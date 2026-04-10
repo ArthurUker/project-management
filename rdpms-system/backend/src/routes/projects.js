@@ -122,11 +122,14 @@ projects.post('/', async (c) => {
   }
   
   // 生成编号
-  const code = await generateProjectCode();
+  const code = body.code || await generateProjectCode();
+  
+  // 提取 tasks 和 milestones
+  const { tasks = [], milestones = [], ...projectData } = body;
   
   const project = await prisma.project.create({
     data: {
-      ...body,
+      ...projectData,
       code,
       manager: { connect: { id: body.managerId } }
     },
@@ -145,6 +148,30 @@ projects.post('/', async (c) => {
       role: 'manager'
     }
   });
+  
+  // 批量创建任务
+  if (tasks.length > 0) {
+    const tasksToCreate = tasks.map((t, idx) => ({
+      projectId: project.id,
+      title: t.title || `Task ${idx + 1}`,
+      description: t.description || '',
+      status: t.status || '待开始',
+      priority: t.priority || '中',
+      assigneeId: t.assigneeId || body.managerId
+    }));
+    await prisma.task.createMany({ data: tasksToCreate });
+  }
+  
+  // 批量创建里程碑
+  if (milestones.length > 0) {
+    const milestonesToCreate = milestones.map((m) => ({
+      projectId: project.id,
+      name: m.name || '未命名里程碑',
+      date: m.date ? new Date(m.date) : new Date(),
+      status: m.status || '待完成'
+    }));
+    await prisma.milestone.createMany({ data: milestonesToCreate });
+  }
   
   return c.json(project, 201);
 });

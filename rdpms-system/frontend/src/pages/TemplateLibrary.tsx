@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { projectTemplatesAPI } from '../api/client';
+import { useNavigate } from 'react-router-dom';
+import { projectTemplatesAPI, projectAPI } from '../api/client';
 
 export default function TemplateLibrary() {
+  const navigate = useNavigate();
   const [list, setList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<any>(null);
   const [expandedPhase, setExpandedPhase] = useState<string | null>(null);
+  const [showApplyForm, setShowApplyForm] = useState(false);
+  const [applyPayload, setApplyPayload] = useState<any>(null);
+  const [formData, setFormData] = useState<any>({});
 
   useEffect(() => { fetchList(); }, []);
 
@@ -48,10 +53,42 @@ export default function TemplateLibrary() {
     try {
       const resp = await projectTemplatesAPI.apply(t.id, {});
       const payload = resp.payload;
-      alert('生成项目草稿：' + JSON.stringify(payload, null, 2));
+      setApplyPayload(payload);
+      setFormData({
+        code: payload.code || `PRJ-${Date.now()}`,
+        name: payload.name || t.name,
+        type: payload.type || t.category || 'template',
+        position: payload.position || t.description || ''
+      });
+      setShowApplyForm(true);
     } catch (e) {
       console.error(e);
       alert('应用模版失败');
+    }
+  }
+
+  async function createProjectFromTemplate() {
+    if (!formData.code || !formData.name) {
+      alert('项目编码和名称不能为空');
+      return;
+    }
+    try {
+      const newProject = await projectAPI.create({
+        code: formData.code,
+        name: formData.name,
+        type: formData.type,
+        position: formData.position,
+        managerId: localStorage.getItem('rdpms_userId') || '', // 使用当前用户
+        startDate: new Date().toISOString(),
+        tasks: applyPayload.tasks || [],
+        milestones: applyPayload.milestones || []
+      });
+      alert('项目创建成功！');
+      setShowApplyForm(false);
+      navigate(`/projects/${newProject.id}`);
+    } catch (err) {
+      console.error(err);
+      alert('创建项目失败');
     }
   }
 
