@@ -117,21 +117,22 @@ projects.post('/', async (c) => {
   }
   
   // 非管理员必须指定负责人
-  if (userRole !== 'admin' && !body.managerId) {
-    body.managerId = userId;
+  const managerId = body.managerId || (userRole === 'admin' ? undefined : userId);
+  if (!managerId) {
+    return c.json({ error: '必须指定项目负责人' }, 400);
   }
   
   // 生成编号
   const code = body.code || await generateProjectCode();
   
-  // 提取 tasks 和 milestones
-  const { tasks = [], milestones = [], ...projectData } = body;
+  // 提取 tasks, milestones 和其他字段
+  const { tasks = [], milestones = [], managerId: _, ...projectData } = body;
   
   const project = await prisma.project.create({
     data: {
       ...projectData,
       code,
-      manager: { connect: { id: body.managerId } }
+      manager: { connect: { id: managerId } }
     },
     include: {
       manager: {
@@ -144,7 +145,7 @@ projects.post('/', async (c) => {
   await prisma.projectMember.create({
     data: {
       projectId: project.id,
-      userId: body.managerId,
+      userId: managerId,
       role: 'manager'
     }
   });
@@ -157,7 +158,7 @@ projects.post('/', async (c) => {
       description: t.description || '',
       status: t.status || '待开始',
       priority: t.priority || '中',
-      assigneeId: t.assigneeId || body.managerId
+      assigneeId: t.assigneeId || managerId
     }));
     await prisma.task.createMany({ data: tasksToCreate });
   }
