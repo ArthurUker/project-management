@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { projectTemplatesAPI, projectAPI } from '../api/client';
+import ProcessFlowDiagram from '../components/ProcessFlowDiagram';
 
 export default function TemplateLibrary() {
   const navigate = useNavigate();
@@ -167,58 +168,11 @@ export default function TemplateLibrary() {
                 return (
                   <div style={{ marginBottom: 20 }}>
                     <h4 style={{ marginBottom: 12 }}>📋 阶段流程</h4>
-                    {phases.length === 0 ? (
-                      <div style={{ color: '#999', fontSize: 13 }}>未定义阶段</div>
-                    ) : (
-                      <div style={{ display: 'grid', gap: 8 }}>
-                        {phases.map((phase: any) => (
-                          <div
-                            key={phase.key}
-                            style={{
-                              border: '1px solid #e0e0e0',
-                              borderRadius: 6,
-                              padding: 12,
-                              background: phase.disabled ? '#f5f5f5' : '#fafafa',
-                              opacity: phase.disabled ? 0.7 : 1
-                            }}
-                          >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <div style={{ flex: 1 }}>
-                                <div style={{ fontWeight: 600, fontSize: 14 }}>
-                                  {phase.order}. {phase.name}
-                                </div>
-                                {phase.desc && (
-                                  <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
-                                    {phase.desc}
-                                  </div>
-                                )}
-                              </div>
-                              <div style={{ fontSize: 12, color: '#4f46e5', fontWeight: 500, minWidth: 60, textAlign: 'right' }}>
-                                {getSourceIcon(phase.source, phase.disabled)}
-                              </div>
-                            </div>
-
-                            {phase.tasks && phase.tasks.length > 0 && (
-                              <div
-                                style={{
-                                  marginTop: 8,
-                                  paddingTop: 8,
-                                  borderTop: '1px solid #e0e0e0',
-                                  fontSize: 12,
-                                  color: '#666'
-                                }}
-                              >
-                                {phase.tasks.map((task: any, idx: number) => (
-                                  <div key={idx} style={{ margin: '4px 0', paddingLeft: 12 }}>
-                                    • {task.title}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <ProcessFlowDiagram
+                      phases={phases}
+                      editable={false}
+                      onPhaseSelect={(phase) => setExpandedPhase(phase.order.toString())}
+                    />
                   </div>
                 );
               })()}
