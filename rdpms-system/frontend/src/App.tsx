@@ -13,6 +13,7 @@ import Users from './pages/Users';
 import Settings from './pages/Settings';
 import Docs from './pages/Docs';
 import ReagentRecipes from './pages/ReagentRecipes';
+import ProjectTemplates from './pages/ProjectTemplates';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAppStore();
@@ -51,6 +52,7 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="projects" element={<Projects />} />
           <Route path="projects/:id" element={<ProjectDetail />} />
+          <Route path="project-templates" element={<ProjectTemplates />} />
           <Route path="reports" element={<Reports />} />
           <Route path="reports/:id" element={<ReportEdit />} />
           <Route path="docs" element={<Docs />} />

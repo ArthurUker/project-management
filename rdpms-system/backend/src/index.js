@@ -11,6 +11,7 @@ import taskRoutes from './routes/tasks.js';
 import syncRoutes from './routes/sync.js';
 import statsRoutes from './routes/stats.js';
 import docsRoutes from './routes/docs.js';
+import projectTemplatesRoutes from './routes/projectTemplates.js';
 
 // 初始化Prisma
 export const prisma = new PrismaClient();
@@ -44,6 +45,7 @@ app.route('/api/tasks', taskRoutes);
 app.route('/api/sync', syncRoutes);
 app.route('/api/stats', statsRoutes);
 app.route('/api/docs', docsRoutes);
+app.route('/api/project-templates', projectTemplatesRoutes);
 
 // 错误处理
 app.onError((err, c) => {

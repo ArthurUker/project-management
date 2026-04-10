@@ -149,7 +149,8 @@ export const useAppStore = create<AppState>()(
         
         try {
           const res = await syncAPI.init(lastSync || undefined);
-          const { data } = res;
+          // res may be ApiResponse or { data: ApiResponse }
+          const data = (res as any).data ? (res as any).data : res;
           
           await db.transaction('rw', [db.projects, db.reports, db.tasks], async () => {
             if (data.projects?.length) await db.projects.bulkPut(data.projects);
@@ -161,7 +162,7 @@ export const useAppStore = create<AppState>()(
             projects: data.projects || [],
             reports: data.reports || [],
             tasks: data.tasks || [],
-            lastSync: res.syncTime
+            lastSync: data.syncTime || (res as any).syncTime || lastSync
           });
         } finally {
           set({ isSyncing: false });
@@ -170,10 +171,11 @@ export const useAppStore = create<AppState>()(
       
       login: async (username, password) => {
         const res = await authAPI.login(username, password);
-        const { token, user } = res;
+        const token = (res as any).token || (res as any).data?.token;
+        const user = (res as any).user || (res as any).data?.user;
         
-        localStorage.setItem('rdpms_token', token);
-        localStorage.setItem('rdpms_user', JSON.stringify(user));
+        if (token) localStorage.setItem('rdpms_token', token);
+        if (user) localStorage.setItem('rdpms_user', JSON.stringify(user));
         
         set({ token, user });
         await get().sync();

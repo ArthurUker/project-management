@@ -47,6 +47,36 @@ async function main() {
     console.log('✅ 用户创建成功:', user.name);
   }
 
+  // 创建项目模版
+  const templates = [
+    {
+      code: 'TPL-DEFAULT-1',
+      name: '基础研发模版',
+      description: '包含基础任务、里程碑和初始文档结构',
+      type: '基础',
+      content: JSON.stringify({ tasks: [{ title: '需求评审' }, { title: '设计' }, { title: '实现' }, { title: '测试' }], milestones: [{ name: '需求评审' }, { name: '上线' }] })
+    },
+    {
+      code: 'TPL-AGILE-1',
+      name: '敏捷迭代模版',
+      description: '适用于敏捷开发，含迭代计划与冲刺任务',
+      type: '敏捷',
+      content: JSON.stringify({ sprints: [{ name: 'Sprint 1' }, { name: 'Sprint 2' }], tasks: [{ title: '待办' }] })
+    }
+  ];
+
+  for (const t of templates) {
+    await prisma.projectTemplate.upsert({
+      where: { code: t.code },
+      update: {},
+      create: {
+        ...t,
+        createdBy: admin.id
+      }
+    });
+    console.log('✅ 模版创建成功:', t.name);
+  }
+
   // 创建示例项目（使用管理员作为默认负责人）
   const projects = [
     {

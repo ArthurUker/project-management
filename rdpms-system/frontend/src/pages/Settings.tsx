@@ -3,7 +3,7 @@ import { authAPI } from '../api/client';
 import { useAppStore } from '../store/appStore';
 
 export default function Settings() {
-  const { user, logout } = useAppStore();
+  const { user } = useAppStore();
   
   const [passwords, setPasswords] = useState({
     old: '',

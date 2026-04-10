@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { statsAPI, projectAPI } from '../api/client';
+import { statsAPI } from '../api/client';
 import { useAppStore } from '../store/appStore';
 
 export default function Dashboard() {

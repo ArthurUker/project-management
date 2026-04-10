@@ -33,6 +33,8 @@ model User {
   createdDocs     DocDocument[]    @relation("DocCreator")
   approvedDocs    DocDocument[]    @relation("DocApprover")
   createdDocVersions DocVersion[]  @relation("DocVersionCreator")
+  createdTemplates ProjectTemplate[] @relation("TemplateCreator")
+  createdRecipes ReagentRecipe[] @relation("ReagentCreator")
 }
 
 model Project {
@@ -55,6 +57,23 @@ model Project {
   tasks           Task[]
   milestones      Milestone[]
   monthlyProgress MonthlyProgress[]
+}
+
+model ProjectTemplate {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  description String?
+  type        String?  // 模版类型/分类
+  content     String?  // JSON 描述模版内容，如 tasks/milestones/defaults
+  createdBy   String
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  creator     User     @relation("TemplateCreator", fields: [createdBy], references: [id])
+
+  @@index([type])
 }
 
 model ProjectMember {
@@ -257,7 +276,7 @@ model ReagentRecipe {
   categoryId  String
   category    ReagentCategory @relation(fields: [categoryId], references: [id])
   createdBy   String
-  creator     User            @relation(fields: [createdBy], references: [id])
+  creator     User            @relation("ReagentCreator", fields: [createdBy], references: [id])
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
   tags        String?         // 标签,逗号分隔

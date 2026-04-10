@@ -145,12 +145,14 @@ function KanbanColumnComponent({
   column,
   onDragOver,
   onDrop,
+  onDragStart,
   onTaskClick,
   onAddTask
 }: {
   column: KanbanColumn;
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent, status: string) => void;
+  onDragStart: (e: React.DragEvent, task: Task) => void;
   onTaskClick: (task: Task) => void;
   onAddTask: (status: string) => void;
 }) {
@@ -203,7 +205,7 @@ function KanbanColumnComponent({
             <TaskCard 
               key={task.id} 
               task={task} 
-              onDragStart={() => {}}
+              onDragStart={(e) => onDragStart(e, task)}
               onClick={onTaskClick}
             />
           ))}
@@ -426,14 +428,13 @@ interface KanbanBoardProps {
 }
 
 export default function KanbanBoard({ projectId }: KanbanBoardProps) {
-  const { tasks, projects, saveTaskLocal, setTasks } = useAppStore();
+  const { tasks, projects, saveTaskLocal, setTasks: _setTasks } = useAppStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterProject, setFilterProject] = useState(projectId || '');
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [addingColumn, setAddingColumn] = useState<string | null>(null);
   const dragItem = useRef<Task | null>(null);
-  const dragOverItem = useRef<string | null>(null);
 
   // 定义看板列
   const columns: KanbanColumn[] = [
@@ -508,14 +509,16 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
       if (editingTask) {
         // 更新任务
         const res = await taskAPI.update(editingTask.id, data);
-        await saveTaskLocal(res);
+        const taskRes = (res as any).data ? (res as any).data : res;
+        await saveTaskLocal(taskRes);
       } else {
         // 创建任务
         const res = await taskAPI.create({
           ...data,
           status: data.status || addingColumn || '待开始'
         });
-        await saveTaskLocal(res);
+        const taskRes = (res as any).data ? (res as any).data : res;
+        await saveTaskLocal(taskRes);
       }
       setShowModal(false);
       setEditingTask(null);
@@ -578,6 +581,7 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
               column={column}
               onDragOver={handleDragOver}
               onDrop={handleDrop}
+              onDragStart={handleDragStart}
               onTaskClick={handleTaskClick}
               onAddTask={handleAddTask}
             />

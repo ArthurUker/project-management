@@ -45,7 +45,7 @@ function getCurrentReportType(): string {
 }
 
 export default function Reports() {
-  const { user, reports } = useAppStore();
+  const { user } = useAppStore();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [activeType, setActiveType] = useState<string>(getCurrentReportType());
@@ -95,7 +95,7 @@ export default function Reports() {
   };
   
   // 获取当前类型信息
-  const currentTypeInfo = REPORT_TYPES.find(t => t.id === activeType) || REPORT_TYPES[0];
+
   
   return (
     <div>

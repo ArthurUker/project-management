@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { projectAPI, progressAPI, taskAPI } from '../api/client';
+import { projectAPI, progressAPI } from '../api/client';
 import { useAppStore } from '../store/appStore';
 import KanbanBoard from '../components/KanbanBoard';
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
-  const { projects } = useAppStore();
+  const { projects: _projects } = useAppStore();
   const [project, setProject] = useState<any>(null);
   const [progress, setProgress] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,8 +26,10 @@ export default function ProjectDetail() {
         projectAPI.get(id),
         progressAPI.get(id, 6)
       ]);
-      setProject(projectData);
-      setProgress(progressData || []);
+      const proj = (projectData as any).data ? (projectData as any).data : projectData;
+      const progRaw = (progressData as any).data ? (progressData as any).data : progressData;
+      setProject(proj);
+      setProgress(Array.isArray(progRaw) ? progRaw : (progRaw?.list || []));
     } catch (err) {
       console.error('Failed to load project:', err);
     } finally {
