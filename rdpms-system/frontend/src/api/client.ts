@@ -133,6 +133,7 @@ export const projectTemplatesAPI = {
   create: (data: any) => post<ApiResponse<any>>('/project-templates', data),
   update: (id: string, data: any) => put<ApiResponse<any>>(`/project-templates/${id}`, data),
   delete: (id: string) => del<ApiResponse<any>>(`/project-templates/${id}`),
+  apply: (id: string, data?: any) => post<ApiResponse<any>>(`/project-templates/${id}/apply`, data),
 };
 
 export const docsAPI = {

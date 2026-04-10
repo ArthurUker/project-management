@@ -7,7 +7,6 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 开始初始化数据...');
 
-  // 创建管理员
   const adminPassword = await bcrypt.hash('admin123', 10);
   const admin = await prisma.user.upsert({
     where: { username: 'admin' },
@@ -22,9 +21,7 @@ async function main() {
   });
   console.log('✅ 管理员创建成功:', admin.username);
 
-  // 创建普通用户
   const memberPassword = await bcrypt.hash('123456', 10);
-  
   const users = [
     { username: 'gll', name: '谷磊磊', position: '研发工程师' },
     { username: 'lyq', name: '李应钦', position: '硬件工程师' },
@@ -47,37 +44,301 @@ async function main() {
     console.log('✅ 用户创建成功:', user.name);
   }
 
-  // 创建项目模版
-  const templates = [
-    {
-      code: 'TPL-DEFAULT-1',
-      name: '基础研发模版',
-      description: '包含基础任务、里程碑和初始文档结构',
-      type: '基础',
-      content: JSON.stringify({ tasks: [{ title: '需求评审' }, { title: '设计' }, { title: '实现' }, { title: '测试' }], milestones: [{ name: '需求评审' }, { name: '上线' }] })
-    },
-    {
-      code: 'TPL-AGILE-1',
-      name: '敏捷迭代模版',
-      description: '适用于敏捷开发，含迭代计划与冲刺任务',
-      type: '敏捷',
-      content: JSON.stringify({ sprints: [{ name: 'Sprint 1' }, { name: 'Sprint 2' }], tasks: [{ title: '待办' }] })
+  // 试剂/芯片母版：9阶段完整设计
+  const reagentMaster = await prisma.projectTemplate.upsert({
+    where: { code: 'TPL-REAGENT-MASTER' },
+    update: {},
+    create: {
+      code: 'TPL-REAGENT-MASTER',
+      name: '🧪 试剂/芯片开发 全流程模版（母版）',
+      description: '包含9个阶段的完整研发流程，可作为派生模版的基础',
+      category: '试剂/芯片',
+      isMaster: true,
+      content: JSON.stringify({
+        phases: [
+          { key: 'phase1', order: 1, name: '立项', desc: '立项申请、可行性分析、评审', source: 'inherit', tasks: [{ title: '立项申请' }, { title: '可行性分析' }, { title: '评审' }] },
+          { key: 'phase2', order: 2, name: '方案设计', desc: '引物探针设计 / 外购 / 合作 / 国标引用', source: 'inherit', tasks: [{ title: '引物/探针设计' }, { title: '外购方案' }, { title: '合作评估' }, { title: '国标对照' }] },
+          { key: 'phase3', order: 3, name: '样本收集', desc: '样本来源、接收记录', source: 'inherit', tasks: [{ title: '样本来源确认' }, { title: '接收记录' }] },
+          { key: 'phase4', order: 4, name: '片外核酸提取优化', desc: '提取试剂筛选、程序验证', source: 'inherit', tasks: [{ title: '提取试剂筛选' }, { title: '程序验证' }, { title: '效果评估' }] },
+          { key: 'phase5', order: 5, name: '片外扩增试剂/程序优化', desc: '扩增体系、参数调试', source: 'inherit', tasks: [{ title: '扩增体系优化' }, { title: '参数调试' }, { title: '敏感性/特异性测试' }] },
+          { key: 'phase6', order: 6, name: '芯片试产验证', desc: '试产、实验验证、性能测试', source: 'inherit', tasks: [{ title: '样片试产' }, { title: '实验验证' }, { title: '性能测试' }, { title: '问题记录' }] },
+          { key: 'phase7', order: 7, name: '量产加工', desc: '芯片量产、生产加工', source: 'inherit', tasks: [{ title: '生产工艺确认' }, { title: '量产准备' }, { title: '生产加工' }, { title: '质量检验' }] },
+          { key: 'phase8', order: 8, name: '客户验证', desc: '送样、客户反馈、验证报告', source: 'inherit', tasks: [{ title: '样品送样' }, { title: '收集客户反馈' }, { title: '生成验证报告' }] },
+          { key: 'phase9', order: 9, name: '归档', desc: '文档整理、知识库归档、项目总结', source: 'inherit', tasks: [{ title: '文档整理' }, { title: '知识库归档' }, { title: '项目总结' }, { title: '经验教训记录' }] }
+        ],
+        milestones: [{ name: '立项通过' }, { name: '样品可用' }, { name: '试产通过' }, { name: '客户验证通过' }, { name: '项目关闭' }],
+        defaults: { priority: '中' }
+      }),
+      createdBy: admin.id
     }
-  ];
+  });
+  console.log('✅ 模版创建成功:', reagentMaster.name);
 
-  for (const t of templates) {
-    await prisma.projectTemplate.upsert({
-      where: { code: t.code },
-      update: {},
-      create: {
-        ...t,
-        createdBy: admin.id
-      }
-    });
-    console.log('✅ 模版创建成功:', t.name);
-  }
+  // 试剂/芯片子模版：标准型（完整流程）
+  await prisma.projectTemplate.upsert({
+    where: { code: 'TPL-REAGENT-STD' },
+    update: {},
+    create: {
+      code: 'TPL-REAGENT-STD',
+      name: '标准型（完整流程）',
+      description: '试剂/芯片 开发-标准型，包含完整9阶段',
+      category: '试剂/芯片',
+      parentId: reagentMaster.id,
+      content: reagentMaster.content,
+      createdBy: admin.id
+    }
+  });
+  console.log('✅ 模版创建成功: 标准型');
 
-  // 创建示例项目（使用管理员作为默认负责人）
+  // 试剂/芯片子模版：快速验证型（禁用阶段3、4）
+  await prisma.projectTemplate.upsert({
+    where: { code: 'TPL-REAGENT-FAST' },
+    update: {},
+    create: {
+      code: 'TPL-REAGENT-FAST',
+      name: '快速验证型',
+      description: '适用场景：已有提取方案，直接做扩增验证（禁用阶段3、4）',
+      category: '试剂/芯片',
+      parentId: reagentMaster.id,
+      content: JSON.stringify({
+        phases: [
+          { key: 'phase1', order: 1, name: '立项', source: 'inherit', tasks: [{ title: '立项' }] },
+          { key: 'phase2', order: 2, name: '方案设计', source: 'inherit', tasks: [{ title: '方案' }] },
+          { key: 'phase3', order: 3, name: '样本收集', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase4', order: 4, name: '片外核酸提取优化', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase5', order: 5, name: '片外扩增试剂/程序优化', source: 'inherit', tasks: [{ title: '快速扩增验证' }] },
+          { key: 'phase6', order: 6, name: '芯片试产验证', source: 'inherit', tasks: [{ title: '快速试产' }] },
+          { key: 'phase7', order: 7, name: '量产加工', source: 'inherit', tasks: [{ title: '量产' }] },
+          { key: 'phase8', order: 8, name: '客户验证', source: 'inherit', tasks: [{ title: '验证' }] },
+          { key: 'phase9', order: 9, name: '归档', source: 'inherit', tasks: [{ title: '归档' }] }
+        ],
+        milestones: [{ name: '验证通过' }],
+        defaults: { priority: '高' }
+      }),
+      createdBy: admin.id
+    }
+  });
+  console.log('✅ 模版创建成功: 快速验证型');
+
+  // 试剂/芯片子模版：合作开发型（禁用阶段3、4、5）
+  await prisma.projectTemplate.upsert({
+    where: { code: 'TPL-REAGENT-COOP' },
+    update: {},
+    create: {
+      code: 'TPL-REAGENT-COOP',
+      name: '合作开发型',
+      description: '适用场景：合作方提供试剂，我方做芯片（禁用阶段3、4、5）',
+      category: '试剂/芯片',
+      parentId: reagentMaster.id,
+      content: JSON.stringify({
+        phases: [
+          { key: 'phase1', order: 1, name: '立项', source: 'inherit', tasks: [{ title: '合作申请' }] },
+          { key: 'phase2', order: 2, name: '方案设计', source: 'inherit', tasks: [{ title: '合作设计' }] },
+          { key: 'phase3', order: 3, name: '样本收集', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase4', order: 4, name: '片外核酸提取优化', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase5', order: 5, name: '片外扩增试剂/程序优化', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase6', order: 6, name: '芯片试产验证', source: 'inherit', tasks: [{ title: '试产验证' }] },
+          { key: 'phase7', order: 7, name: '量产加工', source: 'inherit', tasks: [{ title: '量产' }] },
+          { key: 'phase8', order: 8, name: '客户验证', source: 'inherit', tasks: [{ title: '验证' }] },
+          { key: 'phase9', order: 9, name: '归档', source: 'inherit', tasks: [{ title: '归档' }] }
+        ],
+        milestones: [{ name: '合作完成' }],
+        defaults: { priority: '中' }
+      }),
+      createdBy: admin.id
+    }
+  });
+  console.log('✅ 模版创建成功: 合作开发型');
+
+  // 试剂/芯片子模版：性能测试型（禁用阶段2、3、4、5、7）
+  await prisma.projectTemplate.upsert({
+    where: { code: 'TPL-REAGENT-PERF' },
+    update: {},
+    create: {
+      code: 'TPL-REAGENT-PERF',
+      name: '性能测试型',
+      description: '适用场景：已有产品，只做性能测试（禁用阶段2、3、4、5、7）',
+      category: '试剂/芯片',
+      parentId: reagentMaster.id,
+      content: JSON.stringify({
+        phases: [
+          { key: 'phase1', order: 1, name: '立项', source: 'inherit', tasks: [{ title: '测试计划' }] },
+          { key: 'phase2', order: 2, name: '方案设计', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase3', order: 3, name: '样本收集', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase4', order: 4, name: '片外核酸提取优化', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase5', order: 5, name: '片外扩增试剂/程序优化', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase6', order: 6, name: '芯片试产验证', source: 'inherit', tasks: [{ title: '性能测试' }, { title: '数据分析' }] },
+          { key: 'phase7', order: 7, name: '量产加工', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase8', order: 8, name: '客户验证', source: 'inherit', tasks: [{ title: '提交报告' }] },
+          { key: 'phase9', order: 9, name: '归档', source: 'inherit', tasks: [{ title: '归档' }] }
+        ],
+        milestones: [{ name: '测试完成' }],
+        defaults: { priority: '高' }
+      }),
+      createdBy: admin.id
+    }
+  });
+  console.log('✅ 模版创建成功: 性能测试型');
+
+  // 试剂/芯片子模版：国标引用型（禁用阶段4、5）
+  await prisma.projectTemplate.upsert({
+    where: { code: 'TPL-REAGENT-STAND' },
+    update: {},
+    create: {
+      code: 'TPL-REAGENT-STAND',
+      name: '国标引用型',
+      description: '适用场景：基于国标体系，跳过优化（禁用阶段4、5）',
+      category: '试剂/芯片',
+      parentId: reagentMaster.id,
+      content: JSON.stringify({
+        phases: [
+          { key: 'phase1', order: 1, name: '立项', source: 'inherit', tasks: [{ title: '立项' }] },
+          { key: 'phase2', order: 2, name: '方案设计', source: 'inherit', tasks: [{ title: '国标设计' }] },
+          { key: 'phase3', order: 3, name: '样本收集', source: 'inherit', tasks: [{ title: '样本准备' }] },
+          { key: 'phase4', order: 4, name: '片外核酸提取优化', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase5', order: 5, name: '片外扩增试剂/程序优化', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase6', order: 6, name: '芯片试产验证', source: 'inherit', tasks: [{ title: '国标验证' }] },
+          { key: 'phase7', order: 7, name: '量产加工', source: 'inherit', tasks: [{ title: '量产' }] },
+          { key: 'phase8', order: 8, name: '客户验证', source: 'inherit', tasks: [{ title: '检测' }] },
+          { key: 'phase9', order: 9, name: '归档', source: 'inherit', tasks: [{ title: '报告' }] }
+        ],
+        milestones: [{ name: '国标符合' }],
+        defaults: { priority: '中' }
+      }),
+      createdBy: admin.id
+    }
+  });
+  console.log('✅ 模版创建成功: 国标引用型');
+
+  // 设备开发母版：11阶段完整设计
+  const equipMaster = await prisma.projectTemplate.upsert({
+    where: { code: 'TPL-EQUIP-MASTER' },
+    update: {},
+    create: {
+      code: 'TPL-EQUIP-MASTER',
+      name: '⚙️ 设备开发 全流程模版（母版）',
+      description: '包含11个阶段的完整设备研发流程',
+      category: '设备',
+      isMaster: true,
+      content: JSON.stringify({
+        phases: [
+          { key: 'phase1', order: 1, name: '项目调研', desc: '市场调研、需求收集、竞品分析', source: 'inherit', tasks: [{ title: '市场调研' }, { title: '需求收集' }, { title: '竞品分析' }] },
+          { key: 'phase2', order: 2, name: '立项审批', desc: '立项申请、审批流程', source: 'inherit', tasks: [{ title: '立项申请' }, { title: '审批流程' }] },
+          { key: 'phase3', order: 3, name: '方案设计', desc: '设备结构、硬件设计、芯片设计', source: 'inherit', tasks: [{ title: '结构设计' }, { title: '硬件设计' }, { title: '芯片集成' }] },
+          { key: 'phase4', order: 4, name: '设计方案评审', desc: '评审会议、评审意见', source: 'inherit', tasks: [{ title: '评审会议' }, { title: '意见处理' }] },
+          { key: 'phase5', order: 5, name: '设计迭代再评审', desc: '方案修改、二次评审', source: 'inherit', tasks: [{ title: '方案修改' }, { title: '二次评审' }] },
+          { key: 'phase6', order: 6, name: '采购', desc: 'BOM清单、供应商、采购跟进', source: 'inherit', tasks: [{ title: 'BOM清单' }, { title: '供应商选择' }, { title: '采购跟进' }] },
+          { key: 'phase7', order: 7, name: '样机组装联调', desc: '组装、软硬件联调、问题记录', source: 'inherit', tasks: [{ title: '样机组装' }, { title: '软硬件联调' }, { title: '问题记录' }] },
+          { key: 'phase8', order: 8, name: '结合芯片性能测试', desc: '整机性能测试、指标验证', source: 'inherit', tasks: [{ title: '性能测试' }, { title: '指标验证' }] },
+          { key: 'phase9', order: 9, name: '加工生产', desc: '量产 / 定制版样机', source: 'inherit', tasks: [{ title: '生产工艺' }, { title: '量产准备' }, { title: '生产加工' }] },
+          { key: 'phase10', order: 10, name: '客户验证', desc: '送样、客户反馈、验证报告', source: 'inherit', tasks: [{ title: '样机送样' }, { title: '客户反馈' }, { title: '验证报告' }] },
+          { key: 'phase11', order: 11, name: '归档', desc: '文档整理、知识库归档', source: 'inherit', tasks: [{ title: '文档整理' }, { title: '知识库归档' }] }
+        ],
+        milestones: [{ name: '立项通过' }, { name: '样机完成' }, { name: '量产准备' }, { name: '客户验证通过' }],
+        defaults: { priority: '中' }
+      }),
+      createdBy: admin.id
+    }
+  });
+  console.log('✅ 模版创建成功:', equipMaster.name);
+
+  // 设备子模版：定制开发型（禁用阶段1、4、5）
+  await prisma.projectTemplate.upsert({
+    where: { code: 'TPL-EQUIP-CUSTOM' },
+    update: {},
+    create: {
+      code: 'TPL-EQUIP-CUSTOM',
+      name: '定制开发型',
+      description: '适用场景：客户需求明确，跳过调研和多轮评审（禁用阶段1、4、5）',
+      category: '设备',
+      parentId: equipMaster.id,
+      content: JSON.stringify({
+        phases: [
+          { key: 'phase1', order: 1, name: '项目调研', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase2', order: 2, name: '立项审批', source: 'inherit', tasks: [{ title: '快速审批' }] },
+          { key: 'phase3', order: 3, name: '方案设计', source: 'inherit', tasks: [{ title: '定制设计' }] },
+          { key: 'phase4', order: 4, name: '设计方案评审', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase5', order: 5, name: '设计迭代再评审', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase6', order: 6, name: '采购', source: 'inherit', tasks: [{ title: '采购' }] },
+          { key: 'phase7', order: 7, name: '样机组装联调', source: 'inherit', tasks: [{ title: '组装联调' }] },
+          { key: 'phase8', order: 8, name: '结合芯片性能测试', source: 'inherit', tasks: [{ title: '性能测试' }] },
+          { key: 'phase9', order: 9, name: '加工生产', source: 'inherit', tasks: [{ title: '生产' }] },
+          { key: 'phase10', order: 10, name: '客户验证', source: 'inherit', tasks: [{ title: '验证' }] },
+          { key: 'phase11', order: 11, name: '归档', source: 'inherit', tasks: [{ title: '归档' }] }
+        ],
+        milestones: [{ name: '样机交付' }],
+        defaults: { priority: '高' }
+      }),
+      createdBy: admin.id
+    }
+  });
+  console.log('✅ 模版创建成功: 定制开发型');
+
+  // 设备子模版：性能测试型（禁用阶段1～6）
+  await prisma.projectTemplate.upsert({
+    where: { code: 'TPL-EQUIP-PERF' },
+    update: {},
+    create: {
+      code: 'TPL-EQUIP-PERF',
+      name: '性能测试型',
+      description: '适用场景：已有样机，只做测试验证（禁用阶段1～6）',
+      category: '设备',
+      parentId: equipMaster.id,
+      content: JSON.stringify({
+        phases: [
+          { key: 'phase1', order: 1, name: '项目调研', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase2', order: 2, name: '立项审批', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase3', order: 3, name: '方案设计', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase4', order: 4, name: '设计方案评审', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase5', order: 5, name: '设计迭代再评审', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase6', order: 6, name: '采购', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase7', order: 7, name: '样机组装联调', source: 'inherit', tasks: [{ title: '样机调试' }] },
+          { key: 'phase8', order: 8, name: '结合芯片性能测试', source: 'inherit', tasks: [{ title: '性能测试' }, { title: '数据分析' }] },
+          { key: 'phase9', order: 9, name: '加工生产', source: 'inherit', tasks: [{ title: '生产' }] },
+          { key: 'phase10', order: 10, name: '客户验证', source: 'inherit', tasks: [{ title: '验证' }] },
+          { key: 'phase11', order: 11, name: '归档', source: 'inherit', tasks: [{ title: '报告' }] }
+        ],
+        milestones: [{ name: '测试完成' }],
+        defaults: { priority: '高' }
+      }),
+      createdBy: admin.id
+    }
+  });
+  console.log('✅ 模版创建成功: 性能测试型');
+
+  // 设备子模版：快速迭代型（禁用阶段1、2）
+  await prisma.projectTemplate.upsert({
+    where: { code: 'TPL-EQUIP-FAST' },
+    update: {},
+    create: {
+      code: 'TPL-EQUIP-FAST',
+      name: '快速迭代型',
+      description: '适用场景：已立项，直接进入设计（禁用阶段1、2）',
+      category: '设备',
+      parentId: equipMaster.id,
+      content: JSON.stringify({
+        phases: [
+          { key: 'phase1', order: 1, name: '项目调研', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase2', order: 2, name: '立项审批', source: 'inherit', disabled: true, tasks: [] },
+          { key: 'phase3', order: 3, name: '方案设计', source: 'inherit', tasks: [{ title: '快速设计' }] },
+          { key: 'phase4', order: 4, name: '设计方案评审', source: 'inherit', tasks: [{ title: '评审' }] },
+          { key: 'phase5', order: 5, name: '设计迭代再评审', source: 'inherit', tasks: [{ title: '迭代' }] },
+          { key: 'phase6', order: 6, name: '采购', source: 'inherit', tasks: [{ title: '采购' }] },
+          { key: 'phase7', order: 7, name: '样机组装联调', source: 'inherit', tasks: [{ title: '快速组装' }] },
+          { key: 'phase8', order: 8, name: '结合芯片性能测试', source: 'inherit', tasks: [{ title: '测试' }] },
+          { key: 'phase9', order: 9, name: '加工生产', source: 'inherit', tasks: [{ title: '生产' }] },
+          { key: 'phase10', order: 10, name: '客户验证', source: 'inherit', tasks: [{ title: '验证' }] },
+          { key: 'phase11', order: 11, name: '归档', source: 'inherit', tasks: [{ title: '归档' }] }
+        ],
+        milestones: [{ name: '样机完成' }],
+        defaults: { priority: '中' }
+      }),
+      createdBy: admin.id
+    }
+  });
+  console.log('✅ 模版创建成功: 快速迭代型');
+
+  // 创建示例项目
   const projects = [
     {
       code: 'PLATFORM-2.0C',
@@ -154,13 +415,13 @@ async function main() {
   ];
 
   for (const projectData of projects) {
-    const project = await prisma.project.upsert({
+    await prisma.project.upsert({
       where: { code: projectData.code },
       update: {},
       create: projectData
     });
-    console.log('✅ 项目创建成功:', project.name);
   }
+  console.log('✅ 8个示例项目创建成功');
 
   console.log('🎉 数据初始化完成！');
 }
