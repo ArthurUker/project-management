@@ -1,0 +1,33 @@
+{
+  "name": "rdpms-backend",
+  "version": "1.0.0",
+  "description": "R&D Project Management System - Backend API",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "db:push": "prisma db push",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.10.0",
+    "hono": "^4.0.0",
+    "@hono/node-server": "^1.8.0",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "nanoid": "^5.0.4",
+    "pdfkit": "^0.14.0",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "prisma": "^5.10.0",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.11.0"
+  }
+}
