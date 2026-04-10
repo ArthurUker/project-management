@@ -36,7 +36,7 @@ templates.get('/', async (c) => {
 
 // 获取单个模版
 templates.get('/:id', async (c) => {
-  const { id } = c.params;
+  const id = c.req.param('id');
   const tpl = await prisma.projectTemplate.findUnique({ where: { id }, include: { creator: { select: { id: true, name: true } } } });
   if (!tpl) return c.json({ error: '模版不存在' }, 404);
   return c.json(tpl);
@@ -69,7 +69,7 @@ templates.post('/', adminMiddleware, async (c) => {
 
 // 更新
 templates.put('/:id', adminMiddleware, async (c) => {
-  const { id } = c.params;
+  const id = c.req.param('id');
   const body = await c.req.json();
   delete body.code;
   delete body.createdAt;
@@ -80,14 +80,14 @@ templates.put('/:id', adminMiddleware, async (c) => {
 
 // 删除
 templates.delete('/:id', adminMiddleware, async (c) => {
-  const { id } = c.params;
+  const id = c.req.param('id');
   await prisma.projectTemplate.delete({ where: { id } });
   return c.json({ success: true });
 });
 
 // 应用模版：生成项目草稿（不直接写入项目表）
 templates.post('/:id/apply', async (c) => {
-  const { id } = c.params;
+  const id = c.req.param('id');
   const body = await c.req.json().catch(() => ({}));
   const tpl = await prisma.projectTemplate.findUnique({ where: { id } });
   if (!tpl) return c.json({ error: '模版不存在' }, 404);
