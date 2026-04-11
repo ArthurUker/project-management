@@ -177,9 +177,6 @@ const PhaseNodeComponent = ({
 const nodeTypes = { phase: PhaseNodeComponent };
 
 // ─── 自定义边（含中点 + 按钮） ───────────────────────────────────────────
-interface CustomEdgeData {
-  onAddParallel?: (sourceId: string, targetId: string) => void;
-}
 
 const CustomEdge: React.FC<EdgeProps> = ({
   id,

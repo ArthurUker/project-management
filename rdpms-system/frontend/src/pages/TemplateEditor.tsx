@@ -241,12 +241,22 @@ export default function TemplateEditor() {
       const loaded: Phase[] = (rawPhases as any[]).map((p: any, idx: number) => normalizePhase(p, idx));
 
       setPhases(loaded.sort((a, b) => a.order - b.order));
-      setMilestones((content.milestones || []).map((m: any, i: number) => ({
+
+      const contentObj = (() => {
+        const c = (res as any).content ?? (res as any).data?.content;
+        if (typeof c === 'string') {
+          try { return JSON.parse(c); } catch { return c; }
+        }
+        return c || {};
+      })();
+
+      setMilestones((contentObj.milestones || []).map((m: any, i: number) => ({
         id: m.id || `ms_${i}`,
         name: m.name || '里程碑',
         phaseId: m.phaseId || '',
         offsetDays: m.offsetDays || 0,
       })));
+
     } catch (e) {
       console.error(e);
       alert('加载模版失败');
