@@ -189,8 +189,10 @@ const CustomEdge: React.FC<EdgeProps> = ({
   style,
   markerEnd,
   data,
+  selected,
 }) => {
   const [hovered, setHovered] = React.useState(false);
+  const { setEdges } = useReactFlow();
 
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
@@ -201,6 +203,21 @@ const CustomEdge: React.FC<EdgeProps> = ({
     targetPosition,
     borderRadius: 8,
   });
+
+  const handleDelete = React.useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    // remove from react-flow state
+    setEdges((eds) => (eds || []).filter((ed: any) => ed.id !== id));
+    // parse ids and notify parent/back-end via data.onDelete
+    const parts = (id || '').split('-');
+    const sourceId = parts[1] || '';
+    const targetId = parts[2] || '';
+    try {
+      (data as any)?.onDelete?.(sourceId, targetId);
+    } catch (err) {
+      // ignore
+    }
+  }, [id, setEdges, data]);
 
   return (
     <>
@@ -228,19 +245,20 @@ const CustomEdge: React.FC<EdgeProps> = ({
         style={{ cursor: 'pointer' }}
       />
 
-      {/* overlay '+' button at midpoint */}
+      {/* overlay buttons at midpoint */}
       <EdgeLabelRenderer>
         <div
           style={{
             position: 'absolute',
             transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
             pointerEvents: 'all',
+            display: 'flex',
+            gap: 6,
           }}
         >
           <button
             onClick={(e) => {
               e.stopPropagation();
-              // id format: e-<source>-<target>
               const parts = (id || '').split('-');
               const sourceId = parts[1] || '';
               const targetId = parts[2] || '';
@@ -251,11 +269,23 @@ const CustomEdge: React.FC<EdgeProps> = ({
           >
             +
           </button>
+
+          {(hovered || selected) && (
+            <button
+              onClick={handleDelete}
+              className={"w-6 h-6 rounded-full bg-white border-2 border-red-300 text-red-500 text-sm font-bold flex items-center justify-center shadow-md hover:bg-red-50 hover:border-red-400 hover:shadow-lg transition-all duration-150 cursor-pointer select-none"}
+              title="删除连线"
+            >
+              ✕
+            </button>
+          )}
         </div>
       </EdgeLabelRenderer>
     </>
   );
 };
+
+const edgeTypes = { custom: CustomEdge };
 
 const edgeTypes = { custom: CustomEdge };
 
@@ -360,7 +390,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
               type: MarkerType.ArrowClosed,
               color: '#93C5FD',
             },
-            data: { onAddParallel: onAddParallel ?? (() => {}) },
+            data: { onAddParallel: onAddParallel ?? (() => {}), onDelete: onEdgeDelete },
           });
         });
       });
@@ -416,14 +446,14 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       if (hasExplicitEdges) {
         phases.forEach((p) => {
           (p.nextPhaseIds ?? []).forEach((nextId) => {
-            rawEdges.push({ id: `e-${p.id}-${nextId}`, source: p.id, target: nextId, type: 'custom', animated: false, style: { stroke: '#93C5FD', strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: '#93C5FD' }, data: { onAddParallel: onAddParallel ?? (() => {}) } });
+            rawEdges.push({ id: `e-${p.id}-${nextId}`, source: p.id, target: nextId, type: 'custom', animated: false, style: { stroke: '#93C5FD', strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: '#93C5FD' }, data: { onAddParallel: onAddParallel ?? (() => {}), onDelete: onEdgeDelete } });
           });
         });
       } else {
         const sorted = [...phases].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         for (let i = 0; i < sorted.length - 1; i++) {
           if (!rawEdges.find(e => e.source === sorted[i].id)) {
-          rawEdges.push({ id: `e-${sorted[i].id}-${sorted[i + 1].id}`, source: sorted[i].id, target: sorted[i + 1].id, type: 'custom', animated: false, style: { stroke: '#93C5FD', strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: '#93C5FD' }, data: { onAddParallel: onAddParallel ?? (() => {}) } });
+          rawEdges.push({ id: `e-${sorted[i].id}-${sorted[i + 1].id}`, source: sorted[i].id, target: sorted[i + 1].id, type: 'custom', animated: false, style: { stroke: '#93C5FD', strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: '#93C5FD' }, data: { onAddParallel: onAddParallel ?? (() => {}), onDelete: onEdgeDelete } });
         }
         }
       }
@@ -503,6 +533,9 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       nodeTypes={nodeTypes}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
+      deleteKeyCode="Delete"
+      edgesFocusable={true}
+      edgesUpdatable={true}
       onConnect={handleConnect}
       onNodeDrag={handleNodeDrag}
       onNodeDragStop={handleNodeDragStop}
@@ -517,9 +550,8 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       defaultEdgeOptions={edgeOptions}
       onEdgesDelete={(delEdges) => {
         delEdges.forEach(e => {
-          const parts = (e.id || '').split('->');
-          const sourceId = parts[0] || '';
-          const targetId = parts[1] || '';
+          const sourceId = (e as any).source || '';
+          const targetId = (e as any).target || '';
           if (sourceId && targetId && onEdgeDelete) onEdgeDelete(sourceId, targetId);
         });
       }}
