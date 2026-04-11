@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -258,8 +258,6 @@ const buildEdgeStyle = (onAddParallel: (s: string, t: string) => void) => ({
   data: { onAddParallel },
 });
 
-// fallback default for compatibility
-const defaultEdgeStyle = buildEdgeStyle(() => {});
 
 // ─── 内部图组件（需要在 ReactFlowProvider 内） ────────────────────────────────
 const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
@@ -268,6 +266,8 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
   onPhaseClick,
   onAddParallel,
   onEdgeDelete,
+  onDropParallel,
+  onDropInsertAfter,
   readonly = false,
 }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);

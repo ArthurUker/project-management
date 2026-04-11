@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api, { projectTemplatesAPI, taskAPI } from '../api/client';
+import api, { projectTemplatesAPI } from '../api/client';
 import ProcessFlowDiagram from '../components/ProcessFlowDiagram';
 import { AlignLeft, X } from 'lucide-react';
 import {
@@ -34,6 +34,8 @@ interface Phase {
   id: string;
   name: string;
   order: number;
+  totalDays?: number;
+  nextPhaseIds?: string[];
   type: 'normal' | 'milestone' | 'approval';
   source: 'self' | 'inherited';
   enabled: boolean;
@@ -115,206 +117,7 @@ function PhaseNode({ phase, isSelected, onClick }: {
 
 // ─── Task Row ──────────────────────────────────────────────────────────────
 
-function TaskRow({ task, onChange, onDelete }: {
-  task: PhaseTask;
-  onChange: (updates: Partial<PhaseTask>) => void;
-  onDelete: () => void;
-}) {
-  return (
-    <div className={`flex items-center gap-2 py-2 border-b border-gray-100 last:border-0 ${!task.enabled ? 'opacity-50' : ''}`}>
-      <input
-        type="checkbox"
-        checked={task.enabled}
-        onChange={e => onChange({ enabled: e.target.checked })}
-        title="启用/禁用任务"
-      />
-      <input
-        className="flex-1 text-sm border border-gray-200 rounded px-2 py-1 focus:outline-none focus:border-primary-400"
-        value={task.title}
-        onChange={e => onChange({ title: e.target.value })}
-        placeholder="任务名称"
-      />
-      <select
-        className="text-xs border border-gray-200 rounded px-1 py-1"
-        value={task.priority}
-        onChange={e => onChange({ priority: e.target.value as any })}
-      >
-        <option value="高">高</option>
-        <option value="中">中</option>
-        <option value="低">低</option>
-      </select>
-      <input
-        type="number"
-        className="w-14 text-xs border border-gray-200 rounded px-1 py-1 text-center"
-        value={task.estimatedDays}
-        min={1}
-        onChange={e => onChange({ estimatedDays: parseInt(e.target.value) || 1 })}
-        title="预计天数"
-      />
-      <span className="text-xs text-gray-400">天</span>
-      {task.source === 'inherited' && <span className="text-gray-300 text-xs" title="继承">🔒</span>}
-      <button
-        className="text-gray-300 hover:text-red-500 text-xs"
-        onClick={onDelete}
-        title="删除任务"
-      >
-        ✕
-      </button>
-    </div>
-  );
-}
 
-// ─── Right Panel ──────────────────────────────────────────────────────────
-
-function PhasePanel({ phase, onChange, onDelete }: {
-  phase: Phase;
-  onChange: (updates: Partial<Phase>) => void;
-  onDelete: () => void;
-}) {
-  const [activeTab, setActiveTab] = useState<'info' | 'tasks'>('tasks');
-
-  function addTask() {
-    const newTask: PhaseTask = {
-      id: `task_${Date.now()}`,
-      title: '新任务',
-      priority: '中',
-      estimatedDays: 3,
-      role: 'member',
-      source: 'self',
-      enabled: true,
-    };
-    onChange({ tasks: [...phase.tasks, newTask] });
-  }
-
-  function updateTask(taskId: string, updates: Partial<PhaseTask>) {
-    onChange({ tasks: phase.tasks.map(t => t.id === taskId ? { ...t, ...updates } : t) });
-  }
-
-  function deleteTask(taskId: string) {
-    onChange({ tasks: phase.tasks.filter(t => t.id !== taskId) });
-  }
-
-  const totalDays = phase.tasks.filter(t => t.enabled).reduce((s, t) => s + t.estimatedDays, 0);
-
-  return (
-    <div className="h-full flex flex-col">
-      <div className="p-4 border-b border-gray-100">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-gray-900">阶段配置</h3>
-          <button
-            className="text-xs text-red-500 hover:text-red-700"
-            onClick={onDelete}
-          >
-            删除阶段
-          </button>
-        </div>
-        <div className="flex gap-2 text-xs">
-          <button
-            className={`px-3 py-1.5 rounded ${activeTab === 'tasks' ? 'bg-primary-100 text-primary-700 font-medium' : 'text-gray-500 hover:bg-gray-100'}`}
-            onClick={() => setActiveTab('tasks')}
-          >
-            任务列表
-          </button>
-          <button
-            className={`px-3 py-1.5 rounded ${activeTab === 'info' ? 'bg-primary-100 text-primary-700 font-medium' : 'text-gray-500 hover:bg-gray-100'}`}
-            onClick={() => setActiveTab('info')}
-          >
-            基础信息
-          </button>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-4">
-        {activeTab === 'info' && (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">阶段名称</label>
-              <input
-                className="input w-full text-sm"
-                value={phase.name}
-                onChange={e => onChange({ name: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">节点类型</label>
-              <div className="flex gap-2">
-                {(['normal', 'milestone', 'approval'] as const).map(t => (
-                  <button
-                    key={t}
-                    onClick={() => onChange({ type: t })}
-                    className={`flex-1 py-1.5 text-xs rounded border transition-colors ${
-                      phase.type === t
-                        ? t === 'milestone' ? 'bg-orange-500 text-white border-orange-500'
-                        : t === 'approval' ? 'bg-purple-500 text-white border-purple-500'
-                        : 'bg-blue-500 text-white border-blue-500'
-                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                    }`}
-                  >
-                    {t === 'normal' ? '普通' : t === 'milestone' ? '里程碑' : '审批'}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">完成提示</label>
-              <textarea
-                className="input w-full text-sm resize-none"
-                rows={3}
-                placeholder="完成该阶段前的提示信息"
-                value={phase.completionTip}
-                onChange={e => onChange({ completionTip: e.target.value })}
-              />
-            </div>
-            <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={phase.enabled}
-                  onChange={e => onChange({ enabled: e.target.checked })}
-                />
-                启用该阶段
-              </label>
-              <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={phase.allowSkip}
-                  onChange={e => onChange({ allowSkip: e.target.checked })}
-                />
-                允许跳过
-              </label>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'tasks' && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs text-gray-500">{phase.tasks.filter(t=>t.enabled).length} 个任务 · 约 {totalDays} 天</span>
-              <button
-                className="text-xs px-2 py-1 bg-primary-50 text-primary-600 rounded hover:bg-primary-100"
-                onClick={addTask}
-              >
-                + 添加任务
-              </button>
-            </div>
-            {phase.tasks.length === 0 ? (
-              <p className="text-xs text-gray-400 text-center py-6">暂无任务，点击上方添加</p>
-            ) : (
-              phase.tasks.map(task => (
-                <TaskRow
-                  key={task.id}
-                  task={task}
-                  onChange={updates => updateTask(task.id, updates)}
-                  onDelete={() => deleteTask(task.id)}
-                />
-              ))
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 // ─── Main Editor ──────────────────────────────────────────────────────────
 
@@ -340,7 +143,6 @@ export default function TemplateEditor() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<number>(0);
-  const [selectedTask, setSelectedTask] = useState<any>(null);
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
 
@@ -351,10 +153,6 @@ export default function TemplateEditor() {
     setParallelModal({ open: true, sourceId, targetId });
   }, []);
 
-  function updateSelectedPhaseField(key: string, value: any) {
-    if (!selectedPhase) return;
-    updatePhase(selectedPhase.id, { [key]: value });
-  }
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
@@ -533,10 +331,6 @@ export default function TemplateEditor() {
   }, [phases]);
 
   // 兼容旧名：handleConnect （一些 JSX 仍引用此名）
-  const handleConnect = useCallback(async (sourceId: string, targetId: string) => {
-    // delegate to handlePhaseConnect
-    await handlePhaseConnect(sourceId, targetId);
-  }, [handlePhaseConnect]);
 
   // 阶段节点点击回调
   const handlePhaseClick = useCallback((phase: any) => {
@@ -550,33 +344,6 @@ export default function TemplateEditor() {
     window.dispatchEvent(new CustomEvent('flow:reLayout'));
   }, []);
 
-  const handleAddPrerequisite = useCallback(async (prerequisiteId: string) => {
-    if (!selectedTask) return;
-    try {
-      await api.post(`/tasks/${selectedTask.id}/prerequisites`, { prerequisiteId });
-      await fetchTemplate();
-      setSelectedTask((prev: any) => ({
-        ...prev,
-        prerequisites: [ ...(prev?.prerequisites ?? []), { prerequisiteId } ]
-      }));
-    } catch (err: any) {
-      console.error('添加前置任务失败', err);
-    }
-  }, [selectedTask]);
-
-  const handleRemovePrerequisite = useCallback(async (prerequisiteId: string) => {
-    if (!selectedTask) return;
-    try {
-      await api.delete(`/tasks/${selectedTask.id}/prerequisites/${prerequisiteId}`);
-      await fetchTemplate();
-      setSelectedTask((prev: any) => ({
-        ...prev,
-        prerequisites: (prev?.prerequisites ?? []).filter((p: any) => p.prerequisiteId !== prerequisiteId)
-      }));
-    } catch (err: any) {
-      console.error('移除前置任务失败', err);
-    }
-  }, [selectedTask]);
 
   function addPhase() {
     const newPhase: Phase = {
@@ -595,27 +362,11 @@ export default function TemplateEditor() {
     setSelectedPhase(newPhase);
   }
 
-  function handleAddMilestone() {
-    const ms: Milestone = {
-      id: `ms_${Date.now()}`,
-      name: '新里程碑',
-      phaseId: phases[0]?.id || '',
-      offsetDays: 0,
-    };
-    setMilestones(prev => [...prev, ms]);
-  }
-
   function updatePhase(phaseId: string, updates: Partial<Phase>) {
     setPhases(prev => prev.map(p => p.id === phaseId ? { ...p, ...updates } : p));
   }
 
-  function deletePhase(phaseId: string) {
-    setPhases(prev => {
-      const filtered = prev.filter(p => p.id !== phaseId);
-      return filtered.map((p, i) => ({ ...p, order: i + 1 }));
-    });
-    if (selectedPhase?.id === phaseId) setSelectedPhase(null);
-  }
+
 
   function handleDragEnd(event: any) {
     const { active, over } = event;
@@ -667,7 +418,6 @@ export default function TemplateEditor() {
   // selectedPhase is now a state object set directly by clicks
   // const selectedPhase = phases.find(p => p.id === selectedPhaseId) ?? null;
   const totalTasks = phases.reduce((s, p) => s + p.tasks.filter(t => t.enabled).length, 0);
-  const enabledPhases = phases.filter(p => p.enabled).length;
 
   if (loading) return <div className="flex items-center justify-center h-full text-gray-400">加载中...</div>;
   if (!template) return <div className="flex items-center justify-center h-full text-gray-400">模版不存在</div>;
@@ -930,7 +680,7 @@ export default function TemplateEditor() {
                     <div>
                       <label className="text-xs font-medium text-gray-500 mb-1 block">节点类型</label>
                       <div className="flex gap-2">
-                        {[{ value: 'normal', label: '普通', color: 'blue' },{ value: 'milestone', label: '里程碑', color: 'orange' },{ value: 'approval', label: '审批', color: 'purple' }].map(({ value, label, color }) => (
+                        {[{ value: 'normal', label: '普通', color: 'blue' },{ value: 'milestone', label: '里程碑', color: 'orange' },{ value: 'approval', label: '审批', color: 'purple' }].map(({ value, label }) => (
                           <button key={value} onClick={() => updatePhase(selectedPhase.id, { type: value as any })} className={`flex-1 py-1.5 text-xs rounded-md border transition-colors ${selectedPhase.type === value ? 'border-gray-300 font-medium text-gray-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
                             {label}
                           </button>

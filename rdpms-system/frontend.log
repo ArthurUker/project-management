@@ -3,28 +3,131 @@
 > vite --port 5173 --host
 
 
-  VITE v5.4.21  ready in 118 ms
+  VITE v5.4.21  ready in 148 ms
 
   ➜  Local:   http://localhost:5173/
   ➜  Network: http://192.168.0.105:5173/
   ➜  Network: http://198.18.0.1:5173/
-1:09:52 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
-1:09:52 PM [vite] page reload src/components/ProcessFlowDiagram.tsx
-1:09:52 PM [vite] hmr update /src/index.css
-1:09:52 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
-1:09:52 PM [vite] page reload src/components/ProcessFlowDiagram.tsx
-1:09:52 PM [vite] hmr update /src/index.css
-1:09:52 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
-1:09:53 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
-1:09:53 PM [vite] Pre-transform error: /Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/src/pages/TemplateEditor.tsx: Unterminated JSX contents. (653:14)
+8:26:32 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+8:27:35 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+8:28:07 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+8:28:18 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+8:34:04 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+8:34:26 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+8:34:58 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+8:46:00 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+8:46:00 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+8:55:24 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+8:55:36 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+8:55:47 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+8:56:05 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+8:56:17 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+8:57:44 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+8:57:44 PM [vite] Internal server error: /Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/src/components/ProcessFlowDiagram.tsx: Unexpected token, expected "," (529:4)
 
-  651 |             </div>
-  652 |           )}
-> 653 |         </div>
-      |               ^
-  654 |     
-1:09:53 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
-1:09:53 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
-1:10:22 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
-1:11:19 PM [vite] page reload src/components/ProcessFlowDiagram.tsx
-1:11:19 PM [vite] hmr update /src/index.css
+  527 |     </ReactFlow>
+  528 |
+> 529 |     {/* Drop menu (outside ReactFlow but inside provider) */}
+      |     ^
+  530 |     {dropMenuState.visible && (
+  531 |       <>
+  532 |         <div className="fixed inset-0 z-40" onClick={() => setDropMenuState(s => ({ ...s, visible: false }))} />
+  Plugin: vite:react-babel
+  File: /Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/src/components/ProcessFlowDiagram.tsx:529:4
+  527|      </ReactFlow>
+  528|  
+  529|      {/* Drop menu (outside ReactFlow but inside provider) */}
+     |      ^
+  530|      {dropMenuState.visible && (
+  531|        <>
+      at constructor (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:365:19)
+      at TypeScriptParserMixin.raise (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:6599:19)
+      at TypeScriptParserMixin.unexpected (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:6619:16)
+      at TypeScriptParserMixin.expect (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:6899:12)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:11661:14)
+      at TypeScriptParserMixin.parseExprAtom (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:11331:23)
+      at TypeScriptParserMixin.parseExprAtom (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:4764:20)
+      at TypeScriptParserMixin.parseExprSubscripts (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:10831:21)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:9786:20)
+      at TypeScriptParserMixin.parseExpressionBase (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:10784:23)
+      at /Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:10780:39
+      at TypeScriptParserMixin.allowInAnd (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:12421:16)
+      at TypeScriptParserMixin.parseExpression (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:10780:17)
+      at TypeScriptParserMixin.parseReturnStatement (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:13142:28)
+      at TypeScriptParserMixin.parseStatementContent (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:12798:21)
+      at TypeScriptParserMixin.parseStatementContent (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:9508:18)
+      at TypeScriptParserMixin.parseStatementLike (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+      at TypeScriptParserMixin.parseStatementListItem (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:12747:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:13316:61)
+      at TypeScriptParserMixin.parseBlockBody (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+      at TypeScriptParserMixin.parseBlock (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:13297:10)
+      at TypeScriptParserMixin.parseFunctionBody (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:12100:24)
+      at TypeScriptParserMixin.parseArrowExpression (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:12075:10)
+      at TypeScriptParserMixin.parseParenAndDistinguishExpression (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:11687:12)
+      at TypeScriptParserMixin.parseExprAtom (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:11331:23)
+      at TypeScriptParserMixin.parseExprAtom (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:4764:20)
+      at TypeScriptParserMixin.parseExprSubscripts (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:11081:23)
+      at TypeScriptParserMixin.parseUpdate (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:11066:21)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:11046:23)
+      at TypeScriptParserMixin.parseMaybeUnary (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:9837:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:10899:61)
+      at TypeScriptParserMixin.parseExprOps (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:10904:23)
+      at TypeScriptParserMixin.parseMaybeConditional (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:10881:23)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:10831:21)
+      at TypeScriptParserMixin.parseMaybeAssign (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:9786:20)
+      at /Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:10800:39
+      at TypeScriptParserMixin.allowInAnd (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:12421:16)
+      at TypeScriptParserMixin.parseMaybeAssignAllowIn (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:10800:17)
+      at TypeScriptParserMixin.parseVar (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:13384:91)
+      at TypeScriptParserMixin.parseVarStatement (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:13230:10)
+      at TypeScriptParserMixin.parseVarStatement (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:9408:31)
+      at TypeScriptParserMixin.parseStatementContent (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:12851:23)
+      at TypeScriptParserMixin.parseStatementContent (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/@babel/parser/lib/index.js:9508:18)
+9:00:05 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+9:00:05 PM [vite] Pre-transform error: /Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/src/components/ProcessFlowDiagram.tsx: Unexpected token, expected "," (529:4)
+
+  527 |     </ReactFlow>
+  528 |
+> 529 |     {/* Drop menu (outside ReactFlow but inside provider) */}
+      |     ^
+  530 |     {dropMenuState.visible && (
+  531 |       <>
+  532 |         <div className="fixed inset-0 z-40" onClick={() => setDropMenuState(s => ({ ...s, visible: false }))} />
+9:00:37 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+9:00:37 PM [vite] Pre-transform error: /Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/src/components/ProcessFlowDiagram.tsx: Unexpected token, expected "," (529:4)
+
+  527 |     </ReactFlow>
+  528 |
+> 529 |     {/* Drop menu (outside ReactFlow but inside provider) */}
+      |     ^
+  530 |     {dropMenuState.visible && (
+  531 |       <>
+  532 |         <div className="fixed inset-0 z-40" onClick={() => setDropMenuState(s => ({ ...s, visible: false }))} />
+9:02:39 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+9:09:43 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+9:10:07 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+9:13:34 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+9:13:44 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+9:13:58 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+9:14:08 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+9:14:15 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+9:15:00 PM [vite] hmr update /src/pages/Projects.tsx, /src/index.css
+9:15:38 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+9:18:12 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+9:19:01 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+9:19:07 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+9:19:12 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+9:19:22 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+9:19:33 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+9:19:41 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+9:21:19 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+9:21:27 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+9:21:34 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+9:21:39 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
