@@ -336,7 +336,7 @@ export default function TemplateEditor() {
     );
   }, [phases]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
+  const [selectedPhase, setSelectedPhase] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<number>(0);
@@ -430,9 +430,7 @@ export default function TemplateEditor() {
 
   // 阶段节点点击回调
   const handlePhaseClick = useCallback((phase: any) => {
-    setSelectedPhaseId(phase.id);
-    // set selectedPhase for right panel
-    try { setSelectedPhase(phase); } catch (e) { /* noop if not available */ }
+    setSelectedPhase(phase);
     setRightPanelOpen(true);
     setActiveTab(0);
   }, []);
@@ -484,7 +482,7 @@ export default function TemplateEditor() {
     };
     const updated = [...phases, newPhase];
     setPhases(updated);
-    setSelectedPhaseId(newPhase.id);
+    setSelectedPhase(newPhase);
   }
 
   function handleAddMilestone() {
@@ -506,7 +504,7 @@ export default function TemplateEditor() {
       const filtered = prev.filter(p => p.id !== phaseId);
       return filtered.map((p, i) => ({ ...p, order: i + 1 }));
     });
-    if (selectedPhaseId === phaseId) setSelectedPhaseId(null);
+    if (selectedPhase?.id === phaseId) setSelectedPhase(null);
   }
 
   function handleDragEnd(event: any) {
@@ -556,7 +554,8 @@ export default function TemplateEditor() {
     }
   }
 
-  const selectedPhase = phases.find(p => p.id === selectedPhaseId) ?? null;
+  // selectedPhase is now a state object set directly by clicks
+  // const selectedPhase = phases.find(p => p.id === selectedPhaseId) ?? null;
   const totalTasks = phases.reduce((s, p) => s + p.tasks.filter(t => t.enabled).length, 0);
   const enabledPhases = phases.filter(p => p.enabled).length;
 
@@ -630,8 +629,8 @@ export default function TemplateEditor() {
                         <PhaseNode
                           key={phase.id}
                           phase={phase}
-                          isSelected={selectedPhaseId === phase.id}
-                          onClick={() => { setSelectedPhaseId(phase.id); setRightPanelOpen(true); setActiveTab(0); }}
+                          isSelected={selectedPhase?.id === phase.id}
+                          onClick={() => { setSelectedPhase(phase); setRightPanelOpen(true); setActiveTab(0); }}
                         />
                       ))}
                     </SortableContext>
@@ -753,7 +752,7 @@ export default function TemplateEditor() {
 
         {/* ── 右侧收起/展开按钮（悬浮在面板边缘） ── */}
         <button
-          onClick={() => { setRightPanelOpen(v => { const next = !v; if (!next) { setSelectedPhaseId(null); /* clear selection on close */ } return next; }); }}
+          onClick={() => { setRightPanelOpen(v => { const next = !v; if (!next) { setSelectedPhase(null); /* clear selection on close */ } return next; }); }}
           className={[ 
             'absolute z-20 top-1/2 -translate-y-1/2',
             'flex items-center justify-center',
@@ -796,7 +795,7 @@ export default function TemplateEditor() {
             <div className="flex flex-col h-full w-80">
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                 <h3 className="text-sm font-semibold text-gray-800 truncate">{selectedPhase.name}</h3>
-                <button onClick={() => { setRightPanelOpen(false); setSelectedPhaseId(null); }} className="p-1 rounded hover:bg-gray-100 text-gray-400">✕</button>
+                <button onClick={() => { setRightPanelOpen(false); setSelectedPhase(null); }} className="p-1 rounded hover:bg-gray-100 text-gray-400">✕</button>
               </div>
 
               <div className="flex border-b border-gray-100">
