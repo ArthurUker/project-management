@@ -328,6 +328,10 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
 
     // DEBUG: 输出 phases 的 nextPhaseIds 以便诊断（浏览器 Console）
     console.log('[FlowDiagram] phases nextPhaseIds:', phases.map(p => ({ name: p.name, nextPhaseIds: p.nextPhaseIds })));
+    // 兼容旧的诊断标识，确保搜索 '[DEBUG] phases with nextPhaseIds' 能找到输出
+    console.log('[DEBUG] phases with nextPhaseIds:',
+      phases.map(p => ({ name: p.name, order: p.order, nextPhaseIds: p.nextPhaseIds ?? [] }))
+    );
 
     // 判断是否有任何阶段配置了显式流转
     const hasExplicitEdges = phases.some(

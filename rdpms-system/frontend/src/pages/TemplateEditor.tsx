@@ -242,6 +242,9 @@ export default function TemplateEditor() {
 
       setPhases(loaded.sort((a, b) => a.order - b.order));
 
+      console.log('[DEBUG] normalized phases:', (loaded || []).map(p => ({ name: p.name, nextPhaseIds: p.nextPhaseIds })));
+      console.log('[DEBUG] raw API response (template):', res);
+
       const contentObj = (() => {
         const c = (res as any).content ?? (res as any).data?.content;
         if (typeof c === 'string') {
