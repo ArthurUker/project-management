@@ -49,28 +49,48 @@ interface ProcessFlowDiagramProps {
 }
 
 // ─── Dagre 布局 ───────────────────────────────────────────────────────────────
+const NODE_WIDTH = 160;
+const NODE_HEIGHT = 60;
+const RANK_SEP = 80;
+const NODE_SEP = 50;
+
 const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
-  const g = new dagre.graphlib.Graph();
-  g.setDefaultEdgeLabel(() => ({}));
-  g.setGraph({
-    rankdir: 'LR',   // 左→右
-    nodesep: 60,     // 垂直间距（并行节点之间）
-    ranksep: 120,    // 水平间距（层级之间）
-    marginx: 60,
-    marginy: 60,
+  const dagreGraph = new dagre.graphlib.Graph();
+  dagreGraph.setDefaultEdgeLabel(() => ({}));
+  dagreGraph.setGraph({
+    rankdir: 'LR',
+    ranksep: RANK_SEP,
+    nodesep: NODE_SEP,
+    marginx: 40,
+    marginy: 40,
   });
 
-  nodes.forEach((n) => g.setNode(n.id, { width: 150, height: 64 }));
-  edges.forEach((e) => g.setEdge(e.source, e.target));
-  dagre.layout(g);
+  // 注册节点（使用统一尺寸）
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
+  });
 
-  return {
-    nodes: nodes.map((n) => {
-      const { x, y } = g.node(n.id);
-      return { ...n, position: { x: x - 75, y: y - 32 } };
-    }),
-    edges,
-  };
+  // 注册边
+  edges.forEach((edge) => {
+    try {
+      dagreGraph.setEdge(edge.source, edge.target);
+    } catch (e) {
+      // ignore invalid edges
+    }
+  });
+
+  // 执行布局
+  dagre.layout(dagreGraph as any);
+
+  const layoutedNodes: Node[] = nodes.map((node) => {
+    const pos = dagreGraph.node(node.id);
+    return {
+      ...node,
+      position: { x: pos.x - NODE_WIDTH / 2, y: pos.y - NODE_HEIGHT / 2 },
+    };
+  });
+
+  return { nodes: layoutedNodes, edges };
 };
 
 // ─── 阶段节点组件 ─────────────────────────────────────────────────────────────
@@ -247,13 +267,11 @@ const edgeTypes = { custom: CustomEdge };
 
 // helper to build edge options including data callback for adding parallel
 const buildEdgeStyle = (onAddParallel: (s: string, t: string) => void) => ({
-  type: 'custom' as const,
+  type: 'smoothstep' as const,
   style: { stroke: '#93C5FD', strokeWidth: 2 },
   markerEnd: {
     type: MarkerType.ArrowClosed,
     color: '#93C5FD',
-    width: 16,
-    height: 16,
   },
   data: { onAddParallel },
 });
@@ -333,18 +351,16 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
           if (!targetExists) return;
 
           rawEdges.push({
-            id: `${p.id}->${nextId}`,
+            id: `e-${p.id}-${nextId}`,
             source: p.id,
             target: nextId,
-            type: 'custom',
+            type: 'smoothstep',
+            animated: false,
             style: { stroke: '#93C5FD', strokeWidth: 2 },
             markerEnd: {
               type: MarkerType.ArrowClosed,
               color: '#93C5FD',
-              width: 16,
-              height: 16,
             },
-            data: { onAddParallel: onAddParallel ?? (() => {}) },
           });
         });
       });
@@ -353,18 +369,16 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       const sorted = [...phases].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
       for (let i = 0; i < sorted.length - 1; i++) {
         rawEdges.push({
-          id: `${sorted[i].id}->${sorted[i + 1].id}`,
+          id: `e-${sorted[i].id}-${sorted[i + 1].id}`,
           source: sorted[i].id,
           target: sorted[i + 1].id,
-          type: 'custom',
+          type: 'smoothstep',
+          animated: false,
           style: { stroke: '#93C5FD', strokeWidth: 2 },
           markerEnd: {
             type: MarkerType.ArrowClosed,
             color: '#93C5FD',
-            width: 16,
-            height: 16,
           },
-          data: { onAddParallel: onAddParallel ?? (() => {}) },
         });
       }
     }
