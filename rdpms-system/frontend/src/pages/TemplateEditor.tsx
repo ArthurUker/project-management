@@ -479,17 +479,27 @@ export default function TemplateEditor() {
   // 拖拽放置操作：设为并行（来自画布的 drop menu）
   const handleDropParallel = useCallback(async (draggedPhaseId: string, targetPhaseId: string) => {
     try {
-      // 找到指向 target 的前置阶段（第一个匹配）
+      // 找到 target 的前置阶段（即那些指向 target 的阶段），取第一个作为分叉点
       const prevPhase = phases.find(p => (p.nextPhaseIds ?? []).includes(targetPhaseId));
+
+      // ① 前置 -> dragged（分叉）
       if (prevPhase) {
         await api.post(`/phases/${prevPhase.id}/transitions`, { toPhaseId: draggedPhaseId });
       }
-      // dragged -> target 的后继（与 target 并行后应指向同一汇合节点）
+
+      // ② dragged -> target 的后继（汇合点），与 target 共享汇合后继
       const targetPhase = phases.find(p => p.id === targetPhaseId);
-      const targetNextIds = targetPhase?.nextPhaseIds ?? [];
-      if (targetNextIds.length > 0) {
-        await api.post(`/phases/${draggedPhaseId}/transitions`, { toPhaseId: targetNextIds[0] });
+      const mergeNodeId = (targetPhase?.nextPhaseIds ?? [])[0];
+      if (mergeNodeId) {
+        await api.post(`/phases/${draggedPhaseId}/transitions`, { toPhaseId: mergeNodeId }).catch(() => {});
       }
+
+      // ③ 如果 dragged 原来有前置，将其断开（避免保留旧串行关系），但不要删除与新 prevPhase 相同的引用
+      const draggedPrevPhase = phases.find(p => (p.nextPhaseIds ?? []).includes(draggedPhaseId));
+      if (draggedPrevPhase && draggedPrevPhase.id !== prevPhase?.id) {
+        await api.delete(`/phases/${draggedPrevPhase.id}/transitions/${draggedPhaseId}`).catch(() => {});
+      }
+
       await fetchTemplate();
       console.log('已设为并行阶段');
     } catch (err: any) {

@@ -455,11 +455,11 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     setDragOverNodeId(closestId);
   }, [nodes]);
 
-  const handleNodeDragStop = useCallback((_: any, draggedNode: Node) => {
+  const handleNodeDragStop = useCallback((event: React.MouseEvent, draggedNode: Node) => {
     if (dragOverNodeId) {
-      // approximate screen coords by node position
-      const x = (draggedNode.position?.x || 0) + 150;
-      const y = (draggedNode.position?.y || 0) + 40;
+      // Use mouse screen coordinates for menu placement (clientX/clientY)
+      const x = (event?.clientX) ?? 0;
+      const y = (event?.clientY) ?? 0;
       setDropMenuState({ visible: true, draggedPhaseId: draggedNode.id, targetPhaseId: dragOverNodeId, x, y });
     }
     setDragOverNodeId(null);
