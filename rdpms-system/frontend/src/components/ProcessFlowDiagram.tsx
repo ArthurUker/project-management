@@ -202,12 +202,12 @@ const CustomEdge: React.FC<EdgeProps> = ({
     targetX,
     targetY,
     targetPosition,
+    borderRadius: 8,
   });
-
-  const hitAreaPath = edgePath;
 
   return (
     <>
+      {/* smoothstep path rendered by BaseEdge */}
       <BaseEdge
         id={id}
         path={edgePath}
@@ -220,8 +220,9 @@ const CustomEdge: React.FC<EdgeProps> = ({
         markerEnd={markerEnd}
       />
 
+      {/* hit area for hover */}
       <path
-        d={hitAreaPath}
+        d={edgePath}
         fill="none"
         stroke="transparent"
         strokeWidth={20}
@@ -230,6 +231,7 @@ const CustomEdge: React.FC<EdgeProps> = ({
         style={{ cursor: 'pointer' }}
       />
 
+      {/* overlay '+' button at midpoint */}
       <EdgeLabelRenderer>
         <div
           style={{
@@ -237,25 +239,21 @@ const CustomEdge: React.FC<EdgeProps> = ({
             transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
             pointerEvents: 'all',
           }}
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
         >
-          {hovered && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                const edgeData = data as CustomEdgeData;
-                const parts = (id || '').split('->');
-                const sourceId = parts[0] || '';
-                const targetId = parts[1] || '';
-                edgeData?.onAddParallel?.(sourceId, targetId);
-              }}
-              className={"w-6 h-6 rounded-full bg-white border-2 border-blue-400 text-blue-500 text-sm font-bold flex items-center justify-center shadow-md hover:bg-blue-50 hover:border-blue-500 hover:shadow-lg transition-all duration-150 cursor-pointer select-none"}
-              title="在此处添加并行阶段"
-            >
-              +
-            </button>
-          )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              // id format: e-<source>-<target>
+              const parts = (id || '').split('-');
+              const sourceId = parts[1] || '';
+              const targetId = parts[2] || '';
+              (data as any)?.onAddParallel?.(sourceId, targetId);
+            }}
+            className={"w-6 h-6 rounded-full bg-white border-2 border-blue-400 text-blue-500 text-sm font-bold flex items-center justify-center shadow-md hover:bg-blue-50 hover:border-blue-500 hover:shadow-lg transition-all duration-150 cursor-pointer select-none"}
+            title="在此处添加并行阶段"
+          >
+            +
+          </button>
         </div>
       </EdgeLabelRenderer>
     </>
@@ -354,13 +352,14 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
             id: `e-${p.id}-${nextId}`,
             source: p.id,
             target: nextId,
-            type: 'smoothstep',
+            type: 'custom',
             animated: false,
             style: { stroke: '#93C5FD', strokeWidth: 2 },
             markerEnd: {
               type: MarkerType.ArrowClosed,
               color: '#93C5FD',
             },
+            data: { onAddParallel: onAddParallel ?? (() => {}) },
           });
         });
       });
@@ -416,13 +415,15 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       if (hasExplicitEdges) {
         phases.forEach((p) => {
           (p.nextPhaseIds ?? []).forEach((nextId) => {
-            rawEdges.push({ id: `${p.id}->${nextId}`, source: p.id, target: nextId, ...edgeOptions });
+            rawEdges.push({ id: `e-${p.id}-${nextId}`, source: p.id, target: nextId, type: 'custom', animated: false, style: { stroke: '#93C5FD', strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: '#93C5FD' }, data: { onAddParallel: onAddParallel ?? (() => {}) } });
           });
         });
       } else {
         const sorted = [...phases].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         for (let i = 0; i < sorted.length - 1; i++) {
-          rawEdges.push({ id: `${sorted[i].id}->${sorted[i + 1].id}`, source: sorted[i].id, target: sorted[i + 1].id, ...edgeOptions });
+          if (!rawEdges.find(e => e.source === sorted[i].id)) {
+          rawEdges.push({ id: `e-${sorted[i].id}-${sorted[i + 1].id}`, source: sorted[i].id, target: sorted[i + 1].id, type: 'custom', animated: false, style: { stroke: '#93C5FD', strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: '#93C5FD' }, data: { onAddParallel: onAddParallel ?? (() => {}) } });
+        }
         }
       }
 
