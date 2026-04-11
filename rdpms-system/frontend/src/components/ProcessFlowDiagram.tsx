@@ -287,8 +287,6 @@ const CustomEdge: React.FC<EdgeProps> = ({
 
 const edgeTypes = { custom: CustomEdge };
 
-const edgeTypes = { custom: CustomEdge };
-
 
 // helper to build edge options including data callback for adding parallel
 const buildEdgeStyle = (onAddParallel: (s: string, t: string) => void) => ({
@@ -535,7 +533,6 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       onEdgesChange={onEdgesChange}
       deleteKeyCode="Delete"
       edgesFocusable={true}
-      edgesUpdatable={true}
       onConnect={handleConnect}
       onNodeDrag={handleNodeDrag}
       onNodeDragStop={handleNodeDragStop}
