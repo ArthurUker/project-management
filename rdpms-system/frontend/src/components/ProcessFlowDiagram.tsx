@@ -308,6 +308,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
   onPhaseClick,
   onAddParallel,
   onEdgeDelete,
+  onEdgeReconnect,
   onDropParallel,
   onDropInsertAfter,
   readonly = false,
