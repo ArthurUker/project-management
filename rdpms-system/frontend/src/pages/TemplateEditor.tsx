@@ -422,6 +422,59 @@ export default function TemplateEditor() {
     }
   }, []);
 
+  // 在右侧面板中添加后继阶段（并行）
+  const handleAddTransition = useCallback(
+    async (fromId: string, toId: string) => {
+      try {
+        await api.post(`/phases/${fromId}/transitions`, { toPhaseId: toId });
+        await fetchTemplate();
+        setSelectedPhase((prev: any) =>
+          prev
+            ? { ...prev, nextPhaseIds: [...(prev.nextPhaseIds ?? []), toId] }
+            : prev
+        );
+        console.log('后继阶段已添加');
+      } catch (err: any) {
+        console.error('添加后继阶段失败', err);
+        alert(err?.response?.data?.error ?? '添加失败');
+      }
+    },
+    []
+  );
+
+  // 右侧面板：删除后继阶段
+  const handleRemoveTransition = useCallback(
+    async (fromId: string, toId: string) => {
+      try {
+        await api.delete(`/phases/${fromId}/transitions/${toId}`);
+        await fetchTemplate();
+        setSelectedPhase((prev: any) =>
+          prev ? { ...prev, nextPhaseIds: (prev.nextPhaseIds ?? []).filter((id: string) => id !== toId) } : prev
+        );
+        console.log('后继阶段已移除');
+      } catch (err: any) {
+        console.error('移除后继阶段失败', err);
+        alert('移除失败');
+      }
+    },
+    []
+  );
+
+  // 流程图上删除连线时调用（同步后端）
+  const handleEdgeDelete = useCallback(
+    async (fromId: string, toId: string) => {
+      try {
+        await api.delete(`/phases/${fromId}/transitions/${toId}`);
+        await fetchTemplate();
+        console.log('连线已删除');
+      } catch (err: any) {
+        console.error('删除连线失败', err);
+        alert('删除失败');
+      }
+    },
+    []
+  );
+
   // 兼容旧名：handleConnect （一些 JSX 仍引用此名）
   const handleConnect = useCallback(async (sourceId: string, targetId: string) => {
     // delegate to handlePhaseConnect
@@ -704,6 +757,7 @@ export default function TemplateEditor() {
                 onPhaseConnect={handlePhaseConnect}
                 onPhaseClick={handlePhaseClick}
                 onAddParallel={handleAddParallel}
+                onEdgeDelete={handleEdgeDelete}
               />
             </div>
           ) : (
@@ -848,50 +902,114 @@ export default function TemplateEditor() {
                   </>
                 )}
 
-                {activeTab === 1 && (
-                  <div className="space-y-5">
+                {activeTab === 1 && selectedPhase && (
+                  <div className="p-4 space-y-6">
 
-                    {/* 前置任务 */}
+                    {/* ── 前置阶段（流入） ── */}
                     <div>
-                      <label className="text-xs font-semibold text-gray-500 mb-2 block">
-                        前置任务
-                        <span className="ml-1 text-gray-400 font-normal">
-                          完成后当前任务才可开始
-                        </span>
-                      </label>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                          前置阶段
+                        </label>
+                        <span className="text-[10px] text-gray-400">完成后本阶段才可开始</span>
+                      </div>
 
-                      {/* 已配置列表 */}
+                      {/* 已有前置阶段列表 */}
                       <div className="space-y-1.5 mb-2">
-                        {(selectedTask?.prerequisites ?? []).length === 0 ? (
-                          <div className="text-xs text-gray-300 py-2 text-center
-                                          border border-dashed border-gray-200 rounded-md">
-                            暂未配置前置任务
+                        {(() => {
+                          // 找出所有以 selectedPhase 为 target 的阶段
+                          const prevPhases = phases.filter(p =>
+                            (p.nextPhaseIds ?? []).includes(selectedPhase.id)
+                          );
+                          return prevPhases.length === 0 ? (
+                            <div className="text-xs text-gray-300 py-3 text-center
+                                            border border-dashed border-gray-200 rounded-lg">
+                              暂无前置阶段（当前为起始节点）
+                            </div>
+                          ) : (
+                            prevPhases.map(p => (
+                              <div key={p.id}
+                                className="flex items-center justify-between px-3 py-2
+                                           bg-gray-50 border border-gray-200 rounded-lg group"
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="w-5 h-5 rounded-full bg-gray-200 text-gray-500
+                                                   text-[10px] font-bold flex items-center
+                                                   justify-center flex-shrink-0">
+                                    {p.order}
+                                  </span>
+                                  <span className="text-xs text-gray-600 truncate">{p.name}</span>
+                                </div>
+                                <span className="text-[10px] text-gray-400 ml-2 flex-shrink-0">
+                                  {p.tasks?.length ?? 0} 任务
+                                </span>
+                              </div>
+                            ))
+                          );
+                        })()}
+                      </div>
+                    </div>
+
+                    <div className="border-t border-gray-100" />
+
+                    {/* ── 后继阶段（流出，支持并行） ── */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                          后继阶段
+                        </label>
+                        <span className="text-[10px] text-blue-400 font-medium">
+                          可添加多个（并行）
+                        </span>
+                      </div>
+
+                      {/* 已配置的后继阶段 */}
+                      <div className="space-y-1.5 mb-2">
+                        {(selectedPhase.nextPhaseIds ?? []).length === 0 ? (
+                          <div className="text-xs text-gray-300 py-3 text-center
+                                          border border-dashed border-gray-200 rounded-lg">
+                            暂无后继阶段（当前为终止节点）
                           </div>
                         ) : (
-                          (selectedTask?.prerequisites ?? []).map((pre: any) => {
-                            const preTask = allTasks.find(t => t.id === pre.prerequisiteId);
+                          (selectedPhase.nextPhaseIds ?? []).map((nextId: string) => {
+                            const nextPhase = phases.find(p => p.id === nextId);
                             return (
-                              <div
-                                key={pre.prerequisiteId}
+                              <div key={nextId}
                                 className="flex items-center justify-between px-3 py-2
-                                           bg-blue-50 border border-blue-100 rounded-md
-                                           group"
+                                           bg-blue-50 border border-blue-100 rounded-lg group"
                               >
-                                <div className="min-w-0">
-                                  <div className="text-xs font-medium text-blue-700 truncate">
-                                    {preTask?.name ?? pre.prerequisiteId}
-                                  </div>
-                                  <div className="text-[10px] text-blue-400 mt-0.5">
-                                    {preTask?.phaseName ?? '未知阶段'}
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="w-5 h-5 rounded-full bg-blue-200 text-blue-600
+                                                   text-[10px] font-bold flex items-center
+                                                   justify-center flex-shrink-0">
+                                    {nextPhase?.order ?? '?'}
+                                  </span>
+                                  <div className="min-w-0">
+                                    <div className="text-xs font-medium text-blue-700 truncate">
+                                      {nextPhase?.name ?? nextId}
+                                    </div>
+                                    <div className="text-[10px] text-blue-400">
+                                      {nextPhase?.tasks?.length ?? 0} 任务
+                                      {(nextPhase?.totalDays ?? 0) > 0 &&
+                                        ` · ~${nextPhase?.totalDays} 天`}
+                                    </div>
                                   </div>
                                 </div>
+                                {/* 删除按钮 */}
                                 <button
-                                  onClick={() => handleRemovePrerequisite(pre.prerequisiteId)}
-                                  className="ml-2 flex-shrink-0 text-blue-300
-                                             hover:text-red-400 transition-colors
+                                  onClick={() => handleRemoveTransition(selectedPhase.id, nextId)}
+                                  className="ml-2 flex-shrink-0 w-6 h-6 rounded-full
+                                             flex items-center justify-center
+                                             text-blue-300 hover:text-red-400
+                                             hover:bg-red-50 transition-colors
                                              opacity-0 group-hover:opacity-100"
+                                  title="移除此流转"
                                 >
-                                  <X size={12} />
+                                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                    <path d="M2 2l6 6M8 2l-6 6"
+                                      stroke="currentColor" strokeWidth="1.8"
+                                      strokeLinecap="round"/>
+                                  </svg>
                                 </button>
                               </div>
                             );
@@ -899,68 +1017,51 @@ export default function TemplateEditor() {
                         )}
                       </div>
 
-                      {/* 添加前置任务下拉 */}
+                      {/* 添加后继阶段下拉 */}
                       <select
-                        className="w-full text-xs border border-gray-200 rounded-md
-                                   px-3 py-2 text-gray-600 bg-white
-                                   focus:outline-none focus:ring-2 focus:ring-blue-200"
+                        className="w-full text-xs border border-gray-200 rounded-lg
+                                   px-3 py-2.5 text-gray-600 bg-white
+                                   focus:outline-none focus:ring-2 focus:ring-blue-200
+                                   cursor-pointer"
                         value=""
                         onChange={(e) => {
-                          if (e.target.value) handleAddPrerequisite(e.target.value);
+                          if (e.target.value) {
+                            handleAddTransition(selectedPhase.id, e.target.value);
+                          }
                           e.target.value = '';
                         }}
                       >
-                        <option value="">+ 选择前置任务...</option>
-                        {allTasks
-                          .filter(t =>
-                            t.id !== selectedTask?.id &&
-                            !(selectedTask?.prerequisites ?? [])
-                              .some((p: any) => p.prerequisiteId === t.id)
+                        <option value="">＋ 添加后继阶段（可并行）...</option>
+                        {phases
+                          .filter(p =>
+                            p.id !== selectedPhase.id &&
+                            !(selectedPhase.nextPhaseIds ?? []).includes(p.id)
                           )
-                          .map(t => (
-                            <option key={t.id} value={t.id}>
-                              [{t.phaseName}] {t.name}
+                          .map(p => (
+                            <option key={p.id} value={p.id}>
+                              [{p.order}] {p.name}
+                              {(p.tasks?.length ?? 0) > 0 ? ` ({p.tasks.length}任务)` : ''}
                             </option>
                           ))
                         }
                       </select>
-                    </div>
 
-                    {/* 分割线 */}
-                    <div className="border-t border-gray-100" />
-
-                    {/* 后续任务（只读） */}
-                    <div>
-                      <label className="text-xs font-semibold text-gray-500 mb-2 block">
-                        后续任务
-                        <span className="ml-1 text-gray-400 font-normal">只读</span>
-                      </label>
-                      {(() => {
-                        const dependents = allTasks.filter(t =>
-                          (t.prerequisites ?? []).some((p: any) => p.prerequisiteId === selectedTask?.id)
-                        );
-                        return dependents.length === 0 ? (
-                          <div className="text-xs text-gray-300 py-2 text-center
-                                          border border-dashed border-gray-200 rounded-md">
-                            暂无后续任务
-                          </div>
-                        ) : (
-                          <div className="space-y-1.5">
-                            {dependents.map(t => (
-                              <div
-                                key={t.id}
-                                className="px-3 py-2 bg-gray-50 border border-gray-100
-                                           rounded-md"
-                              >
-                                <div className="text-xs text-gray-600 truncate">{t.name}</div>
-                                <div className="text-[10px] text-gray-400 mt-0.5">
-                                  {t.phaseName}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })()}
+                      {/* 并行说明 */}
+                      {(selectedPhase.nextPhaseIds ?? []).length > 1 && (
+                        <div className="mt-2 flex items-center gap-1.5 px-3 py-2
+                                        bg-amber-50 border border-amber-200 rounded-lg">
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"
+                               className="flex-shrink-0 text-amber-500">
+                            <circle cx="7" cy="7" r="6" stroke="currentColor" strokeWidth="1.5"/>
+                            <path d="M7 4v3.5M7 9.5v.5"
+                              stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                          </svg>
+                          <span className="text-[11px] text-amber-600">
+                            已配置 {(selectedPhase.nextPhaseIds ?? []).length} 个并行后继阶段，
+                            流程图将显示分叉连线
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                   </div>

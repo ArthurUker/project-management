@@ -42,6 +42,7 @@ interface ProcessFlowDiagramProps {
   onPhaseConnect?: (sourceId: string, targetId: string) => void;
   onPhaseClick?: (phase: Phase) => void;
   onAddParallel?: (sourceId: string, targetId: string) => void;
+  onEdgeDelete?: (sourceId: string, targetId: string) => void;
   readonly?: boolean;
 }
 
@@ -51,8 +52,8 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
   g.setDefaultEdgeLabel(() => ({}));
   g.setGraph({
     rankdir: 'LR',   // 左→右
-    nodesep: 50,     // 垂直间距
-    ranksep: 100,    // 水平间距
+    nodesep: 60,     // 垂直间距（并行节点之间）
+    ranksep: 120,    // 水平间距（层级之间）
     marginx: 60,
     marginy: 60,
   });
@@ -264,6 +265,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
   onPhaseConnect,
   onPhaseClick,
   onAddParallel,
+  onEdgeDelete,
   readonly = false,
 }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -294,32 +296,55 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       },
     }));
 
-    // 构建边：优先用 nextPhaseIds，否则按 order 线性连接
+    // 构建边：优先用 nextPhaseIds，回退到按 order 线性连接
     const rawEdges: Edge[] = [];
+
+    // 判断是否有任何阶段配置了显式流转
     const hasExplicitEdges = phases.some(
-      (p) => (p.nextPhaseIds ?? []).length > 0
+      (p) => Array.isArray(p.nextPhaseIds) && p.nextPhaseIds.length > 0
     );
 
     if (hasExplicitEdges) {
+      // 使用显式流转关系（支持并行分叉）
       phases.forEach((p) => {
-        (p.nextPhaseIds ?? []).forEach((nextId) => {
+        (p.nextPhaseIds ?? []).forEach((nextId: string) => {
+          // 确认目标阶段存在
+          const targetExists = phases.some((ph) => ph.id === nextId);
+          if (!targetExists) return;
+
           rawEdges.push({
             id: `${p.id}->${nextId}`,
             source: p.id,
             target: nextId,
-            ...edgeOptions,
+            type: 'custom',
+            style: { stroke: '#93C5FD', strokeWidth: 2 },
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+              color: '#93C5FD',
+              width: 16,
+              height: 16,
+            },
+            data: { onAddParallel: onAddParallel ?? (() => {}) },
           });
         });
       });
     } else {
-      // 按 order 排序后线性连接（默认无并行）
+      // 回退：按 order 排序后线性连接
       const sorted = [...phases].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
       for (let i = 0; i < sorted.length - 1; i++) {
         rawEdges.push({
           id: `${sorted[i].id}->${sorted[i + 1].id}`,
           source: sorted[i].id,
           target: sorted[i + 1].id,
-          ...edgeOptions,
+          type: 'custom',
+          style: { stroke: '#93C5FD', strokeWidth: 2 },
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: '#93C5FD',
+            width: 16,
+            height: 16,
+          },
+          data: { onAddParallel: onAddParallel ?? (() => {}) },
         });
       }
     }
@@ -418,6 +443,14 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       nodesConnectable={!readonly}
       elementsSelectable
       defaultEdgeOptions={edgeOptions}
+      onEdgesDelete={(delEdges) => {
+        delEdges.forEach(e => {
+          const parts = (e.id || '').split('->');
+          const sourceId = parts[0] || '';
+          const targetId = parts[1] || '';
+          if (sourceId && targetId && onEdgeDelete) onEdgeDelete(sourceId, targetId);
+        });
+      }}
       edgeTypes={edgeTypes}
       className="bg-gray-50"
     >
