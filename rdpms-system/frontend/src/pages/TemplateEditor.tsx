@@ -631,7 +631,7 @@ export default function TemplateEditor() {
                           key={phase.id}
                           phase={phase}
                           isSelected={selectedPhaseId === phase.id}
-                          onClick={() => setSelectedPhaseId(phase.id)}
+                          onClick={() => { setSelectedPhaseId(phase.id); setRightPanelOpen(true); setActiveTab(0); }}
                         />
                       ))}
                     </SortableContext>
