@@ -235,18 +235,25 @@ const CustomEdge: React.FC<EdgeProps> = ({
         markerEnd={markerEnd}
       />
 
-      {/* hit area for hover */}
+      {/* interaction area: transparent wide path for easier clicks (kept for pointer interactions) */}
       <path
         d={edgePath}
         fill="none"
         stroke="transparent"
         strokeWidth={20}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        style={{ cursor: 'pointer' }}
+        className="react-flow__edge-interaction"
       />
 
-      {/* overlay buttons at midpoint */}
+      {/* visible edge path */}
+      <path
+        d={edgePath}
+        fill="none"
+        stroke={selected ? '#3b82f6' : (style?.stroke ?? '#93C5FD')}
+        strokeWidth={selected ? 2 : (style?.strokeWidth ?? 1.5)}
+        className="react-flow__edge-path"
+      />
+
+      {/* overlay buttons at midpoint (show only when selected) */}
       <EdgeLabelRenderer>
         <div
           style={{
@@ -271,9 +278,10 @@ const CustomEdge: React.FC<EdgeProps> = ({
             +
           </button>
 
-          {(hovered || selected) && (
+          {selected && (
             <button
               onClick={handleDelete}
+              onContextMenu={(e) => { e.preventDefault(); handleDelete(e as any); }}
               className={"w-6 h-6 rounded-full bg-white border-2 border-red-300 text-red-500 text-sm font-bold flex items-center justify-center shadow-md hover:bg-red-50 hover:border-red-400 hover:shadow-lg transition-all duration-150 cursor-pointer select-none"}
               title="删除连线"
             >
