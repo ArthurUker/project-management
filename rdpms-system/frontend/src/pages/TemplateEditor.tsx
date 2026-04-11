@@ -148,10 +148,26 @@ export default function TemplateEditor() {
 
   // 并行阶段选择弹窗
   const [parallelModal, setParallelModal] = useState<null | { open: boolean; sourceId: string; targetId: string }>(null);
+  const [parallelLoading, setParallelLoading] = useState(false);
 
   const handleAddParallel = useCallback((sourceId: string, targetId: string) => {
     setParallelModal({ open: true, sourceId, targetId });
   }, []);
+
+  const handleRemoveParallel = useCallback(async (targetPhaseId: string) => {
+    if (!parallelModal) return;
+    if (parallelLoading) return;
+    setParallelLoading(true);
+    try {
+      await api.delete(`/phases/${parallelModal.sourceId}/transitions/${targetPhaseId}`);
+      await fetchTemplate();
+    } catch (err: any) {
+      console.error('移除并行失败', err);
+      alert(err?.response?.data?.error ?? '移除失败');
+    } finally {
+      setParallelLoading(false);
+    }
+  }, [parallelModal, parallelLoading]);
 
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
@@ -907,30 +923,83 @@ export default function TemplateEditor() {
                   同时进行）
                 </p>
 
+                {/* 当前已配置的并行阶段 Tags */}
+                {(phases.find(p => p.id === parallelModal.sourceId)?.nextPhaseIds ?? []).length > 0 && (
+                  <div className="mb-3">
+                    <div className="text-[11px] text-gray-400 font-medium mb-2">当前并行后继阶段：</div>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {(phases.find(p => p.id === parallelModal.sourceId)?.nextPhaseIds ?? []).map((nid: string) => {
+                        const np = phases.find(pp => pp.id === nid);
+                        if (!np) return null;
+                        return (
+                          <span key={nid} className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full">
+                            {np.name}
+                            <button
+                              className="text-blue-400 hover:text-red-500 transition-colors ml-0.5 leading-none"
+                              onClick={(e) => { e.stopPropagation(); handleRemoveParallel(nid); }}
+                              title="移除并行"
+                            >
+                              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                <path d="M3 3l4 4M7 3l-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                              </svg>
+                            </button>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-1.5 max-h-60 overflow-y-auto mb-4">
                   {phases
                     .filter(p => p.id !== parallelModal.sourceId && p.id !== parallelModal.targetId)
-                    .map(p => (
-                      <button
-                        key={p.id}
-                        onClick={async () => {
-                          // 建立：source → 新并行阶段 的流转
-                          await handlePhaseConnect(parallelModal.sourceId, p.id);
-                          setParallelModal(null);
-                        }}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border border-gray-200 text-left hover:border-blue-300 hover:bg-blue-50 transition-colors group"
-                      >
-                        <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs font-bold flex items-center justify-center flex-shrink-0 group-hover:bg-blue-500 group-hover:text-white transition-colors">{p.order}</span>
-                        <div className="min-w-0">
-                          <div className="text-sm font-medium text-gray-700 truncate">{p.name}</div>
-                          <div className="text-xs text-gray-400">{p.tasks?.length ?? 0} 任务{(p.totalDays ?? 0) > 0 && ` · ~${p.totalDays} 天`}</div>
-                        </div>
-                        <span className="ml-auto text-xs text-blue-400 opacity-0 group-hover:opacity-100">设为并行 →</span>
-                      </button>
-                    ))}
+                    .map(p => {
+                      const sourcePhase = phases.find(sp => sp.id === parallelModal.sourceId);
+                      const isAlreadyParallel = (sourcePhase?.nextPhaseIds ?? []).includes(p.id);
+
+                      return (
+                        <button
+                          key={p.id}
+                          onClick={async () => {
+                            if (isAlreadyParallel) {
+                              await handleRemoveParallel(p.id);
+                            } else {
+                              await handlePhaseConnect(parallelModal.sourceId, p.id);
+                              // 保持弹窗打开，允许继续编辑
+                            }
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg border transition-all text-left ${isAlreadyParallel ? 'border-blue-200 bg-blue-50 hover:bg-red-50 hover:border-red-200 group/added' : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50'} group`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${isAlreadyParallel ? 'bg-blue-500 text-white group-hover/added:bg-red-400' : 'bg-blue-100 text-blue-600'}`}>{p.order}</span>
+                            <div className="min-w-0">
+                              <div className={`text-sm font-medium truncate ${isAlreadyParallel ? 'text-blue-700' : 'text-gray-700'}`}>{p.name}</div>
+                              <div className="text-xs text-gray-400">{p.tasks?.length ?? 0} 任务{(p.totalDays ?? 0) > 0 && ` · ~${p.totalDays} 天`}</div>
+                            </div>
+                          </div>
+
+                          <div className="flex-shrink-0 ml-3">
+                            {isAlreadyParallel ? (
+                              <>
+                                <span className="group-hover/added:hidden inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
+                                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2 2 4-4" stroke="#3B82F6" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                  已添加
+                                </span>
+                                <span className="hidden group-hover/added:inline-flex items-center gap-1 text-[11px] font-medium text-red-500 bg-red-50 px-2 py-0.5 rounded-full">
+                                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M3 3l4 4M7 3l-4 4" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                                  点击移除
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-[11px] text-gray-300 group-hover:text-blue-400 transition-colors">+ 添加</span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
                 </div>
 
-                <button onClick={() => setParallelModal(null)} className="w-full py-2 text-sm text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">取消</button>
+                <button onClick={() => setParallelModal(null)} className="w-full py-2 text-sm text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">完成</button>
               </div>
             </div>
           )}
