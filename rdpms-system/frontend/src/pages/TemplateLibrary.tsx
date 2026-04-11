@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { projectTemplatesAPI, projectAPI } from '../api/client';
 import ProcessFlowDiagram from '../components/ProcessFlowDiagram';
@@ -8,10 +8,6 @@ export default function TemplateLibrary() {
   const [list, setList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<any>(null);
-  const [expandedPhase, setExpandedPhase] = useState<string | null>(null);
-  const [showApplyForm, setShowApplyForm] = useState(false);
-  const [applyPayload, setApplyPayload] = useState<any>(null);
-  const [formData, setFormData] = useState<any>({});
 
   useEffect(() => { fetchList(); }, []);
 
@@ -19,7 +15,7 @@ export default function TemplateLibrary() {
     setLoading(true);
     try {
       const res = await projectTemplatesAPI.list({ page: 1, pageSize: 200 });
-      setList(res.list || res || []);
+      setList((res as any).list || res as any || []);
     } catch (e) {
       console.error(e);
     } finally { setLoading(false); }
@@ -44,52 +40,32 @@ export default function TemplateLibrary() {
     }
   }
 
-  function getSourceIcon(source?: string, disabled?: boolean): string {
-    if (disabled) return '✂️ 禁用';
-    if (source === 'new') return '➕ 新增';
-    return '🔒 继承';
-  }
-
   async function applyTemplate(t: any) {
     try {
       const resp = await projectTemplatesAPI.apply(t.id, {});
-      const payload = resp.payload;
-      setApplyPayload(payload);
-      setFormData({
-        code: payload.code || `PRJ-${Date.now()}`,
-        name: payload.name || t.name,
-        type: payload.type || t.category || 'template',
-        position: payload.position || t.description || ''
+      const payload = (resp as any).payload;
+
+      // 生成默认代码和名称
+      const projectCode = `PRJ-${Date.now()}`;
+      const projectName = `${t.name} 项目`;
+
+      // 直接创建项目
+      const newProject = await projectAPI.create({
+        code: projectCode,
+        name: projectName,
+        type: t.category || 'template',
+        position: t.description || '',
+        managerId: localStorage.getItem('rdpms_userId') || '',
+        startDate: new Date().toISOString(),
+        tasks: payload.tasks || [],
+        milestones: payload.milestones || []
       });
-      setShowApplyForm(true);
+
+      alert('项目创建成功！');
+      navigate(`/projects/${newProject.id}`);
     } catch (e) {
       console.error(e);
       alert('应用模版失败');
-    }
-  }
-
-  async function createProjectFromTemplate() {
-    if (!formData.code || !formData.name) {
-      alert('项目编码和名称不能为空');
-      return;
-    }
-    try {
-      const newProject = await projectAPI.create({
-        code: formData.code,
-        name: formData.name,
-        type: formData.type,
-        position: formData.position,
-        managerId: localStorage.getItem('rdpms_userId') || '', // 使用当前用户
-        startDate: new Date().toISOString(),
-        tasks: applyPayload.tasks || [],
-        milestones: applyPayload.milestones || []
-      });
-      alert('项目创建成功！');
-      setShowApplyForm(false);
-      navigate(`/projects/${newProject.id}`);
-    } catch (err) {
-      console.error(err);
-      alert('创建项目失败');
     }
   }
 
@@ -107,7 +83,7 @@ export default function TemplateLibrary() {
         parentId: parent.id,
         content: parent.content
       };
-      const res = await projectTemplatesAPI.create(data);
+      await projectTemplatesAPI.create(data);
       alert('子模版创建成功');
       fetchList();
     } catch (err) {
@@ -171,7 +147,6 @@ export default function TemplateLibrary() {
                     <ProcessFlowDiagram
                       phases={phases}
                       editable={false}
-                      onPhaseSelect={(phase) => setExpandedPhase(phase.order.toString())}
                     />
                   </div>
                 );
@@ -219,6 +194,20 @@ export default function TemplateLibrary() {
                   }}
                 >
                   📌 应用模版创建项目
+                </button>
+                <button
+                  onClick={() => navigate(`/project-templates/${selected.id}/edit`)}
+                  style={{
+                    padding: '8px 16px',
+                    background: '#f59e0b',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                    fontSize: 13
+                  }}
+                >
+                  ✏️ 编辑模版
                 </button>
                 {isMaster && (
                   <button

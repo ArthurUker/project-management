@@ -78,6 +78,20 @@ templates.put('/:id', adminMiddleware, async (c) => {
   return c.json(tpl);
 });
 
+// 部分更新（仅更新content）
+templates.patch('/:id', adminMiddleware, async (c) => {
+  const id = c.req.param('id');
+  const body = await c.req.json();
+  
+  const updateData = {};
+  if (body.content !== undefined) updateData.content = body.content;
+  if (body.name !== undefined) updateData.name = body.name;
+  if (body.description !== undefined) updateData.description = body.description;
+
+  const tpl = await prisma.projectTemplate.update({ where: { id }, data: updateData });
+  return c.json(tpl);
+});
+
 // 删除
 templates.delete('/:id', adminMiddleware, async (c) => {
   const id = c.req.param('id');

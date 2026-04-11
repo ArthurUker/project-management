@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -114,6 +114,7 @@ function DraggablePhaseCard({
         )}
       </div>
 
+      {/* @ts-ignore */}
       <style jsx>{`
         .phase-card {
           background: ${phase.disabled ? '#f5f5f5' : '#fff'};
@@ -233,7 +234,7 @@ export default function ProcessFlowDiagram({
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      distance: 8,
+      activationConstraint: { distance: 8 },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
@@ -309,6 +310,7 @@ export default function ProcessFlowDiagram({
         </SortableContext>
       </DndContext>
 
+      {/* @ts-ignore */}
       <style jsx>{`
         .process-flow {
           width: 100%;
