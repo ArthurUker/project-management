@@ -342,6 +342,7 @@ export default function TemplateEditor() {
   const [activeTab, setActiveTab] = useState<number>(0);
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
+  const [leftPanelOpen, setLeftPanelOpen] = useState(true);
 
   // 并行阶段选择弹窗
   const [parallelModal, setParallelModal] = useState<null | { open: boolean; sourceId: string; targetId: string }>(null);
@@ -593,41 +594,83 @@ export default function TemplateEditor() {
 
       {/* 主内容 */}
       {/* 主体区域 */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* 左侧：阶段列表 */}
-        <div className="w-72 shrink-0 flex flex-col bg-gray-50 border-r border-gray-200">
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* ── 左侧阶段面板 ── */}
+        <div
+          className={[
+            'relative flex-shrink-0 flex flex-col',
+            'border-r border-gray-200 bg-white',
+            'transition-all duration-300 ease-in-out',
+            leftPanelOpen ? 'w-72' : 'w-0 overflow-hidden',
+          ].join(' ')}
+        >
+          {/* 面板内容（折叠时隐藏） */}
+          {leftPanelOpen && (
+            <div className="flex flex-col h-full w-72">
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">阶段流程</span>
-            <button
-              onClick={addPhase}
-              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
-            >
-              + 新增阶段
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-3">
-            {phases.length === 0 ? (
-              <p className="text-xs text-gray-400 text-center py-8">点击「新增阶段」开始构建流程</p>
-            ) : (
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext items={phases.map(p => p.id)} strategy={verticalListSortingStrategy}>
-                  {phases.map(phase => (
-                    <PhaseNode
-                      key={phase.id}
-                      phase={phase}
-                      isSelected={selectedPhaseId === phase.id}
-                      onClick={() => setSelectedPhaseId(phase.id)}
-                    />
-                  ))}
-                </SortableContext>
-              </DndContext>
-            )}
-          </div>
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">阶段流程</span>
+                <button
+                  onClick={addPhase}
+                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
+                >
+                  + 新增阶段
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-3">
+                {phases.length === 0 ? (
+                  <p className="text-xs text-gray-400 text-center py-8">点击「新增阶段」开始构建流程</p>
+                ) : (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext items={phases.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                      {phases.map(phase => (
+                        <PhaseNode
+                          key={phase.id}
+                          phase={phase}
+                          isSelected={selectedPhaseId === phase.id}
+                          onClick={() => setSelectedPhaseId(phase.id)}
+                        />
+                      ))}
+                    </SortableContext>
+                  </DndContext>
+                )}
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* ── 左侧收起/展开按钮（悬浮在面板边缘） ── */}
+        <button
+          onClick={() => setLeftPanelOpen(v => !v)}
+          className={[
+            'absolute z-20 top-1/2 -translate-y-1/2',
+            'flex items-center justify-center',
+            'w-5 h-14 rounded-r-xl',
+            'bg-blue-500 hover:bg-blue-600 active:bg-blue-700',
+            'text-white shadow-lg',
+            'transition-all duration-300 ease-in-out',
+            'cursor-pointer select-none',
+            leftPanelOpen ? 'left-72' : 'left-0',
+          ].join(' ')}
+          title={leftPanelOpen ? '收起阶段列表' : '展开阶段列表'}
+        >
+          <svg
+            width="10" height="16" viewBox="0 0 10 16" fill="none"
+            className={[
+              'transition-transform duration-300',
+              leftPanelOpen ? 'rotate-0' : 'rotate-180',
+            ].join(' ')}
+          >
+            <path
+              d="M7 2L2 8L7 14"
+              stroke="white" strokeWidth="2.2"
+              strokeLinecap="round" strokeLinejoin="round"
+            />
+          </svg>
+        </button>
 
 {/* 中央画布区域 */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
@@ -708,13 +751,52 @@ export default function TemplateEditor() {
           )}
         </div>
 
-        {/* 右侧配置面板 */}
-        <div className={`flex-shrink-0 border-l border-gray-200 bg-white transition-all duration-300 overflow-hidden ${(selectedPhase || rightPanelOpen) ? 'w-72' : 'w-0'}`}>
-          {selectedPhase && (
-            <div className="h-full flex flex-col">
+        {/* ── 右侧收起/展开按钮（悬浮在面板边缘） ── */}
+        <button
+          onClick={() => { setRightPanelOpen(v => { const next = !v; if (!next) { setSelectedPhaseId(null); /* clear selection on close */ } return next; }); }}
+          className={[ 
+            'absolute z-20 top-1/2 -translate-y-1/2',
+            'flex items-center justify-center',
+            'w-5 h-14 rounded-l-xl',
+            rightPanelOpen ? 'right-80' : 'right-0',
+            rightPanelOpen
+              ? 'bg-blue-500 hover:bg-blue-600 active:bg-blue-700'
+              : 'bg-gray-400 hover:bg-blue-500 active:bg-blue-600',
+            'text-white shadow-lg',
+            'transition-all duration-300 ease-in-out',
+            'cursor-pointer select-none',
+          ].join(' ')}
+          title={rightPanelOpen ? '收起节点信息' : '展开节点信息'}
+        >
+          <svg
+            width="10" height="16" viewBox="0 0 10 16" fill="none"
+            className={[
+              'transition-transform duration-300',
+              rightPanelOpen ? 'rotate-180' : 'rotate-0',
+            ].join(' ')}
+          >
+            <path
+              d="M7 2L2 8L7 14"
+              stroke="white" strokeWidth="2.2"
+              strokeLinecap="round" strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+
+        {/* ── 右侧节点信息面板 ── */}
+        <div
+          className={[
+            'relative flex-shrink-0 flex flex-col',
+            'border-l border-gray-200 bg-white',
+            'transition-all duration-300 ease-in-out',
+            rightPanelOpen ? 'w-80' : 'w-0 overflow-hidden',
+          ].join(' ')}
+        >
+          {rightPanelOpen && selectedPhase && (
+            <div className="flex flex-col h-full w-80">
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                 <h3 className="text-sm font-semibold text-gray-800 truncate">{selectedPhase.name}</h3>
-                <button onClick={() => setSelectedPhaseId(null)} className="p-1 rounded hover:bg-gray-100 text-gray-400">✕</button>
+                <button onClick={() => { setRightPanelOpen(false); setSelectedPhaseId(null); }} className="p-1 rounded hover:bg-gray-100 text-gray-400">✕</button>
               </div>
 
               <div className="flex border-b border-gray-100">
@@ -888,7 +970,6 @@ export default function TemplateEditor() {
               </div>
             </div>
           )}
-
           {/* 并行阶段选择弹窗 */}
           {parallelModal?.open && (
             <div
