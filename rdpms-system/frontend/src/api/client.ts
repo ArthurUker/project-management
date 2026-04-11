@@ -84,6 +84,8 @@ export const projectAPI = {
     post<ApiResponse<any>>(`/projects/${id}/members`, { userId, role }),
   removeMember: (id: string, userId: string) =>
     del<ApiResponse<any>>(`/projects/${id}/members/${userId}`),
+  applyTemplate: (id: string, data: { templateId: string; startDate?: string }) =>
+    post<ApiResponse<any>>(`/projects/${id}/apply-template`, data),
 };
 
 export const reportAPI = {
@@ -132,7 +134,10 @@ export const projectTemplatesAPI = {
   get: (id: string) => get<ApiResponse<any>>(`/project-templates/${id}`),
   create: (data: any) => post<ApiResponse<any>>('/project-templates', data),
   update: (id: string, data: any) => put<ApiResponse<any>>(`/project-templates/${id}`, data),
+  patch: (id: string, data: any) => patch<ApiResponse<any>>(`/project-templates/${id}`, data),
   delete: (id: string) => del<ApiResponse<any>>(`/project-templates/${id}`),
+  copy: (id: string) => post<ApiResponse<any>>(`/project-templates/${id}/copy`),
+  preview: (id: string) => get<ApiResponse<any>>(`/project-templates/${id}/preview`),
   apply: (id: string, data?: any) => post<ApiResponse<any>>(`/project-templates/${id}/apply`, data),
 };
 

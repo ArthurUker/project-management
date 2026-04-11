@@ -70,12 +70,15 @@ projects.get('/', async (c) => {
 // 获取单个项目
 projects.get('/:id', async (c) => {
   const { id } = c.params;
-  
+
   const project = await prisma.project.findUnique({
     where: { id },
     include: {
       manager: {
         select: { id: true, name: true, position: true, avatar: true }
+      },
+      template: {
+        select: { id: true, name: true, code: true, category: true, content: true }
       },
       members: {
         include: {
@@ -85,8 +88,7 @@ projects.get('/:id', async (c) => {
         }
       },
       tasks: {
-        orderBy: { createdAt: 'desc' },
-        take: 20
+        orderBy: [{ phaseOrder: 'asc' }, { createdAt: 'asc' }],
       },
       milestones: {
         orderBy: { date: 'asc' }
@@ -97,11 +99,11 @@ projects.get('/:id', async (c) => {
       }
     }
   });
-  
+
   if (!project) {
     return c.json({ error: '项目不存在' }, 404);
   }
-  
+
   return c.json(project);
 });
 
@@ -110,37 +112,40 @@ projects.post('/', async (c) => {
   const body = await c.req.json();
   const userId = c.get('userId');
   const userRole = c.get('userRole');
-  
+
   // 验证
   if (!body.name) {
     return c.json({ error: '项目名称不能为空' }, 400);
   }
-  
+
   // 非管理员必须指定负责人
   const managerId = body.managerId || (userRole === 'admin' ? undefined : userId);
   if (!managerId) {
     return c.json({ error: '必须指定项目负责人' }, 400);
   }
-  
+
   // 生成编号
   const code = body.code || await generateProjectCode();
-  
-  // 提取 tasks, milestones 和其他字段
-  const { tasks = [], milestones = [], managerId: _, ...projectData } = body;
-  
+
+  const { tasks = [], milestones = [], managerId: _, templateId, ...projectData } = body;
+
+  // 清理不属于 Project 模型的字段
+  delete projectData.manager;
+  delete projectData.members;
+  delete projectData._count;
+
   const project = await prisma.project.create({
     data: {
       ...projectData,
       code,
-      manager: { connect: { id: managerId } }
+      templateId: templateId || null,
+      manager: { connect: { id: managerId } },
     },
     include: {
-      manager: {
-        select: { id: true, name: true }
-      }
+      manager: { select: { id: true, name: true } }
     }
   });
-  
+
   // 自动添加负责人为项目成员
   await prisma.projectMember.create({
     data: {
@@ -149,8 +154,8 @@ projects.post('/', async (c) => {
       role: 'manager'
     }
   });
-  
-  // 批量创建任务
+
+  // 批量创建任务（支持 phase 信息）
   if (tasks.length > 0) {
     const tasksToCreate = tasks.map((t, idx) => ({
       projectId: project.id,
@@ -158,11 +163,15 @@ projects.post('/', async (c) => {
       description: t.description || '',
       status: t.status || '待开始',
       priority: t.priority || '中',
+      phase: t.phase || null,
+      phaseId: t.phaseId || null,
+      phaseOrder: t.phaseOrder != null ? t.phaseOrder : null,
+      dueDate: t.dueDate ? new Date(t.dueDate) : null,
       assigneeId: t.assigneeId || managerId
     }));
     await prisma.task.createMany({ data: tasksToCreate });
   }
-  
+
   // 批量创建里程碑
   if (milestones.length > 0) {
     const milestonesToCreate = milestones.map((m) => ({
@@ -173,7 +182,7 @@ projects.post('/', async (c) => {
     }));
     await prisma.milestone.createMany({ data: milestonesToCreate });
   }
-  
+
   return c.json(project, 201);
 });
 
@@ -315,6 +324,61 @@ projects.get('/stats/status', async (c) => {
     status: s.status,
     count: s._count.id
   })));
+});
+
+// 套用模版到已有项目（为项目批量生成任务和里程碑）
+projects.post('/:id/apply-template', async (c) => {
+  const { id } = c.params;
+  const { templateId, startDate } = await c.req.json();
+
+  if (!templateId) return c.json({ error: '模版ID不能为空' }, 400);
+
+  const [project, template] = await Promise.all([
+    prisma.project.findUnique({ where: { id } }),
+    prisma.projectTemplate.findUnique({ where: { id: templateId } })
+  ]);
+  if (!project) return c.json({ error: '项目不存在' }, 404);
+  if (!template) return c.json({ error: '模版不存在' }, 404);
+
+  let content = {};
+  try { content = template.content ? JSON.parse(template.content) : {}; } catch { content = {}; }
+
+  const base = startDate ? new Date(startDate) : (project.startDate || new Date());
+  const phases = (content.phases || []).filter(p => p.enabled !== false);
+
+  const tasksToCreate = [];
+  let dayOffset = 0;
+  for (const phase of phases) {
+    for (const t of (phase.tasks || []).filter(t => t.enabled !== false)) {
+      const dueDate = new Date(base);
+      dueDate.setDate(dueDate.getDate() + dayOffset + (t.estimatedDays || 3));
+      tasksToCreate.push({
+        projectId: id,
+        title: t.title,
+        priority: t.priority || '中',
+        status: '待开始',
+        phase: phase.name,
+        phaseId: phase.id,
+        phaseOrder: phase.order,
+        dueDate,
+      });
+      dayOffset += (t.estimatedDays || 3);
+    }
+  }
+
+  const milestonesToCreate = (content.milestones || []).map(m => {
+    const date = new Date(base);
+    date.setDate(date.getDate() + (m.offsetDays || 0));
+    return { projectId: id, name: m.name, date, status: '待完成' };
+  });
+
+  await prisma.$transaction([
+    prisma.project.update({ where: { id }, data: { templateId } }),
+    ...(tasksToCreate.length > 0 ? [prisma.task.createMany({ data: tasksToCreate })] : []),
+    ...(milestonesToCreate.length > 0 ? [prisma.milestone.createMany({ data: milestonesToCreate })] : []),
+  ]);
+
+  return c.json({ success: true, taskCount: tasksToCreate.length, milestoneCount: milestonesToCreate.length });
 });
 
 export default projects;

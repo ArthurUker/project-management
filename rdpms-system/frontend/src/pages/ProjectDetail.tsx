@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { projectAPI, progressAPI } from '../api/client';
 import { useAppStore } from '../store/appStore';
 import KanbanBoard from '../components/KanbanBoard';
+import PhaseProgressBar from '../components/PhaseProgressBar';
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -122,6 +123,16 @@ export default function ProjectDetail() {
             <p className="font-medium text-gray-900 mt-1">{project.members?.length || 0} 人</p>
           </div>
         </div>
+
+        {/* 阶段进度条（仅模版项目显示）*/}
+        {project.templateId && project.template && (
+          <div className="mt-4 pt-4 border-t border-gray-100">
+            <PhaseProgressBar
+              template={project.template}
+              tasks={project.tasks || []}
+            />
+          </div>
+        )}
       </div>
       
       {/* 标签页切换 */}

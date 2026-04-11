@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { projectAPI } from '../api/client';
+import CreateProjectModal from '../components/CreateProjectModal';
 
 const PROJECT_TYPES = [
   { value: '', label: '全部类型' },
@@ -30,11 +31,20 @@ const statusColors: Record<string, string> = {
 };
 
 export default function Projects() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [type, setType] = useState('');
   const [status, setStatus] = useState('');
   const [keyword, setKeyword] = useState('');
+  const [showCreate, setShowCreate] = useState(location.pathname === '/projects/new');
+
+  useEffect(() => {
+    if (location.pathname === '/projects/new' && !showCreate) {
+      setShowCreate(true);
+    }
+  }, [location.pathname]);
   
   useEffect(() => {
     loadProjects();
@@ -66,13 +76,14 @@ export default function Projects() {
     : projects;
   
   return (
+    <>
     <div>
       {/* 页面标题 */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-display font-bold text-gray-900">项目管理</h1>
-        <Link to="/projects/new" className="btn btn-primary">
+        <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
           + 新建项目
-        </Link>
+        </button>
       </div>
       
       {/* 筛选栏 */}
@@ -169,5 +180,16 @@ export default function Projects() {
         </div>
       )}
     </div>
+
+    {showCreate && (
+      <CreateProjectModal
+        onClose={() => {
+          setShowCreate(false);
+          if (location.pathname === '/projects/new') navigate('/projects');
+          loadProjects();
+        }}
+      />
+    )}
+    </>
   );
 }

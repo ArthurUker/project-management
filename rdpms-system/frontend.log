@@ -1,0 +1,30 @@
+
+> rdpms-frontend@1.0.0 dev
+> vite --port 5173 --host
+
+
+  VITE v5.4.21  ready in 118 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://192.168.0.105:5173/
+  ➜  Network: http://198.18.0.1:5173/
+1:09:52 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+1:09:52 PM [vite] page reload src/components/ProcessFlowDiagram.tsx
+1:09:52 PM [vite] hmr update /src/index.css
+1:09:52 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+1:09:52 PM [vite] page reload src/components/ProcessFlowDiagram.tsx
+1:09:52 PM [vite] hmr update /src/index.css
+1:09:52 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+1:09:53 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+1:09:53 PM [vite] Pre-transform error: /Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/src/pages/TemplateEditor.tsx: Unterminated JSX contents. (653:14)
+
+  651 |             </div>
+  652 |           )}
+> 653 |         </div>
+      |               ^
+  654 |     
+1:09:53 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+1:09:53 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+1:10:22 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+1:11:19 PM [vite] page reload src/components/ProcessFlowDiagram.tsx
+1:11:19 PM [vite] hmr update /src/index.css

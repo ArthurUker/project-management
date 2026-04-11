@@ -52,6 +52,7 @@ function App() {
         }>
           <Route index element={<Dashboard />} />
           <Route path="projects" element={<Projects />} />
+          <Route path="projects/new" element={<Projects />} />
           <Route path="projects/:id" element={<ProjectDetail />} />
           <Route path="project-templates" element={<TemplateLibrary />} />
           <Route path="project-templates/:id/edit" element={<TemplateEditor />} />
