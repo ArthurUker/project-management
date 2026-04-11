@@ -133,3 +133,36 @@
 9:21:39 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
 9:31:25 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
 9:31:57 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+9:39:47 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+9:39:47 PM [vite] Internal server error: Failed to resolve import "dagre" from "src/components/ProcessFlowDiagram.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: /Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/src/components/ProcessFlowDiagram.tsx:52:21
+  37 |  import "@xyflow/react/dist/style.css";
+  38 |  import dagre from "@dagrejs/dagre";
+  39 |  import dagreLib from "dagre";
+     |                        ^
+  40 |  const NODE_WIDTH = 160;
+  41 |  const NODE_HEIGHT = 60;
+      at TransformPluginContext._formatError (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49258:41)
+      at TransformPluginContext.error (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49253:16)
+      at normalizeUrl (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64307:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64439:39
+      at async Promise.all (index 7)
+      at async TransformPluginContext.transform (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:64366:7)
+      at async PluginContainer.transform (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:49099:18)
+      at async loadAndTransform (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:51978:27)
+      at async viteTransformMiddleware (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/frontend/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:62106:24)
+9:39:56 PM [vite] hmr update /src/index.css, /src/pages/TemplateEditor.tsx
+9:40:01 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+9:40:05 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+9:40:22 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+9:40:47 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+9:41:03 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+9:47:06 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+9:47:23 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+9:48:31 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+9:48:39 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+9:55:57 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
+9:56:49 PM [vite] hmr update /src/components/ProcessFlowDiagram.tsx, /src/index.css
+9:56:57 PM [vite] hmr update /src/pages/TemplateEditor.tsx, /src/index.css
