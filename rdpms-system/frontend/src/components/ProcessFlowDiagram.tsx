@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -43,6 +43,7 @@ interface ProcessFlowDiagramProps {
   onPhaseClick?: (phase: Phase) => void;
   onAddParallel?: (sourceId: string, targetId: string) => void;
   onEdgeDelete?: (sourceId: string, targetId: string) => void;
+  onEdgeReconnect?: (oldEdge: Edge, newConnection: Connection) => void;
   onDropParallel?: (draggedId: string, targetId: string, x?: number, y?: number) => void;
   onDropInsertAfter?: (draggedId: string, targetId: string, x?: number, y?: number) => void;
   readonly?: boolean;
@@ -330,6 +331,35 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
   // helper to build edges using current onAddParallel
   const edgeOptions = buildEdgeStyle(onAddParallel ?? (() => {}));
 
+  // reconnect tracking
+  const edgeReconnectSuccessful = useRef(true);
+
+  const onReconnectStart = useCallback(() => {
+    edgeReconnectSuccessful.current = false;
+  }, []);
+
+  const onReconnect = useCallback((oldEdge: Edge, newConnection: Connection) => {
+    edgeReconnectSuccessful.current = true;
+    // update local edges: replace old edge with new connection
+    setEdges((eds) => (eds || []).map((e: any) => e.id === oldEdge.id ? {
+      ...e,
+      id: `e-${newConnection.source}-${newConnection.target}`,
+      source: newConnection.source,
+      target: newConnection.target,
+    } : e));
+
+    if (onEdgeReconnect) onEdgeReconnect(oldEdge, newConnection);
+  }, [onEdgeReconnect]);
+
+  const onReconnectEnd = useCallback((_: any, edge?: Edge) => {
+    if (!edgeReconnectSuccessful.current && edge) {
+      // remove edge if reconnect failed
+      setEdges((eds) => (eds || []).filter((e: any) => e.id !== edge.id));
+      if (onEdgeDelete && edge.source && edge.target) onEdgeDelete(edge.source, edge.target);
+    }
+    edgeReconnectSuccessful.current = true;
+  }, [onEdgeDelete]);
+
   // phases → nodes + edges
   useEffect(() => {
     if (!phases?.length) {
@@ -531,6 +561,10 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       nodeTypes={nodeTypes}
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
+      onReconnect={onReconnect}
+      onReconnectStart={onReconnectStart}
+      onReconnectEnd={onReconnectEnd}
+      edgesReconnectable={true}
       deleteKeyCode="Delete"
       edgesFocusable={true}
       onConnect={handleConnect}

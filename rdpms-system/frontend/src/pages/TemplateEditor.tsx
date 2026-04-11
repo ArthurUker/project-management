@@ -331,6 +331,34 @@ export default function TemplateEditor() {
     []
   );
 
+  // 边重连：删旧 transition + 建新 transition
+  const handleEdgeReconnect = useCallback(async (oldEdge: any, newConnection: any) => {
+    const oldFrom = oldEdge?.source;
+    const oldTo = oldEdge?.target;
+    const newFrom = newConnection?.source;
+    const newTo = newConnection?.target;
+
+    if (!oldFrom || !oldTo || !newFrom || !newTo) {
+      console.warn('[TemplateEditor] Invalid reconnect params', oldEdge, newConnection);
+      return;
+    }
+
+    try {
+      await api.delete(`/phases/${oldFrom}/transitions/${oldTo}`);
+    } catch (e) {
+      // ignore delete failure
+      console.warn('Old transition delete may have failed', e);
+    }
+
+    try {
+      await api.post(`/phases/${newFrom}/transitions`, { toPhaseId: newTo });
+      await fetchTemplate();
+      console.log('[TemplateEditor] Reconnected:', oldFrom, '→', oldTo, 'to', newFrom, '→', newTo);
+    } catch (err) {
+      console.error('[TemplateEditor] Reconnect failed:', err);
+    }
+  }, []);
+
   // 拖拽放置操作：设为并行（来自画布的 drop menu）
   const handleDropParallel = useCallback(async (draggedPhaseId: string, targetPhaseId: string) => {
     try {
@@ -622,6 +650,7 @@ export default function TemplateEditor() {
                 onPhaseClick={handlePhaseClick}
                 onAddParallel={handleAddParallel}
                 onEdgeDelete={handleEdgeDelete}
+                onEdgeReconnect={handleEdgeReconnect}
                 onDropParallel={handleDropParallel}
                 onDropInsertAfter={handleDropInsertAfter}
               />
