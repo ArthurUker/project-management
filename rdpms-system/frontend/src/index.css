@@ -153,3 +153,21 @@ code, pre {
 .subcategories {
   margin-left: 4px;
 }
+
+/* React Flow 画布优化 */
+.react-flow__node {
+  font-family: inherit;
+}
+.react-flow__controls {
+  bottom: 16px;
+  left: 16px;
+}
+.react-flow__minimap {
+  bottom: 16px;
+  right: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.react-flow__edge-path {
+  stroke-linecap: round;
+}
