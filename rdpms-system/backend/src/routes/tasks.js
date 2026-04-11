@@ -54,24 +54,59 @@ tasks.get('/', async (c) => {
   });
 });
 
+// POST /tasks/:id/prerequisites  添加前置任务
+tasks.post('/:id/prerequisites', async (c) => {
+  const { id } = c.req.param();
+  const { prerequisiteId } = await c.req.json();
+
+  // 防止自引用
+  if (id === prerequisiteId) {
+    return c.json({ success: false, error: '任务不能以自身为前置任务' }, 400);
+  }
+
+  // 防止循环依赖（简单检查：prerequisiteId 是否以 id 为前置）
+  const circular = await prisma.taskDependency.findFirst({
+    where: { taskId: prerequisiteId, prerequisiteId: id }
+  });
+  if (circular) {
+    return c.json({ success: false, error: '检测到循环依赖，无法添加' }, 400);
+  }
+
+  const dep = await prisma.taskDependency.create({
+    data: { taskId: id, prerequisiteId }
+  });
+  return c.json({ success: true, data: dep });
+});
+
+// DELETE /tasks/:id/prerequisites/:prerequisiteId  删除前置任务
+tasks.delete('/:id/prerequisites/:prerequisiteId', async (c) => {
+  const { id, prerequisiteId } = c.req.param();
+  await prisma.taskDependency.deleteMany({
+    where: { taskId: id, prerequisiteId }
+  });
+  return c.json({ success: true });
+});
+
 // 获取单个任务
 tasks.get('/:id', async (c) => {
-  const { id } = c.params;
+  const { id } = c.req.param();
   
   const task = await prisma.task.findUnique({
     where: { id },
     include: {
       project: true,
-      assignee: { select: { id: true, name: true, avatar: true } }
+      assignee: { select: { id: true, name: true, avatar: true } },
+      prerequisites: { include: { prerequisite: { select: { id: true, title: true } } } }
     }
   });
   
   if (!task) return c.json({ error: '任务不存在' }, 404);
   
-  // 解析 docRefs
+  // 解析 docRefs 并整理 prerequisites
   return c.json({
     ...task,
-    docRefs: task.docRefs ? JSON.parse(task.docRefs) : null
+    docRefs: task.docRefs ? JSON.parse(task.docRefs) : null,
+    prerequisites: (task.prerequisites || []).map(p => ({ prerequisiteId: p.prerequisiteId, prerequisite: p.prerequisite }))
   });
 });
 
