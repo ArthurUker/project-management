@@ -182,26 +182,35 @@ export default function TemplateEditor() {
       const res = await projectTemplatesAPI.get(id!);
       setTemplate(res);
 
-      let content: any = {};
-      if ((res as any).content) {
-        try {
-          content = typeof (res as any).content === 'string'
-            ? JSON.parse((res as any).content)
-            : (res as any).content;
-        } catch { /* noop */ }
+      // 兼容后端多种返回格式：直接 phases / data.phases / content(JSON string).phases / list[0]
+      function parsePhases(payload: any) {
+        if (!payload) return [];
+        if (Array.isArray(payload.phases)) return payload.phases;
+        if (Array.isArray(payload.data?.phases)) return payload.data.phases;
+
+        // content may be a JSON string or object
+        const content = payload.content ?? payload.data?.content;
+        if (typeof content === 'string') {
+          try {
+            const parsed = JSON.parse(content);
+            if (Array.isArray(parsed?.phases)) return parsed.phases;
+          } catch (e) {
+            // ignore
+          }
+        } else if (typeof content === 'object' && Array.isArray(content?.phases)) {
+          return content.phases;
+        }
+
+        // list => take first
+        if (Array.isArray(payload.list) && payload.list.length > 0) {
+          return parsePhases(payload.list[0]);
+        }
+
+        return [];
       }
 
-      const loaded: Phase[] = ((content.phases || []) as any[]).map((p: any, idx: number) => ({
-        ...p,
-        id: p.id || `phase_${Date.now()}_${idx}`,
-        name: p.name || `阶段 ${idx + 1}`,
-        order: p.order ?? idx + 1,
-        type: p.type || 'normal',
-        source: p.source || 'self',
-        enabled: p.enabled !== false,
-        completionTip: p.completionTip || '',
-        allowSkip: p.allowSkip || false,
-        tasks: ((p.tasks || []) as any[]).map((t: any, ti: number) => ({
+      function normalizePhase(raw: any, idx: number) {
+        const tasks = (raw.tasks || []).map((t: any, ti: number) => ({
           id: t.id || `task_${Date.now()}_${ti}`,
           title: t.title || '任务',
           priority: t.priority || '中',
@@ -209,8 +218,27 @@ export default function TemplateEditor() {
           role: t.role || 'member',
           source: t.source || 'self',
           enabled: t.enabled !== false,
-        })),
-      }));
+        }));
+
+        const nextPhaseIds = raw.nextPhaseIds ?? (raw.transitions ? (raw.transitions || []).map((x: any) => x.toPhaseId || x.targetId || x.to) : undefined) ?? [];
+
+        return {
+          ...raw,
+          id: raw.id || raw.key || `phase_${Date.now()}_${idx}`,
+          name: raw.name || raw.label || `阶段 ${idx + 1}`,
+          order: raw.order ?? idx + 1,
+          type: raw.type || 'normal',
+          source: raw.source || 'self',
+          enabled: raw.enabled !== false,
+          completionTip: raw.completionTip || '',
+          allowSkip: raw.allowSkip || false,
+          tasks,
+          nextPhaseIds,
+        };
+      }
+
+      const rawPhases = parsePhases(res as any);
+      const loaded: Phase[] = (rawPhases as any[]).map((p: any, idx: number) => normalizePhase(p, idx));
 
       setPhases(loaded.sort((a, b) => a.order - b.order));
       setMilestones((content.milestones || []).map((m: any, i: number) => ({
