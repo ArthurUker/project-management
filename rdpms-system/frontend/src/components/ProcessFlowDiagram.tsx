@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -43,6 +43,8 @@ interface ProcessFlowDiagramProps {
   onPhaseClick?: (phase: Phase) => void;
   onAddParallel?: (sourceId: string, targetId: string) => void;
   onEdgeDelete?: (sourceId: string, targetId: string) => void;
+  onDropParallel?: (draggedId: string, targetId: string, x?: number, y?: number) => void;
+  onDropInsertAfter?: (draggedId: string, targetId: string, x?: number, y?: number) => void;
   readonly?: boolean;
 }
 
@@ -272,6 +274,18 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const { fitView } = useReactFlow();
 
+  // drag-to-snap state
+  const [dragOverNodeId, setDragOverNodeId] = useState<string | null>(null);
+  const SNAP_DISTANCE = 80;
+
+  const [dropMenuState, setDropMenuState] = useState<{
+    visible: boolean;
+    draggedPhaseId: string;
+    targetPhaseId: string;
+    x: number;
+    y: number;
+  }>({ visible: false, draggedPhaseId: '', targetPhaseId: '', x: 0, y: 0 });
+
   // helper to build edges using current onAddParallel
   const edgeOptions = buildEdgeStyle(onAddParallel ?? (() => {}));
 
@@ -423,6 +437,39 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     [onPhaseConnect, onAddParallel]
   );
 
+  // 拖拽节点：磁吸检测
+  const handleNodeDrag = useCallback((_: any, draggedNode: Node) => {
+    let closestId: string | null = null;
+    let closestDist = SNAP_DISTANCE;
+    nodes.forEach((n) => {
+      if (n.id === draggedNode.id) return;
+      const dx = (n.position.x || 0) - (draggedNode.position.x || 0);
+      const dy = (n.position.y || 0) - (draggedNode.position.y || 0);
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < closestDist) {
+        closestDist = dist;
+        closestId = n.id;
+      }
+    });
+
+    setDragOverNodeId(closestId);
+  }, [nodes]);
+
+  const handleNodeDragStop = useCallback((_: any, draggedNode: Node) => {
+    if (dragOverNodeId) {
+      // approximate screen coords by node position
+      const x = (draggedNode.position?.x || 0) + 150;
+      const y = (draggedNode.position?.y || 0) + 40;
+      setDropMenuState({ visible: true, draggedPhaseId: draggedNode.id, targetPhaseId: dragOverNodeId, x, y });
+    }
+    setDragOverNodeId(null);
+  }, [dragOverNodeId]);
+
+  // 更新节点样式以高亮拖拽目标
+  useEffect(() => {
+    setNodes((cur) => cur.map(n => ({ ...n, className: dragOverNodeId === n.id ? 'ring-2 ring-blue-400 ring-offset-2 scale-105 transition-all' : '' })));
+  }, [dragOverNodeId, setNodes]);
+
   // 节点点击
   const handleNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
@@ -433,6 +480,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
   );
 
   return (
+    <>
     <ReactFlow
       nodes={nodes}
       edges={edges}
@@ -440,6 +488,8 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       onNodesChange={onNodesChange}
       onEdgesChange={onEdgesChange}
       onConnect={handleConnect}
+      onNodeDrag={handleNodeDrag}
+      onNodeDragStop={handleNodeDragStop}
       onNodeClick={handleNodeClick}
       fitView
       fitViewOptions={{ padding: 0.25 }}
@@ -476,6 +526,66 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
         className="!shadow-sm !border !border-gray-200 !rounded-xl"
       />
     </ReactFlow>
+
+    {/* Drop menu (outside ReactFlow but inside provider) */}
+    {dropMenuState.visible && (
+      <>
+        <div className="fixed inset-0 z-40" onClick={() => setDropMenuState(s => ({ ...s, visible: false }))} />
+        <div
+          className="fixed z-50 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden min-w-[200px]"
+          style={{ left: dropMenuState.x, top: dropMenuState.y, transform: 'translate(-50%, -110%)' }}
+        >
+          <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100">
+            <div className="text-[11px] text-gray-400 font-medium">
+              拖拽到：
+              <span className="text-gray-600 font-semibold ml-1">
+                {phases.find(p => p.id === dropMenuState.targetPhaseId)?.name}
+              </span>
+            </div>
+          </div>
+
+          <button
+            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-blue-50 transition-colors text-left group"
+            onClick={() => {
+              setDropMenuState(s => ({ ...s, visible: false }));
+              onDropParallel?.(dropMenuState.draggedPhaseId, dropMenuState.targetPhaseId, dropMenuState.x, dropMenuState.y);
+            }}
+          >
+            <div className="w-8 h-8 rounded-lg bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center flex-shrink-0 transition-colors">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 4h10M3 8h10M3 12h10" stroke="#3B82F6" strokeWidth="1.8" strokeLinecap="round"/></svg>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-gray-700">设为并行阶段</div>
+              <div className="text-[11px] text-gray-400 mt-0.5">两个阶段同时进行，流程图显示分叉</div>
+            </div>
+          </button>
+
+          <div className="mx-4 border-t border-gray-50" />
+
+          <button
+            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-green-50 transition-colors text-left group"
+            onClick={() => {
+              setDropMenuState(s => ({ ...s, visible: false }));
+              onDropInsertAfter?.(dropMenuState.draggedPhaseId, dropMenuState.targetPhaseId, dropMenuState.x, dropMenuState.y);
+            }}
+          >
+            <div className="w-8 h-8 rounded-lg bg-green-100 group-hover:bg-green-200 flex items-center justify-center flex-shrink-0 transition-colors">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h8M8 5l3 3-3 3" stroke="#10B981" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-gray-700">插入到此节点之后</div>
+              <div className="text-[11px] text-gray-400 mt-0.5">调整阶段顺序，串行排列</div>
+            </div>
+          </button>
+
+          <div className="px-4 py-2 bg-gray-50 border-t border-gray-100">
+            <button className="w-full text-xs text-gray-400 hover:text-gray-600 py-1 transition-colors" onClick={() => setDropMenuState(s => ({ ...s, visible: false }))}>取消</button>
+          </div>
+        </div>
+      </>
+    )}
+
+    </>
   );
 };
 

@@ -476,6 +476,52 @@ export default function TemplateEditor() {
     []
   );
 
+  // 拖拽放置操作：设为并行（来自画布的 drop menu）
+  const handleDropParallel = useCallback(async (draggedPhaseId: string, targetPhaseId: string) => {
+    try {
+      // 找到指向 target 的前置阶段（第一个匹配）
+      const prevPhase = phases.find(p => (p.nextPhaseIds ?? []).includes(targetPhaseId));
+      if (prevPhase) {
+        await api.post(`/phases/${prevPhase.id}/transitions`, { toPhaseId: draggedPhaseId });
+      }
+      // dragged -> target 的后继（与 target 并行后应指向同一汇合节点）
+      const targetPhase = phases.find(p => p.id === targetPhaseId);
+      const targetNextIds = targetPhase?.nextPhaseIds ?? [];
+      if (targetNextIds.length > 0) {
+        await api.post(`/phases/${draggedPhaseId}/transitions`, { toPhaseId: targetNextIds[0] });
+      }
+      await fetchTemplate();
+      console.log('已设为并行阶段');
+    } catch (err: any) {
+      console.error('设为并行失败', err);
+      alert(err?.response?.data?.error ?? '设为并行失败');
+    }
+  }, [phases]);
+
+  // 拖拽放置操作：插入到目标节点之后
+  const handleDropInsertAfter = useCallback(async (draggedPhaseId: string, targetPhaseId: string) => {
+    try {
+      const targetPhase = phases.find(p => p.id === targetPhaseId);
+      const targetNextIds = targetPhase?.nextPhaseIds ?? [];
+
+      // 1. target -> dragged
+      await api.post(`/phases/${targetPhaseId}/transitions`, { toPhaseId: draggedPhaseId });
+
+      // 2. dragged -> 原后继
+      if (targetNextIds.length > 0) {
+        await api.post(`/phases/${draggedPhaseId}/transitions`, { toPhaseId: targetNextIds[0] });
+        // 3. 删除 target -> 原后继
+        await api.delete(`/phases/${targetPhaseId}/transitions/${targetNextIds[0]}`);
+      }
+
+      await fetchTemplate();
+      console.log('已插入到节点之后');
+    } catch (err: any) {
+      console.error('插入失败', err);
+      alert(err?.response?.data?.error ?? '插入失败');
+    }
+  }, [phases]);
+
   // 兼容旧名：handleConnect （一些 JSX 仍引用此名）
   const handleConnect = useCallback(async (sourceId: string, targetId: string) => {
     // delegate to handlePhaseConnect
@@ -759,6 +805,8 @@ export default function TemplateEditor() {
                 onPhaseClick={handlePhaseClick}
                 onAddParallel={handleAddParallel}
                 onEdgeDelete={handleEdgeDelete}
+                onDropParallel={handleDropParallel}
+                onDropInsertAfter={handleDropInsertAfter}
               />
             </div>
           ) : (
