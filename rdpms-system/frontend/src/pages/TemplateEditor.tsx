@@ -378,6 +378,7 @@ export default function TemplateEditor() {
       }
 
       const loaded: Phase[] = ((content.phases || []) as any[]).map((p: any, idx: number) => ({
+        ...p,
         id: p.id || `phase_${Date.now()}_${idx}`,
         name: p.name || `阶段 ${idx + 1}`,
         order: p.order ?? idx + 1,

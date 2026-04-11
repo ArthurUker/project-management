@@ -299,10 +299,16 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     // 构建边：优先用 nextPhaseIds，回退到按 order 线性连接
     const rawEdges: Edge[] = [];
 
+    // DEBUG: 输出 phases 的 nextPhaseIds 以便诊断（浏览器 Console）
+    console.log('[FlowDiagram] phases nextPhaseIds:', phases.map(p => ({ name: p.name, nextPhaseIds: p.nextPhaseIds })));
+
     // 判断是否有任何阶段配置了显式流转
     const hasExplicitEdges = phases.some(
       (p) => Array.isArray(p.nextPhaseIds) && p.nextPhaseIds.length > 0
     );
+
+    // DEBUG: 输出是否使用显式边
+    console.log('[FlowDiagram] hasExplicitEdges:', hasExplicitEdges, '| rawEdges will be:', hasExplicitEdges ? 'explicit' : 'linear-fallback');
 
     if (hasExplicitEdges) {
       // 使用显式流转关系（支持并行分叉）
@@ -355,7 +361,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
 
     // 布局完成后自适应视图
     setTimeout(() => fitView({ padding: 0.25, duration: 400 }), 50);
-  }, [phases, onAddParallel]);
+  }, [JSON.stringify(phases.map(p => ({ id: p.id, order: p.order, nextPhaseIds: p.nextPhaseIds }))), onAddParallel]);
 
   // 监听外部 fitView / reLayout 事件
   useEffect(() => {
@@ -404,7 +410,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       window.removeEventListener('flow:fitView', fitHandler);
       window.removeEventListener('flow:reLayout', handleReLayout);
     };
-  }, [phases, fitView, onAddParallel]);
+  }, [JSON.stringify(phases.map(p => ({ id: p.id, order: p.order, nextPhaseIds: p.nextPhaseIds }))), fitView, onAddParallel]);
 
   // 拖拽连线
   const handleConnect = useCallback(
