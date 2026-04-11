@@ -192,7 +192,7 @@ const CustomEdge: React.FC<EdgeProps> = ({
   data,
   selected,
 }) => {
-  const [hovered, setHovered] = React.useState(false);
+  const [hovered] = React.useState(false);
   const { setEdges } = useReactFlow();
 
   const [edgePath, labelX, labelY] = getSmoothStepPath({
