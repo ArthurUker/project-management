@@ -34,7 +34,12 @@ function App() {
   }, []);
   
   return (
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       {/* 离线提示 */}
       {!isOnline && (
         <div className="fixed top-0 left-0 right-0 bg-warning-500 text-black px-4 py-2 text-center text-sm z-50">

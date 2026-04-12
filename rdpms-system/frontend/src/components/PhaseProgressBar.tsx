@@ -171,8 +171,8 @@ export default function PhaseProgressBar({ template, tasks, onPhaseClick }: Prop
           <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
             <p className="text-xs font-medium text-gray-600 mb-2">{phase.name} 的任务</p>
             <div className="space-y-1">
-              {phaseTasks.map(task => (
-                <div key={task.id} className="flex items-center gap-2 text-xs">
+              {phaseTasks.map((task, tIdx) => (
+                <div key={task.id ?? `task-${phase.id}-${tIdx}`} className="flex items-center gap-2 text-xs">
                   <span className={`w-2 h-2 rounded-full shrink-0 ${
                     task.status === '已完成' ? 'bg-green-500' :
                     task.status === '进行中' ? 'bg-blue-500' :

@@ -119,3 +119,246 @@ Unknown argument `templateId`. Did you mean `template`? Available options are ma
 [32m[nodemon] starting `node src/index.js`[39m
 🚀 R&D PMS API starting on port 3000...
 ✅ Server is running at http://localhost:3000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node src/index.js`[39m
+🚀 R&D PMS API starting on port 3000...
+✅ Server is running at http://localhost:3000
+[CREATE PROJECT] req.body: {
+  "name": "测试0412",
+  "type": "定制",
+  "managerId": "eaa04094-dfb0-41ba-9209-ac663f0dd396",
+  "startDate": "2026-04-12T00:00:00.000Z",
+  "endDate": "2026-04-14T00:00:00.000Z",
+  "tasks": [
+    {
+      "title": "立项",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "立项",
+      "phaseOrder": 1,
+      "estimatedDays": 3,
+      "dueDate": "2026-04-15T00:00:00.000Z"
+    },
+    {
+      "title": "方案",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "方案设计",
+      "phaseOrder": 2,
+      "estimatedDays": 3,
+      "dueDate": "2026-04-18T00:00:00.000Z"
+    },
+    {
+      "title": "快速扩增验证",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "片外扩增试剂/程序优化",
+      "phaseOrder": 5,
+      "estimatedDays": 3,
+      "dueDate": "2026-04-21T00:00:00.000Z"
+    },
+    {
+      "title": "快速试产",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "芯片试产验证",
+      "phaseOrder": 6,
+      "estimatedDays": 3,
+      "dueDate": "2026-04-24T00:00:00.000Z"
+    },
+    {
+      "title": "量产",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "量产加工",
+      "phaseOrder": 7,
+      "estimatedDays": 3,
+      "dueDate": "2026-04-27T00:00:00.000Z"
+    },
+    {
+      "title": "验证",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "客户验证",
+      "phaseOrder": 8,
+      "estimatedDays": 3,
+      "dueDate": "2026-04-30T00:00:00.000Z"
+    },
+    {
+      "title": "归档",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "归档",
+      "phaseOrder": 9,
+      "estimatedDays": 3,
+      "dueDate": "2026-05-03T00:00:00.000Z"
+    }
+  ],
+  "milestones": [
+    {
+      "name": "验证通过",
+      "date": "2026-04-12T00:00:00.000Z",
+      "status": "待完成"
+    }
+  ],
+  "templateId": "18696973-8e93-4775-8d2e-b09de0dc704d"
+}
+Error: TypeError: Cannot destructure property 'id' of 'c.params' as it is undefined.
+    at file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/src/routes/projects.js:72:11
+    at dispatch (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:23)
+    at file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:46
+    at authMiddleware (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/src/routes/auth.js:25:11)
+    at dispatch (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:23)
+    at file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:46
+    at cors2 (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/middleware/cors/index.js:82:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async dispatch (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:17)
+    at async file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/hono-base.js:301:25
+Error: TypeError: Cannot destructure property 'id' of 'c.params' as it is undefined.
+    at file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/src/routes/projects.js:72:11
+    at dispatch (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:23)
+    at file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:46
+    at authMiddleware (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/src/routes/auth.js:25:11)
+    at dispatch (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:23)
+    at file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:46
+    at cors2 (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/middleware/cors/index.js:82:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async dispatch (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:17)
+    at async file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/hono-base.js:301:25
+Error: TypeError: Cannot destructure property 'projectId' of 'c.params' as it is undefined.
+    at file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/src/routes/progress.js:11:11
+    at dispatch (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:23)
+    at file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:46
+    at authMiddleware (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/src/routes/auth.js:25:11)
+    at dispatch (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:23)
+    at file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:46
+    at cors2 (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/middleware/cors/index.js:82:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async dispatch (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:17)
+    at async file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/hono-base.js:301:25
+Error: TypeError: Cannot destructure property 'projectId' of 'c.params' as it is undefined.
+    at file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/src/routes/progress.js:11:11
+    at dispatch (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:23)
+    at file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:46
+    at authMiddleware (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/src/routes/auth.js:25:11)
+    at dispatch (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:23)
+    at file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:46
+    at cors2 (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/middleware/cors/index.js:82:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async dispatch (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:17)
+    at async file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/hono-base.js:301:25
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node src/index.js`[39m
+🚀 R&D PMS API starting on port 3000...
+✅ Server is running at http://localhost:3000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node src/index.js`[39m
+🚀 R&D PMS API starting on port 3000...
+✅ Server is running at http://localhost:3000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node src/index.js`[39m
+🚀 R&D PMS API starting on port 3000...
+✅ Server is running at http://localhost:3000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node src/index.js`[39m
+🚀 R&D PMS API starting on port 3000...
+✅ Server is running at http://localhost:3000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node src/index.js`[39m
+🚀 R&D PMS API starting on port 3000...
+✅ Server is running at http://localhost:3000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node src/index.js`[39m
+🚀 R&D PMS API starting on port 3000...
+✅ Server is running at http://localhost:3000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node src/index.js`[39m
+🚀 R&D PMS API starting on port 3000...
+✅ Server is running at http://localhost:3000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node src/index.js`[39m
+🚀 R&D PMS API starting on port 3000...
+✅ Server is running at http://localhost:3000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node src/index.js`[39m
+🚀 R&D PMS API starting on port 3000...
+✅ Server is running at http://localhost:3000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node src/index.js`[39m
+🚀 R&D PMS API starting on port 3000...
+✅ Server is running at http://localhost:3000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node src/index.js`[39m
+🚀 R&D PMS API starting on port 3000...
+✅ Server is running at http://localhost:3000
+[CREATE PROJECT] req.body: {
+  "name": "测试0413",
+  "type": "定制",
+  "managerId": "eaa04094-dfb0-41ba-9209-ac663f0dd396",
+  "startDate": "2026-04-12T00:00:00.000Z",
+  "endDate": "2026-04-13T00:00:00.000Z",
+  "tasks": [
+    {
+      "title": "合作申请",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "立项",
+      "phaseOrder": 1,
+      "estimatedDays": 3,
+      "dueDate": "2026-04-15T00:00:00.000Z"
+    },
+    {
+      "title": "合作设计",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "方案设计",
+      "phaseOrder": 2,
+      "estimatedDays": 3,
+      "dueDate": "2026-04-18T00:00:00.000Z"
+    },
+    {
+      "title": "试产验证",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "芯片试产验证",
+      "phaseOrder": 6,
+      "estimatedDays": 3,
+      "dueDate": "2026-04-21T00:00:00.000Z"
+    },
+    {
+      "title": "量产",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "量产加工",
+      "phaseOrder": 7,
+      "estimatedDays": 3,
+      "dueDate": "2026-04-24T00:00:00.000Z"
+    },
+    {
+      "title": "验证",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "客户验证",
+      "phaseOrder": 8,
+      "estimatedDays": 3,
+      "dueDate": "2026-04-27T00:00:00.000Z"
+    },
+    {
+      "title": "归档",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "归档",
+      "phaseOrder": 9,
+      "estimatedDays": 3,
+      "dueDate": "2026-04-30T00:00:00.000Z"
+    }
+  ],
+  "milestones": [
+    {
+      "name": "合作完成",
+      "date": "2026-04-12T00:00:00.000Z",
+      "status": "待完成"
+    }
+  ],
+  "templateId": "a4df06f2-b1fa-46de-be1e-d537b36e393e"
+}
