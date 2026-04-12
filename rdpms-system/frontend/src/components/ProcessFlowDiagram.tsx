@@ -192,7 +192,7 @@ const CustomEdge: React.FC<EdgeProps> = ({
   data,
   selected,
 }) => {
-  const [hovered] = React.useState(false);
+  const [hovered, setHovered] = React.useState(false);
   const { setEdges } = useReactFlow();
 
   const [edgePath, labelX, labelY] = getSmoothStepPath({
@@ -242,54 +242,62 @@ const CustomEdge: React.FC<EdgeProps> = ({
         stroke="transparent"
         strokeWidth={20}
         className="react-flow__edge-interaction"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
       />
 
       {/* visible edge path */}
       <path
         d={edgePath}
         fill="none"
-        stroke={selected ? '#3b82f6' : (style?.stroke ?? '#93C5FD')}
-        strokeWidth={selected ? 2 : (style?.strokeWidth ?? 1.5)}
+        stroke={selected ? '#3b82f6' : (hovered ? '#60a5fa' : (style?.stroke ?? '#93C5FD'))}
+        strokeWidth={selected || hovered ? 2 : (style?.strokeWidth ?? 1.5)}
         className="react-flow__edge-path"
       />
 
-      {/* overlay buttons at midpoint (show only when selected) */}
-      <EdgeLabelRenderer>
-        <div
-          style={{
-            position: 'absolute',
-            transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
-            pointerEvents: 'all',
-            display: 'flex',
-            gap: 6,
-          }}
-        >
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              const parts = (id || '').split('-');
-              const sourceId = parts[1] || '';
-              const targetId = parts[2] || '';
-              (data as any)?.onAddParallel?.(sourceId, targetId);
+      {/* overlay buttons at midpoint (show on hover or selected) */}
+      {(hovered || selected) && (
+        <EdgeLabelRenderer>
+          <div
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+              pointerEvents: 'all',
+              display: 'flex',
+              gap: 6,
             }}
-            className={"w-6 h-6 rounded-full bg-white border-2 border-blue-400 text-blue-500 text-sm font-bold flex items-center justify-center shadow-md hover:bg-blue-50 hover:border-blue-500 hover:shadow-lg transition-all duration-150 cursor-pointer select-none"}
-            title="在此处添加并行阶段"
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
           >
-            +
-          </button>
+            {hovered && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const parts = (id || '').split('-');
+                  const sourceId = parts[1] || '';
+                  const targetId = parts[2] || '';
+                  (data as any)?.onAddParallel?.(sourceId, targetId);
+                }}
+                className={"w-6 h-6 rounded-full bg-white border-2 border-blue-400 text-blue-500 text-sm font-bold flex items-center justify-center shadow-md hover:bg-blue-50 hover:border-blue-500 hover:shadow-lg transition-all duration-150 cursor-pointer select-none"}
+                title="在此处添加并行阶段"
+              >
+                +
+              </button>
+            )}
 
-          {selected && (
-            <button
-              onClick={handleDelete}
-              onContextMenu={(e) => { e.preventDefault(); handleDelete(e as any); }}
-              className={"w-6 h-6 rounded-full bg-white border-2 border-red-300 text-red-500 text-sm font-bold flex items-center justify-center shadow-md hover:bg-red-50 hover:border-red-400 hover:shadow-lg transition-all duration-150 cursor-pointer select-none"}
-              title="删除连线"
-            >
-              ✕
-            </button>
-          )}
-        </div>
-      </EdgeLabelRenderer>
+            {selected && (
+              <button
+                onClick={handleDelete}
+                onContextMenu={(e) => { e.preventDefault(); handleDelete(e as any); }}
+                className={"w-6 h-6 rounded-full bg-white border-2 border-red-300 text-red-500 text-sm font-bold flex items-center justify-center shadow-md hover:bg-red-50 hover:border-red-400 hover:shadow-lg transition-all duration-150 cursor-pointer select-none"}
+                title="删除连线"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </EdgeLabelRenderer>
+      )}
     </>
   );
 };
