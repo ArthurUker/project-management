@@ -198,14 +198,64 @@ export default function ReportEdit() {
         content = { reagentReports };
       }
       
-      const data = {
-        reportType,
-        month: fullMonth,
-        content: JSON.stringify(content),
-        status: asDraft ? '草稿' : '已提交'
-      };
-      
-      await reportAPI.save(data);
+      const commonStatus = asDraft ? '草稿' : '已提交';
+
+      // 如果是通用模板：对每个 projectReports 分别提交（后端期望 top-level projectId）
+      if (dailyTemplate === 'general') {
+        const payloads = projectReports.map((report) => ({
+          projectId: report.projectId,
+          reportType,
+          month: fullMonth,
+          content: JSON.stringify({ projectReports: [report] }),
+          status: commonStatus,
+        }));
+
+        console.log('[SAVE REPORT] payloads:', JSON.stringify(payloads, null, 2));
+        await Promise.all(payloads.map((p) => reportAPI.save(p)));
+
+      } else if (dailyTemplate === 'reagent') {
+        // 将试验记录按 projectId 分组后分别提交，如果没有关联任何 project 则阻止提交
+        const reportsByProject: Record<string, any[]> = {};
+        for (const r of reagentReports) {
+          const pid = r.projectId || 'NO_PROJECT';
+          if (!reportsByProject[pid]) reportsByProject[pid] = [];
+          reportsByProject[pid].push(r);
+        }
+        const entries = Object.entries(reportsByProject);
+        // 如果只有未关联项目的记录，则要求用户先关联项目
+        if (entries.length === 1 && entries[0][0] === 'NO_PROJECT') {
+          alert('请为试验记录关联项目后再提交');
+          setSaving(false);
+          return;
+        }
+
+        const payloads = entries
+          .filter(([pid]) => pid !== 'NO_PROJECT')
+          .map(([pid, arr]) => ({
+            projectId: pid,
+            reportType,
+            month: fullMonth,
+            content: JSON.stringify({ reagentReports: arr }),
+            status: commonStatus,
+          }));
+
+        console.log('[SAVE REPORT] payloads:', JSON.stringify(payloads, null, 2));
+        await Promise.all(payloads.map((p) => reportAPI.save(p)));
+
+      } else {
+        // 兜底：单条提交（尽量包含 projectId，如果 content 中无法拆分则按原样提交）
+        const payload: any = {
+          reportType,
+          month: fullMonth,
+          content: JSON.stringify(content),
+          status: commonStatus,
+        };
+        if (projectReports.length === 1) payload.projectId = projectReports[0].projectId;
+
+        console.log('[SAVE REPORT] payload:', JSON.stringify(payload, null, 2));
+        await reportAPI.save(payload);
+      }
+
       navigate('/reports');
     } catch (err) {
       console.error('Failed to save:', err);
