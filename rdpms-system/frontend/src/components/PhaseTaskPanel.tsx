@@ -9,7 +9,7 @@ interface Task {
 }
 
 interface PhaseTaskPanelProps {
-  phaseId: string;
+  phaseId?: string;
   tasks: Task[];
   onTasksChange: (tasks: Task[]) => void;
 }
