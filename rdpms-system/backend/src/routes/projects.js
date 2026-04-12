@@ -149,7 +149,7 @@ projects.post('/', async (c) => {
     data: {
       ...projectData,
       code,
-      templateId: templateId || null,
+      ...(templateId ? { template: { connect: { id: templateId } } } : {}),
       manager: { connect: { id: managerId } },
     },
     include: {
