@@ -455,8 +455,6 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
 
 
 
-    const displayOrderMap = computeDisplayOrder(sortedPhases);
-
     const rawNodes: Node[] = sortedPhases.map((p) => ({
       id: p.id,
       type: 'phase',
@@ -464,8 +462,8 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       data: {
         label: p.name,
         order: p.order ?? 1,
-        // ensure displayOrder is string
-        displayOrder: displayOrderMap.get(p.id) ?? String(p.order ?? 1),
+        // initial displayOrder uses numeric order; layout will recompute actual strings
+        displayOrder: String(p.order ?? 1),
         taskCount: p.tasks?.length ?? 0,
         totalDays: p.totalDays ?? 0,
         enabled: p.enabled !== false,
