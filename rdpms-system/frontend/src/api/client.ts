@@ -169,7 +169,7 @@ export const docsAPI = {
 
 export default api;
 
-// 试剂配方API
+// 旧的试剂配方API兼容层（保留）
 export const reagentsAPI = {
   categories: {
     list: (): Promise<ApiResponse<any>> => get<ApiResponse<any>>('/reagents/categories'),
@@ -184,4 +184,30 @@ export const reagentsAPI = {
     update: (id: string, data: any): Promise<ApiResponse> => put<ApiResponse<any>>(`/reagents/recipes/${id}`, data),
     delete: (id: string): Promise<ApiResponse> => del<ApiResponse<any>>(`/reagents/recipes/${id}`),
   },
+};
+
+// 新的试剂/配方/配制API
+export const reagentAPI = {
+  list: (params?: Record<string, any>) => get<ApiResponse<any>>('/reagents', { params }),
+  get: (id: string) => get<ApiResponse<any>>(`/reagents/${id}`),
+  create: (data: any) => post<ApiResponse<any>>('/reagents', data),
+  update: (id: string, data: any) => put<ApiResponse<any>>(`/reagents/${id}`, data),
+  delete: (id: string) => del<ApiResponse<any>>(`/reagents/${id}`),
+  formulas: (id: string) => get<ApiResponse<any>>(`/reagents/${id}/formulas`),
+};
+
+export const formulaAPI = {
+  list: (params?: Record<string, any>) => get<ApiResponse<any>>('/formulas', { params }),
+  get: (id: string) => get<ApiResponse<any>>(`/formulas/${id}`),
+  create: (data: any) => post<ApiResponse<any>>('/formulas', data),
+  update: (id: string, data: any) => put<ApiResponse<any>>(`/formulas/${id}`, data),
+  delete: (id: string) => del<ApiResponse<any>>(`/formulas/${id}`),
+  duplicate: (id: string) => post<ApiResponse<any>>(`/formulas/${id}/duplicate`),
+};
+
+export const prepAPI = {
+  calculate: (data: any) => post<ApiResponse<any>>('/prep/calculate', data),
+  saveRecord: (data: any) => post<ApiResponse<any>>('/prep/records', data),
+  listRecords: (params?: Record<string, any>) => get<ApiResponse<any>>('/prep/records', { params }),
+  getRecord: (id: string) => get<ApiResponse<any>>(`/prep/records/${id}`),
 };

@@ -12,7 +12,10 @@ import Tasks from './pages/Tasks';
 import Users from './pages/Users';
 import Settings from './pages/Settings';
 import Docs from './pages/Docs';
-import ReagentRecipes from './pages/ReagentRecipes';
+import ReagentLibrary from './pages/knowledge/ReagentLibrary';
+import FormulaList from './pages/reagent-formula/index';
+import FormulaEditor from './pages/reagent-formula/FormulaEditor';
+import PrepCalculator from './pages/reagent-formula/PrepCalculator';
 import TemplateLibrary from './pages/TemplateLibrary';
 import TemplateEditor from './pages/TemplateEditor';
 
@@ -64,7 +67,11 @@ function App() {
           <Route path="reports" element={<Reports />} />
           <Route path="reports/:id" element={<ReportEdit />} />
           <Route path="docs" element={<Docs />} />
-          <Route path="reagents" element={<ReagentRecipes />} />
+          <Route path="knowledge/reagents" element={<ReagentLibrary />} />
+          <Route path="reagent-formula" element={<FormulaList />} />
+          <Route path="reagent-formula/new" element={<FormulaEditor />} />
+          <Route path="reagent-formula/:id/edit" element={<FormulaEditor />} />
+          <Route path="reagent-formula/calculator" element={<PrepCalculator />} />
           <Route path="tasks" element={<Tasks />} />
           <Route path="users" element={<Users />} />
           <Route path="settings" element={<Settings />} />
