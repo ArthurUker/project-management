@@ -56,8 +56,17 @@ formulas.post('/', async (c) => {
     const data = await c.req.json();
     const userId = c.get('userId');
 
-    // 生成唯一 code（简单取时间戳或用户提供）
-    const code = data.code || `${data.type}-${Date.now() % 100000}`;
+    // 生成唯一 code（使用事务式自增以避免并发冲突）
+    const code = data.code || await prisma.$transaction(async (tx) => {
+      const last = await tx.reagentFormula.findFirst({
+        where: { type: data.type },
+        orderBy: { code: 'desc' }
+      })
+      const nextNum = last
+        ? parseInt(last.code.split('-')[1]) + 1
+        : 1
+      return `${data.type}-${String(nextNum).padStart(2, '0')}`
+    });
 
     const created = await prisma.reagentFormula.create({
       data: {
@@ -154,8 +163,15 @@ formulas.post('/:id/duplicate', async (c) => {
     const orig = await prisma.reagentFormula.findUnique({ where: { id }, include: { components: true } });
     if (!orig) return c.json({ error: '配方不存在' }, 404);
 
-    // 生成新 code: type-<seq>，但为简单实现使用 timestamp
-    const newCode = `${orig.type}-${Date.now() % 100000}`;
+    // 生成新 code: type-<seq>（事务式自增）
+    const newCode = await prisma.$transaction(async (tx) => {
+      const last = await tx.reagentFormula.findFirst({
+        where: { type: orig.type },
+        orderBy: { code: 'desc' }
+      });
+      const nextNum = last ? parseInt(last.code.split('-')[1]) + 1 : 1;
+      return `${orig.type}-${String(nextNum).padStart(2, '0')}`;
+    });
     const created = await prisma.reagentFormula.create({
       data: {
         code: newCode,
