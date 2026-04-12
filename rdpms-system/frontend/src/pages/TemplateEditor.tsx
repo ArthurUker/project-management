@@ -240,7 +240,8 @@ export default function TemplateEditor() {
       const rawPhases = parsePhases(res as any);
       const loaded: Phase[] = (rawPhases as any[]).map((p: any, idx: number) => normalizePhase(p, idx));
 
-      setPhases(loaded.sort((a, b) => a.order - b.order));
+      // Ensure phases are sorted by their explicit order before rendering (important for parallel numbering)
+      setPhases(loaded.sort((a, b) => (a.order || 0) - (b.order || 0)));
 
       console.log('[DEBUG] normalized phases:', (loaded || []).map(p => ({ name: p.name, nextPhaseIds: p.nextPhaseIds })));
       console.log('[DEBUG] raw API response (template):', res);
