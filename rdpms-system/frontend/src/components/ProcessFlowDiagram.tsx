@@ -14,8 +14,8 @@ import {
   Position,
   useReactFlow,
   EdgeLabelRenderer,
-  BaseEdge,
-  getSmoothStepPath,
+  getBezierPath,
+  ConnectionLineType,
   type EdgeProps,
   type Node,
   type Edge,
@@ -195,14 +195,14 @@ const CustomEdge: React.FC<EdgeProps> = ({
   const [hovered, setHovered] = React.useState(false);
   const { setEdges } = useReactFlow();
 
-  const [edgePath, labelX, labelY] = getSmoothStepPath({
+  const [edgePath, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
     sourcePosition,
     targetX,
     targetY,
     targetPosition,
-    borderRadius: 8,
+    curvature: 0.4,
   });
 
   const handleDelete = React.useCallback((e: React.MouseEvent) => {
@@ -222,18 +222,7 @@ const CustomEdge: React.FC<EdgeProps> = ({
 
   return (
     <>
-      {/* smoothstep path rendered by BaseEdge */}
-      <BaseEdge
-        id={id}
-        path={edgePath}
-        style={{
-          ...style,
-          stroke: hovered ? '#3B82F6' : (style?.stroke ?? '#93C5FD'),
-          strokeWidth: hovered ? 2.5 : (style?.strokeWidth ?? 2),
-          transition: 'stroke 0.15s, stroke-width 0.15s',
-        }}
-        markerEnd={markerEnd}
-      />
+
 
       {/* interaction area: transparent wide path for easier clicks (kept for pointer interactions) */}
       <path
@@ -250,9 +239,12 @@ const CustomEdge: React.FC<EdgeProps> = ({
       <path
         d={edgePath}
         fill="none"
-        stroke={selected ? '#3b82f6' : (hovered ? '#60a5fa' : (style?.stroke ?? '#93C5FD'))}
+        stroke={selected ? '#3b82f6' : (hovered ? '#60a5fa' : (style?.stroke ?? '#bfdbfe'))}
         strokeWidth={selected || hovered ? 2 : (style?.strokeWidth ?? 1.5)}
+        strokeLinecap="round"
+        markerEnd={`url(#${selected ? 'arrow-selected' : hovered ? 'arrow-hover' : 'arrow-default'})`}
         className="react-flow__edge-path"
+        style={{ transition: 'stroke 0.2s, stroke-width 0.2s' }}
       />
 
       {/* overlay buttons at midpoint (show on hover or selected) */}
@@ -307,11 +299,11 @@ const edgeTypes = { custom: CustomEdge };
 
 // helper to build edge options including data callback for adding parallel
 const buildEdgeStyle = (onAddParallel: (s: string, t: string) => void) => ({
-  type: 'smoothstep' as const,
-  style: { stroke: '#93C5FD', strokeWidth: 2 },
+  type: 'custom' as const,
+  style: { stroke: '#bfdbfe', strokeWidth: 1.5 },
   markerEnd: {
     type: MarkerType.ArrowClosed,
-    color: '#93C5FD',
+    color: '#bfdbfe',
   },
   data: { onAddParallel },
 });
@@ -447,12 +439,12 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
           id: `e-${sorted[i].id}-${sorted[i + 1].id}`,
           source: sorted[i].id,
           target: sorted[i + 1].id,
-          type: 'smoothstep',
+          type: 'custom',
           animated: false,
-          style: { stroke: '#93C5FD', strokeWidth: 2 },
+          style: { stroke: '#bfdbfe', strokeWidth: 1.5 },
           markerEnd: {
             type: MarkerType.ArrowClosed,
-            color: '#93C5FD',
+            color: '#bfdbfe',
           },
         });
       }
@@ -572,6 +564,19 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
 
   return (
     <>
+    <svg style={{ position: 'absolute', top: 0, left: 0, width: 0, height: 0 }}>
+      <defs>
+        <marker id="arrow-default" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L0,6 L8,3 z" fill="#bfdbfe" />
+        </marker>
+        <marker id="arrow-hover" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L0,6 L8,3 z" fill="#60a5fa" />
+        </marker>
+        <marker id="arrow-selected" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
+          <path d="M0,0 L0,6 L8,3 z" fill="#3b82f6" />
+        </marker>
+      </defs>
+    </svg>
     <ReactFlow
       nodes={nodes}
       edges={edges}
@@ -595,7 +600,8 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       nodesDraggable={!readonly}
       nodesConnectable={!readonly}
       elementsSelectable
-      defaultEdgeOptions={edgeOptions}
+      connectionLineType={ConnectionLineType.Bezier}
+      defaultEdgeOptions={{ type: 'default', animated: false, style: { stroke: '#bfdbfe', strokeWidth: 1.5 } }}
       onEdgesDelete={(delEdges) => {
         delEdges.forEach(e => {
           const sourceId = (e as any).source || '';

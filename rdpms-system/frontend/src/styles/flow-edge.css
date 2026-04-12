@@ -19,3 +19,19 @@
   stroke-width: 2 !important;
   cursor: pointer;
 }
+
+/* Handle (connection point) styling: small white circle with blue border */
+.react-flow__handle {
+  width: 8px !important;
+  height: 8px !important;
+  background: white !important;
+  border: 1.5px solid #93c5fd !important;
+  border-radius: 50% !important;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.react-flow__handle:hover,
+.react-flow__handle-connecting {
+  border-color: #3b82f6 !important;
+  transform: scale(1.3);
+}
