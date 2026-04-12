@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProjectCard, { Project } from '../components/ProjectCard';
 import EditProjectModal from '../components/EditProjectModal';
-import api from '../lib/api'; // 根据 Task1 结果调整路径
+import { projectAPI } from '../api/client';
 
 // ─── 状态/类型选项（与 Prisma Schema 对齐）───
 const TYPE_OPTIONS  = ['platform', '定制', '合作', '测试', '应用'];
@@ -32,9 +32,9 @@ const Projects: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await api.get('/projects');
-      // 兼容 { projects: [...] } 和 [...] 两种返回格式
-      setProjects(res.data.projects ?? res.data ?? []);
+      const res = await projectAPI.list(params);
+      // projectAPI.list 返回 ApiResponse，优先使用 list 或 projects 字段
+      setProjects(res.list ?? res.projects ?? res.flat ?? (res as any) ?? []);
     } catch (err: any) {
       setError(err?.response?.data?.error ?? '加载失败，请刷新重试');
     } finally {
@@ -77,7 +77,7 @@ const Projects: React.FC = () => {
   const handleDelete = async (id: string) => {
     if (!window.confirm('确认删除该项目？此操作不可撤销。')) return;
     try {
-      await api.delete(`/projects/${id}`);
+      await projectAPI.delete(id);
       setProjects(prev => prev.filter(p => p.id !== id));
       setSelectedIds(prev => prev.filter(i => i !== id));
     } catch (err: any) {
@@ -90,7 +90,7 @@ const Projects: React.FC = () => {
     if (!selectedIds.length) return;
     if (!window.confirm(`确认删除选中的 ${selectedIds.length} 个项目？此操作不可撤销。`)) return;
     try {
-      await api.post('/projects/batch-delete', { ids: selectedIds });
+      await projectAPI.batchDelete(selectedIds);
       setProjects(prev => prev.filter(p => !selectedIds.includes(p.id)));
       setSelectedIds([]);
     } catch (err: any) {
@@ -102,7 +102,7 @@ const Projects: React.FC = () => {
   const handleBatchStatus = async (status: string) => {
     if (!selectedIds.length || !status) return;
     try {
-      await api.post('/projects/batch-update-status', { ids: selectedIds, status });
+      await projectAPI.batchUpdateStatus(selectedIds, status);
       setProjects(prev =>
         prev.map(p => selectedIds.includes(p.id) ? { ...p, status } : p)
       );
