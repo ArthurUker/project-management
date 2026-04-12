@@ -451,12 +451,6 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
     };
     loadProjects();
   }, []);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterProject, setFilterProject] = useState(projectId || '');
-  const [showModal, setShowModal] = useState(false);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [addingColumn, setAddingColumn] = useState<string | null>(null);
-  const dragItem = useRef<Task | null>(null);
 
   // 定义看板列
   const columns: KanbanColumn[] = [
