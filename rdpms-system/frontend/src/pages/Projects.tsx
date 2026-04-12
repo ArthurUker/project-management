@@ -33,11 +33,13 @@ const Projects: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await projectAPI.list(params);
-      // projectAPI.list 返回 ApiResponse，优先使用 list 或 projects 字段
-      setProjects(res.list ?? res.projects ?? res.flat ?? (res as any) ?? []);
+      const res = await projectAPI.list();
+      // client.ts 响应拦截器已解包 response.data，res 即为后端返回的 JSON
+      // 后端返回格式兼容：{ projects: [...] } 或 { list: [...] } 或 [...] 直接数组
+      const data = (res as any).projects ?? (res as any).list ?? (res as any).flat ?? (res as any).data ?? res;
+      setProjects(Array.isArray(data) ? data : []);
     } catch (err: any) {
-      setError(err?.response?.data?.error ?? '加载失败，请刷新重试');
+      setError(err?.message ?? err?.error ?? '加载失败，请刷新重试');
     } finally {
       setLoading(false);
     }
