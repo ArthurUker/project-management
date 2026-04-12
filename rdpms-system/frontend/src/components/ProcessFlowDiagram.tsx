@@ -322,7 +322,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
 }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const { fitView } = useReactFlow();
+  const { fitView, getNodes } = useReactFlow();
 
   // drag-to-snap state
   const [dragOverNodeId, setDragOverNodeId] = useState<string | null>(null);
@@ -601,6 +601,10 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     const handleReLayout = () => {
       if (!phases?.length) return;
 
+      // Step 1: capture live node positions (avoid stale closure)
+      const currentNodes = (typeof getNodes === 'function') ? getNodes() : nodes;
+
+      // build raw nodes/edges for dagre
       const rawNodes: Node[] = phases.map((p) => ({
         id: p.id,
         type: 'phase',
@@ -626,18 +630,54 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
         const sorted = [...phases].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
         for (let i = 0; i < sorted.length - 1; i++) {
           if (!rawEdges.find(e => e.source === sorted[i].id)) {
-          rawEdges.push({ id: `e-${sorted[i].id}-${sorted[i + 1].id}`, source: sorted[i].id, target: sorted[i + 1].id, type: 'custom', animated: false, style: { stroke: '#93C5FD', strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: '#93C5FD' }, data: { onAddParallel: onAddParallel ?? (() => {}), onDelete: onEdgeDelete } });
-        }
+            rawEdges.push({ id: `e-${sorted[i].id}-${sorted[i + 1].id}`, source: sorted[i].id, target: sorted[i + 1].id, type: 'custom', animated: false, style: { stroke: '#93C5FD', strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: '#93C5FD' }, data: { onAddParallel: onAddParallel ?? (() => {}), onDelete: onEdgeDelete } });
+          }
         }
       }
 
+      // Step 2: run dagre layout
       const { nodes: ln, edges: le } = getLayoutedElements(rawNodes, rawEdges);
 
-      // compute displayOrder using layout positions (Y coordinate)
-      const nodePositions = new Map<string, { x: number; y: number }>(ln.map(n => [n.id, n.position] as [string, {x:number,y:number}]));
-      const displayOrderMap = computeDisplayOrder(phases, nodePositions);
-      const lnUpdated = ln.map(n => ({ ...n, data: { ...n.data, displayOrder: displayOrderMap.get(n.id) ?? String(n.data?.order ?? 1) } }));
+      // Step 3: compute parallel groups (BFS by phases.nextPhaseIds)
+      const inDegree = new Map<string, number>();
+      const children = new Map<string, string[]>();
+      phases.forEach(p => { if (!inDegree.has(p.id)) inDegree.set(p.id, 0); const nexts = p.nextPhaseIds ?? []; children.set(p.id, nexts); nexts.forEach(nid => inDegree.set(nid, (inDegree.get(nid) ?? 0) + 1)); });
+      let cur: string[] = [];
+      phases.forEach(p => { if ((inDegree.get(p.id) ?? 0) === 0) cur.push(p.id); });
+      const parallelGroups: string[][] = [];
+      while (cur.length > 0) {
+        if (cur.length > 1) parallelGroups.push([...cur]);
+        const next: string[] = [];
+        cur.forEach(id => { (children.get(id) ?? []).forEach(nid => { inDegree.set(nid, (inDegree.get(nid) ?? 1) - 1); if (inDegree.get(nid) === 0) next.push(nid); }); });
+        cur = next;
+      }
 
+      // Step 4: snapshot user rank within each parallel group (using currentNodes Y)
+      const userRankSnapshot = new Map<string, number>();
+      parallelGroups.forEach(group => {
+        const arr = group.map(id => ({ id, y: currentNodes.find(n => n.id === id)?.position.y ?? 0 }));
+        arr.sort((a, b) => a.y - b.y);
+        arr.forEach((it, idx) => userRankSnapshot.set(it.id, idx));
+      });
+
+      // Step 5: for each parallel group, get dagre Y pool and reassign by user rank
+      let lnAdjusted = ln;
+      parallelGroups.forEach(group => {
+        if (group.length < 2) return;
+        const dagreYs = group.map(id => ln.find(n => n.id === id)?.position.y ?? 0).sort((a, b) => a - b);
+        lnAdjusted = lnAdjusted.map(n => {
+          if (!group.includes(n.id)) return n;
+          const rank = userRankSnapshot.get(n.id) ?? 0;
+          return { ...n, position: { ...n.position, y: dagreYs[Math.min(rank, dagreYs.length - 1)] } };
+        });
+      });
+
+      // Step 6: recompute displayOrder using adjusted positions
+      const nodePositions = new Map<string, { x: number; y: number }>(lnAdjusted.map(n => [n.id, n.position] as [string, {x:number,y:number}]));
+      const displayOrderMap = computeDisplayOrder(phases, nodePositions);
+      const lnUpdated = lnAdjusted.map(n => ({ ...n, data: { ...n.data, displayOrder: displayOrderMap.get(n.id) ?? String(n.data?.order ?? 1) } }));
+
+      // Step 7: apply
       setNodes(lnUpdated);
       setEdges(le);
       setTimeout(() => fitView({ padding: 0.25, duration: 400 }), 50);
