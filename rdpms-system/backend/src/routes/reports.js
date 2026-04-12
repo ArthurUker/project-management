@@ -126,6 +126,31 @@ reports.post('/', async (c) => {
   }
 });
 
+// 更新汇报（按 id 更新内容）
+reports.put('/:id', async (c) => {
+  try {
+    const id = c.req.param('id');
+    const userId = c.get('userId');
+    const body = await c.req.json();
+
+    const existing = await prisma.report.findUnique({ where: { id } });
+    if (!existing) return c.json({ error: '汇报不存在' }, 404);
+    if (existing.userId !== userId) return c.json({ error: '无权修改他人的汇报' }, 403);
+
+    const data = {};
+    if (body.content !== undefined) data.content = body.content;
+    if (body.status !== undefined) data.status = body.status;
+    if (body.month !== undefined) data.month = body.month;
+    if (body.reportType !== undefined) data.reportType = body.reportType;
+
+    const updated = await prisma.report.update({ where: { id }, data, include: { user: { select: { id: true, name: true } }, project: { select: { id: true, name: true } } } });
+    return c.json(updated);
+  } catch (error) {
+    console.error('[PUT REPORT]', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // 提交汇报
 reports.post('/:id/submit', async (c) => {
   const id = c.params.id;

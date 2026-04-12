@@ -196,8 +196,19 @@ export default function ReportEdit() {
       
       const commonStatus = asDraft ? '草稿' : '已提交';
 
-      // 如果是通用模板：对每个 projectReports 分别提交（后端期望 top-level projectId）
-      if (dailyTemplate === 'general') {
+      // 如果正在编辑已有汇报（id）则直接更新该汇报，确保草稿回填正常
+      if (id && id !== 'new') {
+        const payload: any = {
+          content: JSON.stringify(dailyTemplate === 'general' ? { projectReports } : { reagentReports }),
+          status: commonStatus,
+          month: fullMonth,
+          reportType,
+        };
+        console.log('[UPDATE REPORT] id:', id, 'payload:', JSON.stringify(payload, null, 2));
+        await reportAPI.update(id as string, payload);
+
+      } else if (dailyTemplate === 'general') {
+        // 新建模式：为每个 projectReports 分别提交（后端期望 top-level projectId）
         const payloads = projectReports.map((report) => ({
           projectId: report.projectId,
           reportType,
