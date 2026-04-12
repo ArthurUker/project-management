@@ -470,6 +470,23 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       },
     }));
 
+    // build helper: identify parallel groups before layout
+    const getParallelGroups = (phs: Phase[]) => {
+      const inDegree = new Map<string, number>();
+      const children = new Map<string, string[]>();
+      phs.forEach(p => { if (!inDegree.has(p.id)) inDegree.set(p.id, 0); const nexts = p.nextPhaseIds ?? []; children.set(p.id, nexts); nexts.forEach(nid => inDegree.set(nid, (inDegree.get(nid) ?? 0) + 1)); });
+      const groups: string[][] = [];
+      let current: string[] = [];
+      phs.forEach(p => { if ((inDegree.get(p.id) ?? 0) === 0) current.push(p.id); });
+      while (current.length > 0) {
+        if (current.length > 1) groups.push([...current]);
+        const next: string[] = [];
+        current.forEach(id => { (children.get(id) ?? []).forEach(nid => { inDegree.set(nid, (inDegree.get(nid) ?? 1) - 1); if (inDegree.get(nid) === 0) next.push(nid); }); });
+        current = next;
+      }
+      return groups;
+    };
+
     // 构建边：优先用 nextPhaseIds，回退到按 order 线性连接
     const rawEdges: Edge[] = [];
 
@@ -530,13 +547,39 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       }
     }
 
+    // identify parallel groups and record user order
+    const parallelGroups = getParallelGroups(sortedPhases);
+    const userOrderMap = new Map<string, number>();
+    parallelGroups.forEach(group => {
+      const sortedByY = [...group].sort((a, b) => {
+        const ya = nodes.find(n => n.id === a)?.position.y ?? 0;
+        const yb = nodes.find(n => n.id === b)?.position.y ?? 0;
+        return ya - yb;
+      });
+      sortedByY.forEach((id, idx) => userOrderMap.set(id, idx));
+    });
+
     const { nodes: ln, edges: le } = getLayoutedElements(rawNodes, rawEdges);
 
-    // compute displayOrder using layout positions (Y coordinate)
-    const nodePositions = new Map<string, { x: number; y: number }>(ln.map(n => [n.id, n.position] as [string, {x:number,y:number}]));
+    // After dagre layout: reassign Y within each parallel group to preserve user order
+    let lnAdjusted = ln;
+    parallelGroups.forEach(group => {
+      if (group.length < 2) return;
+      const dagreYs = [...group]
+        .map(id => ln.find(n => n.id === id)?.position.y ?? 0)
+        .sort((a, b) => a - b);
+      lnAdjusted = lnAdjusted.map(n => {
+        if (!group.includes(n.id)) return n;
+        const userRank = userOrderMap.get(n.id) ?? 0;
+        return { ...n, position: { ...n.position, y: dagreYs[userRank] } };
+      });
+    });
+
+    // compute displayOrder using adjusted positions
+    const nodePositions = new Map<string, { x: number; y: number }>(lnAdjusted.map(n => [n.id, n.position] as [string, {x:number,y:number}]));
     const displayOrderMap = computeDisplayOrder(sortedPhases, nodePositions);
 
-    const lnUpdated = ln.map(n => ({
+    const lnUpdated = lnAdjusted.map(n => ({
       ...n,
       data: {
         ...n.data,
