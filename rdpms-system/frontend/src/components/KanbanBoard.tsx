@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '../store/appStore';
-import { taskAPI } from '../api/client';
+import { taskAPI, projectAPI } from '../api/client';
 import DocReference from './DocReference';
 
 // 任务类型定义
@@ -428,7 +428,29 @@ interface KanbanBoardProps {
 }
 
 export default function KanbanBoard({ projectId }: KanbanBoardProps) {
-  const { tasks, projects, saveTaskLocal, setTasks: _setTasks } = useAppStore();
+  const { tasks, projects, saveTaskLocal, setTasks: _setTasks, setProjects } = useAppStore();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterProject, setFilterProject] = useState(projectId || '');
+  const [showModal, setShowModal] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [addingColumn, setAddingColumn] = useState<string | null>(null);
+  const dragItem = useRef<Task | null>(null);
+
+  // Ensure projects are loaded the same way Projects page does
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        if (projects && projects.length > 0) return;
+        const res: any = await projectAPI.list({ pageSize: 999 });
+        const list = res.list || res.data?.list || res.data || [];
+        setProjects(list);
+        console.log('[KanbanBoard] loaded projects for dropdown:', list.length);
+      } catch (err) {
+        console.error('[KanbanBoard] failed to load projects for dropdown', err);
+      }
+    };
+    loadProjects();
+  }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterProject, setFilterProject] = useState(projectId || '');
   const [showModal, setShowModal] = useState(false);
