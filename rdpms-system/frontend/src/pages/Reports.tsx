@@ -71,6 +71,19 @@ export default function Reports() {
       setLoading(false);
     }
   };
+
+  const handleDeleteReport = async (e: any, id: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!window.confirm('确认删除该草稿？')) return;
+    try {
+      await reportAPI.delete(id);
+      await loadReports();
+    } catch (err) {
+      console.error('删除失败', err);
+      alert('删除失败，请重试');
+    }
+  };
   
   // 计算当前月份
   const now = new Date();
@@ -256,9 +269,19 @@ export default function Reports() {
                             </p>
                           </div>
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${STATUS_COLORS[report.status]}`}>
-                          {report.status}
-                        </span>
+                        <div className="flex items-center gap-3">
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${STATUS_COLORS[report.status]}`}>
+                            {report.status}
+                          </span>
+                          {(report.status === '草稿' || report.status === 'draft') && (
+                            <button
+                              onClick={(e) => handleDeleteReport(e, report.id)}
+                              className="text-red-500 hover:text-red-700 text-sm"
+                            >
+                              删除
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </Link>
                   ))}

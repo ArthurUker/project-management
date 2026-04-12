@@ -588,6 +588,23 @@ export default function ReportEdit() {
           >
             取消
           </button>
+          {id && id !== 'new' && (
+            <button
+              onClick={async () => {
+                if (!window.confirm('确认删除该草稿？')) return;
+                try {
+                  await reportAPI.delete(id as string);
+                  navigate('/reports');
+                } catch (err) {
+                  console.error('删除失败', err);
+                  alert('删除失败，请重试');
+                }
+              }}
+              className="text-red-500 border border-red-300 px-4 py-2 rounded hover:bg-red-50"
+            >
+              删除草稿
+            </button>
+          )}
           <button
             onClick={() => handleSave(true)}
             className="btn btn-secondary"

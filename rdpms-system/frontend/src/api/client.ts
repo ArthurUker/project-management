@@ -98,6 +98,7 @@ export const reportAPI = {
   versions: (id: string) => get<ApiResponse<any>>(`/reports/${id}/versions`),
   export: (month: string, params?: Record<string, any>) =>
     get<ApiResponse<any>>(`/reports/export/month/${month}`, { params }),
+  delete: (id: string) => del<ApiResponse<any>>(`/reports/${id}`),
 };
 
 export const progressAPI = {

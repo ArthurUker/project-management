@@ -245,4 +245,28 @@ reports.get('/export/month/:month', async (c) => {
   return c.json({ month, reports, exportedAt: new Date().toISOString() });
 });
 
+// DELETE 报告（仅允许删除草稿）
+reports.delete('/:id', async (c) => {
+  try {
+    const id = c.req.param('id');
+    const userId = c.get('userId');
+
+    const report = await prisma.report.findUnique({ where: { id } });
+    if (!report) return c.json({ error: '汇报不存在' }, 404);
+
+    // 仅允许删除草稿
+    if (report.status !== '草稿' && report.status !== 'draft') {
+      return c.json({ error: '只能删除草稿状态的汇报' }, 403);
+    }
+
+    if (report.userId !== userId) return c.json({ error: '无权删除他人的汇报' }, 403);
+
+    await prisma.report.delete({ where: { id } });
+    return c.json({ message: '删除成功' });
+  } catch (error) {
+    console.error('[DELETE REPORT]', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 export default reports;
