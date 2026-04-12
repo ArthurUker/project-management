@@ -110,6 +110,7 @@ projects.get('/:id', async (c) => {
 // 创建项目
 projects.post('/', async (c) => {
   const body = await c.req.json();
+  console.log('[CREATE PROJECT] req.body:', JSON.stringify(body, null, 2));
   const userId = c.get('userId');
   const userRole = c.get('userRole');
 
@@ -133,6 +134,16 @@ projects.post('/', async (c) => {
   delete projectData.manager;
   delete projectData.members;
   delete projectData._count;
+  delete projectData.createdAt;
+  delete projectData.updatedAt;
+
+  // 规范化日期字段
+  if (projectData.startDate) {
+    projectData.startDate = new Date(projectData.startDate);
+  }
+  if (projectData.endDate) {
+    projectData.endDate = new Date(projectData.endDate);
+  }
 
   const project = await prisma.project.create({
     data: {

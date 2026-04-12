@@ -9,3 +9,113 @@
 [32m[nodemon] starting `node src/index.js`[39m
 🚀 R&D PMS API starting on port 3000...
 ✅ Server is running at http://localhost:3000
+Error: PrismaClientValidationError: 
+Invalid `prisma.project.create()` invocation:
+
+{
+  data: {
+    name: "测试0412",
+    type: "定制",
+    startDate: "2026-04-12T00:00:00.000Z",
+    endDate: "2026-04-13T00:00:00.000Z",
+    code: "PRJ-2026-001",
+    templateId: "18696973-8e93-4775-8d2e-b09de0dc704d",
+    ~~~~~~~~~~
+    manager: {
+      connect: {
+        id: "eaa04094-dfb0-41ba-9209-ac663f0dd396"
+      }
+    },
+?   id?: String,
+?   subtype?: String | Null,
+?   status?: String,
+?   position?: String | Null,
+?   createdAt?: DateTime,
+?   updatedAt?: DateTime,
+?   template?: ProjectTemplateCreateNestedOneWithoutProjectsInput,
+?   members?: ProjectMemberCreateNestedManyWithoutProjectInput,
+?   reports?: ReportCreateNestedManyWithoutProjectInput,
+?   tasks?: TaskCreateNestedManyWithoutProjectInput,
+?   milestones?: MilestoneCreateNestedManyWithoutProjectInput,
+?   monthlyProgress?: MonthlyProgressCreateNestedManyWithoutProjectInput
+  },
+  include: {
+    manager: {
+      select: {
+        id: true,
+        name: true
+      }
+    }
+  }
+}
+
+Unknown argument `templateId`. Did you mean `template`? Available options are marked with ?.
+    at wn (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/@prisma/client/runtime/library.js:29:1363)
+    at $n.handleRequestError (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/@prisma/client/runtime/library.js:121:6958)
+    at $n.handleAndLogRequestError (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/@prisma/client/runtime/library.js:121:6623)
+    at $n.request (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/@prisma/client/runtime/library.js:121:6307)
+    at async l (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/@prisma/client/runtime/library.js:130:9633)
+    at async file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/src/routes/projects.js:137:19
+    at async dispatch (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:17)
+    at async authMiddleware (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/src/routes/auth.js:25:5)
+    at async dispatch (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:17)
+    at async cors2 (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/middleware/cors/index.js:82:5) {
+  clientVersion: '5.22.0'
+}
+Error: PrismaClientValidationError: 
+Invalid `prisma.project.create()` invocation:
+
+{
+  data: {
+    name: "测试0412",
+    type: "定制",
+    startDate: "2026-04-12T00:00:00.000Z",
+    endDate: "2026-04-13T00:00:00.000Z",
+    code: "PRJ-2026-001",
+    templateId: "18696973-8e93-4775-8d2e-b09de0dc704d",
+    ~~~~~~~~~~
+    manager: {
+      connect: {
+        id: "eaa04094-dfb0-41ba-9209-ac663f0dd396"
+      }
+    },
+?   id?: String,
+?   subtype?: String | Null,
+?   status?: String,
+?   position?: String | Null,
+?   createdAt?: DateTime,
+?   updatedAt?: DateTime,
+?   template?: ProjectTemplateCreateNestedOneWithoutProjectsInput,
+?   members?: ProjectMemberCreateNestedManyWithoutProjectInput,
+?   reports?: ReportCreateNestedManyWithoutProjectInput,
+?   tasks?: TaskCreateNestedManyWithoutProjectInput,
+?   milestones?: MilestoneCreateNestedManyWithoutProjectInput,
+?   monthlyProgress?: MonthlyProgressCreateNestedManyWithoutProjectInput
+  },
+  include: {
+    manager: {
+      select: {
+        id: true,
+        name: true
+      }
+    }
+  }
+}
+
+Unknown argument `templateId`. Did you mean `template`? Available options are marked with ?.
+    at wn (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/@prisma/client/runtime/library.js:29:1363)
+    at $n.handleRequestError (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/@prisma/client/runtime/library.js:121:6958)
+    at $n.handleAndLogRequestError (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/@prisma/client/runtime/library.js:121:6623)
+    at $n.request (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/@prisma/client/runtime/library.js:121:6307)
+    at async l (/Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/@prisma/client/runtime/library.js:130:9633)
+    at async file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/src/routes/projects.js:137:19
+    at async dispatch (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:17)
+    at async authMiddleware (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/src/routes/auth.js:25:5)
+    at async dispatch (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/compose.js:22:17)
+    at async cors2 (file:///Users/renkangguo/CodeBuddy/20260407211420/rdpms-system/backend/node_modules/hono/dist/middleware/cors/index.js:82:5) {
+  clientVersion: '5.22.0'
+}
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node src/index.js`[39m
+🚀 R&D PMS API starting on port 3000...
+✅ Server is running at http://localhost:3000
