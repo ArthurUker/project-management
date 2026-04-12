@@ -69,7 +69,7 @@ projects.get('/', async (c) => {
 
 // 获取单个项目
 projects.get('/:id', async (c) => {
-  const { id } = c.params;
+  const id = c.req.param('id');
 
   const project = await prisma.project.findUnique({
     where: { id },
@@ -199,7 +199,7 @@ projects.post('/', async (c) => {
 
 // 更新项目
 projects.put('/:id', async (c) => {
-  const { id } = c.params;
+  const id = c.req.param('id');
   const body = await c.req.json();
   
   // 不能直接修改managerId，需要通过成员接口
@@ -229,7 +229,7 @@ projects.put('/:id', async (c) => {
 
 // 删除项目
 projects.delete('/:id', async (c) => {
-  const { id } = c.params;
+  const id = c.req.param('id');
   
   await prisma.project.delete({ where: { id } });
   
@@ -238,7 +238,7 @@ projects.delete('/:id', async (c) => {
 
 // 获取项目成员
 projects.get('/:id/members', async (c) => {
-  const { id } = c.params;
+  const id = c.req.param('id');
   
   const members = await prisma.projectMember.findMany({
     where: { projectId: id },
@@ -254,7 +254,7 @@ projects.get('/:id/members', async (c) => {
 
 // 添加项目成员
 projects.post('/:id/members', async (c) => {
-  const { id } = c.params;
+  const id = c.req.param('id');
   const { userId, role = 'member' } = await c.req.json();
   
   if (!userId) {
@@ -290,7 +290,8 @@ projects.post('/:id/members', async (c) => {
 
 // 移除项目成员
 projects.delete('/:id/members/:userId', async (c) => {
-  const { id, userId } = c.params;
+  const id = c.req.param('id');
+  const userId = c.req.param('userId');
   
   // 检查是否为项目负责人
   const project = await prisma.project.findUnique({
@@ -339,7 +340,7 @@ projects.get('/stats/status', async (c) => {
 
 // 套用模版到已有项目（为项目批量生成任务和里程碑）
 projects.post('/:id/apply-template', async (c) => {
-  const { id } = c.params;
+  const id = c.req.param('id');
   const { templateId, startDate } = await c.req.json();
 
   if (!templateId) return c.json({ error: '模版ID不能为空' }, 400);

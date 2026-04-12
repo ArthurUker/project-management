@@ -8,7 +8,7 @@ progress.use('*', authMiddleware);
 
 // 获取项目月度进展
 progress.get('/project/:projectId', async (c) => {
-  const { projectId } = c.params;
+  const projectId = c.req.param('projectId');
   const { months = 6 } = c.req.query();
   
   const progresses = await prisma.monthlyProgress.findMany({
@@ -25,7 +25,7 @@ progress.get('/project/:projectId', async (c) => {
 
 // 填写/更新月度进展
 progress.post('/project/:projectId', async (c) => {
-  const { projectId } = c.params;
+  const projectId = c.req.param('projectId');
   const userId = c.get('userId');
   const { month, actualWork, completion, nextPlan, risks, projectStatus } = await c.req.json();
   
@@ -68,7 +68,7 @@ progress.post('/project/:projectId', async (c) => {
 
 // 获取所有项目月度进展（用于报告）
 progress.get('/all/:month', async (c) => {
-  const { month } = c.params;
+  const month = c.req.param('month');
   
   const progresses = await prisma.monthlyProgress.findMany({
     where: { month },
@@ -85,7 +85,7 @@ progress.get('/all/:month', async (c) => {
 
 // 导出月度进展报告
 progress.get('/export/:month', async (c) => {
-  const { month } = c.params;
+  const month = c.req.param('month');
   
   const progresses = await prisma.monthlyProgress.findMany({
     where: { month },
