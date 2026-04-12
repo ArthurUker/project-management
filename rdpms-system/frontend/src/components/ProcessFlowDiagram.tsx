@@ -346,54 +346,6 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     edgeReconnectSuccessful.current = false;
   }, []);
 
-  /**
-   * 计算每个 phase 的显示编号（string）
-   * - 单节点层级："1","2","3"...
-   * - 并行节点层级："4-1","4-2"...
-   */
-  function computeDisplayOrder(phs: Phase[]): Map<string, string> {
-    const displayOrderMap = new Map<string, string>();
-    const inDegree = new Map<string, number>();
-    const children = new Map<string, string[]>();
-
-    phs.forEach(p => {
-      if (!inDegree.has(p.id)) inDegree.set(p.id, 0);
-      const nexts = p.nextPhaseIds ?? [];
-      children.set(p.id, nexts);
-      nexts.forEach(nid => {
-        inDegree.set(nid, (inDegree.get(nid) ?? 0) + 1);
-      });
-    });
-
-    const queue: string[] = [];
-    phs.forEach(p => {
-      if ((inDegree.get(p.id) ?? 0) === 0) queue.push(p.id);
-    });
-
-    let order = 1;
-    let current = [...queue];
-    while (current.length > 0) {
-      const isParallel = current.length > 1;
-      // assign display strings
-      current.forEach((id, subIndex) => {
-        if (isParallel) displayOrderMap.set(id, `${order}-${subIndex + 1}`);
-        else displayOrderMap.set(id, `${order}`);
-      });
-
-      const next: string[] = [];
-      current.forEach(id => {
-        (children.get(id) ?? []).forEach(nid => {
-          inDegree.set(nid, (inDegree.get(nid) ?? 1) - 1);
-          if (inDegree.get(nid) === 0) next.push(nid);
-        });
-      });
-
-      order++;
-      current = next;
-    }
-
-    return displayOrderMap;
-  }
 
   const onReconnect = useCallback((oldEdge: Edge, newConnection: Connection) => {
     edgeReconnectSuccessful.current = true;
@@ -417,6 +369,79 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     edgeReconnectSuccessful.current = true;
   }, [onEdgeDelete]);
 
+  /**
+   * 计算每个 phase 的显示编号（string），并行层级按 Y 排序（上方编号较小）
+   * @param phs phases list
+   * @param nodePositions Map of node id to {x,y}
+   */
+  const computeDisplayOrder = (phs: Phase[], nodePositions: Map<string, { x: number; y: number }>) => {
+    const displayOrderMap = new Map<string, string>();
+    const inDegree = new Map<string, number>();
+    const children = new Map<string, string[]>();
+
+    phs.forEach(p => {
+      if (!inDegree.has(p.id)) inDegree.set(p.id, 0);
+      const nexts = p.nextPhaseIds ?? [];
+      children.set(p.id, nexts);
+      nexts.forEach(nid => {
+        inDegree.set(nid, (inDegree.get(nid) ?? 0) + 1);
+      });
+    });
+
+    const queue: string[] = [];
+    phs.forEach(p => {
+      if ((inDegree.get(p.id) ?? 0) === 0) queue.push(p.id);
+    });
+
+    let order = 1;
+    let current = [...queue];
+    while (current.length > 0) {
+      const isParallel = current.length > 1;
+
+      const sorted = isParallel
+        ? [...current].sort((a, b) => {
+            const ya = nodePositions.get(a)?.y ?? 0;
+            const yb = nodePositions.get(b)?.y ?? 0;
+            return ya - yb;
+          })
+        : current;
+
+      sorted.forEach((id, subIndex) => {
+        if (isParallel) displayOrderMap.set(id, `${order}-${subIndex + 1}`);
+        else displayOrderMap.set(id, `${order}`);
+      });
+
+      const next: string[] = [];
+      current.forEach(id => {
+        (children.get(id) ?? []).forEach(nid => {
+          inDegree.set(nid, (inDegree.get(nid) ?? 1) - 1);
+          if (inDegree.get(nid) === 0) next.push(nid);
+        });
+      });
+
+      order++;
+      current = next;
+    }
+
+    return displayOrderMap;
+  };
+
+  // recalculate display order using current node positions
+  const recalculateDisplayOrder = useCallback((currentNodes?: Node[]) => {
+    const curNodes = currentNodes ?? nodes;
+    const nodePositions = new Map<string, { x: number; y: number }>(curNodes.map(n => [n.id, n.position] as [string, {x:number,y:number}]));
+    const sortedPhases = [...phases].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const displayOrderMap = computeDisplayOrder(sortedPhases, nodePositions);
+
+    setNodes(nds => (nds || []).map(n => ({
+      ...n,
+      data: {
+        ...n.data,
+        displayOrder: displayOrderMap.get(n.id) ?? n.data.displayOrder,
+      }
+    })));
+  }, [nodes, phases, setNodes]);
+
   // phases → nodes + edges
   useEffect(() => {
     if (!phases?.length) {
@@ -428,47 +453,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     // Sort phases and compute displayOrder so parallel phases share same number
     const sortedPhases = [...phases].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-    function computeDisplayOrder(phs: Phase[]) {
-      const displayOrderMap = new Map<string, string>();
-      const inDegree = new Map<string, number>();
-      const children = new Map<string, string[]>();
 
-      phs.forEach(p => {
-        if (!inDegree.has(p.id)) inDegree.set(p.id, 0);
-        const nexts = p.nextPhaseIds ?? [];
-        children.set(p.id, nexts);
-        nexts.forEach(nid => {
-          inDegree.set(nid, (inDegree.get(nid) ?? 0) + 1);
-        });
-      });
-
-      const queue: string[] = [];
-      phs.forEach(p => {
-        if ((inDegree.get(p.id) ?? 0) === 0) queue.push(p.id);
-      });
-
-      let order = 1;
-      let current = [...queue];
-      while (current.length > 0) {
-        const isParallel = current.length > 1;
-        current.forEach((id, subIndex) => {
-          if (isParallel) displayOrderMap.set(id, `${order}-${subIndex + 1}`);
-          else displayOrderMap.set(id, `${order}`);
-        });
-
-        const next: string[] = [];
-        current.forEach(id => {
-          (children.get(id) ?? []).forEach(nid => {
-            inDegree.set(nid, (inDegree.get(nid) ?? 1) - 1);
-            if (inDegree.get(nid) === 0) next.push(nid);
-          });
-        });
-        order++;
-        current = next;
-      }
-
-      return displayOrderMap;
-    }
 
     const displayOrderMap = computeDisplayOrder(sortedPhases);
 
@@ -548,7 +533,20 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     }
 
     const { nodes: ln, edges: le } = getLayoutedElements(rawNodes, rawEdges);
-    setNodes(ln);
+
+    // compute displayOrder using layout positions (Y coordinate)
+    const nodePositions = new Map<string, { x: number; y: number }>(ln.map(n => [n.id, n.position] as [string, {x:number,y:number}]));
+    const displayOrderMap = computeDisplayOrder(sortedPhases, nodePositions);
+
+    const lnUpdated = ln.map(n => ({
+      ...n,
+      data: {
+        ...n.data,
+        displayOrder: displayOrderMap.get(n.id) ?? String(n.data?.order ?? 1),
+      },
+    }));
+
+    setNodes(lnUpdated);
     setEdges(le);
 
     // 布局完成后自适应视图
@@ -593,7 +591,13 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       }
 
       const { nodes: ln, edges: le } = getLayoutedElements(rawNodes, rawEdges);
-      setNodes(ln);
+
+      // compute displayOrder using layout positions (Y coordinate)
+      const nodePositions = new Map<string, { x: number; y: number }>(ln.map(n => [n.id, n.position] as [string, {x:number,y:number}]));
+      const displayOrderMap = computeDisplayOrder(phases, nodePositions);
+      const lnUpdated = ln.map(n => ({ ...n, data: { ...n.data, displayOrder: displayOrderMap.get(n.id) ?? String(n.data?.order ?? 1) } }));
+
+      setNodes(lnUpdated);
       setEdges(le);
       setTimeout(() => fitView({ padding: 0.25, duration: 400 }), 50);
     };
@@ -643,7 +647,14 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       setDropMenuState({ visible: true, draggedPhaseId: draggedNode.id, targetPhaseId: dragOverNodeId, x, y });
     }
     setDragOverNodeId(null);
-  }, [dragOverNodeId]);
+
+    // Recalculate display order after user finishes dragging a node
+    try {
+      recalculateDisplayOrder();
+    } catch (err) {
+      // ignore
+    }
+  }, [dragOverNodeId, recalculateDisplayOrder]);
 
   // 更新节点样式以高亮拖拽目标
   useEffect(() => {
