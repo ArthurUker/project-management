@@ -362,3 +362,13 @@ Error: TypeError: Cannot destructure property 'projectId' of 'c.params' as it is
   ],
   "templateId": "a4df06f2-b1fa-46de-be1e-d537b36e393e"
 }
+[CREATE PROJECT] req.body: {
+  "name": "测试0412-2",
+  "type": "定制",
+  "managerId": "eaa04094-dfb0-41ba-9209-ac663f0dd396",
+  "startDate": "2026-04-12T00:00:00.000Z",
+  "endDate": "2026-04-13T00:00:00.000Z",
+  "tasks": [],
+  "milestones": [],
+  "templateId": "bca83d4a-4785-43f5-b8e6-53054c4bf8b4"
+}
