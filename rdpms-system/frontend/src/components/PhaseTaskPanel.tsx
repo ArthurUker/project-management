@@ -16,8 +16,8 @@ interface Task {
 
 interface PhaseTaskPanelProps {
   phaseId?: string;
-  tasks: Task[];
-  onTasksChange: (tasks: Task[]) => void;
+  tasks: any[]; // accept any shape from parent phases
+  onTasksChange: (tasks: any[]) => void;
 }
 
 const PhaseTaskPanel: React.FC<PhaseTaskPanelProps> = ({
