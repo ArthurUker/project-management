@@ -122,7 +122,7 @@ export default function PhaseProgressBar({ template, tasks, onPhaseClick }: Prop
           const isCurrent = phase.status === 'in_progress';
 
           return (
-            <div key={phase.id} className="flex items-start shrink-0">
+            <div key={phase.id ?? `phase-${idx}`} className="flex items-start shrink-0">
               {/* Phase node */}
               <div
                 className={`flex flex-col items-center cursor-pointer group ${idx === currentIdx ? '' : ''}`}

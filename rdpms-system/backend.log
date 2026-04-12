@@ -372,3 +372,101 @@ Error: TypeError: Cannot destructure property 'projectId' of 'c.params' as it is
   "milestones": [],
   "templateId": "bca83d4a-4785-43f5-b8e6-53054c4bf8b4"
 }
+[CREATE PROJECT] req.body: {
+  "name": "测试2",
+  "type": "定制",
+  "managerId": "eaa04094-dfb0-41ba-9209-ac663f0dd396",
+  "startDate": "2026-04-12T00:00:00.000Z",
+  "endDate": "2026-04-14T00:00:00.000Z",
+  "tasks": [
+    {
+      "title": "快速设计",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "方案设计",
+      "phaseOrder": 3,
+      "estimatedDays": 3,
+      "dueDate": "2026-04-15T00:00:00.000Z"
+    },
+    {
+      "title": "评审",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "设计方案评审",
+      "phaseOrder": 4,
+      "estimatedDays": 3,
+      "dueDate": "2026-04-18T00:00:00.000Z"
+    },
+    {
+      "title": "迭代",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "设计迭代再评审",
+      "phaseOrder": 5,
+      "estimatedDays": 3,
+      "dueDate": "2026-04-21T00:00:00.000Z"
+    },
+    {
+      "title": "采购",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "采购",
+      "phaseOrder": 6,
+      "estimatedDays": 3,
+      "dueDate": "2026-04-24T00:00:00.000Z"
+    },
+    {
+      "title": "快速组装",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "样机组装联调",
+      "phaseOrder": 7,
+      "estimatedDays": 3,
+      "dueDate": "2026-04-27T00:00:00.000Z"
+    },
+    {
+      "title": "测试",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "结合芯片性能测试",
+      "phaseOrder": 8,
+      "estimatedDays": 3,
+      "dueDate": "2026-04-30T00:00:00.000Z"
+    },
+    {
+      "title": "生产",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "加工生产",
+      "phaseOrder": 9,
+      "estimatedDays": 3,
+      "dueDate": "2026-05-03T00:00:00.000Z"
+    },
+    {
+      "title": "验证",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "客户验证",
+      "phaseOrder": 10,
+      "estimatedDays": 3,
+      "dueDate": "2026-05-06T00:00:00.000Z"
+    },
+    {
+      "title": "归档",
+      "priority": "中",
+      "status": "待开始",
+      "phase": "归档",
+      "phaseOrder": 11,
+      "estimatedDays": 3,
+      "dueDate": "2026-05-09T00:00:00.000Z"
+    }
+  ],
+  "milestones": [
+    {
+      "name": "样机完成",
+      "date": "2026-04-12T00:00:00.000Z",
+      "status": "待完成"
+    }
+  ],
+  "templateId": "2319b612-2fcc-4be5-81f5-cae216b7ee2c"
+}
