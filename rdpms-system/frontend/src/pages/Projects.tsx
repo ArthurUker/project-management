@@ -23,18 +23,18 @@ type ViewMode = 'card' | 'list' | 'kanban';
 // ── 视图切换图标 ──────────────────────────────────────
 const ViewIcons = {
   card: (
-    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
       <rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/>
       <rect x="3" y="13" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/>
     </svg>
   ),
   list: (
-    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
       <path strokeLinecap="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
     </svg>
   ),
   kanban: (
-    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
       <rect x="3" y="3" width="5" height="18" rx="1.5"/>
       <rect x="10" y="3" width="5" height="12" rx="1.5"/>
       <rect x="17" y="3" width="5" height="15" rx="1.5"/>
@@ -167,7 +167,7 @@ const Projects: React.FC = () => {
           onClick={e => e.stopPropagation()}
         />
         <div>
-          <div style={{ fontSize: '13px', fontWeight: 600, color: '#111827' }}>{project.name}</div>
+          <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>{project.name}</div>
           <div style={{ fontSize: '11px', color: '#9ca3af', fontFamily: 'monospace' }}>{project.code}</div>
         </div>
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
@@ -210,7 +210,7 @@ const Projects: React.FC = () => {
       <div style={{ flex: '0 0 280px', minWidth: '280px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', padding: '0 4px' }}>
           <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: cfg.dotColor, display: 'inline-block' }} />
-          <span style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>{status}</span>
+          <span style={{ fontSize: '14px', fontWeight: 600, color: '#374151' }}>{status}</span>
           <span style={{ fontSize: '12px', color: '#9ca3af', background: '#f3f4f6', padding: '1px 8px', borderRadius: '20px', marginLeft: 'auto' }}>{list.length}</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -218,7 +218,7 @@ const Projects: React.FC = () => {
             <ProjectCard key={p.id} project={p} onEdit={setEditingProject} onClick={() => navigate(`/projects/${p.id}`)} />
           ))}
           {list.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '32px 16px', color: '#d1d5db', fontSize: '13px', border: '2px dashed #e5e7eb', borderRadius: '12px' }}>
+            <div style={{ textAlign: 'center', padding: '32px 16px', color: '#d1d5db', fontSize: '14px', border: '2px dashed #e5e7eb', borderRadius: '12px' }}>
               暂无项目
             </div>
           )}
@@ -249,15 +249,15 @@ const Projects: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
 
           {/* 视图切换 */}
-          <div style={{ display: 'flex', alignItems: 'center', background: '#f3f4f6', borderRadius: '10px', padding: '4px', gap: '3px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', background: '#f3f4f6', borderRadius: '12px', padding: '5px', gap: '4px' }}>
             {(['card', 'list', 'kanban'] as ViewMode[]).map(mode => (
               <button
                 key={mode}
                 onClick={() => setViewMode(mode)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '6px',
-                  padding: '8px 14px', borderRadius: '8px',
-                  fontSize: '13px', fontWeight: 500, cursor: 'pointer', border: 'none',
+                  padding: '10px 20px', borderRadius: '9px',
+                  fontSize: '14px', fontWeight: 600, cursor: 'pointer', border: 'none',
                   transition: 'all .15s',
                   background: viewMode === mode ? '#fff' : 'transparent',
                   color: viewMode === mode ? '#2563eb' : '#6b7280',
@@ -276,9 +276,9 @@ const Projects: React.FC = () => {
           {/* 批量操作（有选中时显示） */}
           {selectedIds.length > 0 && (
             <>
-              <span style={{ fontSize: '13px', color: '#6b7280' }}>已选 {selectedIds.length} 项</span>
+              <span style={{ fontSize: '14px', color: '#6b7280' }}>已选 {selectedIds.length} 项</span>
               <select
-                style={{ padding: '7px 28px 7px 12px', border: '1.5px solid #e5e7eb', borderRadius: '8px', fontSize: '13px', color: '#374151', background: '#fff', cursor: 'pointer', outline: 'none' }}
+                style={{ padding: '7px 28px 7px 12px', border: '1.5px solid #e5e7eb', borderRadius: '9px', fontSize: '14px', color: '#374151', background: '#fff', cursor: 'pointer', outline: 'none' }}
                 onChange={e => { if (e.target.value) handleBatchStatus(e.target.value); e.target.value = ''; }}
                 defaultValue=""
               >
@@ -287,7 +287,7 @@ const Projects: React.FC = () => {
               </select>
               <button
                 onClick={handleBatchDelete}
-                style={{ padding: '7px 14px', border: '1.5px solid #fca5a5', borderRadius: '8px', fontSize: '13px', color: '#dc2626', background: '#fff', cursor: 'pointer', fontWeight: 500 }}
+                style={{ padding: '7px 14px', border: '1.5px solid #fca5a5', borderRadius: '9px', fontSize: '14px', color: '#dc2626', background: '#fff', cursor: 'pointer', fontWeight: 500 }}
               >
                 删除
               </button>
@@ -297,7 +297,7 @@ const Projects: React.FC = () => {
           {/* 刷新 */}
           <button
             onClick={loadProjects}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', border: '1.5px solid #e5e7eb', borderRadius: '8px', background: '#fff', fontSize: '13px', color: '#6b7280', cursor: 'pointer', fontWeight: 500 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', border: '1.5px solid #e5e7eb', borderRadius: '9px', background: '#fff', fontSize: '14px', color: '#6b7280', cursor: 'pointer', fontWeight: 500 }}
           >
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
             刷新
@@ -306,9 +306,9 @@ const Projects: React.FC = () => {
           {/* 新建 */}
           <button
             onClick={() => navigate('/projects/new')}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 18px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 8px rgba(37,99,235,.3)' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 18px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: '9px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 8px rgba(37,99,235,.3)' }}
           >
-            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" d="M12 4v16m8-8H4"/></svg>
+            <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" d="M12 4v16m8-8H4"/></svg>
             新建项目
           </button>
         </div>
@@ -347,17 +347,17 @@ const Projects: React.FC = () => {
         {/* 筛选栏 */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px',
-          flexWrap: 'wrap', background: '#fff', padding: '14px 18px',
+          flexWrap: 'wrap', background: '#fff', padding: '16px 22px',
           borderRadius: '12px', border: '1px solid #e5e7eb',
           boxShadow: '0 1px 4px rgba(0,0,0,.04)',
         }}>
           {/* 搜索框 */}
           <div style={{ position: 'relative', flex: 1, minWidth: '200px', maxWidth: '320px' }}>
-            <svg style={{ position: 'absolute', left: '11px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+            <svg style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
               <circle cx="11" cy="11" r="8"/><path strokeLinecap="round" d="m21 21-4.35-4.35"/>
             </svg>
             <input
-              style={{ width: '100%', padding: '8px 12px 8px 34px', border: '1.5px solid #e5e7eb', borderRadius: '8px', fontSize: '13px', color: '#374151', outline: 'none' }}
+              style={{ width: '100%', padding: '8px 12px 8px 34px', border: '1.5px solid #e5e7eb', borderRadius: '9px', fontSize: '14px', color: '#374151', outline: 'none' }}
               placeholder="搜索项目名称或编号..."
               value={searchKeyword}
               onChange={e => setSearchKeyword(e.target.value)}
@@ -368,14 +368,14 @@ const Projects: React.FC = () => {
 
           {/* 类型标签筛选 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '12px', color: '#9ca3af', fontWeight: 500, whiteSpace: 'nowrap' }}>类型：</span>
+            <span style={{ fontSize: '14px', color: '#9ca3af', fontWeight: 500, whiteSpace: 'nowrap' }}>类型：</span>
             {['', ...TYPE_OPTIONS].map(t => (
               <button
                 key={t || 'all'}
                 onClick={() => setFilterType(t)}
                 style={{
                   display: 'inline-flex', alignItems: 'center',
-                  padding: '5px 12px', borderRadius: '7px', fontSize: '12px', fontWeight: 500,
+                  padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 500, height: '42px',
                   cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .15s',
                   border: filterType === t ? '1.5px solid #3b82f6' : '1.5px solid #e5e7eb',
                   background: filterType === t ? '#eff6ff' : '#fff',
@@ -393,7 +393,7 @@ const Projects: React.FC = () => {
           <select
             value={filterStatus}
             onChange={e => setFilterStatus(e.target.value)}
-            style={{ padding: '8px 28px 8px 12px', border: '1.5px solid #e5e7eb', borderRadius: '8px', fontSize: '13px', color: '#374151', background: '#fff', cursor: 'pointer', outline: 'none', fontWeight: 500 }}
+            style={{ padding: '8px 28px 8px 12px', border: '1.5px solid #e5e7eb', borderRadius: '9px', fontSize: '14px', color: '#374151', background: '#fff', cursor: 'pointer', outline: 'none', fontWeight: 500 }}
           >
             <option value="">全部状态</option>
             {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -403,7 +403,7 @@ const Projects: React.FC = () => {
           <select
             value={filterManager}
             onChange={e => setFilterManager(e.target.value)}
-            style={{ padding: '8px 28px 8px 12px', border: '1.5px solid #e5e7eb', borderRadius: '8px', fontSize: '13px', color: '#374151', background: '#fff', cursor: 'pointer', outline: 'none', fontWeight: 500 }}
+            style={{ padding: '8px 28px 8px 12px', border: '1.5px solid #e5e7eb', borderRadius: '9px', fontSize: '14px', color: '#374151', background: '#fff', cursor: 'pointer', outline: 'none', fontWeight: 500 }}
           >
             <option value="">全部负责人</option>
             {managerOptions.map(m => <option key={m} value={m}>{m}</option>)}
@@ -411,8 +411,8 @@ const Projects: React.FC = () => {
 
           {/* 全选（列表/卡片视图） */}
           {viewMode !== 'kanban' && (
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#6b7280', cursor: 'pointer', marginLeft: 'auto' }}>
-              <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} style={{ accentColor: '#3b82f6', width: '14px', height: '14px' }} />
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: '#6b7280', cursor: 'pointer', marginLeft: 'auto' }}>
+              <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} style={{ accentColor: '#3b82f6', width: '16px', height: '16px' }} />
               全选
             </label>
           )}
@@ -420,10 +420,10 @@ const Projects: React.FC = () => {
 
         {/* 错误提示 */}
         {error && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', color: '#dc2626', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path strokeLinecap="round" d="M12 8v4m0 4h.01"/></svg>
+          <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', color: '#dc2626', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path strokeLinecap="round" d="M12 8v4m0 4h.01"/></svg>
             {error}
-            <button onClick={loadProjects} style={{ marginLeft: 'auto', color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '13px' }}>重试</button>
+            <button onClick={loadProjects} style={{ marginLeft: 'auto', color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>重试</button>
           </div>
         )}
 
@@ -480,7 +480,7 @@ const Projects: React.FC = () => {
               <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <svg width="20" height="20" fill="none" stroke="#9ca3af" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" d="M12 4v16m8-8H4"/></svg>
               </div>
-              <span style={{ fontSize: '13px', color: '#9ca3af', fontWeight: 500 }}>新建项目</span>
+              <span style={{ fontSize: '14px', color: '#9ca3af', fontWeight: 500 }}>新建项目</span>
             </div>
           </div>
         )}
@@ -518,7 +518,7 @@ const Projects: React.FC = () => {
           <div style={{ textAlign: 'center', padding: '80px 24px', color: '#9ca3af' }}>
             <svg style={{ margin: '0 auto 16px', display: 'block', opacity: .4 }} width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1"><path d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
             <div style={{ fontSize: '15px', fontWeight: 600, marginBottom: '8px' }}>暂无匹配项目</div>
-            <div style={{ fontSize: '13px' }}>尝试调整筛选条件，或新建一个项目</div>
+            <div style={{ fontSize: '14px' }}>尝试调整筛选条件，或新建一个项目</div>
           </div>
         )}
 
