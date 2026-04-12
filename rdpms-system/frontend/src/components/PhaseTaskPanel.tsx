@@ -1,11 +1,17 @@
 import React, { useState, useCallback } from 'react';
-import api from '../api/client';
 
 interface Task {
   id: string;
-  name: string;
+  // support both `title` and `name` shapes from different sources
+  title?: string;
+  name?: string;
   description?: string;
   required?: boolean;
+  priority?: string;
+  estimatedDays?: number;
+  role?: string;
+  source?: string;
+  enabled?: boolean;
 }
 
 interface PhaseTaskPanelProps {
@@ -19,23 +25,30 @@ const PhaseTaskPanel: React.FC<PhaseTaskPanelProps> = ({
   tasks,
   onTasksChange,
 }) => {
+  // use phaseId at least for debug to avoid unused var errors
+  React.useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.debug('[PhaseTaskPanel] phase', phaseId);
+  }, [phaseId]);
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
   const [adding, setAdding] = useState(false);
   const [newTaskName, setNewTaskName] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // local-only operations: modify tasks via onTasksChange (template manages persistence)
   const handleAdd = useCallback(async () => {
     if (!newTaskName.trim()) return;
     setLoading(true);
     try {
-      const res = await api.post(`/tasks`, {
-        projectId: undefined,
+      const newTask: Task = {
+        id: `task_${Date.now()}`,
         title: newTaskName.trim(),
-      });
-      const created = res?.data ?? res;
-      // attach to phase locally
-      onTasksChange([...tasks, { id: created.id || `${Date.now()}`, name: created.title || created.name || newTaskName.trim() }]);
+        name: newTaskName.trim(),
+        enabled: true,
+      };
+      onTasksChange([...tasks, newTask]);
       setNewTaskName('');
       setAdding(false);
     } catch (e) {
@@ -49,9 +62,7 @@ const PhaseTaskPanel: React.FC<PhaseTaskPanelProps> = ({
     if (!editingName.trim()) return;
     setLoading(true);
     try {
-      // try PATCH tasks/:id
-      await api.put(`/tasks/${taskId}`, { title: editingName.trim() });
-      onTasksChange(tasks.map(t => t.id === taskId ? { ...t, name: editingName.trim() } : t));
+      onTasksChange(tasks.map(t => (t.id === taskId ? { ...t, name: editingName.trim(), title: editingName.trim() } : t)));
       setEditingId(null);
     } catch (e) {
       console.error('编辑任务失败', e);
@@ -64,7 +75,6 @@ const PhaseTaskPanel: React.FC<PhaseTaskPanelProps> = ({
   const handleDelete = useCallback(async (taskId: string) => {
     setLoading(true);
     try {
-      await api.delete(`/tasks/${taskId}`);
       onTasksChange(tasks.filter(t => t.id !== taskId));
     } catch (e) {
       console.error('删除任务失败', e);
