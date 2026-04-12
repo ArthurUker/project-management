@@ -79,6 +79,8 @@ export const projectAPI = {
   create: (data: any) => post<ApiResponse<any>>('/projects', data),
   update: (id: string, data: any) => put<ApiResponse<any>>(`/projects/${id}`, data),
   delete: (id: string) => del<ApiResponse<any>>(`/projects/${id}`),
+  batchDelete: (ids: string[]) => post<ApiResponse<any>>('/projects/batch-delete', { ids }),
+  batchUpdateStatus: (ids: string[], status: string) => post<ApiResponse<any>>('/projects/batch-update-status', { ids, status }),
   members: (id: string) => get<ApiResponse<any>>(`/projects/${id}/members`),
   addMember: (id: string, userId: string, role?: string) =>
     post<ApiResponse<any>>(`/projects/${id}/members`, { userId, role }),

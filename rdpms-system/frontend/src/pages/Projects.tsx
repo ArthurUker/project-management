@@ -40,6 +40,42 @@ export default function Projects() {
   const [status, setStatus] = useState('');
   const [keyword, setKeyword] = useState('');
   const [showCreate, setShowCreate] = useState(location.pathname === '/projects/new');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [editingProject, setEditingProject] = useState<any | null>(null);
+
+  const allSelected = projects.length > 0 && selectedIds.length === projects.length;
+
+  const toggleSelectAll = () => {
+    setSelectedIds(allSelected ? [] : projects.map(p => p.id));
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const handleBatchDelete = async () => {
+    if (!selectedIds.length) return;
+    if (!window.confirm(`确认删除选中的 ${selectedIds.length} 个项目？此操作不可撤销。`)) return;
+    try {
+      await projectAPI.batchDelete(selectedIds);
+      setSelectedIds([]);
+      loadProjects();
+    } catch (err: any) {
+      alert(err?.message || '批量删除失败');
+    }
+  };
+
+  const handleBatchStatus = async (statusVal: string) => {
+    if (!selectedIds.length) return;
+    try {
+      await projectAPI.batchUpdateStatus(selectedIds, statusVal);
+      setSelectedIds([]);
+      loadProjects();
+    } catch (err: any) {
+      alert(err?.message || '批量更新失败');
+    }
+  };
+
 
   useEffect(() => {
     if (location.pathname === '/projects/new' && !showCreate) {
@@ -126,59 +162,106 @@ export default function Projects() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-3 gap-4">
-          {filteredProjects.map((project) => (
-            <Link
-              key={project.id}
-              to={`/projects/${project.id}`}
-              className="card card-hover p-5 block"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
-                    <span className="text-primary-600 font-bold text-sm">
-                      {project.code.split('-').pop()}
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{project.name}</h3>
-                    <p className="text-xs text-gray-500">{project.code}</p>
-                  </div>
+        <>
+          {/* 批量操作栏 */}
+          {selectedIds.length > 0 && (
+            <div className="col-span-3 mb-4">
+              <div className="flex items-center gap-3 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                <span className="text-sm text-blue-700">已选 {selectedIds.length} 个项目</span>
+                <select className="text-sm border rounded px-2 py-1" onChange={(e) => e.target.value && handleBatchStatus(e.target.value)} defaultValue="">
+                  <option value="" disabled>批量改状态</option>
+                  <option value="进行中">进行中</option>
+                  <option value="规划中">规划中</option>
+                  <option value="待验证">待验证</option>
+                  <option value="已完成">已完成</option>
+                  <option value="暂停">暂停</option>
+                </select>
+                <button className="text-sm text-red-500 border border-red-300 rounded px-3 py-1 hover:bg-red-50" onClick={handleBatchDelete}>批量删除</button>
+                <button className="text-sm text-gray-500 hover:text-gray-700" onClick={() => setSelectedIds([])}>取消选择</button>
+                <div className="ml-auto">
+                  <label className="inline-flex items-center text-sm">
+                    <input type="checkbox" className="mr-2" checked={allSelected} onChange={toggleSelectAll} /> 全选
+                  </label>
                 </div>
               </div>
-              
-              <div className="flex items-center space-x-4 text-sm text-gray-500 mb-3">
-                <span>{project.type}</span>
-                {project.subtype && <span>· {project.subtype}</span>}
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[project.status] || 'bg-gray-100 text-gray-600'}`}>
-                  {project.status}
-                </span>
-                <div className="flex items-center space-x-3 text-xs text-gray-500">
-                  <span>{project._count?.members || 0} 人</span>
-                  <span>{project._count?.tasks || 0} 任务</span>
-                </div>
-              </div>
-              
-              {project.manager && (
-                <div className="flex items-center mt-3 pt-3 border-t border-gray-100">
-                  <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
-                    <span className="text-xs text-gray-600">{project.manager.name?.charAt(0)}</span>
-                  </div>
-                  <span className="ml-2 text-sm text-gray-600">{project.manager.name}</span>
-                </div>
-              )}
-            </Link>
-          ))}
-          
-          {filteredProjects.length === 0 && (
-            <div className="col-span-3 card p-12 text-center text-gray-500">
-              暂无项目
             </div>
           )}
-        </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            {filteredProjects.map((project) => (
+              <Link
+                key={project.id}
+                to={`/projects/${project.id}`}
+                className="card card-hover p-5 block relative"
+              >
+                {/* 复选框 */}
+                <input
+                  type="checkbox"
+                  className="absolute top-3 left-3 z-10 w-4 h-4 cursor-pointer"
+                  checked={selectedIds.includes(project.id)}
+                  onChange={(e) => { e.stopPropagation(); toggleSelect(project.id); }}
+                  onClick={(e) => e.stopPropagation()}
+                />
+
+                {/* 操作菜单 */}
+                <div className="absolute top-3 right-3">
+                  <div className="relative inline-block">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); const el = (e.target as HTMLElement); const menu = document.getElementById(`menu-${project.id}`); if (menu) { menu.style.display = menu.style.display === 'block' ? 'none' : 'block'; } }}
+                      className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100"
+                    >
+                      ⋯
+                    </button>
+                    <div id={`menu-${project.id}`} style={{ display: 'none' }} className="absolute right-0 top-6 z-10 bg-white border border-gray-200 rounded-lg shadow-lg py-1 w-36">
+                      <button className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50" onClick={(e) => { e.stopPropagation(); document.getElementById(`menu-${project.id}`)!.style.display = 'none'; setEditingProject(project); }}>
+                        ✏️ 编辑
+                      </button>
+                      <button className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50" onClick={async (e) => { e.stopPropagation(); document.getElementById(`menu-${project.id}`)!.style.display = 'none'; if (!confirm('确认删除该项目？此操作不可撤销')) return; try { await projectAPI.delete(project.id); loadProjects(); } catch (err: any) { alert(err?.message || '删除失败'); } }}>
+                        🗑️ 删除
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
+                      <span className="text-primary-600 font-bold text-sm">{project.code.split('-').pop()}</span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{project.name}</h3>
+                      <p className="text-xs text-gray-500">{project.code}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-4 text-sm text-gray-500 mb-3">
+                  <span>{project.type}</span>
+                  {project.subtype && <span>· {project.subtype}</span>}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusColors[project.status] || 'bg-gray-100 text-gray-600'}`}>{project.status}</span>
+                  <div className="flex items-center space-x-3 text-xs text-gray-500">
+                    <span>{project._count?.members || 0} 人</span>
+                    <span>{project._count?.tasks || 0} 任务</span>
+                  </div>
+                </div>
+
+                {project.manager && (
+                  <div className="flex items-center mt-3 pt-3 border-t border-gray-100">
+                    <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center"><span className="text-xs text-gray-600">{project.manager.name?.charAt(0)}</span></div>
+                    <span className="ml-2 text-sm text-gray-600">{project.manager.name}</span>
+                  </div>
+                )}
+              </Link>
+            ))}
+
+            {filteredProjects.length === 0 && (
+              <div className="col-span-3 card p-12 text-center text-gray-500">暂无项目</div>
+            )}
+          </div>
+        </>
       )}
     </div>
 

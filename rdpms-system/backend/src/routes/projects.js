@@ -393,4 +393,35 @@ projects.post('/:id/apply-template', async (c) => {
   return c.json({ success: true, taskCount: tasksToCreate.length, milestoneCount: milestonesToCreate.length });
 });
 
+// 批量删除项目
+projects.post('/batch-delete', async (c) => {
+  try {
+    const body = await c.req.json();
+    const ids = body.ids || [];
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return c.json({ error: '请选择要删除的项目' }, 400);
+    }
+    const result = await prisma.project.deleteMany({ where: { id: { in: ids } } });
+    return c.json({ message: `成功删除 ${result.count} 个项目` });
+  } catch (error) {
+    console.error('[BATCH DELETE PROJECTS]', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// 批量更新项目状态
+projects.post('/batch-update-status', async (c) => {
+  try {
+    const { ids, status } = await c.req.json();
+    if (!Array.isArray(ids) || ids.length === 0 || !status) {
+      return c.json({ error: '参数不完整' }, 400);
+    }
+    const result = await prisma.project.updateMany({ where: { id: { in: ids } }, data: { status } });
+    return c.json({ message: `成功更新 ${result.count} 个项目` });
+  } catch (error) {
+    console.error('[BATCH UPDATE PROJECT STATUS]', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 export default projects;

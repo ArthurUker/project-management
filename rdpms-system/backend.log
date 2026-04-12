@@ -678,3 +678,7 @@ Error: TypeError: Cannot destructure property 'id' of 'c.params' as it is undefi
 [32m[nodemon] starting `node src/index.js`[39m
 🚀 R&D PMS API starting on port 3000...
 ✅ Server is running at http://localhost:3000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node src/index.js`[39m
+🚀 R&D PMS API starting on port 3000...
+✅ Server is running at http://localhost:3000
