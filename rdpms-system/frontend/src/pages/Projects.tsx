@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ProjectCard, { Project } from '../components/ProjectCard';
+import ProjectCard from '../components/ProjectCard';
+import type { Project } from '../components/ProjectCard';
 import EditProjectModal from '../components/EditProjectModal';
 import { projectAPI } from '../api/client';
 
