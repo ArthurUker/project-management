@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { projectAPI } from '../api/client';
 import CreateProjectModal from '../components/CreateProjectModal';
+import ProjectCard from '../components/ProjectCard';
+import EditProjectModal from '../components/EditProjectModal';
 
 const PROJECT_TYPES = [
   { value: '', label: '全部类型' },
