@@ -125,7 +125,7 @@ const PhaseNodeComponent = ({
             : 'bg-blue-500 text-white',
         ].join(' ')}
       >
-        {data.order}
+        {data.displayOrder ?? data.order}
       </span>
 
       {/* 阶段名称 */}
@@ -376,13 +376,56 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       return;
     }
 
-    const rawNodes: Node[] = phases.map((p) => ({
+    // Sort phases and compute displayOrder so parallel phases share same number
+    const sortedPhases = [...phases].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+    function computeDisplayOrder(phs: Phase[]) {
+      const displayOrderMap = new Map<string, number>();
+      const inDegree = new Map<string, number>();
+      const children = new Map<string, string[]>();
+
+      phs.forEach(p => {
+        if (!inDegree.has(p.id)) inDegree.set(p.id, 0);
+        const nexts = p.nextPhaseIds ?? [];
+        children.set(p.id, nexts);
+        nexts.forEach(nid => {
+          inDegree.set(nid, (inDegree.get(nid) ?? 0) + 1);
+        });
+      });
+
+      const queue: string[] = [];
+      phs.forEach(p => {
+        if ((inDegree.get(p.id) ?? 0) === 0) queue.push(p.id);
+      });
+
+      let order = 1;
+      let current = [...queue];
+      while (current.length > 0) {
+        const next: string[] = [];
+        current.forEach(id => {
+          displayOrderMap.set(id, order);
+          (children.get(id) ?? []).forEach(nid => {
+            inDegree.set(nid, (inDegree.get(nid) ?? 1) - 1);
+            if (inDegree.get(nid) === 0) next.push(nid);
+          });
+        });
+        order++;
+        current = next;
+      }
+
+      return displayOrderMap;
+    }
+
+    const displayOrderMap = computeDisplayOrder(sortedPhases);
+
+    const rawNodes: Node[] = sortedPhases.map((p) => ({
       id: p.id,
       type: 'phase',
       position: { x: 0, y: 0 },
       data: {
         label: p.name,
         order: p.order ?? 1,
+        displayOrder: displayOrderMap.get(p.id) ?? p.order ?? 1,
         taskCount: p.tasks?.length ?? 0,
         totalDays: p.totalDays ?? 0,
         enabled: p.enabled !== false,
