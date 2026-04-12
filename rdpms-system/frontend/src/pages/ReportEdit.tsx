@@ -183,13 +183,9 @@ export default function ReportEdit() {
     
     setSaving(true);
     try {
-      // 如果是日报，增加日期
-      let fullMonth = month;
-      if (reportType === '日报') {
-        const now = new Date();
-        fullMonth = `${month}-${String(now.getDate()).padStart(2, '0')}`;
-      }
-      
+      // 保证 month 只保留 YYYY-MM（后端期望）
+      let fullMonth = month ? String(month).slice(0, 7) : month;
+
       // 根据模板类型构建内容
       let content: any = {};
       if (dailyTemplate === 'general') {
