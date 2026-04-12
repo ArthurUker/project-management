@@ -193,7 +193,7 @@ stats.get('/projects', async (c) => {
 
 // 个人工作量统计
 stats.get('/users/:userId/workload', async (c) => {
-  const { userId } = c.params;
+  const userId = c.req.param('userId');
   
   // 获取该用户参与的项目
   const projects = await prisma.projectMember.findMany({

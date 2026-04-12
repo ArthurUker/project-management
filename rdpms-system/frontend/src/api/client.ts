@@ -96,6 +96,7 @@ export const reportAPI = {
   submit: (id: string) => post<ApiResponse<any>>(`/reports/${id}/submit`),
   approve: (id: string, note?: string) => post<ApiResponse<any>>(`/reports/${id}/approve`, { note }),
   reject: (id: string, note: string) => post<ApiResponse<any>>(`/reports/${id}/reject`, { note }),
+  recall: (id: string) => patch<ApiResponse<any>>(`/reports/${id}/recall`),
   versions: (id: string) => get<ApiResponse<any>>(`/reports/${id}/versions`),
   export: (month: string, params?: Record<string, any>) =>
     get<ApiResponse<any>>(`/reports/export/month/${month}`, { params }),

@@ -49,7 +49,7 @@ users.get('/', async (c) => {
 
 // 获取单个用户
 users.get('/:id', async (c) => {
-  const { id } = c.params;
+  const id = c.req.param('id');
   
   const user = await prisma.user.findUnique({
     where: { id },
@@ -138,7 +138,7 @@ users.post('/', adminMiddleware, async (c) => {
 
 // 更新用户
 users.put('/:id', async (c) => {
-  const { id } = c.params;
+  const id = c.req.param('id');
   const currentUserId = c.get('userId');
   const currentRole = c.get('userRole');
   
@@ -180,7 +180,7 @@ users.put('/:id', async (c) => {
 
 // 重置密码（管理员）
 users.put('/:id/reset-password', adminMiddleware, async (c) => {
-  const { id } = c.params;
+  const id = c.req.param('id');
   const { newPassword } = await c.req.json();
   
   if (!newPassword || newPassword.length < 6) {
@@ -199,7 +199,7 @@ users.put('/:id/reset-password', adminMiddleware, async (c) => {
 
 // 删除用户（管理员）
 users.delete('/:id', adminMiddleware, async (c) => {
-  const { id } = c.params;
+  const id = c.req.param('id');
   
   // 不能删除自己
   const currentUserId = c.get('userId');

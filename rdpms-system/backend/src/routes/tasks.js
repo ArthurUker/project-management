@@ -56,7 +56,7 @@ tasks.get('/', async (c) => {
 
 // POST /tasks/:id/prerequisites  添加前置任务
 tasks.post('/:id/prerequisites', async (c) => {
-  const { id } = c.req.param();
+  const id = c.req.param('id');
   const { prerequisiteId } = await c.req.json();
 
   // 防止自引用
@@ -80,7 +80,8 @@ tasks.post('/:id/prerequisites', async (c) => {
 
 // DELETE /tasks/:id/prerequisites/:prerequisiteId  删除前置任务
 tasks.delete('/:id/prerequisites/:prerequisiteId', async (c) => {
-  const { id, prerequisiteId } = c.req.param();
+  const id = c.req.param('id');
+  const prerequisiteId = c.req.param('prerequisiteId');
   await prisma.taskDependency.deleteMany({
     where: { taskId: id, prerequisiteId }
   });
@@ -89,7 +90,7 @@ tasks.delete('/:id/prerequisites/:prerequisiteId', async (c) => {
 
 // 获取单个任务
 tasks.get('/:id', async (c) => {
-  const { id } = c.req.param();
+  const id = c.req.param('id');
   
   const task = await prisma.task.findUnique({
     where: { id },
@@ -142,7 +143,7 @@ tasks.post('/', async (c) => {
 
 // 更新任务
 tasks.put('/:id', async (c) => {
-  const { id } = c.params;
+  const id = c.req.param('id');
   const body = await c.req.json();
   
   // 处理日期字段
@@ -171,7 +172,7 @@ tasks.put('/:id', async (c) => {
 
 // 更新任务状态（Kanban拖拽）
 tasks.patch('/:id/status', async (c) => {
-  const { id } = c.params;
+  const id = c.req.param('id');
   const { status } = await c.req.json();
   
   const data = { status };
@@ -193,14 +194,14 @@ tasks.patch('/:id/status', async (c) => {
 
 // 删除任务
 tasks.delete('/:id', async (c) => {
-  const { id } = c.params;
+  const id = c.req.param('id');
   await prisma.task.delete({ where: { id } });
   return c.json({ success: true });
 });
 
 // 获取看板数据
 tasks.get('/board/:projectId', async (c) => {
-  const { projectId } = c.params;
+  const projectId = c.req.param('projectId');
   
   const tasks = await prisma.task.findMany({
     where: { projectId },

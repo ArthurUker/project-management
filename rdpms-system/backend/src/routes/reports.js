@@ -53,7 +53,7 @@ reports.get('/', async (c) => {
 
 // 获取单个汇报
 reports.get('/:id', async (c) => {
-  const { id } = c.params;
+  const id = c.req.param('id');
   
   const report = await prisma.report.findUnique({
     where: { id },
@@ -153,7 +153,7 @@ reports.put('/:id', async (c) => {
 
 // 提交汇报
 reports.post('/:id/submit', async (c) => {
-  const id = c.params.id;
+  const id = c.req.param('id');
   const userId = c.get('userId');
   
   const report = await prisma.report.findUnique({ where: { id } });
@@ -196,7 +196,7 @@ reports.post('/:id/submit', async (c) => {
 
 // 审批通过
 reports.post('/:id/approve', async (c) => {
-  const id = c.params.id;
+  const id = c.req.param('id');
   const userId = c.get('userId');
   const { note } = await c.req.json();
   
@@ -224,7 +224,7 @@ reports.post('/:id/approve', async (c) => {
 
 // 驳回
 reports.post('/:id/reject', async (c) => {
-  const id = c.params.id;
+  const id = c.req.param('id');
   const userId = c.get('userId');
   const { note } = await c.req.json();
   
@@ -240,7 +240,7 @@ reports.post('/:id/reject', async (c) => {
 
 // 历史版本
 reports.get('/:id/versions', async (c) => {
-  const { id } = c.params;
+  const id = c.req.param('id');
   const versions = await prisma.reportVersion.findMany({
     where: { reportId: id },
     orderBy: { version: 'desc' }
@@ -250,7 +250,7 @@ reports.get('/:id/versions', async (c) => {
 
 // 导出月度汇报
 reports.get('/export/month/:month', async (c) => {
-  const { month } = c.params;
+  const month = c.req.param('month');
   const { userId, projectId, reportType } = c.req.query();
   
   const where = { month };
@@ -290,6 +290,39 @@ reports.delete('/:id', async (c) => {
     return c.json({ message: '删除成功' });
   } catch (error) {
     console.error('[DELETE REPORT]', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// 撤回汇报（仅允许撤回已提交，恢复为草稿）
+reports.patch('/:id/recall', async (c) => {
+  try {
+    const id = c.req.param('id');
+    const userId = c.get('userId');
+
+    const report = await prisma.report.findUnique({ where: { id } });
+    if (!report) return c.json({ error: '汇报不存在' }, 404);
+
+    const submittedStatus = ['已提交', 'submitted'];
+    if (!submittedStatus.includes(report.status)) {
+      return c.json({ error: '只有已提交的汇报才能撤回' }, 400);
+    }
+
+    if (report.userId !== userId) return c.json({ error: '无权撤回他人的汇报' }, 403);
+
+    const updated = await prisma.report.update({
+      where: { id },
+      data: {
+        status: '草稿',
+        approvedAt: null,
+        approvedBy: null,
+        submittedAt: null,
+      },
+    });
+
+    return c.json({ report: updated, message: '撤回成功' });
+  } catch (error) {
+    console.error('[RECALL REPORT]', error);
     return c.json({ error: error.message }, 500);
   }
 });

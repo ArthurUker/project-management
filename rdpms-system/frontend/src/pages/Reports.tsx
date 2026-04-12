@@ -273,6 +273,25 @@ export default function Reports() {
                           <span className={`px-3 py-1 rounded-full text-sm font-medium ${STATUS_COLORS[report.status]}`}>
                             {report.status}
                           </span>
+                          {(report.status === '已提交' || report.status === 'submitted') && (
+                            <button
+                              onClick={async (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (!window.confirm('确认撤回该汇报？撤回后将变为草稿状态，可重新编辑。')) return;
+                                try {
+                                  await reportAPI.recall(report.id);
+                                  await loadReports();
+                                } catch (err: any) {
+                                  console.error('撤回失败', err);
+                                  alert(err?.error || err?.message || '撤回失败，请重试');
+                                }
+                              }}
+                              className="text-orange-500 hover:text-orange-700 text-sm border border-orange-300 rounded px-2 py-0.5 hover:bg-orange-50 transition-colors"
+                            >
+                              撤回
+                            </button>
+                          )}
                           {(report.status === '草稿' || report.status === 'draft') && (
                             <button
                               onClick={(e) => handleDeleteReport(e, report.id)}
