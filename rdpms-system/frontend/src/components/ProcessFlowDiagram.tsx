@@ -188,7 +188,6 @@ const CustomEdge: React.FC<EdgeProps> = ({
   sourcePosition,
   targetPosition,
   style,
-  markerEnd,
   data,
   selected,
 }) => {
