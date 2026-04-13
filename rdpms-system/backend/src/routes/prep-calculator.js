@@ -11,7 +11,7 @@ prep.post('/calculate', async (c) => {
     const { formulaId, targetVolume } = await c.req.json();
     if (!formulaId || !targetVolume) return c.json({ error: 'formulaId and targetVolume required' }, 400);
 
-    const formula = await prisma.reagentFormula.findUnique({ where: { id: formulaId }, include: { components: { include: { reagent: true } } } });
+    const formula = await prisma.reagentFormula.findUnique({ where: { id: formulaId }, include: { components: { include: { reagent: true, reagentMaterial: true } } } });
     if (!formula) return c.json({ error: 'Formula not found' }, 404);
 
     const result = {
@@ -25,7 +25,8 @@ prep.post('/calculate', async (c) => {
     };
 
     for (const comp of formula.components) {
-      const reagent = comp.reagent;
+      // 优先使用关联的原料库数据（reagentMaterial），若不存在则回退到旧的 reagent
+      const material = comp.reagentMaterial || comp.reagent;
       const conc = comp.concentration;
       const concUnit = comp.unit || 'M';
       let amountG = null;
@@ -33,14 +34,16 @@ prep.post('/calculate', async (c) => {
       let warning = null;
 
       if (concUnit === 'M') {
-        if (reagent.molecularWeight) {
-          amountG = conc * (targetVolume / 1000) * reagent.molecularWeight / ((reagent.purity || 100) / 100);
+        const mw = material?.mw ?? material?.molecularWeight;
+        const purity = material?.purity ?? 100;
+        if (mw) {
+          amountG = conc * (targetVolume / 1000) * mw / (purity / 100);
           amountG = Math.round(amountG * 100) / 100;
-          if (reagent.density) {
-            amountML = Math.round((amountG / reagent.density) * 100) / 100;
+          if (material?.density) {
+            amountML = Math.round((amountG / material.density) * 100) / 100;
           }
         } else {
-          result.missingMW.push(reagent.name || reagent.id);
+          result.missingMW.push(material?.name || material?.id);
           warning = '缺少分子量，无法计算';
         }
       } else if (concUnit === '%') {

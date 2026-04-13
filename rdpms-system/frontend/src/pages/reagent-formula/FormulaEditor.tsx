@@ -7,11 +7,15 @@ export default function FormulaEditor(){
   const navigate = useNavigate();
   const [form, setForm] = useState<any>({ code: '', name:'', type:'CLY', pH:7, procedure:'', notes:'', components: [] });
   const [reagents, setReagents] = useState<any[]>([]);
+  const [materials, setMaterials] = useState<any[]>([]);
 
-  useEffect(()=>{ loadReagents(); if (id) loadFormula(); }, [id]);
+  useEffect(()=>{ loadReagents(); loadMaterials(); if (id) loadFormula(); }, [id]);
 
   const loadReagents = async ()=>{
     const res = await reagentAPI.list(); setReagents(res.list || []);
+  };
+  const loadMaterials = async ()=>{
+    const res = await (await import('../../api/client')).reagentMaterialsAPI.list(); setMaterials(res.list || []);
   };
   const loadFormula = async ()=>{
     const res = await formulaAPI.get(id as string);
@@ -67,10 +71,17 @@ export default function FormulaEditor(){
             {(form.components||[]).map((c:any, idx:number)=> (
               <tr key={idx}>
                 <td>
-                  <select value={c.reagentId} onChange={e=>{ const comps=[...form.components]; comps[idx].reagentId=e.target.value; setForm({...form, components: comps})}}>
-                    <option value="">请选择</option>
-                    {reagents.map(r=> <option key={r.id} value={r.id}>{r.name}</option>)}
-                  </select>
+                  <div className="flex">
+                    <input className="p-1 border" placeholder="搜索试剂/别名" value={c._search || (c.reagentName||'')} onChange={e=>{
+                      const comps=[...form.components]; comps[idx]._search=e.target.value; setForm({...form, components: comps});
+                    }} />
+                    <select value={c.reagentMaterialId || c.reagentId || ''} onChange={e=>{ const comps=[...form.components]; const val=e.target.value; comps[idx].reagentMaterialId=val || null; comps[idx].reagentId=null; comps[idx].reagentName = materials.find(m=>m.id===val)?.name || comps[idx].reagentName; setForm({...form, components: comps})}}>
+                      <option value="">请选择（或输入自定义名称）</option>
+                      {materials.map(m=> <option key={m.id} value={m.id}>{m.name}{m.alias && m.alias.length ? ` (${m.alias.join(',')})` : ''}</option>)}
+                    </select>
+                    {/* 当未找到匹配时提示并跳转 */}
+                    <button className="ml-2 text-amber-600 bg-amber-50 text-xs p-1 rounded" onClick={()=>{ window.location.href = '/knowledge?openNew=1'; }}>前往新增</button>
+                  </div>
                 </td>
                 <td><input value={c.concentration} onChange={e=>{ const comps=[...form.components]; comps[idx].concentration=Number(e.target.value); setForm({...form, components: comps})}} /></td>
                 <td>

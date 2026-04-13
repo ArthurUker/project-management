@@ -14,6 +14,7 @@ import docsRoutes from './routes/docs.js';
 import projectTemplatesRoutes from './routes/projectTemplates.js';
 import phasesRoutes from './routes/phases.js';
 import reagentsRoutes from './routes/reagents.js';
+import reagentMaterialsRoutes from './routes/reagentMaterials.js';
 import formulasRoutes from './routes/formulas.js';
 import prepRoutes from './routes/prep-calculator.js';
 
@@ -52,6 +53,7 @@ app.route('/api/docs', docsRoutes);
 app.route('/api/project-templates', projectTemplatesRoutes);
 app.route('/api/phases', phasesRoutes);
 app.route('/api/reagents', reagentsRoutes);
+app.route('/api/reagent-materials', reagentMaterialsRoutes);
 app.route('/api/formulas', formulasRoutes);
 app.route('/api/prep', prepRoutes);
 

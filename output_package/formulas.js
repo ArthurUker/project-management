@@ -81,8 +81,7 @@ formulas.post('/', async (c) => {
         createdBy: userId,
         components: {
           create: (data.components || []).map((comp) => ({
-            reagentId: comp.reagentId || null,
-            reagentMaterialId: comp.reagentMaterialId || null,
+            reagentId: comp.reagentId,
             concentration: comp.concentration,
             unit: comp.unit || 'M',
             notes: comp.notes || '',
@@ -125,8 +124,7 @@ formulas.put('/:id', async (c) => {
       const comps = data.components.map((comp) => ({
         id: undefined,
         formulaId: id,
-        reagentId: comp.reagentId || null,
-        reagentMaterialId: comp.reagentMaterialId || null,
+        reagentId: comp.reagentId,
         concentration: comp.concentration,
         unit: comp.unit || 'M',
         notes: comp.notes || '',

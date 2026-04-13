@@ -423,6 +423,52 @@ async function main() {
   }
   console.log('✅ 8个示例项目创建成功');
 
+  // 预置试剂原料库数据（如不存在则创建）
+  const materials = [
+    { name:'Tris', mw:121.14, state:'solid', purity:99, defaultStockConc:1, defaultStockUnit:'M' },
+    { name:'NaCl', mw:58.44, state:'solid', purity:99.5, defaultStockConc:5, defaultStockUnit:'M' },
+    { name:'KCl', mw:74.55, state:'solid', purity:99, defaultStockConc:3, defaultStockUnit:'M' },
+    { name:'EDTA', alias:['Na2-EDTA'], mw:372.24, state:'solid', purity:99, defaultStockConc:0.5, defaultStockUnit:'M' },
+    { name:'MgCl2', alias:['氯化镁'], mw:203.30, state:'solid', purity:98, defaultStockConc:1, defaultStockUnit:'M' },
+    { name:'CaCl2', alias:['氯化钙'], mw:110.98, state:'solid', purity:96, defaultStockConc:1, defaultStockUnit:'M' },
+    { name:'HEPES', mw:238.30, state:'solid', purity:99, defaultStockConc:1, defaultStockUnit:'M' },
+    { name:'SDS', alias:['十二烷基硫酸钠'], mw:288.38, state:'solid', purity:99, defaultStockConc:10, defaultStockUnit:'%' },
+    { name:'DTT', alias:['二硫苏糖醇'], mw:154.25, state:'solid', purity:99, defaultStockConc:1, defaultStockUnit:'M' },
+    { name:'β-巯基乙醇', mw:78.13, state:'liquid', density:1.114, purity:99, defaultStockConc:14, defaultStockUnit:'M' },
+    { name:'GITC', alias:['异硫氰酸胍'], mw:118.16, state:'solid', purity:98, defaultStockConc:8, defaultStockUnit:'M' },
+    { name:'尿素', mw:60.06, state:'solid', purity:99, defaultStockConc:8, defaultStockUnit:'M' },
+    { name:'蔗糖', mw:342.30, state:'solid', purity:99, defaultStockConc:1, defaultStockUnit:'M' },
+    { name:'甘油', mw:92.09, state:'liquid', density:1.261, purity:99, defaultStockConc:50, defaultStockUnit:'%' },
+    { name:'BSA', alias:['牛血清白蛋白'], mw:66430, state:'solid', purity:98, defaultStockConc:10, defaultStockUnit:'mg·mL⁻¹' },
+    { name:'Tween-20', mw:1228.0, state:'liquid', density:1.1, purity:100, defaultStockConc:10, defaultStockUnit:'%' },
+    { name:'Triton X-100', mw:625.0, state:'liquid', density:1.065, purity:100, defaultStockConc:10, defaultStockUnit:'%' },
+    { name:'NaOH', alias:['氢氧化钠'], mw:40.00, state:'solid', purity:97, defaultStockConc:10, defaultStockUnit:'M' },
+    { name:'HCl', alias:['盐酸'], mw:36.46, state:'liquid', density:1.19, purity:37, defaultStockConc:12, defaultStockUnit:'M' },
+    { name:'KH2PO4', mw:136.09, state:'solid', purity:99, defaultStockConc:1, defaultStockUnit:'M' },
+    { name:'Na2HPO4', mw:141.96, state:'solid', purity:99, defaultStockConc:1, defaultStockUnit:'M' },
+  ];
+
+  for (const m of materials) {
+    await prisma.reagentMaterial.upsert({
+      where: { name: m.name },
+      update: {},
+      create: {
+        name: m.name,
+        alias: m.alias ? (Array.isArray(m.alias) ? m.alias.join(',') : m.alias) : null,
+        casNumber: m.casNumber || null,
+        molecularFormula: m.molecularFormula || null,
+        mw: m.mw,
+        purity: m.purity || 98,
+        density: m.density || null,
+        state: m.state || 'solid',
+        defaultStockConc: m.defaultStockConc || null,
+        defaultStockUnit: m.defaultStockUnit || null,
+        supplier: m.supplier || null,
+        notes: m.notes || null,
+      }
+    });
+  }
+
   console.log('🎉 数据初始化完成！');
 }
 

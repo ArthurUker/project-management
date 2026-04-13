@@ -15,7 +15,7 @@ export default function PrepCalculator(){
     if (!selected) return alert('请选择配方');
     const res = await prepAPI.calculate({ formulaId: selected, targetVolume });
     if (res.success) setResult(res);
-  };
+  }; // 后端已支持 reagentMaterial 关联，前端无需额外处理 here
 
   const saveRecord = async ()=>{
     if (!result) return;

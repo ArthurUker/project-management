@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../store/appStore';
 
@@ -10,6 +10,7 @@ export default function Login() {
   
   const navigate = useNavigate();
   const { login } = useAppStore();
+  const formRef = useRef<HTMLFormElement | null>(null);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +40,7 @@ export default function Login() {
         </div>
         
         {/* 登录表单 */}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
               {error}
@@ -56,6 +57,12 @@ export default function Login() {
               onChange={(e) => setUsername(e.target.value)}
               required
               autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  formRef.current?.requestSubmit?.();
+                }
+              }}
             />
           </div>
           
@@ -68,6 +75,12 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  formRef.current?.requestSubmit?.();
+                }
+              }}
             />
           </div>
           

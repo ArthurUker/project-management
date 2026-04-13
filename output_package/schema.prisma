@@ -304,30 +304,6 @@ model Reagent {
   @@index([category])
 }
 
-// 新增：试剂原料库（ReagentMaterial），用于知识库管理与配方参数引用
-model ReagentMaterial {
-  id               String   @id @default(uuid())
-  name             String   @unique
-  alias            String? // 逗号分隔的别名列表
-  casNumber        String?
-  molecularFormula String?
-  mw               Float
-  purity           Float    @default(98)
-  density          Float?
-  state            String   // 'solid' | 'liquid' | 'solution'
-  defaultStockConc Float?
-  defaultStockUnit String?
-  supplier         String?
-  notes            String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  // 被 FormulaComponent 引用
-  components       FormulaComponent[] @relation("MaterialComponents")
-
-  @@index([name])
-}
-
 model ReagentFormula {
   id          String   @id @default(uuid())
   code        String   @unique
@@ -352,20 +328,18 @@ model ReagentFormula {
 }
 
 model FormulaComponent {
-  id                 String   @id @default(uuid())
-  formulaId          String
-  reagentId          String?
-  reagentMaterialId  String?  // 新增：关联知识库中的试剂原料ID
-  concentration      Float
-  unit               String   @default("M")
-  notes              String?
-  sortOrder          Int      @default(0)
+  id            String   @id @default(uuid())
+  formulaId     String
+  reagentId     String
+  concentration Float
+  unit          String   @default("M")
+  notes         String?
+  sortOrder     Int      @default(0)
 
-  formula            ReagentFormula @relation(fields: [formulaId], references: [id], onDelete: Cascade)
-  reagent            Reagent?       @relation(fields: [reagentId], references: [id])
-  reagentMaterial    ReagentMaterial? @relation("MaterialComponents", fields: [reagentMaterialId], references: [id])
+  formula       ReagentFormula @relation(fields: [formulaId], references: [id], onDelete: Cascade)
+  reagent       Reagent        @relation(fields: [reagentId], references: [id])
 
-  // 兼容性：允许同一配方包含相同原料（通过 reagentId/reagentMaterialId 区分）
+  @@unique([formulaId, reagentId])
   @@index([formulaId])
 }
 

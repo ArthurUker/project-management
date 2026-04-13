@@ -66,8 +66,8 @@ function App() {
           <Route path="project-templates/:id/edit" element={<TemplateEditor />} />
           <Route path="reports" element={<Reports />} />
           <Route path="reports/:id" element={<ReportEdit />} />
+          <Route path="knowledge" element={<Docs />} />
           <Route path="docs" element={<Docs />} />
-          <Route path="knowledge/reagents" element={<ReagentLibrary />} />
           <Route path="reagent-formula" element={<FormulaList />} />
           <Route path="reagent-formula/new" element={<FormulaEditor />} />
           <Route path="reagent-formula/:id/edit" element={<FormulaEditor />} />

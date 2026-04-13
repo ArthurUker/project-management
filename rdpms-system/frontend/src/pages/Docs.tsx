@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { docsAPI } from '../api/client';
 import { useAppStore } from '../store/appStore';
+import ReagentLibrary from './knowledge/ReagentLibrary';
 
 interface DocCategory {
   id: string;
@@ -40,6 +41,8 @@ const DEFAULT_CATEGORIES = [
   { name: '分子生物', description: '分子生物学实验方法', icon: '🧬' },
   { name: '通用模板', description: '通用文档模板', icon: '📋' },
   { name: '技术参考', description: '技术文档和参考资料', icon: '📚' },
+  // 新增：试剂原料库（作为文档分类的一项）
+  { name: '试剂原料库', description: '管理试剂原料信息（名称/分子量/CAS等）', icon: '🧴' },
 ];
 
 export default function Docs() {
@@ -56,6 +59,8 @@ export default function Docs() {
   
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingDoc, setEditingDoc] = useState<DocDocument | null>(null);
+  const [reagentOpenKey, setReagentOpenKey] = useState(0);
+  const [reagentCategoryId, setReagentCategoryId] = useState<string | null>(null);
   
   // 新建文档表单
   const [docForm, setDocForm] = useState({
@@ -110,6 +115,13 @@ export default function Docs() {
       });
       
       setCategories(cats);
+
+      // 如果后端包含“试剂原料库”，记录其真实 id，供后续使用
+      const reagent = cats.find((c: DocCategory) => c.name === '试剂原料库');
+      if (reagent) {
+        setReagentCategoryId(reagent.id);
+      }
+
       if (cats.length > 0 && !selectedCategory) {
         setSelectedCategory(cats[0].id);
       }
@@ -119,6 +131,13 @@ export default function Docs() {
   };
 
   const loadDocuments = async () => {
+    // 如果当前选中的是试剂原料库（后端分类），跳过文档查询
+    if (selectedCategory && reagentCategoryId && selectedCategory === reagentCategoryId) {
+      setDocuments([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const params: Record<string, any> = {};
@@ -241,13 +260,19 @@ export default function Docs() {
           <p className="text-sm text-gray-500 mt-1">管理 SOP 文件、操作模板和技术文档</p>
         </div>
         <button
-          onClick={() => { resetForm(); setShowCreateModal(true); }}
+          onClick={() => {
+            if (selectedCategory && reagentCategoryId && selectedCategory === reagentCategoryId) {
+              setReagentOpenKey(k => k + 1);
+            } else {
+              resetForm(); setShowCreateModal(true);
+            }
+          }}
           className="btn btn-primary flex items-center gap-2"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          新建文档
+          {selectedCategory && reagentCategoryId && selectedCategory === reagentCategoryId ? '新建试剂' : '新建文档'}
         </button>
       </div>
 
@@ -285,6 +310,8 @@ export default function Docs() {
                   )}
                 </button>
               ))}
+
+
             </div>
           </div>
         </div>
@@ -332,85 +359,92 @@ export default function Docs() {
             </div>
           </div>
 
-          {/* 文档列表 */}
-          {loading ? (
-            <div className="text-center py-12 text-gray-500">加载中...</div>
-          ) : documents.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-lg border border-dashed border-gray-200">
-              <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <p className="text-gray-500">暂无文档</p>
-              <button
-                onClick={() => { resetForm(); setShowCreateModal(true); }}
-                className="mt-4 text-primary-600 hover:text-primary-700"
-              >
-                创建第一个文档
-              </button>
+          {/* 文档列表 / 或 试剂原料库 */}
+          {selectedCategory && reagentCategoryId && selectedCategory === reagentCategoryId ? (
+            <div className="bg-white rounded-lg border border-gray-200 p-4">
+              <ReagentLibrary openKey={reagentOpenKey} hideTopButton />
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {documents.map(doc => (
-                <div
-                  key={doc.id}
-                  className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => navigate(`/docs/${doc.id}`)}
+            /* 原有文档列表逻辑 */
+            loading ? (
+              <div className="text-center py-12 text-gray-500">加载中...</div>
+            ) : documents.length === 0 ? (
+              <div className="text-center py-12 bg-white rounded-lg border border-dashed border-gray-200">
+                <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="text-gray-500">暂无文档</p>
+                <button
+                  onClick={() => { resetForm(); setShowCreateModal(true); }}
+                  className="mt-4 text-primary-600 hover:text-primary-700"
                 >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${getTypeColor(doc.docType)}`}>
-                        {DOC_TYPES.find(t => t.id === doc.docType)?.label || doc.docType}
-                      </span>
-                      <h3 className="font-semibold text-gray-900 mt-2 line-clamp-2">{doc.title}</h3>
-                    </div>
-                    <span className={`px-2 py-0.5 rounded text-xs ${getStatusBadge(doc.status)}`}>
-                      {doc.status === 'active' ? '有效' : doc.status === 'archived' ? '归档' : '废弃'}
-                    </span>
-                  </div>
-                  
-                  {doc.description && (
-                    <p className="text-sm text-gray-500 line-clamp-2 mb-3">{doc.description}</p>
-                  )}
-                  
-                  <div className="flex items-center justify-between text-xs text-gray-400">
-                    <span className="font-mono">{doc.code}</span>
-                    <span>{doc.version}</span>
-                  </div>
-                  
-                  {doc.tags && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {doc.tags.split(',').slice(0, 3).map((tag, i) => (
-                        <span key={i} className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
-                          {tag.trim()}
+                  创建第一个文档
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {documents.map(doc => (
+                  <div
+                    key={doc.id}
+                    className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => navigate(`/knowledge/${doc.id}`)}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${getTypeColor(doc.docType)}`}>
+                          {DOC_TYPES.find(t => t.id === doc.docType)?.label || doc.docType}
                         </span>
-                      ))}
+                        <h3 className="font-semibold text-gray-900 mt-2 line-clamp-2">{doc.title}</h3>
+                      </div>
+                      <span className={`px-2 py-0.5 rounded text-xs ${getStatusBadge(doc.status)}`}>
+                        {doc.status === 'active' ? '有效' : doc.status === 'archived' ? '归档' : '废弃'}
+                      </span>
                     </div>
-                  )}
-                  
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                    <span className="text-xs text-gray-400">{doc.category?.name}</span>
-                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                      <button
-                        onClick={() => openEditModal(doc)}
-                        className="text-gray-400 hover:text-primary-600"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => handleDeleteDoc(doc.id)}
-                        className="text-gray-400 hover:text-red-600"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
+                    
+                    {doc.description && (
+                      <p className="text-sm text-gray-500 line-clamp-2 mb-3">{doc.description}</p>
+                    )}
+                    
+                    <div className="flex items-center justify-between text-xs text-gray-400">
+                      <span className="font-mono">{doc.code}</span>
+                      <span>{doc.version}</span>
+                    </div>
+                    
+                    {doc.tags && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {doc.tags.split(',').slice(0, 3).map((tag, i) => (
+                          <span key={i} className="px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
+                            {tag.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
+                      <span className="text-xs text-gray-400">{doc.category?.name}</span>
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => openEditModal(doc)}
+                          className="text-gray-400 hover:text-primary-600"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteDoc(doc.id)}
+                          className="text-gray-400 hover:text-red-600"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )
           )}
         </div>
       </div>

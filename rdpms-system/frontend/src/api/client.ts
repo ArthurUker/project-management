@@ -196,6 +196,14 @@ export const reagentAPI = {
   formulas: (id: string) => get<ApiResponse<any>>(`/reagents/${id}/formulas`),
 };
 
+export const reagentMaterialsAPI = {
+  list: (params?: Record<string, any>) => get<ApiResponse<any>>('/reagent-materials', { params }),
+  get: (id: string) => get<ApiResponse<any>>(`/reagent-materials/${id}`),
+  create: (data: any) => post<ApiResponse<any>>('/reagent-materials', data),
+  update: (id: string, data: any) => put<ApiResponse<any>>(`/reagent-materials/${id}`, data),
+  delete: (id: string) => del<ApiResponse<any>>(`/reagent-materials/${id}`),
+};
+
 export const formulaAPI = {
   list: (params?: Record<string, any>) => get<ApiResponse<any>>('/formulas', { params }),
   get: (id: string) => get<ApiResponse<any>>(`/formulas/${id}`),
