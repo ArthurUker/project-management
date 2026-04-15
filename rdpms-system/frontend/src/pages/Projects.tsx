@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProjectCard from '../components/ProjectCard';
 import type { Project } from '../components/ProjectCard';
@@ -66,6 +66,24 @@ const Projects: React.FC = () => {
   // 编辑弹窗
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
+  // sticky refs and offsets
+  const headerRef = useRef<HTMLDivElement | null>(null);
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const statsRef = useRef<HTMLDivElement | null>(null);
+  const filterRef = useRef<HTMLDivElement | null>(null);
+  const tableHeaderRef = useRef<HTMLDivElement | null>(null);
+  const combinedRef = useRef<HTMLDivElement | null>(null);
+  const tableHeaderOverlayRef = useRef<HTMLDivElement | null>(null);
+
+  const [headerHeight, setHeaderHeight] = useState(56);
+  const [statsTop, setStatsTop] = useState(0);
+  const [filterTop, setFilterTop] = useState(0);
+  const [tableHeaderTop, setTableHeaderTop] = useState(0);
+
+  const [statsShadow, setStatsShadow] = useState(false);
+  const [filterShadow, setFilterShadow] = useState(false);
+  const [tableShadow, setTableShadow] = useState(false);
+
   // ── 加载项目列表 ──
   const loadProjects = useCallback(async () => {
     setLoading(true);
@@ -82,6 +100,43 @@ const Projects: React.FC = () => {
   }, []);
 
   useEffect(() => { loadProjects(); }, [loadProjects]);
+
+  // compute offsets and attach scroll/resize listeners
+  useEffect(() => {
+    const compute = () => {
+      const h = headerRef.current?.getBoundingClientRect().height || 56;
+      setHeaderHeight(h);
+      const statsH = statsRef.current?.getBoundingClientRect().height || 0;
+      const filterH = filterRef.current?.getBoundingClientRect().height || 0;
+      // stats top relative to content container -> 0
+      setStatsTop(0);
+      setFilterTop(statsH);
+      setTableHeaderTop(statsH + filterH);
+      // set content container height - removed as flex layout handles this
+      // if (contentRef.current) {
+      //   contentRef.current.style.maxHeight = `calc(100vh - ${h}px)`;
+      // }
+    };
+
+    compute();
+    const onResize = () => compute();
+    window.addEventListener('resize', onResize);
+
+    const ref = contentRef.current;
+    const onScroll = () => {
+      const scrollTop = ref?.scrollTop || 0;
+      setStatsShadow(scrollTop > 0);
+      setFilterShadow(scrollTop > (statsRef.current?.getBoundingClientRect().height || 0));
+      setTableShadow(scrollTop > (statsRef.current?.getBoundingClientRect().height || 0) + (filterRef.current?.getBoundingClientRect().height || 0));
+    };
+    if (ref) ref.addEventListener('scroll', onScroll);
+
+    return () => {
+      window.removeEventListener('resize', onResize);
+      if (ref) ref.removeEventListener('scroll', onScroll);
+    };
+  }, []);
+
 
   // ── 前端筛选 ──
   const filteredProjects = useMemo(() => {
@@ -208,7 +263,9 @@ const Projects: React.FC = () => {
     const list = filteredProjects.filter(p => p.status === status);
     return (
       <div style={{ flex: '0 0 280px', minWidth: '280px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', padding: '0 4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', padding: '0 4px',
+          background: 'transparent', borderBottom: 'none'
+        }}>
           <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: cfg.dotColor, display: 'inline-block' }} />
           <span style={{ fontSize: '14px', fontWeight: 600, color: '#374151' }}>{status}</span>
           <span style={{ fontSize: '12px', color: '#9ca3af', background: '#f3f4f6', padding: '1px 8px', borderRadius: '20px', marginLeft: 'auto' }}>{list.length}</span>
@@ -229,10 +286,10 @@ const Projects: React.FC = () => {
 
   // ── 渲染 ──────────────────────────────────────────
   return (
-    <div style={{ minHeight: '100vh', background: '#f0f2f5' }}>
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#f0f2f5', overflow: 'hidden' }}>
 
       {/* ══ 顶部栏 ══ */}
-      <div style={{
+      <div ref={headerRef} style={{
         background: '#fff', borderBottom: '1px solid #e5e7eb',
         padding: '0 28px', height: '56px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -315,109 +372,137 @@ const Projects: React.FC = () => {
       </div>
 
       {/* ══ 主内容 ══ */}
-      <div style={{ padding: '24px 28px', maxWidth: '1400px', margin: '0 auto' }}>
+      <div ref={contentRef} style={{ padding: '24px 28px', maxWidth: '1400px', margin: '0 auto', overflowY: 'auto', position: 'relative', flex: 1, minHeight: 0, width: '100%', boxSizing: 'border-box' }}>
 
-        {/* 状态统计栏 */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: '14px', marginBottom: '22px' }}>
-          {statusStats.map(stat => (
-            <div
-              key={stat.label}
-              style={{
-                background: '#fff', borderRadius: '12px', padding: '16px 20px',
-                border: '1px solid #e5e7eb', borderLeft: `4px solid ${stat.barColor}`,
-                cursor: 'pointer', transition: 'all .2s',
-              }}
-              onClick={() => setFilterStatus(filterStatus === stat.label ? '' : stat.label)}
-              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,.08)')}
-              onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                <span style={{ fontSize: '12px', color: stat.textColor, fontWeight: 500 }}>{stat.label}</span>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: stat.dotColor, display: 'block' }} />
-              </div>
-              <div style={{ fontSize: '28px', fontWeight: 800, color: stat.textColor, lineHeight: 1 }}>{stat.count}</div>
-              <div style={{ height: '5px', borderRadius: '3px', background: '#f3f4f6', overflow: 'hidden', marginTop: '10px' }}>
-                <div style={{ height: '100%', borderRadius: '3px', background: stat.barColor, width: `${stat.percent}%`, transition: 'width .3s' }} />
-              </div>
-              <div style={{ fontSize: '11px', color: '#d1d5db', marginTop: '5px' }}>占比 {stat.percent}%</div>
-            </div>
-          ))}
-        </div>
+        {/* Combined sticky wrapper: 第1排（看板列标题）+ 第2排（状态统计卡片） + 第3排（搜索筛选栏） — 统一毛玻璃 */}
+        <div ref={combinedRef}
+             style={{
+               position: 'sticky', top: 0, zIndex: 20,
+               background: 'rgba(255,255,255,0.75)',
+               backdropFilter: 'blur(20px) saturate(180%)',
+               WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+               borderBottom: '1px solid rgba(0,0,0,0.08)',
+               boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
+               display: 'flex', flexDirection: 'column', gap: 0
+             }}>
 
-        {/* 筛选栏 */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px',
-          flexWrap: 'wrap', background: '#fff', padding: '16px 22px',
-          borderRadius: '12px', border: '1px solid #e5e7eb',
-          boxShadow: '0 1px 4px rgba(0,0,0,.04)',
-        }}>
-          {/* 搜索框 */}
-          <div style={{ position: 'relative', flex: 1, minWidth: '200px', maxWidth: '320px' }}>
-            <svg style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-              <circle cx="11" cy="11" r="8"/><path strokeLinecap="round" d="m21 21-4.35-4.35"/>
-            </svg>
-            <input
-              style={{ width: '100%', padding: '8px 12px 8px 34px', border: '1.5px solid #e5e7eb', borderRadius: '9px', fontSize: '14px', color: '#374151', outline: 'none' }}
-              placeholder="搜索项目名称或编号..."
-              value={searchKeyword}
-              onChange={e => setSearchKeyword(e.target.value)}
-            />
+          {/* 第1排：看板状态列标题行（透明背景） */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 22px', background: 'transparent' }}>
+            {STATUS_OPTIONS.map(s => {
+              const cfg = STATUS_CONFIG[s] ?? STATUS_CONFIG['规划中'];
+              return (
+                <div key={s} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 8px', borderRadius: '8px', background: 'transparent' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: cfg.dotColor, display: 'inline-block' }} />
+                  <span style={{ fontSize: '13px', color: '#374151', fontWeight: 600 }}>{s}</span>
+                </div>
+              );
+            })}
           </div>
 
-          <div style={{ width: '1px', height: '28px', background: '#e5e7eb' }} />
-
-          {/* 类型标签筛选 */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '14px', color: '#9ca3af', fontWeight: 500, whiteSpace: 'nowrap' }}>类型：</span>
-            {['', ...TYPE_OPTIONS].map(t => (
-              <button
-                key={t || 'all'}
-                onClick={() => setFilterType(t)}
+          {/* 第2排：状态统计卡片行（卡片背景改为透明，保留边框与颜色显示） */}
+          <div ref={statsRef} style={{
+            display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: '14px', padding: '8px 22px',
+            background: 'transparent'
+          }}>
+            {statusStats.map(stat => (
+              <div
+                key={stat.label}
                 style={{
-                  display: 'inline-flex', alignItems: 'center',
-                  padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 500, height: '42px',
-                  cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .15s',
-                  border: filterType === t ? '1.5px solid #3b82f6' : '1.5px solid #e5e7eb',
-                  background: filterType === t ? '#eff6ff' : '#fff',
-                  color: filterType === t ? '#2563eb' : '#6b7280',
+                  background: 'transparent', borderRadius: '12px', padding: '16px 20px',
+                  border: '1px solid #e5e7eb', borderLeft: `4px solid ${stat.barColor}`,
+                  cursor: 'pointer', transition: 'all .2s',
                 }}
+                onClick={() => setFilterStatus(filterStatus === stat.label ? '' : stat.label)}
+                onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,.08)')}
+                onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
               >
-                {t || '全部'}
-              </button>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '12px', color: stat.textColor, fontWeight: 500 }}>{stat.label}</span>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: stat.dotColor, display: 'block' }} />
+                </div>
+                <div style={{ fontSize: '28px', fontWeight: 800, color: stat.textColor, lineHeight: 1 }}>{stat.count}</div>
+                <div style={{ height: '5px', borderRadius: '3px', background: '#f3f4f6', overflow: 'hidden', marginTop: '10px' }}>
+                  <div style={{ height: '100%', borderRadius: '3px', background: stat.barColor, width: `${stat.percent}%`, transition: 'width .3s' }} />
+                </div>
+                <div style={{ fontSize: '11px', color: '#d1d5db', marginTop: '5px' }}>占比 {stat.percent}%</div>
+              </div>
             ))}
           </div>
 
-          <div style={{ width: '1px', height: '28px', background: '#e5e7eb' }} />
+          {/* 第3排：筛选栏（子元素背景设为透明） */}
+          <div ref={filterRef} style={{
+            display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0',
+            flexWrap: 'wrap', padding: '12px 22px', borderRadius: '12px',
+            background: 'transparent'
+          }}>
+            {/* 搜索框 */}
+            <div style={{ position: 'relative', flex: 1, minWidth: '200px', maxWidth: '320px' }}>
+              <svg style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+                <circle cx="11" cy="11" r="8"/><path strokeLinecap="round" d="m21 21-4.35-4.35"/>
+              </svg>
+              <input
+                style={{ width: '100%', padding: '8px 12px 8px 34px', border: '1.5px solid #e5e7eb', borderRadius: '9px', fontSize: '14px', color: '#374151', outline: 'none', background: 'transparent' }}
+                placeholder="搜索项目名称或编号..."
+                value={searchKeyword}
+                onChange={e => setSearchKeyword(e.target.value)}
+              />
+            </div>
 
-          {/* 状态下拉 */}
-          <select
-            value={filterStatus}
-            onChange={e => setFilterStatus(e.target.value)}
-            style={{ padding: '8px 28px 8px 12px', border: '1.5px solid #e5e7eb', borderRadius: '9px', fontSize: '14px', color: '#374151', background: '#fff', cursor: 'pointer', outline: 'none', fontWeight: 500 }}
-          >
-            <option value="">全部状态</option>
-            {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
+            <div style={{ width: '1px', height: '28px', background: '#e5e7eb' }} />
 
-          {/* 负责人下拉 */}
-          <select
-            value={filterManager}
-            onChange={e => setFilterManager(e.target.value)}
-            style={{ padding: '8px 28px 8px 12px', border: '1.5px solid #e5e7eb', borderRadius: '9px', fontSize: '14px', color: '#374151', background: '#fff', cursor: 'pointer', outline: 'none', fontWeight: 500 }}
-          >
-            <option value="">全部负责人</option>
-            {managerOptions.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
+            {/* 类型标签筛选 */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '14px', color: '#9ca3af', fontWeight: 500, whiteSpace: 'nowrap' }}>类型：</span>
+              {['', ...TYPE_OPTIONS].map(t => (
+                <button
+                  key={t || 'all'}
+                  onClick={() => setFilterType(t)}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center',
+                    padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 500, height: '42px',
+                    cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .15s',
+                    border: filterType === t ? '1.5px solid #3b82f6' : '1.5px solid #e5e7eb',
+                    background: filterType === t ? '#eff6ff' : 'transparent',
+                    color: filterType === t ? '#2563eb' : '#6b7280',
+                  }}
+                >
+                  {t || '全部'}
+                </button>
+              ))}
+            </div>
 
-          {/* 全选（列表/卡片视图） */}
-          {viewMode !== 'kanban' && (
-            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: '#6b7280', cursor: 'pointer', marginLeft: 'auto' }}>
-              <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} style={{ accentColor: '#3b82f6', width: '16px', height: '16px' }} />
-              全选
-            </label>
-          )}
+            <div style={{ width: '1px', height: '28px', background: '#e5e7eb' }} />
+
+            {/* 状态下拉 */}
+            <select
+              value={filterStatus}
+              onChange={e => setFilterStatus(e.target.value)}
+              style={{ padding: '8px 28px 8px 12px', border: '1.5px solid #e5e7eb', borderRadius: '9px', fontSize: '14px', color: '#374151', background: 'transparent', cursor: 'pointer', outline: 'none', fontWeight: 500 }}
+            >
+              <option value="">全部状态</option>
+              {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+
+            {/* 负责人下拉 */}
+            <select
+              value={filterManager}
+              onChange={e => setFilterManager(e.target.value)}
+              style={{ padding: '8px 28px 8px 12px', border: '1.5px solid #e5e7eb', borderRadius: '9px', fontSize: '14px', color: '#374151', background: 'transparent', cursor: 'pointer', outline: 'none', fontWeight: 500 }}
+            >
+              <option value="">全部负责人</option>
+              {managerOptions.map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+
+            {/* 全选（列表/卡片视图） */}
+            {viewMode !== 'kanban' && (
+              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: '#6b7280', cursor: 'pointer', marginLeft: 'auto' }}>
+                <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} style={{ accentColor: '#3b82f6', width: '16px', height: '16px' }} />
+                全选
+              </label>
+            )}
+          </div>
+
         </div>
-
         {/* 错误提示 */}
         {error && (
           <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', color: '#dc2626', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -487,13 +572,14 @@ const Projects: React.FC = () => {
 
         {/* ── 列表视图 ── */}
         {!loading && viewMode === 'list' && (
-          <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+          <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #e5e7eb' }}>
             {/* 表头 */}
-            <div style={{
+            <div ref={tableHeaderRef} style={{
               display: 'grid', gridTemplateColumns: '32px 2fr 1fr 1fr 1fr 120px 100px',
               gap: '12px', padding: '10px 16px',
-              background: '#f9fafb', borderBottom: '1px solid #e5e7eb',
+              background: 'transparent',
               fontSize: '12px', fontWeight: 600, color: '#6b7280',
+              position: 'relative'
             }}>
               <span></span>
               <span>项目名称</span><span>类型</span><span>状态</span>

@@ -12,12 +12,13 @@ materials.get('/', async (c) => {
     const where = {};
     if (keyword) {
       where.OR = [
-        { name: { contains: keyword } },
-        { alias: { has: keyword } },
+        { commonName: { contains: keyword } },
+        { chineseName: { contains: keyword } },
+        { englishName: { contains: keyword } },
         { casNumber: { contains: keyword } },
       ];
     }
-    const list = await prisma.reagentMaterial.findMany({ where, orderBy: { name: 'asc' } });
+    const list = await prisma.reagentMaterial.findMany({ where, orderBy: { commonName: 'asc' } });
     return c.json({ success: true, list });
   } catch (err) {
     console.error('获取试剂原料列表失败', err);
@@ -74,6 +75,39 @@ materials.delete('/:id', async (c) => {
   } catch (err) {
     console.error('删除试剂原料失败', err);
     return c.json({ error: '删除试剂原料失败' }, 500);
+  }
+});
+
+// POST /api/reagent-materials/bulk-delete
+materials.post('/bulk-delete', async (c) => {
+  try {
+    const body = await c.req.json();
+    const ids = body.ids || [];
+    const force = !!body.force;
+
+    // check references
+    const refs = [];
+    for (const id of ids) {
+      const count = await prisma.formulaComponent.count({ where: { reagentMaterialId: id } });
+      if (count > 0) refs.push({ id, count });
+    }
+
+    if (refs.length > 0 && !force) {
+      return c.json({ error: 'has_references', details: refs }, 400);
+    }
+
+    // start transaction: if force, nullify references first
+    await prisma.$transaction(async (tx) => {
+      if (refs.length > 0 && force) {
+        await tx.formulaComponent.updateMany({ where: { reagentMaterialId: { in: ids } }, data: { reagentMaterialId: null } });
+      }
+      await tx.reagentMaterial.deleteMany({ where: { id: { in: ids } } });
+    });
+
+    return c.json({ success: true });
+  } catch (err) {
+    console.error('批量删除试剂原料失败', err);
+    return c.json({ error: '批量删除试剂原料失败' }, 500);
   }
 });
 

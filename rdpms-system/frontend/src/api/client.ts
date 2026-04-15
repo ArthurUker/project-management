@@ -146,6 +146,15 @@ export const projectTemplatesAPI = {
   apply: (id: string, data?: any) => post<ApiResponse<any>>(`/project-templates/${id}/apply`, data),
 };
 
+export const taskTemplatesAPI = {
+  list: (params?: Record<string, any>) => get<ApiResponse<any>>('/task-templates', { params }),
+  get: (id: string) => get<ApiResponse<any>>(`/task-templates/${id}`),
+  create: (data: any) => post<ApiResponse<any>>('/task-templates', data),
+  update: (id: string, data: any) => put<ApiResponse<any>>(`/task-templates/${id}`, data),
+  delete: (id: string) => del<ApiResponse<any>>(`/task-templates/${id}`),
+  bulkDelete: (ids: string[], force?: boolean) => post<ApiResponse<any>>('/task-templates/bulk-delete', { ids, force }),
+};
+
 export const docsAPI = {
   // 分类管理
   categories: {
@@ -202,6 +211,7 @@ export const reagentMaterialsAPI = {
   create: (data: any) => post<ApiResponse<any>>('/reagent-materials', data),
   update: (id: string, data: any) => put<ApiResponse<any>>(`/reagent-materials/${id}`, data),
   delete: (id: string) => del<ApiResponse<any>>(`/reagent-materials/${id}`),
+  bulkDelete: (ids: string[], force?: boolean) => post<ApiResponse<any>>('/reagent-materials/bulk-delete', { ids, force }),
 };
 
 export const formulaAPI = {

@@ -30,9 +30,9 @@ export default function Layout() {
   const filteredNav = navItems.filter(item => !item.adminOnly || isAdmin);
   
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen" style={{ background: 'transparent' }}>
       {/* 侧边栏 */}
-      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
+      <aside className="w-64 border-r border-gray-200 flex flex-col" style={{ background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(24px) saturate(180%)', WebkitBackdropFilter: 'blur(24px) saturate(180%)', borderRight: '1px solid rgba(255,255,255,0.70)', boxShadow: '2px 0 20px rgba(0,0,0,0.05)', position: 'relative', zIndex: 10 }}>
         {/* Logo */}
         <div className="h-16 flex items-center px-6 border-b border-gray-100">
           <div className="flex items-center space-x-3">
@@ -145,8 +145,8 @@ export default function Layout() {
       </aside>
       
       {/* 主内容区 */}
-      <main className="flex-1 overflow-auto">
-        <div className="p-6">
+      <main className="flex-1 overflow-hidden flex flex-col">
+        <div className="p-6 flex-1 min-h-0 overflow-hidden flex flex-col">
           <Outlet />
         </div>
       </main>

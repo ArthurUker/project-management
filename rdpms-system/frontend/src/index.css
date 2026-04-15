@@ -25,10 +25,22 @@
   padding: 0;
 }
 
-body {
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
   font-family: 'Source Sans 3', 'DM Sans', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* 全局渐变背景，覆盖整个视口 */
+  background: linear-gradient(135deg, #dde8ff 0%, #eef3ff 35%, #f0f5ff 60%, #ede8ff 100%);
+  background-attachment: fixed;
+}
+
+/* 清除可能覆盖背景的根容器颜色 */
+#root {
+  background: transparent !important;
+  min-height: 100vh;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -170,4 +182,26 @@ code, pre {
 }
 .react-flow__edge-path {
   stroke-linecap: round;
+}
+
+/* 卡片区滚动条样式 */
+.project-scroll-area::-webkit-scrollbar {
+  width: 6px;
+}
+.project-scroll-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+.project-scroll-area::-webkit-scrollbar-thumb {
+  background: rgba(150, 170, 255, 0.35);
+  border-radius: 3px;
+}
+.project-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: rgba(150, 170, 255, 0.60);
+}
+
+/* Ensure top-level layout containers are transparent */
+.layout-container,
+.main-content,
+.sidebar-layout {
+  background: transparent !important;
 }

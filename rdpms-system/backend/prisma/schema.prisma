@@ -307,8 +307,12 @@ model Reagent {
 // 新增：试剂原料库（ReagentMaterial），用于知识库管理与配方参数引用
 model ReagentMaterial {
   id               String   @id @default(uuid())
-  name             String   @unique
-  alias            String? // 逗号分隔的别名列表
+  // legacy name kept for backward compatibility
+  name             String?
+  // New fields
+  commonName       String   @unique
+  chineseName      String?
+  englishName      String?
   casNumber        String?
   molecularFormula String?
   mw               Float
@@ -325,7 +329,7 @@ model ReagentMaterial {
   // 被 FormulaComponent 引用
   components       FormulaComponent[] @relation("MaterialComponents")
 
-  @@index([name])
+  @@index([commonName])
 }
 
 model ReagentFormula {
@@ -395,4 +399,37 @@ model PhaseTransition {
   createdAt   DateTime @default(now())
 
   @@unique([fromPhaseId, toPhaseId])
+}
+
+// 任务模板库：可复用的任务流程模板
+model TaskTemplate {
+  id           String   @id @default(uuid())
+  name         String   @unique
+  category     String?
+  description  String?
+  estimatedDays Int?    @default(0)
+  priority     String   @default("medium")
+  tags         String?  // 逗号分隔
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  steps        TaskTemplateStep[]
+
+  @@index([category])
+}
+
+model TaskTemplateStep {
+  id             String   @id @default(uuid())
+  templateId     String
+  order          Int
+  title          String
+  description    String?
+  estimatedHours Float?
+  assigneeRole   String?
+  checklist      String?  // 逗号分隔
+
+  template       TaskTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([templateId])
+  @@index([order])
 }

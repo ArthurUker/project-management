@@ -338,6 +338,73 @@ async function main() {
   });
   console.log('✅ 模版创建成功: 快速迭代型');
 
+  // 预置：任务模板示例（首次加载时写入）
+  const existingTemplates = await prisma.taskTemplate.findMany();
+  if (existingTemplates.length === 0) {
+    console.log('🌱 初始化任务模板示例数据...');
+    const templatesToCreate = [
+      {
+        name: '微流控芯片制备流程',
+        category: '芯片制备',
+        description: '标准微流控芯片从设计到封装的完整制备流程',
+        estimatedDays: 5,
+        priority: 'high',
+        tags: ['PDMS','光刻','键合'],
+        steps: [
+          { order:1, title:'掩模版设计与制作', estimatedHours:8, assigneeRole:'负责人', checklist:['确认芯片尺寸','完成CAD设计','送厂制版'] },
+          { order:2, title:'PDMS浇注', estimatedHours:4, assigneeRole:'实验员', checklist:['配制PDMS（10:1）','真空脱气30min','60℃固化2h'] },
+          { order:3, title:'等离子体键合', estimatedHours:2, assigneeRole:'实验员', checklist:['表面活化处理','对准键合','80℃后烘1h'] },
+          { order:4, title:'功能测试', estimatedHours:3, assigneeRole:'实验员', checklist:['注水检漏','流速测试','显微镜检查'] },
+        ]
+      },
+      {
+        name: '核酸检测实验流程',
+        category: '检测实验',
+        description: '基于微流控平台的核酸提取与扩增检测标准流程',
+        estimatedDays: 3,
+        priority: 'high',
+        tags: ['PCR','核酸','检测'],
+        steps: [
+          { order:1, title:'样本前处理', estimatedHours:2, assigneeRole:'实验员', checklist:['样本登记','裂解液配制','样本裂解'] },
+          { order:2, title:'核酸提取', estimatedHours:3, assigneeRole:'实验员', checklist:['磁珠法提取','洗涤3次','洗脱'] },
+          { order:3, title:'PCR扩增', estimatedHours:2, assigneeRole:'实验员', checklist:['配制反应体系','上机扩增','结果采集'] },
+          { order:4, title:'数据分析与报告', estimatedHours:2, assigneeRole:'负责人', checklist:['Ct值分析','阴阳性判断','出具报告'] },
+        ]
+      },
+      {
+        name: '试剂配制与质检',
+        category: '通用',
+        description: '实验室常用缓冲液及试剂的配制与质量检验流程',
+        estimatedDays: 1,
+        priority: 'medium',
+        tags: ['配制','质检','缓冲液'],
+        steps: [
+          { order:1, title:'原料称量', estimatedHours:1, assigneeRole:'实验员', checklist:['核对试剂名称','检查有效期','精确称量'] },
+          { order:2, title:'溶液配制', estimatedHours:1, assigneeRole:'实验员', checklist:['加入80%体积超纯水','调节pH','定容至目标体积'] },
+          { order:3, title:'质量检验', estimatedHours:1, assigneeRole:'负责人', checklist:['pH复测','浓度验证','外观检查'] },
+          { order:4, title:'分装与标记', estimatedHours:0.5, assigneeRole:'实验员', checklist:['无菌分装','贴标签（名称/浓度/日期）','低温保存'] },
+        ]
+      }
+    ];
+
+    for (const t of templatesToCreate) {
+      try {
+        await prisma.taskTemplate.create({
+          data: {
+            name: t.name,
+            category: t.category,
+            description: t.description,
+            estimatedDays: t.estimatedDays,
+            priority: t.priority,
+            tags: t.tags.join(','),
+            steps: { create: t.steps.map(s => ({ order: s.order, title: s.title, description: s.description || null, estimatedHours: s.estimatedHours, assigneeRole: s.assigneeRole, checklist: s.checklist.join('|') })) }
+          }
+        });
+        console.log('✅ 模板创建:', t.name);
+      } catch (e) { console.error('创建模板失败', e); }
+    }
+  }
+
   // 创建示例项目
   const projects = [
     {
@@ -425,36 +492,37 @@ async function main() {
 
   // 预置试剂原料库数据（如不存在则创建）
   const materials = [
-    { name:'Tris', mw:121.14, state:'solid', purity:99, defaultStockConc:1, defaultStockUnit:'M' },
-    { name:'NaCl', mw:58.44, state:'solid', purity:99.5, defaultStockConc:5, defaultStockUnit:'M' },
-    { name:'KCl', mw:74.55, state:'solid', purity:99, defaultStockConc:3, defaultStockUnit:'M' },
-    { name:'EDTA', alias:['Na2-EDTA'], mw:372.24, state:'solid', purity:99, defaultStockConc:0.5, defaultStockUnit:'M' },
-    { name:'MgCl2', alias:['氯化镁'], mw:203.30, state:'solid', purity:98, defaultStockConc:1, defaultStockUnit:'M' },
-    { name:'CaCl2', alias:['氯化钙'], mw:110.98, state:'solid', purity:96, defaultStockConc:1, defaultStockUnit:'M' },
-    { name:'HEPES', mw:238.30, state:'solid', purity:99, defaultStockConc:1, defaultStockUnit:'M' },
-    { name:'SDS', alias:['十二烷基硫酸钠'], mw:288.38, state:'solid', purity:99, defaultStockConc:10, defaultStockUnit:'%' },
-    { name:'DTT', alias:['二硫苏糖醇'], mw:154.25, state:'solid', purity:99, defaultStockConc:1, defaultStockUnit:'M' },
-    { name:'β-巯基乙醇', mw:78.13, state:'liquid', density:1.114, purity:99, defaultStockConc:14, defaultStockUnit:'M' },
-    { name:'GITC', alias:['异硫氰酸胍'], mw:118.16, state:'solid', purity:98, defaultStockConc:8, defaultStockUnit:'M' },
-    { name:'尿素', mw:60.06, state:'solid', purity:99, defaultStockConc:8, defaultStockUnit:'M' },
-    { name:'蔗糖', mw:342.30, state:'solid', purity:99, defaultStockConc:1, defaultStockUnit:'M' },
-    { name:'甘油', mw:92.09, state:'liquid', density:1.261, purity:99, defaultStockConc:50, defaultStockUnit:'%' },
-    { name:'BSA', alias:['牛血清白蛋白'], mw:66430, state:'solid', purity:98, defaultStockConc:10, defaultStockUnit:'mg·mL⁻¹' },
-    { name:'Tween-20', mw:1228.0, state:'liquid', density:1.1, purity:100, defaultStockConc:10, defaultStockUnit:'%' },
-    { name:'Triton X-100', mw:625.0, state:'liquid', density:1.065, purity:100, defaultStockConc:10, defaultStockUnit:'%' },
-    { name:'NaOH', alias:['氢氧化钠'], mw:40.00, state:'solid', purity:97, defaultStockConc:10, defaultStockUnit:'M' },
-    { name:'HCl', alias:['盐酸'], mw:36.46, state:'liquid', density:1.19, purity:37, defaultStockConc:12, defaultStockUnit:'M' },
-    { name:'KH2PO4', mw:136.09, state:'solid', purity:99, defaultStockConc:1, defaultStockUnit:'M' },
-    { name:'Na2HPO4', mw:141.96, state:'solid', purity:99, defaultStockConc:1, defaultStockUnit:'M' },
+    { commonName:'Tris', chineseName:'三羟甲基氨基甲烷', englishName:'Tris base', mw:121.14 },
+    { commonName:'NaCl', chineseName:'氯化钠', englishName:'Sodium Chloride', mw:58.44 },
+    { commonName:'KCl', chineseName:'氯化钾', englishName:'Potassium Chloride', mw:74.55 },
+    { commonName:'EDTA', chineseName:'乙二胺四乙酸二钠', englishName:'Ethylenediaminetetraacetic acid disodium salt', mw:372.24 },
+    { commonName:'MgCl2', chineseName:'氯化镁', englishName:'Magnesium Chloride', mw:203.30 },
+    { commonName:'CaCl2', chineseName:'氯化钙', englishName:'Calcium Chloride', mw:110.98 },
+    { commonName:'HEPES', chineseName:'羟乙基哌嗪乙硫磺酸', englishName:'4-(2-hydroxyethyl)-1-piperazineethanesulfonic acid', mw:238.30 },
+    { commonName:'SDS', chineseName:'十二烷基硫酸钠', englishName:'Sodium Dodecyl Sulfate', mw:288.38 },
+    { commonName:'DTT', chineseName:'二硫苏糖醇', englishName:'Dithiothreitol', mw:154.25 },
+    { commonName:'β-ME', chineseName:'β-巯基乙醇', englishName:'Beta-Mercaptoethanol', mw:78.13 },
+    { commonName:'GITC', chineseName:'异硫氰酸胍', englishName:'Guanidinium isothiocyanate', mw:118.16 },
+    { commonName:'尿素', chineseName:'尿素', englishName:'Urea', mw:60.06 },
+    { commonName:'蔗糖', chineseName:'蔗糖', englishName:'Sucrose', mw:342.30 },
+    { commonName:'甘油', chineseName:'甘油', englishName:'Glycerol', mw:92.09, state:'liquid', density:1.261 },
+    { commonName:'BSA', chineseName:'牛血清白蛋白', englishName:'Bovine Serum Albumin', mw:66430 },
+    { commonName:'Tween-20', chineseName:'吐温-20', englishName:'Polyoxyethylene sorbitan monolaurate', mw:1228.0, state:'liquid' },
+    { commonName:'Triton X-100', chineseName:'曲拉通X-100', englishName:'Polyethylene glycol tert-octylphenyl ether', mw:625.0, state:'liquid' },
+    { commonName:'NaOH', chineseName:'氢氧化钠', englishName:'Sodium Hydroxide', mw:40.00 },
+    { commonName:'HCl', chineseName:'盐酸', englishName:'Hydrochloric acid', mw:36.46, state:'liquid', density:1.19 },
+    { commonName:'KH2PO4', chineseName:'磷酸二氢钾', englishName:'Potassium dihydrogen phosphate', mw:136.09 },
+    { commonName:'Na2HPO4', chineseName:'磷酸氢二钠', englishName:'Disodium hydrogen phosphate', mw:141.96 },
   ];
 
   for (const m of materials) {
     await prisma.reagentMaterial.upsert({
-      where: { name: m.name },
+      where: { commonName: m.commonName },
       update: {},
       create: {
-        name: m.name,
-        alias: m.alias ? (Array.isArray(m.alias) ? m.alias.join(',') : m.alias) : null,
+        commonName: m.commonName,
+        chineseName: m.chineseName || null,
+        englishName: m.englishName || null,
         casNumber: m.casNumber || null,
         molecularFormula: m.molecularFormula || null,
         mw: m.mw,

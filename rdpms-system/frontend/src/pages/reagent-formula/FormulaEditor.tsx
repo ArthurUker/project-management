@@ -72,12 +72,12 @@ export default function FormulaEditor(){
               <tr key={idx}>
                 <td>
                   <div className="flex">
-                    <input className="p-1 border" placeholder="搜索试剂/别名" value={c._search || (c.reagentName||'')} onChange={e=>{
+                    <input className="p-1 border" placeholder="搜索试剂（常用名/中文/英文）" value={c._search || (c.reagentName||'')} onChange={e=>{
                       const comps=[...form.components]; comps[idx]._search=e.target.value; setForm({...form, components: comps});
                     }} />
-                    <select value={c.reagentMaterialId || c.reagentId || ''} onChange={e=>{ const comps=[...form.components]; const val=e.target.value; comps[idx].reagentMaterialId=val || null; comps[idx].reagentId=null; comps[idx].reagentName = materials.find(m=>m.id===val)?.name || comps[idx].reagentName; setForm({...form, components: comps})}}>
+                    <select value={c.reagentMaterialId || c.reagentId || ''} onChange={e=>{ const comps=[...form.components]; const val=e.target.value; comps[idx].reagentMaterialId=val || null; comps[idx].reagentId=null; comps[idx].reagentName = materials.find(m=>m.id===val)?.commonName || materials.find(m=>m.id===val)?.name || comps[idx].reagentName; setForm({...form, components: comps})}}>
                       <option value="">请选择（或输入自定义名称）</option>
-                      {materials.map(m=> <option key={m.id} value={m.id}>{m.name}{m.alias && m.alias.length ? ` (${m.alias.join(',')})` : ''}</option>)}
+                      {materials.map(m=> <option key={m.id} value={m.id}>{(m.commonName || m.name) + (m.chineseName ? ` (${m.chineseName})` : '')}</option>)}
                     </select>
                     {/* 当未找到匹配时提示并跳转 */}
                     <button className="ml-2 text-amber-600 bg-amber-50 text-xs p-1 rounded" onClick={()=>{ window.location.href = '/knowledge?openNew=1'; }}>前往新增</button>
