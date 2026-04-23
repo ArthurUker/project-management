@@ -12,7 +12,6 @@ import Tasks from './pages/Tasks';
 import Users from './pages/Users';
 import Settings from './pages/Settings';
 import Docs from './pages/Docs';
-import ReagentLibrary from './pages/knowledge/ReagentLibrary';
 import FormulaList from './pages/reagent-formula/index';
 import FormulaEditor from './pages/reagent-formula/FormulaEditor';
 import PrepCalculator from './pages/reagent-formula/PrepCalculator';

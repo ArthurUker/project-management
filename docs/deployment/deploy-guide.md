@@ -37,13 +37,20 @@ npm -v    # 10.x.x
 
 ```powershell
 npm install -g pm2
+npm install -g pm2-windows-startup
+pm2-startup install
 pm2 -v
 ```
+
+> ⚠️ Windows 环境中，`pm2 startup`（Linux systemd）不适用，需使用 `pm2-windows-startup`。
 
 ### 2.3 安装 Nginx（静态文件 + 反向代理）
 
 下载 Windows 版 Nginx：http://nginx.org/en/download.html  
 解压到 `C:\nginx\`
+
+> ⚠️ Windows 下 Nginx 默认不是系统服务。若仅用命令行启动，关闭窗口或重启后会停止。  
+> 建议使用 **WinSW** 或 **NSSM** 将 Nginx 注册为 Windows 服务。
 
 ---
 
@@ -60,14 +67,18 @@ pm2 -v
 ```powershell
 cd C:\rdpms\backend
 npm install --production
+npx prisma generate
 ```
+
+> `prisma generate` 会在服务器上生成当前平台（Windows）的 Prisma 引擎二进制文件。
 
 ### 3.3 配置环境变量
 
 编辑 `C:\rdpms\backend\.env`：
 
 ```env
-DATABASE_URL="file:./prisma/rdpms.db"
+# 限制连接池并设置超时，降低 SQLite 在 Windows 下出现 database is locked 的概率
+DATABASE_URL="file:./prisma/rdpms.db?connection_limit=1&socket_timeout=10"
 JWT_SECRET="【替换为随机强密钥，至少64位】"
 PORT=3000
 ```
@@ -93,10 +104,9 @@ node prisma/seed.js
 cd C:\rdpms\backend
 pm2 start src/index.js --name rdpms-backend --interpreter node
 pm2 save
-
-# 设置开机自启（Windows 服务）
-pm2-startup install
 ```
+
+> 已在 2.2 节安装 `pm2-windows-startup` 并执行 `pm2-startup install`，可确保重启后拉起 PM2 进程列表。
 
 ### 3.6 验证后端
 
@@ -116,6 +126,11 @@ curl http://localhost:3000/api/health
 
 ```bash
 cd rdpms-system/frontend
+
+# 生产环境变量（建议）
+echo "VITE_API_URL=/api" > .env.production
+# 兼容变量名（可选）
+# echo "VITE_API_BASE=/api" >> .env.production
 
 # 安装依赖
 npm install
@@ -182,7 +197,7 @@ http {
 
     server {
         listen       80;
-        server_name  你的域名或服务器IP;
+        server_name  159.75.106.179 localhost;
 
         root   C:/rdpms/frontend/dist;
         index  index.html;
@@ -192,6 +207,12 @@ http {
             expires 1y;
             add_header Cache-Control "public, immutable";
             add_header X-Content-Type-Options nosniff;
+        }
+
+        # ── 其他常见静态资源缓存 ──
+        location ~* \.(ico|png|svg|jpg|jpeg|gif|json)$ {
+            expires 30d;
+            add_header Cache-Control "public";
         }
 
         # ── HTML 禁止缓存（确保更新后立即生效）──
@@ -223,9 +244,30 @@ nginx.exe -s reload    # 修改配置后重载
 nginx.exe -t           # 配置语法检查
 ```
 
+> 建议将 Nginx 以 Windows 服务方式运行，避免 RDP 断开或系统重启后进程消失。
+
 ---
 
-## 六、HTTPS 配置（可选但推荐）
+## 六、网络放通（致命检查）
+
+### 6.1 腾讯云安全组
+
+在腾讯云控制台中进入该实例对应安全组，添加入站规则：
+
+- 协议：TCP
+- 端口：80
+- 来源：按需设置（建议先 `0.0.0.0/0` 验证，再收敛）
+- 备注：Nginx HTTP
+
+### 6.2 Windows Defender 防火墙
+
+在服务器内执行：高级安全 Windows Defender 防火墙 -> 入站规则 -> 新建规则 -> 端口 -> TCP 80 -> 允许连接。
+
+> 如需 HTTPS，还需同时放通 TCP 443。
+
+---
+
+## 七、HTTPS 配置（可选但推荐）
 
 如有域名，使用 [Certbot for Windows](https://certbot.eff.org/) 申请 Let's Encrypt 免费证书，  
 或在腾讯云控制台申请免费 SSL 证书后，修改 Nginx：
@@ -239,7 +281,7 @@ ssl_protocols       TLSv1.2 TLSv1.3;
 
 ---
 
-## 七、数据库备份策略
+## 八、数据库备份策略
 
 SQLite 备份极简，定时复制文件即可：
 
@@ -257,13 +299,17 @@ Get-ChildItem "C:\rdpms\backup\*.db" |
 
 ---
 
-## 八、部署检查清单
+## 九、部署检查清单
 
 ### 部署前
 - [ ] `.env` 中 `JWT_SECRET` 已替换为强随机密钥
+- [ ] `.env` 中 `DATABASE_URL` 已包含 `connection_limit=1&socket_timeout=10`
 - [ ] 前端 `npm run build` 构建无报错
+- [ ] `prisma generate` 执行成功
 - [ ] `prisma migrate deploy` 执行成功
 - [ ] Nginx 配置语法检查通过（`nginx -t`）
+- [ ] 腾讯云安全组已放通 TCP 80（HTTPS 场景再放通 443）
+- [ ] Windows 防火墙已放通 TCP 80（HTTPS 场景再放通 443）
 
 ### 部署后验证
 - [ ] `http://服务器IP/` 可访问前端页面
@@ -274,7 +320,7 @@ Get-ChildItem "C:\rdpms\backup\*.db" |
 
 ---
 
-## 九、常用运维命令
+## 十、常用运维命令
 
 ```powershell
 # 查看后端日志
@@ -295,7 +341,7 @@ type C:\nginx\logs\error.log
 
 ---
 
-## 十、预期性能
+## 十一、预期性能
 
 | 指标 | 目标值 |
 |------|--------|

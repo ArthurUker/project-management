@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { formulaAPI, prepAPI } from '../../api/client';
-import { useNavigate } from 'react-router-dom';
 
 export default function PrepCalculator(){
   const [formulas, setFormulas] = useState<any[]>([]);

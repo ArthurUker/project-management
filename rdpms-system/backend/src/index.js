@@ -40,6 +40,7 @@ app.get('/', (c) => c.json({
 
 // 健康检查
 app.get('/health', (c) => c.json({ status: 'ok' }));
+app.get('/api/health', (c) => c.json({ status: 'ok' }));
 
 // 注册路由
 app.route('/api/auth', authRoutes);

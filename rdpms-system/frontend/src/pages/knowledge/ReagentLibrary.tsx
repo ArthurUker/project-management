@@ -1,7 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { reagentMaterialsAPI } from '../../api/client';
 
-const DEFAULT_MATERIALS = [
+type DefaultMaterial = {
+  commonName: string;
+  chineseName: string;
+  englishName: string;
+  mw: number;
+  state?: string;
+  density?: number;
+  casNumber?: string;
+  molecularFormula?: string;
+  purity?: number;
+  defaultStockConc?: number;
+  defaultStockUnit?: string;
+  supplier?: string;
+  notes?: string;
+};
+
+const DEFAULT_MATERIALS: DefaultMaterial[] = [
   { commonName:'Tris', chineseName:'三羟甲基氨基甲烷', englishName:'Tris base', mw:121.14 },
   { commonName:'NaCl', chineseName:'氯化钠', englishName:'Sodium Chloride', mw:58.44 },
   { commonName:'KCl', chineseName:'氯化钾', englishName:'Potassium Chloride', mw:74.55 },
@@ -108,17 +124,6 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
       setShowDrawer(false);
       load();
     } catch (err) { console.error(err); alert('保存失败'); }
-  };
-
-  const remove = async (id: string) => {
-    // per-row delete removed from UI; keep function for compatibility
-    if (!confirm('确认删除？')) return;
-    try {
-      await reagentMaterialsAPI.delete(id);
-      load();
-    } catch (err: any) {
-      alert(err?.error || err?.message || '删除失败');
-    }
   };
 
   const toggleSelect = (id: string) => {

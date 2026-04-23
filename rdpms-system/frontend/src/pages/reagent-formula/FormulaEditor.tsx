@@ -1,19 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { formulaAPI, reagentAPI } from '../../api/client';
+import { useEffect, useState } from 'react';
+import { formulaAPI } from '../../api/client';
 import { useNavigate, useParams } from 'react-router-dom';
 
 export default function FormulaEditor(){
   const { id } = useParams();
   const navigate = useNavigate();
   const [form, setForm] = useState<any>({ code: '', name:'', type:'CLY', pH:7, procedure:'', notes:'', components: [] });
-  const [reagents, setReagents] = useState<any[]>([]);
   const [materials, setMaterials] = useState<any[]>([]);
 
-  useEffect(()=>{ loadReagents(); loadMaterials(); if (id) loadFormula(); }, [id]);
+  useEffect(()=>{ loadMaterials(); if (id) loadFormula(); }, [id]);
 
-  const loadReagents = async ()=>{
-    const res = await reagentAPI.list(); setReagents(res.list || []);
-  };
   const loadMaterials = async ()=>{
     const res = await (await import('../../api/client')).reagentMaterialsAPI.list(); setMaterials(res.list || []);
   };

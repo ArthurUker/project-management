@@ -4,7 +4,7 @@ import { docsAPI } from '../api/client';
 import { useAppStore } from '../store/appStore';
 import ReagentLibrary from './knowledge/ReagentLibrary';
 import TaskTemplateLibrary from './knowledge/TaskTemplateLibrary';
-import { LayoutGrid, FlaskConical, Cpu, Dna, FileText, BookOpen, Package, ClipboardList, ChevronDown, ChevronUp } from 'lucide-react';
+import { LayoutGrid, FlaskConical, Cpu, Dna, FileText, BookOpen, Package, ClipboardList } from 'lucide-react';
 
 interface DocCategory {
   id: string;
@@ -127,7 +127,19 @@ export default function Docs() {
   const handleUpdateDoc = async () => { if (!editingDoc || !docForm.title) return; try { await docsAPI.documents.update(editingDoc.id, { ...docForm, updatedBy: user?.id }); setEditingDoc(null); resetForm(); loadDocuments(); } catch (e: any) { alert(e.message || '更新失败'); } };
   const handleDeleteDoc = async (id: string) => { if (!confirm('确定要删除这个文档吗？')) return; try { await docsAPI.documents.delete(id); loadDocuments(); } catch (e) { alert('删除失败'); } };
   const resetForm = () => setDocForm({ categoryId: selectedCategory || '', code: '', title: '', description: '', docType: 'sop', content: '', tags: '', version: 'V1.0' });
-  const openEditModal = (doc: DocDocument) => setEditingDoc(doc) || setDocForm({ categoryId: doc.category?.id || '', code: doc.code, title: doc.title, description: doc.description || '', docType: doc.docType, content: '', tags: doc.tags || '', version: doc.version });
+  const openEditModal = (doc: DocDocument) => {
+    setEditingDoc(doc);
+    setDocForm({
+      categoryId: doc.category?.id || '',
+      code: doc.code,
+      title: doc.title,
+      description: doc.description || '',
+      docType: doc.docType,
+      content: '',
+      tags: doc.tags || '',
+      version: doc.version,
+    });
+  };
 
   const IconMap: Record<string, any> = {
     '全部文档': LayoutGrid,
@@ -183,8 +195,27 @@ export default function Docs() {
             <div
               onClick={() => setSelectedCategory(null)}
               style={{ ...cardBaseStyle, ...getCardStyle(selectedCategory === null, true), minWidth: 'fit-content' }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.border = '1px solid #bfdbfe'; (e.currentTarget as HTMLElement).style.background = '#eff6ff'; (e.currentTarget as HTMLElement).style.color = '#ffffff' ; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px rgba(59,130,246,0.10)'; const svg = (e.currentTarget as HTMLElement).querySelector('svg'); if (svg) (svg as HTMLElement).style.color = selectedCategory === null ? '#ffffff' : '#3b82f6'; }}
-              onMouseLeave={(e) => { const isActiveAll = selectedCategory === null; (e.currentTarget as HTMLElement).style.border = isActiveAll ? '1px solid #2563eb' : '1px solid #e2e8f0'; (e.currentTarget as HTMLElement).style.background = isActiveAll ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' : '#f8fafc'; (e.currentTarget as HTMLElement).style.color = isActiveAll ? '#ffffff' : '#475569'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0px)'; (e.currentTarget as HTMLElement).style.boxShadow = isActiveAll ? '0 2px 10px rgba(59,130,246,0.30)' : 'none'; const svg = (e.currentTarget as HTMLElement).querySelector('svg'); if (svg) (svg as HTMLElement).style.color = isActiveAll ? '#ffffff' : '#475569'; }}
+              onMouseEnter={(e) => {
+                const target = e.currentTarget;
+                target.style.border = '1px solid #bfdbfe';
+                target.style.background = '#eff6ff';
+                target.style.color = '#ffffff';
+                target.style.transform = 'translateY(-1px)';
+                target.style.boxShadow = '0 2px 8px rgba(59,130,246,0.10)';
+                const svg = target.querySelector('svg');
+                if (svg) svg.style.color = selectedCategory === null ? '#ffffff' : '#3b82f6';
+              }}
+              onMouseLeave={(e) => {
+                const target = e.currentTarget;
+                const isActiveAll = selectedCategory === null;
+                target.style.border = isActiveAll ? '1px solid #2563eb' : '1px solid #e2e8f0';
+                target.style.background = isActiveAll ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' : '#f8fafc';
+                target.style.color = isActiveAll ? '#ffffff' : '#475569';
+                target.style.transform = 'translateY(0px)';
+                target.style.boxShadow = isActiveAll ? '0 2px 10px rgba(59,130,246,0.30)' : 'none';
+                const svg = target.querySelector('svg');
+                if (svg) svg.style.color = isActiveAll ? '#ffffff' : '#475569';
+              }}
             >
               <LayoutGrid size={14} color={selectedCategory === null ? '#fff' : '#475569'} />
               <div style={{ fontSize: 13, fontWeight: selectedCategory === null ? 600 : 500, color: selectedCategory === null ? '#fff' : '#475569' }}>全部文档</div>
@@ -199,8 +230,27 @@ export default function Docs() {
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
                   style={{ ...cardBaseStyle, ...getCardStyle(isActive, false), minWidth: 'fit-content' }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.border = '1px solid #bfdbfe'; (e.currentTarget as HTMLElement).style.background = '#eff6ff'; (e.currentTarget as HTMLElement).style.color = '#3b82f6'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 8px rgba(59,130,246,0.10)'; const svg = (e.currentTarget as HTMLElement).querySelector('svg'); if (svg) (svg as HTMLElement).style.color = '#3b82f6'; }}
-                  onMouseLeave={(e) => { const isActiveLocal = isActive; (e.currentTarget as HTMLElement).style.border = isActiveLocal ? '1px solid #3b82f6' : '1px solid #e2e8f0'; (e.currentTarget as HTMLElement).style.background = isActiveLocal ? 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)' : '#f8fafc'; (e.currentTarget as HTMLElement).style.color = isActiveLocal ? '#2563eb' : '#475569'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0px)'; (e.currentTarget as HTMLElement).style.boxShadow = isActiveLocal ? '0 2px 8px rgba(59,130,246,0.15)' : 'none'; const svg = (e.currentTarget as HTMLElement).querySelector('svg'); if (svg) (svg as HTMLElement).style.color = isActiveLocal ? '#2563eb' : '#475569'; }}
+                  onMouseEnter={(e) => {
+                    const target = e.currentTarget;
+                    target.style.border = '1px solid #bfdbfe';
+                    target.style.background = '#eff6ff';
+                    target.style.color = '#3b82f6';
+                    target.style.transform = 'translateY(-1px)';
+                    target.style.boxShadow = '0 2px 8px rgba(59,130,246,0.10)';
+                    const svg = target.querySelector('svg');
+                    if (svg) svg.style.color = '#3b82f6';
+                  }}
+                  onMouseLeave={(e) => {
+                    const target = e.currentTarget;
+                    const isActiveLocal = isActive;
+                    target.style.border = isActiveLocal ? '1px solid #3b82f6' : '1px solid #e2e8f0';
+                    target.style.background = isActiveLocal ? 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)' : '#f8fafc';
+                    target.style.color = isActiveLocal ? '#2563eb' : '#475569';
+                    target.style.transform = 'translateY(0px)';
+                    target.style.boxShadow = isActiveLocal ? '0 2px 8px rgba(59,130,246,0.15)' : 'none';
+                    const svg = target.querySelector('svg');
+                    if (svg) svg.style.color = isActiveLocal ? '#2563eb' : '#475569';
+                  }}
                 >
                   <Icon size={14} color={isActive ? '#2563eb' : '#475569'} />
                   <div style={{ fontSize: 13, fontWeight: isActive ? 600 : 500, color: isActive ? '#2563eb' : '#475569' }}>{cat.name}</div>
