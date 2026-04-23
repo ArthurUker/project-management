@@ -111,7 +111,7 @@ export default function Reports() {
 
   
   return (
-    <div>
+    <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
       {/* 页面标题 */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-display font-bold text-gray-900">汇报管理</h1>

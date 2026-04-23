@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { projectAPI, userAPI } from '../api/client';
+import { getAllowedTransitions } from '../constants/statusColors';
 
 // ─── 与 Prisma Schema 严格对齐的类型 ───
 interface Project {
@@ -27,8 +28,7 @@ interface EditProjectModalProps {
   onSaved: () => void;
 }
 
-const TYPE_OPTIONS    = ['platform', '定制', '合作', '测试', '应用'];
-const STATUS_OPTIONS  = ['规划中', '进行中', '待加工', '待验证', '已完成', '已归档'];
+const TYPE_OPTIONS = ['platform', '定制', '合作', '测试', '应用'];
 
 const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) => {
   const [form, setForm] = useState({
@@ -203,10 +203,15 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
                 onChange={e => setForm({ ...form, status: e.target.value })}
               >
                 <option value="">- 请选择 -</option>
-                {STATUS_OPTIONS.map(s => (
+                {getAllowedTransitions(project?.status).map(s => (
                   <option key={s} value={s}>{s}</option>
                 ))}
               </select>
+              {project?.status && (
+                <p className="text-xs text-gray-400 mt-1">
+                  当前：{project.status}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">

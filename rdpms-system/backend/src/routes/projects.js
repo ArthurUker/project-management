@@ -7,6 +7,16 @@ const projects = new Hono();
 
 projects.use('*', authMiddleware);
 
+// ── 状态机：允许的迁移路径（与前端 statusColors.ts 保持一致） ──
+const STATUS_TRANSITIONS = {
+  '规划中': ['进行中', '已归档'],
+  '进行中': ['待加工', '待验证', '已完成', '已归档'],
+  '待加工': ['进行中', '待验证', '已归档'],
+  '待验证': ['进行中', '已完成', '已归档'],
+  '已完成': ['已归档'],
+  '已归档': ['规划中'],
+};
+
 // 生成项目编号
 async function generateProjectCode() {
   const year = new Date().getFullYear();
@@ -104,7 +114,10 @@ projects.get('/:id', async (c) => {
     return c.json({ error: '项目不存在' }, 404);
   }
 
-  return c.json(project);
+  return c.json({
+    ...project,
+    allowedTransitions: STATUS_TRANSITIONS[project.status] ?? Object.keys(STATUS_TRANSITIONS),
+  });
 });
 
 // 创建项目
@@ -206,6 +219,27 @@ projects.put('/:id', async (c) => {
   delete body.managerId;
   delete body.code;
   delete body.createdAt;
+  // 清理计算字段
+  delete body.allowedTransitions;
+
+  // ── 状态机校验：检查目标状态是否允许 ──────────────────
+  if (body.status) {
+    const existing = await prisma.project.findUnique({
+      where: { id },
+      select: { status: true }
+    });
+    if (existing && existing.status !== body.status) {
+      const allowed = STATUS_TRANSITIONS[existing.status] ?? [];
+      if (!allowed.includes(body.status)) {
+        return c.json({
+          error: `状态不可从"${existing.status}"变更为"${body.status}"，允许的目标状态：${allowed.join('、') || '无'}`,
+          code: 'INVALID_STATUS_TRANSITION',
+          current: existing.status,
+          allowedTransitions: allowed,
+        }, 422);
+      }
+    }
+  }
   
   const project = await prisma.project.update({
     where: { id },

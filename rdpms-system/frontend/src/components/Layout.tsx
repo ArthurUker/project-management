@@ -1,7 +1,16 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppStore } from '../store/appStore';
+import { hasPerm, PERMS } from '../utils/permissions';
 
-const navItems = [
+interface NavItem {
+  path: string;
+  label: string;
+  icon: string;
+  adminOnly?: boolean;
+  children?: NavItem[];
+}
+
+const navItems: NavItem[] = [
   { path: '/', label: '仪表盘', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
   { path: '/projects', label: '项目管理', icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' },
   { path: '/reports', label: '汇报管理', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
@@ -20,7 +29,7 @@ export default function Layout() {
   const navigate = useNavigate();
   const { user, logout, isSyncing } = useAppStore();
   
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = hasPerm(user, PERMS.USERS_MANAGE);
   
   const handleLogout = async () => {
     await logout();

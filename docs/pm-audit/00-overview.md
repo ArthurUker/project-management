@@ -1,5 +1,14 @@
 # PM Module — Pre-refactor Audit Overview
 
+> **状态更新（2026-04-23）：** 系统已进入 **"功能完备 MVP / 集成精修"** 阶段。
+> 所有核心模块（项目管理、任务、汇报、模版、试剂配方、知识库）均已实现。
+> 当前存在 1 处阻断生产构建的 TypeScript 错误（`Layout.tsx` ts(2339)），
+> 详细分析与修复计划见 [06-dev-status-and-plan.md](./06-dev-status-and-plan.md)。
+>
+> **后端框架修正：** 实际使用 **Hono**（非 Express），`backend/src/index.js` 已确认。
+
+
+
 ## 一、技术栈识别
 
 - 前端框架：React 18

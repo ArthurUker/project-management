@@ -1,0 +1,48 @@
+# ── 依赖目录 ──
+node_modules/
+.venv/
+__pycache__/
+
+# ── 构建产物 ──
+dist/
+build/
+.vite/
+
+# ── 运行时产物（进程 ID / 日志）──
+*.pid
+*.log
+parallel_run.log
+
+# ── 数据库文件（生产数据不纳入版本控制）──
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# ── 环境变量（含密钥，绝对不提交）──
+.env
+.env.local
+.env.production
+.env.*.local
+
+# ── 编辑器 / IDE ──
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── 临时 / 调试文件 ──
+*.bak
+*.tmp
+output_package.zip
+output_package/
+
+# ── Python 虚拟环境 ──
+.venv/
+venv/
+env/
+
+# ── CodeBuddy 工作区 ──
+.codebuddy/

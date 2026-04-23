@@ -8,6 +8,25 @@ const jwt = pkg2;
 const auth = new Hono();
 const JWT_SECRET = process.env.JWT_SECRET || 'rdpms-jwt-secret';
 
+// 角色权限映射 — 与前端 permissions.ts 保持一致
+const ROLE_PERMISSIONS = {
+  admin: [
+    'projects.create','projects.edit','projects.delete',
+    'projects.update_status','projects.manage_members',
+    'tasks.create','tasks.update_status','tasks.delete',
+    'users.manage','templates.create','templates.edit',
+  ],
+  manager: [
+    'projects.create','projects.edit',
+    'projects.update_status','projects.manage_members',
+    'tasks.create','tasks.update_status','tasks.delete',
+    'templates.edit',
+  ],
+  member: [
+    'tasks.create','tasks.update_status',
+  ],
+};
+
 // 中间件：验证Token
 export const authMiddleware = async (c, next) => {
   const authHeader = c.req.header('Authorization');
@@ -85,10 +104,11 @@ auth.post('/login', async (c) => {
     
     // 返回用户信息（不含密码）
     const { password: _, ...userInfo } = user;
+    const permissions = ROLE_PERMISSIONS[user.role] ?? [];
     
     return c.json({
       token,
-      user: userInfo
+      user: { ...userInfo, permissions }
     });
   } catch (err) {
     console.error('Login error:', err);
@@ -115,7 +135,8 @@ auth.post('/verify', authMiddleware, async (c) => {
     return c.json({ error: '用户不存在或已禁用' }, 401);
   }
   
-  return c.json({ valid: true, user });
+  const permissions = ROLE_PERMISSIONS[user.role] ?? [];
+  return c.json({ valid: true, user: { ...user, permissions } });
 });
 
 // 登出

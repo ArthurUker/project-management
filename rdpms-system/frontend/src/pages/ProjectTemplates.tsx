@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { projectTemplatesAPI } from '../api/client';
 import { useAppStore } from '../store/appStore';
+import { hasPerm, PERMS } from '../utils/permissions';
 
 export default function ProjectTemplates() {
   const { user } = useAppStore();
@@ -38,7 +39,7 @@ export default function ProjectTemplates() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold">项目研发模版</h1>
-        {user?.role === 'admin' && (
+        {hasPerm(user, PERMS.TEMPLATES_CREATE) && (
           <button onClick={handleCreate} className="btn btn-primary">新建模版</button>
         )}
       </div>

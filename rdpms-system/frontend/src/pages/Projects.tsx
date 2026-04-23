@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ProjectCard from '../components/ProjectCard';
 import type { Project } from '../components/ProjectCard';
@@ -66,23 +66,7 @@ const Projects: React.FC = () => {
   // 编辑弹窗
   const [editingProject, setEditingProject] = useState<Project | null>(null);
 
-  // sticky refs and offsets
-  const headerRef = useRef<HTMLDivElement | null>(null);
-  const contentRef = useRef<HTMLDivElement | null>(null);
-  const statsRef = useRef<HTMLDivElement | null>(null);
-  const filterRef = useRef<HTMLDivElement | null>(null);
-  const tableHeaderRef = useRef<HTMLDivElement | null>(null);
-  const combinedRef = useRef<HTMLDivElement | null>(null);
-  const tableHeaderOverlayRef = useRef<HTMLDivElement | null>(null);
 
-  const [headerHeight, setHeaderHeight] = useState(56);
-  const [statsTop, setStatsTop] = useState(0);
-  const [filterTop, setFilterTop] = useState(0);
-  const [tableHeaderTop, setTableHeaderTop] = useState(0);
-
-  const [statsShadow, setStatsShadow] = useState(false);
-  const [filterShadow, setFilterShadow] = useState(false);
-  const [tableShadow, setTableShadow] = useState(false);
 
   // ── 加载项目列表 ──
   const loadProjects = useCallback(async () => {
@@ -101,41 +85,6 @@ const Projects: React.FC = () => {
 
   useEffect(() => { loadProjects(); }, [loadProjects]);
 
-  // compute offsets and attach scroll/resize listeners
-  useEffect(() => {
-    const compute = () => {
-      const h = headerRef.current?.getBoundingClientRect().height || 56;
-      setHeaderHeight(h);
-      const statsH = statsRef.current?.getBoundingClientRect().height || 0;
-      const filterH = filterRef.current?.getBoundingClientRect().height || 0;
-      // stats top relative to content container -> 0
-      setStatsTop(0);
-      setFilterTop(statsH);
-      setTableHeaderTop(statsH + filterH);
-      // set content container height - removed as flex layout handles this
-      // if (contentRef.current) {
-      //   contentRef.current.style.maxHeight = `calc(100vh - ${h}px)`;
-      // }
-    };
-
-    compute();
-    const onResize = () => compute();
-    window.addEventListener('resize', onResize);
-
-    const ref = contentRef.current;
-    const onScroll = () => {
-      const scrollTop = ref?.scrollTop || 0;
-      setStatsShadow(scrollTop > 0);
-      setFilterShadow(scrollTop > (statsRef.current?.getBoundingClientRect().height || 0));
-      setTableShadow(scrollTop > (statsRef.current?.getBoundingClientRect().height || 0) + (filterRef.current?.getBoundingClientRect().height || 0));
-    };
-    if (ref) ref.addEventListener('scroll', onScroll);
-
-    return () => {
-      window.removeEventListener('resize', onResize);
-      if (ref) ref.removeEventListener('scroll', onScroll);
-    };
-  }, []);
 
 
   // ── 前端筛选 ──
@@ -286,40 +235,31 @@ const Projects: React.FC = () => {
 
   // ── 渲染 ──────────────────────────────────────────
   return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#f0f2f5', overflow: 'hidden' }}>
+    <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
 
-      {/* ══ 顶部栏 ══ */}
-      <div ref={headerRef} style={{
-        background: '#fff', borderBottom: '1px solid #e5e7eb',
-        padding: '0 28px', height: '56px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        position: 'sticky', top: 0, zIndex: 30,
-        boxShadow: '0 1px 4px rgba(0,0,0,.06)',
-      }}>
+      {/* ══ 页面标题行 ══ */}
+      <div className="flex items-center justify-between mb-6">
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <h1 style={{ fontSize: '17px', fontWeight: 700, color: '#111827' }}>项目管理</h1>
+          <h1 className="text-2xl font-display font-bold text-gray-900">项目管理</h1>
           <span style={{ fontSize: '12px', color: '#9ca3af', background: '#f3f4f6', padding: '2px 10px', borderRadius: '20px', fontWeight: 500 }}>
             {projects.length} 个项目
           </span>
         </div>
-
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-
           {/* 视图切换 */}
-          <div style={{ display: 'flex', alignItems: 'center', background: '#f3f4f6', borderRadius: '12px', padding: '5px', gap: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', background: '#f3f4f6', borderRadius: '10px', padding: '4px', gap: '2px' }}>
             {(['card', 'list', 'kanban'] as ViewMode[]).map(mode => (
               <button
                 key={mode}
                 onClick={() => setViewMode(mode)}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '6px',
-                  padding: '10px 20px', borderRadius: '9px',
-                  fontSize: '14px', fontWeight: 600, cursor: 'pointer', border: 'none',
+                  display: 'flex', alignItems: 'center', gap: '5px',
+                  padding: '7px 14px', borderRadius: '7px',
+                  fontSize: '13px', fontWeight: 600, cursor: 'pointer', border: 'none',
                   transition: 'all .15s',
                   background: viewMode === mode ? '#fff' : 'transparent',
                   color: viewMode === mode ? '#2563eb' : '#6b7280',
                   boxShadow: viewMode === mode ? '0 1px 4px rgba(37,99,235,.15)' : 'none',
-                  outline: viewMode === mode ? '1.5px solid #bfdbfe' : 'none',
                 }}
               >
                 {ViewIcons[mode]}
@@ -327,9 +267,7 @@ const Projects: React.FC = () => {
               </button>
             ))}
           </div>
-
           <div style={{ width: '1px', height: '24px', background: '#e5e7eb' }} />
-
           {/* 批量操作（有选中时显示） */}
           {selectedIds.length > 0 && (
             <>
@@ -350,265 +288,235 @@ const Projects: React.FC = () => {
               </button>
             </>
           )}
-
           {/* 刷新 */}
           <button
             onClick={loadProjects}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', border: '1.5px solid #e5e7eb', borderRadius: '9px', background: '#fff', fontSize: '14px', color: '#6b7280', cursor: 'pointer', fontWeight: 500 }}
+            className="btn btn-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
           >
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
             刷新
           </button>
-
           {/* 新建 */}
           <button
             onClick={() => navigate('/projects/new')}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 18px', background: '#2563eb', color: '#fff', border: 'none', borderRadius: '9px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 8px rgba(37,99,235,.3)' }}
+            className="btn btn-primary"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
           >
-            <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" d="M12 4v16m8-8H4"/></svg>
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" d="M12 4v16m8-8H4"/></svg>
             新建项目
           </button>
         </div>
       </div>
 
-      {/* ══ 主内容 ══ */}
-      <div ref={contentRef} style={{ padding: '24px 28px', maxWidth: '1400px', margin: '0 auto', overflowY: 'auto', position: 'relative', flex: 1, minHeight: 0, width: '100%', boxSizing: 'border-box' }}>
+      {/* ══ 状态统计 ══ */}
+      <div className="card p-4 mb-6">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: '12px' }}>
+          {statusStats.map(stat => (
+            <div
+              key={stat.label}
+              style={{
+                borderRadius: '10px', padding: '14px 16px',
+                border: '1px solid #e5e7eb', borderLeft: `4px solid ${stat.barColor}`,
+                cursor: 'pointer', transition: 'all .2s',
+                background: filterStatus === stat.label ? '#f0f7ff' : 'transparent',
+              }}
+              onClick={() => setFilterStatus(filterStatus === stat.label ? '' : stat.label)}
+              onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,.08)')}
+              onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ fontSize: '12px', color: stat.textColor, fontWeight: 500 }}>{stat.label}</span>
+                <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: stat.dotColor, display: 'block' }} />
+              </div>
+              <div style={{ fontSize: '26px', fontWeight: 800, color: stat.textColor, lineHeight: 1 }}>{stat.count}</div>
+              <div style={{ height: '4px', borderRadius: '3px', background: '#f3f4f6', overflow: 'hidden', marginTop: '8px' }}>
+                <div style={{ height: '100%', borderRadius: '3px', background: stat.barColor, width: `${stat.percent}%`, transition: 'width .3s' }} />
+              </div>
+              <div style={{ fontSize: '11px', color: '#d1d5db', marginTop: '4px' }}>占比 {stat.percent}%</div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-        {/* Combined sticky wrapper: 第1排（看板列标题）+ 第2排（状态统计卡片） + 第3排（搜索筛选栏） — 统一毛玻璃 */}
-        <div ref={combinedRef}
-             style={{
-               position: 'sticky', top: 0, zIndex: 20,
-               background: 'rgba(255,255,255,0.75)',
-               backdropFilter: 'blur(20px) saturate(180%)',
-               WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-               borderBottom: '1px solid rgba(0,0,0,0.08)',
-               boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
-               display: 'flex', flexDirection: 'column', gap: 0
-             }}>
-
-          {/* 第1排：看板状态列标题行（透明背景） */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 22px', background: 'transparent' }}>
-            {STATUS_OPTIONS.map(s => {
-              const cfg = STATUS_CONFIG[s] ?? STATUS_CONFIG['规划中'];
-              return (
-                <div key={s} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 8px', borderRadius: '8px', background: 'transparent' }}>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: cfg.dotColor, display: 'inline-block' }} />
-                  <span style={{ fontSize: '13px', color: '#374151', fontWeight: 600 }}>{s}</span>
-                </div>
-              );
-            })}
+      {/* ══ 筛选区 ══ */}
+      <div className="card p-3 mb-6">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          {/* 搜索框 */}
+          <div style={{ position: 'relative', flex: 1, minWidth: '200px', maxWidth: '300px' }}>
+            <svg style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/><path strokeLinecap="round" d="m21 21-4.35-4.35"/>
+            </svg>
+            <input
+              style={{ width: '100%', padding: '7px 12px 7px 34px', border: '1.5px solid #e5e7eb', borderRadius: '8px', fontSize: '13px', color: '#374151', outline: 'none', background: '#f9fafb', boxSizing: 'border-box' }}
+              placeholder="搜索项目名称或编号..."
+              value={searchKeyword}
+              onChange={e => setSearchKeyword(e.target.value)}
+            />
           </div>
 
-          {/* 第2排：状态统计卡片行（卡片背景改为透明，保留边框与颜色显示） */}
-          <div ref={statsRef} style={{
-            display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: '14px', padding: '8px 22px',
-            background: 'transparent'
-          }}>
-            {statusStats.map(stat => (
-              <div
-                key={stat.label}
+          <div style={{ width: '1px', height: '26px', background: '#e5e7eb' }} />
+
+          {/* 类型标签筛选 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '13px', color: '#9ca3af', fontWeight: 500, whiteSpace: 'nowrap' }}>类型：</span>
+            {['', ...TYPE_OPTIONS].map(t => (
+              <button
+                key={t || 'all'}
+                onClick={() => setFilterType(t)}
                 style={{
-                  background: 'transparent', borderRadius: '12px', padding: '16px 20px',
-                  border: '1px solid #e5e7eb', borderLeft: `4px solid ${stat.barColor}`,
-                  cursor: 'pointer', transition: 'all .2s',
+                  padding: '5px 12px', borderRadius: '7px', fontSize: '13px', fontWeight: 500,
+                  cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .15s', border: 'none',
+                  background: filterType === t ? '#eff6ff' : '#f3f4f6',
+                  color: filterType === t ? '#2563eb' : '#6b7280',
+                  outline: filterType === t ? '1.5px solid #bfdbfe' : 'none',
                 }}
-                onClick={() => setFilterStatus(filterStatus === stat.label ? '' : stat.label)}
-                onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,.08)')}
-                onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '12px', color: stat.textColor, fontWeight: 500 }}>{stat.label}</span>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: stat.dotColor, display: 'block' }} />
-                </div>
-                <div style={{ fontSize: '28px', fontWeight: 800, color: stat.textColor, lineHeight: 1 }}>{stat.count}</div>
-                <div style={{ height: '5px', borderRadius: '3px', background: '#f3f4f6', overflow: 'hidden', marginTop: '10px' }}>
-                  <div style={{ height: '100%', borderRadius: '3px', background: stat.barColor, width: `${stat.percent}%`, transition: 'width .3s' }} />
-                </div>
-                <div style={{ fontSize: '11px', color: '#d1d5db', marginTop: '5px' }}>占比 {stat.percent}%</div>
-              </div>
+                {t || '全部'}
+              </button>
             ))}
           </div>
 
-          {/* 第3排：筛选栏（子元素背景设为透明） */}
-          <div ref={filterRef} style={{
-            display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0',
-            flexWrap: 'wrap', padding: '12px 22px', borderRadius: '12px',
-            background: 'transparent'
-          }}>
-            {/* 搜索框 */}
-            <div style={{ position: 'relative', flex: 1, minWidth: '200px', maxWidth: '320px' }}>
-              <svg style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2">
-                <circle cx="11" cy="11" r="8"/><path strokeLinecap="round" d="m21 21-4.35-4.35"/>
-              </svg>
-              <input
-                style={{ width: '100%', padding: '8px 12px 8px 34px', border: '1.5px solid #e5e7eb', borderRadius: '9px', fontSize: '14px', color: '#374151', outline: 'none', background: 'transparent' }}
-                placeholder="搜索项目名称或编号..."
-                value={searchKeyword}
-                onChange={e => setSearchKeyword(e.target.value)}
-              />
-            </div>
+          <div style={{ width: '1px', height: '26px', background: '#e5e7eb' }} />
 
-            <div style={{ width: '1px', height: '28px', background: '#e5e7eb' }} />
+          {/* 状态下拉 */}
+          <select
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value)}
+            style={{ padding: '7px 24px 7px 10px', border: '1.5px solid #e5e7eb', borderRadius: '8px', fontSize: '13px', color: '#374151', background: '#f9fafb', cursor: 'pointer', outline: 'none', fontWeight: 500 }}
+          >
+            <option value="">全部状态</option>
+            {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
 
-            {/* 类型标签筛选 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '14px', color: '#9ca3af', fontWeight: 500, whiteSpace: 'nowrap' }}>类型：</span>
-              {['', ...TYPE_OPTIONS].map(t => (
-                <button
-                  key={t || 'all'}
-                  onClick={() => setFilterType(t)}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center',
-                    padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: 500, height: '42px',
-                    cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .15s',
-                    border: filterType === t ? '1.5px solid #3b82f6' : '1.5px solid #e5e7eb',
-                    background: filterType === t ? '#eff6ff' : 'transparent',
-                    color: filterType === t ? '#2563eb' : '#6b7280',
-                  }}
-                >
-                  {t || '全部'}
-                </button>
-              ))}
-            </div>
+          {/* 负责人下拉 */}
+          <select
+            value={filterManager}
+            onChange={e => setFilterManager(e.target.value)}
+            style={{ padding: '7px 24px 7px 10px', border: '1.5px solid #e5e7eb', borderRadius: '8px', fontSize: '13px', color: '#374151', background: '#f9fafb', cursor: 'pointer', outline: 'none', fontWeight: 500 }}
+          >
+            <option value="">全部负责人</option>
+            {managerOptions.map(m => <option key={m} value={m}>{m}</option>)}
+          </select>
 
-            <div style={{ width: '1px', height: '28px', background: '#e5e7eb' }} />
-
-            {/* 状态下拉 */}
-            <select
-              value={filterStatus}
-              onChange={e => setFilterStatus(e.target.value)}
-              style={{ padding: '8px 28px 8px 12px', border: '1.5px solid #e5e7eb', borderRadius: '9px', fontSize: '14px', color: '#374151', background: 'transparent', cursor: 'pointer', outline: 'none', fontWeight: 500 }}
-            >
-              <option value="">全部状态</option>
-              {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-
-            {/* 负责人下拉 */}
-            <select
-              value={filterManager}
-              onChange={e => setFilterManager(e.target.value)}
-              style={{ padding: '8px 28px 8px 12px', border: '1.5px solid #e5e7eb', borderRadius: '9px', fontSize: '14px', color: '#374151', background: 'transparent', cursor: 'pointer', outline: 'none', fontWeight: 500 }}
-            >
-              <option value="">全部负责人</option>
-              {managerOptions.map(m => <option key={m} value={m}>{m}</option>)}
-            </select>
-
-            {/* 全选（列表/卡片视图） */}
-            {viewMode !== 'kanban' && (
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', color: '#6b7280', cursor: 'pointer', marginLeft: 'auto' }}>
-                <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} style={{ accentColor: '#3b82f6', width: '16px', height: '16px' }} />
-                全选
-              </label>
-            )}
-          </div>
-
+          {/* 全选（列表/卡片视图） */}
+          {viewMode !== 'kanban' && (
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#6b7280', cursor: 'pointer', marginLeft: 'auto' }}>
+              <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} style={{ accentColor: '#3b82f6', width: '15px', height: '15px' }} />
+              全选
+            </label>
+          )}
         </div>
-        {/* 错误提示 */}
-        {error && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', color: '#dc2626', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path strokeLinecap="round" d="M12 8v4m0 4h.01"/></svg>
-            {error}
-            <button onClick={loadProjects} style={{ marginLeft: 'auto', color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>重试</button>
-          </div>
-        )}
+      </div>
 
-        {/* 加载骨架屏 */}
-        {loading && (
+      {/* 错误提示 */}
+      {error && (
+        <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: '10px', padding: '12px 16px', marginBottom: '16px', color: '#dc2626', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path strokeLinecap="round" d="M12 8v4m0 4h.01"/></svg>
+          {error}
+          <button onClick={loadProjects} style={{ marginLeft: 'auto', color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '14px' }}>重试</button>
+        </div>
+      )}
+
+      {/* ══ 内容区 ══ */}
+
+      {/* 加载骨架屏 */}
+      {loading && (
+        <div className="card p-4">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '16px' }}>
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} style={{ background: '#fff', borderRadius: '14px', height: '180px', overflow: 'hidden', border: '1px solid #e5e7eb' }}>
+              <div key={i} style={{ background: '#f9fafb', borderRadius: '12px', height: '180px', overflow: 'hidden', border: '1px solid #e5e7eb' }}>
                 <div style={{ height: '4px', background: '#e5e7eb' }} />
                 <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#f3f4f6' }} />
+                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#e5e7eb' }} />
                     <div style={{ flex: 1 }}>
-                      <div style={{ height: '14px', background: '#f3f4f6', borderRadius: '4px', marginBottom: '6px', width: '70%' }} />
-                      <div style={{ height: '10px', background: '#f3f4f6', borderRadius: '4px', width: '50%' }} />
+                      <div style={{ height: '14px', background: '#e5e7eb', borderRadius: '4px', marginBottom: '6px', width: '70%' }} />
+                      <div style={{ height: '10px', background: '#e5e7eb', borderRadius: '4px', width: '50%' }} />
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '6px' }}>
-                    <div style={{ height: '20px', width: '50px', background: '#f3f4f6', borderRadius: '5px' }} />
-                    <div style={{ height: '20px', width: '60px', background: '#f3f4f6', borderRadius: '5px' }} />
+                    <div style={{ height: '20px', width: '50px', background: '#e5e7eb', borderRadius: '5px' }} />
+                    <div style={{ height: '20px', width: '60px', background: '#e5e7eb', borderRadius: '5px' }} />
                   </div>
-                  <div style={{ height: '5px', background: '#f3f4f6', borderRadius: '3px' }} />
+                  <div style={{ height: '5px', background: '#e5e7eb', borderRadius: '3px' }} />
                 </div>
               </div>
             ))}
           </div>
-        )}
+        </div>
+      )}
 
-        {/* ── 卡片视图 ── */}
-        {!loading && viewMode === 'card' && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '16px' }}>
-            {filteredProjects.map(p => (
-              <ProjectCard
-                key={p.id}
-                project={p}
-                selected={selectedIds.includes(p.id)}
-                onSelect={(id, checked) => setSelectedIds(prev => checked ? [...prev, id] : prev.filter(x => x !== id))}
-                onEdit={setEditingProject}
-                onClick={() => navigate(`/projects/${p.id}`)}
-              />
-            ))}
-            {/* 新建引导卡 */}
-            <div
-              onClick={() => navigate('/projects/new')}
-              style={{
-                border: '2px dashed #d1d5db', borderRadius: '14px',
-                display: 'flex', flexDirection: 'column', alignItems: 'center',
-                justifyContent: 'center', cursor: 'pointer', minHeight: '180px',
-                transition: 'all .2s', gap: '8px',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = '#3b82f6'; (e.currentTarget as HTMLDivElement).style.background = '#eff6ff'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = '#d1d5db'; (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}
-            >
-              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <svg width="20" height="20" fill="none" stroke="#9ca3af" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" d="M12 4v16m8-8H4"/></svg>
-              </div>
-              <span style={{ fontSize: '14px', color: '#9ca3af', fontWeight: 500 }}>新建项目</span>
+      {/* ── 卡片视图 ── */}
+      {!loading && viewMode === 'card' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '16px' }}>
+          {filteredProjects.map(p => (
+            <ProjectCard
+              key={p.id}
+              project={p}
+              selected={selectedIds.includes(p.id)}
+              onSelect={(id, checked) => setSelectedIds(prev => checked ? [...prev, id] : prev.filter(x => x !== id))}
+              onEdit={setEditingProject}
+              onClick={() => navigate(`/projects/${p.id}`)}
+            />
+          ))}
+          {/* 新建引导卡 */}
+          <div
+            onClick={() => navigate('/projects/new')}
+            style={{
+              border: '2px dashed #d1d5db', borderRadius: '14px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              justifyContent: 'center', cursor: 'pointer', minHeight: '180px',
+              transition: 'all .2s', gap: '8px',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = '#3b82f6'; (e.currentTarget as HTMLDivElement).style.background = '#eff6ff'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = '#d1d5db'; (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}
+          >
+            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="20" height="20" fill="none" stroke="#9ca3af" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" d="M12 4v16m8-8H4"/></svg>
             </div>
+            <span style={{ fontSize: '14px', color: '#9ca3af', fontWeight: 500 }}>新建项目</span>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* ── 列表视图 ── */}
-        {!loading && viewMode === 'list' && (
-          <div style={{ background: '#fff', borderRadius: '14px', border: '1px solid #e5e7eb' }}>
-            {/* 表头 */}
-            <div ref={tableHeaderRef} style={{
-              display: 'grid', gridTemplateColumns: '32px 2fr 1fr 1fr 1fr 120px 100px',
-              gap: '12px', padding: '10px 16px',
-              background: 'transparent',
-              fontSize: '12px', fontWeight: 600, color: '#6b7280',
-              position: 'relative'
-            }}>
-              <span></span>
-              <span>项目名称</span><span>类型</span><span>状态</span>
-              <span>任务进度</span><span>负责人</span><span>操作</span>
-            </div>
-            {filteredProjects.length === 0
-              ? <div style={{ textAlign: 'center', padding: '48px', color: '#9ca3af', fontSize: '14px' }}>暂无项目</div>
-              : filteredProjects.map(p => <ListRow key={p.id} project={p} />)
-            }
+      {/* ── 列表视图 ── */}
+      {!loading && viewMode === 'list' && (
+        <div className="card">
+          {/* 表头 */}
+          <div style={{
+            display: 'grid', gridTemplateColumns: '32px 2fr 1fr 1fr 1fr 120px 100px',
+            gap: '12px', padding: '10px 16px',
+            background: '#f9fafb', borderBottom: '1px solid #f3f4f6',
+            fontSize: '12px', fontWeight: 600, color: '#6b7280',
+            borderRadius: '8px 8px 0 0',
+          }}>
+            <span></span>
+            <span>项目名称</span><span>类型</span><span>状态</span>
+            <span>任务进度</span><span>负责人</span><span>操作</span>
           </div>
-        )}
+          {filteredProjects.length === 0
+            ? <div style={{ textAlign: 'center', padding: '48px', color: '#9ca3af', fontSize: '14px' }}>暂无项目</div>
+            : filteredProjects.map(p => <ListRow key={p.id} project={p} />)
+          }
+        </div>
+      )}
 
-        {/* ── 看板视图 ── */}
-        {!loading && viewMode === 'kanban' && (
-          <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '16px' }}>
-            {STATUS_OPTIONS.map(s => <KanbanColumn key={s} status={s} />)}
-          </div>
-        )}
+      {/* ── 看板视图 ── */}
+      {!loading && viewMode === 'kanban' && (
+        <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '16px' }}>
+          {STATUS_OPTIONS.map(s => <KanbanColumn key={s} status={s} />)}
+        </div>
+      )}
 
-        {/* 空状态 */}
-        {!loading && filteredProjects.length === 0 && viewMode !== 'kanban' && (
-          <div style={{ textAlign: 'center', padding: '80px 24px', color: '#9ca3af' }}>
-            <svg style={{ margin: '0 auto 16px', display: 'block', opacity: .4 }} width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1"><path d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
-            <div style={{ fontSize: '15px', fontWeight: 600, marginBottom: '8px' }}>暂无匹配项目</div>
-            <div style={{ fontSize: '14px' }}>尝试调整筛选条件，或新建一个项目</div>
-          </div>
-        )}
-
-      </div>
+      {/* 空状态 */}
+      {!loading && filteredProjects.length === 0 && viewMode !== 'kanban' && (
+        <div className="card" style={{ textAlign: 'center', padding: '64px 24px', color: '#9ca3af', marginTop: '4px' }}>
+          <svg style={{ margin: '0 auto 16px', display: 'block', opacity: .4 }} width="56" height="56" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1"><path d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+          <div style={{ fontSize: '15px', fontWeight: 600, marginBottom: '8px' }}>暂无匹配项目</div>
+          <div style={{ fontSize: '14px' }}>尝试调整筛选条件，或新建一个项目</div>
+        </div>
+      )}
 
       {/* 编辑弹窗 */}
       {editingProject && (
