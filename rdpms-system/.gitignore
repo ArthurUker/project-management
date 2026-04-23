@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+.vite/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Runtime files
+*.log
+*.pid
+logs/
+
+# Database and local data
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Backup and temp files
+*.bak
+*.tmp
+
+# Editor and OS files
+.DS_Store
+.vscode/
+.idea/
