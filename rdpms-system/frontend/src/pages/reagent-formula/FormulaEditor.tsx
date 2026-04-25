@@ -83,6 +83,7 @@ export default function FormulaEditor(){
                 <td>
                   <select value={c.unit} onChange={e=>{ const comps=[...form.components]; comps[idx].unit=e.target.value; setForm({...form, components: comps})}}>
                     <option value="M">M</option>
+                    <option value="mM">mM</option>
                     <option value="%">%</option>
                   </select>
                 </td>

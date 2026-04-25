@@ -214,27 +214,42 @@ projects.post('/', async (c) => {
 projects.put('/:id', async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json();
+  const existingProject = await prisma.project.findUnique({
+    where: { id },
+    select: { managerId: true, status: true }
+  });
+
+  if (!existingProject) {
+    return c.json({ error: '项目不存在' }, 404);
+  }
   
-  // 不能直接修改managerId，需要通过成员接口
-  delete body.managerId;
   delete body.code;
   delete body.createdAt;
   // 清理计算字段
   delete body.allowedTransitions;
 
+  if (body.startDate) {
+    body.startDate = new Date(body.startDate);
+  }
+  if (body.startDate === null || body.startDate === '') {
+    body.startDate = null;
+  }
+  if (body.endDate) {
+    body.endDate = new Date(body.endDate);
+  }
+  if (body.endDate === null || body.endDate === '') {
+    body.endDate = null;
+  }
+
   // ── 状态机校验：检查目标状态是否允许 ──────────────────
   if (body.status) {
-    const existing = await prisma.project.findUnique({
-      where: { id },
-      select: { status: true }
-    });
-    if (existing && existing.status !== body.status) {
-      const allowed = STATUS_TRANSITIONS[existing.status] ?? [];
+    if (existingProject.status !== body.status) {
+      const allowed = STATUS_TRANSITIONS[existingProject.status] ?? [];
       if (!allowed.includes(body.status)) {
         return c.json({
-          error: `状态不可从"${existing.status}"变更为"${body.status}"，允许的目标状态：${allowed.join('、') || '无'}`,
+          error: `状态不可从"${existingProject.status}"变更为"${body.status}"，允许的目标状态：${allowed.join('、') || '无'}`,
           code: 'INVALID_STATUS_TRANSITION',
-          current: existing.status,
+          current: existingProject.status,
           allowedTransitions: allowed,
         }, 422);
       }
@@ -257,6 +272,27 @@ projects.put('/:id', async (c) => {
       }
     }
   });
+
+  if (body.managerId) {
+    await prisma.projectMember.upsert({
+      where: {
+        projectId_userId: { projectId: id, userId: body.managerId }
+      },
+      update: { role: 'manager' },
+      create: {
+        projectId: id,
+        userId: body.managerId,
+        role: 'manager'
+      }
+    });
+
+    if (existingProject.managerId !== body.managerId) {
+      await prisma.projectMember.updateMany({
+        where: { projectId: id, userId: existingProject.managerId, role: 'manager' },
+        data: { role: 'member' }
+      });
+    }
+  }
   
   return c.json(project);
 });

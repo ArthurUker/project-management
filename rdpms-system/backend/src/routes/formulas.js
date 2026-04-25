@@ -186,7 +186,14 @@ formulas.post('/:id/duplicate', async (c) => {
         notes: orig.notes,
         createdBy: c.get('userId'),
         components: {
-          create: orig.components.map((comp) => ({ reagentId: comp.reagentId, concentration: comp.concentration, unit: comp.unit, notes: comp.notes, sortOrder: comp.sortOrder }))
+          create: orig.components.map((comp) => ({
+            reagentId: comp.reagentId,
+            reagentMaterialId: comp.reagentMaterialId || null,
+            concentration: comp.concentration,
+            unit: comp.unit,
+            notes: comp.notes,
+            sortOrder: comp.sortOrder
+          }))
         }
       },
       include: { components: true }

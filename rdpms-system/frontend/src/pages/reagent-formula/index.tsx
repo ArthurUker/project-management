@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { formulaAPI, reagentAPI } from '../../api/client';
+import { formulaAPI, prepAPI, reagentAPI } from '../../api/client';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, FlaskConical } from 'lucide-react';
 
@@ -13,6 +13,15 @@ export default function FormulaMatrix(): JSX.Element {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchText, setSearchText] = useState<string>('');
   const [showCalcModal, setShowCalcModal] = useState<boolean>(false);
+  const [calcFormulaIds, setCalcFormulaIds] = useState<string[]>([]);
+  const [calcModalCategory, setCalcModalCategory] = useState<string>('all');
+  const [calcModalSearch, setCalcModalSearch] = useState<string>('');
+  const [calcTargetVolume, setCalcTargetVolume] = useState<number>(100);
+  const [calcUnit, setCalcUnit] = useState<'mL' | 'L'>('mL');
+  const [calcPrepMethods, setCalcPrepMethods] = useState<Array<'powder' | 'stock'>>(['powder']);
+  const [calcLoading, setCalcLoading] = useState<boolean>(false);
+  const [calcResults, setCalcResults] = useState<any[]>([]);
+  const [calcError, setCalcError] = useState<string>('');
 
   const navigate = useNavigate();
 
@@ -127,6 +136,152 @@ export default function FormulaMatrix(): JSX.Element {
     return Number.isInteger(n) ? String(n) : String(n);
   };
 
+  const handleOpenCalcModal = () => {
+    setShowCalcModal(true);
+    setCalcFormulaIds([]);
+    setCalcModalCategory('all');
+    setCalcModalSearch('');
+    setCalcTargetVolume(100);
+    setCalcUnit('mL');
+    setCalcPrepMethods(['powder']);
+    setCalcResults([]);
+    setCalcError('');
+  };
+
+  const handleCalculate = async () => {
+    if (calcFormulaIds.length === 0) {
+      setCalcError('请至少选择一个配方');
+      return;
+    }
+
+    if (!calcTargetVolume || calcTargetVolume <= 0) {
+      setCalcError('请输入有效的目标体积');
+      return;
+    }
+
+    if (calcPrepMethods.length === 0) {
+      setCalcError('请至少选择一种配制方法');
+      return;
+    }
+
+    setCalcLoading(true);
+    setCalcError('');
+    try {
+      const normalizedTargetVolume = calcUnit === 'L' ? calcTargetVolume * 1000 : calcTargetVolume;
+      const results = await Promise.all(
+        calcFormulaIds.map(fid => prepAPI.calculate({ formulaId: fid, targetVolume: normalizedTargetVolume }))
+      );
+      const successResults = results.filter(r => r.success);
+      if (successResults.length === 0) {
+        setCalcError(results[0]?.error || '计算失败，请重试');
+      } else {
+        setCalcResults(successResults);
+      }
+    } catch (error: any) {
+      setCalcResults([]);
+      setCalcError(error?.message ?? error?.error ?? '计算失败，请重试');
+    } finally {
+      setCalcLoading(false);
+    }
+  };
+
+  const toggleFormulaSelect = (formulaId: string) => {
+    setCalcFormulaIds(prev => 
+      prev.includes(formulaId) 
+        ? prev.filter(id => id !== formulaId)
+        : [...prev, formulaId]
+    );
+  };
+
+  const togglePrepMethod = (method: 'powder' | 'stock') => {
+    setCalcPrepMethods((prev) =>
+      prev.includes(method) ? prev.filter((m) => m !== method) : [...prev, method]
+    );
+  };
+
+  const getPrepMethodLabel = (method: 'powder' | 'stock') => {
+    return method === 'powder' ? '干粉/原液' : '母液';
+  };
+
+  const getModalFormulas = useMemo(() => {
+    return formulas.filter(f => 
+      (calcModalCategory === 'all' || (f.type || f.category) === calcModalCategory) &&
+      (!calcModalSearch || 
+        (f.code || '').toLowerCase().includes(calcModalSearch.toLowerCase()) ||
+        (f.name || '').toLowerCase().includes(calcModalSearch.toLowerCase()))
+    );
+  }, [formulas, calcModalCategory, calcModalSearch]);
+
+  const getAllReagentsFromResults = useMemo(() => {
+    const reagentMap = new Map<string, any>();
+    calcResults.forEach(result => {
+      result.components?.forEach((comp: any) => {
+        const key = comp.reagentName;
+        if (!reagentMap.has(key)) {
+          reagentMap.set(key, comp);
+        }
+      });
+    });
+    return Array.from(reagentMap.values());
+  }, [calcResults]);
+
+  const calcDisplayRows = useMemo(() => {
+    return calcResults.flatMap((result: any) =>
+      calcPrepMethods.map((method) => ({ result, method }))
+    );
+  }, [calcResults, calcPrepMethods]);
+
+  const handleExportExcel = () => {
+    if (calcDisplayRows.length === 0) return;
+
+    const headers = ['配方', '配制方法', ...getAllReagentsFromResults.map((r: any) => r.reagentName)];
+    const rows = calcDisplayRows.map(({ result, method }: any) => {
+      const row: string[] = [
+        `${result.formulaCode} ${result.formulaName || ''}`.trim(),
+        getPrepMethodLabel(method),
+      ];
+
+      getAllReagentsFromResults.forEach((allComp: any) => {
+        const comp = result.components?.find((c: any) => c.reagentName === allComp.reagentName);
+        if (!comp) {
+          row.push('—');
+          return;
+        }
+
+        if (method === 'powder') {
+          const extra = comp.molecularWeight ? `, MW:${formatNumber(comp.molecularWeight)}` : '';
+          row.push(`${comp.powderDisplay || 'N/A'}${extra}`);
+        } else {
+          const conc = comp.stockConc != null && comp.stockUnit ? `, 浓度:${formatNumber(comp.stockConc)} ${comp.stockUnit}` : '';
+          const warn = comp.stockWarning ? `, 警告:${comp.stockWarning}` : '';
+          row.push(`${comp.stockDisplay || 'N/A'}${conc}${warn}`);
+        }
+      });
+
+      return row;
+    });
+
+    const escapeCsv = (value: string) => {
+      const safe = String(value ?? '');
+      if (safe.includes('"') || safe.includes(',') || safe.includes('\n')) {
+        return `"${safe.replace(/"/g, '""')}"`;
+      }
+      return safe;
+    };
+
+    const csv = [headers, ...rows].map((line) => line.map(escapeCsv).join(',')).join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+    link.href = url;
+    link.download = `配制计算-${stamp}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   // Row heights for sticky offset calculation
   const GROUP_ROW_H = 38; // px — first thead row (type group labels)
 
@@ -146,7 +301,7 @@ export default function FormulaMatrix(): JSX.Element {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <button
-            onClick={() => setShowCalcModal(true)}
+            onClick={handleOpenCalcModal}
             style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', background: 'linear-gradient(135deg,#667eea 0%,#764ba2 100%)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}
           ><FlaskConical size={14} /> 配制计算</button>
           <button
@@ -310,35 +465,206 @@ export default function FormulaMatrix(): JSX.Element {
       {showCalcModal && (
         <>
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', backdropFilter: 'blur(4px)', zIndex: 999 }} onClick={() => setShowCalcModal(false)} />
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', background: '#fff', borderRadius: 16, boxShadow: '0 20px 60px rgba(0,0,0,.15)', width: 520, maxWidth: '90vw', zIndex: 1000, overflow: 'hidden' }}>
-            <div style={{ padding: '20px 24px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', background: '#fff', borderRadius: 16, boxShadow: '0 20px 60px rgba(0,0,0,.15)', width: 'min(95vw, 1400px)', height: 'min(90vh, 800px)', zIndex: 1000, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
               <div style={{ fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
                 <FlaskConical size={18} color="#764ba2" /> 配制计算
               </div>
               <button onClick={() => setShowCalcModal(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#9ca3af', fontSize: 18 }}>×</button>
             </div>
-            <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div>
-                <label style={{ fontSize: 13, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 6 }}>选择配方</label>
-                <select style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, color: '#374151', background: '#f9fafb', outline: 'none' }}>
-                  <option value="">-- 选择配方 --</option>
-                  {formulas.map(f => <option key={f.id} value={f.id}>{f.code} - {f.name}</option>)}
-                </select>
+            <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* ── 配方选择区 ── */}
+              <div style={{ borderBottom: '1px solid #e5e7eb', paddingBottom: 16 }}>
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 8 }}>选择配方（可多选）</label>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+                    {categories.map(cat => (
+                      <button
+                        key={cat.key}
+                        onClick={() => setCalcModalCategory(cat.key)}
+                        style={{
+                          padding: '5px 12px', borderRadius: 6, fontSize: 12, fontWeight: 500,
+                          cursor: 'pointer', border: 'none', transition: 'all .15s',
+                          background: calcModalCategory === cat.key ? '#3b82f6' : '#e5e7eb',
+                          color: calcModalCategory === cat.key ? '#fff' : '#374151',
+                        }}
+                      >{cat.label}</button>
+                    ))}
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="搜索配方编号或名称..."
+                    value={calcModalSearch}
+                    onChange={(e) => setCalcModalSearch(e.target.value)}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, background: '#f9fafb', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div style={{ border: '1px solid #e5e7eb', borderRadius: 8, maxHeight: 180, overflowY: 'auto' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 0 }}>
+                    {getModalFormulas.length === 0 ? (
+                      <div style={{ padding: 20, textAlign: 'center', color: '#94a3b8', gridColumn: '1/-1' }}>暂无配方</div>
+                    ) : (
+                      getModalFormulas.map(f => (
+                        <label key={f.id} style={{ padding: '10px 12px', borderRight: '1px solid #f1f5f9', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', background: calcFormulaIds.includes(f.id) ? '#eff6ff' : '#fff' }}>
+                          <input
+                            type="checkbox"
+                            checked={calcFormulaIds.includes(f.id)}
+                            onChange={() => toggleFormulaSelect(f.id)}
+                            style={{ cursor: 'pointer' }}
+                          />
+                          <span style={{ fontSize: 12, color: '#374151' }}>
+                            <div style={{ fontWeight: 600, color: '#1e40af' }}>{f.code}</div>
+                            <div style={{ fontSize: 11, color: '#64748b' }}>{f.name}</div>
+                          </span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+
+              {/* ── 计算参数 ── */}
+              <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ fontSize: 13, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 6 }}>目标体积</label>
-                  <input defaultValue={100} style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, background: '#f9fafb', outline: 'none', boxSizing: 'border-box' }} />
+                  <input
+                    type="number"
+                    min={0}
+                    value={calcTargetVolume}
+                    onChange={(e) => setCalcTargetVolume(Number(e.target.value))}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, background: '#f9fafb', outline: 'none', boxSizing: 'border-box' }}
+                  />
                 </div>
-                <div style={{ paddingTop: 24 }}>
-                  <select defaultValue="mL" style={{ padding: '8px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, background: '#f9fafb', outline: 'none' }}>
+                <div style={{ width: 100 }}>
+                  <label style={{ fontSize: 13, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 6 }}>单位</label>
+                  <select
+                    value={calcUnit}
+                    onChange={(e) => setCalcUnit(e.target.value as 'mL' | 'L')}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontSize: 13, background: '#f9fafb', outline: 'none' }}
+                  >
                     <option>mL</option><option>L</option>
                   </select>
                 </div>
-                <div style={{ paddingTop: 24 }}>
-                  <button style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>计算</button>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+                  <label style={{ fontSize: 13, fontWeight: 500, color: '#374151', display: 'block', marginBottom: 6 }}>配制方法</label>
                 </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', padding: '6px 10px', borderRadius: 6, background: calcPrepMethods.includes('powder') ? '#dbeafe' : '#f3f4f6' }}>
+                    <input
+                      type="checkbox"
+                      value="powder"
+                      checked={calcPrepMethods.includes('powder')}
+                      onChange={() => togglePrepMethod('powder')}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    <span style={{ fontSize: 12, color: '#374151', fontWeight: 500 }}>干粉/原液</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', padding: '6px 10px', borderRadius: 6, background: calcPrepMethods.includes('stock') ? '#dbeafe' : '#f3f4f6' }}>
+                    <input
+                      type="checkbox"
+                      value="stock"
+                      checked={calcPrepMethods.includes('stock')}
+                      onChange={() => togglePrepMethod('stock')}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    <span style={{ fontSize: 12, color: '#374151', fontWeight: 500 }}>母液</span>
+                  </label>
+                </div>
+                <button
+                  onClick={handleCalculate}
+                  disabled={calcLoading || calcFormulaIds.length === 0}
+                  style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 13, fontWeight: 500, cursor: calcLoading ? 'wait' : 'pointer', opacity: calcLoading || calcFormulaIds.length === 0 ? 0.7 : 1, whiteSpace: 'nowrap' }}
+                >
+                  {calcLoading ? '计算中...' : '开始计算'}
+                </button>
               </div>
+
+              {/* ── 错误提示 ── */}
+              {calcError && (
+                <div style={{ padding: '10px 12px', borderRadius: 10, background: '#fef2f2', color: '#b91c1c', fontSize: 13 }}>
+                  {calcError}
+                </div>
+              )}
+
+              {/* ── 结果表格（配方行 × 试剂列） ── */}
+              {calcResults.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <button
+                      onClick={handleExportExcel}
+                      style={{ background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      导出Excel
+                    </button>
+                  </div>
+                  <div style={{ border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'auto', minHeight: 0 }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '100%' }}>
+                      <thead>
+                        <tr style={{ background: '#f8fafc', color: '#475569', fontSize: 12, fontWeight: 600, position: 'sticky', top: 0, zIndex: 10 }}>
+                          <th style={{ padding: '10px 12px', textAlign: 'left', borderRight: '1px solid #e5e7eb', minWidth: 150, maxWidth: 150 }}>配方</th>
+                          <th style={{ padding: '10px 12px', textAlign: 'center', borderRight: '1px solid #e5e7eb', minWidth: 100 }}>配制方法</th>
+                          {getAllReagentsFromResults.map((comp: any) => (
+                            <th key={`${comp.reagentName}`} style={{ padding: '10px 12px', textAlign: 'center', borderRight: '1px solid #e5e7eb', minWidth: 180 }}>
+                              <div style={{ fontWeight: 600, color: '#1e40af' }}>{comp.reagentName}</div>
+                              <div style={{ fontSize: 11, color: '#64748b', fontWeight: 400 }}>{formatNumber(comp.concentration)} {comp.concUnit}</div>
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {calcDisplayRows.map(({ result, method }: any, idx: number) => (
+                          <tr key={`${result.formulaCode}-${method}`} style={{ borderTop: '1px solid #f1f5f9', background: idx % 2 === 0 ? '#fff' : '#f8fafc' }}>
+                            <td style={{ padding: '10px 12px', borderRight: '1px solid #e5e7eb', position: 'sticky', left: 0, zIndex: 5, background: idx % 2 === 0 ? '#fff' : '#f8fafc', minWidth: 150, maxWidth: 150 }}>
+                              <div style={{ fontWeight: 600, color: '#1e40af', fontSize: 12 }}>{result.formulaCode}</div>
+                              <div style={{ fontSize: 11, color: '#64748b' }}>{result.formulaName}</div>
+                              <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>({result.targetVolume} mL)</div>
+                            </td>
+                            <td style={{ padding: '10px 12px', borderRight: '1px solid #e5e7eb', textAlign: 'center', fontSize: 12, fontWeight: 500, color: '#1e40af', background: idx % 2 === 0 ? '#fff' : '#f8fafc' }}>
+                              {getPrepMethodLabel(method)}
+                            </td>
+                            {getAllReagentsFromResults.map((allComp: any) => {
+                              const comp = result.components?.find((c: any) => c.reagentName === allComp.reagentName);
+                              const displayValue = method === 'powder' ? comp?.powderDisplay : comp?.stockDisplay;
+                              return (
+                                <td key={`${result.formulaCode}-${allComp.reagentName}`} style={{ padding: '10px 12px', borderRight: '1px solid #e5e7eb', textAlign: 'center', fontSize: 12, color: '#334155' }}>
+                                  {comp ? (
+                                    <>
+                                      <div style={{ marginBottom: 4 }}>
+                                        <div style={{ fontSize: 11, color: '#64748b', fontWeight: 500 }}>{displayValue || 'N/A'}</div>
+                                        {method === 'powder' && comp.molecularWeight && (
+                                          <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>MW: {formatNumber(comp.molecularWeight)}</div>
+                                        )}
+                                        {method === 'stock' && comp.stockConc != null && comp.stockUnit && (
+                                          <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 2 }}>浓度: {formatNumber(comp.stockConc)} {comp.stockUnit}</div>
+                                        )}
+                                      </div>
+                                      {method === 'stock' && comp.stockWarning && (
+                                        <div style={{ fontSize: 10, color: '#b45309', marginTop: 3, fontStyle: 'italic' }}>⚠️ {comp.stockWarning}</div>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <div style={{ fontSize: 11, color: '#d1d5db' }}>—</div>
+                                  )}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {calcResults.some((r: any) => r.missingMW?.length > 0) && (
+                    <div style={{ padding: '10px 12px', borderRadius: 10, background: '#fffbeb', color: '#92400e', fontSize: 12 }}>
+                      ⚠️ 部分试剂缺少分子量数据: {Array.from(new Set(calcResults.flatMap((r: any) => r.missingMW || []))).join('、')}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.5 }}>
+                    <strong>说明：</strong><br/>
+                    • 干粉/原液：当终浓度为 M/mM 时，按分子量与纯度计算干粉克数；当为 % 时，按质量体积比计算。<br/>
+                    • 母液：若试剂维护了母液浓度且单位兼容，按稀释比例计算所需母液体积。若不可稀释会显示警告。
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </>
