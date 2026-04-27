@@ -163,15 +163,43 @@ export default function PrimerLibrary() {
     const reader = new FileReader();
     reader.onload = async (ev) => {
       try {
-        const text = (ev.target?.result as string).replace(/^\uFEFF/, '');
+        // 去除 BOM，统一换行为 \n（兼容 Windows \r\n 和旧 Mac \r）
+        const text = (ev.target?.result as string)
+          .replace(/^\uFEFF/, '')
+          .replace(/\r\n/g, '\n')
+          .replace(/\r/g, '\n');
         const lines = text.split('\n').filter(l => l.trim());
         if (lines.length < 2) { alert('CSV 文件无数据行'); return; }
         const keys = COLUMNS.map(c => c.key);
+
+        // 更健壮的 CSV 逐字段解析（支持引号内含逗号/换行）
+        const parseRow = (line: string): string[] => {
+          const result: string[] = [];
+          let cur = '';
+          let inQuote = false;
+          for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (inQuote) {
+              if (ch === '"') {
+                if (line[i + 1] === '"') { cur += '"'; i++; }  // "" → 转义引号
+                else { inQuote = false; }
+              } else {
+                cur += ch;
+              }
+            } else {
+              if (ch === '"') { inQuote = true; }
+              else if (ch === ',') { result.push(cur); cur = ''; }
+              else { cur += ch; }
+            }
+          }
+          result.push(cur);
+          return result;
+        };
+
         const rows = lines.slice(1).map(line => {
-          const vals = line.match(/(".*?"|[^,\n]*)/g)?.filter((_, i) => i % 2 === 0)
-            .map(v => v.replace(/^"|"$/g, '').replace(/""/g, '"')) || [];
+          const vals = parseRow(line);
           const obj: Record<string, any> = {};
-          keys.forEach((k, i) => { obj[k] = vals[i] || ''; });
+          keys.forEach((k, i) => { obj[k] = (vals[i] ?? '').trim(); });
           return obj;
         }).filter(r => r.name && r.sequence);
         if (rows.length === 0) { alert('没有有效数据行（名称和序列不能为空）'); return; }
