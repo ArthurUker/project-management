@@ -142,33 +142,37 @@ export default function TaskTemplateLibrary() {
       )}
 
       {showDrawer && (
-        <div className="fixed right-0 top-0 h-full w-160 bg-white shadow-lg p-4 overflow-auto">
-          <h3 className="text-lg mb-2">{editing ? '编辑模板' : '新建模板'}</h3>
-          <form onSubmit={onSubmit}>
-            <div className="space-y-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-5">
+          <div style={{ width: 'min(96vw, 680px)', maxHeight: '90vh', background: '#fff', borderRadius: 14, display: 'flex', flexDirection: 'column', boxShadow: '0 24px 64px rgba(0,0,0,0.18)' }}>
+            <div style={{ padding: '18px 24px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+              <h3 style={{ margin: 0, fontWeight: 700, fontSize: 16, color: '#1e293b' }}>{editing ? '编辑模板' : '新建模板'}</h3>
+              <button type="button" onClick={() => setShowDrawer(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#9ca3af', fontSize: 24, lineHeight: 1 }}>×</button>
+            </div>
+          <form onSubmit={onSubmit} style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+            <div className="space-y-3 p-6">
               <div>
-                <label className="text-sm">模板名称（必填）</label>
-                <input name="name" defaultValue={editing?.name||''} className="w-full p-2 border mb-2" />
+                <label className="text-sm font-medium text-gray-700 block mb-1">模板名称（必填）</label>
+                <input name="name" defaultValue={editing?.name||''} className="w-full p-2 border rounded" />
               </div>
               <div>
-                <label className="text-sm">分类</label>
-                <select name="category" defaultValue={editing?.category||''} className="w-full p-2 border mb-2">
+                <label className="text-sm font-medium text-gray-700 block mb-1">分类</label>
+                <select name="category" defaultValue={editing?.category||''} className="w-full p-2 border rounded bg-white">
                   <option value="">请选择</option>
                   {DEFAULT_CATEGORIES.filter(c=>c!=='全部分类').map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-sm">描述</label>
-                <textarea name="description" defaultValue={editing?.description||''} className="w-full p-2 border h-20 mb-2" />
+                <label className="text-sm font-medium text-gray-700 block mb-1">描述</label>
+                <textarea name="description" defaultValue={editing?.description||''} className="w-full p-2 border rounded h-20" />
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-sm">预计完成天数</label>
-                  <input type="number" name="estimatedDays" defaultValue={editing?.estimatedDays||0} className="w-full p-2 border mb-2" />
+                  <label className="text-sm font-medium text-gray-700 block mb-1">预计完成天数</label>
+                  <input type="number" name="estimatedDays" defaultValue={editing?.estimatedDays||0} className="w-full p-2 border rounded" />
                 </div>
                 <div>
-                  <label className="text-sm">默认优先级</label>
-                  <select name="priority" defaultValue={editing?.priority||'medium'} className="w-full p-2 border mb-2">
+                  <label className="text-sm font-medium text-gray-700 block mb-1">默认优先级</label>
+                  <select name="priority" defaultValue={editing?.priority||'medium'} className="w-full p-2 border rounded bg-white">
                     <option value="low">低</option>
                     <option value="medium">中</option>
                     <option value="high">高</option>
@@ -177,31 +181,29 @@ export default function TaskTemplateLibrary() {
                 </div>
               </div>
               <div>
-                <label className="text-sm">标签（逗号分隔）</label>
-                <input name="tags" defaultValue={(editing?.tags||'').toString()} className="w-full p-2 border mb-2" />
+                <label className="text-sm font-medium text-gray-700 block mb-1">标签（逗号分隔）</label>
+                <input name="tags" defaultValue={(editing?.tags||'').toString()} className="w-full p-2 border rounded" />
               </div>
-
               <div>
-                <h4 className="flex items-center justify-between">任务步骤 <button type="button" className="text-sm text-primary-600" onClick={()=>{
-                  // add empty step
-                  const steps = JSON.parse((document.getElementById('stepsJson') as HTMLInputElement).value || '[]');
-                  steps.push({ id: Date.now().toString(), order: steps.length+1, title: '新步骤', description: '', estimatedHours: 1, assigneeRole: '', checklist: [] });
-                  (document.getElementById('stepsJson') as HTMLInputElement).value = JSON.stringify(steps);
-                  // trigger re-render by forcing reload
-                  load();
-                }}>+ 添加步骤</button></h4>
-                <p className="text-xs text-gray-400">（步骤编辑在保存后生效）</p>
-                <textarea id="stepsJson" name="stepsJson" defaultValue={JSON.stringify(editing?.steps || [])} className="hidden"></textarea>
-                <div className="mt-2 text-sm text-gray-500">为简化实现，步骤编辑采用 JSON 编辑（临时）。</div>
-                <textarea defaultValue={JSON.stringify(editing?.steps || [], null, 2)} onChange={(e)=>{ (document.getElementById('stepsJson') as HTMLInputElement).value = e.target.value; }} className="w-full p-2 border h-40 mt-2" />
-              </div>
-
-              <div className="flex justify-end gap-2 mt-4">
-                <button type="button" onClick={()=>setShowDrawer(false)} className="px-3 py-1 border rounded">取消</button>
-                <button type="submit" className="px-3 py-1 bg-blue-600 text-white rounded">保存模板</button>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-sm font-medium text-gray-700">任务步骤 (JSON)</label>
+                  <button type="button" className="text-xs text-blue-600 border border-blue-200 rounded px-2 py-0.5" onClick={()=>{
+                    const steps = JSON.parse((document.getElementById('stepsJson') as HTMLInputElement).value || '[]');
+                    steps.push({ id: Date.now().toString(), order: steps.length+1, title: '新步骤', description: '', estimatedHours: 1, assigneeRole: '', checklist: [] });
+                    (document.getElementById('stepsJson') as HTMLInputElement).value = JSON.stringify(steps);
+                    load();
+                  }}>+ 添加步骤</button>
+                </div>
+                <textarea id="stepsJson" name="stepsJson" defaultValue={JSON.stringify(editing?.steps || [])} className="hidden" />
+                <textarea defaultValue={JSON.stringify(editing?.steps || [], null, 2)} onChange={(e)=>{ (document.getElementById('stepsJson') as HTMLInputElement).value = e.target.value; }} className="w-full p-2 border rounded h-36 font-mono text-xs" />
               </div>
             </div>
+            <div style={{ padding: '14px 24px', borderTop: '1px solid #f3f4f6', display: 'flex', gap: 10, justifyContent: 'flex-end', flexShrink: 0, background: '#fafafa', borderRadius: '0 0 14px 14px' }}>
+              <button type="button" onClick={()=>setShowDrawer(false)} style={{ padding: '8px 22px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', fontSize: 13, color: '#374151' }}>取消</button>
+              <button type="submit" style={{ padding: '8px 28px', borderRadius: 8, background: '#3b82f6', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>保存模板</button>
+            </div>
           </form>
+          </div>
         </div>
       )}
 

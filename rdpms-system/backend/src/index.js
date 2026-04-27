@@ -18,6 +18,7 @@ import reagentMaterialsRoutes from './routes/reagentMaterials.js';
 import taskTemplatesRoutes from './routes/taskTemplates.js';
 import formulasRoutes from './routes/formulas.js';
 import prepRoutes from './routes/prep-calculator.js';
+import primersRoutes from './routes/primers.js';
 
 // 初始化Prisma
 export const prisma = new PrismaClient();
@@ -59,6 +60,7 @@ app.route('/api/reagent-materials', reagentMaterialsRoutes);
 app.route('/api/task-templates', taskTemplatesRoutes);
 app.route('/api/formulas', formulasRoutes);
 app.route('/api/prep', prepRoutes);
+app.route('/api/primers', primersRoutes);
 
 // 错误处理
 app.onError((err, c) => {

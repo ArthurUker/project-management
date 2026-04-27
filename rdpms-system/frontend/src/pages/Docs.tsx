@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { docsAPI } from '../api/client';
+import { docsAPI, formulaAPI } from '../api/client';
 import { useAppStore } from '../store/appStore';
 import ReagentLibrary from './knowledge/ReagentLibrary';
 import TaskTemplateLibrary from './knowledge/TaskTemplateLibrary';
-import { LayoutGrid, FlaskConical, Cpu, Dna, FileText, BookOpen, Package, ClipboardList } from 'lucide-react';
+import PrimerLibrary from './knowledge/PrimerLibrary';
+import AmplificationReagentLibrary from './knowledge/AmplificationReagentLibrary';
+import VisualTableEditor from '../components/VisualTableEditor';
+import { FlaskConical, Cpu, Dna, FileText, BookOpen, Package, ClipboardList, Dna as DnaIcon, Beaker } from 'lucide-react';
 
 interface DocCategory {
   id: string;
@@ -45,6 +48,8 @@ const DEFAULT_CATEGORIES = [
   { name: '技术参考', description: '技术文档和参考资料', icon: '📚' },
   { name: '试剂原料库', description: '管理试剂原料信息（名称/分子量/CAS等）', icon: '🧴' },
   { name: '任务模板库', description: '管理可复用的任务流程模板', icon: '📋' },
+  { name: '扩增反应体系试剂', description: '管理PCR/qPCR/LAMP等扩增反应专用试剂（酶、Buffer、dNTP等）', icon: '🔬' },
+  { name: '引物探针库', description: '管理引物探针序列、修饰、合成信息等', icon: '🧫' },
 ];
 
 export default function Docs() {
@@ -62,9 +67,14 @@ export default function Docs() {
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingDoc, setEditingDoc] = useState<DocDocument | null>(null);
+  const [showFormulaPicker, setShowFormulaPicker] = useState(false);
+  const [formulaList, setFormulaList] = useState<any[]>([]);
+  const [formulaSearch, setFormulaSearch] = useState('');
   const [reagentOpenKey, setReagentOpenKey] = useState(0);
   const [reagentCategoryId, setReagentCategoryId] = useState<string | null>(null);
   const [taskTemplateCategoryId, setTaskTemplateCategoryId] = useState<string | null>(null);
+  const [ampReagentCategoryId, setAmpReagentCategoryId] = useState<string | null>(null);
+  const [primerCategoryId, setPrimerCategoryId] = useState<string | null>(null);
 
   const [docForm, setDocForm] = useState({
     categoryId: '',
@@ -102,6 +112,8 @@ export default function Docs() {
       setCategories(cats);
       const reagent = cats.find((c: DocCategory) => c.name === '试剂原料库'); if (reagent) setReagentCategoryId(reagent.id);
       const tpl = cats.find((c: DocCategory) => c.name === '任务模板库'); if (tpl) setTaskTemplateCategoryId(tpl.id);
+      const amp = cats.find((c: DocCategory) => c.name === '扩增反应体系试剂'); if (amp) setAmpReagentCategoryId(amp.id);
+      const primer = cats.find((c: DocCategory) => c.name === '引物探针库'); if (primer) setPrimerCategoryId(primer.id);
       if (cats.length > 0 && !selectedCategory) setSelectedCategory(cats[0].id);
     } catch (error) { console.error('加载分类失败:', error); }
   };
@@ -117,6 +129,47 @@ export default function Docs() {
       const res = await docsAPI.documents.list(params);
       setDocuments(res.list || []);
     } catch (error) { console.error('加载文档失败:', error); } finally { setLoading(false); }
+  };
+
+  const insertAtCursor = (text: string) => {
+    setDocForm(f => ({ ...f, content: f.content ? f.content + '\n\n' + text : text }));
+  };
+
+  const handleOpenFormulaPicker = async () => {
+    try {
+      const res = await formulaAPI.list({});
+      setFormulaList((res as any).list || res as any || []);
+    } catch (e) { setFormulaList([]); }
+    setFormulaSearch('');
+    setShowFormulaPicker(true);
+  };
+
+  const handleInsertFormula = (formula: any) => {
+    const comps: any[] = formula.components || [];
+    const PCR_TYPES = ['PCR', 'qPCR', 'RT-PCR', 'RT-qPCR'];
+    const isPCR = PCR_TYPES.includes(formula.type || '');
+    let table = '';
+    if (isPCR) {
+      const totalVol = comps.reduce((s: number, c: any) => s + (Number(c.concentration) || 0), 0);
+      table = `**${formula.code} ${formula.name}（${formula.type}）**\n\n`;
+      table += '| # | 组分 | 终浓度 | 加样量(μL) | 备注 |\n';
+      table += '| --- | --- | --- | --- | --- |\n';
+      comps.forEach((c: any, i: number) => {
+        const name = c.componentName || c.reagentMaterial?.commonName || c.reagentMaterial?.name || c.reagent?.name || '';
+        table += `| ${i + 1} | ${name} | ${c.notes || ''} | ${Number(c.concentration).toFixed(1)} | |\n`;
+      });
+      table += `| | **合计** | | **${totalVol.toFixed(1)}** | |`;
+    } else {
+      table = `**${formula.code} ${formula.name}**\n\n`;
+      table += '| 试剂 | 浓度 | 单位 | 备注 |\n';
+      table += '| --- | --- | --- | --- |\n';
+      comps.forEach((c: any) => {
+        const name = c.reagentMaterial?.commonName || c.reagentMaterial?.name || c.reagent?.name || c.componentName || '';
+        table += `| ${name} | ${c.concentration} | ${c.unit} | ${c.notes || ''} |\n`;
+      });
+    }
+    insertAtCursor(table);
+    setShowFormulaPicker(false);
   };
 
   const handleSearch = () => { loadDocuments(); };
@@ -142,7 +195,6 @@ export default function Docs() {
   };
 
   const IconMap: Record<string, any> = {
-    '全部文档': LayoutGrid,
     '试剂组标准': FlaskConical,
     '芯片测试': Cpu,
     '分子生物': Dna,
@@ -150,6 +202,8 @@ export default function Docs() {
     '技术参考': BookOpen,
     '试剂原料库': Package,
     '任务模板库': ClipboardList,
+    '扩增反应体系试剂': Beaker,
+    '引物探针库': DnaIcon,
   };
 
   const cardBaseStyle: React.CSSProperties = {
@@ -176,55 +230,43 @@ export default function Docs() {
   const getStatusBadge = (status: string) => { const badges: Record<string, string> = { active: 'bg-green-100 text-green-700', archived: 'bg-gray-100 text-gray-700', deprecated: 'bg-red-100 text-red-700' }; return badges[status] || badges.active; };
 
   return (
-    <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', boxSizing: 'border-box' }}>
+    <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', boxSizing: 'border-box', height: '100%', overflow: 'hidden' }}>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">知识库管理</h1>
           <p className="text-sm text-gray-500 mt-1">管理 SOP 文件、操作模板和技术文档</p>
         </div>
-        <button onClick={() => { if (selectedCategory && reagentCategoryId && selectedCategory === reagentCategoryId) { setReagentOpenKey(k => k + 1); } else { resetForm(); setShowCreateModal(true); } }} className="btn btn-primary flex items-center gap-2">
+        <button
+          onClick={() => {
+            const isSpecial = selectedCategory && (
+              (reagentCategoryId && selectedCategory === reagentCategoryId) ||
+              (ampReagentCategoryId && selectedCategory === ampReagentCategoryId) ||
+              (primerCategoryId && selectedCategory === primerCategoryId) ||
+              (taskTemplateCategoryId && selectedCategory === taskTemplateCategoryId)
+            );
+            if (selectedCategory && reagentCategoryId && selectedCategory === reagentCategoryId) {
+              setReagentOpenKey(k => k + 1);
+            } else if (!isSpecial) {
+              resetForm();
+              setShowCreateModal(true);
+            }
+          }}
+          className="btn btn-primary flex items-center gap-2"
+        >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-          {selectedCategory && reagentCategoryId && selectedCategory === reagentCategoryId ? '新建试剂' : '新建文档'}
+          {selectedCategory && reagentCategoryId && selectedCategory === reagentCategoryId ? '新建试剂' :
+           selectedCategory && primerCategoryId && selectedCategory === primerCategoryId ? '新建引物' :
+           selectedCategory && ampReagentCategoryId && selectedCategory === ampReagentCategoryId ? '新增试剂' :
+           '新建文档'}
         </button>
       </div>
 
-      <div style={{ position: 'sticky', top: 0, zIndex: 20, width: '100%', background: 'rgba(255, 255, 255, 0.82)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', borderRadius: '12px', border: '1px solid rgba(0, 0, 0, 0.08)', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06)', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 0, boxSizing: 'border-box' }}>
+      <div style={{ flexShrink: 0, width: '100%', background: 'rgba(255, 255, 255, 0.82)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', borderRadius: '12px', border: '1px solid rgba(0, 0, 0, 0.08)', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06)', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 0, boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-            {/* 全部文档 卡片 */}
-            <div
-              onClick={() => setSelectedCategory(null)}
-              style={{ ...cardBaseStyle, ...getCardStyle(selectedCategory === null, true), minWidth: 'fit-content' }}
-              onMouseEnter={(e) => {
-                const target = e.currentTarget;
-                target.style.border = '1px solid #bfdbfe';
-                target.style.background = '#eff6ff';
-                target.style.color = '#ffffff';
-                target.style.transform = 'translateY(-1px)';
-                target.style.boxShadow = '0 2px 8px rgba(59,130,246,0.10)';
-                const svg = target.querySelector('svg');
-                if (svg) svg.style.color = selectedCategory === null ? '#ffffff' : '#3b82f6';
-              }}
-              onMouseLeave={(e) => {
-                const target = e.currentTarget;
-                const isActiveAll = selectedCategory === null;
-                target.style.border = isActiveAll ? '1px solid #2563eb' : '1px solid #e2e8f0';
-                target.style.background = isActiveAll ? 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' : '#f8fafc';
-                target.style.color = isActiveAll ? '#ffffff' : '#475569';
-                target.style.transform = 'translateY(0px)';
-                target.style.boxShadow = isActiveAll ? '0 2px 10px rgba(59,130,246,0.30)' : 'none';
-                const svg = target.querySelector('svg');
-                if (svg) svg.style.color = isActiveAll ? '#ffffff' : '#475569';
-              }}
-            >
-              <LayoutGrid size={14} color={selectedCategory === null ? '#fff' : '#475569'} />
-              <div style={{ fontSize: 13, fontWeight: selectedCategory === null ? 600 : 500, color: selectedCategory === null ? '#fff' : '#475569' }}>全部文档</div>
-              {/* no count for all by default */}
-            </div>
-
             {categories.map(cat => {
               const isActive = selectedCategory === cat.id;
-              const Icon = IconMap[cat.name] || LayoutGrid;
+              const Icon = IconMap[cat.name] || FileText;
               return (
                 <div
                   key={cat.id}
@@ -284,11 +326,15 @@ export default function Docs() {
         </div>
       </div>
 
-      <div style={{ padding: '0px', display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', boxSizing: 'border-box' }}>
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', boxSizing: 'border-box', paddingBottom: 8 }}>
         {selectedCategory && reagentCategoryId && selectedCategory === reagentCategoryId ? (
           <div className="bg-white rounded-lg border border-gray-200 p-4"><ReagentLibrary openKey={reagentOpenKey} hideTopButton /></div>
         ) : selectedCategory && taskTemplateCategoryId && selectedCategory === taskTemplateCategoryId ? (
           <div className="bg-white rounded-lg border border-gray-200 p-4"><TaskTemplateLibrary /></div>
+        ) : selectedCategory && ampReagentCategoryId && selectedCategory === ampReagentCategoryId ? (
+          <div className="bg-white rounded-lg border border-gray-200 p-4"><AmplificationReagentLibrary /></div>
+        ) : selectedCategory && primerCategoryId && selectedCategory === primerCategoryId ? (
+          <div className="bg-white rounded-lg border border-gray-200 p-4"><PrimerLibrary /></div>
         ) : (
           loading ? (
             <div className="text-center py-12 text-gray-500">加载中...</div>
@@ -318,6 +364,34 @@ export default function Docs() {
         )}
       </div>
 
+      {/* 引用配方选择器 */}
+      {showFormulaPicker && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60 }}>
+          <div style={{ background: '#fff', borderRadius: 12, width: 'min(95vw, 640px)', maxHeight: '80vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontWeight: 700, fontSize: 15 }}>引用试剂配方</span>
+              <button onClick={() => setShowFormulaPicker(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#9ca3af', fontSize: 20 }}>×</button>
+            </div>
+            <div style={{ padding: '12px 20px', borderBottom: '1px solid #f3f4f6' }}>
+              <input type="text" placeholder="搜索配方编号或名称..." style={{ width: '100%', padding: '8px 12px', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13, outline: 'none', boxSizing: 'border-box' }} value={formulaSearch} onChange={e => setFormulaSearch(e.target.value)} />
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '8px 8px' }}>
+              {formulaList.filter(f => !formulaSearch || f.code?.toLowerCase().includes(formulaSearch.toLowerCase()) || f.name?.toLowerCase().includes(formulaSearch.toLowerCase())).map((f: any) => (
+                <div key={f.id} onClick={() => handleInsertFormula(f)} style={{ padding: '10px 14px', borderRadius: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 2 }} onMouseEnter={e => (e.currentTarget.style.background = '#f1f5f9')} onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#1e40af', minWidth: 140 }}>{f.code}</span>
+                  <span style={{ fontSize: 13, color: '#374151', flex: 1 }}>{f.name}</span>
+                  {f.type && <span style={{ fontSize: 11, color: '#d97706', background: '#fef3c7', padding: '2px 8px', borderRadius: 8 }}>{f.type}</span>}
+                  <span style={{ fontSize: 11, color: '#94a3b8' }}>{(f.components || []).length}组分</span>
+                </div>
+              ))}
+              {formulaList.filter(f => !formulaSearch || f.code?.toLowerCase().includes(formulaSearch.toLowerCase()) || f.name?.toLowerCase().includes(formulaSearch.toLowerCase())).length === 0 && (
+                <div style={{ textAlign: 'center', padding: 32, color: '#94a3b8', fontSize: 13 }}>未找到匹配的配方</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {(showCreateModal || editingDoc) && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4">
@@ -333,7 +407,17 @@ export default function Docs() {
               <div className="grid grid-cols-2 gap-4"><div><label className="label">文档类型</label><select className="input" value={docForm.docType} onChange={(e) => setDocForm({ ...docForm, docType: e.target.value })}>{DOC_TYPES.map(type => (<option key={type.id} value={type.id}>{type.label}</option>))}</select></div>
               <div><label className="label">版本号</label><input type="text" className="input" placeholder="如 V1.0" value={docForm.version} onChange={(e) => setDocForm({ ...docForm, version: e.target.value })} /></div></div>
               <div><label className="label">标签</label><input type="text" className="input" placeholder="多个标签用逗号分隔" value={docForm.tags} onChange={(e) => setDocForm({ ...docForm, tags: e.target.value })} /></div>
-              <div><label className="label">文档内容</label><textarea className="input h-40 font-mono text-sm" placeholder="输入文档正文内容..." value={docForm.content} onChange={(e) => setDocForm({ ...docForm, content: e.target.value })} /></div>
+              <div>
+                <label className="label">文档内容</label>
+                <div style={{ display: 'flex', gap: 6, marginBottom: 6, alignItems: 'center' }}>
+                  <button type="button" onClick={handleOpenFormulaPicker} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #e2e8f0', background: '#f8fafc', cursor: 'pointer', fontSize: 12, color: '#374151', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2v-4M9 21H5a2 2 0 01-2-2v-4m0 0h18"/></svg>
+                    引用配方
+                  </button>
+                  <span style={{ fontSize: 11, color: '#9ca3af' }}>可视化或 Markdown 两种录入方式</span>
+                </div>
+                <VisualTableEditor value={docForm.content} onChange={v => setDocForm({ ...docForm, content: v })} />
+              </div>
             </div>
             <div className="sticky bottom-0 bg-gray-50 px-6 py-4 flex items-center justify-end gap-3 border-t border-gray-200"><button onClick={() => { setShowCreateModal(false); setEditingDoc(null); resetForm(); }} className="btn btn-secondary">取消</button><button onClick={editingDoc ? handleUpdateDoc : handleCreateDoc} className="btn btn-primary">{editingDoc ? '保存修改' : '创建文档'}</button></div>
           </div>

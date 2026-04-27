@@ -229,3 +229,12 @@ export const prepAPI = {
   listRecords: (params?: Record<string, any>) => get<ApiResponse<any>>('/prep/records', { params }),
   getRecord: (id: string) => get<ApiResponse<any>>(`/prep/records/${id}`),
 };
+
+export const primerAPI = {
+  list: (params?: Record<string, any>) => get<ApiResponse<any>>('/primers', { params }),
+  get: (id: string) => get<ApiResponse<any>>(`/primers/${id}`),
+  create: (data: any) => post<ApiResponse<any>>('/primers', data),
+  update: (id: string, data: any) => put<ApiResponse<any>>(`/primers/${id}`, data),
+  delete: (id: string) => del<ApiResponse<any>>(`/primers/${id}`),
+  batchImport: (rows: any[]) => post<ApiResponse<any>>('/primers/batch-import', { rows }),
+};

@@ -360,9 +360,10 @@ model FormulaComponent {
   formulaId          String
   reagentId          String?
   reagentMaterialId  String?  // 新增：关联知识库中的试剂原料ID
+  componentName      String?  // 自定义组分名称（用于PCR等非标准化学试剂组分）
   concentration      Float
   unit               String   @default("M")
-  notes              String?
+  notes              String?  // PCR配方中存储终浓度描述，如"1×"、"0.2μM"
   sortOrder          Int      @default(0)
 
   formula            ReagentFormula @relation(fields: [formulaId], references: [id], onDelete: Cascade)
@@ -432,4 +433,33 @@ model TaskTemplateStep {
 
   @@index([templateId])
   @@index([order])
+}
+
+// 引物探针设计库
+model Primer {
+  id                  String   @id @default(uuid())
+  projectName         String?  // 所属项目（文本，便于录入）
+  name                String   // 引物/探针名称
+  sequence            String   // 5'-3' 序列
+  targetGene          String?  // 目标基因
+  modification5       String?  // 5' 标记/修饰
+  modification3       String?  // 3' 标记/修饰
+  ampliconLength      Int?     // PCR 长度（扩增子长度 bp）
+  speciesLatinName    String?  // 物种丁名（拉丁名）
+  speciesChineseName  String?  // 物种中文名
+  speciesTaxid        String?  // 物种 taxid
+  atccStrain          String?  // ATCC 标准菌株/参考菌株
+  validatedStrain     String?  // 验证菌株
+  synthesisAmount     String?  // 合成量（如 200nmol）
+  synthesisCompany    String?  // 合成公司
+  tubeCount           Int?     // 管数
+  notes               String?  // 备注
+  status              String   @default("active") // active | archived
+  createdBy           String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([projectName])
+  @@index([targetGene])
+  @@index([name])
 }

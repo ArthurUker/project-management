@@ -3,6 +3,9 @@ import { formulaAPI, prepAPI, reagentAPI } from '../../api/client';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, FlaskConical } from 'lucide-react';
 
+// PCR类配方类型（这些配方使用独立的垂直表格，不合并到化学试剂矩阵）
+const PCR_TYPES = ['PCR', 'qPCR', 'RT-PCR', 'RT-qPCR'];
+
 export default function FormulaMatrix(): JSX.Element {
   // Data
   const [allFormulas, setAllFormulas] = useState<any[]>([]);
@@ -66,9 +69,11 @@ export default function FormulaMatrix(): JSX.Element {
   }, [allFormulas]);
 
   const getActiveReagents = (): any[] => {
-    const filtered = selectedCategory === 'all' ? formulas : formulas.filter(f => (f.type || f.category) === selectedCategory);
+    // 只取化学试剂配方（排除PCR）来计算矩阵列
+    const chemicalForms = (selectedCategory === 'all' ? formulas : formulas.filter(f => (f.type || f.category) === selectedCategory))
+      .filter(f => !PCR_TYPES.includes(f.type || f.category));
     const activeIds = new Set<string>();
-    filtered.forEach(formula => {
+    chemicalForms.forEach(formula => {
       (formula.components || []).forEach((c: any) => {
         const rid = c.reagentId || c.reagent?.id || c.reagentKey || c.reagent?.key;
         if (rid) activeIds.add(String(rid));
@@ -105,17 +110,38 @@ export default function FormulaMatrix(): JSX.Element {
 
   const groupedReagents = useMemo(() => getGroupedReagents(), [activeReagents]);
 
+  // 是否当前选中的是PCR分类
+  const isPCRSelected = PCR_TYPES.includes(selectedCategory);
+
+  // 化学试剂配方（排除PCR类型，用于矩阵表格）
   const filteredFormulas = useMemo(() => formulas
+    .filter(f => !PCR_TYPES.includes(f.type || f.category))  // 化学配方不含PCR
+    .filter(f => selectedCategory === 'all' || (f.type || f.category) === selectedCategory)
+    .filter(f => !searchText || (f.code || '').toLowerCase().includes(searchText.toLowerCase()) || (f.name || '').toLowerCase().includes(searchText.toLowerCase()))
+  , [formulas, selectedCategory, searchText]);
+
+  // PCR类配方（单独展示）
+  const filteredPCRFormulas = useMemo(() => formulas
+    .filter(f => PCR_TYPES.includes(f.type || f.category))
     .filter(f => selectedCategory === 'all' || (f.type || f.category) === selectedCategory)
     .filter(f => !searchText || (f.code || '').toLowerCase().includes(searchText.toLowerCase()) || (f.name || '').toLowerCase().includes(searchText.toLowerCase()))
   , [formulas, selectedCategory, searchText]);
 
   const groupedFormulas = useMemo(() => {
-    const cats = categories.filter(c => c.key !== 'all');
+    const cats = categories.filter(c => c.key !== 'all' && !PCR_TYPES.includes(c.key));
     const groups = cats.map(c => ({ category: c.label, items: filteredFormulas.filter(f => (f.type || f.category) === c.key) })).filter(g => g.items.length > 0);
-    if (selectedCategory !== 'all') return groups.filter(g => g.category === selectedCategory);
+    if (selectedCategory !== 'all' && !isPCRSelected) return groups.filter(g => g.category === selectedCategory);
     return groups;
-  }, [categories, filteredFormulas, selectedCategory]);
+  }, [categories, filteredFormulas, selectedCategory, isPCRSelected]);
+
+  // PCR配方按类分组
+  const groupedPCRFormulas = useMemo(() => {
+    const pcrCats = Array.from(new Set(filteredPCRFormulas.map(f => f.type || f.category))).filter(Boolean);
+    return pcrCats.map(cat => ({
+      category: cat,
+      items: filteredPCRFormulas.filter(f => (f.type || f.category) === cat),
+    }));
+  }, [filteredPCRFormulas]);
 
   const matrix = useMemo(() => {
     const m: Record<string, Record<string, any>> = {};
@@ -297,7 +323,7 @@ export default function FormulaMatrix(): JSX.Element {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <h1 className="text-2xl font-display font-bold text-gray-900">试剂配方</h1>
-          <span style={{ fontSize: '12px', color: '#9ca3af', background: '#f3f4f6', padding: '2px 10px', borderRadius: '20px', fontWeight: 500 }}>{filteredFormulas.length} 条配方</span>
+          <span style={{ fontSize: '12px', color: '#9ca3af', background: '#f3f4f6', padding: '2px 10px', borderRadius: '20px', fontWeight: 500 }}>{filteredFormulas.length + filteredPCRFormulas.length} 条配方</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <button
@@ -316,8 +342,21 @@ export default function FormulaMatrix(): JSX.Element {
       <div className="card p-3 mb-4" style={{ flexShrink: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           {/* Category tabs */}
-          <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-            {categories.map(c => (
+          <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', alignItems: 'center' }}>
+            {/* 全部 */}
+            <button
+              key="all"
+              onClick={() => setSelectedCategory('all')}
+              style={{
+                padding: '5px 14px', borderRadius: '7px', fontSize: '13px', fontWeight: 500,
+                cursor: 'pointer', border: 'none', transition: 'all .15s',
+                background: selectedCategory === 'all' ? '#eff6ff' : '#f3f4f6',
+                color: selectedCategory === 'all' ? '#2563eb' : '#6b7280',
+                outline: selectedCategory === 'all' ? '1.5px solid #bfdbfe' : 'none',
+              }}
+            >全部配方</button>
+            {/* 化学试剂分类 */}
+            {categories.filter(c => c.key !== 'all' && !PCR_TYPES.includes(c.key)).map(c => (
               <button
                 key={c.key}
                 onClick={() => setSelectedCategory(c.key)}
@@ -330,6 +369,26 @@ export default function FormulaMatrix(): JSX.Element {
                 }}
               >{c.label}</button>
             ))}
+            {/* 分隔线 + PCR分类 */}
+            {categories.some(c => PCR_TYPES.includes(c.key)) && (
+              <>
+                <div style={{ width: 1, height: 22, background: '#d1d5db', margin: '0 4px' }} />
+                <span style={{ fontSize: 11, color: '#9ca3af', marginRight: 2 }}>扩增体系</span>
+                {categories.filter(c => PCR_TYPES.includes(c.key)).map(c => (
+                  <button
+                    key={c.key}
+                    onClick={() => setSelectedCategory(c.key)}
+                    style={{
+                      padding: '5px 14px', borderRadius: '7px', fontSize: '13px', fontWeight: 500,
+                      cursor: 'pointer', border: 'none', transition: 'all .15s',
+                      background: selectedCategory === c.key ? '#fef3c7' : '#f3f4f6',
+                      color: selectedCategory === c.key ? '#d97706' : '#6b7280',
+                      outline: selectedCategory === c.key ? '1.5px solid #fcd34d' : 'none',
+                    }}
+                  >{c.label}</button>
+                ))}
+              </>
+            )}
           </div>
           <div style={{ width: '1px', height: '26px', background: '#e5e7eb', flexShrink: 0 }} />
           {/* Search */}
@@ -342,17 +401,75 @@ export default function FormulaMatrix(): JSX.Element {
               style={{ width: '100%', padding: '7px 10px 7px 32px', border: '1.5px solid #e5e7eb', borderRadius: '8px', fontSize: '13px', color: '#374151', background: '#f9fafb', outline: 'none', boxSizing: 'border-box' }}
             />
           </div>
-          <span style={{ marginLeft: 'auto', fontSize: '12px', color: '#9ca3af' }}>共 {filteredFormulas.length} 条</span>
+          <span style={{ marginLeft: 'auto', fontSize: '12px', color: '#9ca3af' }}>共 {filteredFormulas.length + filteredPCRFormulas.length} 条</span>
         </div>
       </div>
 
-      {/*
-       * ══ 矩阵表格区（flex:1 撑满剩余高度，内部 overflow:auto 产生滚动）══
-       *
-       * 关键：试剂信息栏（分组行 + 试剂名称行）位于 <thead> 内，
-       * 使用 position:sticky，仅在此滚动容器内固定。
-       * 无论下方配方行多少，顶部试剂信息栏始终可见，不会被遮盖。
-       */}
+      {/* ══ PCR扩增体系专用视图 ══ */}
+      {isPCRSelected && (
+        <div style={{ flex: 1, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 16 }}>
+          {groupedPCRFormulas.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 48, color: '#94a3b8' }}>
+              <div style={{ fontSize: 18, marginBottom: 8 }}>暂无{selectedCategory}配方数据</div>
+              <a onClick={() => navigate('/reagent-formula/new')} style={{ color: '#3b82f6', cursor: 'pointer', fontSize: 14 }}>+ 创建第一个配方</a>
+            </div>
+          ) : (
+            groupedPCRFormulas.flatMap(g => g.items).map(f => {
+              const comps: any[] = f.components || [];
+              const totalVol = comps.reduce((s: number, c: any) => s + (Number(c.concentration) || 0), 0);
+              return (
+                <div key={f.id} className="card" style={{ padding: '16px 20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <div>
+                      <span style={{ fontSize: 14, fontWeight: 700, color: '#1e40af', fontFamily: 'monospace' }}>{f.code}</span>
+                      <span style={{ fontSize: 14, color: '#374151', marginLeft: 10 }}>{f.name}</span>
+                      {f.notes && <span style={{ marginLeft: 8, fontSize: 12, color: '#64748b', background: '#f1f5f9', padding: '2px 8px', borderRadius: 10 }}>{f.notes}</span>}
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={() => navigate(`/reagent-formula/${f.id}/edit`)} style={{ padding: '4px 10px', border: '1px solid #e2e8f0', borderRadius: 6, cursor: 'pointer', background: '#fff', color: '#374151', fontSize: 12 }}>编辑</button>
+                    </div>
+                  </div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ background: '#fef3c7' }}>
+                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: '#92400e', border: '1px solid #fde68a', width: 40 }}>#</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: '#92400e', border: '1px solid #fde68a' }}>组分</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 600, color: '#92400e', border: '1px solid #fde68a', width: 160 }}>终浓度</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 600, color: '#92400e', border: '1px solid #fde68a', width: 130 }}>加样量 (μL)</th>
+                        <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, color: '#92400e', border: '1px solid #fde68a', width: 150 }}>备注</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {comps.map((c: any, idx: number) => {
+                        const name = c.componentName || c.reagentMaterial?.commonName || c.reagentMaterial?.name || c.reagent?.name || c.reagentName || '';
+                        const finalConc = c.notes || '';
+                        return (
+                          <tr key={idx} style={{ background: idx % 2 === 0 ? '#fff' : '#fffbeb', borderBottom: '1px solid #fde68a' }}>
+                            <td style={{ padding: '7px 12px', color: '#94a3b8', fontSize: 12, borderRight: '1px solid #fde68a', textAlign: 'center' }}>{idx + 1}</td>
+                            <td style={{ padding: '7px 12px', color: '#1e293b', fontWeight: 500, borderRight: '1px solid #fde68a' }}>{name}</td>
+                            <td style={{ padding: '7px 12px', color: '#374151', textAlign: 'center', borderRight: '1px solid #fde68a' }}>{finalConc}</td>
+                            <td style={{ padding: '7px 12px', color: '#1e40af', fontWeight: 600, textAlign: 'center', borderRight: '1px solid #fde68a' }}>{c.concentration != null ? c.concentration : ''}</td>
+                            <td style={{ padding: '7px 12px', color: '#64748b', fontSize: 12 }}></td>
+                          </tr>
+                        );
+                      })}
+                      {/* 合计行 */}
+                      <tr style={{ background: '#fef9c3', borderTop: '2px solid #f59e0b' }}>
+                        <td colSpan={3} style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 700, color: '#92400e', fontSize: 13 }}>合计</td>
+                        <td style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 700, color: '#dc2626', fontSize: 13 }}>{totalVol.toFixed(1)}</td>
+                        <td style={{ padding: '8px 12px', color: '#64748b', fontSize: 12 }}></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {/* ══ 矩阵表格区（化学试剂配方，flex:1 撑满剩余高度） ══ */}
+      {!isPCRSelected && (
       <div className="card" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         <div style={{ flex: 1, overflowX: 'auto', overflowY: 'auto', minHeight: 0 }}>
           <style>{`
@@ -451,7 +568,7 @@ export default function FormulaMatrix(): JSX.Element {
               {groupedFormulas.length === 0 && (
                 <tr>
                   <td colSpan={1 + activeReagents.length} style={{ padding: 48, textAlign: 'center', color: '#94a3b8' }}>
-                    <div style={{ fontSize: 20, marginBottom: 8 }}>暂无配方数据</div>
+                    <div style={{ fontSize: 20, marginBottom: 8 }}>暂无化学试剂配方数据</div>
                     <a onClick={() => navigate('/reagent-formula/new')} style={{ color: '#3b82f6', cursor: 'pointer', fontSize: 14 }}>+ 创建第一个配方</a>
                   </td>
                 </tr>
@@ -460,6 +577,29 @@ export default function FormulaMatrix(): JSX.Element {
           </table>
         </div>
       </div>
+      )}
+
+      {/* 全部配方视图下，化学矩阵下方追加PCR配方摘要 */}
+      {!isPCRSelected && selectedCategory === 'all' && filteredPCRFormulas.length > 0 && (
+        <div style={{ flexShrink: 0, marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#92400e', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b', display: 'inline-block' }} />
+            扩增反应体系（{filteredPCRFormulas.length} 条，点击分类标签查看详情）
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {filteredPCRFormulas.map(f => (
+              <div key={f.id}
+                onClick={() => { setSelectedCategory(f.type || f.category); }}
+                style={{ padding: '8px 14px', border: '1px solid #fde68a', borderRadius: 8, background: '#fffbeb', cursor: 'pointer', fontSize: 13 }}
+              >
+                <span style={{ fontWeight: 600, color: '#1e40af', fontFamily: 'monospace' }}>{f.code}</span>
+                <span style={{ marginLeft: 6, color: '#374151' }}>{f.name}</span>
+                <span style={{ marginLeft: 6, fontSize: 11, color: '#d97706', background: '#fef3c7', padding: '1px 6px', borderRadius: 8 }}>{f.type}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ══ 配制计算弹窗 ══ */}
       {showCalcModal && (
@@ -672,3 +812,4 @@ export default function FormulaMatrix(): JSX.Element {
     </div>
   );
 }
+

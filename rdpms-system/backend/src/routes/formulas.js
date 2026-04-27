@@ -38,7 +38,7 @@ formulas.get('/:id', async (c) => {
     const formula = await prisma.reagentFormula.findUnique({
       where: { id },
       include: {
-        components: { include: { reagent: true }, orderBy: { sortOrder: 'asc' } },
+        components: { include: { reagent: true, reagentMaterial: true }, orderBy: { sortOrder: 'asc' } },
         creator: { select: { id: true, name: true } }
       }
     });
@@ -83,6 +83,7 @@ formulas.post('/', async (c) => {
           create: (data.components || []).map((comp) => ({
             reagentId: comp.reagentId || null,
             reagentMaterialId: comp.reagentMaterialId || null,
+            componentName: comp.componentName || null,
             concentration: comp.concentration,
             unit: comp.unit || 'M',
             notes: comp.notes || '',
@@ -127,6 +128,7 @@ formulas.put('/:id', async (c) => {
         formulaId: id,
         reagentId: comp.reagentId || null,
         reagentMaterialId: comp.reagentMaterialId || null,
+        componentName: comp.componentName || null,
         concentration: comp.concentration,
         unit: comp.unit || 'M',
         notes: comp.notes || '',
@@ -189,6 +191,7 @@ formulas.post('/:id/duplicate', async (c) => {
           create: orig.components.map((comp) => ({
             reagentId: comp.reagentId,
             reagentMaterialId: comp.reagentMaterialId || null,
+            componentName: comp.componentName || null,
             concentration: comp.concentration,
             unit: comp.unit,
             notes: comp.notes,
