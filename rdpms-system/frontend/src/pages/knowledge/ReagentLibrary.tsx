@@ -213,7 +213,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
         <div></div>
       </div>
 
-      <div className="overflow-x-auto overflow-y-auto rounded-lg border border-gray-200" style={{ maxHeight: 'calc(100vh - 320px)' }}>
+      <div className="overflow-x-auto rounded-lg border border-gray-200">
         <table className="min-w-[1200px] w-full table-auto border-collapse">
           <thead className="sticky top-0 bg-gray-100 z-10">
             <tr className="bg-gray-100">

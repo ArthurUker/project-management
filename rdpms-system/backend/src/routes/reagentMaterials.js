@@ -42,7 +42,20 @@ materials.get('/:id', async (c) => {
 // POST /api/reagent-materials
 materials.post('/', async (c) => {
   try {
-    const data = await c.req.json();
+    const raw = await c.req.json();
+    const { id: _id, createdAt, updatedAt, components, ...rest } = raw;
+
+    const toFloat = (v) => { const n = parseFloat(String(v ?? '')); return isNaN(n) ? undefined : n; };
+    const toFloatOrNull = (v) => { if (v === '' || v == null) return null; const n = parseFloat(String(v)); return isNaN(n) ? null : n; };
+
+    const data = { ...rest };
+    if ('mw' in data) data.mw = toFloat(data.mw) ?? 0;
+    if ('purity' in data) { const p = toFloat(data.purity); data.purity = p !== undefined ? p : 98; }
+    if ('density' in data) data.density = toFloatOrNull(data.density);
+    if ('defaultStockConc' in data) data.defaultStockConc = toFloatOrNull(data.defaultStockConc);
+
+    Object.keys(data).forEach(k => data[k] === undefined && delete data[k]);
+
     const created = await prisma.reagentMaterial.create({ data });
     return c.json({ success: true, material: created });
   } catch (err) {
@@ -55,7 +68,23 @@ materials.post('/', async (c) => {
 materials.put('/:id', async (c) => {
   const id = c.req.param('id');
   try {
-    const data = await c.req.json();
+    const raw = await c.req.json();
+    // 去除不可更新字段（Prisma 不允许在 data 中包含主键或关联列表）
+    const { id: _id, createdAt, updatedAt, components, ...rest } = raw;
+
+    // FormData 传来的数值都是字符串，需要强转；空字符串的可选字段转为 null
+    const toFloat = (v) => { const n = parseFloat(String(v ?? '')); return isNaN(n) ? undefined : n; };
+    const toFloatOrNull = (v) => { if (v === '' || v == null) return null; const n = parseFloat(String(v)); return isNaN(n) ? null : n; };
+
+    const data = { ...rest };
+    if ('mw' in data) data.mw = toFloat(data.mw);
+    if ('purity' in data) { const p = toFloat(data.purity); data.purity = p !== undefined ? p : 98; }
+    if ('density' in data) data.density = toFloatOrNull(data.density);
+    if ('defaultStockConc' in data) data.defaultStockConc = toFloatOrNull(data.defaultStockConc);
+
+    // 移除 undefined 值，避免 Prisma 类型校验失败
+    Object.keys(data).forEach(k => data[k] === undefined && delete data[k]);
+
     const updated = await prisma.reagentMaterial.update({ where: { id }, data });
     return c.json({ success: true, material: updated });
   } catch (err) {

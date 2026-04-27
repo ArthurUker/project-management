@@ -1,27 +1,43 @@
 /**
  * PrimerLibrary — 引物探针设计库
- * 支持 CRUD、CSV 导入/导出
+ * 支持 CRUD、CSV 导入/导出、列设置、批量编辑
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { primerAPI, projectAPI } from '../../api/client';
 
 const COLUMNS = [
-  { key: 'projectName',         label: '所属项目',             width: 120, editable: true },
-  { key: 'name',                label: '引物名称',             width: 140, editable: true, required: true },
-  { key: 'sequence',            label: "5'-3'序列",            width: 260, editable: true, required: true, mono: true },
-  { key: 'targetGene',          label: '目标基因',             width: 100, editable: true },
-  { key: 'modification5',       label: "5'标记",               width: 90,  editable: true },
-  { key: 'modification3',       label: "3'标记",               width: 90,  editable: true },
-  { key: 'ampliconLength',      label: 'PCR长度(bp)',          width: 90,  editable: true, type: 'number' },
-  { key: 'speciesLatinName',    label: '物种丁名',             width: 160, editable: true, italic: true },
-  { key: 'speciesChineseName',  label: '物种中文名',           width: 110, editable: true },
-  { key: 'speciesTaxid',        label: '物种taxid',            width: 90,  editable: true },
-  { key: 'atccStrain',          label: 'ATCC标准菌株/参考菌株', width: 200, editable: true },
-  { key: 'validatedStrain',     label: '验证菌株',             width: 160, editable: true },
-  { key: 'synthesisAmount',     label: '合成量',               width: 90,  editable: true },
-  { key: 'synthesisCompany',    label: '合成公司',             width: 110, editable: true },
-  { key: 'tubeCount',           label: '管数',                 width: 70,  editable: true, type: 'number' },
-  { key: 'notes',               label: '备注',                 width: 180, editable: true },
+  { key: 'projectName',        label: '所属项目',              mono: false, italic: false },
+  { key: 'name',               label: '引物名称',              mono: false, italic: false, required: true },
+  { key: 'sequence',           label: "5'-3'序列",             mono: true,  italic: false, required: true },
+  { key: 'targetGene',         label: '目标基因',              mono: false, italic: false },
+  { key: 'modification5',      label: "5'标记",                mono: false, italic: false },
+  { key: 'modification3',      label: "3'标记",                mono: false, italic: false },
+  { key: 'ampliconLength',     label: 'PCR长度(bp)',           mono: false, italic: false, type: 'number' },
+  { key: 'speciesLatinName',   label: '物种拉丁名',            mono: false, italic: true },
+  { key: 'speciesChineseName', label: '物种中文名',            mono: false, italic: false },
+  { key: 'speciesTaxid',       label: '物种taxid',             mono: false, italic: false },
+  { key: 'atccStrain',         label: 'ATCC标准菌株',          mono: false, italic: false },
+  { key: 'validatedStrain',    label: '验证菌株',              mono: false, italic: false },
+  { key: 'synthesisAmount',    label: '合成量',                mono: false, italic: false },
+  { key: 'synthesisCompany',   label: '合成公司',              mono: false, italic: false },
+  { key: 'tubeCount',          label: '管数',                  mono: false, italic: false, type: 'number' },
+  { key: 'notes',              label: '备注',                  mono: false, italic: false },
+];
+
+// 默认显示的列（可通过列设置调整）
+const DEFAULT_VISIBLE_COLS = ['projectName', 'name', 'sequence', 'targetGene', 'modification5', 'modification3', 'ampliconLength', 'synthesisCompany'];
+
+// 支持批量编辑的字段
+const BATCH_FIELDS = [
+  { key: 'projectName',        label: '所属项目',   type: 'project' },
+  { key: 'targetGene',         label: '目标基因',   type: 'text' },
+  { key: 'synthesisCompany',   label: '合成公司',   type: 'text' },
+  { key: 'synthesisAmount',    label: '合成量',     type: 'text' },
+  { key: 'speciesLatinName',   label: '物种拉丁名', type: 'text' },
+  { key: 'speciesChineseName', label: '物种中文名', type: 'text' },
+  { key: 'speciesTaxid',       label: '物种taxid',  type: 'text' },
+  { key: 'validatedStrain',    label: '验证菌株',   type: 'text' },
+  { key: 'atccStrain',         label: 'ATCC标准菌株', type: 'text' },
 ];
 
 const EMPTY_FORM = () => ({
@@ -51,6 +67,28 @@ export default function PrimerLibrary() {
   const [showProjectDropdown, setShowProjectDropdown] = useState(false);
   const projectDropRef = useRef<HTMLDivElement>(null);
 
+  // ── 筛选 ──
+  const [filterProject, setFilterProject] = useState('');
+  const [showProjectFilter, setShowProjectFilter] = useState(false);
+  const projectFilterRef = useRef<HTMLDivElement>(null);
+
+  // ── 列设置 ──
+  const [visibleCols, setVisibleCols] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('primerLibCols') || 'null') || DEFAULT_VISIBLE_COLS; }
+    catch { return DEFAULT_VISIBLE_COLS; }
+  });
+  const [showColSettings, setShowColSettings] = useState(false);
+  const colSettingsRef = useRef<HTMLDivElement>(null);
+
+  // ── 批量编辑 ──
+  const [showBatchEdit, setShowBatchEdit] = useState(false);
+  const [batchEditField, setBatchEditField] = useState('');
+  const [batchEditValue, setBatchEditValue] = useState('');
+  const [batchProjectNames, setBatchProjectNames] = useState<string[]>([]);
+  const [batchProjectSearch, setBatchProjectSearch] = useState('');
+  const [batchProjectDropOpen, setBatchProjectDropOpen] = useState(false);
+  const batchProjectDropRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     load();
     loadProjects();
@@ -60,6 +98,15 @@ export default function PrimerLibrary() {
     const handler = (e: MouseEvent) => {
       if (projectDropRef.current && !projectDropRef.current.contains(e.target as Node)) {
         setShowProjectDropdown(false);
+      }
+      if (projectFilterRef.current && !projectFilterRef.current.contains(e.target as Node)) {
+        setShowProjectFilter(false);
+      }
+      if (colSettingsRef.current && !colSettingsRef.current.contains(e.target as Node)) {
+        setShowColSettings(false);
+      }
+      if (batchProjectDropRef.current && !batchProjectDropRef.current.contains(e.target as Node)) {
+        setBatchProjectDropOpen(false);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -144,6 +191,53 @@ export default function PrimerLibrary() {
     load();
   };
 
+  const handleBatchEdit = async () => {
+    if (selectedIds.length === 0 || !batchEditField) return;
+    const value = batchEditField === 'projectName'
+      ? batchProjectNames.join(', ')
+      : batchEditValue;
+    try {
+      await Promise.all(selectedIds.map(id => primerAPI.update(id, { [batchEditField]: value })));
+      setShowBatchEdit(false);
+      setBatchEditField('');
+      setBatchEditValue('');
+      setBatchProjectNames([]);
+      load();
+    } catch (e: any) { alert(e.message || '批量编辑失败'); }
+  };
+
+  // 列设置：持久化到 localStorage
+  const saveVisibleCols = useCallback((cols: string[]) => {
+    setVisibleCols(cols);
+    localStorage.setItem('primerLibCols', JSON.stringify(cols));
+  }, []);
+  const toggleColVisible = (key: string) => {
+    saveVisibleCols(visibleCols.includes(key) ? visibleCols.filter(k => k !== key) : [...visibleCols, key]);
+  };
+  const moveCol = (key: string, dir: -1 | 1) => {
+    const arr = [...visibleCols];
+    const i = arr.indexOf(key);
+    if (i < 0) return;
+    const j = i + dir;
+    if (j < 0 || j >= arr.length) return;
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+    saveVisibleCols(arr);
+  };
+
+  // 当前显示的列（按 visibleCols 顺序）
+  const activeColumns = COLUMNS.filter(c => visibleCols.includes(c.key))
+    .sort((a, b) => visibleCols.indexOf(a.key) - visibleCols.indexOf(b.key));
+
+  // 从已加载列表中提取所有项目名（用于筛选下拉）
+  const projectOptions = Array.from(new Set(
+    list.flatMap(r => (r.projectName || '').split(',').map((s: string) => s.trim()).filter(Boolean))
+  )).sort();
+
+  // 按项目筛选
+  const displayList = filterProject
+    ? list.filter(r => (r.projectName || '').split(',').map((s: string) => s.trim()).includes(filterProject))
+    : list;
+
   // CSV 导出
   const handleExport = () => {
     const headers = COLUMNS.map(c => c.label);
@@ -215,7 +309,7 @@ export default function PrimerLibrary() {
   const toggleSelect = (id: string) =>
     setSelectedIds(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
   const toggleAll = () =>
-    setSelectedIds(selectedIds.length === list.length ? [] : list.map(r => r.id));
+    setSelectedIds(selectedIds.length === displayList.length && displayList.length > 0 ? [] : displayList.map(r => r.id));
 
   const f = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
 
@@ -225,9 +319,10 @@ export default function PrimerLibrary() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {/* ── 顶部工具栏 ── */}
+      {/* ── 工具栏 ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        <div style={{ position: 'relative', flex: '0 0 260px' }}>
+        {/* 搜索框 */}
+        <div style={{ position: 'relative', flex: '0 0 220px' }}>
           <input
             value={keyword} onChange={e => setKeyword(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
@@ -236,29 +331,115 @@ export default function PrimerLibrary() {
           />
           <svg style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </div>
+        {/* 所属项目筛选 */}
+        <div ref={projectFilterRef} style={{ position: 'relative' }}>
+          <button
+            onClick={() => setShowProjectFilter(v => !v)}
+            style={{ padding: '7px 12px', borderRadius: 8, border: '1px solid #e2e8f0', background: filterProject ? '#eff6ff' : '#f8fafc', color: filterProject ? '#1d4ed8' : '#64748b', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            {filterProject || '所属项目'}
+            {filterProject && (
+              <span onClick={e => { e.stopPropagation(); setFilterProject(''); }} style={{ marginLeft: 2, fontSize: 14, color: '#3b82f6', lineHeight: 1 }}>×</span>
+            )}
+          </button>
+          {showProjectFilter && (
+            <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 4, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,0.10)', zIndex: 200, minWidth: 180, maxHeight: 280, overflowY: 'auto' }}>
+              <div
+                onClick={() => { setFilterProject(''); setShowProjectFilter(false); }}
+                style={{ padding: '9px 14px', fontSize: 13, cursor: 'pointer', color: !filterProject ? '#1d4ed8' : '#374151', fontWeight: !filterProject ? 600 : 400, borderBottom: '1px solid #f3f4f6' }}
+              >全部项目</div>
+              {projectOptions.length === 0
+                ? <div style={{ padding: '10px 14px', color: '#94a3b8', fontSize: 12 }}>暂无项目数据</div>
+                : projectOptions.map(name => (
+                  <div
+                    key={name}
+                    onClick={() => { setFilterProject(name); setShowProjectFilter(false); }}
+                    style={{ padding: '9px 14px', fontSize: 13, cursor: 'pointer', color: filterProject === name ? '#1d4ed8' : '#374151', fontWeight: filterProject === name ? 600 : 400, background: filterProject === name ? '#eff6ff' : 'transparent' }}
+                  >{name}</div>
+                ))
+              }
+            </div>
+          )}
+        </div>
         <button onClick={handleSearch} style={{ padding: '7px 14px', borderRadius: 8, background: '#3b82f6', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13 }}>搜索</button>
         <button onClick={openNew} style={{ padding: '7px 14px', borderRadius: 8, background: '#10b981', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>＋ 新建引物</button>
         <button onClick={handleExport} style={{ padding: '7px 14px', borderRadius: 8, background: '#0ea5e9', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13 }}>导出CSV</button>
         <button onClick={() => fileRef.current?.click()} style={{ padding: '7px 14px', borderRadius: 8, background: '#f59e0b', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13 }}>导入CSV</button>
         <input ref={fileRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={handleImportFile} />
-        {selectedIds.length > 0 && (
-          <button onClick={handleBatchDelete} style={{ padding: '7px 14px', borderRadius: 8, background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13 }}>
-            删除选中（{selectedIds.length}）
+
+        {/* 列设置按钮 */}
+        <div ref={colSettingsRef} style={{ position: 'relative', marginLeft: 'auto' }}>
+          <button
+            onClick={() => setShowColSettings(v => !v)}
+            style={{ padding: '7px 12px', borderRadius: 8, border: '1px solid #e2e8f0', background: showColSettings ? '#eff6ff' : '#f8fafc', color: showColSettings ? '#1d4ed8' : '#64748b', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', gap: 5 }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+            列设置
           </button>
-        )}
-        <span style={{ marginLeft: 'auto', fontSize: 12, color: '#94a3b8' }}>共 {list.length} 条记录</span>
+          {/* 列设置面板 */}
+          {showColSettings && (
+            <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 10, boxShadow: '0 12px 32px rgba(0,0,0,0.12)', zIndex: 300, width: 260, padding: '12px 0' }}>
+              <div style={{ padding: '4px 14px 10px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontWeight: 600, fontSize: 13, color: '#1e293b' }}>列显示设置</span>
+                <button onClick={() => saveVisibleCols(DEFAULT_VISIBLE_COLS)} style={{ fontSize: 11, color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>重置默认</button>
+              </div>
+              <div style={{ maxHeight: 320, overflowY: 'auto' }}>
+                {COLUMNS.map((col) => {
+                  const isVisible = visibleCols.includes(col.key);
+                  const vIdx = visibleCols.indexOf(col.key);
+                  return (
+                    <div key={col.key} style={{ display: 'flex', alignItems: 'center', padding: '6px 14px', gap: 6 }}>
+                      <input type="checkbox" checked={isVisible} onChange={() => toggleColVisible(col.key)} style={{ width: 14, height: 14, cursor: 'pointer', flexShrink: 0 }} />
+                      <span style={{ flex: 1, fontSize: 13, color: isVisible ? '#374151' : '#94a3b8' }}>{col.label}</span>
+                      {isVisible && (
+                        <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+                          <button onClick={() => moveCol(col.key, -1)} disabled={vIdx === 0} style={{ padding: '1px 5px', borderRadius: 4, border: '1px solid #e2e8f0', background: '#f8fafc', cursor: vIdx === 0 ? 'not-allowed' : 'pointer', fontSize: 12, color: vIdx === 0 ? '#cbd5e1' : '#374151', lineHeight: 1 }}>↑</button>
+                          <button onClick={() => moveCol(col.key, 1)} disabled={vIdx === visibleCols.length - 1} style={{ padding: '1px 5px', borderRadius: 4, border: '1px solid #e2e8f0', background: '#f8fafc', cursor: vIdx === visibleCols.length - 1 ? 'not-allowed' : 'pointer', fontSize: 12, color: vIdx === visibleCols.length - 1 ? '#cbd5e1' : '#374151', lineHeight: 1 }}>↓</button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ padding: '8px 14px 0', borderTop: '1px solid #f3f4f6', fontSize: 11, color: '#94a3b8' }}>
+                已显示 {visibleCols.length} / {COLUMNS.length} 列 · 设置自动保存
+              </div>
+            </div>
+          )}
+        </div>
+        <span style={{ fontSize: 12, color: '#94a3b8', whiteSpace: 'nowrap' }}>共 {displayList.length} 条记录</span>
       </div>
+
+      {/* ── 批量操作栏（选中时出现） ── */}
+      {selectedIds.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#eff6ff', padding: '8px 14px', borderRadius: 8, border: '1px solid #bfdbfe' }}>
+          <span style={{ fontSize: 13, color: '#1e40af', fontWeight: 600 }}>已选 {selectedIds.length} 条</span>
+          <button
+            onClick={() => { setShowBatchEdit(true); setBatchEditField(''); setBatchEditValue(''); setBatchProjectNames([]); }}
+            style={{ padding: '5px 12px', borderRadius: 6, background: '#3b82f6', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
+          >批量编辑</button>
+          <button
+            onClick={handleBatchDelete}
+            style={{ padding: '5px 12px', borderRadius: 6, background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 12 }}
+          >删除选中</button>
+          <button
+            onClick={() => setSelectedIds([])}
+            style={{ padding: '5px 10px', borderRadius: 6, background: 'transparent', color: '#64748b', border: '1px solid #cbd5e1', cursor: 'pointer', fontSize: 12 }}
+          >取消选中</button>
+        </div>
+      )}
 
       {/* ── 表格 ── */}
       <div style={{ overflowX: 'auto', border: '1px solid #e2e8f0', borderRadius: 10 }}>
-        <table style={{ borderCollapse: 'collapse', minWidth: '100%', fontSize: 12 }}>
+        <table style={{ borderCollapse: 'collapse', width: '100%', tableLayout: 'auto', fontSize: 12 }}>
           <thead>
             <tr style={{ background: '#f8fafc', position: 'sticky', top: 0, zIndex: 10 }}>
               <th style={{ padding: '10px 8px', borderBottom: '2px solid #e2e8f0', width: 36, textAlign: 'center' }}>
-                <input type="checkbox" checked={list.length > 0 && selectedIds.length === list.length} onChange={toggleAll} />
+                <input type="checkbox" checked={displayList.length > 0 && selectedIds.length === displayList.length} onChange={toggleAll} />
               </th>
-              {COLUMNS.map(col => (
-                <th key={col.key} style={{ padding: '10px 10px', borderBottom: '2px solid #e2e8f0', whiteSpace: 'nowrap', textAlign: 'left', minWidth: col.width, color: '#374151', fontWeight: 600, fontSize: 12 }}>
+              {activeColumns.map(col => (
+                <th key={col.key} style={{ padding: '10px 10px', borderBottom: '2px solid #e2e8f0', whiteSpace: 'nowrap', textAlign: 'left', color: '#374151', fontWeight: 600, fontSize: 12 }}>
                   {col.label}
                 </th>
               ))}
@@ -267,14 +448,14 @@ export default function PrimerLibrary() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={COLUMNS.length + 2} style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>加载中...</td></tr>
-            ) : list.length === 0 ? (
-              <tr><td colSpan={COLUMNS.length + 2} style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>
+              <tr><td colSpan={activeColumns.length + 2} style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>加载中...</td></tr>
+            ) : displayList.length === 0 ? (
+              <tr><td colSpan={activeColumns.length + 2} style={{ padding: 40, textAlign: 'center', color: '#94a3b8' }}>
                 <div style={{ fontSize: 16, marginBottom: 8 }}>暂无引物记录</div>
                 <button onClick={openNew} style={{ color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13 }}>+ 添加第一条记录</button>
               </td></tr>
             ) : (
-              list.map((row, ri) => (
+              displayList.map((row, ri) => (
                 <tr key={row.id} style={{ background: ri % 2 === 0 ? '#fff' : '#f8fafc' }}
                   onMouseEnter={e => (e.currentTarget.style.background = '#eff6ff')}
                   onMouseLeave={e => (e.currentTarget.style.background = ri % 2 === 0 ? '#fff' : '#f8fafc')}
@@ -282,8 +463,8 @@ export default function PrimerLibrary() {
                   <td style={{ padding: '8px', borderBottom: '1px solid #f1f5f9', textAlign: 'center' }}>
                     <input type="checkbox" checked={selectedIds.includes(row.id)} onChange={() => toggleSelect(row.id)} />
                   </td>
-                  {COLUMNS.map(col => (
-                    <td key={col.key} style={{ padding: '8px 10px', borderBottom: '1px solid #f1f5f9', whiteSpace: col.key === 'sequence' ? 'nowrap' : 'normal', maxWidth: col.width, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {activeColumns.map(col => (
+                    <td key={col.key} style={{ padding: '8px 10px', borderBottom: '1px solid #f1f5f9', whiteSpace: col.key === 'sequence' ? 'nowrap' : 'normal', maxWidth: col.key === 'sequence' ? 300 : col.key === 'notes' ? 200 : 160, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {col.key === 'projectName' && row[col.key] ? (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
                           {String(row[col.key]).split(',').map((n: string, i: number) => (
@@ -291,8 +472,8 @@ export default function PrimerLibrary() {
                           ))}
                         </div>
                       ) : (
-                        <span style={{ fontFamily: (col as any).mono ? 'monospace' : undefined, fontStyle: (col as any).italic ? 'italic' : undefined, color: col.key === 'name' ? '#1e40af' : '#374151', fontWeight: col.key === 'name' ? 600 : 400 }}>
-                          {row[col.key] ?? ''}
+                        <span style={{ fontFamily: col.mono ? 'monospace' : undefined, fontStyle: col.italic ? 'italic' : undefined, color: col.key === 'name' ? '#1e40af' : '#374151', fontWeight: col.key === 'name' ? 600 : 400 }}>
+                          {row[col.key] != null && row[col.key] !== '' ? row[col.key] : <span style={{ color: '#cbd5e1' }}>-</span>}
                         </span>
                       )}
                     </td>
@@ -308,7 +489,103 @@ export default function PrimerLibrary() {
         </table>
       </div>
 
-      {/* ── 居中弹窗 ── */}
+      {/* ── 批量编辑弹窗 ── */}
+      {showBatchEdit && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ width: 'min(96vw, 480px)', background: '#fff', borderRadius: 14, boxShadow: '0 24px 64px rgba(0,0,0,0.18)', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '18px 24px', borderBottom: '1px solid #f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 16, color: '#1e293b' }}>批量编辑</div>
+                <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>将对已选 {selectedIds.length} 条记录统一修改</div>
+              </div>
+              <button onClick={() => setShowBatchEdit(false)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#9ca3af', fontSize: 24, lineHeight: 1 }}>×</button>
+            </div>
+            <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {/* 选择字段 */}
+              <div>
+                <label style={{ fontSize: 12, color: '#64748b', display: 'block', marginBottom: 6, fontWeight: 600 }}>选择要编辑的字段</label>
+                <select
+                  value={batchEditField}
+                  onChange={e => { setBatchEditField(e.target.value); setBatchEditValue(''); setBatchProjectNames([]); }}
+                  style={{ width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: 7, fontSize: 13, outline: 'none', background: '#fff' }}
+                >
+                  <option value="">-- 请选择要修改的字段 --</option>
+                  {BATCH_FIELDS.map(f => <option key={f.key} value={f.key}>{f.label}</option>)}
+                </select>
+              </div>
+              {/* 输入新值 */}
+              {batchEditField && (() => {
+                const fieldDef = BATCH_FIELDS.find(f => f.key === batchEditField)!;
+                if (fieldDef.type === 'project') {
+                  const filteredProjs = projects.filter(p => !batchProjectSearch || (p.name || '').toLowerCase().includes(batchProjectSearch.toLowerCase()));
+                  return (
+                    <div>
+                      <label style={{ fontSize: 12, color: '#64748b', display: 'block', marginBottom: 6, fontWeight: 600 }}>
+                        新的所属项目
+                        <span style={{ fontSize: 11, color: '#f59e0b', fontWeight: 400, marginLeft: 6 }}>（将覆盖原有项目）</span>
+                      </label>
+                      {batchProjectNames.length > 0 && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 8 }}>
+                          {batchProjectNames.map(name => (
+                            <span key={name} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 20, background: '#dbeafe', color: '#1d4ed8', fontSize: 12 }}>
+                              {name}
+                              <button onClick={() => setBatchProjectNames(p => p.filter(n => n !== name))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6', padding: 0, fontSize: 14 }}>×</button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      <div ref={batchProjectDropRef} style={{ position: 'relative' }}>
+                        <div onClick={() => setBatchProjectDropOpen(v => !v)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 10px', border: '1px solid #e2e8f0', borderRadius: 7, cursor: 'pointer', background: '#f8fafc', fontSize: 13, color: '#64748b' }}>
+                          <span>{batchProjectNames.length === 0 ? '点击选择项目...' : `已选 ${batchProjectNames.length} 个`}</span>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
+                        </div>
+                        {batchProjectDropOpen && (
+                          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #e2e8f0', borderRadius: 8, boxShadow: '0 8px 24px rgba(0,0,0,0.10)', zIndex: 100, maxHeight: 200, overflowY: 'auto', marginTop: 4 }}>
+                            <div style={{ padding: '8px 10px', borderBottom: '1px solid #f3f4f6', position: 'sticky', top: 0, background: '#fff' }}>
+                              <input value={batchProjectSearch} onChange={e => setBatchProjectSearch(e.target.value)} placeholder="搜索项目..." style={{ width: '100%', padding: '5px 10px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 12, outline: 'none', boxSizing: 'border-box' }} onClick={e => e.stopPropagation()} />
+                            </div>
+                            {filteredProjs.map((proj: any) => {
+                              const checked = batchProjectNames.includes(proj.name);
+                              return (
+                                <label key={proj.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', cursor: 'pointer', fontSize: 13, background: checked ? '#eff6ff' : 'transparent' }}>
+                                  <input type="checkbox" checked={checked} onChange={() => setBatchProjectNames(p => checked ? p.filter(n => n !== proj.name) : [...p, proj.name])} style={{ width: 14, height: 14 }} />
+                                  <span style={{ color: checked ? '#1d4ed8' : '#374151', fontWeight: checked ? 600 : 400 }}>{proj.name}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }
+                return (
+                  <div>
+                    <label style={{ fontSize: 12, color: '#64748b', display: 'block', marginBottom: 6, fontWeight: 600 }}>新的{fieldDef.label}</label>
+                    <input
+                      value={batchEditValue}
+                      onChange={e => setBatchEditValue(e.target.value)}
+                      placeholder={`输入新的${fieldDef.label}...`}
+                      style={{ width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: 7, fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
+                    />
+                    <div style={{ fontSize: 11, color: '#f59e0b', marginTop: 4 }}>⚠ 将覆盖所选 {selectedIds.length} 条记录的原有值</div>
+                  </div>
+                );
+              })()}
+            </div>
+            <div style={{ padding: '14px 24px', borderTop: '1px solid #f3f4f6', display: 'flex', gap: 10, justifyContent: 'flex-end', flexShrink: 0, background: '#fafafa', borderRadius: '0 0 14px 14px' }}>
+              <button onClick={() => setShowBatchEdit(false)} style={{ padding: '8px 22px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', fontSize: 13 }}>取消</button>
+              <button
+                onClick={handleBatchEdit}
+                disabled={!batchEditField || (batchEditField === 'projectName' ? batchProjectNames.length === 0 : !batchEditValue.trim())}
+                style={{ padding: '8px 24px', borderRadius: 8, background: '#3b82f6', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600, opacity: (!batchEditField || (batchEditField === 'projectName' ? batchProjectNames.length === 0 : !batchEditValue.trim())) ? 0.5 : 1 }}
+              >确认批量修改</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 新建/编辑弹窗 ── */}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ width: 'min(96vw, 780px)', maxHeight: '90vh', background: '#fff', borderRadius: 14, display: 'flex', flexDirection: 'column', boxShadow: '0 24px 64px rgba(0,0,0,0.18)' }}>

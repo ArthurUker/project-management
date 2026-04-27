@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { formulaAPI, prepAPI, reagentAPI } from '../../api/client';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, FlaskConical } from 'lucide-react';
+import { Search, Plus, FlaskConical, Pencil, TableProperties } from 'lucide-react';
+import FormulaBatchEditor from './FormulaBatchEditor';
 
 // PCR类配方类型（这些配方使用独立的垂直表格，不合并到化学试剂矩阵）
 const PCR_TYPES = ['PCR', 'qPCR', 'RT-PCR', 'RT-qPCR'];
@@ -16,6 +17,11 @@ export default function FormulaMatrix(): JSX.Element {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchText, setSearchText] = useState<string>('');
   const [showCalcModal, setShowCalcModal] = useState<boolean>(false);
+  // 批量编辑
+  const [showBatchEditor, setShowBatchEditor] = useState<boolean>(false);
+  const [batchEditorFormulas, setBatchEditorFormulas] = useState<any[] | undefined>(undefined);
+  // 多选（化学配方行）
+  const [selectedFormulaIds, setSelectedFormulaIds] = useState<Set<string>>(new Set());
   const [calcFormulaIds, setCalcFormulaIds] = useState<string[]>([]);
   const [calcModalCategory, setCalcModalCategory] = useState<string>('all');
   const [calcModalSearch, setCalcModalSearch] = useState<string>('');
@@ -331,12 +337,35 @@ export default function FormulaMatrix(): JSX.Element {
             style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', background: 'linear-gradient(135deg,#667eea 0%,#764ba2 100%)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}
           ><FlaskConical size={14} /> 配制计算</button>
           <button
+            onClick={() => { setBatchEditorFormulas(undefined); setShowBatchEditor(true); }}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', borderRadius: '8px', fontSize: '13px', fontWeight: 500, cursor: 'pointer' }}
+          ><TableProperties size={14} /> 批量新增/编辑</button>
+          <button
             onClick={() => navigate('/reagent-formula/new')}
             className="btn btn-primary"
             style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
           ><Plus size={14} /> 新建配方</button>
         </div>
       </div>
+
+      {/* ══ 多选批量操作栏 ══ */}
+      {selectedFormulaIds.size > 0 && (
+        <div style={{ flexShrink: 0, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8, background: '#eff6ff', padding: '8px 14px', borderRadius: 8, border: '1px solid #bfdbfe' }}>
+          <span style={{ fontSize: 13, color: '#1e40af', fontWeight: 600 }}>已选 {selectedFormulaIds.size} 个配方</span>
+          <button
+            onClick={() => {
+              const selected = filteredFormulas.filter(f => selectedFormulaIds.has(f.id));
+              setBatchEditorFormulas(selected);
+              setShowBatchEditor(true);
+            }}
+            style={{ padding: '5px 14px', borderRadius: 6, background: '#3b82f6', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}
+          ><TableProperties size={13} /> 批量编辑选中配方</button>
+          <button
+            onClick={() => setSelectedFormulaIds(new Set())}
+            style={{ padding: '5px 10px', borderRadius: 6, border: '1px solid #cbd5e1', background: '#fff', color: '#64748b', cursor: 'pointer', fontSize: 12 }}
+          >取消选中</button>
+        </div>
+      )}
 
       {/* ══ 筛选区（固定高度，不随表格滚动） ══ */}
       <div className="card p-3 mb-4" style={{ flexShrink: 0 }}>
@@ -547,10 +576,29 @@ export default function FormulaMatrix(): JSX.Element {
                       <td className="fcol-sticky" style={{
                         position: 'sticky', left: 0, zIndex: 5,
                         borderRight: '2px solid #e2e8f0', boxShadow: '2px 0 6px rgba(0,0,0,.03)',
-                        padding: '4px 14px', verticalAlign: 'middle',
+                        padding: '4px 8px 4px 10px', verticalAlign: 'middle',
                       }}>
-                        <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: 12, lineHeight: 1.3 }}>{f.code}</div>
-                        <div style={{ fontSize: 11, color: '#94a3b8', lineHeight: 1.3 }}>{f.name}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <input
+                            type="checkbox"
+                            checked={selectedFormulaIds.has(f.id)}
+                            onChange={() => setSelectedFormulaIds(prev => {
+                              const next = new Set(prev);
+                              next.has(f.id) ? next.delete(f.id) : next.add(f.id);
+                              return next;
+                            })}
+                            style={{ flexShrink: 0 }}
+                          />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: 12, lineHeight: 1.3 }}>{f.code}</div>
+                            <div style={{ fontSize: 11, color: '#94a3b8', lineHeight: 1.3 }}>{f.name}</div>
+                          </div>
+                          <button
+                            onClick={e => { e.stopPropagation(); navigate(`/reagent-formula/${f.id}/edit`); }}
+                            title="编辑配方"
+                            style={{ flexShrink: 0, padding: '2px 4px', border: '1px solid #e2e8f0', borderRadius: 5, background: '#fff', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center' }}
+                          ><Pencil size={11} /></button>
+                        </div>
                       </td>
                       {groupedReagents.flatMap((g2: any) => g2.reagents).map((col: any) => {
                         const comp = matrix[f.id] && (matrix[f.id][String(col.id)] || matrix[f.id][String(col.name)]);
@@ -602,6 +650,14 @@ export default function FormulaMatrix(): JSX.Element {
       )}
 
       {/* ══ 配制计算弹窗 ══ */}
+      {showBatchEditor && (
+        <FormulaBatchEditor
+          initialFormulas={batchEditorFormulas}
+          onClose={() => setShowBatchEditor(false)}
+          onSaved={() => { setShowBatchEditor(false); setSelectedFormulaIds(new Set()); load(); }}
+        />
+      )}
+
       {showCalcModal && (
         <>
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.4)', backdropFilter: 'blur(4px)', zIndex: 999 }} onClick={() => setShowCalcModal(false)} />
