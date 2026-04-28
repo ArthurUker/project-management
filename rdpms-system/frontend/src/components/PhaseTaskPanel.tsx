@@ -37,8 +37,8 @@ function TaskEditModal({ task, onSave, onClose }: {
 }) {
   const [form, setForm] = useState<Partial<Task>>({ title: '', priority: '中', estimatedDays: 3, role: '', ...task });
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 12, width: 380, boxShadow: '0 20px 60px rgba(0,0,0,.18)', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: '#fff', borderRadius: 12, width: 380, boxShadow: '0 20px 60px rgba(0,0,0,.18)', overflow: 'hidden' }}>
         <div style={{ padding: '14px 18px', borderBottom: '1px solid #f1f5f9', fontWeight: 700, fontSize: 14, color: '#1e293b', display: 'flex', alignItems: 'center', gap: 8 }}>
           {task.id ? '编辑任务' : '新建任务'}
           {task.templateRef && <span style={{ fontSize: 11, color: '#3b82f6', background: '#eff6ff', padding: '2px 7px', borderRadius: 20, fontWeight: 500 }}>引用自模版</span>}
@@ -126,8 +126,8 @@ function TaskTemplatePickerModal({ existingTitles, onImport, onClose }: {
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={onClose}>
-      <div style={{ background: '#fff', borderRadius: 14, width: 460, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 72px rgba(0,0,0,.18)', overflow: 'hidden' }} onClick={e => e.stopPropagation()}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ background: '#fff', borderRadius: 14, width: 460, maxHeight: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 72px rgba(0,0,0,.18)', overflow: 'hidden' }}>
         <div style={{ padding: '14px 18px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontWeight: 700, fontSize: 14, color: '#1e293b' }}>从任务模版库引用</div>

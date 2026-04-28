@@ -275,10 +275,9 @@ function TaskModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div 
         className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
       >
         {/* 头部 */}
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
