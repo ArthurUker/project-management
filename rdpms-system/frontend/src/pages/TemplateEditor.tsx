@@ -531,9 +531,6 @@ export default function TemplateEditor() {
       // Ensure phases are sorted by their explicit order before rendering (important for parallel numbering)
       setPhases(loaded.sort((a, b) => (a.order || 0) - (b.order || 0)));
 
-      console.log('[DEBUG] normalized phases:', (loaded || []).map(p => ({ name: p.name, nextPhaseIds: p.nextPhaseIds })));
-      console.log('[DEBUG] raw API response (template):', res);
-
       const contentObj = (() => {
         const c = (res as any).content ?? (res as any).data?.content;
         if (typeof c === 'string') {

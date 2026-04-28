@@ -278,7 +278,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
       </div>
 
       {showDrawer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 py-6" onClick={(e) => { if (e.target === e.currentTarget) closeEditor(); }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 py-6">
           <div className="w-full max-w-5xl overflow-hidden rounded-3xl border border-white/60 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
             <div className="flex items-start justify-between border-b border-gray-100 bg-gradient-to-r from-slate-50 via-blue-50 to-white px-6 py-5">
               <div>

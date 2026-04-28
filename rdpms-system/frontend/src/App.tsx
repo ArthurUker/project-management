@@ -18,6 +18,7 @@ import FormulaEditor from './pages/reagent-formula/FormulaEditor';
 import PrepCalculator from './pages/reagent-formula/PrepCalculator';
 import TemplateLibrary from './pages/TemplateLibrary';
 import TemplateEditor from './pages/TemplateEditor';
+import BackupManager from './pages/BackupManager';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAppStore();
@@ -76,6 +77,7 @@ function App() {
           <Route path="tasks" element={<Tasks />} />
           <Route path="users" element={<Users />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="backup" element={<BackupManager />} />
         </Route>
         
         <Route path="*" element={<Navigate to="/" replace />} />
