@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { docsAPI, formulaAPI } from '../api/client';
 import { useAppStore } from '../store/appStore';
 import { ArrowLeft, Edit2, Trash2, Clock, User, Tag, FileText, Save, X } from 'lucide-react';
+import MindMapView from '../components/MindMapView';
 
 interface DocDocument {
   id: string;
@@ -110,6 +111,7 @@ export default function KnowledgeDetail() {
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState<any>({});
   const [saving, setSaving] = useState(false);
+  const [viewMode, setViewMode] = useState<'doc' | 'mindmap'>('doc');
 
   // 引用配方弹窗
   const [showFormulaModal, setShowFormulaModal] = useState(false);
@@ -247,7 +249,7 @@ export default function KnowledgeDetail() {
       { bg: '#fee2e2', color: '#dc2626', label: '废弃' };
 
   return (
-    <div style={{ padding: '16px 24px', maxWidth: 960, margin: '0 auto' }}>
+    <div style={{ padding: '16px 24px', maxWidth: 960, margin: '0 auto', height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* 顶部操作栏 */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
         <button onClick={() => navigate('/knowledge')} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#64748b', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14 }}>
@@ -279,7 +281,7 @@ export default function KnowledgeDetail() {
       </div>
 
       {/* 文档卡片 */}
-      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         {/* 顶部信息区 */}
         <div style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%)', padding: '24px 32px', borderBottom: '1px solid #e2e8f0' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
@@ -366,7 +368,8 @@ export default function KnowledgeDetail() {
           )}
         </div>
 
-        {/* 文档内容 */}
+        {/* 文档内容 + 版本历史（可滚动区域） */}
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
         <div style={{ padding: '24px 32px' }}>
           {editing ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -393,13 +396,67 @@ export default function KnowledgeDetail() {
               <textarea
                 value={editForm.content}
                 onChange={e => setEditForm({ ...editForm, content: e.target.value })}
-                placeholder="输入文档正文内容，支持 Markdown 表格语法（| 列1 | 列2 |）..."
+                placeholder={`输入文档正文内容，支持 Markdown 语法
+
+【思维导图模式语法示例】
+# 主题名称
+## 一级分支
+### 二级分支
+- 叶节点
+- 叶节点
+## 另一个分支
+- 子项1
+- 子项2`}
                 style={{ width: '100%', minHeight: 360, padding: '10px 14px', border: '1.5px solid #bfdbfe', borderRadius: 8, fontSize: 13, fontFamily: 'monospace', resize: 'vertical', boxSizing: 'border-box', lineHeight: 1.7 }}
               />
-              <p style={{ fontSize: 11, color: '#94a3b8' }}>支持 Markdown 语法：# 标题，| 表格 |---| 内容 |，普通文本</p>
+              <p style={{ fontSize: 11, color: '#94a3b8' }}>思维导图：# 根节点 → ## 分支 → ### 子分支 → - 叶节点 ｜ 表格：| 列1 | 列2 |---| 数据 |</p>
             </div>
           ) : doc.content ? (
-            renderContent(doc.content)
+            <div>
+              {/* 视图切换 */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 16, padding: '4px', background: '#f1f5f9', borderRadius: 8, width: 'fit-content' }}>
+                <button
+                  onClick={() => setViewMode('doc')}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 5, padding: '5px 14px',
+                    borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 500,
+                    background: viewMode === 'doc' ? '#fff' : 'transparent',
+                    color: viewMode === 'doc' ? '#1e40af' : '#64748b',
+                    boxShadow: viewMode === 'doc' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                  </svg>
+                  文档
+                </button>
+                <button
+                  onClick={() => setViewMode('mindmap')}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 5, padding: '5px 14px',
+                    borderRadius: 6, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 500,
+                    background: viewMode === 'mindmap' ? '#fff' : 'transparent',
+                    color: viewMode === 'mindmap' ? '#1e40af' : '#64748b',
+                    boxShadow: viewMode === 'mindmap' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="3"/><line x1="3" y1="12" x2="9" y2="12"/><line x1="15" y1="12" x2="21" y2="12"/><line x1="12" y1="3" x2="12" y2="9"/><line x1="12" y1="15" x2="12" y2="21"/>
+                  </svg>
+                  思维导图
+                </button>
+              </div>
+              {/* 内容区 */}
+              {viewMode === 'mindmap' ? (
+                <div style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: 16, background: '#fafbfc', minHeight: 200 }}>
+                  <MindMapView content={doc.content} />
+                </div>
+              ) : (
+                renderContent(doc.content)
+              )}
+            </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '48px 0', color: '#94a3b8' }}>
               <FileText size={40} style={{ margin: '0 auto 12px', opacity: 0.3, display: 'block' }} />
@@ -427,6 +484,7 @@ export default function KnowledgeDetail() {
             </div>
           </div>
         )}
+        </div>
       </div>
 
       {/* 引用配方弹窗 */}
