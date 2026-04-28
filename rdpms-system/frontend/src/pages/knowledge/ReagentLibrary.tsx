@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { reagentMaterialsAPI } from '../../api/client';
 
 type DefaultMaterial = {
@@ -73,6 +73,18 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
   const [showForceConfirm, setShowForceConfirm] = useState(false);
   const [forceDetails, setForceDetails] = useState<any[]>([]);
 
+  // 滚动位置保持：编辑保存后恢复原位
+  const containerRef = useRef<HTMLDivElement>(null);
+  const savedScrollRef = useRef<number | null>(null);
+  const findScrollParent = (el: HTMLElement | null): HTMLElement | null => {
+    while (el) {
+      const style = window.getComputedStyle(el);
+      if ((style.overflowY === 'auto' || style.overflowY === 'scroll') && el.scrollHeight > el.clientHeight) return el;
+      el = el.parentElement;
+    }
+    return null;
+  };
+
   const closeEditor = () => {
     setShowDrawer(false);
     setEditing(null);
@@ -112,6 +124,15 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
       } else {
         setList(items);
       }
+      // 恢复保存前的滚动位置
+      if (savedScrollRef.current !== null) {
+        const pos = savedScrollRef.current;
+        savedScrollRef.current = null;
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          const parent = findScrollParent(containerRef.current);
+          if (parent) parent.scrollTop = pos;
+        }));
+      }
     } catch (e) {
       console.error('加载试剂原料失败', e);
     } finally { setLoading(false); }
@@ -133,6 +154,8 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
     try {
       if (editing) await reagentMaterialsAPI.update(editing.id, data);
       else await reagentMaterialsAPI.create(data);
+      // 保存当前滚动位置，load() 完成后恢复
+      savedScrollRef.current = findScrollParent(containerRef.current)?.scrollTop ?? null;
       closeEditor();
       load();
     } catch (err) { console.error(err); alert('保存失败'); }
@@ -187,7 +210,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
   };
 
   return (
-    <div>
+    <div ref={containerRef}>
       {!hideTopButton && (
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">

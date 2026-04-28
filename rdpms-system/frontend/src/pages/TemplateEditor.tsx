@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api, { projectTemplatesAPI } from '../api/client';
+import { projectTemplatesAPI } from '../api/client';
 import ProcessFlowDiagram from '../components/ProcessFlowDiagram';
 import PhaseTaskPanel from '../components/PhaseTaskPanel';
 import { AlignLeft, X } from 'lucide-react';
@@ -438,31 +438,23 @@ export default function TemplateEditor() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<number>(0);
-  const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
 
   // 并行阶段选择弹窗
   const [parallelModal, setParallelModal] = useState<null | { open: boolean; sourceId: string; targetId: string }>(null);
-  const [parallelLoading, setParallelLoading] = useState(false);
 
   const handleAddParallel = useCallback((sourceId: string, targetId: string) => {
     setParallelModal({ open: true, sourceId, targetId });
   }, []);
 
-  const handleRemoveParallel = useCallback(async (targetPhaseId: string) => {
+  const handleRemoveParallel = useCallback((targetPhaseId: string) => {
     if (!parallelModal) return;
-    if (parallelLoading) return;
-    setParallelLoading(true);
-    try {
-      await api.delete(`/phases/${parallelModal.sourceId}/transitions/${targetPhaseId}`);
-      await fetchTemplate();
-    } catch (err: any) {
-      console.error('移除并行失败', err);
-      alert(err?.response?.data?.error ?? '移除失败');
-    } finally {
-      setParallelLoading(false);
-    }
-  }, [parallelModal, parallelLoading]);
+    setPhases(prev => prev.map(p =>
+      p.id === parallelModal.sourceId
+        ? { ...p, nextPhaseIds: (p.nextPhaseIds ?? []).filter(id => id !== targetPhaseId) }
+        : p
+    ));
+  }, [parallelModal]);
 
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
@@ -565,151 +557,140 @@ export default function TemplateEditor() {
     }
   }
 
-  // 拖拽连线回调：建立阶段流转关系（旧名兼容）
-  const handlePhaseConnect = useCallback(async (sourceId: string, targetId: string) => {
-    try {
-      await api.post(`/phases/${sourceId}/transitions`, { toPhaseId: targetId });
-      await fetchTemplate();
-    } catch (err: any) {
-      console.error('建立阶段流转失败', err);
-    }
+  // 拖拽连线回调：建立阶段流转关系（本地状态操作，保存时一并提交）
+  const handlePhaseConnect = useCallback((sourceId: string, targetId: string) => {
+    setPhases(prev => prev.map(p =>
+      p.id === sourceId
+        ? { ...p, nextPhaseIds: [...new Set([...(p.nextPhaseIds ?? []), targetId])] }
+        : p
+    ));
   }, []);
 
   // 在右侧面板中添加后继阶段（并行）
   const handleAddTransition = useCallback(
-    async (fromId: string, toId: string) => {
-      try {
-        await api.post(`/phases/${fromId}/transitions`, { toPhaseId: toId });
-        await fetchTemplate();
-        console.log('后继阶段已添加');
-      } catch (err: any) {
-        console.error('添加后继阶段失败', err);
-        alert(err?.response?.data?.error ?? '添加失败');
-      }
+    (fromId: string, toId: string) => {
+      setPhases(prev => prev.map(p =>
+        p.id === fromId
+          ? { ...p, nextPhaseIds: [...new Set([...(p.nextPhaseIds ?? []), toId])] }
+          : p
+      ));
     },
     []
   );
 
   // 右侧面板：删除后继阶段
   const handleRemoveTransition = useCallback(
-    async (fromId: string, toId: string) => {
-      try {
-        await api.delete(`/phases/${fromId}/transitions/${toId}`);
-        await fetchTemplate();
-        console.log('后继阶段已移除');
-      } catch (err: any) {
-        console.error('移除后继阶段失败', err);
-        alert('移除失败');
-      }
+    (fromId: string, toId: string) => {
+      setPhases(prev => prev.map(p =>
+        p.id === fromId
+          ? { ...p, nextPhaseIds: (p.nextPhaseIds ?? []).filter(id => id !== toId) }
+          : p
+      ));
     },
     []
   );
 
-  // 流程图上删除连线时调用（同步后端）
+  // 流程图上删除连线时调用（本地状态）
   const handleEdgeDelete = useCallback(
-    async (fromId: string, toId: string) => {
-      try {
-        await api.delete(`/phases/${fromId}/transitions/${toId}`);
-        await fetchTemplate();
-        console.log('连线已删除');
-      } catch (err: any) {
-        console.error('删除连线失败', err);
-        alert('删除失败');
-      }
+    (fromId: string, toId: string) => {
+      setPhases(prev => prev.map(p =>
+        p.id === fromId
+          ? { ...p, nextPhaseIds: (p.nextPhaseIds ?? []).filter(id => id !== toId) }
+          : p
+      ));
     },
     []
   );
 
-  // 边重连：删旧 transition + 建新 transition
-  const handleEdgeReconnect = useCallback(async (oldEdge: any, newConnection: any) => {
+  // 边重连：删旧连线 + 建新连线（本地状态）
+  const handleEdgeReconnect = useCallback((oldEdge: any, newConnection: any) => {
     const oldFrom = oldEdge?.source;
     const oldTo = oldEdge?.target;
     const newFrom = newConnection?.source;
     const newTo = newConnection?.target;
-
     if (!oldFrom || !oldTo || !newFrom || !newTo) {
       console.warn('[TemplateEditor] Invalid reconnect params', oldEdge, newConnection);
       return;
     }
-
-    try {
-      await api.delete(`/phases/${oldFrom}/transitions/${oldTo}`);
-    } catch (e) {
-      // ignore delete failure
-      console.warn('Old transition delete may have failed', e);
-    }
-
-    try {
-      await api.post(`/phases/${newFrom}/transitions`, { toPhaseId: newTo });
-      await fetchTemplate();
-      console.log('[TemplateEditor] Reconnected:', oldFrom, '→', oldTo, 'to', newFrom, '→', newTo);
-    } catch (err) {
-      console.error('[TemplateEditor] Reconnect failed:', err);
-    }
+    setPhases(prev => prev.map(p => {
+      if (p.id === oldFrom) {
+        return { ...p, nextPhaseIds: (p.nextPhaseIds ?? []).filter(id => id !== oldTo) };
+      }
+      if (p.id === newFrom) {
+        return { ...p, nextPhaseIds: [...new Set([...(p.nextPhaseIds ?? []), newTo])] };
+      }
+      return p;
+    }));
   }, []);
 
   // 拖拽放置操作：设为并行（来自画布的 drop menu）
-  const handleDropParallel = useCallback(async (draggedPhaseId: string, targetPhaseId: string) => {
-    try {
-      // 找到 target 的前置阶段（即那些指向 target 的阶段），取第一个作为分叉点
-      const prevPhase = phases.find(p => (p.nextPhaseIds ?? []).includes(targetPhaseId));
-
-      // ① 前置 -> dragged（分叉）
+  const handleDropParallel = useCallback((draggedPhaseId: string, targetPhaseId: string) => {
+    setPhases(prev => {
+      let updated = [...prev];
+      // 找到指向 target 的前置阶段，增加 dragged 为其并行后继
+      const prevPhase = updated.find(p => (p.nextPhaseIds ?? []).includes(targetPhaseId));
       if (prevPhase) {
-        await api.post(`/phases/${prevPhase.id}/transitions`, { toPhaseId: draggedPhaseId });
+        updated = updated.map(p =>
+          p.id === prevPhase.id
+            ? { ...p, nextPhaseIds: [...new Set([...(p.nextPhaseIds ?? []), draggedPhaseId])] }
+            : p
+        );
       }
-
-      // ② dragged -> target 的后继（汇合点），与 target 共享汇合后继
-      const targetPhase = phases.find(p => p.id === targetPhaseId);
+      // dragged -> target 的第一个后继（汇合点）
+      const targetPhase = updated.find(p => p.id === targetPhaseId);
       const mergeNodeId = (targetPhase?.nextPhaseIds ?? [])[0];
       if (mergeNodeId) {
-        await api.post(`/phases/${draggedPhaseId}/transitions`, { toPhaseId: mergeNodeId }).catch(() => {});
+        updated = updated.map(p =>
+          p.id === draggedPhaseId
+            ? { ...p, nextPhaseIds: [...new Set([...(p.nextPhaseIds ?? []), mergeNodeId])] }
+            : p
+        );
       }
-
-      // ③ 如果 dragged 原来有前置，将其断开（避免保留旧串行关系），但不要删除与新 prevPhase 相同的引用
-      const draggedPrevPhase = phases.find(p => (p.nextPhaseIds ?? []).includes(draggedPhaseId));
-      if (draggedPrevPhase && draggedPrevPhase.id !== prevPhase?.id) {
-        await api.delete(`/phases/${draggedPrevPhase.id}/transitions/${draggedPhaseId}`).catch(() => {});
+      // 移除 dragged 原有串行前置（如果与新 prevPhase 不同）
+      const draggedPrevPhase = updated.find(p =>
+        p.id !== prevPhase?.id && (p.nextPhaseIds ?? []).includes(draggedPhaseId)
+      );
+      if (draggedPrevPhase) {
+        updated = updated.map(p =>
+          p.id === draggedPrevPhase.id
+            ? { ...p, nextPhaseIds: (p.nextPhaseIds ?? []).filter(id => id !== draggedPhaseId) }
+            : p
+        );
       }
-
-      await fetchTemplate();
-      console.log('已设为并行阶段');
-    } catch (err: any) {
-      console.error('设为并行失败', err);
-      alert(err?.response?.data?.error ?? '设为并行失败');
-    }
-  }, [phases]);
+      return updated;
+    });
+  }, []);
 
   // 拖拽放置操作：插入到目标节点之后
-  const handleDropInsertAfter = useCallback(async (draggedPhaseId: string, targetPhaseId: string) => {
-    try {
-      const targetPhase = phases.find(p => p.id === targetPhaseId);
-      const targetNextIds = targetPhase?.nextPhaseIds ?? [];
+  const handleDropInsertAfter = useCallback((draggedPhaseId: string, targetPhaseId: string) => {
+    setPhases(prev => {
+      let updated = [...prev];
+      const targetPhase = updated.find(p => p.id === targetPhaseId);
+      const targetNextIds = (targetPhase?.nextPhaseIds ?? []).filter(id => id !== draggedPhaseId);
 
-      // 1. target -> dragged
-      await api.post(`/phases/${targetPhaseId}/transitions`, { toPhaseId: draggedPhaseId });
-
-      // 2. dragged -> 原后继
+      // target -> dragged
+      updated = updated.map(p =>
+        p.id === targetPhaseId
+          ? { ...p, nextPhaseIds: [draggedPhaseId] }
+          : p
+      );
+      // dragged -> 原后继
       if (targetNextIds.length > 0) {
-        await api.post(`/phases/${draggedPhaseId}/transitions`, { toPhaseId: targetNextIds[0] });
-        // 3. 删除 target -> 原后继
-        await api.delete(`/phases/${targetPhaseId}/transitions/${targetNextIds[0]}`);
+        updated = updated.map(p =>
+          p.id === draggedPhaseId
+            ? { ...p, nextPhaseIds: [...new Set([...(p.nextPhaseIds ?? []), targetNextIds[0]])] }
+            : p
+        );
       }
-
-      await fetchTemplate();
-      console.log('已插入到节点之后');
-    } catch (err: any) {
-      console.error('插入失败', err);
-      alert(err?.response?.data?.error ?? '插入失败');
-    }
-  }, [phases]);
+      return updated;
+    });
+  }, []);
 
   // 兼容旧名：handleConnect （一些 JSX 仍引用此名）
 
   // 阶段节点点击回调
   const handlePhaseClick = useCallback((phase: any) => {
     setSelectedPhaseId(phase.id);
-    setRightPanelOpen(true);
     setActiveTab(0);
   }, []);
 
@@ -872,7 +853,7 @@ export default function TemplateEditor() {
                           key={phase.id}
                           phase={phase}
                           isSelected={selectedPhase?.id === phase.id}
-                          onClick={() => { setSelectedPhaseId(phase.id); setRightPanelOpen(true); setActiveTab(0); }}
+                          onClick={() => { setSelectedPhaseId(phase.id); setActiveTab(0); }}
                         />
                       ))}
                     </SortableContext>
@@ -996,63 +977,35 @@ export default function TemplateEditor() {
           )}
         </div>
 
-        {/* ── 右侧收起/展开按钮（悬浮在面板边缘） ── */}
-        <button
-          onClick={() => { setRightPanelOpen(v => { const next = !v; if (!next) { setSelectedPhaseId(null); } return next; }); }}
-          className={[ 
-            'absolute z-20 top-1/2 -translate-y-1/2',
-            'flex items-center justify-center',
-            'w-5 h-14 rounded-l-xl',
-            rightPanelOpen ? 'right-80' : 'right-0',
-            rightPanelOpen
-              ? 'bg-blue-500 hover:bg-blue-600 active:bg-blue-700'
-              : 'bg-gray-400 hover:bg-blue-500 active:bg-blue-600',
-            'text-white shadow-lg',
-            'transition-all duration-300 ease-in-out',
-            'cursor-pointer select-none',
-          ].join(' ')}
-          title={rightPanelOpen ? '收起节点信息' : '展开节点信息'}
-        >
-          <svg
-            width="10" height="16" viewBox="0 0 10 16" fill="none"
-            className={[
-              'transition-transform duration-300',
-              rightPanelOpen ? 'rotate-180' : 'rotate-0',
-            ].join(' ')}
+        {/* ── 节点编辑居中弹窗 ── */}
+        {selectedPhase && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center"
+            style={{ background: 'rgba(15,23,42,0.45)' }}
+            onClick={() => setSelectedPhaseId(null)}
           >
-            <path
-              d="M7 2L2 8L7 14"
-              stroke="white" strokeWidth="2.2"
-              strokeLinecap="round" strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-
-        {/* ── 右侧节点信息面板 ── */}
-        <div
-          className={[
-            'relative flex-shrink-0 flex flex-col',
-            'border-l border-gray-200 bg-white',
-            'transition-all duration-300 ease-in-out',
-            rightPanelOpen ? 'w-80' : 'w-0 overflow-hidden',
-          ].join(' ')}
-        >
-          {rightPanelOpen && selectedPhase && (
-            <div className="flex flex-col h-full w-80">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+            <div
+              className="flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden"
+              style={{ width: 'min(90vw, 860px)', height: 'min(85vh, 720px)' }}
+              onClick={e => e.stopPropagation()}
+            >
+              {/* 弹窗顶部 */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
                 <h3 className="text-sm font-semibold text-gray-800 truncate">{selectedPhase.name}</h3>
-                <button onClick={() => { setRightPanelOpen(false); setSelectedPhaseId(null); }} className="p-1 rounded hover:bg-gray-100 text-gray-400">✕</button>
+                <button onClick={() => setSelectedPhaseId(null)} className="p-1 rounded hover:bg-gray-100 text-gray-400">✕</button>
               </div>
 
-              <div className="flex border-b border-gray-100">
+              {/* 标签页 */}
+              <div className="flex border-b border-gray-100 flex-shrink-0">
                 {['节点信息', '节点流转', '节点事件', '节点任务'].map((tab, i) => (
-                  <button key={i} onClick={() => setActiveTab(i)} className={`flex-1 py-2 text-xs font-medium transition-colors ${activeTab === i ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>
+                  <button key={i} onClick={() => setActiveTab(i)} className={`flex-1 py-2.5 text-xs font-medium transition-colors ${activeTab === i ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}>
                     {tab}
                   </button>
                 ))}
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {/* 内容区 */}
+              <div className="flex-1 overflow-y-auto p-5 space-y-4">
                 {activeTab === 0 && (
                   <>
                     <div>
@@ -1063,8 +1016,8 @@ export default function TemplateEditor() {
                     <div>
                       <label className="text-xs font-medium text-gray-500 mb-1 block">节点类型</label>
                       <div className="flex gap-2">
-                        {[{ value: 'normal', label: '普通', color: 'blue' },{ value: 'milestone', label: '里程碑', color: 'orange' },{ value: 'approval', label: '审批', color: 'purple' }].map(({ value, label }) => (
-                          <button key={value} onClick={() => updatePhase(selectedPhase.id, { type: value as any })} className={`flex-1 py-1.5 text-xs rounded-md border transition-colors ${selectedPhase.type === value ? 'border-gray-300 font-medium text-gray-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
+                        {[{ value: 'normal', label: '普通' },{ value: 'milestone', label: '里程碑' },{ value: 'approval', label: '审批' }].map(({ value, label }) => (
+                          <button key={value} onClick={() => updatePhase(selectedPhase.id, { type: value as any })} className={`flex-1 py-1.5 text-xs rounded-md border transition-colors ${selectedPhase.type === value ? 'border-blue-400 bg-blue-50 font-medium text-blue-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
                             {label}
                           </button>
                         ))}
@@ -1095,6 +1048,7 @@ export default function TemplateEditor() {
                 )}
 
                 {activeTab === 1 && selectedPhase && (
+
                   <div className="p-4 space-y-6">
 
                     {/* ── 前置阶段（流入） ── */}
@@ -1280,7 +1234,8 @@ export default function TemplateEditor() {
                 )}
               </div>
             </div>
-          )}
+          </div>
+        )}
           {/* 并行阶段选择弹窗 */}
           {parallelModal?.open && (
             <div
@@ -1390,7 +1345,6 @@ export default function TemplateEditor() {
             </div>
           )}
 
-        </div>
       </div>
     </div>
   );

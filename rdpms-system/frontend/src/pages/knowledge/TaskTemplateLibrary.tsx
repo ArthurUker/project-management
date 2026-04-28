@@ -75,8 +75,17 @@ export default function TaskTemplateLibrary() {
     const data:any = Object.fromEntries(form as any);
     // tags from comma-separated
     data.tags = data.tags ? data.tags.split(',').map((t:string)=>t.trim()).filter(Boolean) : [];
+    // convert numeric strings to numbers (FormData returns strings)
+    data.estimatedDays = parseInt(data.estimatedDays) || 0;
     // steps JSON is provided in hidden input stepsJson
-    try { data.steps = JSON.parse(data.stepsJson || '[]'); } catch(e){ data.steps = []; }
+    try {
+      const rawSteps = JSON.parse(data.stepsJson || '[]');
+      data.steps = rawSteps.map((s: any, idx: number) => ({
+        ...s,
+        order: parseInt(s.order) || idx + 1,
+        estimatedHours: s.estimatedHours !== undefined && s.estimatedHours !== '' ? parseFloat(s.estimatedHours) : null,
+      }));
+    } catch(e){ data.steps = []; }
     save(data);
   };
 
