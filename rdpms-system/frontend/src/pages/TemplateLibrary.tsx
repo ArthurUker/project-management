@@ -197,8 +197,10 @@ export default function TemplateLibrary() {
   const isAdmin = user?.role === 'admin';
 
   return (
-    <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
+      {/* ══ 固定顶部：标题 + 统计卡片 + 筛选 ══ */}
+      <div style={{ flexShrink: 0 }}>
       {/* ══ 页面标题行 ══ */}
       <div className="flex items-center justify-between mb-6">
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -310,7 +312,10 @@ export default function TemplateLibrary() {
           </select>
         </div>
       </div>
+      </div>{/* ── 固定顶部结束 ── */}
 
+      {/* ══ 可滚动内容区：模版卡片 ══ */}
+      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingBottom: 24 }}>
       {/* ══ 内容区 ══ */}
       {loading ? (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
@@ -343,6 +348,8 @@ export default function TemplateLibrary() {
           ))}
         </div>
       )}
+
+      </div>{/* ── 可滚动内容区结束 ── */}
 
       {showCreate && (
         <CreateTemplateModal onClose={() => setShowCreate(false)} onCreated={fetchList} />

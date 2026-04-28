@@ -31,6 +31,35 @@ interface PhaseTask {
   enabled: boolean;
 }
 
+// 节点事件类型
+export type EventTrigger = 'onEnter' | 'onComplete' | 'onOverdue';
+export type EventActionType = 'notify' | 'updateField' | 'startApproval' | 'webhook';
+
+export interface PhaseEventAction {
+  id: string;
+  type: EventActionType;
+  config: {
+    /** notify: 通知对象 */
+    notifyRoles?: string[];   // 角色列表
+    notifyContent?: string;   // 通知内容
+    /** updateField */
+    fieldName?: string;
+    fieldValue?: string;
+    /** startApproval */
+    approvalProcess?: string;
+    /** webhook */
+    webhookUrl?: string;
+  };
+}
+
+export interface PhaseEvent {
+  id: string;
+  trigger: EventTrigger;
+  label?: string;           // 自定义描述
+  enabled: boolean;
+  actions: PhaseEventAction[];
+}
+
 interface Phase {
   id: string;
   name: string;
@@ -43,6 +72,7 @@ interface Phase {
   completionTip: string;
   allowSkip: boolean;
   tasks: PhaseTask[];
+  events: PhaseEvent[];
 }
 
 interface Milestone {
@@ -50,6 +80,270 @@ interface Milestone {
   name: string;
   phaseId: string;
   offsetDays: number;
+}
+
+// ─── Node Events Panel ─────────────────────────────────────────────────────
+
+const TRIGGER_OPTIONS: { value: EventTrigger; label: string; icon: string; desc: string }[] = [
+  { value: 'onEnter',   label: '进入阶段',   icon: '▶', desc: '当项目流转到该阶段时触发' },
+  { value: 'onComplete',label: '完成阶段',   icon: '✓', desc: '当该阶段被标记为完成时触发' },
+  { value: 'onOverdue', label: '阶段逾期',   icon: '⚠', desc: '当该阶段超过预计时间未完成时触发' },
+];
+
+const ACTION_OPTIONS: { value: EventActionType; label: string; icon: string }[] = [
+  { value: 'notify',        label: '发送通知',   icon: '🔔' },
+  { value: 'updateField',   label: '更新字段',   icon: '✏️' },
+  { value: 'startApproval', label: '发起审批',   icon: '📋' },
+  { value: 'webhook',       label: '调用 Webhook', icon: '🔗' },
+];
+
+const NOTIFY_ROLES = ['项目负责人', '研发工程师', '测试工程师', '质量经理', '项目管理员'];
+
+function ActionEditor({ action, onChange, onDelete }: {
+  action: PhaseEventAction;
+  onChange: (a: PhaseEventAction) => void;
+  onDelete: () => void;
+}) {
+  const opt = ACTION_OPTIONS.find(o => o.value === action.type);
+  return (
+    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* 动作类型选择 */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 14 }}>{opt?.icon}</span>
+          <select
+            value={action.type}
+            onChange={e => onChange({ ...action, type: e.target.value as EventActionType, config: {} })}
+            style={{ fontSize: 12, fontWeight: 600, color: '#374151', border: 'none', background: 'transparent', outline: 'none', cursor: 'pointer' }}
+          >
+            {ACTION_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+        <button onClick={onDelete} style={{ color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', fontSize: 14, padding: '2px 6px' }}>×</button>
+      </div>
+
+      {/* 动作配置 */}
+      {action.type === 'notify' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div>
+            <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginBottom: 4 }}>通知对象</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              {NOTIFY_ROLES.map(role => {
+                const checked = (action.config.notifyRoles || []).includes(role);
+                return (
+                  <button
+                    key={role}
+                    onClick={() => {
+                      const roles = action.config.notifyRoles || [];
+                      const next = checked ? roles.filter((r: string) => r !== role) : [...roles, role];
+                      onChange({ ...action, config: { ...action.config, notifyRoles: next } });
+                    }}
+                    style={{ padding: '3px 8px', borderRadius: 12, fontSize: 11, border: `1px solid ${checked ? '#3b82f6' : '#e2e8f0'}`, background: checked ? '#eff6ff' : '#fff', color: checked ? '#2563eb' : '#64748b', cursor: 'pointer', fontWeight: checked ? 600 : 400 }}
+                  >{role}</button>
+                );
+              })}
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginBottom: 4 }}>通知内容（可选）</div>
+            <input
+              value={action.config.notifyContent || ''}
+              onChange={e => onChange({ ...action, config: { ...action.config, notifyContent: e.target.value } })}
+              placeholder="留空则发送默认消息"
+              style={{ width: '100%', padding: '5px 8px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
+            />
+          </div>
+        </div>
+      )}
+      {action.type === 'updateField' && (
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            value={action.config.fieldName || ''}
+            onChange={e => onChange({ ...action, config: { ...action.config, fieldName: e.target.value } })}
+            placeholder="字段名"
+            style={{ flex: 1, padding: '5px 8px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 12, outline: 'none' }}
+          />
+          <input
+            value={action.config.fieldValue || ''}
+            onChange={e => onChange({ ...action, config: { ...action.config, fieldValue: e.target.value } })}
+            placeholder="目标值"
+            style={{ flex: 1, padding: '5px 8px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 12, outline: 'none' }}
+          />
+        </div>
+      )}
+      {action.type === 'startApproval' && (
+        <input
+          value={action.config.approvalProcess || ''}
+          onChange={e => onChange({ ...action, config: { ...action.config, approvalProcess: e.target.value } })}
+          placeholder="审批流程名称"
+          style={{ width: '100%', padding: '5px 8px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 12, outline: 'none', boxSizing: 'border-box' }}
+        />
+      )}
+      {action.type === 'webhook' && (
+        <input
+          value={action.config.webhookUrl || ''}
+          onChange={e => onChange({ ...action, config: { ...action.config, webhookUrl: e.target.value } })}
+          placeholder="https://your-webhook-url"
+          style={{ width: '100%', padding: '5px 8px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 12, outline: 'none', fontFamily: 'monospace', boxSizing: 'border-box' }}
+        />
+      )}
+    </div>
+  );
+}
+
+function EventRuleCard({ event, phases: _phases, onUpdate, onDelete }: {
+  event: PhaseEvent;
+  phases?: any[];
+  onUpdate: (e: PhaseEvent) => void;
+  onDelete: () => void;
+}) {
+  const triggerOpt = TRIGGER_OPTIONS.find(t => t.value === event.trigger);
+
+  const addAction = () => {
+    const newAction: PhaseEventAction = { id: `act_${Date.now()}`, type: 'notify', config: {} };
+    onUpdate({ ...event, actions: [...event.actions, newAction] });
+  };
+
+  const updateAction = (idx: number, updated: PhaseEventAction) => {
+    const actions = [...event.actions];
+    actions[idx] = updated;
+    onUpdate({ ...event, actions });
+  };
+
+  const deleteAction = (idx: number) => {
+    onUpdate({ ...event, actions: event.actions.filter((_, i) => i !== idx) });
+  };
+
+  return (
+    <div style={{ background: '#fff', border: `1.5px solid ${event.enabled ? '#bfdbfe' : '#e2e8f0'}`, borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10, opacity: event.enabled ? 1 : 0.55 }}>
+      {/* 事件头部 */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+        <div style={{ flex: 1 }}>
+          {/* 触发条件 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#64748b', letterSpacing: '0.04em' }}>触发条件</span>
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {TRIGGER_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                title={opt.desc}
+                onClick={() => onUpdate({ ...event, trigger: opt.value })}
+                style={{
+                  padding: '4px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+                  border: `1.5px solid ${event.trigger === opt.value ? '#3b82f6' : '#e2e8f0'}`,
+                  background: event.trigger === opt.value ? '#eff6ff' : '#f8fafc',
+                  color: event.trigger === opt.value ? '#1d4ed8' : '#64748b',
+                  cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 4,
+                }}
+              >
+                <span style={{ fontSize: 12 }}>{opt.icon}</span> {opt.label}
+              </button>
+            ))}
+          </div>
+          {triggerOpt && (
+            <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>{triggerOpt.desc}</div>
+          )}
+        </div>
+        {/* 启用开关 + 删除 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <button
+            onClick={() => onUpdate({ ...event, enabled: !event.enabled })}
+            style={{ position: 'relative', width: 32, height: 17, borderRadius: 10, border: 'none', background: event.enabled ? '#3b82f6' : '#d1d5db', cursor: 'pointer', transition: 'background .2s', padding: 0 }}
+          >
+            <span style={{ position: 'absolute', top: 2, width: 13, height: 13, background: '#fff', borderRadius: '50%', transition: 'left .2s', left: event.enabled ? 17 : 2 }} />
+          </button>
+          <button onClick={onDelete} style={{ color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, padding: '2px 4px', lineHeight: 1 }} title="删除此事件">×</button>
+        </div>
+      </div>
+
+      {/* 分隔 + 执行动作 */}
+      <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 10 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', letterSpacing: '0.04em', marginBottom: 8 }}>
+          执行动作 <span style={{ color: '#94a3b8', fontWeight: 400 }}>（按顺序执行）</span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {event.actions.length === 0 && (
+            <div style={{ fontSize: 12, color: '#94a3b8', textAlign: 'center', padding: '8px', border: '1px dashed #e2e8f0', borderRadius: 6 }}>
+              暂无动作，点击下方添加
+            </div>
+          )}
+          {event.actions.map((action, idx) => (
+            <ActionEditor
+              key={action.id}
+              action={action}
+              onChange={updated => updateAction(idx, updated)}
+              onDelete={() => deleteAction(idx)}
+            />
+          ))}
+          <button
+            onClick={addAction}
+            style={{ padding: '5px 10px', border: '1px dashed #93c5fd', borderRadius: 6, background: '#fff', color: '#3b82f6', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, fontWeight: 600 }}
+          >
+            <span style={{ fontSize: 14, lineHeight: 1 }}>＋</span> 添加动作
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PhaseEventsPanel({ events, onEventsChange }: {
+  events: PhaseEvent[];
+  onEventsChange: (events: PhaseEvent[]) => void;
+}) {
+  const addEvent = () => {
+    const newEvent: PhaseEvent = {
+      id: `evt_${Date.now()}`,
+      trigger: 'onEnter',
+      enabled: true,
+      actions: [],
+    };
+    onEventsChange([...events, newEvent]);
+  };
+
+  const updateEvent = (idx: number, updated: PhaseEvent) => {
+    const next = [...events];
+    next[idx] = updated;
+    onEventsChange(next);
+  };
+
+  const deleteEvent = (idx: number) => {
+    onEventsChange(events.filter((_, i) => i !== idx));
+  };
+
+  return (
+    <div style={{ padding: '12px 0' }}>
+      {/* 说明 */}
+      <div style={{ margin: '0 16px 12px', padding: '8px 12px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 8, fontSize: 11, color: '#0369a1', lineHeight: 1.6 }}>
+        <strong>节点事件</strong>：当阶段进入特定状态时，自动触发预设动作（发通知、更新字段、发起审批或调用 Webhook）。
+      </div>
+
+      {/* 事件规则列表 */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '0 16px' }}>
+        {events.length === 0 && (
+          <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 12, padding: '24px 0', border: '1px dashed #e2e8f0', borderRadius: 8 }}>
+            暂无事件规则，点击下方按钮添加
+          </div>
+        )}
+        {events.map((event, idx) => (
+          <EventRuleCard
+            key={event.id}
+            event={event}
+            onUpdate={updated => updateEvent(idx, updated)}
+            onDelete={() => deleteEvent(idx)}
+          />
+        ))}
+        <button
+          onClick={addEvent}
+          style={{ padding: '8px 0', border: '1.5px dashed #93c5fd', borderRadius: 8, background: '#fff', color: '#3b82f6', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontWeight: 600 }}
+        >
+          <span style={{ fontSize: 16, lineHeight: 1 }}>＋</span> 添加事件规则
+        </button>
+      </div>
+    </div>
+  );
 }
 
 // ─── Phase Node (sortable) ─────────────────────────────────────────────────
@@ -140,7 +434,7 @@ export default function TemplateEditor() {
     );
   }, [phases]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [selectedPhase, setSelectedPhase] = useState<any | null>(null);
+  const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<number>(0);
@@ -235,6 +529,7 @@ export default function TemplateEditor() {
           allowSkip: raw.allowSkip || false,
           tasks,
           nextPhaseIds,
+          events: raw.events || [],
         };
       }
 
@@ -286,11 +581,6 @@ export default function TemplateEditor() {
       try {
         await api.post(`/phases/${fromId}/transitions`, { toPhaseId: toId });
         await fetchTemplate();
-        setSelectedPhase((prev: any) =>
-          prev
-            ? { ...prev, nextPhaseIds: [...(prev.nextPhaseIds ?? []), toId] }
-            : prev
-        );
         console.log('后继阶段已添加');
       } catch (err: any) {
         console.error('添加后继阶段失败', err);
@@ -306,9 +596,6 @@ export default function TemplateEditor() {
       try {
         await api.delete(`/phases/${fromId}/transitions/${toId}`);
         await fetchTemplate();
-        setSelectedPhase((prev: any) =>
-          prev ? { ...prev, nextPhaseIds: (prev.nextPhaseIds ?? []).filter((id: string) => id !== toId) } : prev
-        );
         console.log('后继阶段已移除');
       } catch (err: any) {
         console.error('移除后继阶段失败', err);
@@ -421,7 +708,7 @@ export default function TemplateEditor() {
 
   // 阶段节点点击回调
   const handlePhaseClick = useCallback((phase: any) => {
-    setSelectedPhase(phase);
+    setSelectedPhaseId(phase.id);
     setRightPanelOpen(true);
     setActiveTab(0);
   }, []);
@@ -443,10 +730,11 @@ export default function TemplateEditor() {
       completionTip: '',
       allowSkip: false,
       tasks: [],
+      events: [],
     };
     const updated = [...phases, newPhase];
     setPhases(updated);
-    setSelectedPhase(newPhase);
+    setSelectedPhaseId(newPhase.id);
   }
 
   function updatePhase(phaseId: string, updates: Partial<Phase>) {
@@ -486,6 +774,13 @@ export default function TemplateEditor() {
           source: t.source,
           enabled: t.enabled,
         })),
+        events: (p.events || []).map((ev: PhaseEvent) => ({
+          id: ev.id,
+          trigger: ev.trigger,
+          label: ev.label,
+          enabled: ev.enabled,
+          actions: ev.actions,
+        })),
       })),
       milestones,
     };
@@ -502,8 +797,8 @@ export default function TemplateEditor() {
     }
   }
 
-  // selectedPhase is now a state object set directly by clicks
-  // const selectedPhase = phases.find(p => p.id === selectedPhaseId) ?? null;
+  // selectedPhase 从 phases 派生，确保编辑后右侧面板实时更新
+  const selectedPhase = phases.find(p => p.id === selectedPhaseId) ?? null;
   const totalTasks = phases.reduce((s, p) => s + p.tasks.filter(t => t.enabled).length, 0);
 
   if (loading) return <div className="flex items-center justify-center h-full text-gray-400">加载中...</div>;
@@ -577,7 +872,7 @@ export default function TemplateEditor() {
                           key={phase.id}
                           phase={phase}
                           isSelected={selectedPhase?.id === phase.id}
-                          onClick={() => { setSelectedPhase(phase); setRightPanelOpen(true); setActiveTab(0); }}
+                          onClick={() => { setSelectedPhaseId(phase.id); setRightPanelOpen(true); setActiveTab(0); }}
                         />
                       ))}
                     </SortableContext>
@@ -703,7 +998,7 @@ export default function TemplateEditor() {
 
         {/* ── 右侧收起/展开按钮（悬浮在面板边缘） ── */}
         <button
-          onClick={() => { setRightPanelOpen(v => { const next = !v; if (!next) { setSelectedPhase(null); /* clear selection on close */ } return next; }); }}
+          onClick={() => { setRightPanelOpen(v => { const next = !v; if (!next) { setSelectedPhaseId(null); } return next; }); }}
           className={[ 
             'absolute z-20 top-1/2 -translate-y-1/2',
             'flex items-center justify-center',
@@ -746,7 +1041,7 @@ export default function TemplateEditor() {
             <div className="flex flex-col h-full w-80">
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                 <h3 className="text-sm font-semibold text-gray-800 truncate">{selectedPhase.name}</h3>
-                <button onClick={() => { setRightPanelOpen(false); setSelectedPhase(null); }} className="p-1 rounded hover:bg-gray-100 text-gray-400">✕</button>
+                <button onClick={() => { setRightPanelOpen(false); setSelectedPhaseId(null); }} className="p-1 rounded hover:bg-gray-100 text-gray-400">✕</button>
               </div>
 
               <div className="flex border-b border-gray-100">
@@ -963,7 +1258,12 @@ export default function TemplateEditor() {
 
                   </div>
                 )}
-                {activeTab === 2 && (<div className="text-xs text-gray-400 text-center py-8">事件配置开发中</div>)}
+                {activeTab === 2 && selectedPhase && (
+                  <PhaseEventsPanel
+                    events={selectedPhase.events || []}
+                    onEventsChange={(newEvents) => updatePhase(selectedPhase.id, { events: newEvents })}
+                  />
+                )}
 
                 {activeTab === 3 && selectedPhase && (
                   <div>
