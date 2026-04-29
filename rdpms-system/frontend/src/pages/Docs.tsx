@@ -9,7 +9,7 @@ import AmplificationReagentLibrary from './knowledge/AmplificationReagentLibrary
 import VisualTableEditor, { type VisualTableEditorRef } from '../components/VisualTableEditor';
 import { MindMapEditor } from '../components/MindMapView';
 import { FlaskConical, Cpu, Dna, FileText, BookOpen, Package, ClipboardList, Dna as DnaIcon, Beaker } from 'lucide-react';
-import { extractMindmapBlock, findMindmapBlocks, replaceMindmapBlock, hasMarkdownTable, upsertFirstMindmapBlock } from '../utils/markdownBlocks';
+import { appendMindmapBlock, extractMindmapBlock, findMarkdownTables, findMindmapBlocks, replaceMindmapBlock, upsertFirstMindmapBlock } from '../utils/markdownBlocks';
 
 interface DocCategory {
   id: string;
@@ -78,6 +78,8 @@ export default function Docs() {
   const [tableDraft, setTableDraft] = useState('');
   const [activeMindmapIndex, setActiveMindmapIndex] = useState(0);
   const [mindmapBlockIndex, setMindmapBlockIndex] = useState(0);
+  const [mindmapAppendMode, setMindmapAppendMode] = useState(false);
+  const [tableBlockIndex, setTableBlockIndex] = useState(0);
   const tableEditorRef = useRef<VisualTableEditorRef>(null);
   const [reagentOpenKey, setReagentOpenKey] = useState(0);
   const [reagentCategoryId, setReagentCategoryId] = useState<string | null>(null);
@@ -237,8 +239,30 @@ export default function Docs() {
 
   const getTypeColor = (type: string) => { const typeInfo = DOC_TYPES.find(t => t.id === type); const colors: Record<string, string> = { blue: 'bg-blue-100 text-blue-700', green: 'bg-green-100 text-green-700', purple: 'bg-purple-100 text-purple-700', orange: 'bg-orange-100 text-orange-700' }; return colors[typeInfo?.color || 'blue']; };
   const getStatusBadge = (status: string) => { const badges: Record<string, string> = { active: 'bg-green-100 text-green-700', archived: 'bg-gray-100 text-gray-700', deprecated: 'bg-red-100 text-red-700' }; return badges[status] || badges.active; };
+  const mindmapBlocks = findMindmapBlocks(docForm.content || '');
+  const tableBlocks = findMarkdownTables(docForm.content || '');
   const hasExistingMindmap = !!extractMindmapBlock(docForm.content || '');
-  const hasExistingTable = hasMarkdownTable(docForm.content || '');
+  const hasExistingTable = tableBlocks.length > 0;
+
+  const openTableEditorForIndex = (index: number) => {
+    setTableBlockIndex(index);
+    setTableDraft(docForm.content || '');
+    setShowTableEditor(true);
+  };
+
+  const openMindmapEditorForIndex = (index: number) => {
+    if (mindmapBlocks.length === 0) {
+      setActiveMindmapIndex(-1);
+      setMindmapDraft('# 根节点\n## 分支1\n## 分支2');
+      setMindmapAppendMode(true);
+    } else {
+      const safeIndex = index < mindmapBlocks.length ? index : 0;
+      setActiveMindmapIndex(safeIndex);
+      setMindmapDraft(mindmapBlocks[safeIndex].content);
+      setMindmapAppendMode(false);
+    }
+    setShowMindmapEditor(true);
+  };
 
   return (
     <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', boxSizing: 'border-box', height: '100%', overflow: 'hidden' }}>
@@ -416,7 +440,9 @@ export default function Docs() {
                 <button onClick={() => {
                   setDocForm(prev => ({
                     ...prev,
-                    content: activeMindmapIndex >= 0
+                    content: mindmapAppendMode
+                      ? appendMindmapBlock(prev.content || '', mindmapDraft)
+                      : activeMindmapIndex >= 0
                       ? replaceMindmapBlock(prev.content || '', activeMindmapIndex, mindmapDraft)
                       : upsertFirstMindmapBlock(prev.content || '', mindmapDraft),
                   }));
@@ -437,7 +463,11 @@ export default function Docs() {
             <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>表格图形化编辑器</div>
-                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 3 }}>默认读取正文中的第一个 Markdown 表格；如果正文里还没有表格，也可以在这里直接新建一个。</div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 3 }}>
+                  {tableBlockIndex < tableBlocks.length
+                    ? `当前编辑：表格 ${tableBlockIndex + 1} / ${tableBlocks.length}`
+                    : `当前模式：新增第 ${tableBlocks.length + 1} 个表格`}
+                </div>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={() => setShowTableEditor(false)} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', color: '#374151', cursor: 'pointer', fontSize: 12 }}>取消</button>
@@ -445,7 +475,7 @@ export default function Docs() {
               </div>
             </div>
             <div style={{ flex: 1, minHeight: 0, background: '#f8fafc', padding: 12 }}>
-              <VisualTableEditor ref={tableEditorRef} value={tableDraft} onChange={setTableDraft} tableOnly />
+              <VisualTableEditor ref={tableEditorRef} value={tableDraft} onChange={setTableDraft} tableOnly tableIndex={tableBlockIndex} />
             </div>
           </div>
         </div>
@@ -468,7 +498,7 @@ export default function Docs() {
               <div><label className="label">标签</label><input type="text" className="input" placeholder="多个标签用逗号分隔" value={docForm.tags} onChange={(e) => setDocForm({ ...docForm, tags: e.target.value })} /></div>
               <div>
                 <label className="label">文档内容</label>
-                <div style={{ display: 'flex', gap: 6, marginBottom: 6, alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: 6, marginBottom: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                   <button type="button" onClick={handleOpenFormulaPicker} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #e2e8f0', background: '#f8fafc', cursor: 'pointer', fontSize: 12, color: '#374151', display: 'flex', alignItems: 'center', gap: 4 }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2v-4M9 21H5a2 2 0 01-2-2v-4m0 0h18"/></svg>
                     引用配方
@@ -476,35 +506,56 @@ export default function Docs() {
                   <button type="button" onClick={() => insertAtCursor(':::mindmap\n# 根节点\n## 分支1\n## 分支2\n:::')} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #ddd6fe', background: '#f5f3ff', cursor: 'pointer', fontSize: 12, color: '#6d28d9', display: 'flex', alignItems: 'center', gap: 4 }}>
                     插入思维导图
                   </button>
-                  <button type="button" onClick={() => { setTableDraft(docForm.content || ''); setShowTableEditor(true); }} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #cbd5e1', background: '#fff', cursor: 'pointer', fontSize: 12, color: '#334155', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    {hasExistingTable ? '图形编辑现有表格' : '图形新建表格'}
-                  </button>
-                  {findMindmapBlocks(docForm.content || '').length > 1 && (
+                  {tableBlocks.length > 0 && (
                     <select
-                      value={mindmapBlockIndex}
+                      value={tableBlockIndex < tableBlocks.length ? tableBlockIndex : 0}
+                      onChange={e => setTableBlockIndex(Number(e.target.value))}
+                      style={{ padding: '3px 6px', borderRadius: 5, border: '1px solid #cbd5e1', fontSize: 12, color: '#334155', background: '#f8fafc', cursor: 'pointer' }}
+                    >
+                      {tableBlocks.map((_, i) => (
+                        <option key={i} value={i}>表格 {i + 1}</option>
+                      ))}
+                    </select>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => openTableEditorForIndex(tableBlocks.length > 0 ? Math.min(tableBlockIndex, tableBlocks.length - 1) : 0)}
+                    style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #cbd5e1', background: '#fff', cursor: 'pointer', fontSize: 12, color: '#334155', display: 'flex', alignItems: 'center', gap: 4 }}
+                  >
+                    {hasExistingTable ? '图形编辑选中表格' : '图形新建表格'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openTableEditorForIndex(tableBlocks.length)}
+                    style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #bfdbfe', background: '#eff6ff', cursor: 'pointer', fontSize: 12, color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: 4 }}
+                  >
+                    图形新增下一个表格
+                  </button>
+                  {mindmapBlocks.length > 0 && (
+                    <select
+                      value={mindmapBlockIndex < mindmapBlocks.length ? mindmapBlockIndex : 0}
                       onChange={e => setMindmapBlockIndex(Number(e.target.value))}
                       style={{ padding: '3px 6px', borderRadius: 5, border: '1px solid #bfdbfe', fontSize: 12, color: '#1d4ed8', background: '#eff6ff', cursor: 'pointer' }}
                     >
-                      {findMindmapBlocks(docForm.content || '').map((_, i) => (
+                      {mindmapBlocks.map((_, i) => (
                         <option key={i} value={i}>思维导图 {i + 1}</option>
                       ))}
                     </select>
                   )}
                   <button type="button" onClick={() => {
-                    const blocks = findMindmapBlocks(docForm.content || '');
-                    if (blocks.length === 0) {
-                      setActiveMindmapIndex(-1);
-                      setMindmapDraft('# 根节点\n## 分支1\n## 分支2');
-                    } else {
-                      const idx = blocks.length > 1 ? (mindmapBlockIndex < blocks.length ? mindmapBlockIndex : 0) : 0;
-                      setActiveMindmapIndex(idx);
-                      setMindmapDraft(blocks[idx].content);
-                    }
-                    setShowMindmapEditor(true);
+                    openMindmapEditorForIndex(mindmapBlocks.length > 0 ? Math.min(mindmapBlockIndex, mindmapBlocks.length - 1) : 0);
                   }} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #bfdbfe', background: '#eff6ff', cursor: 'pointer', fontSize: 12, color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    {hasExistingMindmap ? '画布编辑思维导图' : '画布创建思维导图'}
+                    {hasExistingMindmap ? '画布编辑选中思维导图' : '画布创建思维导图'}
                   </button>
-                  <span style={{ fontSize: 11, color: '#9ca3af' }}>已有的表格和思维导图块都可以从这里直接进入图形化编辑</span>
+                  <button type="button" onClick={() => {
+                    setActiveMindmapIndex(-1);
+                    setMindmapDraft('# 根节点\n## 分支1\n## 分支2');
+                    setMindmapAppendMode(true);
+                    setShowMindmapEditor(true);
+                  }} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #ddd6fe', background: '#f5f3ff', cursor: 'pointer', fontSize: 12, color: '#6d28d9', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    画布新增下一个思维导图
+                  </button>
+                  <span style={{ fontSize: 11, color: '#9ca3af' }}>可按序号选择并编辑任意表格/思维导图，新增会追加到文档末尾</span>
                 </div>
                 <textarea
                   style={{

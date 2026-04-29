@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { docsAPI, formulaAPI } from '../api/client';
 import { useAppStore } from '../store/appStore';
-import { ArrowLeft, Edit2, Trash2, Clock, User, Tag, FileText, Save, X } from 'lucide-react';
+import { ArrowLeft, Edit2, Trash2, Clock, User, Tag, FileText, Save, X, Maximize2, Minimize2 } from 'lucide-react';
 import MindMapView, { MindMapEditor } from '../components/MindMapView';
 import VisualTableEditor from '../components/VisualTableEditor';
 import { extractMindmapBlock, hasMarkdownTable, replaceMindmapBlock } from '../utils/markdownBlocks';
@@ -36,6 +36,55 @@ interface RenderContentOptions {
   onEditMindmap?: (index: number, blockContent: string) => void;
 }
 
+interface MergeRegion {
+  row: number;
+  col: number;
+  rowspan: number;
+  colspan: number;
+}
+
+function normalizeMergeRegions(regions: MergeRegion[], rowCount: number, colCount: number): MergeRegion[] {
+  return regions
+    .map((r) => ({
+      row: Math.max(0, Math.min(rowCount - 1, Number(r.row) || 0)),
+      col: Math.max(0, Math.min(colCount - 1, Number(r.col) || 0)),
+      rowspan: Math.max(1, Number(r.rowspan) || 1),
+      colspan: Math.max(1, Number(r.colspan) || 1),
+    }))
+    .map((r) => ({
+      ...r,
+      rowspan: Math.min(r.rowspan, rowCount - r.row),
+      colspan: Math.min(r.colspan, colCount - r.col),
+    }))
+    .filter((r) => r.rowspan * r.colspan > 1);
+}
+
+function parseMergeMetaLine(line: string): MergeRegion[] | null {
+  const m = line.match(/^\s*<!--\s*VTABLE_MERGE\s+(\{.*\})\s*-->\s*$/);
+  if (!m) return null;
+  try {
+    const obj = JSON.parse(m[1]);
+    if (Array.isArray(obj?.regions)) return obj.regions;
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+function findRegionContainingCell(regions: MergeRegion[], row: number, col: number): MergeRegion | null {
+  for (const region of regions) {
+    if (
+      row >= region.row &&
+      row < region.row + region.rowspan &&
+      col >= region.col &&
+      col < region.col + region.colspan
+    ) {
+      return region;
+    }
+  }
+  return null;
+}
+
 /** 将 markdown 文本渲染为 React 节点（支持表格、:::mindmap 块） */
 function renderContent(content: string, options: RenderContentOptions = {}): JSX.Element {
   const lines = content.split('\n');
@@ -43,9 +92,17 @@ function renderContent(content: string, options: RenderContentOptions = {}): JSX
   let i = 0;
   let key = 0;
   let mindmapIndex = 0;
+  let pendingTableMergeRegions: MergeRegion[] | null = null;
 
   while (i < lines.length) {
     const line = lines[i];
+
+    const mergeMeta = parseMergeMetaLine(line);
+    if (mergeMeta) {
+      pendingTableMergeRegions = mergeMeta;
+      i++;
+      continue;
+    }
 
     // :::mindmap 块
     if (line.trim() === ':::mindmap') {
@@ -104,6 +161,8 @@ function renderContent(content: string, options: RenderContentOptions = {}): JSX
         r.replace(/^\||\|$/g, '').split('|').map(cell => cell.trim());
       const headers = parseRow(tableLines[0]);
       const dataRows = tableLines.slice(2).map(parseRow);
+      const mergeRegions = normalizeMergeRegions(pendingTableMergeRegions || [], dataRows.length, headers.length);
+      pendingTableMergeRegions = null;
       elements.push(
         <div key={key++} style={{ overflowX: 'auto', margin: '12px 0' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
@@ -117,9 +176,20 @@ function renderContent(content: string, options: RenderContentOptions = {}): JSX
             <tbody>
               {dataRows.map((row, ri) => (
                 <tr key={ri} style={{ background: ri % 2 === 0 ? '#fff' : '#f8fafc' }}>
-                  {headers.map((_, ci) => (
-                    <td key={ci} style={{ border: '1px solid #e2e8f0', padding: '7px 12px', color: '#374151', fontWeight: ci === 0 && row[ci]?.includes('合计') ? 700 : 400 }}>{row[ci] || ''}</td>
-                  ))}
+                  {headers.map((_, ci) => {
+                    const region = findRegionContainingCell(mergeRegions, ri, ci);
+                    if (region && (region.row !== ri || region.col !== ci)) return null;
+                    return (
+                      <td
+                        key={ci}
+                        rowSpan={region ? region.rowspan : 1}
+                        colSpan={region ? region.colspan : 1}
+                        style={{ border: '1px solid #e2e8f0', padding: '7px 12px', color: '#374151', fontWeight: ci === 0 && row[ci]?.includes('合计') ? 700 : 400 }}
+                      >
+                        {row[ci] || ''}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>
@@ -161,10 +231,20 @@ export default function KnowledgeDetail() {
   const [activeMindmapIndex, setActiveMindmapIndex] = useState(0);
   const [showTableEditor, setShowTableEditor] = useState(false);
   const [tableDraft, setTableDraft] = useState('');
+  const [isViewFullscreen, setIsViewFullscreen] = useState(false);
+  const detailCardRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (id) loadDoc();
   }, [id]);
+
+  useEffect(() => {
+    const onFsChange = () => {
+      setIsViewFullscreen(document.fullscreenElement === detailCardRef.current);
+    };
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => document.removeEventListener('fullscreenchange', onFsChange);
+  }, []);
 
   const loadDoc = async () => {
     setLoading(true);
@@ -270,10 +350,6 @@ export default function KnowledgeDetail() {
 
   const openMindmapEditor = (index = 0, blockContent?: string) => {
     const sourceContent = editing ? (editForm.content || '') : (doc?.content || '');
-    if (!editing) {
-      setEditing(true);
-      setEditForm((prev: any) => ({ ...prev, content: doc?.content || '' }));
-    }
     setActiveMindmapIndex(index);
     setMindmapDraft(blockContent || extractMindmapBlock(sourceContent, index) || '# 根节点\n## 分支1\n## 分支2');
     setShowMindmapEditor(true);
@@ -281,16 +357,46 @@ export default function KnowledgeDetail() {
 
   const openTableEditor = () => {
     const sourceContent = editing ? (editForm.content || '') : (doc?.content || '');
-    if (!editing) {
-      setEditing(true);
-      setEditForm((prev: any) => ({ ...prev, content: doc?.content || '' }));
-    }
     setTableDraft(sourceContent);
     setShowTableEditor(true);
   };
 
-  const hasExistingMindmap = !!extractMindmapBlock(editForm.content || '');
-  const hasExistingTable = hasMarkdownTable(editForm.content || '');
+  const toggleViewFullscreen = async () => {
+    const el = detailCardRef.current;
+    if (!el) return;
+    try {
+      if (document.fullscreenElement === el) {
+        await document.exitFullscreen();
+      } else if (!document.fullscreenElement) {
+        await el.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+        await el.requestFullscreen();
+      }
+    } catch {
+      // 浏览器/环境不支持时静默失败
+    }
+  };
+
+  const applyCanvasContent = async (content: string) => {
+    if (editing) {
+      setEditForm((prev: any) => ({ ...prev, content }));
+      return true;
+    }
+    if (!doc) return false;
+    try {
+      await docsAPI.documents.update(doc.id, { content, updatedBy: user?.id });
+      await loadDoc();
+      return true;
+    } catch (e: any) {
+      alert(e?.message || '写入失败，请重试');
+      return false;
+    }
+  };
+
+  const sourceContentForCanvas = editing ? (editForm.content || '') : (doc?.content || '');
+  const hasExistingMindmap = !!extractMindmapBlock(sourceContentForCanvas || '');
+  const hasExistingTable = hasMarkdownTable(sourceContentForCanvas || '');
 
   if (loading) {
     return (
@@ -326,6 +432,9 @@ export default function KnowledgeDetail() {
         <div style={{ display: 'flex', gap: 8 }}>
           {!editing ? (
             <>
+              <button onClick={toggleViewFullscreen} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', border: '1px solid #e2e8f0', borderRadius: 8, cursor: 'pointer', background: '#fff', color: '#374151', fontSize: 13 }}>
+                {isViewFullscreen ? <Minimize2 size={14} /> : <Maximize2 size={14} />} {isViewFullscreen ? '退出全屏' : '全屏查看'}
+              </button>
               <button onClick={() => setEditing(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', border: '1px solid #e2e8f0', borderRadius: 8, cursor: 'pointer', background: '#fff', color: '#374151', fontSize: 13 }}>
                 <Edit2 size={14} /> 编辑
               </button>
@@ -349,7 +458,7 @@ export default function KnowledgeDetail() {
       </div>
 
       {/* 文档卡片 */}
-      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      <div ref={detailCardRef} style={{ background: '#fff', borderRadius: isViewFullscreen ? 0 : 12, border: '1px solid #e2e8f0', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', overflow: 'hidden', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', width: isViewFullscreen ? '100vw' : undefined, height: isViewFullscreen ? '100vh' : undefined }}>
         {/* 顶部信息区 */}
         <div style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%)', padding: '24px 32px', borderBottom: '1px solid #e2e8f0' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
@@ -597,8 +706,11 @@ export default function KnowledgeDetail() {
                 </button>
                 <button
                   onClick={() => {
-                    setEditForm((prev: any) => ({ ...prev, content: replaceMindmapBlock(prev.content || '', activeMindmapIndex, mindmapDraft) }));
-                    setShowMindmapEditor(false);
+                    const source = editing ? (editForm.content || '') : (doc?.content || '');
+                    const nextContent = replaceMindmapBlock(source, activeMindmapIndex, mindmapDraft);
+                    applyCanvasContent(nextContent).then((ok) => {
+                      if (ok) setShowMindmapEditor(false);
+                    });
                   }}
                   style={{ padding: '6px 12px', border: 'none', borderRadius: 8, background: '#2563eb', color: '#fff', cursor: 'pointer', fontSize: 12 }}
                 >
@@ -624,7 +736,7 @@ export default function KnowledgeDetail() {
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={() => setShowTableEditor(false)} style={{ padding: '6px 12px', border: '1px solid #e2e8f0', borderRadius: 8, background: '#fff', color: '#475569', cursor: 'pointer', fontSize: 12 }}>取消</button>
-                <button onClick={() => { setEditForm((prev: any) => ({ ...prev, content: tableDraft })); setShowTableEditor(false); }} style={{ padding: '6px 12px', border: 'none', borderRadius: 8, background: '#2563eb', color: '#fff', cursor: 'pointer', fontSize: 12 }}>写入文档</button>
+                <button onClick={() => { applyCanvasContent(tableDraft).then((ok) => { if (ok) setShowTableEditor(false); }); }} style={{ padding: '6px 12px', border: 'none', borderRadius: 8, background: '#2563eb', color: '#fff', cursor: 'pointer', fontSize: 12 }}>写入文档</button>
               </div>
             </div>
             <div style={{ flex: 1, minHeight: 0, padding: 12, background: '#f8fafc' }}>

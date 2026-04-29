@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { projectTemplatesAPI } from '../api/client';
 import ProcessFlowDiagram from '../components/ProcessFlowDiagram';
@@ -64,6 +64,8 @@ interface Phase {
   id: string;
   name: string;
   order: number;
+  x?: number;
+  y?: number;
   totalDays?: number;
   nextPhaseIds?: string[];
   type: 'normal' | 'milestone' | 'approval';
@@ -459,6 +461,13 @@ export default function TemplateEditor() {
   const [showBatchOp, setShowBatchOp] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
+  const [phaseHistory, setPhaseHistory] = useState<Phase[][]>([]);
+  const [, setPhaseFuture] = useState<Phase[][]>([]);
+
+  const suppressHistoryRef = useRef(true);
+  const prevPhasesRef = useRef<Phase[]>([]);
+
+  const clonePhases = useCallback((arr: Phase[]) => JSON.parse(JSON.stringify(arr)) as Phase[], []);
 
   // 并行阶段选择弹窗
   const [parallelModal, setParallelModal] = useState<null | { open: boolean; sourceId: string; targetId: string }>(null);
@@ -482,6 +491,26 @@ export default function TemplateEditor() {
   useEffect(() => {
     if (id) fetchTemplate();
   }, [id]);
+
+  useEffect(() => {
+    if (suppressHistoryRef.current) {
+      prevPhasesRef.current = clonePhases(phases);
+      suppressHistoryRef.current = false;
+      return;
+    }
+
+    const prev = prevPhasesRef.current;
+    const prevKey = JSON.stringify(prev);
+    const curKey = JSON.stringify(phases);
+    if (prevKey === curKey) return;
+
+    setPhaseHistory((h) => {
+      const next = [...h, clonePhases(prev)];
+      return next.slice(-10);
+    });
+    setPhaseFuture([]);
+    prevPhasesRef.current = clonePhases(phases);
+  }, [clonePhases, phases]);
 
   async function fetchTemplate() {
     setLoading(true);
@@ -549,7 +578,12 @@ export default function TemplateEditor() {
       const loaded: Phase[] = (rawPhases as any[]).map((p: any, idx: number) => normalizePhase(p, idx));
 
       // Ensure phases are sorted by their explicit order before rendering (important for parallel numbering)
-      setPhases(loaded.sort((a, b) => (a.order || 0) - (b.order || 0)));
+      const sorted = loaded.sort((a, b) => (a.order || 0) - (b.order || 0));
+      suppressHistoryRef.current = true;
+      setPhases(sorted);
+      setPhaseHistory([]);
+      setPhaseFuture([]);
+      prevPhasesRef.current = clonePhases(sorted);
 
       const contentObj = (() => {
         const c = (res as any).content ?? (res as any).data?.content;
@@ -582,6 +616,18 @@ export default function TemplateEditor() {
         : p
     ));
   }, []);
+
+  const handleUndo = useCallback(() => {
+    setPhaseHistory((h) => {
+      if (h.length === 0) return h;
+      const last = h[h.length - 1];
+      suppressHistoryRef.current = true;
+      setPhaseFuture((f) => [clonePhases(phases), ...f].slice(0, 10));
+      setPhases(clonePhases(last));
+      prevPhasesRef.current = clonePhases(last);
+      return h.slice(0, -1);
+    });
+  }, [clonePhases, phases]);
 
   // 在右侧面板中添加后继阶段（并行）
   const handleAddTransition = useCallback(
@@ -681,9 +727,15 @@ export default function TemplateEditor() {
   // 拖拽放置操作：插入到目标节点之后
   const handleDropInsertAfter = useCallback((draggedPhaseId: string, targetPhaseId: string) => {
     setPhases(prev => {
-      let updated = [...prev];
-      const targetPhase = updated.find(p => p.id === targetPhaseId);
-      const targetNextIds = (targetPhase?.nextPhaseIds ?? []).filter(id => id !== draggedPhaseId);
+      const targetPhase = prev.find(p => p.id === targetPhaseId);
+      if (!targetPhase) return prev;
+      const targetNextIds = (targetPhase.nextPhaseIds ?? []).filter(id => id !== draggedPhaseId);
+
+      // 先移除所有指向 dragged 的前置关系，避免出现双前驱串线污染
+      let updated = prev.map(p => ({
+        ...p,
+        nextPhaseIds: (p.nextPhaseIds ?? []).filter(id => id !== draggedPhaseId),
+      }));
 
       // target -> dragged
       updated = updated.map(p =>
@@ -691,14 +743,127 @@ export default function TemplateEditor() {
           ? { ...p, nextPhaseIds: [draggedPhaseId] }
           : p
       );
-      // dragged -> 原后继
-      if (targetNextIds.length > 0) {
-        updated = updated.map(p =>
-          p.id === draggedPhaseId
-            ? { ...p, nextPhaseIds: [...new Set([...(p.nextPhaseIds ?? []), targetNextIds[0]])] }
-            : p
-        );
+
+      // dragged -> target 原后继（串行插入）
+      updated = updated.map(p =>
+        p.id === draggedPhaseId
+          ? { ...p, nextPhaseIds: [...targetNextIds] }
+          : p
+      );
+
+      return updated;
+    });
+  }, []);
+
+  // 拖拽放置操作：插入在目标节点与其首个后继之间（语义更明确）
+  const handleDropInsertBetween = useCallback((draggedPhaseId: string, targetPhaseId: string) => {
+    setPhases(prev => {
+      const targetPhase = prev.find(p => p.id === targetPhaseId);
+      if (!targetPhase) return prev;
+      const targetNextIds = (targetPhase.nextPhaseIds ?? []).filter(id => id !== draggedPhaseId);
+      if (targetNextIds.length === 0) {
+        // 没有后继时，退化成“插入到此节点之后”
+        return prev.map(p => {
+          if (p.id === targetPhaseId) return { ...p, nextPhaseIds: [draggedPhaseId] };
+          if (p.id === draggedPhaseId) return { ...p, nextPhaseIds: [] };
+          return { ...p, nextPhaseIds: (p.nextPhaseIds ?? []).filter(id => id !== draggedPhaseId) };
+        });
       }
+
+      // 清理所有指向 dragged 的旧入边
+      let updated = prev.map(p => ({
+        ...p,
+        nextPhaseIds: (p.nextPhaseIds ?? []).filter(id => id !== draggedPhaseId),
+      }));
+
+      // target -> dragged
+      updated = updated.map(p =>
+        p.id === targetPhaseId
+          ? { ...p, nextPhaseIds: [draggedPhaseId] }
+          : p
+      );
+
+      // dragged -> target 原后继（默认接首个，保证“插入两节点之间”语义稳定）
+      const firstNextId = targetNextIds[0];
+      updated = updated.map(p =>
+        p.id === draggedPhaseId
+          ? { ...p, nextPhaseIds: firstNextId ? [firstNextId] : [] }
+          : p
+      );
+
+      return updated;
+    });
+  }, []);
+
+  // 拖拽放置操作：与目标节点首个后继并行
+  const handleDropParallelWithSuccessor = useCallback((draggedPhaseId: string, targetPhaseId: string) => {
+    setPhases(prev => {
+      const target = prev.find(p => p.id === targetPhaseId);
+      if (!target) return prev;
+      const successorId = (target.nextPhaseIds ?? [])[0];
+      if (!successorId) {
+        // 没有后继时，退化为目标并行后继
+        return prev.map(p => {
+          if (p.id === targetPhaseId) {
+            return { ...p, nextPhaseIds: [...new Set([...(p.nextPhaseIds ?? []), draggedPhaseId])] };
+          }
+          if (p.id === draggedPhaseId) {
+            return { ...p, nextPhaseIds: [] };
+          }
+          return { ...p, nextPhaseIds: (p.nextPhaseIds ?? []).filter(id => id !== draggedPhaseId) };
+        });
+      }
+
+      const successor = prev.find(p => p.id === successorId);
+      const successorNext = successor?.nextPhaseIds ?? [];
+
+      // 1) 清理 dragged 原入边
+      // 2) target 同时指向 successor 与 dragged（并行）
+      // 3) dragged 默认汇入 successor 的后继，尽量保持流程连续
+      return prev.map(p => {
+        const cleaned = (p.nextPhaseIds ?? []).filter(id => id !== draggedPhaseId);
+        if (p.id === targetPhaseId) {
+          return { ...p, nextPhaseIds: [...new Set([...cleaned, successorId, draggedPhaseId])] };
+        }
+        if (p.id === draggedPhaseId) {
+          return { ...p, nextPhaseIds: [...new Set(successorNext)] };
+        }
+        return { ...p, nextPhaseIds: cleaned };
+      });
+    });
+  }, []);
+
+  // 拖拽放置操作：插入到目标节点之前
+  const handleDropInsertBefore = useCallback((draggedPhaseId: string, targetPhaseId: string) => {
+    setPhases(prev => {
+      const targetPhase = prev.find(p => p.id === targetPhaseId);
+      if (!targetPhase) return prev;
+
+      const predecessors = prev
+        .filter(p => (p.nextPhaseIds ?? []).includes(targetPhaseId) && p.id !== draggedPhaseId)
+        .map(p => p.id);
+
+      // 清理所有指向 dragged 的旧入边，避免重复前驱
+      let updated = prev.map(p => ({
+        ...p,
+        nextPhaseIds: (p.nextPhaseIds ?? []).filter(id => id !== draggedPhaseId),
+      }));
+
+      // 所有 target 的前驱改为指向 dragged（保持并行前驱关系）
+      updated = updated.map(p => {
+        if (!predecessors.includes(p.id)) return p;
+        const current = p.nextPhaseIds ?? [];
+        const withoutTarget = current.filter(id => id !== targetPhaseId);
+        return { ...p, nextPhaseIds: [...new Set([...withoutTarget, draggedPhaseId])] };
+      });
+
+      // dragged -> target
+      updated = updated.map(p =>
+        p.id === draggedPhaseId
+          ? { ...p, nextPhaseIds: [targetPhaseId] }
+          : p
+      );
+
       return updated;
     });
   }, []);
@@ -712,8 +877,8 @@ export default function TemplateEditor() {
   }, []);
 
   // 自动对齐（触发重新布局 reLayout）
-  const handleAutoLayout = useCallback(() => {
-    window.dispatchEvent(new CustomEvent('flow:reLayout'));
+  const handleAutoLayout = useCallback((mode: 'compact' | 'readable' = 'compact') => {
+    window.dispatchEvent(new CustomEvent('flow:reLayout', { detail: { mode } }));
   }, []);
 
 
@@ -732,8 +897,22 @@ export default function TemplateEditor() {
     };
     const updated = [...phases, newPhase];
     setPhases(updated);
-    setSelectedPhaseId(newPhase.id);
   }
+
+  const handleNodePositionChange = useCallback((phaseId: string, x: number, y: number) => {
+    setPhases(prev => prev.map(p =>
+      p.id === phaseId ? { ...p, x, y } : p
+    ));
+  }, []);
+
+  const handleNodesPositionBatchChange = useCallback((positions: Array<{ id: string; x: number; y: number }>) => {
+    const posMap = new Map(positions.map(p => [p.id, p]));
+    setPhases(prev => prev.map(p => {
+      const pos = posMap.get(p.id);
+      if (!pos) return p;
+      return { ...p, x: pos.x, y: pos.y };
+    }));
+  }, []);
 
   function updatePhase(phaseId: string, updates: Partial<Phase>) {
     setPhases(prev => prev.map(p => p.id === phaseId ? { ...p, ...updates } : p));
@@ -777,11 +956,14 @@ export default function TemplateEditor() {
         id: p.id,
         name: p.name,
         order: p.order,
+        x: p.x,
+        y: p.y,
         type: p.type,
         source: p.source,
         enabled: p.enabled,
         completionTip: p.completionTip,
         allowSkip: p.allowSkip,
+        nextPhaseIds: p.nextPhaseIds ?? [],
         tasks: p.tasks.map(t => ({
           id: t.id,
           title: t.title,
@@ -871,7 +1053,16 @@ export default function TemplateEditor() {
               </div>
             )}
           </div>
-          <button onClick={handleAutoLayout} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50">对齐流程图</button>
+          <button onClick={() => handleAutoLayout('compact')} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50">紧凑对齐</button>
+          <button onClick={() => handleAutoLayout('readable')} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50">易读对齐</button>
+          <button
+            onClick={handleUndo}
+            disabled={phaseHistory.length === 0}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded-md transition-colors ${phaseHistory.length === 0 ? 'text-gray-300 border-gray-200 cursor-not-allowed bg-gray-50' : 'text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+            title={phaseHistory.length === 0 ? '没有可回退的操作' : `回退（剩余 ${phaseHistory.length} 步）`}
+          >
+            撤销
+          </button>
           <button onClick={() => setShowPreview(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50">预览</button>
           <div className="w-px h-4 bg-gray-200" />
           <button onClick={saveTemplate} disabled={saving} className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors">{saving ? '保存中...' : '保存模版'}</button>
@@ -985,12 +1176,20 @@ export default function TemplateEditor() {
             </span>
             <div className="flex-1" />
             <button
-              onClick={handleAutoLayout}
+              onClick={() => handleAutoLayout('compact')}
               className="flex items-center gap-1 px-2.5 py-1 text-xs text-gray-500
                          border border-gray-200 rounded-md hover:bg-gray-50"
             >
               <AlignLeft size={12} />
-              自动对齐
+              紧凑对齐
+            </button>
+            <button
+              onClick={() => handleAutoLayout('readable')}
+              className="flex items-center gap-1 px-2.5 py-1 text-xs text-gray-500
+                         border border-gray-200 rounded-md hover:bg-gray-50"
+            >
+              <AlignLeft size={12} />
+              易读对齐
             </button>
           </div>
 
@@ -1007,6 +1206,11 @@ export default function TemplateEditor() {
                 onEdgeReconnect={handleEdgeReconnect}
                 onDropParallel={handleDropParallel}
                 onDropInsertAfter={handleDropInsertAfter}
+                onDropInsertBetween={handleDropInsertBetween}
+                onDropParallelWithSuccessor={handleDropParallelWithSuccessor}
+                onDropInsertBefore={handleDropInsertBefore}
+                onNodePositionChange={handleNodePositionChange}
+                onNodesPositionChange={handleNodesPositionBatchChange}
               />
             </div>
           ) : (

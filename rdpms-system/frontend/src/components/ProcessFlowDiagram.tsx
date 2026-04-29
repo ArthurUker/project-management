@@ -29,6 +29,8 @@ interface Phase {
   id: string;
   name: string;
   order: number;
+  x?: number;
+  y?: number;
   totalDays?: number;
   tasks?: any[];
   enabled?: boolean;
@@ -46,6 +48,11 @@ interface ProcessFlowDiagramProps {
   onEdgeReconnect?: (oldEdge: Edge, newConnection: Connection) => void;
   onDropParallel?: (draggedId: string, targetId: string, x?: number, y?: number) => void;
   onDropInsertAfter?: (draggedId: string, targetId: string, x?: number, y?: number) => void;
+  onDropInsertBetween?: (draggedId: string, targetId: string, x?: number, y?: number) => void;
+  onDropParallelWithSuccessor?: (draggedId: string, targetId: string, x?: number, y?: number) => void;
+  onDropInsertBefore?: (draggedId: string, targetId: string, x?: number, y?: number) => void;
+  onNodePositionChange?: (phaseId: string, x: number, y: number) => void;
+  onNodesPositionChange?: (positions: Array<{ id: string; x: number; y: number }>) => void;
   readonly?: boolean;
 }
 
@@ -54,16 +61,41 @@ const NODE_WIDTH = 160;
 const NODE_HEIGHT = 60;
 const RANK_SEP = 80;
 const NODE_SEP = 50;
+type LayoutMode = 'compact' | 'readable';
 
-const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
-  const dagreGraph = new dagre.graphlib.Graph();
-  dagreGraph.setDefaultEdgeLabel(() => ({}));
-  dagreGraph.setGraph({
-    rankdir: 'LR',
+const layoutConfigByMode = (mode: LayoutMode) => {
+  if (mode === 'readable') {
+    return {
+      ranksep: 120,
+      nodesep: 90,
+      marginx: 60,
+      marginy: 60,
+      fitPadding: 0.35,
+      tailThresholdFactor: 1.9,
+      tailMinGap: NODE_HEIGHT + 32,
+    };
+  }
+  return {
     ranksep: RANK_SEP,
     nodesep: NODE_SEP,
     marginx: 40,
     marginy: 40,
+    fitPadding: 0.25,
+    tailThresholdFactor: 1.4,
+    tailMinGap: NODE_HEIGHT + 16,
+  };
+};
+
+const getLayoutedElements = (nodes: Node[], edges: Edge[], mode: LayoutMode = 'compact') => {
+  const cfg = layoutConfigByMode(mode);
+  const dagreGraph = new dagre.graphlib.Graph();
+  dagreGraph.setDefaultEdgeLabel(() => ({}));
+  dagreGraph.setGraph({
+    rankdir: 'LR',
+    ranksep: cfg.ranksep,
+    nodesep: cfg.nodesep,
+    marginx: cfg.marginx,
+    marginy: cfg.marginy,
   });
 
   // 注册节点（使用统一尺寸）
@@ -318,6 +350,11 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
   onEdgeReconnect,
   onDropParallel,
   onDropInsertAfter,
+  onDropInsertBetween,
+  onDropParallelWithSuccessor,
+  onDropInsertBefore,
+  onNodePositionChange,
+  onNodesPositionChange,
   readonly = false,
 }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -335,6 +372,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     x: number;
     y: number;
   }>({ visible: false, draggedPhaseId: '', targetPhaseId: '', x: 0, y: 0 });
+  const prevStructureKeyRef = useRef('');
 
   // helper to build edges using current onAddParallel
   const edgeOptions = buildEdgeStyle(onAddParallel ?? (() => {}));
@@ -458,7 +496,10 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     const rawNodes: Node[] = sortedPhases.map((p) => ({
       id: p.id,
       type: 'phase',
-      position: { x: 0, y: 0 },
+      position: {
+        x: typeof p.x === 'number' ? p.x : 0,
+        y: typeof p.y === 'number' ? p.y : 0,
+      },
       data: {
         label: p.name,
         order: p.order ?? 1,
@@ -539,24 +580,46 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
 
     // identify parallel groups and record user order
     const parallelGroups = getParallelGroups(sortedPhases);
+    const currentNodes = (typeof getNodes === 'function') ? getNodes() : [];
     const userOrderMap = new Map<string, number>();
     parallelGroups.forEach(group => {
       const sortedByY = [...group].sort((a, b) => {
-        const ya = nodes.find(n => n.id === a)?.position.y ?? 0;
-        const yb = nodes.find(n => n.id === b)?.position.y ?? 0;
+        const ya = currentNodes.find(n => n.id === a)?.position.y ?? 0;
+        const yb = currentNodes.find(n => n.id === b)?.position.y ?? 0;
         return ya - yb;
       });
       sortedByY.forEach((id, idx) => userOrderMap.set(id, idx));
     });
 
-    const { nodes: ln, edges: le } = getLayoutedElements(rawNodes, rawEdges);
+    const hasAllSavedPositions = sortedPhases.length > 0 && sortedPhases.every(
+      (p) => typeof p.x === 'number' && typeof p.y === 'number'
+    );
+
+    const { nodes: ln, edges: le } = hasAllSavedPositions
+      ? { nodes: rawNodes, edges: rawEdges }
+      : getLayoutedElements(rawNodes, rawEdges);
+
+    const nodeMap = new Map(ln.map((n) => [n.id, n]));
+    const currentPosMap = new Map(currentNodes.map((n) => [n.id, n.position] as [string, { x: number; y: number }]));
+
+    let lnWithManualPos = ln.map((n) => {
+      const phase = sortedPhases.find((p) => p.id === n.id);
+      if (phase && typeof phase.x === 'number' && typeof phase.y === 'number') {
+        return { ...n, position: { x: phase.x, y: phase.y } };
+      }
+      const pos = currentPosMap.get(n.id);
+      if (pos && typeof pos.x === 'number' && typeof pos.y === 'number') {
+        return { ...n, position: { x: pos.x, y: pos.y } };
+      }
+      return n;
+    });
 
     // After dagre layout: reassign Y within each parallel group to preserve user order
-    let lnAdjusted = ln;
+    let lnAdjusted = lnWithManualPos;
     parallelGroups.forEach(group => {
       if (group.length < 2) return;
       const dagreYs = [...group]
-        .map(id => ln.find(n => n.id === id)?.position.y ?? 0)
+        .map(id => nodeMap.get(id)?.position.y ?? 0)
         .sort((a, b) => a - b);
       lnAdjusted = lnAdjusted.map(n => {
         if (!group.includes(n.id)) return n;
@@ -580,19 +643,21 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     setNodes(lnUpdated);
     setEdges(le);
 
-    // 布局完成后自适应视图
-    setTimeout(() => fitView({ padding: 0.25, duration: 400 }), 50);
-  }, [JSON.stringify(phases.map(p => ({ id: p.id, order: p.order, nextPhaseIds: p.nextPhaseIds }))), onAddParallel]);
+    const structureKey = JSON.stringify(sortedPhases.map((p) => ({ id: p.id, order: p.order, next: p.nextPhaseIds ?? [] })));
+    if (prevStructureKeyRef.current !== structureKey) {
+      prevStructureKeyRef.current = structureKey;
+      setTimeout(() => fitView({ padding: 0.25, duration: 400 }), 50);
+    }
+  }, [phases, fitView, getNodes, onAddParallel, onEdgeDelete, setEdges, setNodes]);
 
   // 监听外部 fitView / reLayout 事件
   useEffect(() => {
     const fitHandler = () => fitView({ padding: 0.25, duration: 400 });
 
-    const handleReLayout = () => {
+    const handleReLayout = (evt?: Event) => {
       if (!phases?.length) return;
-
-      // Step 1: capture live node positions (avoid stale closure)
-      const currentNodes = (typeof getNodes === 'function') ? getNodes() : nodes;
+      const mode: LayoutMode = (evt as CustomEvent | undefined)?.detail?.mode === 'readable' ? 'readable' : 'compact';
+      const cfg = layoutConfigByMode(mode);
 
       // build raw nodes/edges for dagre
       const rawNodes: Node[] = phases.map((p) => ({
@@ -626,7 +691,9 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       }
 
       // Step 2: run dagre layout
-      const { nodes: ln, edges: le } = getLayoutedElements(rawNodes, rawEdges);
+      const { nodes: ln, edges: le } = getLayoutedElements(rawNodes, rawEdges, mode);
+
+      const phaseOrderMap = new Map(phases.map((p) => [p.id, p.order ?? 0] as const));
 
       // Step 3: compute parallel groups (BFS by phases.nextPhaseIds)
       const inDegree = new Map<string, number>();
@@ -642,12 +709,13 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
         cur = next;
       }
 
-      // Step 4: snapshot user rank within each parallel group (using currentNodes Y)
-      const userRankSnapshot = new Map<string, number>();
+      // Step 4: use deterministic rank within each parallel group (phase order)
+      const rankSnapshot = new Map<string, number>();
       parallelGroups.forEach(group => {
-        const arr = group.map(id => ({ id, y: currentNodes.find(n => n.id === id)?.position.y ?? 0 }));
-        arr.sort((a, b) => a.y - b.y);
-        arr.forEach((it, idx) => userRankSnapshot.set(it.id, idx));
+        const arr = group
+          .map(id => ({ id, order: phaseOrderMap.get(id) ?? 0 }))
+          .sort((a, b) => a.order - b.order);
+        arr.forEach((it, idx) => rankSnapshot.set(it.id, idx));
       });
 
       // Step 5: for each parallel group, get dagre Y pool and reassign by user rank
@@ -657,10 +725,76 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
         const dagreYs = group.map(id => ln.find(n => n.id === id)?.position.y ?? 0).sort((a, b) => a - b);
         lnAdjusted = lnAdjusted.map(n => {
           if (!group.includes(n.id)) return n;
-          const rank = userRankSnapshot.get(n.id) ?? 0;
+          const rank = rankSnapshot.get(n.id) ?? 0;
           return { ...n, position: { ...n.position, y: dagreYs[Math.min(rank, dagreYs.length - 1)] } };
         });
       });
+
+      // Step 5.5: tail alignment smoothing for right-most segment
+      const preds = new Map<string, string[]>();
+      const succs = new Map<string, string[]>();
+      le.forEach((e) => {
+        const s = String(e.source);
+        const t = String(e.target);
+        if (!succs.has(s)) succs.set(s, []);
+        if (!preds.has(t)) preds.set(t, []);
+        succs.get(s)!.push(t);
+        preds.get(t)!.push(s);
+      });
+
+      const maxX = Math.max(...lnAdjusted.map((n) => n.position.x));
+      const tailThresholdX = maxX - (NODE_WIDTH + cfg.ranksep) * cfg.tailThresholdFactor;
+      const idToNode = new Map(lnAdjusted.map((n) => [n.id, { ...n, position: { ...n.position } }]));
+      const nodeIds = [...idToNode.values()]
+        .sort((a, b) => b.position.x - a.position.x)
+        .map((n) => n.id);
+
+      const meanY = (ids: string[]) => {
+        if (!ids.length) return 0;
+        const vals = ids.map((id) => idToNode.get(id)?.position.y ?? 0);
+        return vals.reduce((s, v) => s + v, 0) / vals.length;
+      };
+
+      nodeIds.forEach((id) => {
+        const node = idToNode.get(id);
+        if (!node) return;
+        if (node.position.x < tailThresholdX) return;
+
+        const inIds = preds.get(id) ?? [];
+        const outIds = succs.get(id) ?? [];
+        if (inIds.length === 0) return;
+
+        const targetY = meanY(inIds);
+        if (outIds.length === 0) {
+          node.position.y = targetY;
+          return;
+        }
+
+        if (outIds.length === 1) {
+          const nextIn = preds.get(outIds[0]) ?? [];
+          if (nextIn.length === 1) {
+            node.position.y = targetY;
+          }
+        }
+      });
+
+      // tail minimal vertical gap guard
+      const tailNodes = [...idToNode.values()]
+        .filter((n) => n.position.x >= tailThresholdX)
+        .sort((a, b) => a.position.y - b.position.y);
+      const MIN_GAP = cfg.tailMinGap;
+      for (let i = 1; i < tailNodes.length; i++) {
+        const prev = tailNodes[i - 1];
+        const cur = tailNodes[i];
+        if (cur.position.y - prev.position.y < MIN_GAP) {
+          cur.position.y = prev.position.y + MIN_GAP;
+        }
+      }
+
+      lnAdjusted = lnAdjusted.map((n) => ({
+        ...n,
+        position: idToNode.get(n.id)?.position ?? n.position,
+      }));
 
       // Step 6: recompute displayOrder using adjusted positions
       const nodePositions = new Map<string, { x: number; y: number }>(lnAdjusted.map(n => [n.id, n.position] as [string, {x:number,y:number}]));
@@ -670,7 +804,8 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       // Step 7: apply
       setNodes(lnUpdated);
       setEdges(le);
-      setTimeout(() => fitView({ padding: 0.25, duration: 400 }), 50);
+      onNodesPositionChange?.(lnUpdated.map((n) => ({ id: n.id, x: n.position.x, y: n.position.y })));
+      setTimeout(() => fitView({ padding: cfg.fitPadding, duration: 400 }), 50);
     };
 
     window.addEventListener('flow:fitView', fitHandler);
@@ -679,7 +814,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       window.removeEventListener('flow:fitView', fitHandler);
       window.removeEventListener('flow:reLayout', handleReLayout);
     };
-  }, [JSON.stringify(phases.map(p => ({ id: p.id, order: p.order, nextPhaseIds: p.nextPhaseIds }))), fitView, onAddParallel]);
+  }, [fitView, getNodes, onAddParallel, onEdgeDelete, onNodesPositionChange, phases, setEdges, setNodes]);
 
   // 拖拽连线
   const handleConnect = useCallback(
@@ -717,6 +852,11 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       const y = (event?.clientY) ?? 0;
       setDropMenuState({ visible: true, draggedPhaseId: draggedNode.id, targetPhaseId: dragOverNodeId, x, y });
     }
+
+    if (typeof draggedNode.position?.x === 'number' && typeof draggedNode.position?.y === 'number') {
+      onNodePositionChange?.(draggedNode.id, draggedNode.position.x, draggedNode.position.y);
+    }
+
     setDragOverNodeId(null);
 
     // Recalculate display order after user finishes dragging a node
@@ -725,7 +865,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     } catch (err) {
       // ignore
     }
-  }, [dragOverNodeId, recalculateDisplayOrder]);
+  }, [dragOverNodeId, onNodePositionChange, recalculateDisplayOrder]);
 
   // 更新节点样式以高亮拖拽目标
   useEffect(() => {
@@ -811,6 +951,13 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     {/* Drop menu (outside ReactFlow but inside provider) */}
     {dropMenuState.visible && (
       <>
+        {(() => {
+          const targetPhase = phases.find((p) => p.id === dropMenuState.targetPhaseId);
+          const successorId = (targetPhase?.nextPhaseIds ?? [])[0];
+          const successor = phases.find((p) => p.id === successorId);
+
+          return (
+            <>
         <div className="fixed inset-0 z-40" onClick={() => setDropMenuState(s => ({ ...s, visible: false }))} />
         <div
           className="fixed z-50 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden min-w-[200px]"
@@ -824,6 +971,53 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
               </span>
             </div>
           </div>
+
+          {successor && (
+            <div className="px-4 py-2 text-[11px] text-gray-500 bg-amber-50 border-b border-amber-100">
+              检测到后继节点：
+              <span className="font-semibold text-amber-700 ml-1">{successor.name}</span>
+            </div>
+          )}
+
+          {successor && (
+            <>
+              <button
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-indigo-50 transition-colors text-left group"
+                onClick={() => {
+                  setDropMenuState(s => ({ ...s, visible: false }));
+                  onDropInsertBetween?.(dropMenuState.draggedPhaseId, dropMenuState.targetPhaseId, dropMenuState.x, dropMenuState.y);
+                }}
+              >
+                <div className="w-8 h-8 rounded-lg bg-indigo-100 group-hover:bg-indigo-200 flex items-center justify-center flex-shrink-0 transition-colors">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8h12M6 5l-3 3 3 3M10 5l3 3-3 3" stroke="#4F46E5" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-700">插入在两节点之间</div>
+                  <div className="text-[11px] text-gray-400 mt-0.5">插入到“目标节点 → 后继节点”中间</div>
+                </div>
+              </button>
+
+              <div className="mx-4 border-t border-gray-50" />
+
+              <button
+                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-cyan-50 transition-colors text-left group"
+                onClick={() => {
+                  setDropMenuState(s => ({ ...s, visible: false }));
+                  onDropParallelWithSuccessor?.(dropMenuState.draggedPhaseId, dropMenuState.targetPhaseId, dropMenuState.x, dropMenuState.y);
+                }}
+              >
+                <div className="w-8 h-8 rounded-lg bg-cyan-100 group-hover:bg-cyan-200 flex items-center justify-center flex-shrink-0 transition-colors">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 4h10M3 8h10M3 12h10" stroke="#0891B2" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-700">与后继节点并行</div>
+                  <div className="text-[11px] text-gray-400 mt-0.5">目标节点将同时指向后继与拖拽节点</div>
+                </div>
+              </button>
+
+              <div className="mx-4 border-t border-gray-50" />
+            </>
+          )}
 
           <button
             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-blue-50 transition-colors text-left group"
@@ -859,10 +1053,31 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
             </div>
           </button>
 
+          <div className="mx-4 border-t border-gray-50" />
+
+          <button
+            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-amber-50 transition-colors text-left group"
+            onClick={() => {
+              setDropMenuState(s => ({ ...s, visible: false }));
+              onDropInsertBefore?.(dropMenuState.draggedPhaseId, dropMenuState.targetPhaseId, dropMenuState.x, dropMenuState.y);
+            }}
+          >
+            <div className="w-8 h-8 rounded-lg bg-amber-100 group-hover:bg-amber-200 flex items-center justify-center flex-shrink-0 transition-colors">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M13 8H5M8 5L5 8l3 3" stroke="#D97706" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </div>
+            <div>
+              <div className="text-sm font-medium text-gray-700">插入到此节点之前</div>
+              <div className="text-[11px] text-gray-400 mt-0.5">当前节点前置将改为拖拽节点</div>
+            </div>
+          </button>
+
           <div className="px-4 py-2 bg-gray-50 border-t border-gray-100">
             <button className="w-full text-xs text-gray-400 hover:text-gray-600 py-1 transition-colors" onClick={() => setDropMenuState(s => ({ ...s, visible: false }))}>取消</button>
           </div>
         </div>
+            </>
+          );
+        })()}
       </>
     )}
 

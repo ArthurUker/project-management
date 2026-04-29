@@ -553,7 +553,7 @@ function Canvas({ content, fullscreen, onClose, editable = true, onChange, varia
     ? { position: 'fixed', inset: 0, zIndex: 9999, background: activeTheme.bg, display: 'flex', flexDirection: 'column' }
     : isEditor
       ? { width: '100%', height: '100%', position: 'relative', background: editorShellBg, borderRadius: 10, overflow: 'hidden', display: 'flex', flexDirection: 'column', border: `1px solid ${editorBorder}` }
-      : { width: '100%', height: inlineHeight ?? 230, position: 'relative', background: '#fafbfc', borderRadius: 8, overflow: 'hidden' };
+      : { width: '100%', height: inlineHeight ?? 230, position: 'relative', background: '#fafbfc', borderRadius: 8, overflow: 'hidden', display: 'flex', flexDirection: 'column' };
 
   return (
     <div style={containerStyle}>

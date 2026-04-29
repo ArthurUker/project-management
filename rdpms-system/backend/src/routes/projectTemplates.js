@@ -77,17 +77,6 @@ templates.get('/:id', async (c) => {
   const content = parseContent(tpl);
   const phases = (content.phases || []).filter(p => p.enabled !== false);
 
-  const transitions = await prisma.phaseTransition.findMany({
-    where: {},
-    select: { fromPhaseId: true, toPhaseId: true }
-  }).catch(() => []);
-
-  const nextMap = {};
-  (transitions || []).forEach(t => {
-    if (!nextMap[t.fromPhaseId]) nextMap[t.fromPhaseId] = [];
-    nextMap[t.fromPhaseId].push(t.toPhaseId);
-  });
-
   const normalizedPhases = phases.map((p, idx) => ({
     id: p.id || p.key || `phase_${idx}`,
     name: p.name || p.title || `阶段 ${idx + 1}`,
@@ -95,7 +84,7 @@ templates.get('/:id', async (c) => {
     totalDays: p.totalDays ?? p.estimatedDays ?? 0,
     tasks: p.tasks || [],
     enabled: p.enabled !== false,
-    nextPhaseIds: nextMap[p.id || p.key] || []
+    nextPhaseIds: Array.isArray(p.nextPhaseIds) ? p.nextPhaseIds : []
   }));
 
   const tplOut = {
@@ -233,18 +222,6 @@ templates.get('/:id/preview', async (c) => {
   const milestones = (content.milestones || []);
   const taskCount = phases.reduce((sum, p) => sum + (p.tasks || []).filter(t => t.enabled !== false).length, 0);
 
-  // 获取 phase transitions for this template (if any)
-  const transitions = await prisma.phaseTransition.findMany({
-    where: {},
-    select: { fromPhaseId: true, toPhaseId: true }
-  }).catch(() => []);
-
-  const nextMap = {};
-  (transitions || []).forEach(t => {
-    if (!nextMap[t.fromPhaseId]) nextMap[t.fromPhaseId] = [];
-    nextMap[t.fromPhaseId].push(t.toPhaseId);
-  });
-
   return c.json({
     id: tpl.id,
     name: tpl.name,
@@ -256,7 +233,7 @@ templates.get('/:id/preview', async (c) => {
       order: p.order,
       type: p.type || 'normal',
       taskCount: (p.tasks || []).filter(t => t.enabled !== false).length,
-      nextPhaseIds: nextMap[p.id || p.key] || [],
+      nextPhaseIds: Array.isArray(p.nextPhaseIds) ? p.nextPhaseIds : [],
     })),
 
     milestones,
