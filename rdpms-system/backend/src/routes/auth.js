@@ -56,6 +56,15 @@ export const adminMiddleware = async (c, next) => {
   await next();
 };
 
+// 管理员或项目经理中间件（可编辑模版）
+export const adminOrManagerMiddleware = async (c, next) => {
+  const role = c.get('userRole');
+  if (role !== 'admin' && role !== 'manager') {
+    return c.json({ error: 'Forbidden: Admin or Manager only', code: 403 }, 403);
+  }
+  await next();
+};
+
 // 登录
 auth.post('/login', async (c) => {
   try {

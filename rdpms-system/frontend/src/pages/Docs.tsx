@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { docsAPI, formulaAPI } from '../api/client';
 import { useAppStore } from '../store/appStore';
@@ -6,8 +6,10 @@ import ReagentLibrary from './knowledge/ReagentLibrary';
 import TaskTemplateLibrary from './knowledge/TaskTemplateLibrary';
 import PrimerLibrary from './knowledge/PrimerLibrary';
 import AmplificationReagentLibrary from './knowledge/AmplificationReagentLibrary';
-import VisualTableEditor from '../components/VisualTableEditor';
+import VisualTableEditor, { type VisualTableEditorRef } from '../components/VisualTableEditor';
+import { MindMapEditor } from '../components/MindMapView';
 import { FlaskConical, Cpu, Dna, FileText, BookOpen, Package, ClipboardList, Dna as DnaIcon, Beaker } from 'lucide-react';
+import { extractMindmapBlock, findMindmapBlocks, replaceMindmapBlock, hasMarkdownTable, upsertFirstMindmapBlock } from '../utils/markdownBlocks';
 
 interface DocCategory {
   id: string;
@@ -68,8 +70,15 @@ export default function Docs() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingDoc, setEditingDoc] = useState<DocDocument | null>(null);
   const [showFormulaPicker, setShowFormulaPicker] = useState(false);
+  const [showMindmapEditor, setShowMindmapEditor] = useState(false);
+  const [showTableEditor, setShowTableEditor] = useState(false);
   const [formulaList, setFormulaList] = useState<any[]>([]);
   const [formulaSearch, setFormulaSearch] = useState('');
+  const [mindmapDraft, setMindmapDraft] = useState('# 根节点\n## 分支1\n## 分支2');
+  const [tableDraft, setTableDraft] = useState('');
+  const [activeMindmapIndex, setActiveMindmapIndex] = useState(0);
+  const [mindmapBlockIndex, setMindmapBlockIndex] = useState(0);
+  const tableEditorRef = useRef<VisualTableEditorRef>(null);
   const [reagentOpenKey, setReagentOpenKey] = useState(0);
   const [reagentCategoryId, setReagentCategoryId] = useState<string | null>(null);
   const [taskTemplateCategoryId, setTaskTemplateCategoryId] = useState<string | null>(null);
@@ -228,6 +237,8 @@ export default function Docs() {
 
   const getTypeColor = (type: string) => { const typeInfo = DOC_TYPES.find(t => t.id === type); const colors: Record<string, string> = { blue: 'bg-blue-100 text-blue-700', green: 'bg-green-100 text-green-700', purple: 'bg-purple-100 text-purple-700', orange: 'bg-orange-100 text-orange-700' }; return colors[typeInfo?.color || 'blue']; };
   const getStatusBadge = (status: string) => { const badges: Record<string, string> = { active: 'bg-green-100 text-green-700', archived: 'bg-gray-100 text-gray-700', deprecated: 'bg-red-100 text-red-700' }; return badges[status] || badges.active; };
+  const hasExistingMindmap = !!extractMindmapBlock(docForm.content || '');
+  const hasExistingTable = hasMarkdownTable(docForm.content || '');
 
   return (
     <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', boxSizing: 'border-box', height: '100%', overflow: 'hidden' }}>
@@ -392,6 +403,54 @@ export default function Docs() {
         </div>
       )}
 
+      {showMindmapEditor && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(2,6,23,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ width: 'min(96vw, 1280px)', height: 'min(90vh, 860px)', background: '#fff', borderRadius: 14, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.24)', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>思维导图画布编辑器</div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 3 }}>新建文档和编辑文档都可以直接在这里完成可视化录入，保存后自动回写到 :::mindmap 区块。</div>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => setShowMindmapEditor(false)} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', color: '#374151', cursor: 'pointer', fontSize: 12 }}>取消</button>
+                <button onClick={() => {
+                  setDocForm(prev => ({
+                    ...prev,
+                    content: activeMindmapIndex >= 0
+                      ? replaceMindmapBlock(prev.content || '', activeMindmapIndex, mindmapDraft)
+                      : upsertFirstMindmapBlock(prev.content || '', mindmapDraft),
+                  }));
+                  setShowMindmapEditor(false);
+                }} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer', fontSize: 12 }}>写入文档</button>
+              </div>
+            </div>
+            <div style={{ flex: 1, minHeight: 0, background: '#f8fafc', padding: 12 }}>
+              <MindMapEditor content={mindmapDraft} onChange={setMindmapDraft} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showTableEditor && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.48)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ width: 'min(94vw, 1100px)', height: 'min(84vh, 760px)', background: '#fff', borderRadius: 14, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.22)', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '14px 18px', borderBottom: '1px solid #e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>表格图形化编辑器</div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginTop: 3 }}>默认读取正文中的第一个 Markdown 表格；如果正文里还没有表格，也可以在这里直接新建一个。</div>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => setShowTableEditor(false)} style={{ padding: '8px 14px', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fff', color: '#374151', cursor: 'pointer', fontSize: 12 }}>取消</button>
+                <button onClick={() => { const md = tableEditorRef.current?.getMarkdown() ?? tableDraft; setDocForm(prev => ({ ...prev, content: md })); setShowTableEditor(false); }} style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer', fontSize: 12 }}>写入文档</button>
+              </div>
+            </div>
+            <div style={{ flex: 1, minHeight: 0, background: '#f8fafc', padding: 12 }}>
+              <VisualTableEditor ref={tableEditorRef} value={tableDraft} onChange={setTableDraft} tableOnly />
+            </div>
+          </div>
+        </div>
+      )}
+
       {(showCreateModal || editingDoc) && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4">
@@ -414,9 +473,50 @@ export default function Docs() {
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2v-4M9 21H5a2 2 0 01-2-2v-4m0 0h18"/></svg>
                     引用配方
                   </button>
-                  <span style={{ fontSize: 11, color: '#9ca3af' }}>可视化或 Markdown 两种录入方式</span>
+                  <button type="button" onClick={() => insertAtCursor(':::mindmap\n# 根节点\n## 分支1\n## 分支2\n:::')} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #ddd6fe', background: '#f5f3ff', cursor: 'pointer', fontSize: 12, color: '#6d28d9', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    插入思维导图
+                  </button>
+                  <button type="button" onClick={() => { setTableDraft(docForm.content || ''); setShowTableEditor(true); }} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #cbd5e1', background: '#fff', cursor: 'pointer', fontSize: 12, color: '#334155', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {hasExistingTable ? '图形编辑现有表格' : '图形新建表格'}
+                  </button>
+                  {findMindmapBlocks(docForm.content || '').length > 1 && (
+                    <select
+                      value={mindmapBlockIndex}
+                      onChange={e => setMindmapBlockIndex(Number(e.target.value))}
+                      style={{ padding: '3px 6px', borderRadius: 5, border: '1px solid #bfdbfe', fontSize: 12, color: '#1d4ed8', background: '#eff6ff', cursor: 'pointer' }}
+                    >
+                      {findMindmapBlocks(docForm.content || '').map((_, i) => (
+                        <option key={i} value={i}>思维导图 {i + 1}</option>
+                      ))}
+                    </select>
+                  )}
+                  <button type="button" onClick={() => {
+                    const blocks = findMindmapBlocks(docForm.content || '');
+                    if (blocks.length === 0) {
+                      setActiveMindmapIndex(-1);
+                      setMindmapDraft('# 根节点\n## 分支1\n## 分支2');
+                    } else {
+                      const idx = blocks.length > 1 ? (mindmapBlockIndex < blocks.length ? mindmapBlockIndex : 0) : 0;
+                      setActiveMindmapIndex(idx);
+                      setMindmapDraft(blocks[idx].content);
+                    }
+                    setShowMindmapEditor(true);
+                  }} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #bfdbfe', background: '#eff6ff', cursor: 'pointer', fontSize: 12, color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {hasExistingMindmap ? '画布编辑思维导图' : '画布创建思维导图'}
+                  </button>
+                  <span style={{ fontSize: 11, color: '#9ca3af' }}>已有的表格和思维导图块都可以从这里直接进入图形化编辑</span>
                 </div>
-                <VisualTableEditor value={docForm.content} onChange={v => setDocForm({ ...docForm, content: v })} />
+                <textarea
+                  style={{
+                    width: '100%', minHeight: 160, padding: '10px 12px',
+                    border: '1px solid #e2e8f0', borderRadius: 8,
+                    fontFamily: 'monospace', fontSize: 13, lineHeight: 1.6,
+                    resize: 'vertical', outline: 'none', boxSizing: 'border-box',
+                  }}
+                  placeholder="输入文档正文内容，可使用 Markdown 语法..."
+                  value={docForm.content}
+                  onChange={e => setDocForm({ ...docForm, content: e.target.value })}
+                />
               </div>
             </div>
             <div className="sticky bottom-0 bg-gray-50 px-6 py-4 flex items-center justify-end gap-3 border-t border-gray-200"><button onClick={() => { setShowCreateModal(false); setEditingDoc(null); resetForm(); }} className="btn btn-secondary">取消</button><button onClick={editingDoc ? handleUpdateDoc : handleCreateDoc} className="btn btn-primary">{editingDoc ? '保存修改' : '创建文档'}</button></div>

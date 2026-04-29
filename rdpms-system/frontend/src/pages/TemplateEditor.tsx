@@ -348,10 +348,11 @@ function PhaseEventsPanel({ events, onEventsChange }: {
 
 // ─── Phase Node (sortable) ─────────────────────────────────────────────────
 
-function PhaseNode({ phase, isSelected, onClick }: {
+function PhaseNode({ phase, isSelected, onClick, onDelete }: {
   phase: Phase;
   isSelected: boolean;
   onClick: () => void;
+  onDelete?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: phase.id });
   const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 };
@@ -369,7 +370,7 @@ function PhaseNode({ phase, isSelected, onClick }: {
   };
 
   return (
-    <div ref={setNodeRef} style={style}>
+    <div ref={setNodeRef} style={style} className="group/phase-node">
       <div
         className={`border-2 rounded-lg p-3 cursor-pointer select-none transition-all ${typeColors[phase.type]} ${
           phase.enabled ? '' : 'opacity-50 border-dashed'
@@ -396,6 +397,19 @@ function PhaseNode({ phase, isSelected, onClick }: {
             {phase.name}
           </span>
           {phase.source === 'inherited' && <span title="继承" className="text-gray-400 text-xs">🔒</span>}
+          {/* 删除按钮：悬停时显示 */}
+          {onDelete && (
+            <button
+              type="button"
+              className="opacity-0 group-hover/phase-node:opacity-100 w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all flex-shrink-0"
+              title="删除阶段"
+              onClick={e => { e.stopPropagation(); onDelete(); }}
+            >
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M1.5 2.5h7M4 2.5V1.5a.5.5 0 01.5-.5h1a.5.5 0 01.5.5v1M3 2.5l.5 6h3l.5-6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          )}
         </div>
         <div className="ml-8 mt-1 flex gap-3 text-xs text-gray-400">
           <span>{phase.tasks.filter(t => t.enabled).length} 任务</span>
@@ -439,6 +453,12 @@ export default function TemplateEditor() {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<number>(0);
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
+  const [searchText, setSearchText] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [showBatchOp, setShowBatchOp] = useState(false);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState('');
 
   // 并行阶段选择弹窗
   const [parallelModal, setParallelModal] = useState<null | { open: boolean; sourceId: string; targetId: string }>(null);
@@ -719,6 +739,25 @@ export default function TemplateEditor() {
     setPhases(prev => prev.map(p => p.id === phaseId ? { ...p, ...updates } : p));
   }
 
+  function deletePhase(phaseId: string) {
+    if (!confirm('确认删除该阶段？与该阶段相关的所有连线也将被移除。')) return;
+    setPhases(prev => {
+      const filtered = prev.filter(p => p.id !== phaseId);
+      const cleaned = filtered.map(p => ({
+        ...p,
+        nextPhaseIds: (p.nextPhaseIds ?? []).filter(id => id !== phaseId),
+      }));
+      return cleaned.map((p, i) => ({ ...p, order: i + 1 }));
+    });
+    if (selectedPhaseId === phaseId) setSelectedPhaseId(null);
+  }
+
+  const filteredPhases = useMemo(() => {
+    if (!searchText.trim()) return phases;
+    const kw = searchText.trim().toLowerCase();
+    return phases.filter(p => p.name.toLowerCase().includes(kw));
+  }, [phases, searchText]);
+
 
 
   function handleDragEnd(event: any) {
@@ -793,8 +832,27 @@ export default function TemplateEditor() {
           <div className="w-px h-4 bg-gray-200" />
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-gray-800">{(template as any).name}</span>
-              <button onClick={() => {}}><span className="text-gray-400">✎</span></button>
+              <span className="text-sm font-semibold text-gray-800">
+                {editingTitle ? (
+                  <input
+                    autoFocus
+                    className="text-sm font-semibold text-gray-800 border border-blue-300 rounded px-1 outline-none focus:ring-1 focus:ring-blue-300"
+                    value={titleDraft}
+                    onChange={e => setTitleDraft(e.target.value)}
+                    onBlur={() => {
+                      if (titleDraft.trim()) {
+                        setTemplate((t: any) => ({ ...t, name: titleDraft.trim() }));
+                      }
+                      setEditingTitle(false);
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                      if (e.key === 'Escape') { setEditingTitle(false); }
+                    }}
+                  />
+                ) : (template as any).name}
+              </span>
+              <button onClick={() => { setTitleDraft((template as any).name || ''); setEditingTitle(true); }} title="编辑名称"><span className="text-gray-400">✎</span></button>
             </div>
             <div className="text-xs text-gray-400 mt-0.5">{(template as any).code} · {phases.length} 个阶段 · {totalTasks} 个任务</div>
           </div>
@@ -802,10 +860,19 @@ export default function TemplateEditor() {
 
         {/* 右侧：工具按钮 + 保存 */}
         <div className="flex items-center gap-2">
-          <button onClick={() => {}} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50">🔍 搜索</button>
-          <button onClick={() => {}} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50">批量操作</button>
-          <button onClick={() => {}} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50">对齐流程图</button>
-          <button onClick={() => {}} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50">预览</button>
+          <button onClick={() => setShowSearch(v => !v)} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded-md hover:bg-gray-50 ${showSearch ? 'text-blue-600 border-blue-300 bg-blue-50' : 'text-gray-600 border-gray-200'}`}>🔍 搜索</button>
+          <div className="relative">
+            <button onClick={() => setShowBatchOp(v => !v)} className={`flex items-center gap-1.5 px-3 py-1.5 text-xs border rounded-md hover:bg-gray-50 ${showBatchOp ? 'text-blue-600 border-blue-300 bg-blue-50' : 'text-gray-600 border-gray-200'}`}>批量操作</button>
+            {showBatchOp && (
+              <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 w-36 py-1">
+                <button className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50" onClick={() => { setPhases(p => p.map(ph => ({ ...ph, enabled: true }))); setShowBatchOp(false); }}>全部启用</button>
+                <button className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50" onClick={() => { setPhases(p => p.map(ph => ({ ...ph, enabled: false }))); setShowBatchOp(false); }}>全部禁用</button>
+                <button className="w-full text-left px-3 py-2 text-xs text-red-500 hover:bg-red-50" onClick={() => { if (confirm('确认删除所有已禁用的阶段？')) { setPhases(p => { const filtered = p.filter(ph => ph.enabled !== false); return filtered.map((ph, i) => ({ ...ph, order: i + 1 })); }); } setShowBatchOp(false); }}>删除已禁用阶段</button>
+              </div>
+            )}
+          </div>
+          <button onClick={handleAutoLayout} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50">对齐流程图</button>
+          <button onClick={() => setShowPreview(true)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50">预览</button>
           <div className="w-px h-4 bg-gray-200" />
           <button onClick={saveTemplate} disabled={saving} className="flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 transition-colors">{saving ? '保存中...' : '保存模版'}</button>
         </div>
@@ -835,6 +902,17 @@ export default function TemplateEditor() {
                   + 新增阶段
                 </button>
               </div>
+              {showSearch && (
+                <div className="px-3 py-2 border-b border-gray-100">
+                  <input
+                    autoFocus
+                    placeholder="搜索阶段名称..."
+                    className="w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 outline-none focus:ring-1 focus:ring-blue-300"
+                    value={searchText}
+                    onChange={e => setSearchText(e.target.value)}
+                  />
+                </div>
+              )}
               <div className="flex-1 overflow-y-auto p-3">
                 {phases.length === 0 ? (
                   <p className="text-xs text-gray-400 text-center py-8">点击「新增阶段」开始构建流程</p>
@@ -845,12 +923,13 @@ export default function TemplateEditor() {
                     onDragEnd={handleDragEnd}
                   >
                     <SortableContext items={phases.map(p => p.id)} strategy={verticalListSortingStrategy}>
-                      {phases.map(phase => (
+                      {filteredPhases.map(phase => (
                         <PhaseNode
                           key={phase.id}
                           phase={phase}
                           isSelected={selectedPhase?.id === phase.id}
                           onClick={() => { setSelectedPhaseId(phase.id); setActiveTab(0); }}
+                          onDelete={() => deletePhase(phase.id)}
                         />
                       ))}
                     </SortableContext>
@@ -1343,6 +1422,31 @@ export default function TemplateEditor() {
           )}
 
       </div>
+
+      {/* 预览模态框 */}
+      {showPreview && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowPreview(false)}>
+          <div className="bg-white rounded-xl shadow-2xl w-4/5 h-4/5 flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+              <span className="text-sm font-semibold text-gray-800">流程预览 — {(template as any).name}</span>
+              <button onClick={() => setShowPreview(false)} className="text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <ProcessFlowDiagram
+                phases={phases}
+                onPhaseConnect={() => {}}
+                onEdgeDelete={() => {}}
+                readonly={true}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 批量操作点击外部关闭 */}
+      {showBatchOp && (
+        <div className="fixed inset-0 z-40" onClick={() => setShowBatchOp(false)} />
+      )}
     </div>
   );
 }

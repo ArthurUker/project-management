@@ -3,7 +3,7 @@
  * 支持在"可视化表格"和"Markdown 源码"两种模式之间切换
  * 对外通过 value/onChange 双向绑定 Markdown 字符串
  */
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react';
 
 interface VisualTableEditorProps {
   /** Markdown 文本内容（整篇文档，不只是表格） */
@@ -11,6 +11,11 @@ interface VisualTableEditorProps {
   onChange: (v: string) => void;
   /** 是否只渲染表格编辑器（不显示正文 textarea） */
   tableOnly?: boolean;
+}
+
+export interface VisualTableEditorRef {
+  /** 返回当前编辑状态的完整 Markdown（把可视化网格写回文档） */
+  getMarkdown: () => string;
 }
 
 // ── 数据结构 ───────────────────────────────────────
@@ -73,9 +78,29 @@ function gridToMarkdown(g: GridTable): string {
 }
 
 // ── 主组件 ─────────────────────────────────────────
-export default function VisualTableEditor({ value, onChange, tableOnly }: VisualTableEditorProps) {
-  const [mode, setMode] = useState<'visual' | 'markdown'>('markdown');
+const VisualTableEditor = forwardRef<VisualTableEditorRef, VisualTableEditorProps>(
+  ({ value, onChange, tableOnly }, ref) => {
+  const [mode, setMode] = useState<'visual' | 'markdown'>(tableOnly ? 'visual' : 'markdown');
   const [grid, setGrid] = useState<GridTable>({ headers: ['列1', '列2', '列3'], rows: [['', '', '']] });
+  // 标记当前是否处于新建（追加）模式，而非编辑文档中已有的第一个表格
+  const [isNewTable, setIsNewTable] = useState(false);
+
+  // 暴露给父组件的 getMarkdown 方法
+  useImperativeHandle(ref, () => ({
+    getMarkdown: () => {
+      const tableMd = gridToMarkdown(grid);
+      if (isNewTable) {
+        // 追加到文档末尾
+        return value ? value + '\n\n' + tableMd : tableMd;
+      }
+      const parsed = parseFirstTable(value);
+      if (parsed) {
+        return [parsed.before, tableMd, parsed.after].filter(s => s !== '').join('\n');
+      }
+      // 文档中没有表格则追加
+      return value ? value + '\n\n' + tableMd : tableMd;
+    },
+  }), [grid, value, isNewTable]);
 
   // 当切换到 visual 模式时，从 markdown 解析表格
   const switchToVisual = useCallback(() => {
@@ -87,6 +112,10 @@ export default function VisualTableEditor({ value, onChange, tableOnly }: Visual
     }
     setMode('visual');
   }, [value]);
+
+  useEffect(() => {
+    if (tableOnly && mode === 'visual') switchToVisual();
+  }, [mode, switchToVisual, tableOnly]);
 
   // 当切换回 markdown 时，把 grid 合并回 value
   const switchToMarkdown = useCallback(() => {
@@ -126,7 +155,10 @@ export default function VisualTableEditor({ value, onChange, tableOnly }: Visual
   const insertNewTable = () => {
     const newGrid = { headers: ['列1', '列2', '列3'], rows: [['', '', ''], ['', '', '']] };
     setGrid(newGrid);
-    if (mode === 'markdown') {
+    if (tableOnly) {
+      // tableOnly 模式：标记为"新建"，写入时将追加到文档末尾
+      setIsNewTable(true);
+    } else if (mode === 'markdown') {
       const tableMd = gridToMarkdown(newGrid);
       onChange(value ? value + '\n\n' + tableMd : tableMd);
     }
@@ -147,7 +179,8 @@ export default function VisualTableEditor({ value, onChange, tableOnly }: Visual
     <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
       {/* ── 工具栏 ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
-        {/* 模式切换 */}
+        {/* 模式切换（tableOnly 时隐藏，专注于可视化编辑） */}
+        {!tableOnly && (
         <div style={{ display: 'flex', border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden' }}>
           <button
             type="button"
@@ -175,6 +208,7 @@ export default function VisualTableEditor({ value, onChange, tableOnly }: Visual
             📝 Markdown
           </button>
         </div>
+        )}
 
         {mode === 'visual' && (
           <>
@@ -185,7 +219,7 @@ export default function VisualTableEditor({ value, onChange, tableOnly }: Visual
               ＋ 添加列
             </button>
             <button type="button" onClick={insertNewTable} style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid #fde68a', background: '#fffbeb', cursor: 'pointer', fontSize: 12, color: '#92400e' }}>
-              重置表格
+              {tableOnly ? '新增另一个表格' : '重置表格'}
             </button>
           </>
         )}
@@ -275,7 +309,7 @@ export default function VisualTableEditor({ value, onChange, tableOnly }: Visual
         </div>
       )}
 
-      {mode === 'visual' && (
+      {mode === 'visual' && !tableOnly && (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
           <button
             type="button"
@@ -291,4 +325,6 @@ export default function VisualTableEditor({ value, onChange, tableOnly }: Visual
       )}
     </div>
   );
-}
+});
+
+export default VisualTableEditor;

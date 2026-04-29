@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { projectAPI, userAPI } from '../api/client';
+import { projectAPI, userAPI, projectTemplatesAPI } from '../api/client';
 import { getAllowedTransitions } from '../constants/statusColors';
 
 // ─── 与 Prisma Schema 严格对齐的类型 ───
@@ -14,6 +14,7 @@ interface Project {
   managerId?: string;
   startDate?: string | null;
   endDate?: string | null;
+  templateId?: string | null;
 }
 
 interface User {
@@ -40,8 +41,10 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
     managerId: '',
     startDate: '',
     endDate:   '',
+    templateId: '',
   });
   const [users, setUsers]       = useState<User[]>([]);
+  const [templates, setTemplates] = useState<any[]>([]);
   const [saving, setSaving]     = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(false);
 
@@ -57,8 +60,17 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
       managerId: project.managerId   ?? '',
       startDate: project.startDate   ? String(project.startDate).slice(0, 10) : '',
       endDate:   project.endDate     ? String(project.endDate).slice(0, 10)   : '',
+      templateId: project.templateId ?? '',
     });
   }, [project]);
+
+  // 加载模版列表
+  useEffect(() => {
+    projectTemplatesAPI.list().then((res: any) => {
+      const list = res.templates ?? res.list ?? res.data ?? res;
+      setTemplates(Array.isArray(list) ? list : []);
+    }).catch(() => {});
+  }, []);
 
   // 加载用户列表（用于负责人选择）
   useEffect(() => {
@@ -92,6 +104,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
         managerId: form.managerId || undefined,
         startDate: form.startDate || null,
         endDate:   form.endDate   || null,
+        templateId: form.templateId || undefined,
       };
       await projectAPI.update(project.id, payload);
       onSaved();
@@ -251,6 +264,25 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
               onChange={e => setForm({ ...form, position: e.target.value })}
               placeholder="项目定位或简要描述"
             />
+          </div>
+
+          {/* 项目模版 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              项目模版
+            </label>
+            <select
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
+                         focus:outline-none focus:ring-2 focus:ring-blue-200
+                         focus:border-blue-400 bg-white transition-colors"
+              value={form.templateId}
+              onChange={e => setForm({ ...form, templateId: e.target.value })}
+            >
+              <option value="">- 不使用模版 -</option>
+              {templates.map((t: any) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
           </div>
 
           {/* 开始时间 + 结束时间 */}

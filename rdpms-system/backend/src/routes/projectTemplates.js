@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { prisma } from '../index.js';
-import { authMiddleware, adminMiddleware } from './auth.js';
+import { authMiddleware, adminMiddleware, adminOrManagerMiddleware } from './auth.js';
 
 const templates = new Hono();
 
@@ -133,8 +133,8 @@ templates.post('/', adminMiddleware, async (c) => {
   return c.json(tpl, 201);
 });
 
-// 更新模版（管理员）
-templates.put('/:id', adminMiddleware, async (c) => {
+// 更新模版（管理员或项目经理）
+templates.put('/:id', adminOrManagerMiddleware, async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json();
   delete body.code;
@@ -149,8 +149,8 @@ templates.put('/:id', adminMiddleware, async (c) => {
   return c.json(tpl);
 });
 
-// 部分更新（仅更新 content / name / description / status 等）
-templates.patch('/:id', adminMiddleware, async (c) => {
+// 部分更新（管理员或项目经理）
+templates.patch('/:id', adminOrManagerMiddleware, async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json();
 
