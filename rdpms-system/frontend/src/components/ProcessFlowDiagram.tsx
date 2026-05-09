@@ -6,6 +6,7 @@ import {
   BackgroundVariant,
   Controls,
   MiniMap,
+  Panel,
   MarkerType,
   useNodesState,
   useEdgesState,
@@ -88,6 +89,17 @@ const layoutConfigByMode = (mode: LayoutMode) => {
 
 const getLayoutedElements = (nodes: Node[], edges: Edge[], mode: LayoutMode = 'compact') => {
   const cfg = layoutConfigByMode(mode);
+
+  // 区分「有连线节点」和「孤立节点」（无任何入边或出边）
+  const connectedIds = new Set<string>();
+  edges.forEach((e) => {
+    connectedIds.add(String(e.source));
+    connectedIds.add(String(e.target));
+  });
+  const connectedNodes = nodes.filter((n) => connectedIds.has(n.id));
+  const isolatedNodes  = nodes.filter((n) => !connectedIds.has(n.id));
+
+  // 仅对有连线的节点运行 Dagre
   const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
   dagreGraph.setGraph({
@@ -98,12 +110,10 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], mode: LayoutMode = 'c
     marginy: cfg.marginy,
   });
 
-  // 注册节点（使用统一尺寸）
-  nodes.forEach((node) => {
+  connectedNodes.forEach((node) => {
     dagreGraph.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
   });
 
-  // 注册边
   edges.forEach((edge) => {
     try {
       dagreGraph.setEdge(edge.source, edge.target);
@@ -112,10 +122,9 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], mode: LayoutMode = 'c
     }
   });
 
-  // 执行布局
   dagre.layout(dagreGraph as any);
 
-  const layoutedNodes: Node[] = nodes.map((node) => {
+  const connectedLayouted: Node[] = connectedNodes.map((node) => {
     const pos = dagreGraph.node(node.id);
     return {
       ...node,
@@ -123,7 +132,20 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], mode: LayoutMode = 'c
     };
   });
 
-  return { nodes: layoutedNodes, edges };
+  // 孤立节点排列在主流程下方的水平行，避免干扰主流程的布局和交叉消除
+  const mainMaxY = connectedLayouted.length > 0
+    ? Math.max(...connectedLayouted.map((n) => n.position.y + NODE_HEIGHT))
+    : cfg.marginy;
+  const isolatedRowY = mainMaxY + (isolatedNodes.length > 0 ? cfg.ranksep + 16 : 0);
+  const isolatedLayouted: Node[] = isolatedNodes.map((node, idx) => ({
+    ...node,
+    position: {
+      x: cfg.marginx + idx * (NODE_WIDTH + cfg.nodesep),
+      y: isolatedRowY,
+    },
+  }));
+
+  return { nodes: [...connectedLayouted, ...isolatedLayouted], edges };
 };
 
 // ─── 阶段节点组件 ─────────────────────────────────────────────────────────────
@@ -308,7 +330,7 @@ const CustomEdge: React.FC<EdgeProps> = ({
               </button>
             )}
 
-            {selected && (
+            {(hovered || selected) && (
               <button
                 onClick={handleDelete}
                 onContextMenu={(e) => { e.preventDefault(); handleDelete(e as any); }}
@@ -361,9 +383,9 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const { fitView, getNodes } = useReactFlow();
 
-  // drag-to-snap state
+  // drag-to-snap: disabled (set to 0 so menu never triggers; users connect via handles)
   const [dragOverNodeId, setDragOverNodeId] = useState<string | null>(null);
-  const SNAP_DISTANCE = 80;
+  const SNAP_DISTANCE = 0;
 
   const [dropMenuState, setDropMenuState] = useState<{
     visible: boolean;
@@ -559,24 +581,8 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
           });
         });
       });
-    } else {
-      // 回退：按 order 排序后线性连接
-      const sorted = [...phases].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-      for (let i = 0; i < sorted.length - 1; i++) {
-        rawEdges.push({
-          id: `e-${sorted[i].id}-${sorted[i + 1].id}`,
-          source: sorted[i].id,
-          target: sorted[i + 1].id,
-          type: 'custom',
-          animated: false,
-          style: { stroke: '#bfdbfe', strokeWidth: 1.5 },
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: '#bfdbfe',
-          },
-        });
-      }
     }
+    // 不再回退到线性连接：若用户清除了所有 nextPhaseIds，节点保持无连线状态
 
     // identify parallel groups and record user order
     const parallelGroups = getParallelGroups(sortedPhases);
@@ -681,14 +687,8 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
             rawEdges.push({ id: `e-${p.id}-${nextId}`, source: p.id, target: nextId, type: 'custom', animated: false, style: { stroke: '#93C5FD', strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: '#93C5FD' }, data: { onAddParallel: onAddParallel ?? (() => {}), onDelete: onEdgeDelete } });
           });
         });
-      } else {
-        const sorted = [...phases].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-        for (let i = 0; i < sorted.length - 1; i++) {
-          if (!rawEdges.find(e => e.source === sorted[i].id)) {
-            rawEdges.push({ id: `e-${sorted[i].id}-${sorted[i + 1].id}`, source: sorted[i].id, target: sorted[i + 1].id, type: 'custom', animated: false, style: { stroke: '#93C5FD', strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: '#93C5FD' }, data: { onAddParallel: onAddParallel ?? (() => {}), onDelete: onEdgeDelete } });
-          }
-        }
       }
+      // 无显式连线时不再回退到线性连接（TemplateEditor 加载时已保证初始连线）
 
       // Step 2: run dagre layout
       const { nodes: ln, edges: le } = getLayoutedElements(rawNodes, rawEdges, mode);
@@ -827,45 +827,23 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     [onPhaseConnect, onAddParallel]
   );
 
-  // 拖拽节点：磁吸检测
-  const handleNodeDrag = useCallback((_: any, draggedNode: Node) => {
-    let closestId: string | null = null;
-    let closestDist = SNAP_DISTANCE;
-    nodes.forEach((n) => {
-      if (n.id === draggedNode.id) return;
-      const dx = (n.position.x || 0) - (draggedNode.position.x || 0);
-      const dy = (n.position.y || 0) - (draggedNode.position.y || 0);
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist < closestDist) {
-        closestDist = dist;
-        closestId = n.id;
-      }
-    });
+  // 拖拽节点：不做磁吸检测，允许节点自由拖拽到任意位置
+  const handleNodeDrag = useCallback((_: any, _draggedNode: Node) => {
+    // snap detection disabled – free dragging
+  }, []);
 
-    setDragOverNodeId(closestId);
-  }, [nodes]);
-
-  const handleNodeDragStop = useCallback((event: React.MouseEvent, draggedNode: Node) => {
-    if (dragOverNodeId) {
-      // Use mouse screen coordinates for menu placement (clientX/clientY)
-      const x = (event?.clientX) ?? 0;
-      const y = (event?.clientY) ?? 0;
-      setDropMenuState({ visible: true, draggedPhaseId: draggedNode.id, targetPhaseId: dragOverNodeId, x, y });
-    }
-
+  const handleNodeDragStop = useCallback((_event: React.MouseEvent, draggedNode: Node) => {
     if (typeof draggedNode.position?.x === 'number' && typeof draggedNode.position?.y === 'number') {
       onNodePositionChange?.(draggedNode.id, draggedNode.position.x, draggedNode.position.y);
     }
-
     setDragOverNodeId(null);
-
     // Recalculate display order after user finishes dragging a node
     try {
       recalculateDisplayOrder();
     } catch (err) {
       // ignore
     }
-  }, [dragOverNodeId, onNodePositionChange, recalculateDisplayOrder]);
+  }, [onNodePositionChange, recalculateDisplayOrder]);
 
   // 更新节点样式以高亮拖拽目标
   useEffect(() => {
@@ -946,6 +924,42 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
         maskColor="rgba(248,250,252,0.85)"
         className="!shadow-sm !border !border-gray-200 !rounded-xl"
       />
+
+      {/* 画布内浮动「自动整理」按钮 */}
+      {!readonly && (
+        <Panel position="top-right">
+          <div className="flex flex-col gap-1.5 mr-1 mt-1">
+            <button
+              onClick={() =>
+                window.dispatchEvent(
+                  new CustomEvent('flow:reLayout', { detail: { mode: 'compact' } })
+                )
+              }
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-blue-50 hover:border-blue-300 text-gray-600 transition-colors"
+              title="自动整理节点位置，消除连线交叉（紧凑）"
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M1 2.5h10M1 5.5h7M1 8.5h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              自动整理
+            </button>
+            <button
+              onClick={() =>
+                window.dispatchEvent(
+                  new CustomEvent('flow:reLayout', { detail: { mode: 'readable' } })
+                )
+              }
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-purple-50 hover:border-purple-300 text-gray-600 transition-colors"
+              title="间距更大的易读布局"
+            >
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <path d="M1 2.5h10M1 5.5h10M1 8.5h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+              宽松布局
+            </button>
+          </div>
+        </Panel>
+      )}
     </ReactFlow>
 
     {/* Drop menu (outside ReactFlow but inside provider) */}

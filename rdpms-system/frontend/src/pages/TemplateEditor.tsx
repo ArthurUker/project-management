@@ -579,6 +579,16 @@ export default function TemplateEditor() {
 
       // Ensure phases are sorted by their explicit order before rendering (important for parallel numbering)
       const sorted = loaded.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+      // 若加载的模版没有任何显式连线（nextPhaseIds 全为空），自动生成线性连线。
+      // 这样新模版加载时节点有初始连线，且之后用户删除连线不会触发"线性回退"自动重连。
+      const hasAnyConnections = sorted.some(p => (p.nextPhaseIds ?? []).length > 0);
+      if (!hasAnyConnections && sorted.length > 1) {
+        for (let i = 0; i < sorted.length - 1; i++) {
+          sorted[i].nextPhaseIds = [sorted[i + 1].id];
+        }
+      }
+
       suppressHistoryRef.current = true;
       setPhases(sorted);
       setPhaseHistory([]);
