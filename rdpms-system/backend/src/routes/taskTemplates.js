@@ -174,4 +174,47 @@ templates.post('/bulk-delete', async (c) => {
   }
 });
 
+// POST /api/task-templates/seed  ── 一键预置标准模板
+templates.post('/seed', async (c) => {
+  try {
+    const { SEED_TEMPLATES } = await import('../data/taskTemplateSeed.js');
+    let created = 0;
+    let skipped = 0;
+
+    for (const tpl of SEED_TEMPLATES) {
+      const exists = await prisma.taskTemplate.findFirst({
+        where: { name: tpl.name, category: tpl.category },
+      });
+      if (exists) { skipped++; continue; }
+
+      await prisma.taskTemplate.create({
+        data: {
+          name: tpl.name,
+          category: tpl.category,
+          description: tpl.description || null,
+          estimatedDays: tpl.estimatedDays || 0,
+          priority: tpl.priority || 'medium',
+          tags: Array.isArray(tpl.tags) ? tpl.tags.join(',') : (tpl.tags || null),
+          steps: {
+            create: (tpl.steps || []).map((s, idx) => ({
+              order: idx + 1,
+              title: s.title,
+              description: s.description || null,
+              estimatedHours: s.estimatedHours || null,
+              assigneeRole: s.assigneeRole || null,
+              checklist: null,
+            })),
+          },
+        },
+      });
+      created++;
+    }
+
+    return c.json({ success: true, created, skipped });
+  } catch (err) {
+    console.error('预置任务模板失败', err);
+    return c.json({ error: '预置任务模板失败' }, 500);
+  }
+});
+
 export default templates;

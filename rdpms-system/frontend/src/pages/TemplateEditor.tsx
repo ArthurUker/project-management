@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { projectTemplatesAPI } from '../api/client';
 import ProcessFlowDiagram from '../components/ProcessFlowDiagram';
 import PhaseTaskPanel from '../components/PhaseTaskPanel';
-import { AlignLeft, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -886,12 +886,6 @@ export default function TemplateEditor() {
     setActiveTab(0);
   }, []);
 
-  // 自动对齐（触发重新布局 reLayout）
-  const handleAutoLayout = useCallback((mode: 'compact' | 'readable' = 'compact') => {
-    window.dispatchEvent(new CustomEvent('flow:reLayout', { detail: { mode } }));
-  }, []);
-
-
   function addPhase() {
     const newPhase: Phase = {
       id: `phase_${Date.now()}`,
@@ -1063,8 +1057,6 @@ export default function TemplateEditor() {
               </div>
             )}
           </div>
-          <button onClick={() => handleAutoLayout('compact')} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50">紧凑对齐</button>
-          <button onClick={() => handleAutoLayout('readable')} className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50">易读对齐</button>
           <button
             onClick={handleUndo}
             disabled={phaseHistory.length === 0}
@@ -1185,22 +1177,6 @@ export default function TemplateEditor() {
               )}
             </span>
             <div className="flex-1" />
-            <button
-              onClick={() => handleAutoLayout('compact')}
-              className="flex items-center gap-1 px-2.5 py-1 text-xs text-gray-500
-                         border border-gray-200 rounded-md hover:bg-gray-50"
-            >
-              <AlignLeft size={12} />
-              紧凑对齐
-            </button>
-            <button
-              onClick={() => handleAutoLayout('readable')}
-              className="flex items-center gap-1 px-2.5 py-1 text-xs text-gray-500
-                         border border-gray-200 rounded-md hover:bg-gray-50"
-            >
-              <AlignLeft size={12} />
-              易读对齐
-            </button>
           </div>
 
           {/* React Flow 画布 */}

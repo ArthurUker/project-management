@@ -25,6 +25,18 @@ logs/
 # Backup and temp files
 *.bak
 *.tmp
+_task_tree.txt
+_xmind_tmp*/
+
+# Seed data generated exports (keep seed.js only)
+src/data/*.json
+src/data/*.csv
+!src/data/taskTemplateSeed.js
+
+# Database dumps for deployment (safety backups)
+db_backups/
+*.sql
+*.dump
 
 # Editor and OS files
 .DS_Store

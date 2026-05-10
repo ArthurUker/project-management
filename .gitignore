@@ -38,6 +38,13 @@ Thumbs.db
 *.tmp
 output_package.zip
 output_package/
+_task_tree.txt
+_xmind_tmp*/
+
+# ── Seed 数据临时文件（生成的数据不提交）──
+src/data/*.json
+src/data/*.csv
+!src/data/taskTemplateSeed.js
 
 # ── Python 虚拟环境 ──
 .venv/

@@ -23,7 +23,6 @@ import {
   type Connection,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import dagre from '@dagrejs/dagre';
 
 // ─── 类型 ────────────────────────────────────────────────────────────────────
 interface Phase {
@@ -57,7 +56,7 @@ interface ProcessFlowDiagramProps {
   readonly?: boolean;
 }
 
-// ─── Dagre 布局 ───────────────────────────────────────────────────────────────
+// ─── 自适应分层布局 ─────────────────────────────────────────────────────────────
 const NODE_WIDTH = 160;
 const NODE_HEIGHT = 60;
 const RANK_SEP = 80;
@@ -90,54 +89,471 @@ const layoutConfigByMode = (mode: LayoutMode) => {
 const getLayoutedElements = (nodes: Node[], edges: Edge[], mode: LayoutMode = 'compact') => {
   const cfg = layoutConfigByMode(mode);
 
-  // 区分「有连线节点」和「孤立节点」（无任何入边或出边）
-  const connectedIds = new Set<string>();
-  edges.forEach((e) => {
-    connectedIds.add(String(e.source));
-    connectedIds.add(String(e.target));
-  });
-  const connectedNodes = nodes.filter((n) => connectedIds.has(n.id));
-  const isolatedNodes  = nodes.filter((n) => !connectedIds.has(n.id));
+  // 仅保留有效边
+  const nodeById = new Map(nodes.map((n) => [n.id, n] as const));
+  const validEdges = edges.filter((e) => nodeById.has(String(e.source)) && nodeById.has(String(e.target)));
 
-  // 仅对有连线的节点运行 Dagre
-  const dagreGraph = new dagre.graphlib.Graph();
-  dagreGraph.setDefaultEdgeLabel(() => ({}));
-  dagreGraph.setGraph({
-    rankdir: 'LR',
-    ranksep: cfg.ranksep,
-    nodesep: cfg.nodesep,
-    marginx: cfg.marginx,
-    marginy: cfg.marginy,
+  // 邻接表 + 入度
+  const incoming = new Map<string, string[]>();
+  const outgoing = new Map<string, string[]>();
+  const inDegree = new Map<string, number>();
+  nodes.forEach((n) => {
+    incoming.set(n.id, []);
+    outgoing.set(n.id, []);
+    inDegree.set(n.id, 0);
   });
-
-  connectedNodes.forEach((node) => {
-    dagreGraph.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT });
+  validEdges.forEach((e) => {
+    const s = String(e.source);
+    const t = String(e.target);
+    outgoing.get(s)?.push(t);
+    incoming.get(t)?.push(s);
+    inDegree.set(t, (inDegree.get(t) ?? 0) + 1);
   });
 
-  edges.forEach((edge) => {
-    try {
-      dagreGraph.setEdge(edge.source, edge.target);
-    } catch (e) {
-      // ignore invalid edges
+  // 区分孤立节点（无入边且无出边）
+  const connectedNodes = nodes.filter((n) => ((incoming.get(n.id)?.length ?? 0) + (outgoing.get(n.id)?.length ?? 0)) > 0);
+  const isolatedNodes = nodes.filter((n) => ((incoming.get(n.id)?.length ?? 0) + (outgoing.get(n.id)?.length ?? 0)) === 0);
+
+  // 连通部分为空时，直接按一行摆放
+  if (connectedNodes.length === 0) {
+    return {
+      nodes: isolatedNodes.map((n, i) => ({
+        ...n,
+        position: {
+          x: cfg.marginx + i * (NODE_WIDTH + cfg.nodesep),
+          y: cfg.marginy,
+        },
+      })),
+      edges,
+    };
+  }
+
+  // Kahn 拓扑排序（循环图时追加剩余节点，避免中断）
+  const localIn = new Map<string, number>();
+  connectedNodes.forEach((n) => localIn.set(n.id, inDegree.get(n.id) ?? 0));
+
+  const queue: string[] = connectedNodes
+    .filter((n) => (localIn.get(n.id) ?? 0) === 0)
+    .sort((a, b) => (a.position.y ?? 0) - (b.position.y ?? 0))
+    .map((n) => n.id);
+
+  const topo: string[] = [];
+  while (queue.length > 0) {
+    const id = queue.shift()!;
+    topo.push(id);
+    (outgoing.get(id) ?? []).forEach((to) => {
+      if (!localIn.has(to)) return;
+      localIn.set(to, (localIn.get(to) ?? 0) - 1);
+      if ((localIn.get(to) ?? 0) === 0) queue.push(to);
+    });
+  }
+
+  if (topo.length < connectedNodes.length) {
+    const leftovers = connectedNodes
+      .map((n) => n.id)
+      .filter((id) => !topo.includes(id))
+      .sort((a, b) => ((nodeById.get(a)?.position.y ?? 0) - (nodeById.get(b)?.position.y ?? 0)));
+    topo.push(...leftovers);
+  }
+
+  // 分层：layer[v] = max(layer[pred] + 1)
+  const layer = new Map<string, number>();
+  topo.forEach((id) => {
+    const preds = (incoming.get(id) ?? []).filter((p) => layer.has(p));
+    if (preds.length === 0) {
+      layer.set(id, 0);
+      return;
+    }
+    const lv = Math.max(...preds.map((p) => layer.get(p) ?? 0)) + 1;
+    layer.set(id, lv);
+  });
+
+  const maxLayer = Math.max(...connectedNodes.map((n) => layer.get(n.id) ?? 0));
+  const layers: string[][] = Array.from({ length: maxLayer + 1 }, () => []);
+  connectedNodes.forEach((n) => {
+    layers[layer.get(n.id) ?? 0].push(n.id);
+  });
+
+  // 初始化层内顺序：按当前 y（用户心智最稳定）
+  const orderInLayer = new Map<string, number>();
+  layers.forEach((arr) => {
+    arr.sort((a, b) => ((nodeById.get(a)?.position.y ?? 0) - (nodeById.get(b)?.position.y ?? 0)));
+    arr.forEach((id, idx) => orderInLayer.set(id, idx));
+  });
+
+  // === 虚拟节点插入（Dummy Node Insertion）===
+  // 对跨度 >1 层的长距离边，在每个中间层插入一个占位虚拟节点。
+  // 虚拟节点参与 barycenter + transposition 排序，迫使真实节点让路，
+  // 避免边的路径穿过中间层的实际节点。
+  const dummyIds = new Set<string>();
+  const edgeDummyChain = new Map<string, string[]>(); // edgeId -> 该边的虚拟节点列表（有序）
+  const layoutEdgePairs: Array<{ src: string; tgt: string }> = []; // 仅相邻层连接（含虚拟节点）
+
+  validEdges.forEach((edge) => {
+    const src = String(edge.source);
+    const tgt = String(edge.target);
+    const srcL = layer.get(src) ?? 0;
+    const tgtL = layer.get(tgt) ?? 0;
+
+    if (tgtL - srcL <= 1) {
+      // 相邻层或同层：直接记录，无需虚拟节点
+      if (tgtL > srcL) layoutEdgePairs.push({ src, tgt });
+      return;
+    }
+
+    // 长距离边：在每个中间层插入一个虚拟节点
+    const chain: string[] = [];
+    let prev = src;
+
+    for (let l = srcL + 1; l < tgtL; l++) {
+      const did = `__d__${edge.id}__${l}`;
+      dummyIds.add(did);
+      layer.set(did, l);
+
+      // 设置虚拟节点的邻接关系
+      incoming.set(did, [prev]);
+      outgoing.set(did, []);
+
+      // 更新 prev 的 outgoing：第一跳把 tgt 替换为 did，后续直接追加
+      const prevOuts = outgoing.get(prev) ?? [];
+      if (l === srcL + 1) {
+        const ti = prevOuts.indexOf(tgt);
+        if (ti >= 0) prevOuts[ti] = did;
+        else prevOuts.push(did);
+      } else {
+        prevOuts.push(did);
+      }
+      outgoing.set(prev, prevOuts);
+
+      // 将虚拟节点追加到该层末尾，barycenter 迭代会将其移至正确位置
+      layers[l].push(did);
+      orderInLayer.set(did, layers[l].length - 1);
+
+      layoutEdgePairs.push({ src: prev, tgt: did });
+      chain.push(did);
+      prev = did;
+    }
+
+    // 最后一个虚拟节点 -> 真实目标节点
+    outgoing.set(prev, [tgt]);
+    const tgtIns = incoming.get(tgt) ?? [];
+    const si = tgtIns.indexOf(src);
+    if (si >= 0) tgtIns[si] = prev;
+    else tgtIns.push(prev);
+    incoming.set(tgt, tgtIns);
+
+    layoutEdgePairs.push({ src: prev, tgt });
+    edgeDummyChain.set(edge.id, chain);
+  });
+
+  // Barycenter 迭代：下扫 + 上扫，减少交叉
+  const getBarycenter = (id: string, refs: string[]) => {
+    if (refs.length === 0) return orderInLayer.get(id) ?? 0;
+    const vals = refs.map((r) => orderInLayer.get(r) ?? 0);
+    return vals.reduce((s, v) => s + v, 0) / vals.length;
+  };
+
+  for (let iter = 0; iter < 6; iter++) {
+    // downward pass
+    for (let l = 1; l <= maxLayer; l++) {
+      layers[l].sort((a, b) => {
+        const ba = getBarycenter(a, incoming.get(a) ?? []);
+        const bb = getBarycenter(b, incoming.get(b) ?? []);
+        if (ba !== bb) return ba - bb;
+        return (orderInLayer.get(a) ?? 0) - (orderInLayer.get(b) ?? 0);
+      });
+      layers[l].forEach((id, idx) => orderInLayer.set(id, idx));
+    }
+
+    // upward pass
+    for (let l = maxLayer - 1; l >= 0; l--) {
+      layers[l].sort((a, b) => {
+        const ba = getBarycenter(a, outgoing.get(a) ?? []);
+        const bb = getBarycenter(b, outgoing.get(b) ?? []);
+        if (ba !== bb) return ba - bb;
+        return (orderInLayer.get(a) ?? 0) - (orderInLayer.get(b) ?? 0);
+      });
+      layers[l].forEach((id, idx) => orderInLayer.set(id, idx));
+    }
+  }
+
+  // 在 barycenter 之后再做一轮基于交叉数的层内局部交换（transposition）
+  // 目标：逼近用户手工拖拽得到的“更少交叉”方案。
+  const countCrossingsBetweenLayers = (leftLayer: number, rightLayer: number) => {
+    if (leftLayer < 0 || rightLayer > maxLayer || leftLayer >= rightLayer) return 0;
+    const left = layers[leftLayer] ?? [];
+    const right = layers[rightLayer] ?? [];
+    if (left.length <= 1 || right.length <= 1) return 0;
+
+    const leftOrder = new Map(left.map((id, idx) => [id, idx] as const));
+    const rightOrder = new Map(right.map((id, idx) => [id, idx] as const));
+
+    const pairs: Array<{ a: number; b: number }> = [];
+    // 使用 layoutEdgePairs（含虚拟节点链）而非原始 validEdges，
+    // 确保长距离边通过虚拟节点参与交叉计数。
+    layoutEdgePairs.forEach(({ src: s, tgt: t }) => {
+      const ls = layer.get(s);
+      const lt = layer.get(t);
+      if (ls == null || lt == null) return;
+
+      if (ls === leftLayer && lt === rightLayer) {
+        const a = leftOrder.get(s);
+        const b = rightOrder.get(t);
+        if (a != null && b != null) pairs.push({ a, b });
+      } else if (ls === rightLayer && lt === leftLayer) {
+        const a = leftOrder.get(t);
+        const b = rightOrder.get(s);
+        if (a != null && b != null) pairs.push({ a, b });
+      }
+    });
+
+    if (pairs.length <= 1) return 0;
+
+    pairs.sort((p1, p2) => (p1.a - p2.a) || (p1.b - p2.b));
+
+    let crossings = 0;
+    for (let i = 0; i < pairs.length; i++) {
+      for (let j = i + 1; j < pairs.length; j++) {
+        if (pairs[i].b > pairs[j].b) crossings++;
+      }
+    }
+    return crossings;
+  };
+
+  const countLayerLocalCrossings = (l: number) => {
+    return countCrossingsBetweenLayers(l - 1, l) + countCrossingsBetweenLayers(l, l + 1);
+  };
+
+  const refreshLayerOrder = (l: number) => {
+    (layers[l] ?? []).forEach((id, idx) => orderInLayer.set(id, idx));
+  };
+
+  for (let pass = 0; pass < 4; pass++) {
+    let passImproved = false;
+    for (let l = 0; l <= maxLayer; l++) {
+      const arr = layers[l] ?? [];
+      if (arr.length < 2) continue;
+
+      let improved = true;
+      while (improved) {
+        improved = false;
+        for (let i = 0; i < arr.length - 1; i++) {
+          const before = countLayerLocalCrossings(l);
+          [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
+          refreshLayerOrder(l);
+          const after = countLayerLocalCrossings(l);
+          if (after < before) {
+            improved = true;
+            passImproved = true;
+          } else {
+            [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
+            refreshLayerOrder(l);
+          }
+        }
+      }
+    }
+    if (!passImproved) break;
+  }
+
+  // 计算坐标：x 按层，y 按层内顺序 + 度数自适应间距
+  const xGap = NODE_WIDTH + cfg.ranksep;
+  const baseYGap = NODE_HEIGHT + cfg.nodesep;
+
+  const layerYs = new Map<number, number[]>();
+  let globalMaxHeight = 0;
+  layers.forEach((arr, l) => {
+    const ys: number[] = [];
+    let cursor = 0;
+    arr.forEach((id, idx) => {
+      const degree = (incoming.get(id)?.length ?? 0) + (outgoing.get(id)?.length ?? 0);
+      const adaptiveExtra = Math.min(48, degree * 6);
+      if (idx === 0) {
+        ys.push(0);
+      } else {
+        cursor += baseYGap + adaptiveExtra * 0.35;
+        ys.push(cursor);
+      }
+    });
+    layerYs.set(l, ys);
+    if (ys.length > 0) {
+      globalMaxHeight = Math.max(globalMaxHeight, ys[ys.length - 1]);
     }
   });
 
-  dagre.layout(dagreGraph as any);
-
-  const connectedLayouted: Node[] = connectedNodes.map((node) => {
-    const pos = dagreGraph.node(node.id);
-    return {
-      ...node,
-      position: { x: pos.x - NODE_WIDTH / 2, y: pos.y - NODE_HEIGHT / 2 },
-    };
+  const positioned = new Map<string, { x: number; y: number }>();
+  layers.forEach((arr, l) => {
+    const ys = layerYs.get(l) ?? [];
+    const layerHeight = ys.length > 0 ? ys[ys.length - 1] : 0;
+    const layerOffsetY = cfg.marginy + (globalMaxHeight - layerHeight) / 2;
+    arr.forEach((id, idx) => {
+      positioned.set(id, {
+        x: cfg.marginx + l * xGap,
+        y: layerOffsetY + (ys[idx] ?? 0),
+      });
+    });
   });
 
-  // 孤立节点排列在主流程下方的水平行，避免干扰主流程的布局和交叉消除
+  // 视觉优化：让分叉/汇合更接近“括弧式”展开再收拢
+  // 做法：在不改变层内相对顺序的前提下，对 y 进行约束松弛。
+  const yById = new Map<string, number>();
+  positioned.forEach((pos, id) => yById.set(id, pos.y));
+
+  const assignSymmetricTargets = (centerY: number, ids: string[], gap: number) => {
+    const k = ids.length;
+    if (k <= 1) return new Map<string, number>();
+    const targets = new Map<string, number>();
+    const start = centerY - ((k - 1) * gap) / 2;
+    ids.forEach((id, idx) => targets.set(id, start + idx * gap));
+    return targets;
+  };
+
+  for (let iter = 0; iter < 6; iter++) {
+    const desired = new Map<string, { sum: number; w: number }>();
+    const addDesired = (id: string, value: number, weight: number) => {
+      const old = desired.get(id) ?? { sum: 0, w: 0 };
+      desired.set(id, { sum: old.sum + value * weight, w: old.w + weight });
+    };
+
+    // 1) 邻接重心：让节点靠近前后相邻节点的平均 y
+    layers.forEach((arr) => {
+      arr.forEach((id) => {
+        const preds = incoming.get(id) ?? [];
+        const succs = outgoing.get(id) ?? [];
+        const refs = [...preds, ...succs].filter((nid) => yById.has(nid));
+        if (refs.length === 0) return;
+        const m = refs.reduce((s, nid) => s + (yById.get(nid) ?? 0), 0) / refs.length;
+        addDesired(id, m, 1.0);
+      });
+    });
+
+    // 2) 分叉对称：一个父节点指向多个子节点时，子节点围绕父节点对称展开
+    layers.forEach((arr) => {
+      arr.forEach((pid) => {
+        const children = (outgoing.get(pid) ?? []).filter((cid) => (layer.get(cid) ?? -1) === (layer.get(pid) ?? -2) + 1);
+        if (children.length < 2) return;
+        const pY = yById.get(pid) ?? 0;
+        const ordered = [...children].sort((a, b) => (orderInLayer.get(a) ?? 0) - (orderInLayer.get(b) ?? 0));
+        const targets = assignSymmetricTargets(pY, ordered, baseYGap * 0.9);
+        targets.forEach((tY, cid) => addDesired(cid, tY, 1.8));
+      });
+    });
+
+    // 3) 汇合对称：多个父节点指向同一子节点时，父节点围绕子节点对称分布
+    layers.forEach((arr) => {
+      arr.forEach((tid) => {
+        const parents = (incoming.get(tid) ?? []).filter((pid) => (layer.get(pid) ?? -1) === (layer.get(tid) ?? -2) - 1);
+        if (parents.length < 2) return;
+        const tY = yById.get(tid) ?? 0;
+        const ordered = [...parents].sort((a, b) => (orderInLayer.get(a) ?? 0) - (orderInLayer.get(b) ?? 0));
+        const targets = assignSymmetricTargets(tY, ordered, baseYGap * 0.9);
+        targets.forEach((pY, pid) => addDesired(pid, pY, 1.8));
+      });
+    });
+
+    // 4) 应用期望 y，并保持每层顺序与最小间距约束
+    layers.forEach((arr) => {
+      if (arr.length === 0) return;
+
+      const nextYs = arr.map((id) => {
+        const cur = yById.get(id) ?? 0;
+        const d = desired.get(id);
+        if (!d || d.w <= 0) return cur;
+        const target = d.sum / d.w;
+        return cur * 0.6 + target * 0.4;
+      });
+
+      // forward pass: enforce min gap
+      for (let i = 1; i < arr.length; i++) {
+        const prevId = arr[i - 1];
+        const curId = arr[i];
+        const prevDeg = (incoming.get(prevId)?.length ?? 0) + (outgoing.get(prevId)?.length ?? 0);
+        const curDeg = (incoming.get(curId)?.length ?? 0) + (outgoing.get(curId)?.length ?? 0);
+        const gap = baseYGap + Math.min(28, (prevDeg + curDeg) * 2);
+        if (nextYs[i] < nextYs[i - 1] + gap) {
+          nextYs[i] = nextYs[i - 1] + gap;
+        }
+      }
+
+      // backward soft-centering to avoid drift
+      const layerMid = nextYs.reduce((s, v) => s + v, 0) / nextYs.length;
+      const currentMid = arr.reduce((s, id) => s + (yById.get(id) ?? 0), 0) / arr.length;
+      const shift = (currentMid - layerMid) * 0.35;
+
+      arr.forEach((id, idx) => {
+        yById.set(id, nextYs[idx] + shift);
+      });
+    });
+  }
+
+  positioned.forEach((pos, id) => {
+    positioned.set(id, { ...pos, y: yById.get(id) ?? pos.y });
+  });
+
+  // === 全局纵向居中（Symmetric Centering）===
+  // 松弛迭代后各层质心可能偏离全图中轴，导致首尾单节点不在同一水平线。
+  // 此步骤将每一层（含虚拟节点）整体平移，使该层真实节点质心对齐到全图中轴，
+  // 从而保证括弧形布局对称、起始/终止/汇聚节点处于同一水平线。
+  {
+    // 1) 计算所有真实节点的 Y 范围中点作为全局中轴
+    let rMinY = Infinity, rMaxY = -Infinity;
+    connectedNodes.forEach(n => {
+      const y = positioned.get(n.id)?.y ?? 0;
+      if (y < rMinY) rMinY = y;
+      if (y > rMaxY) rMaxY = y;
+    });
+    const globalCenterY = rMinY !== Infinity ? (rMinY + rMaxY) / 2 : cfg.marginy;
+
+    // 2) 逐层平移：整层（含虚拟节点）一起移动，保持层内相对位置
+    layers.forEach(arr => {
+      const realInLayer = arr.filter(id => !dummyIds.has(id));
+      if (realInLayer.length === 0) return;
+      const centroid = realInLayer.reduce((s, id) => s + (positioned.get(id)?.y ?? 0), 0) / realInLayer.length;
+      const shift = globalCenterY - centroid;
+      if (Math.abs(shift) < 0.5) return;
+      arr.forEach(id => {
+        const p = positioned.get(id);
+        if (p) positioned.set(id, { ...p, y: p.y + shift });
+      });
+    });
+  }
+
+  // === 提取长距离边的路径中继点（Waypoints）===
+  // 每个 dummy 节点生成「入层间隙」+「出层间隙」两个 waypoint：
+  //   - enter: (dummy_x - ranksep/2,  dummy_cy)  — 在前一层间隔的中点
+  //   - exit:  (dummy_x + NODE_WIDTH + ranksep/2, dummy_cy) — 在后一层间隔的中点
+  // 这样：
+  //   段1 source_right → enter：dx = ranksep/2，贝塞尔完全在前间隔内 ✓
+  //   段2 enter → exit：enter.y == exit.y，贝塞尔退化为水平直线，仅在 dummy_y 水平穿越 ✓
+  //   段3 exit → target_left：dx = ranksep/2，贝塞尔完全在后间隔内 ✓
+  // 三段路径均不进入任何真实节点的边界框。
+  const edgeWaypoints = new Map<string, Array<{ x: number; y: number }>>();
+  validEdges.forEach((edge) => {
+    const chain = edgeDummyChain.get(edge.id);
+    if (!chain || chain.length === 0) return;
+    const wps = chain.flatMap((did) => {
+      const pos = positioned.get(did);
+      if (!pos) return [];
+      const cy = pos.y + NODE_HEIGHT / 2;
+      return [
+        { x: pos.x - cfg.ranksep / 2,                  y: cy },  // 入层间隙中点
+        { x: pos.x + NODE_WIDTH + cfg.ranksep / 2,     y: cy },  // 出层间隙中点
+      ];
+    });
+    if (wps.length > 0) edgeWaypoints.set(edge.id, wps);
+  });
+
+  const connectedLayouted: Node[] = connectedNodes.map((node) => ({
+    ...node,
+    position: positioned.get(node.id) ?? node.position,
+  }));
+
+  // 孤立节点放在主流程下方，且按当前 x 排序保持稳定
   const mainMaxY = connectedLayouted.length > 0
     ? Math.max(...connectedLayouted.map((n) => n.position.y + NODE_HEIGHT))
     : cfg.marginy;
   const isolatedRowY = mainMaxY + (isolatedNodes.length > 0 ? cfg.ranksep + 16 : 0);
-  const isolatedLayouted: Node[] = isolatedNodes.map((node, idx) => ({
+  const isolatedSorted = [...isolatedNodes].sort((a, b) => (a.position.x ?? 0) - (b.position.x ?? 0));
+  const isolatedLayouted: Node[] = isolatedSorted.map((node, idx) => ({
     ...node,
     position: {
       x: cfg.marginx + idx * (NODE_WIDTH + cfg.nodesep),
@@ -145,7 +561,14 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], mode: LayoutMode = 'c
     },
   }));
 
-  return { nodes: [...connectedLayouted, ...isolatedLayouted], edges };
+  // 将路径中继点写入边数据，供 CustomEdge 渲染多段折线路径
+  const outputEdges = edges.map((edge) => {
+    const wps = edgeWaypoints.get(edge.id);
+    if (!wps || wps.length === 0) return edge;
+    return { ...edge, data: { ...((edge.data as object) ?? {}), waypoints: wps } };
+  });
+
+  return { nodes: [...connectedLayouted, ...isolatedLayouted], edges: outputEdges };
 };
 
 // ─── 阶段节点组件 ─────────────────────────────────────────────────────────────
@@ -157,73 +580,110 @@ const PhaseNodeComponent = ({
   selected: boolean;
 }) => {
   const disabled = data.enabled === false;
+  const [isHovered, setIsHovered] = React.useState(false);
 
   return (
     <div
-      className={[
-        'relative w-[150px] rounded-xl border-2 px-4 py-3',
-        'transition-all duration-150 cursor-pointer select-none',
-        selected
-          ? 'border-blue-500 shadow-lg ring-2 ring-blue-200 ring-offset-1 bg-white'
-          : disabled
-          ? 'border-dashed border-gray-300 bg-gray-50 shadow-none'
-          : 'border-blue-200 bg-blue-50 shadow-sm hover:shadow-md hover:border-blue-400',
-      ].join(' ')}
+      className="relative"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      {/* 序号徽标 */}
-      <span
-        className={[
-          'absolute -top-3 -left-3 min-w-[32px] h-6 px-2 rounded-full text-[10px]','font-bold flex items-center justify-center shadow-sm',
-          disabled
-            ? 'bg-gray-200 text-gray-400'
-            : 'bg-blue-500 text-white',
-        ].join(' ')}
-      >
-        {data.displayOrder ?? data.order}
-      </span>
-
-      {/* 阶段名称 */}
+      {/* 节点卡片主体 */}
       <div
         className={[
-          'text-sm font-semibold leading-tight truncate',
-          disabled ? 'text-gray-400' : 'text-blue-800',
+          'relative w-[150px] rounded-xl border-2 px-4 py-3',
+          'transition-all duration-150 cursor-pointer select-none',
+          selected
+            ? 'border-blue-500 shadow-lg ring-2 ring-blue-200 ring-offset-1 bg-white'
+            : disabled
+            ? 'border-dashed border-gray-300 bg-gray-50 shadow-none'
+            : 'border-blue-200 bg-blue-50 shadow-sm hover:shadow-md hover:border-blue-400',
         ].join(' ')}
       >
-        {data.label}
-      </div>
-
-      {/* 任务数 + 工期 */}
-      <div className="flex items-center gap-2 mt-1.5">
+        {/* 序号徽标 */}
         <span
           className={[
-            'text-[11px]',
-            disabled ? 'text-gray-400' : 'text-blue-500',
+            'absolute -top-3 -left-3 min-w-[32px] h-6 px-2 rounded-full text-[10px]',
+            'font-bold flex items-center justify-center shadow-sm',
+            disabled ? 'bg-gray-200 text-gray-400' : 'bg-blue-500 text-white',
           ].join(' ')}
         >
-          {data.taskCount ?? 0} 任务
+          {data.displayOrder ?? data.order}
         </span>
-        {(data.totalDays ?? 0) > 0 && (
+
+        {/* 阶段名称 */}
+        <div
+          className={[
+            'text-sm font-semibold leading-tight truncate',
+            disabled ? 'text-gray-400' : 'text-blue-800',
+          ].join(' ')}
+        >
+          {data.label}
+        </div>
+
+        {/* 任务数 + 工期 */}
+        <div className="flex items-center gap-2 mt-1.5">
           <span
             className={[
               'text-[11px]',
-              disabled ? 'text-gray-400' : 'text-blue-400',
+              disabled ? 'text-gray-400' : 'text-blue-500',
             ].join(' ')}
           >
-            · ~{data.totalDays} 天
+            {data.taskCount ?? 0} 任务
           </span>
-        )}
+          {(data.totalDays ?? 0) > 0 && (
+            <span
+              className={[
+                'text-[11px]',
+                disabled ? 'text-gray-400' : 'text-blue-400',
+              ].join(' ')}
+            >
+              · ~{data.totalDays} 天
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* 连接点 */}
+      {/*
+        连接柄（Handle）：不设置 left/right，让 React Flow 自动居中于节点边框。
+        悬停时 Handle 本体变大、变蓝，无需额外 overlay div。
+        connectionRadius=60 放大吸附范围，连线更容易触发。
+      */}
       <Handle
         type="target"
         position={Position.Left}
-        className="!w-3 !h-3 !bg-white !border-2 !border-blue-300 hover:!border-blue-500"
+        title="拖入此处以连接"
+        style={{
+          width: isHovered ? 28 : 18,
+          height: isHovered ? 28 : 18,
+          background: isHovered ? '#2563eb' : '#dbeafe',
+          border: `3px solid ${isHovered ? '#1d4ed8' : '#60a5fa'}`,
+          borderRadius: '50%',
+          boxShadow: isHovered
+            ? '0 0 0 6px rgba(37,99,235,0.18), 0 2px 8px rgba(0,0,0,0.15)'
+            : '0 0 0 3px rgba(96,165,250,0.20)',
+          cursor: 'crosshair',
+          transition: 'all 0.12s ease',
+          zIndex: 20,
+        }}
       />
       <Handle
         type="source"
         position={Position.Right}
-        className="!w-3 !h-3 !bg-white !border-2 !border-blue-300 hover:!border-blue-500"
+        title="从此处拖出以连线"
+        style={{
+          width: isHovered ? 28 : 18,
+          height: isHovered ? 28 : 18,
+          background: isHovered ? '#2563eb' : '#dbeafe',
+          border: `3px solid ${isHovered ? '#1d4ed8' : '#60a5fa'}`,
+          borderRadius: '50%',
+          boxShadow: isHovered
+            ? '0 0 0 6px rgba(37,99,235,0.18), 0 2px 8px rgba(0,0,0,0.15)'
+            : '0 0 0 3px rgba(96,165,250,0.20)',
+          cursor: 'crosshair',
+          transition: 'all 0.12s ease',
+          zIndex: 20,
+        }}
       />
     </div>
   );
@@ -248,15 +708,41 @@ const CustomEdge: React.FC<EdgeProps> = ({
   const [hovered, setHovered] = React.useState(false);
   const { setEdges } = useReactFlow();
 
-  const [edgePath, labelX, labelY] = getBezierPath({
-    sourceX,
-    sourceY,
-    sourcePosition,
-    targetX,
-    targetY,
-    targetPosition,
-    curvature: 0.4,
-  });
+  // 支持虚拟节点中继点：若边数据中含 waypoints，则生成多段贝塞尔路径绕过中间节点
+  const waypoints = (data as any)?.waypoints as Array<{ x: number; y: number }> | undefined;
+
+  let edgePath: string;
+  let labelX: number;
+  let labelY: number;
+
+  if (waypoints && waypoints.length > 0) {
+    // 多段贝塞尔：穿过每个中继点，每段用水平切线确保平滑过渡
+    const allPts = [{ x: sourceX, y: sourceY }, ...waypoints, { x: targetX, y: targetY }];
+    let d = `M ${allPts[0].x} ${allPts[0].y}`;
+    for (let i = 0; i < allPts.length - 1; i++) {
+      const p0 = allPts[i];
+      const p1 = allPts[i + 1];
+      const dx = p1.x - p0.x;
+      // 水平切线控制点：保证每段贝塞尔的入/出方向水平，视觉上自然流畅
+      const cp1x = p0.x + dx * 0.5;
+      const cp2x = p1.x - dx * 0.5;
+      d += ` C ${cp1x} ${p0.y} ${cp2x} ${p1.y} ${p1.x} ${p1.y}`;
+    }
+    edgePath = d;
+    const midPt = allPts[Math.floor(allPts.length / 2)];
+    labelX = midPt.x;
+    labelY = midPt.y;
+  } else {
+    [edgePath, labelX, labelY] = getBezierPath({
+      sourceX,
+      sourceY,
+      sourcePosition,
+      targetX,
+      targetY,
+      targetPosition,
+      curvature: 0.4,
+    });
+  }
 
   const handleDelete = React.useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -381,7 +867,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
 }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const { fitView, getNodes } = useReactFlow();
+  const { fitView, getNodes, getEdges } = useReactFlow();
 
   // drag-to-snap: disabled (set to 0 so menu never triggers; users connect via handles)
   const [dragOverNodeId, setDragOverNodeId] = useState<string | null>(null);
@@ -394,10 +880,58 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     x: number;
     y: number;
   }>({ visible: false, draggedPhaseId: '', targetPhaseId: '', x: 0, y: 0 });
-  const prevStructureKeyRef = useRef('');
+  const hasInitialAutoFitRef = useRef(false);
 
   // helper to build edges using current onAddParallel
   const edgeOptions = buildEdgeStyle(onAddParallel ?? (() => {}));
+
+  const mergeEdgesWithCurrent = useCallback((phaseEdges: Edge[], currentEdges: Edge[]) => {
+    const merged = new Map<string, Edge>();
+
+    // Start with current edges so visible edges are not dropped by a relayout.
+    (currentEdges || []).forEach((e) => {
+      const source = String((e as any).source ?? '');
+      const target = String((e as any).target ?? '');
+      if (!source || !target) return;
+      const id = `e-${source}-${target}`;
+      merged.set(id, {
+        ...e,
+        id,
+        source,
+        target,
+        type: 'custom',
+        animated: false,
+        data: {
+          ...((e as any).data ?? {}),
+          onAddParallel: onAddParallel ?? (() => {}),
+          onDelete: onEdgeDelete,
+        },
+      } as Edge);
+    });
+
+    // Phase edges are authoritative when present and overwrite same id.
+    phaseEdges.forEach((e) => {
+      const source = String((e as any).source ?? '');
+      const target = String((e as any).target ?? '');
+      if (!source || !target) return;
+      const id = `e-${source}-${target}`;
+      merged.set(id, {
+        ...e,
+        id,
+        source,
+        target,
+        type: 'custom',
+        animated: false,
+        data: {
+          ...((e as any).data ?? {}),
+          onAddParallel: onAddParallel ?? (() => {}),
+          onDelete: onEdgeDelete,
+        },
+      } as Edge);
+    });
+
+    return Array.from(merged.values());
+  }, [onAddParallel, onEdgeDelete]);
 
   // reconnect tracking
   const edgeReconnectSuccessful = useRef(true);
@@ -486,21 +1020,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     return displayOrderMap;
   };
 
-  // recalculate display order using current node positions
-  const recalculateDisplayOrder = useCallback((currentNodes?: Node[]) => {
-    const curNodes = currentNodes ?? nodes;
-    const nodePositions = new Map<string, { x: number; y: number }>(curNodes.map(n => [n.id, n.position] as [string, {x:number,y:number}]));
-    const sortedPhases = [...phases].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-    const displayOrderMap = computeDisplayOrder(sortedPhases, nodePositions);
 
-    setNodes(nds => (nds || []).map(n => ({
-      ...n,
-      data: {
-        ...n.data,
-        displayOrder: displayOrderMap.get(n.id) ?? n.data.displayOrder,
-      }
-    })));
-  }, [nodes, phases, setNodes]);
 
   // phases → nodes + edges
   useEffect(() => {
@@ -584,6 +1104,8 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     }
     // 不再回退到线性连接：若用户清除了所有 nextPhaseIds，节点保持无连线状态
 
+    const mergedEdges = mergeEdgesWithCurrent(rawEdges, getEdges());
+
     // identify parallel groups and record user order
     const parallelGroups = getParallelGroups(sortedPhases);
     const currentNodes = (typeof getNodes === 'function') ? getNodes() : [];
@@ -602,10 +1124,9 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     );
 
     const { nodes: ln, edges: le } = hasAllSavedPositions
-      ? { nodes: rawNodes, edges: rawEdges }
-      : getLayoutedElements(rawNodes, rawEdges);
+      ? { nodes: rawNodes, edges: mergedEdges }
+      : getLayoutedElements(rawNodes, mergedEdges);
 
-    const nodeMap = new Map(ln.map((n) => [n.id, n]));
     const currentPosMap = new Map(currentNodes.map((n) => [n.id, n.position] as [string, { x: number; y: number }]));
 
     let lnWithManualPos = ln.map((n) => {
@@ -620,7 +1141,10 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       return n;
     });
 
-    // After dagre layout: reassign Y within each parallel group to preserve user order
+    // Use latest/manual positions as the source of truth for subsequent Y adjustments.
+    const nodeMap = new Map(lnWithManualPos.map((n) => [n.id, n]));
+
+    // After layout/manual merge: reassign Y within each parallel group to preserve user order
     let lnAdjusted = lnWithManualPos;
     parallelGroups.forEach(group => {
       if (group.length < 2) return;
@@ -649,12 +1173,12 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     setNodes(lnUpdated);
     setEdges(le);
 
-    const structureKey = JSON.stringify(sortedPhases.map((p) => ({ id: p.id, order: p.order, next: p.nextPhaseIds ?? [] })));
-    if (prevStructureKeyRef.current !== structureKey) {
-      prevStructureKeyRef.current = structureKey;
+    // Keep user zoom/viewport during editing. Auto-fit only once when data is first loaded.
+    if (!hasInitialAutoFitRef.current && sortedPhases.length > 0) {
+      hasInitialAutoFitRef.current = true;
       setTimeout(() => fitView({ padding: 0.25, duration: 400 }), 50);
     }
-  }, [phases, fitView, getNodes, onAddParallel, onEdgeDelete, setEdges, setNodes]);
+  }, [phases, fitView, getNodes, getEdges, onAddParallel, onEdgeDelete, setEdges, setNodes, mergeEdgesWithCurrent]);
 
   // 监听外部 fitView / reLayout 事件
   useEffect(() => {
@@ -665,7 +1189,8 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       const mode: LayoutMode = (evt as CustomEvent | undefined)?.detail?.mode === 'readable' ? 'readable' : 'compact';
       const cfg = layoutConfigByMode(mode);
 
-      // build raw nodes/edges for dagre
+      // Build raw nodes/edges and run adaptive layout directly.
+      // Do not apply legacy parallel/tail post-processors; they can reintroduce crossings.
       const rawNodes: Node[] = phases.map((p) => ({
         id: p.id,
         type: 'phase',
@@ -690,118 +1215,14 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       }
       // 无显式连线时不再回退到线性连接（TemplateEditor 加载时已保证初始连线）
 
-      // Step 2: run dagre layout
-      const { nodes: ln, edges: le } = getLayoutedElements(rawNodes, rawEdges, mode);
+      const mergedEdges = mergeEdgesWithCurrent(rawEdges, getEdges());
+      const { nodes: ln, edges: le } = getLayoutedElements(rawNodes, mergedEdges, mode);
 
-      const phaseOrderMap = new Map(phases.map((p) => [p.id, p.order ?? 0] as const));
-
-      // Step 3: compute parallel groups (BFS by phases.nextPhaseIds)
-      const inDegree = new Map<string, number>();
-      const children = new Map<string, string[]>();
-      phases.forEach(p => { if (!inDegree.has(p.id)) inDegree.set(p.id, 0); const nexts = p.nextPhaseIds ?? []; children.set(p.id, nexts); nexts.forEach(nid => inDegree.set(nid, (inDegree.get(nid) ?? 0) + 1)); });
-      let cur: string[] = [];
-      phases.forEach(p => { if ((inDegree.get(p.id) ?? 0) === 0) cur.push(p.id); });
-      const parallelGroups: string[][] = [];
-      while (cur.length > 0) {
-        if (cur.length > 1) parallelGroups.push([...cur]);
-        const next: string[] = [];
-        cur.forEach(id => { (children.get(id) ?? []).forEach(nid => { inDegree.set(nid, (inDegree.get(nid) ?? 1) - 1); if (inDegree.get(nid) === 0) next.push(nid); }); });
-        cur = next;
-      }
-
-      // Step 4: use deterministic rank within each parallel group (phase order)
-      const rankSnapshot = new Map<string, number>();
-      parallelGroups.forEach(group => {
-        const arr = group
-          .map(id => ({ id, order: phaseOrderMap.get(id) ?? 0 }))
-          .sort((a, b) => a.order - b.order);
-        arr.forEach((it, idx) => rankSnapshot.set(it.id, idx));
-      });
-
-      // Step 5: for each parallel group, get dagre Y pool and reassign by user rank
-      let lnAdjusted = ln;
-      parallelGroups.forEach(group => {
-        if (group.length < 2) return;
-        const dagreYs = group.map(id => ln.find(n => n.id === id)?.position.y ?? 0).sort((a, b) => a - b);
-        lnAdjusted = lnAdjusted.map(n => {
-          if (!group.includes(n.id)) return n;
-          const rank = rankSnapshot.get(n.id) ?? 0;
-          return { ...n, position: { ...n.position, y: dagreYs[Math.min(rank, dagreYs.length - 1)] } };
-        });
-      });
-
-      // Step 5.5: tail alignment smoothing for right-most segment
-      const preds = new Map<string, string[]>();
-      const succs = new Map<string, string[]>();
-      le.forEach((e) => {
-        const s = String(e.source);
-        const t = String(e.target);
-        if (!succs.has(s)) succs.set(s, []);
-        if (!preds.has(t)) preds.set(t, []);
-        succs.get(s)!.push(t);
-        preds.get(t)!.push(s);
-      });
-
-      const maxX = Math.max(...lnAdjusted.map((n) => n.position.x));
-      const tailThresholdX = maxX - (NODE_WIDTH + cfg.ranksep) * cfg.tailThresholdFactor;
-      const idToNode = new Map(lnAdjusted.map((n) => [n.id, { ...n, position: { ...n.position } }]));
-      const nodeIds = [...idToNode.values()]
-        .sort((a, b) => b.position.x - a.position.x)
-        .map((n) => n.id);
-
-      const meanY = (ids: string[]) => {
-        if (!ids.length) return 0;
-        const vals = ids.map((id) => idToNode.get(id)?.position.y ?? 0);
-        return vals.reduce((s, v) => s + v, 0) / vals.length;
-      };
-
-      nodeIds.forEach((id) => {
-        const node = idToNode.get(id);
-        if (!node) return;
-        if (node.position.x < tailThresholdX) return;
-
-        const inIds = preds.get(id) ?? [];
-        const outIds = succs.get(id) ?? [];
-        if (inIds.length === 0) return;
-
-        const targetY = meanY(inIds);
-        if (outIds.length === 0) {
-          node.position.y = targetY;
-          return;
-        }
-
-        if (outIds.length === 1) {
-          const nextIn = preds.get(outIds[0]) ?? [];
-          if (nextIn.length === 1) {
-            node.position.y = targetY;
-          }
-        }
-      });
-
-      // tail minimal vertical gap guard
-      const tailNodes = [...idToNode.values()]
-        .filter((n) => n.position.x >= tailThresholdX)
-        .sort((a, b) => a.position.y - b.position.y);
-      const MIN_GAP = cfg.tailMinGap;
-      for (let i = 1; i < tailNodes.length; i++) {
-        const prev = tailNodes[i - 1];
-        const cur = tailNodes[i];
-        if (cur.position.y - prev.position.y < MIN_GAP) {
-          cur.position.y = prev.position.y + MIN_GAP;
-        }
-      }
-
-      lnAdjusted = lnAdjusted.map((n) => ({
-        ...n,
-        position: idToNode.get(n.id)?.position ?? n.position,
-      }));
-
-      // Step 6: recompute displayOrder using adjusted positions
-      const nodePositions = new Map<string, { x: number; y: number }>(lnAdjusted.map(n => [n.id, n.position] as [string, {x:number,y:number}]));
+      // Recompute display order using adaptive-layout positions
+      const nodePositions = new Map<string, { x: number; y: number }>(ln.map(n => [n.id, n.position] as [string, {x:number,y:number}]));
       const displayOrderMap = computeDisplayOrder(phases, nodePositions);
-      const lnUpdated = lnAdjusted.map(n => ({ ...n, data: { ...n.data, displayOrder: displayOrderMap.get(n.id) ?? String(n.data?.order ?? 1) } }));
+      const lnUpdated = ln.map(n => ({ ...n, data: { ...n.data, displayOrder: displayOrderMap.get(n.id) ?? String(n.data?.order ?? 1) } }));
 
-      // Step 7: apply
       setNodes(lnUpdated);
       setEdges(le);
       onNodesPositionChange?.(lnUpdated.map((n) => ({ id: n.id, x: n.position.x, y: n.position.y })));
@@ -814,7 +1235,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       window.removeEventListener('flow:fitView', fitHandler);
       window.removeEventListener('flow:reLayout', handleReLayout);
     };
-  }, [fitView, getNodes, onAddParallel, onEdgeDelete, onNodesPositionChange, phases, setEdges, setNodes]);
+  }, [fitView, getNodes, getEdges, onAddParallel, onEdgeDelete, onNodesPositionChange, phases, setEdges, setNodes, mergeEdgesWithCurrent]);
 
   // 拖拽连线
   const handleConnect = useCallback(
@@ -837,13 +1258,10 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       onNodePositionChange?.(draggedNode.id, draggedNode.position.x, draggedNode.position.y);
     }
     setDragOverNodeId(null);
-    // Recalculate display order after user finishes dragging a node
-    try {
-      recalculateDisplayOrder();
-    } catch (err) {
-      // ignore
-    }
-  }, [onNodePositionChange, recalculateDisplayOrder]);
+    // Note: displayOrder is calculated in the main effect when phases change.
+    // We do NOT recalculate here to avoid triggering setNodes during drag stop,
+    // which would block the drag animation and cause MiniMap flickering.
+  }, [onNodePositionChange]);
 
   // 更新节点样式以高亮拖拽目标
   useEffect(() => {
@@ -897,6 +1315,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       nodesDraggable={!readonly}
       nodesConnectable={!readonly}
       elementsSelectable
+      connectionRadius={60}
       connectionLineType={ConnectionLineType.Bezier}
       defaultEdgeOptions={{ type: 'default', animated: false, style: { stroke: '#bfdbfe', strokeWidth: 1.5 } }}
       onEdgesDelete={(delEdges) => {

@@ -18,6 +18,7 @@ import FormulaEditor from './pages/reagent-formula/FormulaEditor';
 import PrepCalculator from './pages/reagent-formula/PrepCalculator';
 import TemplateLibrary from './pages/TemplateLibrary';
 import TemplateEditor from './pages/TemplateEditor';
+import TaskTemplateLibrary from './pages/knowledge/TaskTemplateLibrary';
 import BackupManager from './pages/BackupManager';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -65,6 +66,7 @@ function App() {
           <Route path="projects/:id" element={<ProjectDetail />} />
           <Route path="project-templates" element={<TemplateLibrary />} />
           <Route path="project-templates/:id/edit" element={<TemplateEditor />} />
+          <Route path="task-templates" element={<TaskTemplateLibrary />} />
           <Route path="reports" element={<Reports />} />
           <Route path="reports/:id" element={<ReportEdit />} />
           <Route path="knowledge" element={<Docs />} />

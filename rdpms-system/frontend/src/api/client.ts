@@ -153,6 +153,7 @@ export const taskTemplatesAPI = {
   update: (id: string, data: any) => put<ApiResponse<any>>(`/task-templates/${id}`, data),
   delete: (id: string) => del<ApiResponse<any>>(`/task-templates/${id}`),
   bulkDelete: (ids: string[], force?: boolean) => post<ApiResponse<any>>('/task-templates/bulk-delete', { ids, force }),
+  seed: () => post<ApiResponse<any>>('/task-templates/seed', {}),
 };
 
 export const docsAPI = {

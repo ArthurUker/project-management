@@ -3,12 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { docsAPI, formulaAPI } from '../api/client';
 import { useAppStore } from '../store/appStore';
 import ReagentLibrary from './knowledge/ReagentLibrary';
-import TaskTemplateLibrary from './knowledge/TaskTemplateLibrary';
 import PrimerLibrary from './knowledge/PrimerLibrary';
 import AmplificationReagentLibrary from './knowledge/AmplificationReagentLibrary';
 import VisualTableEditor, { type VisualTableEditorRef } from '../components/VisualTableEditor';
 import { MindMapEditor } from '../components/MindMapView';
-import { FlaskConical, Cpu, Dna, FileText, BookOpen, Package, ClipboardList, Dna as DnaIcon, Beaker } from 'lucide-react';
+import { FlaskConical, Cpu, Dna, FileText, BookOpen, Package, Dna as DnaIcon, Beaker } from 'lucide-react';
 import { appendMindmapBlock, extractMindmapBlock, findMarkdownTables, findMindmapBlocks, replaceMindmapBlock, upsertFirstMindmapBlock } from '../utils/markdownBlocks';
 
 interface DocCategory {
@@ -49,7 +48,6 @@ const DEFAULT_CATEGORIES = [
   { name: '通用模板', description: '通用文档模板', icon: '📋' },
   { name: '技术参考', description: '技术文档和参考资料', icon: '📚' },
   { name: '试剂原料库', description: '管理试剂原料信息（名称/分子量/CAS等）', icon: '🧴' },
-  { name: '任务模板库', description: '管理可复用的任务流程模板', icon: '📋' },
   { name: '扩增反应体系试剂', description: '管理PCR/qPCR/LAMP等扩增反应专用试剂（酶、Buffer、dNTP等）', icon: '🔬' },
   { name: '引物探针库', description: '管理引物探针序列、修饰、合成信息等', icon: '🧫' },
 ];
@@ -83,7 +81,6 @@ export default function Docs() {
   const tableEditorRef = useRef<VisualTableEditorRef>(null);
   const [reagentOpenKey, setReagentOpenKey] = useState(0);
   const [reagentCategoryId, setReagentCategoryId] = useState<string | null>(null);
-  const [taskTemplateCategoryId, setTaskTemplateCategoryId] = useState<string | null>(null);
   const [ampReagentCategoryId, setAmpReagentCategoryId] = useState<string | null>(null);
   const [primerCategoryId, setPrimerCategoryId] = useState<string | null>(null);
 
@@ -122,7 +119,6 @@ export default function Docs() {
       cats = cats.filter((cat: DocCategory) => { if (seen.has(cat.name)) return false; seen.add(cat.name); return true; });
       setCategories(cats);
       const reagent = cats.find((c: DocCategory) => c.name === '试剂原料库'); if (reagent) setReagentCategoryId(reagent.id);
-      const tpl = cats.find((c: DocCategory) => c.name === '任务模板库'); if (tpl) setTaskTemplateCategoryId(tpl.id);
       const amp = cats.find((c: DocCategory) => c.name === '扩增反应体系试剂'); if (amp) setAmpReagentCategoryId(amp.id);
       const primer = cats.find((c: DocCategory) => c.name === '引物探针库'); if (primer) setPrimerCategoryId(primer.id);
       if (cats.length > 0 && !selectedCategory) setSelectedCategory(cats[0].id);
@@ -212,7 +208,6 @@ export default function Docs() {
     '通用模板': FileText,
     '技术参考': BookOpen,
     '试剂原料库': Package,
-    '任务模板库': ClipboardList,
     '扩增反应体系试剂': Beaker,
     '引物探针库': DnaIcon,
   };
@@ -276,8 +271,7 @@ export default function Docs() {
             const isSpecial = selectedCategory && (
               (reagentCategoryId && selectedCategory === reagentCategoryId) ||
               (ampReagentCategoryId && selectedCategory === ampReagentCategoryId) ||
-              (primerCategoryId && selectedCategory === primerCategoryId) ||
-              (taskTemplateCategoryId && selectedCategory === taskTemplateCategoryId)
+              (primerCategoryId && selectedCategory === primerCategoryId)
             );
             if (selectedCategory && reagentCategoryId && selectedCategory === reagentCategoryId) {
               setReagentOpenKey(k => k + 1);
@@ -364,8 +358,6 @@ export default function Docs() {
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', boxSizing: 'border-box', paddingBottom: 8 }}>
         {selectedCategory && reagentCategoryId && selectedCategory === reagentCategoryId ? (
           <div className="bg-white rounded-lg border border-gray-200 p-4"><ReagentLibrary openKey={reagentOpenKey} hideTopButton /></div>
-        ) : selectedCategory && taskTemplateCategoryId && selectedCategory === taskTemplateCategoryId ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-4"><TaskTemplateLibrary /></div>
         ) : selectedCategory && ampReagentCategoryId && selectedCategory === ampReagentCategoryId ? (
           <div className="bg-white rounded-lg border border-gray-200 p-4"><AmplificationReagentLibrary /></div>
         ) : selectedCategory && primerCategoryId && selectedCategory === primerCategoryId ? (
