@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { prisma } from '../index.js';
-import { authMiddleware } from './auth.js';
+import { authMiddleware, adminMiddleware } from './auth.js';
 
 const templates = new Hono();
 templates.use('*', authMiddleware);
@@ -175,7 +175,7 @@ templates.post('/bulk-delete', async (c) => {
 });
 
 // POST /api/task-templates/seed  ── 一键预置标准模板
-templates.post('/seed', async (c) => {
+templates.post('/seed', adminMiddleware, async (c) => {
   try {
     const { SEED_TEMPLATES } = await import('../data/taskTemplateSeed.js');
     let created = 0;

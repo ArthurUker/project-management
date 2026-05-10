@@ -1,5 +1,7 @@
 ﻿import { useEffect, useState, useMemo } from 'react';
 import { taskTemplatesAPI } from '../../api/client';
+import { useAppStore } from '../../store/appStore';
+import { hasPerm, PERMS } from '../../utils/permissions';
 
 // ────────────────────────────────────────────────────────────────
 // 5 大阶段（统计卡片用）
@@ -297,6 +299,8 @@ function TemplateFormModal({
 // 主页面
 // ────────────────────────────────────────────────────────────────
 export default function TaskTemplateLibrary() {
+  const { user } = useAppStore();
+  const canSeedTemplates = hasPerm(user, PERMS.USERS_MANAGE);
   const [list, setList]                         = useState<any[]>([]);
   const [loading, setLoading]                   = useState(false);
   const [seeding, setSeeding]                   = useState(false);
@@ -386,6 +390,10 @@ export default function TaskTemplateLibrary() {
   };
 
   const handleSeed = async () => {
+    if (!canSeedTemplates) {
+      alert('仅管理员可执行模板初始化');
+      return;
+    }
     if (!window.confirm('将预置芯片检测试剂盒项目标准任务模板（共 17 大类约 79 个模板），已存在的同名模板将跳过。是否继续？')) return;
     setSeeding(true);
     try {
@@ -421,10 +429,12 @@ export default function TaskTemplateLibrary() {
               <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
               刷新
             </button>
-            <button onClick={handleSeed} disabled={seeding} title="一键导入标准任务模板" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', borderRadius: '8px', border: '1px solid #a7f3d0', background: seeding ? '#f0fdf4' : '#ecfdf5', color: '#059669', cursor: seeding ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: 500 }}>
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-              {seeding ? '导入中…' : '一键初始化'}
-            </button>
+            {canSeedTemplates && (
+              <button onClick={handleSeed} disabled={seeding} title="一键导入标准任务模板（管理员）" style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '7px 14px', borderRadius: '8px', border: '1px solid #a7f3d0', background: seeding ? '#f0fdf4' : '#ecfdf5', color: '#059669', cursor: seeding ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: 500 }}>
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                {seeding ? '导入中…' : '一键初始化'}
+              </button>
+            )}
             <button onClick={() => { setEditing(null); setShowDrawer(true); }} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" d="M12 4v16m8-8H4"/></svg>
               新建模板
