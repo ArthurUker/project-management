@@ -955,6 +955,12 @@ export default function TemplateEditor() {
 
   async function saveTemplate() {
     if (!template) return;
+    const templateName = (editingTitle ? titleDraft : (template as any).name || '').trim();
+    if (!templateName) {
+      alert('模版名称不能为空');
+      return;
+    }
+
     const content = {
       phases: phases.map(p => ({
         id: p.id,
@@ -990,7 +996,13 @@ export default function TemplateEditor() {
 
     setSaving(true);
     try {
-      await projectTemplatesAPI.patch((template as any).id, { content: JSON.stringify(content) });
+      await projectTemplatesAPI.patch((template as any).id, {
+        name: templateName,
+        content: JSON.stringify(content),
+      });
+      setTemplate((t: any) => ({ ...t, name: templateName }));
+      setTitleDraft(templateName);
+      setEditingTitle(false);
       alert('模版已保存！');
     } catch (e) {
       console.error(e);
