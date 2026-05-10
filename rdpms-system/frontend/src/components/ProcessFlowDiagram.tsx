@@ -62,6 +62,7 @@ const NODE_HEIGHT = 60;
 const RANK_SEP = 80;
 const NODE_SEP = 50;
 type LayoutMode = 'compact' | 'readable';
+const DEFAULT_INITIAL_LAYOUT_MODE: LayoutMode = 'readable';
 
 const layoutConfigByMode = (mode: LayoutMode) => {
   if (mode === 'readable') {
@@ -70,7 +71,7 @@ const layoutConfigByMode = (mode: LayoutMode) => {
       nodesep: 90,
       marginx: 60,
       marginy: 60,
-      fitPadding: 0.35,
+      fitPadding: 0.18,
       tailThresholdFactor: 1.9,
       tailMinGap: NODE_HEIGHT + 32,
     };
@@ -80,7 +81,7 @@ const layoutConfigByMode = (mode: LayoutMode) => {
     nodesep: NODE_SEP,
     marginx: 40,
     marginy: 40,
-    fitPadding: 0.25,
+      fitPadding: 0.2,
     tailThresholdFactor: 1.4,
     tailMinGap: NODE_HEIGHT + 16,
   };
@@ -723,9 +724,11 @@ const CustomEdge: React.FC<EdgeProps> = ({
       const p0 = allPts[i];
       const p1 = allPts[i + 1];
       const dx = p1.x - p0.x;
-      // 水平切线控制点：保证每段贝塞尔的入/出方向水平，视觉上自然流畅
-      const cp1x = p0.x + dx * 0.5;
-      const cp2x = p1.x - dx * 0.5;
+      const direction = dx === 0 ? 1 : Math.sign(dx);
+      const controlOffset = Math.max(32, Math.min(Math.abs(dx) * 0.45, 110));
+      // 水平切线控制点：给转折更大的缓冲区，让并行汇合/分叉时弧线更圆润
+      const cp1x = p0.x + direction * controlOffset;
+      const cp2x = p1.x - direction * controlOffset;
       d += ` C ${cp1x} ${p0.y} ${cp2x} ${p1.y} ${p1.x} ${p1.y}`;
     }
     edgePath = d;
@@ -740,7 +743,7 @@ const CustomEdge: React.FC<EdgeProps> = ({
       targetX,
       targetY,
       targetPosition,
-      curvature: 0.4,
+      curvature: 0.72,
     });
   }
 
@@ -781,6 +784,7 @@ const CustomEdge: React.FC<EdgeProps> = ({
         stroke={selected ? '#3b82f6' : (hovered ? '#60a5fa' : (style?.stroke ?? '#bfdbfe'))}
         strokeWidth={selected || hovered ? 2 : (style?.strokeWidth ?? 1.5)}
         strokeLinecap="round"
+        strokeLinejoin="round"
         markerEnd={`url(#${selected ? 'arrow-selected' : hovered ? 'arrow-hover' : 'arrow-default'})`}
         className="react-flow__edge-path"
         style={{ transition: 'stroke 0.2s, stroke-width 0.2s' }}
@@ -1122,15 +1126,19 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       (p) => typeof p.x === 'number' && typeof p.y === 'number'
     );
 
-    const { nodes: ln, edges: le } = hasAllSavedPositions
+    const isInitialRender = !hasInitialAutoFitRef.current;
+    const initialLayoutMode = DEFAULT_INITIAL_LAYOUT_MODE;
+    const shouldRespectSavedPositions = hasAllSavedPositions && !isInitialRender;
+
+    const { nodes: ln, edges: le } = shouldRespectSavedPositions
       ? { nodes: rawNodes, edges: mergedEdges }
-      : getLayoutedElements(rawNodes, mergedEdges);
+      : getLayoutedElements(rawNodes, mergedEdges, initialLayoutMode);
 
     const currentPosMap = new Map(currentNodes.map((n) => [n.id, n.position] as [string, { x: number; y: number }]));
 
     let lnWithManualPos = ln.map((n) => {
       const phase = sortedPhases.find((p) => p.id === n.id);
-      if (phase && typeof phase.x === 'number' && typeof phase.y === 'number') {
+      if (shouldRespectSavedPositions && phase && typeof phase.x === 'number' && typeof phase.y === 'number') {
         return { ...n, position: { x: phase.x, y: phase.y } };
       }
       const pos = currentPosMap.get(n.id);
@@ -1175,7 +1183,8 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     // Keep user zoom/viewport during editing. Auto-fit only once when data is first loaded.
     if (!hasInitialAutoFitRef.current && sortedPhases.length > 0) {
       hasInitialAutoFitRef.current = true;
-      setTimeout(() => fitView({ padding: 0.25, duration: 400 }), 50);
+      const cfg = layoutConfigByMode(initialLayoutMode);
+      setTimeout(() => fitView({ padding: cfg.fitPadding, duration: 400 }), 50);
     }
   }, [phases, fitView, getNodes, getEdges, onAddParallel, onEdgeDelete, setEdges, setNodes, mergeEdgesWithCurrent]);
 
