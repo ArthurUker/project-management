@@ -871,7 +871,6 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
 
   // drag-to-snap: disabled (set to 0 so menu never triggers; users connect via handles)
   const [dragOverNodeId, setDragOverNodeId] = useState<string | null>(null);
-  const SNAP_DISTANCE = 0;
 
   const [dropMenuState, setDropMenuState] = useState<{
     visible: boolean;

@@ -494,7 +494,7 @@ export default function TaskTemplateLibrary() {
               { phase: 'rd',          label: '研发',     color: '#3b82f6' },
               { phase: 'integration', label: '集成验证', color: '#10b981' },
               { phase: 'production',  label: '量产交付', color: '#f59e0b' },
-            ].map(({ phase, color }) => (
+            ].map(({ phase }) => (
               CATEGORIES.filter(c => c.phase === phase).map(cat => {
                 const isActive = catFilter === cat.value;
                 const cs = getCatStyle(cat.value);
