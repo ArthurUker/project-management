@@ -41,6 +41,19 @@ output_package/
 _task_tree.txt
 _xmind_tmp*/
 
+# ── 本地测试脚本 / 本地覆盖配置（不部署）──
+*.local.js
+*.local.ts
+*.local.cjs
+*.local.mjs
+*.local.sh
+**/scripts/test-*.js
+**/scripts/test-*.cjs
+**/scripts/dev-*.js
+**/scripts/dev-*.cjs
+**/scripts/debug-*.js
+**/scripts/debug-*.cjs
+
 # ── Seed 数据临时文件（生成的数据不提交）──
 src/data/*.json
 src/data/*.csv
