@@ -2,6 +2,11 @@
 
 set -e
 
+if [ -s "$HOME/.nvm/nvm.sh" ]; then
+  # Load nvm-managed Node.js for non-interactive shells.
+  . "$HOME/.nvm/nvm.sh"
+fi
+
 echo "🚀 Starting development environment..."
 
 # Kill old processes

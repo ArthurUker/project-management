@@ -28,7 +28,7 @@ interface ExperimentRecord {
 }
 
 export interface ReagentDailyReport {
-  id: string; date: string; fillPerson: string; projectName: string;
+  id: string; date: string; fillPerson: string; projectId: string; projectName: string;
   experimentLocation: string; totalExperiments: string; dataPath: string; relatedSop: string;
   mainContent: string; experimentTypes: string[]; completedAsPlanned: string; uncompletedReason: string;
   experiments: ExperimentRecord[];
@@ -53,7 +53,7 @@ function createEmptyExperiment(date: string, index: number): ExperimentRecord {
 
 function createEmptyReport(date: string, userName: string): ReagentDailyReport {
   return {
-    id: `report-${Date.now()}`, date, fillPerson: userName, projectName: '',
+    id: `report-${Date.now()}`, date, fillPerson: userName, projectId: '', projectName: '',
     experimentLocation: '', totalExperiments: '', dataPath: '', relatedSop: '',
     mainContent: '', experimentTypes: [], completedAsPlanned: '', uncompletedReason: '',
     experiments: [createEmptyExperiment(date, 0)],
@@ -254,12 +254,14 @@ function ExperimentBlock({ experiment, index, onUpdate, onRemove, canRemove }: {
 
 interface ReagentDailyReportProps {
   date: string;
+  projects?: Array<{ id: string; name: string }>;
   value: ReagentDailyReport[];
   onChange: (reports: ReagentDailyReport[]) => void;
 }
 
-export default function ReagentDailyReport({ date, value, onChange }: ReagentDailyReportProps) {
-  const { user, projects } = useAppStore();
+export default function ReagentDailyReport({ date, projects: projectsProp, value, onChange }: ReagentDailyReportProps) {
+  const { user, projects: storeProjects } = useAppStore();
+  const projects = projectsProp && projectsProp.length > 0 ? projectsProp : storeProjects;
   const initialReports = value.length > 0 ? value : [createEmptyReport(date, user?.name || '')];
   const [reports, setReports] = useState<ReagentDailyReport[]>(initialReports);
   
@@ -312,14 +314,14 @@ export default function ReagentDailyReport({ date, value, onChange }: ReagentDai
             <div className="flex items-center gap-3">
               <span className="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center text-sm font-bold">{rIndex + 1}</span>
               <span className="font-semibold text-gray-800">工作日报 #{rIndex + 1}</span>
-              {report.projectName && <span className="text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">{report.projectName}</span>}
+              {(report.projectName || report.projectId) && <span className="text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">{report.projectName || projects.find(p => p.id === report.projectId)?.name || ''}</span>}
             </div>
           </div>
           <div className="p-4 space-y-6">
             <div className="bg-sky-50 rounded-lg p-4 border border-sky-200">
               <SectionTitle number={1} title="基础信息与工作概况" color="sky" />
               <div className="grid grid-cols-4 gap-4">
-                <div className="col-span-2"><label className="label">所属项目</label><select className="input" value={report.projectName} onChange={(e) => updateReport(rIndex, 'projectName', e.target.value)}><option value="">选择项目</option>{projects.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}</select></div>
+                <div className="col-span-2"><label className="label">所属项目</label><select className="input" value={report.projectId || ''} onChange={(e) => { const projectId = e.target.value; const project = projects.find(p => p.id === projectId); updateReport(rIndex, 'projectId', projectId); updateReport(rIndex, 'projectName', project?.name || ''); }}><option value="">选择项目</option>{projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
                 <div><label className="label">实验地点</label><input className="input" placeholder="如 横琴实验室" value={report.experimentLocation} onChange={(e) => updateReport(rIndex, 'experimentLocation', e.target.value)} /></div>
                 <div><label className="label">实验总数</label><input className="input" placeholder="如 3" value={report.totalExperiments} onChange={(e) => updateReport(rIndex, 'totalExperiments', e.target.value)} /></div>
                 <div className="col-span-2"><label className="label">今日主要工作内容</label><textarea className="input h-12" placeholder="简述..." value={report.mainContent} onChange={(e) => updateReport(rIndex, 'mainContent', e.target.value)} /></div>

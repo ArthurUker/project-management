@@ -109,7 +109,8 @@ export default function ReportEdit() {
     try {
       // 获取项目列表
       const projectsRes = await projectAPI.list({ pageSize: 100 });
-      setProjects(projectsRes.list || []);
+      const projectList = projectsRes.list || [];
+      setProjects(projectList);
       
       if (id && id !== 'new') {
         // 编辑现有汇报
@@ -121,7 +122,15 @@ export default function ReportEdit() {
           setReportType(reportData.reportType || '日报');
           setMonth(reportData.month);
           setProjectReports(content.projectReports || []);
-          setReagentReports(content.reagentReports || []);
+          const normalizedReagentReports = (content.reagentReports || []).map((r: any) => {
+            if (r?.projectId) return r;
+            if (r?.projectName) {
+              const matched = projectList.find((p: any) => p.name === r.projectName);
+              if (matched) return { ...r, projectId: matched.id };
+            }
+            return { ...r, projectId: r?.projectId || '' };
+          });
+          setReagentReports(normalizedReagentReports);
           // 根据内容类型自动识别模板
           if (content.reagentReports) {
             setDailyTemplate('reagent');
@@ -421,6 +430,7 @@ export default function ReportEdit() {
             // 试剂组综合模板
             <ReagentDailyReport 
               date={month ? `${month}-01` : new Date().toISOString().split('T')[0]}
+              projects={projects}
               value={reagentReports}
               onChange={setReagentReports}
             />

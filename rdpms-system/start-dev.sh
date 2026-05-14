@@ -3,6 +3,11 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT_DIR"
 
+if [ -s "$HOME/.nvm/nvm.sh" ]; then
+  # Load nvm-managed Node.js for non-interactive shells.
+  . "$HOME/.nvm/nvm.sh"
+fi
+
 echo "Stopping existing vite/backend processes (if any)"
 pkill -f "vite" || true
 pkill -f "node src/index.js" || true
