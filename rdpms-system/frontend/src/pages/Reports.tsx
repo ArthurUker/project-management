@@ -6,8 +6,8 @@ import { useAppStore } from '../store/appStore';
 const STATUS_COLORS: Record<string, string> = {
   '草稿': 'bg-gray-100 text-gray-600',
   '已提交': 'bg-yellow-100 text-yellow-700',
-  '已通过': 'bg-green-100 text-green-700',
-  '已驳回': 'bg-red-100 text-red-600',
+  '已阅': 'bg-green-100 text-green-700',
+  '需修改': 'bg-orange-100 text-orange-700',
 };
 
 const REPORT_TYPES = [
@@ -201,7 +201,7 @@ export default function Reports() {
             }`}
             onClick={() => setFilter('pending')}
           >
-            待审批
+            待审阅
             {reportList.filter(r => r.status === '已提交').length > 0 && (
               <span className="ml-1.5 bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full">
                 {reportList.filter(r => r.status === '已提交').length}
@@ -280,6 +280,11 @@ export default function Reports() {
                                 return null;
                               })()}
                             </p>
+                            {report.status === '需修改' && report.approveNote && (
+                              <p className="text-xs text-orange-600 mt-1.5 bg-orange-50 border border-orange-200 rounded px-2 py-1">
+                                批示：{report.approveNote}
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center gap-3">

@@ -7,8 +7,8 @@ const STATUS_COLORS: Record<string, string> = {
   '草稿': 'bg-gray-100 text-gray-600',
   '已提交': 'bg-yellow-100 text-yellow-700',
   'submitted': 'bg-yellow-100 text-yellow-700',
-  '已通过': 'bg-green-100 text-green-700',
-  '已驳回': 'bg-red-100 text-red-600',
+  '已阅': 'bg-green-100 text-green-700',
+  '需修改': 'bg-orange-100 text-orange-700',
 };
 
 const submittedStatuses = ['已提交', 'submitted'];
@@ -81,10 +81,10 @@ export default function ReportReview() {
     try {
       await reportAPI.approve(id, reviewNote.trim() || undefined);
       await loadReport(id);
-      alert('审批通过成功');
+      alert('已标记为已阅');
     } catch (err: any) {
-      console.error('Approve failed:', err);
-      alert(err?.error || err?.message || '审批失败，请重试');
+      console.error('Review failed:', err);
+      alert(err?.error || err?.message || '操作失败，请重试');
     } finally {
       setSubmitting(false);
     }
@@ -94,7 +94,7 @@ export default function ReportReview() {
     if (!id || !canApprove) return;
     const note = reviewNote.trim();
     if (!note) {
-      alert('驳回时请填写修改意见');
+      alert('批示修改时请填写修改意见');
       return;
     }
 
@@ -102,10 +102,10 @@ export default function ReportReview() {
     try {
       await reportAPI.reject(id, note);
       await loadReport(id);
-      alert('已驳回并返回修改意见');
+      alert('已批示：需修改');
     } catch (err: any) {
-      console.error('Reject failed:', err);
-      alert(err?.error || err?.message || '驳回失败，请重试');
+      console.error('Request revision failed:', err);
+      alert(err?.error || err?.message || '操作失败，请重试');
     } finally {
       setSubmitting(false);
     }
@@ -140,8 +140,8 @@ export default function ReportReview() {
 
       <div className="card">
         <div className="p-6 border-b border-gray-100">
-          <h1 className="text-xl font-display font-bold text-gray-900">{report.reportType}审批查看</h1>
-          <p className="text-sm text-gray-500 mt-2">系统整理展示版（只读），用于管理员审批。</p>
+          <h1 className="text-xl font-display font-bold text-gray-900">{report.reportType}审阅</h1>
+          <p className="text-sm text-gray-500 mt-2">系统整理展示版（只读），用于管理员审阅汇报内容。</p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 text-sm">
             <div className="bg-gray-50 rounded-lg p-3">
@@ -160,6 +160,22 @@ export default function ReportReview() {
               <div className="text-gray-500">提交时间</div>
               <div className="text-gray-900 font-medium mt-1">{report.submittedAt ? new Date(report.submittedAt).toLocaleString() : '-'}</div>
             </div>
+            {(report.status === '已阅' || report.status === '需修改') && report.approvedAt && (
+              <div className={`rounded-lg p-3 ${report.status === '已阅' ? 'bg-green-50' : 'bg-orange-50'}`}>
+                <div className={`text-sm font-medium ${report.status === '已阅' ? 'text-green-700' : 'text-orange-700'}`}>
+                  {report.status === '已阅' ? '✓ 已阅时间' : '↩ 批示时间'}
+                </div>
+                <div className="text-gray-900 font-medium mt-1">{new Date(report.approvedAt).toLocaleString()}</div>
+              </div>
+            )}
+            {(report.status === '已阅' || report.status === '需修改') && report.approveNote && (
+              <div className={`rounded-lg p-3 md:col-span-2 ${report.status === '已阅' ? 'bg-green-50' : 'bg-orange-50'}`}>
+                <div className={`text-sm font-medium ${report.status === '已阅' ? 'text-green-700' : 'text-orange-700'}`}>
+                  {report.status === '已阅' ? '批示意见' : '修改意见'}
+                </div>
+                <div className="text-gray-900 mt-1 whitespace-pre-wrap">{report.approveNote}</div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -311,17 +327,17 @@ export default function ReportReview() {
           )}
 
           <div className="border-t border-gray-100 pt-4">
-            <h2 className="text-base font-semibold text-gray-900 mb-2">审批意见</h2>
+            <h2 className="text-base font-semibold text-gray-900 mb-2">批示意见</h2>
             <textarea
               value={reviewNote}
               onChange={(e) => setReviewNote(e.target.value)}
-              placeholder={canApprove ? '可填写审批通过意见或驳回修改意见' : '暂无审批意见'}
+              placeholder={canApprove ? '可填写批示意见（标记已阅时可不填），批示需修改时必填' : '暂无批示意见'}
               disabled={!canApprove || submitting}
               className={`input h-24 ${!canApprove ? 'bg-gray-50 text-gray-500' : ''}`}
             />
 
             {report.approveNote && !canApprove && (
-              <p className="text-sm text-gray-500 mt-2">当前意见：{report.approveNote}</p>
+              <p className="text-sm text-gray-500 mt-2">当前批示：{report.approveNote}</p>
             )}
 
             {canApprove && (
@@ -331,14 +347,14 @@ export default function ReportReview() {
                   onClick={handleApprove}
                   disabled={submitting}
                 >
-                  {submitting ? '处理中...' : '审批通过'}
+                  {submitting ? '处理中...' : '✓ 已阅'}
                 </button>
                 <button
-                  className="btn bg-red-500 hover:bg-red-600 text-white"
+                  className="btn bg-orange-500 hover:bg-orange-600 text-white"
                   onClick={handleReject}
                   disabled={submitting}
                 >
-                  {submitting ? '处理中...' : '驳回并返回意见'}
+                  {submitting ? '处理中...' : '↩ 批示：需修改'}
                 </button>
               </div>
             )}

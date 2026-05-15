@@ -110,7 +110,7 @@ model Report {
   reportType  String    @default("日报") // 日报 / 周报 / 月报
   month       String    // 2026-03
   content     String    // JSON格式汇报内容
-  status      String    @default("草稿") // 草稿 / 已提交 / 已通过 / 已驳回
+  status      String    @default("草稿") // 草稿 / 已提交 / 已阅 / 需修改
   submittedAt DateTime?
   approvedBy  String?
   approvedAt  DateTime?

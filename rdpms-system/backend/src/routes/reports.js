@@ -163,7 +163,7 @@ reports.post('/:id/submit', async (c) => {
   
   if (!report) return c.json({ error: '汇报不存在' }, 404);
   if (report.userId !== userId) return c.json({ error: '只能提交自己的汇报' }, 403);
-  if (report.status === '已通过') return c.json({ error: '已通过的汇报不能再次提交' }, 400);
+  if (report.status === '已阅') return c.json({ error: '已审阅的汇报不能再次提交' }, 400);
   
   await prisma.$transaction(async (tx) => {
     const lastVersion = await tx.reportVersion.findFirst({
@@ -197,7 +197,7 @@ reports.post('/:id/submit', async (c) => {
   return c.json({ success: true });
 });
 
-// 审批通过
+// 审阅：标记已阅
 reports.post('/:id/approve', async (c) => {
   const id = c.req.param('id');
   const userId = c.get('userId');
@@ -205,20 +205,20 @@ reports.post('/:id/approve', async (c) => {
   const { note } = await c.req.json();
 
   if (userRole !== 'admin' && userRole !== 'manager') {
-    return c.json({ error: '仅管理员或经理可审批汇报' }, 403);
+    return c.json({ error: '仅管理员或经理可审阅汇报' }, 403);
   }
 
   const existing = await prisma.report.findUnique({ where: { id } });
   if (!existing) return c.json({ error: '汇报不存在' }, 404);
-  if (existing.userId === userId) return c.json({ error: '不能审批自己的汇报' }, 400);
+  if (existing.userId === userId) return c.json({ error: '不能审阅自己的汇报' }, 400);
   if (!['已提交', 'submitted'].includes(existing.status)) {
-    return c.json({ error: '仅已提交的汇报可审批通过' }, 400);
+    return c.json({ error: '仅已提交的汇报可审阅' }, 400);
   }
   
   const report = await prisma.report.update({
     where: { id },
     data: {
-      status: '已通过',
+      status: '已阅',
       approvedBy: userId,
       approvedAt: new Date(),
       approveNote: note || null
@@ -227,17 +227,17 @@ reports.post('/:id/approve', async (c) => {
   
   await prisma.systemLog.create({
     data: {
-      action: 'report_approve',
+      action: 'report_review',
       userId,
       targetId: id,
-      detail: `审批通过`
+      detail: `已阅${note ? '，批示：' + note : ''}`
     }
   });
   
   return c.json(report);
 });
 
-// 驳回
+// 批示：需修改
 reports.post('/:id/reject', async (c) => {
   const id = c.req.param('id');
   const userId = c.get('userId');
@@ -245,22 +245,22 @@ reports.post('/:id/reject', async (c) => {
   const { note } = await c.req.json();
 
   if (userRole !== 'admin' && userRole !== 'manager') {
-    return c.json({ error: '仅管理员或经理可驳回汇报' }, 403);
+    return c.json({ error: '仅管理员或经理可批示汇报' }, 403);
   }
   
-  if (!note) return c.json({ error: '驳回原因不能为空' }, 400);
+  if (!note) return c.json({ error: '批示修改意见不能为空' }, 400);
 
   const existing = await prisma.report.findUnique({ where: { id } });
   if (!existing) return c.json({ error: '汇报不存在' }, 404);
-  if (existing.userId === userId) return c.json({ error: '不能驳回自己的汇报' }, 400);
+  if (existing.userId === userId) return c.json({ error: '不能批示自己的汇报' }, 400);
   if (!['已提交', 'submitted'].includes(existing.status)) {
-    return c.json({ error: '仅已提交的汇报可驳回' }, 400);
+    return c.json({ error: '仅已提交的汇报可批示' }, 400);
   }
   
   const report = await prisma.report.update({
     where: { id },
     data: {
-      status: '已驳回',
+      status: '需修改',
       approveNote: note,
       approvedBy: userId,
       approvedAt: new Date()
@@ -269,10 +269,10 @@ reports.post('/:id/reject', async (c) => {
 
   await prisma.systemLog.create({
     data: {
-      action: 'report_reject',
+      action: 'report_request_revision',
       userId,
       targetId: id,
-      detail: `驳回汇报: ${note}`
+      detail: `批示需修改：${note}`
     }
   });
   
