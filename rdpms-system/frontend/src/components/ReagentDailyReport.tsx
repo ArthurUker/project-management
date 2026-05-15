@@ -24,7 +24,12 @@ interface ExperimentRecord {
   steps: Array<{ stepNo: number; plannedStep: string; actualRecord: string; time: string; operator: string; deviation: string }>;
   keyParams: Array<{ paramName: string; setValue: string; actualValue: string; unit: string; isAbnormal: string; note: string }>;
   observation: { visual: string; color: string; abnormal: string; imageNo: string };
-  result: { mainResult: string; achieved: string; conclusion: string; nextPlan: string };
+  result: {
+    planSamples: string; planTargets: string; planRepeats: string; planVariables: string;
+    rows: Array<{ id: string; sample: string; target: string; variable: string; repeat: string; resultValue: string; achieved: string; note: string }>;
+    conclusion: string; nextPlan: string;
+    mainResult?: string; // backward compat
+  };
 }
 
 export interface ReagentDailyReport {
@@ -40,14 +45,14 @@ export interface ReagentDailyReport {
   docRefs: Array<{ id: string; code: string; title: string; docType: string; version: string; category?: { name: string } }>;
 }
 
-function createEmptyExperiment(date: string, index: number): ExperimentRecord {
+function createEmptyExperiment(date: string, index: number, userName?: string): ExperimentRecord {
   const dateStr = date.replace(/-/g, '');
   return {
     id: `exp-${Date.now()}-${index}`, experimentNo: `RD-RG-${dateStr}-${String(index + 1).padStart(2, '0')}`,
-    experimentTitle: '', experimentType: '', personnel: '', startTime: '', endTime: '',
+    experimentTitle: '', experimentType: '', personnel: userName || '', startTime: '', endTime: '',
     samples: [], reagents: [], steps: [], keyParams: [],
     observation: { visual: '', color: '', abnormal: '', imageNo: '' },
-    result: { mainResult: '', achieved: '', conclusion: '', nextPlan: '' }
+    result: { planSamples: '', planTargets: '', planRepeats: '3', planVariables: '', rows: [], conclusion: '', nextPlan: '' }
   };
 }
 
@@ -56,7 +61,7 @@ function createEmptyReport(date: string, userName: string): ReagentDailyReport {
     id: `report-${Date.now()}`, date, fillPerson: userName, projectId: '', projectName: '',
     experimentLocation: '', totalExperiments: '', dataPath: '', relatedSop: '',
     mainContent: '', experimentTypes: [], completedAsPlanned: '', uncompletedReason: '',
-    experiments: [createEmptyExperiment(date, 0)],
+    experiments: [createEmptyExperiment(date, 0, userName)],
     formula: { reagentName: '', formulaNo: '', version: '', totalAmount: '', storageCondition: '', components: [] },
     hasOutput: '否', outputType: '', outputName: '', outputNo: '', outputAmount: '',
     hasHandOver: '否', receiver: '', handoverTime: '', handoverNo: '',
@@ -138,7 +143,7 @@ function ExperimentBlock({ experiment, index, onUpdate, onRemove, canRemove }: {
           <div className="grid grid-cols-4 gap-3">
             <div className="col-span-2"><label className="label text-xs">实验标题</label><input className="input text-sm" placeholder="简述实验内容" value={experiment.experimentTitle} onChange={(e) => update('experimentTitle', e.target.value)} /></div>
             <div><label className="label text-xs">实验类型</label><select className="input text-sm" value={experiment.experimentType} onChange={(e) => update('experimentType', e.target.value)}><option value="">选择</option>{DROPDOWN_OPTIONS.experimentTypes.map(t => <option key={t} value={t}>{t}</option>)}</select></div>
-            <div><label className="label text-xs">实验人员</label><input className="input text-sm" placeholder="参与人员" value={experiment.personnel} onChange={(e) => update('personnel', e.target.value)} /></div>
+            <div><label className="label text-xs">实验人员</label><div className="input bg-gray-50 text-gray-600 text-sm">{experiment.personnel || '—'}</div></div>
             <div className="flex gap-2"><div className="flex-1"><label className="label text-xs">开始</label><input type="time" className="input text-sm" value={experiment.startTime} onChange={(e) => update('startTime', e.target.value)} /></div><div className="flex-1"><label className="label text-xs">结束</label><input type="time" className="input text-sm" value={experiment.endTime} onChange={(e) => update('endTime', e.target.value)} /></div></div>
           </div>
           <div className="bg-emerald-50 rounded-lg p-3 border border-emerald-200">
@@ -226,23 +231,68 @@ function ExperimentBlock({ experiment, index, onUpdate, onRemove, canRemove }: {
               </table>
             ) : <p className="text-xs text-gray-500 italic">暂无参数</p>}
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-lime-50 rounded-lg p-3 border border-lime-200">
-              <h5 className="text-sm font-medium text-lime-800 mb-2 flex items-center gap-2"><span className="w-4 h-4 bg-lime-500 text-white rounded text-xs flex items-center justify-center">!</span>现象记录</h5>
-              <div className="space-y-2">
-                <div><label className="label text-xs">肉眼观察/颜色</label><input className="input text-xs" placeholder="描述..." value={experiment.observation.visual} onChange={(e) => update('observation', {...experiment.observation, visual: e.target.value})} /></div>
-                <div><label className="label text-xs">异常/图片编号</label><input className="input text-xs" placeholder="如异常或 IMG-001" value={experiment.observation.abnormal} onChange={(e) => update('observation', {...experiment.observation, abnormal: e.target.value})} /></div>
-              </div>
+          <div className="bg-lime-50 rounded-lg p-3 border border-lime-200">
+            <h5 className="text-sm font-medium text-lime-800 mb-2 flex items-center gap-2"><span className="w-4 h-4 bg-lime-500 text-white rounded text-xs flex items-center justify-center">!</span>现象记录</h5>
+            <div className="grid grid-cols-2 gap-2">
+              <div><label className="label text-xs">肉眼观察/颜色</label><input className="input text-xs" placeholder="描述..." value={experiment.observation.visual} onChange={(e) => update('observation', {...experiment.observation, visual: e.target.value})} /></div>
+              <div><label className="label text-xs">异常/图片编号</label><input className="input text-xs" placeholder="如异常或 IMG-001" value={experiment.observation.abnormal} onChange={(e) => update('observation', {...experiment.observation, abnormal: e.target.value})} /></div>
             </div>
-            <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
-              <h5 className="text-sm font-medium text-yellow-800 mb-2 flex items-center gap-2"><span className="w-4 h-4 bg-yellow-500 text-white rounded text-xs flex items-center justify-center">✓</span>实验结果</h5>
-              <div className="space-y-2">
-                <div><label className="label text-xs">主要结果</label><textarea className="input h-8 text-xs" placeholder="描述..." value={experiment.result.mainResult} onChange={(e) => update('result', {...experiment.result, mainResult: e.target.value})} /></div>
-                <div className="flex gap-2">
-                  <div className="flex-1"><label className="label text-xs">是否达标</label><select className="input text-xs" value={experiment.result.achieved} onChange={(e) => update('result', {...experiment.result, achieved: e.target.value})}><option value="">-</option>{DROPDOWN_OPTIONS.resultAchieved.map(a => <option key={a} value={a}>{a}</option>)}</select></div>
-                  <div className="flex-1"><label className="label text-xs">结论</label><input className="input text-xs" placeholder="结论" value={experiment.result.conclusion} onChange={(e) => update('result', {...experiment.result, conclusion: e.target.value})} /></div>
-                </div>
+          </div>
+          <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+            <h5 className="text-sm font-medium text-yellow-800 mb-3 flex items-center gap-2"><span className="w-4 h-4 bg-yellow-500 text-white rounded text-xs flex items-center justify-center">✓</span>实验结果（结构化记录）</h5>
+            <div className="grid grid-cols-4 gap-2 mb-3">
+              <div><label className="label text-xs">样本数</label><input className="input text-xs" type="number" min="1" placeholder="如 3" value={experiment.result.planSamples || ''} onChange={(e) => update('result', {...experiment.result, planSamples: e.target.value})} /></div>
+              <div><label className="label text-xs">靶标（逗号分隔）</label><input className="input text-xs" placeholder="如 HBV,HCV" value={experiment.result.planTargets || ''} onChange={(e) => update('result', {...experiment.result, planTargets: e.target.value})} /></div>
+              <div><label className="label text-xs">重复次数</label><input className="input text-xs" type="number" min="1" placeholder="如 3" value={experiment.result.planRepeats || ''} onChange={(e) => update('result', {...experiment.result, planRepeats: e.target.value})} /></div>
+              <div className="flex items-end"><button type="button" onClick={() => {
+                const sCount = parseInt(experiment.result.planSamples || '0') || 0;
+                const targets = (experiment.result.planTargets || '').split(',').map((t: string) => t.trim()).filter(Boolean);
+                if (targets.length === 0) targets.push('');
+                const rCount = parseInt(experiment.result.planRepeats || '1') || 1;
+                const rows: Array<{id: string; sample: string; target: string; variable: string; repeat: string; resultValue: string; achieved: string; note: string}> = [];
+                for (let s = 1; s <= sCount; s++) {
+                  for (const target of targets) {
+                    for (let r = 1; r <= rCount; r++) {
+                      rows.push({ id: `row-${Date.now()}-${s}-${r}`, sample: `S${s}`, target, variable: experiment.result.planVariables || '', repeat: `R${r}`, resultValue: '', achieved: '', note: '' });
+                    }
+                  }
+                }
+                update('result', {...experiment.result, rows});
+              }} className="w-full py-2 text-xs rounded bg-yellow-500 hover:bg-yellow-600 text-white font-medium">生成结果表</button></div>
+            </div>
+            <div className="mb-3"><label className="label text-xs">变量/条件说明</label><input className="input text-xs" placeholder="如：不同引物浓度 (0.2μM, 0.4μM, 0.8μM)" value={experiment.result.planVariables || ''} onChange={(e) => update('result', {...experiment.result, planVariables: e.target.value})} /></div>
+            {Array.isArray(experiment.result.rows) && experiment.result.rows.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs border-collapse">
+                  <thead className="bg-yellow-100"><tr>
+                    <th className="px-2 py-1 text-left border border-yellow-200">样本</th>
+                    <th className="px-2 py-1 text-left border border-yellow-200">靶标</th>
+                    <th className="px-2 py-1 text-left border border-yellow-200">变量/条件</th>
+                    <th className="px-2 py-1 text-left border border-yellow-200">重复</th>
+                    <th className="px-2 py-1 text-left border border-yellow-200">结果值</th>
+                    <th className="px-2 py-1 text-left border border-yellow-200">达标</th>
+                    <th className="px-2 py-1 text-left border border-yellow-200">备注</th>
+                    <th className="w-6 border border-yellow-200"></th>
+                  </tr></thead>
+                  <tbody>{experiment.result.rows.map((row: any, ri: number) => (
+                    <tr key={row.id || ri} className="hover:bg-yellow-50">
+                      <td className="px-1 py-1 border border-yellow-100"><input className="w-full bg-transparent border-none text-xs" value={row.sample} onChange={(e) => { const nr = [...experiment.result.rows]; nr[ri] = {...nr[ri], sample: e.target.value}; update('result', {...experiment.result, rows: nr}); }} /></td>
+                      <td className="px-1 py-1 border border-yellow-100"><input className="w-full bg-transparent border-none text-xs" value={row.target} onChange={(e) => { const nr = [...experiment.result.rows]; nr[ri] = {...nr[ri], target: e.target.value}; update('result', {...experiment.result, rows: nr}); }} /></td>
+                      <td className="px-1 py-1 border border-yellow-100"><input className="w-full bg-transparent border-none text-xs" value={row.variable} onChange={(e) => { const nr = [...experiment.result.rows]; nr[ri] = {...nr[ri], variable: e.target.value}; update('result', {...experiment.result, rows: nr}); }} /></td>
+                      <td className="px-1 py-1 border border-yellow-100"><input className="w-full bg-transparent border-none text-xs" value={row.repeat} onChange={(e) => { const nr = [...experiment.result.rows]; nr[ri] = {...nr[ri], repeat: e.target.value}; update('result', {...experiment.result, rows: nr}); }} /></td>
+                      <td className="px-1 py-1 border border-yellow-100"><input className="w-full bg-transparent border-none text-xs" placeholder="CT值/+/-" value={row.resultValue} onChange={(e) => { const nr = [...experiment.result.rows]; nr[ri] = {...nr[ri], resultValue: e.target.value}; update('result', {...experiment.result, rows: nr}); }} /></td>
+                      <td className="px-1 py-1 border border-yellow-100"><select className="w-full bg-transparent border-none text-xs" value={row.achieved} onChange={(e) => { const nr = [...experiment.result.rows]; nr[ri] = {...nr[ri], achieved: e.target.value}; update('result', {...experiment.result, rows: nr}); }}><option value="">-</option><option value="达到">达到</option><option value="部分达到">部分</option><option value="未达到">未达到</option></select></td>
+                      <td className="px-1 py-1 border border-yellow-100"><input className="w-full bg-transparent border-none text-xs" value={row.note} onChange={(e) => { const nr = [...experiment.result.rows]; nr[ri] = {...nr[ri], note: e.target.value}; update('result', {...experiment.result, rows: nr}); }} /></td>
+                      <td className="px-1 py-1 border border-yellow-100 text-center"><button type="button" onClick={() => update('result', {...experiment.result, rows: experiment.result.rows.filter((_: any, i: number) => i !== ri)})} className="text-red-400 hover:text-red-600">×</button></td>
+                    </tr>
+                  ))}</tbody>
+                </table>
+                <button type="button" onClick={() => update('result', {...experiment.result, rows: [...experiment.result.rows, { id: `row-${Date.now()}`, sample: '', target: '', variable: '', repeat: '', resultValue: '', achieved: '', note: '' }]})} className="mt-2 text-xs text-yellow-600 hover:text-yellow-800">+ 添加行</button>
               </div>
+            ) : <p className="text-xs text-gray-400 italic mb-2">填写上方设计参数后点击"生成结果表"，或 <button type="button" onClick={() => update('result', {...experiment.result, rows: [...(experiment.result.rows||[]), { id: `row-${Date.now()}`, sample: '', target: '', variable: '', repeat: '', resultValue: '', achieved: '', note: '' }]})} className="text-yellow-600 hover:text-yellow-800 not-italic underline">手动添加行</button></p>}
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div><label className="label text-xs">总体结论</label><input className="input text-xs" placeholder="实验整体结论" value={experiment.result.conclusion || ''} onChange={(e) => update('result', {...experiment.result, conclusion: e.target.value})} /></div>
+              <div><label className="label text-xs">下一步计划</label><input className="input text-xs" placeholder="后续实验计划" value={experiment.result.nextPlan || ''} onChange={(e) => update('result', {...experiment.result, nextPlan: e.target.value})} /></div>
             </div>
           </div>
           {canRemove && <div className="flex justify-end"><button type="button" onClick={onRemove} className="text-red-500 hover:text-red-700 text-sm">删除此实验</button></div>}
@@ -274,7 +324,7 @@ export default function ReagentDailyReport({ date, projects: projectsProp, value
   
   const addExperiment = (reportIndex: number) => {
     const report = reports[reportIndex];
-    updateReport(reportIndex, 'experiments', [...report.experiments, createEmptyExperiment(date, report.experiments.length)]);
+    updateReport(reportIndex, 'experiments', [...report.experiments, createEmptyExperiment(date, report.experiments.length, user?.name)]);
   };
   
   const updateExperiment = (reportIndex: number, expIndex: number, exp: ExperimentRecord) => {
@@ -322,8 +372,7 @@ export default function ReagentDailyReport({ date, projects: projectsProp, value
               <SectionTitle number={1} title="基础信息与工作概况" color="sky" />
               <div className="grid grid-cols-4 gap-4">
                 <div className="col-span-2"><label className="label">所属项目</label><select className="input" value={report.projectId || ''} onChange={(e) => { const projectId = e.target.value; const project = projects.find(p => p.id === projectId); updateReport(rIndex, 'projectId', projectId); updateReport(rIndex, 'projectName', project?.name || ''); }}><option value="">选择项目</option>{projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></div>
-                <div><label className="label">实验地点</label><input className="input" placeholder="如 横琴实验室" value={report.experimentLocation} onChange={(e) => updateReport(rIndex, 'experimentLocation', e.target.value)} /></div>
-                <div><label className="label">实验总数</label><input className="input" placeholder="如 3" value={report.totalExperiments} onChange={(e) => updateReport(rIndex, 'totalExperiments', e.target.value)} /></div>
+                <div><label className="label">实验总数</label><div className="input bg-gray-50 text-gray-700 select-none">{report.experiments.length} 个</div></div>
                 <div className="col-span-2"><label className="label">今日主要工作内容</label><textarea className="input h-12" placeholder="简述..." value={report.mainContent} onChange={(e) => updateReport(rIndex, 'mainContent', e.target.value)} /></div>
                 <div className="col-span-2"><label className="label">涉及实验类型</label><MultiSelect options={DROPDOWN_OPTIONS.experimentTypes} value={report.experimentTypes} onChange={(v) => updateReport(rIndex, 'experimentTypes', v)} placeholder="选择类型（可多选）" /></div>
                 <div><label className="label">关联SOP</label><input className="input" placeholder="如 SOP-RT-012" value={report.relatedSop} onChange={(e) => updateReport(rIndex, 'relatedSop', e.target.value)} /></div>

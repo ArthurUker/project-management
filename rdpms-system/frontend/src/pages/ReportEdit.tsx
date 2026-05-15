@@ -90,6 +90,9 @@ export default function ReportEdit() {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
+
+  // 试剂组日报实际日期（完整 YYYY-MM-DD）
+  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0]);
   
   // 项目汇报列表
   const [projectReports, setProjectReports] = useState<ProjectReport[]>([]);
@@ -134,6 +137,9 @@ export default function ReportEdit() {
           // 根据内容类型自动识别模板
           if (content.reagentReports) {
             setDailyTemplate('reagent');
+            // 从内容中恢复日期
+            const firstDate = content.reagentReports?.[0]?.date;
+            if (firstDate) setDate(firstDate);
           }
         } catch {
           setMonth(reportData.month);
@@ -410,10 +416,11 @@ export default function ReportEdit() {
                 <input
                   type="date"
                   className="input w-40"
-                  value={month ? `${month}-01` : ''}
+                  value={date}
                   onChange={(e) => {
-                    const date = new Date(e.target.value);
-                    setMonth(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`);
+                    const d = new Date(e.target.value);
+                    setDate(e.target.value);
+                    setMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
                   }}
                 />
               </div>
@@ -429,7 +436,7 @@ export default function ReportEdit() {
           {reportType === '日报' && dailyTemplate === 'reagent' ? (
             // 试剂组综合模板
             <ReagentDailyReport 
-              date={month ? `${month}-01` : new Date().toISOString().split('T')[0]}
+              date={date}
               projects={projects}
               value={reagentReports}
               onChange={setReagentReports}
