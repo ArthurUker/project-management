@@ -81,8 +81,6 @@ export default function Docs() {
   const [mindmapAppendMode, setMindmapAppendMode] = useState(false);
   const [tableBlockIndex, setTableBlockIndex] = useState(0);
   const tableEditorRef = useRef<VisualTableEditorRef>(null);
-  const [reagentOpenKey, setReagentOpenKey] = useState(0);
-  const [sampleOpenKey, setSampleOpenKey] = useState(0);
   const [reagentCategoryId, setReagentCategoryId] = useState<string | null>(null);
   const [ampReagentCategoryId, setAmpReagentCategoryId] = useState<string | null>(null);
   const [primerCategoryId, setPrimerCategoryId] = useState<string | null>(null);
@@ -274,32 +272,7 @@ export default function Docs() {
           <h1 className="text-2xl font-bold text-gray-900">知识库管理</h1>
           <p className="text-sm text-gray-500 mt-1">管理 SOP 文件、操作模板和技术文档</p>
         </div>
-        <button
-          onClick={() => {
-            const isSpecial = selectedCategory && (
-              (reagentCategoryId && selectedCategory === reagentCategoryId) ||
-              (ampReagentCategoryId && selectedCategory === ampReagentCategoryId) ||
-              (primerCategoryId && selectedCategory === primerCategoryId) ||
-              (sampleCategoryId && selectedCategory === sampleCategoryId)
-            );
-            if (selectedCategory && reagentCategoryId && selectedCategory === reagentCategoryId) {
-              setReagentOpenKey(k => k + 1);
-            } else if (selectedCategory && sampleCategoryId && selectedCategory === sampleCategoryId) {
-              setSampleOpenKey(k => k + 1);
-            } else if (!isSpecial) {
-              resetForm();
-              setShowCreateModal(true);
-            }
-          }}
-          className="btn btn-primary flex items-center gap-2"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-          {selectedCategory && reagentCategoryId && selectedCategory === reagentCategoryId ? '新建试剂' :
-           selectedCategory && primerCategoryId && selectedCategory === primerCategoryId ? '新建引物' :
-           selectedCategory && ampReagentCategoryId && selectedCategory === ampReagentCategoryId ? '新增试剂' :
-           selectedCategory && sampleCategoryId && selectedCategory === sampleCategoryId ? '新建样本' :
-           '新建文档'}
-        </button>
+
       </div>
 
       <div style={{ flexShrink: 0, width: '100%', background: 'rgba(255, 255, 255, 0.82)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', borderRadius: '12px', border: '1px solid rgba(0, 0, 0, 0.08)', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06)', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 0, boxSizing: 'border-box' }}>
@@ -369,20 +342,28 @@ export default function Docs() {
 
       <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', boxSizing: 'border-box', paddingBottom: 8 }}>
         {selectedCategory && reagentCategoryId && selectedCategory === reagentCategoryId ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-4"><ReagentLibrary openKey={reagentOpenKey} hideTopButton /></div>
+          <div className="bg-white rounded-lg border border-gray-200 p-4"><ReagentLibrary /></div>
         ) : selectedCategory && ampReagentCategoryId && selectedCategory === ampReagentCategoryId ? (
           <div className="bg-white rounded-lg border border-gray-200 p-4"><AmplificationReagentLibrary /></div>
         ) : selectedCategory && primerCategoryId && selectedCategory === primerCategoryId ? (
           <div className="bg-white rounded-lg border border-gray-200 p-4"><PrimerLibrary /></div>
         ) : selectedCategory && sampleCategoryId && selectedCategory === sampleCategoryId ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-4"><SampleLibrary openKey={sampleOpenKey} hideTopButton /></div>
+          <div className="bg-white rounded-lg border border-gray-200 p-4"><SampleLibrary /></div>
         ) : (
           loading ? (
             <div className="text-center py-12 text-gray-500">加载中...</div>
           ) : documents.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-lg border border-dashed border-gray-200"><svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg><p className="text-gray-500">暂无文档</p><button onClick={() => { resetForm(); setShowCreateModal(true); }} className="mt-4 text-primary-600 hover:text-primary-700">创建第一个文档</button></div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+            <>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-gray-500">共 {documents.length} 篇文档</span>
+                <button onClick={() => { resetForm(); setShowCreateModal(true); }} className="flex items-center gap-1 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                  新建文档
+                </button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
               {documents.map(doc => (
                 <div key={doc.id} className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/knowledge/${doc.id}`)}>
                   <div className="flex items-start justify-between mb-3">
@@ -400,8 +381,7 @@ export default function Docs() {
                   </div>
                 </div>
               ))}
-            </div>
-          )
+            </div>            </>          )
         )}
       </div>
 
