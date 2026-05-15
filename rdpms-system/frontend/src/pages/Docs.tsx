@@ -50,7 +50,7 @@ const DEFAULT_CATEGORIES = [
   { name: '技术参考', description: '技术文档和参考资料', icon: '📚' },
   { name: '试剂原料库', description: '管理试剂原料信息（名称/分子量/CAS等）', icon: '🧴' },
   { name: '扩增反应体系试剂', description: '管理PCR/qPCR/LAMP等扩增反应专用试剂（酶、Buffer、dNTP等）', icon: '🔬' },
-  { name: '引物探针库', description: '管理引物探针序列、修饰、合成信息等', icon: '🧫' },
+  { name: '引物探针库', description: '管理引物探针序列、修饰、合成信息等', icon: '�' },
   { name: '样本库', description: '管理实验样本信息（归属项目/样本类型/来源/浓度等）', icon: '🧫' },
 ];
 
@@ -109,11 +109,10 @@ export default function Docs() {
       const res = await docsAPI.categories.list();
       let cats = res.list || [];
       const existingNames = new Set(cats.map((c: DocCategory) => c.name));
-      if (cats.length === 0 || existingNames.size < DEFAULT_CATEGORIES.length) {
-        for (const cat of DEFAULT_CATEGORIES) {
-          if (!existingNames.has(cat.name)) {
-            try { await docsAPI.categories.create(cat); } catch (e: any) { if (!e.message?.includes('已存在')) console.error('创建分类失败:', e); }
-          }
+      const missingCategories = DEFAULT_CATEGORIES.filter(cat => !existingNames.has(cat.name));
+      if (missingCategories.length > 0) {
+        for (const cat of missingCategories) {
+          try { await docsAPI.categories.create(cat); } catch (e: any) { if (!e.message?.includes('已存在')) console.error('创建分类失败:', e); }
         }
         const res2 = await docsAPI.categories.list();
         cats = res2.list || [];
