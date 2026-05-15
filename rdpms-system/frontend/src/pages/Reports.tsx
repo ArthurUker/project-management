@@ -49,7 +49,8 @@ export default function Reports() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [activeType, setActiveType] = useState<string>(getCurrentReportType());
-  const [filter, setFilter] = useState<'my' | 'all' | 'pending'>('my');
+  // 管理员默认显示"全部汇报"，其他用户默认显示"我的汇报"
+  const [filter, setFilter] = useState<'my' | 'all' | 'pending'>(user?.role === 'admin' ? 'all' : 'my');
   const [reportList, setReportList] = useState<any[]>([]);
   
   useEffect(() => {
