@@ -107,6 +107,18 @@ export default function Reports() {
   const handleNewReport = () => {
     navigate(`/reports/new?type=${activeType}`);
   };
+
+  const getReportLink = (report: any) => {
+    const isOwnReport = report.userId === user?.id;
+    if (!isOwnReport) return `/reports/${report.id}/review`;
+
+    const submittedStatus = report.status === '已提交' || report.status === 'submitted';
+    if ((user?.role === 'admin' || user?.role === 'manager') && submittedStatus) {
+      return `/reports/${report.id}/review`;
+    }
+
+    return `/reports/${report.id}`;
+  };
   
   // 获取当前类型信息
 
@@ -235,7 +247,7 @@ export default function Reports() {
                   {monthReports.map(report => (
                     <Link
                       key={report.id}
-                      to={`/reports/${report.id}`}
+                      to={getReportLink(report)}
                       className="card card-hover p-5 block"
                     >
                       <div className="flex items-start justify-between">
@@ -274,7 +286,7 @@ export default function Reports() {
                           <span className={`px-3 py-1 rounded-full text-sm font-medium ${STATUS_COLORS[report.status]}`}>
                             {report.status}
                           </span>
-                          {(report.status === '已提交' || report.status === 'submitted') && (
+                          {(report.userId === user?.id) && (report.status === '已提交' || report.status === 'submitted') && (
                             <button
                               onClick={async (e) => {
                                 e.preventDefault();
@@ -293,7 +305,7 @@ export default function Reports() {
                               撤回
                             </button>
                           )}
-                          {(report.status === '草稿' || report.status === 'draft') && (
+                          {(report.userId === user?.id) && (report.status === '草稿' || report.status === 'draft') && (
                             <button
                               onClick={(e) => handleDeleteReport(e, report.id)}
                               className="text-red-500 hover:text-red-700 text-sm"

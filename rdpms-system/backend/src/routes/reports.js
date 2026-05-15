@@ -64,6 +64,9 @@ reports.get('/:id', async (c) => {
       project: {
         select: { id: true, name: true, code: true, type: true }
       },
+      approver: {
+        select: { id: true, name: true }
+      },
       versions: {
         orderBy: { version: 'desc' }
       }
@@ -198,7 +201,19 @@ reports.post('/:id/submit', async (c) => {
 reports.post('/:id/approve', async (c) => {
   const id = c.req.param('id');
   const userId = c.get('userId');
+  const userRole = c.get('userRole');
   const { note } = await c.req.json();
+
+  if (userRole !== 'admin' && userRole !== 'manager') {
+    return c.json({ error: '仅管理员或经理可审批汇报' }, 403);
+  }
+
+  const existing = await prisma.report.findUnique({ where: { id } });
+  if (!existing) return c.json({ error: '汇报不存在' }, 404);
+  if (existing.userId === userId) return c.json({ error: '不能审批自己的汇报' }, 400);
+  if (!['已提交', 'submitted'].includes(existing.status)) {
+    return c.json({ error: '仅已提交的汇报可审批通过' }, 400);
+  }
   
   const report = await prisma.report.update({
     where: { id },
@@ -226,13 +241,39 @@ reports.post('/:id/approve', async (c) => {
 reports.post('/:id/reject', async (c) => {
   const id = c.req.param('id');
   const userId = c.get('userId');
+  const userRole = c.get('userRole');
   const { note } = await c.req.json();
+
+  if (userRole !== 'admin' && userRole !== 'manager') {
+    return c.json({ error: '仅管理员或经理可驳回汇报' }, 403);
+  }
   
   if (!note) return c.json({ error: '驳回原因不能为空' }, 400);
+
+  const existing = await prisma.report.findUnique({ where: { id } });
+  if (!existing) return c.json({ error: '汇报不存在' }, 404);
+  if (existing.userId === userId) return c.json({ error: '不能驳回自己的汇报' }, 400);
+  if (!['已提交', 'submitted'].includes(existing.status)) {
+    return c.json({ error: '仅已提交的汇报可驳回' }, 400);
+  }
   
   const report = await prisma.report.update({
     where: { id },
-    data: { status: '已驳回', approveNote: note }
+    data: {
+      status: '已驳回',
+      approveNote: note,
+      approvedBy: userId,
+      approvedAt: new Date()
+    }
+  });
+
+  await prisma.systemLog.create({
+    data: {
+      action: 'report_reject',
+      userId,
+      targetId: id,
+      detail: `驳回汇报: ${note}`
+    }
   });
   
   return c.json(report);

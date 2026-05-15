@@ -8,6 +8,7 @@ import Projects from './pages/Projects';
 import ProjectDetail from './pages/ProjectDetail';
 import Reports from './pages/Reports';
 import ReportEdit from './pages/ReportEdit';
+import ReportReview from './pages/ReportReview';
 import Tasks from './pages/Tasks';
 import Users from './pages/Users';
 import Settings from './pages/Settings';
@@ -69,6 +70,7 @@ function App() {
           <Route path="task-templates" element={<TaskTemplateLibrary />} />
           <Route path="reports" element={<Reports />} />
           <Route path="reports/:id" element={<ReportEdit />} />
+          <Route path="reports/:id/review" element={<ReportReview />} />
           <Route path="knowledge" element={<Docs />} />
           <Route path="knowledge/:id" element={<KnowledgeDetail />} />
           <Route path="docs" element={<Docs />} />
