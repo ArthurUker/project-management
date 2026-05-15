@@ -239,3 +239,11 @@ export const primerAPI = {
   delete: (id: string) => del<ApiResponse<any>>(`/primers/${id}`),
   batchImport: (rows: any[]) => post<ApiResponse<any>>('/primers/batch-import', { rows }),
 };
+
+export const samplesAPI = {
+  list: (params?: Record<string, any>) => get<ApiResponse<any>>('/samples', { params }),
+  get: (id: string) => get<ApiResponse<any>>(`/samples/${id}`),
+  create: (data: any) => post<ApiResponse<any>>('/samples', data),
+  update: (id: string, data: any) => put<ApiResponse<any>>(`/samples/${id}`, data),
+  delete: (id: string) => del<ApiResponse<any>>(`/samples/${id}`),
+};

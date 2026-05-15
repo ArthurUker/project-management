@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppStore } from '../store/appStore';
 import DocReference from './DocReference';
+import { samplesAPI } from '../api/client';
 
 // ==================== 下拉选项（整合自Excel） ====================
 export const DROPDOWN_OPTIONS = {
@@ -122,7 +123,7 @@ function SectionTitle({ number, title, color }: { number: number; title: string;
   return <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2"><span className={`w-5 h-5 ${colors[color]} text-white rounded text-xs flex items-center justify-center`}>{number}</span>{title}</h4>;
 }
 
-function ExperimentBlock({ experiment, index, onUpdate, onRemove, canRemove }: { experiment: ExperimentRecord; index: number; onUpdate: (exp: ExperimentRecord) => void; onRemove: () => void; canRemove: boolean }) {
+function ExperimentBlock({ experiment, index, onUpdate, onRemove, canRemove, allSamples, reportProjectId, projects }: { experiment: ExperimentRecord; index: number; onUpdate: (exp: ExperimentRecord) => void; onRemove: () => void; canRemove: boolean; allSamples?: any[]; reportProjectId?: string; projects?: Array<{ id: string; name: string }> }) {
   const [expanded, setExpanded] = useState(index === 0);
   const update = (field: string, value: any) => onUpdate({ ...experiment, [field]: value });
   return (
@@ -149,21 +150,25 @@ function ExperimentBlock({ experiment, index, onUpdate, onRemove, canRemove }: {
           <div className="bg-emerald-50 rounded-lg p-3 border border-emerald-200">
             <div className="flex items-center justify-between mb-2">
               <h5 className="text-sm font-medium text-emerald-800 flex items-center gap-2"><span className="w-4 h-4 bg-emerald-500 text-white rounded text-xs flex items-center justify-center">S</span>样本信息</h5>
-              <button type="button" onClick={() => update('samples', [...experiment.samples, { id: `s-${Date.now()}`, name: '', source: '', concentration: '', dosage: '', note: '' }])} className="text-xs text-emerald-600 hover:text-emerald-800">+ 添加</button>
+              <button type="button" onClick={() => update('samples', [...experiment.samples, { id: `s-${Date.now()}`, sampleId: '', sampleProjectId: reportProjectId || '', name: '', source: '', concentration: '', dosage: '', note: '' }])} className="text-xs text-emerald-600 hover:text-emerald-800">+ 添加</button>
             </div>
             {experiment.samples.length > 0 ? (
               <table className="w-full text-xs">
-                <thead className="bg-emerald-100"><tr><th className="px-2 py-1 text-left">名称</th><th className="px-2 py-1 text-left">来源</th><th className="px-2 py-1 text-left">浓度</th><th className="px-2 py-1 text-left">用量</th><th className="px-2 py-1 text-left">备注</th><th className="w-8"></th></tr></thead>
-                <tbody>{experiment.samples.map((s, si) => (
+                <thead className="bg-emerald-100"><tr><th className="px-2 py-1 text-left">归属项目</th><th className="px-2 py-1 text-left">样本名称</th><th className="px-2 py-1 text-left">来源/基质</th><th className="px-2 py-1 text-left">浓度</th><th className="px-2 py-1 text-left">用量</th><th className="px-2 py-1 text-left">备注</th><th className="w-8"></th></tr></thead>
+                <tbody>{experiment.samples.map((s, si) => {
+                  const selProjId = (s as any).sampleProjectId ?? reportProjectId ?? '';
+                  const libSamples = (allSamples || []).filter(sm => sm.projectId === selProjId || (!sm.projectId && !selProjId));
+                  return (
                   <tr key={s.id} className="border-b border-emerald-100">
-                    <td className="px-2 py-1"><input className="w-full bg-transparent border-none" value={s.name} onChange={(e) => { const ns = [...experiment.samples]; ns[si] = {...ns[si], name: e.target.value}; update('samples', ns); }} /></td>
+                    <td className="px-2 py-1 min-w-[120px]"><select className="w-full bg-transparent border border-emerald-200 rounded text-xs py-0.5" value={selProjId} onChange={(e) => { const ns = [...experiment.samples]; (ns[si] as any).sampleProjectId = e.target.value; (ns[si] as any).sampleId = ''; update('samples', ns); }}><option value="">通用</option>{(projects || []).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></td>
+                    <td className="px-2 py-1 min-w-[140px]"><select className="w-full bg-transparent border border-emerald-200 rounded text-xs py-0.5" value={(s as any).sampleId || ''} onChange={(e) => { const sm = (allSamples || []).find(x => x.id === e.target.value); const ns = [...experiment.samples]; ns[si] = {...ns[si], name: sm?.sampleName || ns[si].name, source: sm?.tissue || ns[si].source, concentration: sm?.concentration || ns[si].concentration, ...(ns[si] as any), sampleId: e.target.value}; update('samples', ns); }}><option value="">选择样本...</option>{libSamples.map((sm: any) => <option key={sm.id} value={sm.id}>{sm.sampleName}（{sm.sampleCode}）</option>)}</select>{!(s as any).sampleId && <input className="w-full mt-1 bg-transparent border border-emerald-200 rounded text-xs px-1 py-0.5" placeholder="或手动输入名称" value={s.name} onChange={(e) => { const ns = [...experiment.samples]; ns[si] = {...ns[si], name: e.target.value}; update('samples', ns); }} />}</td>
                     <td className="px-2 py-1"><input className="w-full bg-transparent border-none" value={s.source} onChange={(e) => { const ns = [...experiment.samples]; ns[si] = {...ns[si], source: e.target.value}; update('samples', ns); }} /></td>
                     <td className="px-2 py-1"><input className="w-full bg-transparent border-none" value={s.concentration} onChange={(e) => { const ns = [...experiment.samples]; ns[si] = {...ns[si], concentration: e.target.value}; update('samples', ns); }} /></td>
                     <td className="px-2 py-1"><input className="w-full bg-transparent border-none" value={s.dosage} onChange={(e) => { const ns = [...experiment.samples]; ns[si] = {...ns[si], dosage: e.target.value}; update('samples', ns); }} /></td>
                     <td className="px-2 py-1"><input className="w-full bg-transparent border-none" value={s.note} onChange={(e) => { const ns = [...experiment.samples]; ns[si] = {...ns[si], note: e.target.value}; update('samples', ns); }} /></td>
                     <td className="px-2 py-1"><button type="button" onClick={() => update('samples', experiment.samples.filter((_, i) => i !== si))} className="text-red-500 hover:text-red-700">×</button></td>
-                  </tr>
-                ))}</tbody>
+                  </tr>);
+                })}</tbody>
               </table>
             ) : <p className="text-xs text-gray-500 italic">暂无样本</p>}
           </div>
@@ -314,6 +319,11 @@ export default function ReagentDailyReport({ date, projects: projectsProp, value
   const projects = projectsProp && projectsProp.length > 0 ? projectsProp : storeProjects;
   const initialReports = value.length > 0 ? value : [createEmptyReport(date, user?.name || '')];
   const [reports, setReports] = useState<ReagentDailyReport[]>(initialReports);
+  const [allSamples, setAllSamples] = useState<any[]>([]);
+
+  useEffect(() => {
+    samplesAPI.list().then(res => setAllSamples(res.list || [])).catch(() => {});
+  }, []);
   
   const updateReport = (index: number, field: string, newValue: any) => {
     const newReports = [...reports];
@@ -387,7 +397,7 @@ export default function ReagentDailyReport({ date, projects: projectsProp, value
                 <button type="button" onClick={() => addExperiment(rIndex)} className="text-sm text-purple-600 hover:text-purple-800">+ 添加实验</button>
               </div>
               <div className="space-y-3">{report.experiments.map((exp, eIndex) => (
-                <ExperimentBlock key={exp.id} experiment={exp} index={eIndex} onUpdate={(e) => updateExperiment(rIndex, eIndex, e)} onRemove={() => removeExperiment(rIndex, eIndex)} canRemove={report.experiments.length > 1} />
+                <ExperimentBlock key={exp.id} experiment={exp} index={eIndex} onUpdate={(e) => updateExperiment(rIndex, eIndex, e)} onRemove={() => removeExperiment(rIndex, eIndex)} canRemove={report.experiments.length > 1} allSamples={allSamples} reportProjectId={report.projectId} projects={projects} />
               ))}</div>
             </div>
             <div className="bg-fuchsia-50 rounded-lg p-4 border border-fuchsia-200">

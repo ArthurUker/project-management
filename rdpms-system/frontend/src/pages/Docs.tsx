@@ -5,9 +5,10 @@ import { useAppStore } from '../store/appStore';
 import ReagentLibrary from './knowledge/ReagentLibrary';
 import PrimerLibrary from './knowledge/PrimerLibrary';
 import AmplificationReagentLibrary from './knowledge/AmplificationReagentLibrary';
+import SampleLibrary from './knowledge/SampleLibrary';
 import VisualTableEditor, { type VisualTableEditorRef } from '../components/VisualTableEditor';
 import { MindMapEditor } from '../components/MindMapView';
-import { FlaskConical, Cpu, Dna, FileText, BookOpen, Package, Dna as DnaIcon, Beaker } from 'lucide-react';
+import { FlaskConical, Cpu, Dna, FileText, BookOpen, Package, Dna as DnaIcon, Beaker, Microscope } from 'lucide-react';
 import { appendMindmapBlock, extractMindmapBlock, findMarkdownTables, findMindmapBlocks, replaceMindmapBlock, upsertFirstMindmapBlock } from '../utils/markdownBlocks';
 
 interface DocCategory {
@@ -50,6 +51,7 @@ const DEFAULT_CATEGORIES = [
   { name: '试剂原料库', description: '管理试剂原料信息（名称/分子量/CAS等）', icon: '🧴' },
   { name: '扩增反应体系试剂', description: '管理PCR/qPCR/LAMP等扩增反应专用试剂（酶、Buffer、dNTP等）', icon: '🔬' },
   { name: '引物探针库', description: '管理引物探针序列、修饰、合成信息等', icon: '🧫' },
+  { name: '样本库', description: '管理实验样本信息（归属项目/样本类型/来源/浓度等）', icon: '🧫' },
 ];
 
 export default function Docs() {
@@ -80,9 +82,11 @@ export default function Docs() {
   const [tableBlockIndex, setTableBlockIndex] = useState(0);
   const tableEditorRef = useRef<VisualTableEditorRef>(null);
   const [reagentOpenKey, setReagentOpenKey] = useState(0);
+  const [sampleOpenKey, setSampleOpenKey] = useState(0);
   const [reagentCategoryId, setReagentCategoryId] = useState<string | null>(null);
   const [ampReagentCategoryId, setAmpReagentCategoryId] = useState<string | null>(null);
   const [primerCategoryId, setPrimerCategoryId] = useState<string | null>(null);
+  const [sampleCategoryId, setSampleCategoryId] = useState<string | null>(null);
 
   const [docForm, setDocForm] = useState({
     categoryId: '',
@@ -121,12 +125,16 @@ export default function Docs() {
       const reagent = cats.find((c: DocCategory) => c.name === '试剂原料库'); if (reagent) setReagentCategoryId(reagent.id);
       const amp = cats.find((c: DocCategory) => c.name === '扩增反应体系试剂'); if (amp) setAmpReagentCategoryId(amp.id);
       const primer = cats.find((c: DocCategory) => c.name === '引物探针库'); if (primer) setPrimerCategoryId(primer.id);
+      const sample = cats.find((c: DocCategory) => c.name === '样本库'); if (sample) setSampleCategoryId(sample.id);
       if (cats.length > 0 && !selectedCategory) setSelectedCategory(cats[0].id);
     } catch (error) { console.error('加载分类失败:', error); }
   };
 
   const loadDocuments = async () => {
     if (selectedCategory && reagentCategoryId && selectedCategory === reagentCategoryId) { setDocuments([]); setLoading(false); return; }
+    if (selectedCategory && ampReagentCategoryId && selectedCategory === ampReagentCategoryId) { setDocuments([]); setLoading(false); return; }
+    if (selectedCategory && primerCategoryId && selectedCategory === primerCategoryId) { setDocuments([]); setLoading(false); return; }
+    if (selectedCategory && sampleCategoryId && selectedCategory === sampleCategoryId) { setDocuments([]); setLoading(false); return; }
     setLoading(true);
     try {
       const params: Record<string, any> = {};
@@ -210,6 +218,7 @@ export default function Docs() {
     '试剂原料库': Package,
     '扩增反应体系试剂': Beaker,
     '引物探针库': DnaIcon,
+    '样本库': Microscope,
   };
 
   const cardBaseStyle: React.CSSProperties = {
@@ -271,10 +280,13 @@ export default function Docs() {
             const isSpecial = selectedCategory && (
               (reagentCategoryId && selectedCategory === reagentCategoryId) ||
               (ampReagentCategoryId && selectedCategory === ampReagentCategoryId) ||
-              (primerCategoryId && selectedCategory === primerCategoryId)
+              (primerCategoryId && selectedCategory === primerCategoryId) ||
+              (sampleCategoryId && selectedCategory === sampleCategoryId)
             );
             if (selectedCategory && reagentCategoryId && selectedCategory === reagentCategoryId) {
               setReagentOpenKey(k => k + 1);
+            } else if (selectedCategory && sampleCategoryId && selectedCategory === sampleCategoryId) {
+              setSampleOpenKey(k => k + 1);
             } else if (!isSpecial) {
               resetForm();
               setShowCreateModal(true);
@@ -286,6 +298,7 @@ export default function Docs() {
           {selectedCategory && reagentCategoryId && selectedCategory === reagentCategoryId ? '新建试剂' :
            selectedCategory && primerCategoryId && selectedCategory === primerCategoryId ? '新建引物' :
            selectedCategory && ampReagentCategoryId && selectedCategory === ampReagentCategoryId ? '新增试剂' :
+           selectedCategory && sampleCategoryId && selectedCategory === sampleCategoryId ? '新建样本' :
            '新建文档'}
         </button>
       </div>
@@ -362,6 +375,8 @@ export default function Docs() {
           <div className="bg-white rounded-lg border border-gray-200 p-4"><AmplificationReagentLibrary /></div>
         ) : selectedCategory && primerCategoryId && selectedCategory === primerCategoryId ? (
           <div className="bg-white rounded-lg border border-gray-200 p-4"><PrimerLibrary /></div>
+        ) : selectedCategory && sampleCategoryId && selectedCategory === sampleCategoryId ? (
+          <div className="bg-white rounded-lg border border-gray-200 p-4"><SampleLibrary openKey={sampleOpenKey} hideTopButton /></div>
         ) : (
           loading ? (
             <div className="text-center py-12 text-gray-500">加载中...</div>

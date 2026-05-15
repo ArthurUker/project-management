@@ -62,6 +62,7 @@ model Project {
   milestones      Milestone[]
   monthlyProgress MonthlyProgress[]
   reagentFormulas ReagentFormula[]
+  samples         SampleMaterial[]  @relation("ProjectSamples")
 }
 
 model ProjectTemplate {
@@ -462,4 +463,31 @@ model Primer {
   @@index([projectName])
   @@index([targetGene])
   @@index([name])
+}
+
+// 样本库：实验样本信息管理，与项目关联
+model SampleMaterial {
+  id               String   @id @default(uuid())
+  sampleCode       String   @unique  // 样本编号，如 SMP-2026-001
+  sampleName       String            // 样本名称
+  sampleType       String   @default("临床样本")  // 标准品/临床样本/对照品/空白基质/模拟样本/其他
+  species          String?           // 物种/来源生物，如 Homo sapiens
+  tissue           String?           // 组织/部位/基质，如 血清
+  concentration    String?           // 浓度，如 1×10^6 copies/mL
+  volume           String?           // 体积或数量，如 500μL × 10管
+  storageCondition String   @default("-80°C")  // 保存条件
+  collectionDate   String?           // 采集/接收日期
+  expiryDate       String?           // 有效期
+  supplier         String?           // 来源/供应商
+  status           String   @default("可用")  // 可用/已用完/过期/封存
+  projectId        String?           // 归属项目
+  notes            String?           // 备注
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  project          Project? @relation("ProjectSamples", fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([sampleType])
+  @@index([status])
 }
