@@ -29,7 +29,7 @@ interface EditProjectModalProps {
   onSaved: () => void;
 }
 
-const TYPE_OPTIONS = ['platform', '定制', '合作', '测试', '应用'];
+const TYPE_OPTIONS = ['platform', '定制', '合作', '测试', '应用', '科技项目'];
 
 const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) => {
   const [form, setForm] = useState({

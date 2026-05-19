@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { projectAPI, projectTemplatesAPI, userAPI } from '../api/client';
 import { useAppStore } from '../store/appStore';
 
-const PROJECT_TYPES = ['platform', '定制', '合作', '测试', '应用'];
+const PROJECT_TYPES = ['platform', '定制', '合作', '测试', '应用', '科技项目'];
 const CATEGORY_LABELS: Record<string, string> = {
   reagent_chip: '试剂/芯片开发',
   device: '设备开发',

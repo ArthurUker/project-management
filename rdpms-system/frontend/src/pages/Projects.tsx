@@ -7,7 +7,7 @@ import CreateProjectModal from '../components/CreateProjectModal';
 import { projectAPI } from '../api/client';
 
 // ── 常量 ─────────────────────────────────────────────
-const TYPE_OPTIONS   = ['platform', '定制', '合作', '测试', '应用'];
+const TYPE_OPTIONS   = ['platform', '定制', '合作', '测试', '应用', '科技项目'];
 const STATUS_OPTIONS = ['规划中', '进行中', '待加工', '待验证', '已完成', '已归档'];
 
 const STATUS_CONFIG: Record<string, { label: string; barColor: string; textColor: string; dotColor: string; borderColor: string }> = {
