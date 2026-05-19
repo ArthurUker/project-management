@@ -65,6 +65,7 @@ export default function RegulatoryDocumentsPage({ embedded = false }: Regulatory
   const [showEditor, setShowEditor] = useState(false);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [seeding, setSeeding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<RegulatoryFormState>(emptyForm);
   const [pendingOriginalFile, setPendingOriginalFile] = useState<File | null>(null);
@@ -178,6 +179,23 @@ export default function RegulatoryDocumentsPage({ embedded = false }: Regulatory
     }
   };
 
+  const handleSeed = async () => {
+    if (!window.confirm('将初始化法规知识库预设条目（已存在批示号会自动跳过）。是否继续？')) return;
+
+    setSeeding(true);
+    try {
+      const res = await regulatoryDocumentsAPI.seed();
+      const created = (res as any)?.created ?? 0;
+      const skipped = (res as any)?.skipped ?? 0;
+      alert(`初始化完成：新增 ${created} 条，跳过 ${skipped} 条`);
+      await refetch();
+    } catch (e: any) {
+      alert(e?.error || e?.message || '初始化失败');
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   if (loading) {
     return <div className="text-gray-500">正在加载法规文件...</div>;
   }
@@ -244,6 +262,13 @@ export default function RegulatoryDocumentsPage({ embedded = false }: Regulatory
           <div className="text-sm text-gray-500 flex items-center">共 {filteredDocuments.length} 项</div>
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            className="btn btn-secondary"
+            disabled={seeding}
+            onClick={handleSeed}
+          >
+            {seeding ? '初始化中...' : '一键初始化预设法规'}
+          </button>
           <button
             className="btn btn-primary"
             onClick={openCreateEditor}

@@ -107,6 +107,7 @@ export const regulatoryDocumentsAPI = {
   create: (data: any) => post<ApiResponse<any>>('/regulatory-documents', data),
   update: (id: string, data: any) => put<ApiResponse<any>>(`/regulatory-documents/${id}`, data),
   delete: (id: string) => del<ApiResponse<any>>(`/regulatory-documents/${id}`),
+  seed: () => post<ApiResponse<any>>('/regulatory-documents/seed', {}),
   importPdf: (data: { fileName: string; fileDataBase64: string; [key: string]: any }) =>
     post<ApiResponse<any>>('/regulatory-documents/import', data),
   uploadOriginalFile: (id: string, data: { fileName: string; fileDataBase64: string }) =>

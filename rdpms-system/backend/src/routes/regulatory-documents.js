@@ -1,8 +1,9 @@
 import { Hono } from 'hono';
 import { prisma } from '../index.js';
-import { authMiddleware } from './auth.js';
+import { authMiddleware, adminMiddleware } from './auth.js';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { SEED_REGULATORY_DOCUMENTS } from '../data/regulatoryDocumentsSeed.js';
 
 const regulatoryDocuments = new Hono();
 const STORAGE_DIR = path.resolve(process.cwd(), 'uploads', 'regulatory-documents');
@@ -286,6 +287,53 @@ regulatoryDocuments.post('/import', async (c) => {
 
   await saveOriginalFile(item.id, fileName, fileBuffer);
   return c.json(item, 201);
+});
+
+regulatoryDocuments.post('/seed', adminMiddleware, async (c) => {
+  try {
+    let created = 0;
+    let skipped = 0;
+
+    for (const item of SEED_REGULATORY_DOCUMENTS) {
+      // 以 dispatchNo 作为幂等键，重复执行时跳过已存在记录
+      // eslint-disable-next-line no-await-in-loop
+      const exists = await prisma.regulatoryDocument.findUnique({
+        where: { dispatchNo: item.dispatchNo },
+      });
+
+      if (exists) {
+        skipped += 1;
+        continue;
+      }
+
+      // eslint-disable-next-line no-await-in-loop
+      await prisma.regulatoryDocument.create({
+        data: {
+          dispatchNo: item.dispatchNo,
+          title: item.title,
+          fullTitle: item.fullTitle || null,
+          category: item.category || null,
+          applicability: item.applicability || 'conditional',
+          applicableToIvd: item.applicableToIvd == null ? true : Boolean(item.applicableToIvd),
+          priorityLevel: item.priorityLevel || 'P2',
+          summary: item.summary || null,
+          applicabilityNote: item.applicabilityNote || null,
+          fileName: null,
+        },
+      });
+      created += 1;
+    }
+
+    return c.json({
+      success: true,
+      created,
+      skipped,
+      total: SEED_REGULATORY_DOCUMENTS.length,
+    });
+  } catch (err) {
+    console.error('法规知识库初始化失败', err);
+    return c.json({ error: '法规知识库初始化失败' }, 500);
+  }
 });
 
 regulatoryDocuments.post('/:id/original-file', async (c) => {
