@@ -27,6 +27,43 @@ import regulatoryDocumentsRoutes from './routes/regulatory-documents.js';
 // 初始化Prisma
 export const prisma = new PrismaClient();
 
+async function ensureTaskRegulatoryColumns() {
+  // 兼容历史数据库：某些环境已升级 Prisma Client，但 Task 表仍缺少新增列。
+  const columns = await prisma.$queryRawUnsafe('PRAGMA table_info("Task")');
+  const columnNames = new Set((columns || []).map((col) => col.name));
+
+  const missingColumns = [
+    {
+      name: 'taskType',
+      sql: 'ALTER TABLE "Task" ADD COLUMN "taskType" TEXT'
+    },
+    {
+      name: 'applicabilityStatus',
+      sql: 'ALTER TABLE "Task" ADD COLUMN "applicabilityStatus" TEXT DEFAULT \"required\"'
+    },
+    {
+      name: 'regulatoryPriority',
+      sql: 'ALTER TABLE "Task" ADD COLUMN "regulatoryPriority" TEXT DEFAULT \"P2\"'
+    },
+    {
+      name: 'expectedDeliverable',
+      sql: 'ALTER TABLE "Task" ADD COLUMN "expectedDeliverable" TEXT'
+    },
+    {
+      name: 'regulatoryNotes',
+      sql: 'ALTER TABLE "Task" ADD COLUMN "regulatoryNotes" TEXT'
+    }
+  ].filter((item) => !columnNames.has(item.name));
+
+  if (missingColumns.length === 0) return;
+
+  for (const item of missingColumns) {
+    await prisma.$executeRawUnsafe(item.sql);
+  }
+
+  console.log(`✅ Patched Task columns: ${missingColumns.map((x) => x.name).join(', ')}`);
+}
+
 // 创建Hono应用
 const app = new Hono();
 
@@ -88,6 +125,8 @@ app.notFound((c) => {
 const port = parseInt(process.env.PORT || '3000');
 
 console.log(`🚀 R&D PMS API starting on port ${port}...`);
+
+await ensureTaskRegulatoryColumns();
 
 serve({
   fetch: app.fetch,
