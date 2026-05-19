@@ -232,9 +232,11 @@ async function fetchList() {
 
 ## 七、本项目当前的已知补丁清单
 
-| 表 | 补丁函数 | 补丁列 | 对应迁移 |
-|----|----------|--------|----------|
+| 表 | 补丁函数 | 补丁列/表 | 对应迁移 |
+|----|----------|-----------|----------|
 | `Task` | `ensureTaskRegulatoryColumns()` | taskType, applicabilityStatus, regulatoryPriority, expectedDeliverable, regulatoryNotes | `20260518110000_add_regulatory_documents` |
-| `ProjectTemplate` | `ensureProjectTemplateColumns()` | type, parentId, isMaster, preview, status | 无专用迁移（直接在原始建表中应有，但历史数据库版本不同） |
+| `ProjectTemplate` | `ensureProjectTemplateColumns()` | type, parentId, isMaster, preview, status | 无专用迁移（历史数据库版本不同） |
+| `RegulatoryDocument` | `ensureRegulatoryDocumentTables()` | 整张表（含索引） | `20260518110000_add_regulatory_documents` |
+| `TaskRegulatoryDocument` | `ensureRegulatoryDocumentTables()` | 整张表（含索引） | `20260518110000_add_regulatory_documents` |
 
 > 当补丁函数里某一列的迁移被确认已正常部署到所有环境后，该列的补丁条目**可以删除**，减少启动时的检查开销。
