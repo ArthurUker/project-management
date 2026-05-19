@@ -18,9 +18,9 @@ export default function ProjectDetail() {
   const [showMemberModal, setShowMemberModal] = useState(false);
   const [users, setUsers] = useState<any[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
-  const [memberSaving, setMemberSaving] = useState(false);
-  const [selectedMemberId, setSelectedMemberId] = useState('');
-  const [memberRole, setMemberRole] = useState('member');
+  const [, setMemberSaving] = useState(false);
+  const [, setSelectedMemberId] = useState('');
+  const [, setMemberRole] = useState('member');
   
   useEffect(() => {
     if (id) {

@@ -25,6 +25,7 @@ import { CSS } from '@dnd-kit/utilities';
 interface PhaseTask {
   id: string;
   title: string;
+  name?: string;
   priority: '高' | '中' | '低';
   estimatedDays: number;
   role: string;
