@@ -34,6 +34,7 @@ interface Phase {
   totalDays?: number;
   tasks?: any[];
   enabled?: boolean;
+  isSubPhase?: boolean;
   // 后继阶段 ID 列表（支持并行分叉）
   // 字段名根据 Task1 确认的实际字段填写，默认尝试 nextPhaseIds
   nextPhaseIds?: string[];
@@ -581,6 +582,7 @@ const PhaseNodeComponent = ({
   selected: boolean;
 }) => {
   const disabled = data.enabled === false;
+  const isSubPhase = data.isSubPhase === true;
   const [isHovered, setIsHovered] = React.useState(false);
 
   return (
@@ -592,21 +594,31 @@ const PhaseNodeComponent = ({
       {/* 节点卡片主体 */}
       <div
         className={[
-          'relative w-[150px] rounded-xl border-2 px-4 py-3',
+          'relative rounded-xl border-2 px-3 py-2',
+          isSubPhase ? 'w-[130px]' : 'w-[150px]',
           'transition-all duration-150 cursor-pointer select-none',
           selected
-            ? 'border-blue-500 shadow-lg ring-2 ring-blue-200 ring-offset-1 bg-white'
+            ? isSubPhase
+              ? 'border-emerald-500 shadow-lg ring-2 ring-emerald-200 ring-offset-1 bg-white'
+              : 'border-blue-500 shadow-lg ring-2 ring-blue-200 ring-offset-1 bg-white'
             : disabled
             ? 'border-dashed border-gray-300 bg-gray-50 shadow-none'
+            : isSubPhase
+            ? 'border-emerald-200 bg-emerald-50 shadow-sm hover:shadow-md hover:border-emerald-400'
             : 'border-blue-200 bg-blue-50 shadow-sm hover:shadow-md hover:border-blue-400',
         ].join(' ')}
       >
         {/* 序号徽标 */}
         <span
           className={[
-            'absolute -top-3 -left-3 min-w-[32px] h-6 px-2 rounded-full text-[10px]',
+            'absolute -top-3 -left-3 min-w-[28px] h-5 px-1.5 rounded-full',
+            isSubPhase ? 'text-[9px]' : 'text-[10px]',
             'font-bold flex items-center justify-center shadow-sm',
-            disabled ? 'bg-gray-200 text-gray-400' : 'bg-blue-500 text-white',
+            disabled
+              ? 'bg-gray-200 text-gray-400'
+              : isSubPhase
+              ? 'bg-emerald-500 text-white'
+              : 'bg-blue-500 text-white',
           ].join(' ')}
         >
           {data.displayOrder ?? data.order}
@@ -615,19 +627,28 @@ const PhaseNodeComponent = ({
         {/* 阶段名称 */}
         <div
           className={[
-            'text-sm font-semibold leading-tight truncate',
-            disabled ? 'text-gray-400' : 'text-blue-800',
+            'leading-tight truncate',
+            isSubPhase ? 'text-xs font-medium' : 'text-sm font-semibold',
+            disabled
+              ? 'text-gray-400'
+              : isSubPhase
+              ? 'text-emerald-800'
+              : 'text-blue-800',
           ].join(' ')}
         >
           {data.label}
         </div>
 
         {/* 任务数 + 工期 */}
-        <div className="flex items-center gap-2 mt-1.5">
+        <div className="flex items-center gap-1.5 mt-1">
           <span
             className={[
-              'text-[11px]',
-              disabled ? 'text-gray-400' : 'text-blue-500',
+              'text-[10px]',
+              disabled
+                ? 'text-gray-400'
+                : isSubPhase
+                ? 'text-emerald-600'
+                : 'text-blue-500',
             ].join(' ')}
           >
             {data.taskCount ?? 0} 任务
@@ -635,8 +656,12 @@ const PhaseNodeComponent = ({
           {(data.totalDays ?? 0) > 0 && (
             <span
               className={[
-                'text-[11px]',
-                disabled ? 'text-gray-400' : 'text-blue-400',
+                'text-[10px]',
+                disabled
+                  ? 'text-gray-400'
+                  : isSubPhase
+                  ? 'text-emerald-400'
+                  : 'text-blue-400',
               ].join(' ')}
             >
               · ~{data.totalDays} 天
@@ -1053,6 +1078,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
         taskCount: p.tasks?.length ?? 0,
         totalDays: p.totalDays ?? 0,
         enabled: p.enabled !== false,
+        isSubPhase: p.isSubPhase ?? false,
       },
     }));
 
@@ -1209,6 +1235,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
           taskCount: p.tasks?.length ?? 0,
           totalDays: p.totalDays ?? 0,
           enabled: p.enabled !== false,
+          isSubPhase: p.isSubPhase ?? false,
         },
       }));
 

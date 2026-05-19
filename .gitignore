@@ -7,6 +7,8 @@ __pycache__/
 dist/
 build/
 .vite/
+coverage/
+*.tsbuildinfo
 
 # ── 运行时产物（进程 ID / 日志）──
 *.pid
@@ -32,6 +34,10 @@ parallel_run.log
 *.swo
 .DS_Store
 Thumbs.db
+
+# ── 本地缓存 ──
+.cache/
+.tmp/
 
 # ── 临时 / 调试文件 ──
 *.bak

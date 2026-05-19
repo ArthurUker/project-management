@@ -37,6 +37,7 @@ model User {
 
   createdFormulas  ReagentFormula[] @relation("FormulaCreator")
   prepRecords      PrepRecord[]     @relation("PrepRecordCreator")
+  registrationProfilesOwned ProjectRegistrationProfile[] @relation("RegistrationComplianceOwner")
 }
 
 model Project {
@@ -63,6 +64,49 @@ model Project {
   monthlyProgress MonthlyProgress[]
   reagentFormulas ReagentFormula[]
   samples         SampleMaterial[]  @relation("ProjectSamples")
+  registrationProfile ProjectRegistrationProfile?
+}
+
+model ProjectRegistrationProfile {
+  id                    String   @id @default(uuid())
+  projectId             String   @unique
+  registrationType      String   @default("IVD")
+  region                String?
+  authority             String?
+  submissionNo          String?
+  certificateNo         String?
+  currentStage          String?  // 资料准备 / 送检受理 / 技术审评 / 行政审批 / 取证归档
+  plannedSubmissionDate DateTime?
+  expectedApprovalDate  DateTime?
+  complianceOwnerId     String?
+  riskLevel             String   @default("中") // 高 / 中 / 低
+  notes                 String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  project          Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  complianceOwner  User?   @relation("RegistrationComplianceOwner", fields: [complianceOwnerId], references: [id], onDelete: SetNull)
+
+  @@index([registrationType])
+  @@index([currentStage])
+  @@index([complianceOwnerId])
+}
+
+// 项目模板中的角色定义
+model ProjectRoleDefinition {
+  id          String   @id @default(uuid())
+  templateId  String
+  name        String   // 角色名称，如"项目负责人"、"技术负责人"、"成员"、"参与者"
+  description String?  // 角色描述
+  permissions String?  // 权限标签（逗号分隔），如"view,edit,approve"
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  template    ProjectTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, name])
+  @@index([templateId])
 }
 
 model ProjectTemplate {
@@ -75,6 +119,7 @@ model ProjectTemplate {
   parentId    String?
   isMaster    Boolean  @default(false)
   content     String?  // JSON 描述模版内容，如 phases/tasks/milestones
+  preview     String?  // 模板结构预览（JSON），包含阶段数、角色、任务数统计
   createdBy   String
   status      String   @default("active") // active | archived
   createdAt   DateTime @default(now())
@@ -84,6 +129,7 @@ model ProjectTemplate {
   children    ProjectTemplate[] @relation("TemplateTree")
   creator     User              @relation("TemplateCreator", fields: [createdBy], references: [id])
   projects    Project[]         @relation("ProjectTemplate")
+  roles       ProjectRoleDefinition[]
 
   @@index([category])
   @@index([parentId])
@@ -171,6 +217,11 @@ model Task {
   phase       String?   // 所属阶段名称（来自模版）
   phaseId     String?   // 所属阶段ID（来自模版）
   phaseOrder  Int?      // 阶段排序（用于进度条计算）
+  taskType    String?   // classification / registration_dossier / ...
+  applicabilityStatus String? @default("required") // required / conditional / not_applicable / to_be_confirmed
+  regulatoryPriority  String? @default("P2") // P0 / P1 / P2 / P3 / P4
+  expectedDeliverable String?
+  regulatoryNotes     String?
   dueDate     DateTime?
   completedAt DateTime?
   docRefs     String?   // JSON数组，存储文档引用 {id, code, title, docType, version}
@@ -183,6 +234,7 @@ model Task {
   // 新增：前置任务依赖关系
   prerequisites     TaskDependency[] @relation("TaskDependencies")
   dependents        TaskDependency[] @relation("DependentTasks")
+  regulatoryDocuments TaskRegulatoryDocument[]
 }
 
 model TaskDependency {
@@ -195,6 +247,43 @@ model TaskDependency {
   prerequisite    Task     @relation("TaskDependencies", fields: [prerequisiteId], references: [id], onDelete: Cascade)
 
   @@unique([taskId, prerequisiteId])
+}
+
+model RegulatoryDocument {
+  id                String   @id @default(uuid())
+  dispatchNo        String   @unique
+  title             String
+  fullTitle         String?
+  category          String?
+  applicability     String   @default("conditional") // core / conditional / post_market / low_relevance / not_applicable
+  applicableToIvd   Boolean  @default(false)
+  priorityLevel     String   @default("P3") // P0 / P1 / P2 / P3 / P4
+  summary           String?
+  applicabilityNote String?
+  fileName          String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  taskRelations TaskRegulatoryDocument[]
+
+  @@index([priorityLevel])
+  @@index([applicability])
+  @@index([applicableToIvd])
+}
+
+model TaskRegulatoryDocument {
+  taskId               String
+  regulatoryDocumentId String
+  relationType         String   @default("basis") // basis / reference / conditional / post_market / not_applicable
+  note                 String?
+  createdAt            DateTime @default(now())
+
+  task               Task               @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  regulatoryDocument RegulatoryDocument @relation(fields: [regulatoryDocumentId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, regulatoryDocumentId])
+  @@index([taskId])
+  @@index([regulatoryDocumentId])
 }
 
 model Milestone {

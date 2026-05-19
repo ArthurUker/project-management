@@ -15,15 +15,18 @@ const ROLE_PERMISSIONS = {
     'projects.update_status','projects.manage_members',
     'tasks.create','tasks.update_status','tasks.delete',
     'users.manage','templates.create','templates.edit',
+    'registrations.view','registrations.edit','registrations.approve',
   ],
   manager: [
     'projects.create','projects.edit',
     'projects.update_status','projects.manage_members',
     'tasks.create','tasks.update_status','tasks.delete',
     'templates.edit',
+    'registrations.view','registrations.edit',
   ],
   member: [
     'tasks.create','tasks.update_status',
+    'registrations.view',
   ],
 };
 

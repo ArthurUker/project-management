@@ -21,6 +21,8 @@ import prepRoutes from './routes/prep-calculator.js';
 import primersRoutes from './routes/primers.js';
 import backupRoutes from './routes/backup.js';
 import samplesRoutes from './routes/samples.js';
+import registrationsRoutes from './routes/registrations.js';
+import regulatoryDocumentsRoutes from './routes/regulatory-documents.js';
 
 // 初始化Prisma
 export const prisma = new PrismaClient();
@@ -65,6 +67,8 @@ app.route('/api/prep', prepRoutes);
 app.route('/api/primers', primersRoutes);
 app.route('/api/backup', backupRoutes);
 app.route('/api/samples', samplesRoutes);
+app.route('/api/registrations', registrationsRoutes);
+app.route('/api/regulatory-documents', regulatoryDocumentsRoutes);
 
 // 错误处理
 app.onError((err, c) => {

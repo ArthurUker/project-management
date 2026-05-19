@@ -21,6 +21,8 @@ import TemplateLibrary from './pages/TemplateLibrary';
 import TemplateEditor from './pages/TemplateEditor';
 import TaskTemplateLibrary from './pages/knowledge/TaskTemplateLibrary';
 import BackupManager from './pages/BackupManager';
+import RegistrationProjects from './pages/RegistrationProjects';
+import RegistrationProjectDetail from './pages/RegistrationProjectDetail';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAppStore();
@@ -65,6 +67,9 @@ function App() {
           <Route path="projects" element={<Projects />} />
           <Route path="projects/new" element={<Projects />} />
           <Route path="projects/:id" element={<ProjectDetail />} />
+          <Route path="registrations" element={<RegistrationProjects />} />
+          <Route path="registrations/:id" element={<RegistrationProjectDetail />} />
+          <Route path="regulatory-documents" element={<Navigate to="/knowledge?module=regulatory" replace />} />
           <Route path="project-templates" element={<TemplateLibrary />} />
           <Route path="project-templates/:id/edit" element={<TemplateEditor />} />
           <Route path="task-templates" element={<TaskTemplateLibrary />} />

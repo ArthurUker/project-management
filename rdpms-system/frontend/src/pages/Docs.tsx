@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { docsAPI, formulaAPI } from '../api/client';
 import { useAppStore } from '../store/appStore';
 import ReagentLibrary from './knowledge/ReagentLibrary';
 import PrimerLibrary from './knowledge/PrimerLibrary';
 import AmplificationReagentLibrary from './knowledge/AmplificationReagentLibrary';
 import SampleLibrary from './knowledge/SampleLibrary';
+import RegulatoryDocumentsPage from './RegulatoryDocumentsPage';
 import VisualTableEditor, { type VisualTableEditorRef } from '../components/VisualTableEditor';
 import { MindMapEditor } from '../components/MindMapView';
 import { FlaskConical, Cpu, Dna, FileText, BookOpen, Package, Dna as DnaIcon, Beaker, Microscope } from 'lucide-react';
@@ -56,7 +57,10 @@ const DEFAULT_CATEGORIES = [
 
 export default function Docs() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAppStore();
+  const moduleParam = searchParams.get('module');
+  const [activeModule, setActiveModule] = useState<'docs' | 'regulatory'>(moduleParam === 'regulatory' ? 'regulatory' : 'docs');
 
   const [categories, setCategories] = useState<DocCategory[]>([]);
   const [documents, setDocuments] = useState<DocDocument[]>([]);
@@ -98,9 +102,21 @@ export default function Docs() {
   });
 
   useEffect(() => {
+    setActiveModule(moduleParam === 'regulatory' ? 'regulatory' : 'docs');
+  }, [moduleParam]);
+
+  useEffect(() => {
     loadCategories();
     loadDocuments();
   }, [selectedCategory, filterType]);
+
+  const switchModule = (next: 'docs' | 'regulatory') => {
+    setActiveModule(next);
+    const nextParams = new URLSearchParams(searchParams);
+    if (next === 'regulatory') nextParams.set('module', 'regulatory');
+    else nextParams.delete('module');
+    setSearchParams(nextParams, { replace: true });
+  };
 
   const loadCategories = async () => {
     try {
@@ -270,10 +286,30 @@ export default function Docs() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">知识库管理</h1>
-          <p className="text-sm text-gray-500 mt-1">管理 SOP 文件、操作模板和技术文档</p>
+          <p className="text-sm text-gray-500 mt-1">统一管理知识文档与法规文档（法规作为知识库子模块）</p>
         </div>
 
       </div>
+
+      <div className="card p-3 flex items-center gap-2">
+        <button
+          className={activeModule === 'docs' ? 'btn btn-primary' : 'btn btn-secondary'}
+          onClick={() => switchModule('docs')}
+        >
+          知识文档
+        </button>
+        <button
+          className={activeModule === 'regulatory' ? 'btn btn-primary' : 'btn btn-secondary'}
+          onClick={() => switchModule('regulatory')}
+        >
+          法规知识库
+        </button>
+      </div>
+
+      {activeModule === 'regulatory' ? (
+        <RegulatoryDocumentsPage embedded />
+      ) : (
+        <>
 
       <div style={{ flexShrink: 0, width: '100%', background: 'rgba(255, 255, 255, 0.82)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', borderRadius: '12px', border: '1px solid rgba(0, 0, 0, 0.08)', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06)', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 0, boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
@@ -559,6 +595,8 @@ export default function Docs() {
             <div className="sticky bottom-0 bg-gray-50 px-6 py-4 flex items-center justify-end gap-3 border-t border-gray-200"><button onClick={() => { setShowCreateModal(false); setEditingDoc(null); resetForm(); }} className="btn btn-secondary">取消</button><button onClick={editingDoc ? handleUpdateDoc : handleCreateDoc} className="btn btn-primary">{editingDoc ? '保存修改' : '创建文档'}</button></div>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );

@@ -14,7 +14,10 @@ tasks.get('/', async (c) => {
     projectId, 
     assigneeId, 
     status,
-    priority 
+    priority,
+    taskType,
+    applicabilityStatus,
+    regulatoryPriority,
   } = c.req.query();
   
   const where = {};
@@ -22,6 +25,9 @@ tasks.get('/', async (c) => {
   if (assigneeId) where.assigneeId = assigneeId;
   if (status) where.status = status;
   if (priority) where.priority = priority;
+  if (taskType) where.taskType = taskType;
+  if (applicabilityStatus) where.applicabilityStatus = applicabilityStatus;
+  if (regulatoryPriority) where.regulatoryPriority = regulatoryPriority;
   
   const [total, tasks] = await Promise.all([
     prisma.task.count({ where }),
@@ -97,7 +103,20 @@ tasks.get('/:id', async (c) => {
     include: {
       project: true,
       assignee: { select: { id: true, name: true, avatar: true } },
-      prerequisites: { include: { prerequisite: { select: { id: true, title: true } } } }
+      prerequisites: { include: { prerequisite: { select: { id: true, title: true } } } },
+      regulatoryDocuments: {
+        include: {
+          regulatoryDocument: {
+            select: {
+              id: true,
+              dispatchNo: true,
+              title: true,
+              priorityLevel: true,
+              applicability: true,
+            },
+          },
+        },
+      },
     }
   });
   
@@ -114,7 +133,20 @@ tasks.get('/:id', async (c) => {
 // 创建任务
 tasks.post('/', async (c) => {
   const userId = c.get('userId');
-  const { projectId, title, description, assigneeId, priority, dueDate, docRefs } = await c.req.json();
+  const {
+    projectId,
+    title,
+    description,
+    assigneeId,
+    priority,
+    dueDate,
+    docRefs,
+    taskType,
+    applicabilityStatus,
+    regulatoryPriority,
+    expectedDeliverable,
+    regulatoryNotes,
+  } = await c.req.json();
   
   if (!projectId || !title) return c.json({ error: '项目和标题不能为空' }, 400);
   
@@ -125,6 +157,11 @@ tasks.post('/', async (c) => {
       description,
       assigneeId,
       priority: priority || '中',
+      taskType: taskType || null,
+      applicabilityStatus: applicabilityStatus || 'required',
+      regulatoryPriority: regulatoryPriority || 'P2',
+      expectedDeliverable: expectedDeliverable || null,
+      regulatoryNotes: regulatoryNotes || null,
       dueDate: dueDate ? new Date(dueDate) : null,
       docRefs: docRefs ? JSON.stringify(docRefs) : null
     },

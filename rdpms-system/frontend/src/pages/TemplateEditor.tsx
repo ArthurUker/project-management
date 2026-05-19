@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { projectTemplatesAPI } from '../api/client';
 import ProcessFlowDiagram from '../components/ProcessFlowDiagram';
+import MindMapView from '../components/MindMapView';
 import PhaseTaskPanel from '../components/PhaseTaskPanel';
 import { X } from 'lucide-react';
 import {
@@ -74,6 +75,14 @@ interface Phase {
   completionTip: string;
   allowSkip: boolean;
   tasks: PhaseTask[];
+  isSubPhase?: boolean;
+  subPhases?: Array<{
+    id: string;
+    name: string;
+    order: number;
+    enabled?: boolean;
+    tasks: PhaseTask[];
+  }>;
   events: PhaseEvent[];
 }
 
@@ -82,6 +91,53 @@ interface Milestone {
   name: string;
   phaseId: string;
   offsetDays: number;
+}
+
+function buildTemplatePreviewContent(name: string, phases: Phase[], milestones: Milestone[]) {
+  const lines: string[] = [`# ${name || '模板预览'}`];
+
+  phases.forEach((phase) => {
+    lines.push(`## ${phase.order}. ${phase.name}`);
+    lines.push(`- ${phase.tasks.length} 个任务${phase.totalDays ? ` · 预计 ${phase.totalDays} 天` : ''}`);
+
+    if (phase.subPhases && phase.subPhases.length > 0) {
+      phase.subPhases.forEach((subPhase) => {
+        if (subPhase.enabled === false) return;
+        lines.push(`### ${subPhase.order}. ${subPhase.name}`);
+        lines.push(`- ${subPhase.tasks.filter((task) => task.enabled !== false).length} 个任务`);
+        subPhase.tasks.forEach((task, index) => {
+          if (task.enabled === false) return;
+          const title = task.title || task.name || `任务 ${index + 1}`;
+          const parts = [title];
+          if (task.role) parts.push(task.role);
+          if (task.priority) parts.push(`优先级 ${task.priority}`);
+          if (task.estimatedDays) parts.push(`约 ${task.estimatedDays} 天`);
+          lines.push(`- ${parts.join(' · ')}`);
+        });
+      });
+      return;
+    }
+
+    phase.tasks.forEach((task, index) => {
+      if (task.enabled === false) return;
+      const title = task.title || task.name || `任务 ${index + 1}`;
+      const parts = [title];
+      if (task.role) parts.push(task.role);
+      if (task.priority) parts.push(`优先级 ${task.priority}`);
+      if (task.estimatedDays) parts.push(`约 ${task.estimatedDays} 天`);
+      lines.push(`- ${parts.join(' · ')}`);
+    });
+  });
+
+  if (milestones.length > 0) {
+    lines.push('## 里程碑');
+    milestones.forEach((milestone) => {
+      const phase = phases.find((p) => p.id === milestone.phaseId);
+      lines.push(`- ${milestone.name}${phase ? ` · ${phase.name}` : ''}${milestone.offsetDays ? ` · +${milestone.offsetDays} 天` : ''}`);
+    });
+  }
+
+  return lines.join('\n');
 }
 
 // ─── Node Events Panel ─────────────────────────────────────────────────────
@@ -449,6 +505,46 @@ export default function TemplateEditor() {
       }))
     );
   }, [phases]);
+
+  // 展开 subPhases 为并行分支节点，让流程图显示子阶段小分支
+  const flowPhases = useMemo<Phase[]>(() => {
+    const hasSubPhases = phases.some((p) => p.subPhases && p.subPhases.length > 0);
+    if (!hasSubPhases) return phases;
+
+    const result: Phase[] = [];
+    phases.forEach((phase, phaseIdx) => {
+      const subPhases = phase.subPhases ?? [];
+      const nextMajorPhase = phases[phaseIdx + 1];
+
+      if (subPhases.length === 0) {
+        result.push(phase);
+        return;
+      }
+
+      // 主阶段节点 → 连向各子阶段
+      result.push({ ...phase, nextPhaseIds: subPhases.map((sp) => sp.id) });
+
+      // 子阶段节点 → 汇合到下一主阶段
+      subPhases.forEach((sp) => {
+        result.push({
+          id: sp.id,
+          name: sp.name,
+          order: phase.order,
+          type: 'normal',
+          source: 'self',
+          enabled: sp.enabled !== false,
+          completionTip: '',
+          allowSkip: false,
+          tasks: sp.tasks,
+          subPhases: [],
+          events: [],
+          nextPhaseIds: nextMajorPhase ? [nextMajorPhase.id] : [],
+          isSubPhase: true,
+        });
+      });
+    });
+    return result;
+  }, [phases]);
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -546,7 +642,25 @@ export default function TemplateEditor() {
       }
 
       function normalizePhase(raw: any, idx: number) {
-        const tasks = (raw.tasks || []).map((t: any, ti: number) => ({
+        const subPhases = Array.isArray(raw.subPhases)
+          ? raw.subPhases.map((sub: any, subIdx: number) => ({
+              id: sub.id || `subphase_${idx}_${subIdx}`,
+              name: sub.name || sub.label || `分支 ${subIdx + 1}`,
+              order: sub.order ?? subIdx + 1,
+              enabled: sub.enabled !== false,
+              tasks: (sub.tasks || []).map((t: any, ti: number) => ({
+                id: t.id || `task_${Date.now()}_${subIdx}_${ti}`,
+                title: t.title || '任务',
+                priority: t.priority || '中',
+                estimatedDays: t.estimatedDays || 3,
+                role: t.role || 'member',
+                source: t.source || 'self',
+                enabled: t.enabled !== false,
+              })),
+            }))
+          : [];
+
+        const rootTasks = (raw.tasks || []).map((t: any, ti: number) => ({
           id: t.id || `task_${Date.now()}_${ti}`,
           title: t.title || '任务',
           priority: t.priority || '中',
@@ -555,6 +669,8 @@ export default function TemplateEditor() {
           source: t.source || 'self',
           enabled: t.enabled !== false,
         }));
+
+        const tasks = rootTasks.length > 0 ? rootTasks : subPhases.flatMap((sub) => sub.tasks);
 
         const nextPhaseIds = raw.nextPhaseIds ?? (raw.transitions ? (raw.transitions || []).map((x: any) => x.toPhaseId || x.targetId || x.to) : undefined) ?? [];
 
@@ -569,6 +685,7 @@ export default function TemplateEditor() {
           completionTip: raw.completionTip || '',
           allowSkip: raw.allowSkip || false,
           tasks,
+          subPhases,
           nextPhaseIds,
           events: raw.events || [],
         };
@@ -882,9 +999,20 @@ export default function TemplateEditor() {
 
   // 阶段节点点击回调
   const handlePhaseClick = useCallback((phase: any) => {
+    // 子阶段节点点击时，定位到其父主阶段
+    if (phase.isSubPhase) {
+      const parent = phases.find((p) =>
+        (p.subPhases ?? []).some((sp) => sp.id === phase.id)
+      );
+      if (parent) {
+        setSelectedPhaseId(parent.id);
+        setActiveTab(0);
+      }
+      return;
+    }
     setSelectedPhaseId(phase.id);
     setActiveTab(0);
-  }, []);
+  }, [phases]);
 
   function addPhase() {
     const newPhase: Phase = {
@@ -1015,6 +1143,7 @@ export default function TemplateEditor() {
   // selectedPhase 从 phases 派生，确保编辑后右侧面板实时更新
   const selectedPhase = phases.find(p => p.id === selectedPhaseId) ?? null;
   const totalTasks = phases.reduce((s, p) => s + p.tasks.filter(t => t.enabled).length, 0);
+  const previewContent = useMemo(() => buildTemplatePreviewContent((template as any)?.name || '模板预览', phases, milestones), [template, phases, milestones]);
 
   if (loading) return <div className="flex items-center justify-center h-full text-gray-400">加载中...</div>;
   if (!template) return <div className="flex items-center justify-center h-full text-gray-400">模版不存在</div>;
@@ -1195,7 +1324,7 @@ export default function TemplateEditor() {
           {phases.length > 0 ? (
             <div className="flex-1">
               <ProcessFlowDiagram
-                phases={phases}
+                phases={flowPhases}
                 readonly={false}
                 onPhaseConnect={handlePhaseConnect}
                 onPhaseClick={handlePhaseClick}
@@ -1628,18 +1757,13 @@ export default function TemplateEditor() {
       {/* 预览模态框 */}
       {showPreview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowPreview(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-4/5 h-4/5 flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-xl shadow-2xl w-[96vw] h-[92vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
-              <span className="text-sm font-semibold text-gray-800">流程预览 — {(template as any).name}</span>
+              <span className="text-sm font-semibold text-gray-800">分支预览 — {(template as any).name}</span>
               <button onClick={() => setShowPreview(false)} className="text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
             </div>
-            <div className="flex-1 overflow-hidden">
-              <ProcessFlowDiagram
-                phases={phases}
-                onPhaseConnect={() => {}}
-                onEdgeDelete={() => {}}
-                readonly={true}
-              />
+            <div className="flex-1 overflow-hidden bg-[#fafbff]">
+              <MindMapView content={previewContent} previewCollapseLevel={2} inlineHeight={window.innerHeight * 0.92 - 56} />
             </div>
           </div>
         </div>

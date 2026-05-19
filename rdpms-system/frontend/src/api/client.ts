@@ -90,6 +90,30 @@ export const projectAPI = {
     post<ApiResponse<any>>(`/projects/${id}/apply-template`, data),
 };
 
+export const registrationsAPI = {
+  list: (params?: Record<string, any>) => get<ApiResponse<any>>('/registrations', { params }),
+  stats: () => get<ApiResponse<any>>('/registrations/stats'),
+  templates: () => get<ApiResponse<any>>('/registrations/templates'),
+  get: (id: string) => get<ApiResponse<any>>(`/registrations/${id}`),
+  create: (data: any) => post<ApiResponse<any>>('/registrations', data),
+  update: (id: string, data: any) => put<ApiResponse<any>>(`/registrations/${id}`, data),
+  updateProfile: (id: string, data: any) => patch<ApiResponse<any>>(`/registrations/${id}/profile`, data),
+  updateStage: (id: string, toStage: string) => patch<ApiResponse<any>>(`/registrations/${id}/stage`, { toStage }),
+};
+
+export const regulatoryDocumentsAPI = {
+  list: (params?: Record<string, any>) => get<ApiResponse<any>>('/regulatory-documents', { params }),
+  get: (id: string) => get<ApiResponse<any>>(`/regulatory-documents/${id}`),
+  create: (data: any) => post<ApiResponse<any>>('/regulatory-documents', data),
+  update: (id: string, data: any) => put<ApiResponse<any>>(`/regulatory-documents/${id}`, data),
+  delete: (id: string) => del<ApiResponse<any>>(`/regulatory-documents/${id}`),
+  importPdf: (data: { fileName: string; fileDataBase64: string; [key: string]: any }) =>
+    post<ApiResponse<any>>('/regulatory-documents/import', data),
+  uploadOriginalFile: (id: string, data: { fileName: string; fileDataBase64: string }) =>
+    post<ApiResponse<any>>(`/regulatory-documents/${id}/original-file`, data),
+  originalFileUrl: (id: string) => `/api/regulatory-documents/${id}/original-file`,
+};
+
 export const reportAPI = {
   list: (params?: Record<string, any>) => get<ApiResponse<any>>('/reports', { params }),
   get: (id: string) => get<ApiResponse<any>>(`/reports/${id}`),
@@ -144,6 +168,14 @@ export const projectTemplatesAPI = {
   copy: (id: string) => post<ApiResponse<any>>(`/project-templates/${id}/copy`),
   preview: (id: string) => get<ApiResponse<any>>(`/project-templates/${id}/preview`),
   apply: (id: string, data?: any) => post<ApiResponse<any>>(`/project-templates/${id}/apply`, data),
+  // 角色管理
+  roles: {
+    list: (templateId: string) => get<ApiResponse<any>>(`/project-templates/${templateId}/roles`),
+    create: (templateId: string, data: any) => post<ApiResponse<any>>(`/project-templates/${templateId}/roles`, data),
+    update: (templateId: string, roleId: string, data: any) => put<ApiResponse<any>>(`/project-templates/${templateId}/roles/${roleId}`, data),
+    delete: (templateId: string, roleId: string) => del<ApiResponse<any>>(`/project-templates/${templateId}/roles/${roleId}`),
+    batch: (templateId: string, roles: any[]) => post<ApiResponse<any>>(`/project-templates/${templateId}/roles/batch`, { roles }),
+  },
 };
 
 export const taskTemplatesAPI = {

@@ -39,7 +39,9 @@ projects.get('/', async (c) => {
     keyword 
   } = c.req.query();
   
-  const where = {};
+  const where = {
+    NOT: { type: '项目注册管理' },
+  };
   if (type) where.type = type;
   if (status) where.status = status;
   if (managerId) where.managerId = managerId;

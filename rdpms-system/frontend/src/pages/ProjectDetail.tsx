@@ -5,6 +5,7 @@ import { useAppStore } from '../store/appStore';
 import KanbanBoard from '../components/KanbanBoard';
 import PhaseProgressBar from '../components/PhaseProgressBar';
 import EditProjectModal from '../components/EditProjectModal';
+import AddMemberModal from '../components/AddMemberModal';
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -76,15 +77,11 @@ export default function ProjectDetail() {
     }
   };
 
-  const handleAddMember = async () => {
-    if (!id || !selectedMemberId) {
-      alert('请选择要添加的成员');
-      return;
-    }
-
+  const handleAddMember = async (userId: string, role: string) => {
+    if (!id) return;
     setMemberSaving(true);
     try {
-      await projectAPI.addMember(id, selectedMemberId, memberRole);
+      await projectAPI.addMember(id, userId, role);
       setShowMemberModal(false);
       await loadProject();
     } catch (err: any) {
@@ -329,76 +326,14 @@ export default function ProjectDetail() {
       )}
 
       {showMemberModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <div>
-                <h2 className="text-base font-semibold text-gray-900">添加项目成员</h2>
-                <p className="text-xs text-gray-400 mt-0.5">为当前项目添加新的协作成员</p>
-              </div>
-              <button
-                type="button"
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
-                onClick={() => setShowMemberModal(false)}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="px-6 py-5 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">选择成员</label>
-                <select
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
-                  value={selectedMemberId}
-                  onChange={(e) => setSelectedMemberId(e.target.value)}
-                  disabled={loadingUsers || memberSaving}
-                >
-                  <option value="">{loadingUsers ? '加载中...' : availableUsers.length > 0 ? '- 请选择成员 -' : '暂无可添加成员'}</option>
-                  {availableUsers.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.name}{user.username ? ` (${user.username})` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">项目角色</label>
-                <select
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400"
-                  value={memberRole}
-                  onChange={(e) => setMemberRole(e.target.value)}
-                  disabled={memberSaving}
-                >
-                  <option value="member">成员</option>
-                  <option value="viewer">观察者</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
-              <button
-                type="button"
-                className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-100"
-                onClick={() => setShowMemberModal(false)}
-                disabled={memberSaving}
-              >
-                取消
-              </button>
-              <button
-                type="button"
-                className="px-5 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={handleAddMember}
-                disabled={memberSaving || loadingUsers || !selectedMemberId}
-              >
-                {memberSaving ? '添加中...' : '确认添加'}
-              </button>
-            </div>
-          </div>
-        </div>
+        <AddMemberModal
+          projectId={id || ''}
+          project={project}
+          availableUsers={availableUsers}
+          loadingUsers={loadingUsers}
+          onSave={handleAddMember}
+          onClose={() => setShowMemberModal(false)}
+        />
       )}
     </div>
   );

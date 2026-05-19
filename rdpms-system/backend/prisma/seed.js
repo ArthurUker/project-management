@@ -4,6 +4,403 @@ const bcrypt = pkg;
 
 const prisma = new PrismaClient();
 
+const ISAF_REGULATORY_DOCUMENTS = [
+  { dispatchNo: '第 1/ISAF/2026 号', title: '医疗器械分类规则及技术要求', category: 'classification', applicability: 'core', applicableToIvd: true, priorityLevel: 'P0' },
+  { dispatchNo: '第 2/ISAF/2026 号', title: '医疗器械临床评价的具体要求', category: 'clinical_evaluation', applicability: 'core', applicableToIvd: true, priorityLevel: 'P0' },
+  { dispatchNo: '第 3/ISAF/2026 号', title: '医疗器械临床试验质量管理规范', category: 'clinical_trial', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P1' },
+  { dispatchNo: '第 4/ISAF/2026 号', title: '临床试验预先许可资料编制及技术要求', category: 'clinical_trial_permission', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P1' },
+  { dispatchNo: '第 5/ISAF/2026 号', title: '豁免进行临床评价目录', category: 'clinical_evaluation_exemption', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P1' },
+  { dispatchNo: '第 6/ISAF/2026 号', title: '通用名称、标签及说明书技术要求', category: 'labeling', applicability: 'core', applicableToIvd: true, priorityLevel: 'P0' },
+  { dispatchNo: '第 7/ISAF/2026 号', title: '注册资料编制及技术要求', category: 'registration_dossier', applicability: 'core', applicableToIvd: true, priorityLevel: 'P0' },
+  { dispatchNo: '第 8/ISAF/2026 号', title: '优先审批具体要求', category: 'priority_review', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P2' },
+  { dispatchNo: '第 9/ISAF/2026 号', title: '附条件批准注册具体要求', category: 'conditional_approval', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P2' },
+  { dispatchNo: '第 10/ISAF/2026 号', title: '注册续期资料编制及技术要求', category: 'renewal', applicability: 'post_market', applicableToIvd: true, priorityLevel: 'P2' },
+  { dispatchNo: '第 11/ISAF/2026 号', title: '注册资料变更资料编制及技术要求', category: 'registration_change', applicability: 'post_market', applicableToIvd: true, priorityLevel: 'P2' },
+  { dispatchNo: '第 12/ISAF/2026 号', title: '备案资料编制及技术要求', category: 'filing', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P3' },
+  { dispatchNo: '第 13/ISAF/2026 号', title: '备案资料变更资料要求', category: 'filing_change', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P3' },
+  { dispatchNo: '第 14/ISAF/2026 号', title: '不适用注册及备案制度产品批准资料要求', category: 'special_approval', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P3' },
+  { dispatchNo: '第 15/ISAF/2026 号', title: '第三方技术审评机构名单', category: 'third_party_review', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P1' },
+  { dispatchNo: '第 16/ISAF/2026 号', title: '医疗器械生产质量管理规范', category: 'qms', applicability: 'core', applicableToIvd: true, priorityLevel: 'P0' },
+  { dispatchNo: '第 17/ISAF/2026 号', title: '定制式义齿生产质量管理规范', category: 'qms_special', applicability: 'not_applicable', applicableToIvd: false, priorityLevel: 'P4' },
+  { dispatchNo: '第 18/ISAF/2026 号', title: '无菌医疗器械生产质量管理规范', category: 'qms_sterile', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P3' },
+  { dispatchNo: '第 19/ISAF/2026 号', title: '植入式医疗器械生产质量管理规范', category: 'qms_implantable', applicability: 'not_applicable', applicableToIvd: false, priorityLevel: 'P4' },
+  { dispatchNo: '第 20/ISAF/2026 号', title: '体外诊断试剂生产质量管理规范', category: 'qms_ivd', applicability: 'core', applicableToIvd: true, priorityLevel: 'P0' },
+  { dispatchNo: '第 21/ISAF/2026 号', title: '医疗器械独立软件生产质量管理规范', category: 'software_qms', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P1' },
+  { dispatchNo: '第 22/ISAF/2026 号', title: '制造活动 QMS 文件编制及技术要求', category: 'manufacturing_qms_documentation', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P1' },
+  { dispatchNo: '第 23/ISAF/2026 号', title: '委托制造许可技术要求', category: 'contract_manufacturing', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P3' },
+  { dispatchNo: '第 24/ISAF/2026 号', title: '医疗器械制造厂命名规则', category: 'manufacturer_naming', applicability: 'low_relevance', applicableToIvd: false, priorityLevel: 'P4' },
+  { dispatchNo: '第 25/ISAF/2026 号', title: '制造厂可制造其他卫生健康产品类型', category: 'manufacturer_other_products', applicability: 'low_relevance', applicableToIvd: false, priorityLevel: 'P4' },
+  { dispatchNo: '第 26/ISAF/2026 号', title: '可取得第 III 类医疗器械的其他特定场所', category: 'distribution_access', applicability: 'low_relevance', applicableToIvd: false, priorityLevel: 'P4' },
+];
+
+const REG_66_PHASES = [
+  {
+    id: 'reg_phase_1',
+    order: 1,
+    name: '产品分类与注册策略制定',
+    tasks: [
+      ['明确产品预期用途、适用人群、样本类型和检测场景', 'classification', 'P0', 'required'],
+      ['明确10项病原体检测靶标及临床意义', 'classification', 'P0', 'required'],
+      ['确认产品是否属于体外诊断医疗器械', 'classification', 'P0', 'required'],
+      ['逐条适用 IVD 分类规则并形成记录', 'classification', 'P0', 'required'],
+      ['编制澳门医疗器械分类判定报告', 'classification', 'P0', 'required'],
+      ['判断注册路径或备案路径', 'strategy', 'P0', 'required'],
+      ['判断是否可申请优先审批', 'strategy', 'P2', 'conditional'],
+      ['判断是否可申请附条件批准', 'strategy', 'P2', 'conditional'],
+      ['建立 ISAF 2026 法规适用性矩阵', 'strategy', 'P0', 'required'],
+      ['确定总体注册申报策略与时间表', 'strategy', 'P0', 'required'],
+    ],
+  },
+  {
+    id: 'reg_phase_2',
+    order: 2,
+    name: '注册技术文件与产品资料准备',
+    tasks: [
+      ['按第7号批示建立注册卷宗目录', 'registration_dossier', 'P0', 'required'],
+      ['编制资料位置索引表', 'registration_dossier', 'P0', 'required'],
+      ['编制符合性声明', 'registration_dossier', 'P0', 'required'],
+      ['编制产品基本信息表', 'registration_dossier', 'P0', 'required'],
+      ['编制产品组成、型号规格、工作原理说明', 'registration_dossier', 'P0', 'required'],
+      ['编制产品技术要求', 'registration_dossier', 'P0', 'required'],
+      ['编制检验方法与验收标准', 'registration_dossier', 'P0', 'required'],
+      ['编制主要原材料清单及质量标准', 'qms', 'P0', 'required'],
+      ['编制生产工艺流程图', 'qms', 'P0', 'required'],
+      ['编制风险管理计划与报告', 'registration_dossier', 'P0', 'required'],
+      ['编制设计开发文件', 'registration_dossier', 'P0', 'required'],
+      ['编制稳定性研究方案', 'performance_validation', 'P1', 'required'],
+      ['编制通用名称合规性审核表', 'labeling', 'P0', 'required'],
+      ['编制标签、说明书、包装标识', 'labeling', 'P0', 'required'],
+      ['完成中文/葡文资料一致性核对', 'labeling', 'P0', 'required'],
+    ],
+  },
+  {
+    id: 'reg_phase_3',
+    order: 3,
+    name: '性能验证、临床评价与软件确认',
+    tasks: [
+      ['制定分析性能验证总体方案', 'performance_validation', 'P0', 'required'],
+      ['完成10项病原体 LOD 验证', 'performance_validation', 'P0', 'required'],
+      ['完成包容性研究', 'performance_validation', 'P1', 'required'],
+      ['完成交叉反应/特异性研究', 'performance_validation', 'P0', 'required'],
+      ['完成干扰物质研究', 'performance_validation', 'P1', 'required'],
+      ['完成精密度、重复性、再现性研究', 'performance_validation', 'P0', 'required'],
+      ['完成阳性/阴性符合率研究', 'performance_validation', 'P0', 'required'],
+      ['完成稳定性研究报告', 'performance_validation', 'P0', 'required'],
+      ['检索临床评价豁免目录', 'clinical_evaluation', 'P1', 'required'],
+      ['编制临床评价路径判断报告', 'clinical_evaluation', 'P0', 'required'],
+      ['收集同品种器械和临床数据', 'clinical_evaluation', 'P1', 'conditional'],
+      ['编制等同性论证报告', 'clinical_evaluation', 'P1', 'conditional'],
+      ['编制临床评价报告 CER', 'clinical_evaluation', 'P0', 'required'],
+      ['判断是否需要澳门本地临床试验', 'clinical_evaluation', 'P1', 'required'],
+      ['如需，准备临床试验预先许可资料', 'clinical_evaluation', 'P1', 'conditional'],
+      ['编制软件适用性与安全性级别判定', 'software', 'P1', 'conditional'],
+      ['编制软件需求、设计、V&V 和追溯性文件', 'software', 'P1', 'conditional'],
+      ['编制网络安全与现成软件评估资料', 'software', 'P1', 'conditional'],
+    ],
+  },
+  {
+    id: 'reg_phase_4',
+    order: 4,
+    name: 'QMS、生产质量与注册提交',
+    tasks: [
+      ['建立 QMS 适用性矩阵', 'qms', 'P0', 'required'],
+      ['准备 ISO 13485 证书及范围说明', 'qms', 'P1', 'required'],
+      ['准备组织架构、关键人员资质、培训资料', 'qms', 'P0', 'required'],
+      ['准备厂房设施、洁净区布局及环境控制资料', 'qms', 'P0', 'required'],
+      ['准备洁净区监测、压差、温湿度记录', 'qms', 'P0', 'required'],
+      ['准备工艺用水、设备确认、校准资料', 'qms', 'P1', 'required'],
+      ['准备供应商管理和原材料控制资料', 'qms', 'P0', 'required'],
+      ['准备生产过程控制与批记录模板', 'qms', 'P0', 'required'],
+      ['准备质量控制、放行、不合格品控制资料', 'qms', 'P0', 'required'],
+      ['准备生物安全与污染控制资料', 'qms', 'P0', 'required'],
+      ['如适用，准备 PCR/核酸扩增污染控制资料', 'qms', 'P1', 'conditional'],
+      ['如适用，准备无菌组件生产/采购控制资料', 'qms', 'P3', 'conditional'],
+      ['如适用，准备委托制造控制资料', 'qms', 'P3', 'conditional'],
+      ['完成注册卷宗终审', 'submission', 'P0', 'required'],
+      ['完成申请表、目录、索引和电子文件归档', 'submission', 'P0', 'required'],
+      ['正式提交澳门注册申请', 'submission', 'P0', 'required'],
+    ],
+  },
+  {
+    id: 'reg_phase_5',
+    order: 5,
+    name: '审评、批准与上市后管理',
+    tasks: [
+      ['建立审评问题台账', 'submission', 'P1', 'required'],
+      ['准备补充资料答复模板', 'submission', 'P1', 'required'],
+      ['评估第三方技术审评机构资料采信可能性', 'strategy', 'P2', 'conditional'],
+      ['注册证领取与归档', 'post_market', 'P1', 'required'],
+      ['建立注册续期提醒与资料包', 'post_market', 'P2', 'required'],
+      ['建立注册资料变更管理机制', 'post_market', 'P2', 'required'],
+      ['建立上市后质量反馈、不良事件、召回和 CAPA 管理机制', 'post_market', 'P2', 'required'],
+    ],
+  },
+];
+
+function buildRegistration66TemplateContent() {
+  // 3-tier structure: majorPhase -> subPhase -> tasks
+  const majorPhases = [
+    {
+      id: 'major_phase_1',
+      order: 1,
+      name: '产品分类与注册策略制定',
+      color: '#3B82F6',
+      subPhases: [
+        {
+          id: 'sub_phase_1_1',
+          order: 1,
+          name: '产品定义与分类',
+          tasks: [
+            ['明确产品预期用途、适用人群、样本类型和检测场景', 'classification', 'P0', 'required'],
+            ['明确10项病原体检测靶标及临床意义', 'classification', 'P0', 'required'],
+            ['确认产品是否属于体外诊断医疗器械', 'classification', 'P0', 'required'],
+            ['逐条适用 IVD 分类规则并形成记录', 'classification', 'P0', 'required'],
+            ['编制澳门医疗器械分类判定报告', 'classification', 'P0', 'required'],
+          ],
+        },
+        {
+          id: 'sub_phase_1_2',
+          order: 2,
+          name: '注册策略',
+          tasks: [
+            ['判断注册路径或备案路径', 'strategy', 'P0', 'required'],
+            ['判断是否可申请优先审批', 'strategy', 'P2', 'conditional'],
+            ['判断是否可申请附条件批准', 'strategy', 'P2', 'conditional'],
+            ['确定总体注册申报策略与时间表', 'strategy', 'P0', 'required'],
+          ],
+        },
+        {
+          id: 'sub_phase_1_3',
+          order: 3,
+          name: '法规适用性',
+          tasks: [
+            ['建立 ISAF 2026 法规适用性矩阵', 'strategy', 'P0', 'required'],
+          ],
+        },
+      ],
+    },
+    {
+      id: 'major_phase_2',
+      order: 2,
+      name: '注册技术文件与产品资料准备',
+      color: '#8B5CF6',
+      subPhases: [
+        {
+          id: 'sub_phase_2_1',
+          order: 1,
+          name: '注册卷宗',
+          tasks: [
+            ['按第7号批示建立注册卷宗目录', 'registration_dossier', 'P0', 'required'],
+            ['编制资料位置索引表', 'registration_dossier', 'P0', 'required'],
+            ['编制符合性声明', 'registration_dossier', 'P0', 'required'],
+            ['编制产品基本信息表', 'registration_dossier', 'P0', 'required'],
+          ],
+        },
+        {
+          id: 'sub_phase_2_2',
+          order: 2,
+          name: '产品技术资料',
+          tasks: [
+            ['编制产品组成、型号规格、工作原理说明', 'registration_dossier', 'P0', 'required'],
+            ['编制产品技术要求', 'registration_dossier', 'P0', 'required'],
+            ['编制检验方法与验收标准', 'registration_dossier', 'P0', 'required'],
+            ['编制主要原材料清单及质量标准', 'qms', 'P0', 'required'],
+            ['编制生产工艺流程图', 'qms', 'P0', 'required'],
+            ['编制风险管理计划与报告', 'registration_dossier', 'P0', 'required'],
+            ['编制设计开发文件', 'registration_dossier', 'P0', 'required'],
+            ['编制稳定性研究方案', 'performance_validation', 'P1', 'required'],
+          ],
+        },
+        {
+          id: 'sub_phase_2_3',
+          order: 3,
+          name: '标签说明书',
+          tasks: [
+            ['编制通用名称合规性审核表', 'labeling', 'P0', 'required'],
+            ['编制标签、说明书、包装标识', 'labeling', 'P0', 'required'],
+            ['完成中文/葡文资料一致性核对', 'labeling', 'P0', 'required'],
+          ],
+        },
+      ],
+    },
+    {
+      id: 'major_phase_3',
+      order: 3,
+      name: '性能验证、临床评价与软件确认',
+      color: '#EC4899',
+      subPhases: [
+        {
+          id: 'sub_phase_3_1',
+          order: 1,
+          name: '分析性能验证',
+          tasks: [
+            ['制定分析性能验证总体方案', 'performance_validation', 'P0', 'required'],
+            ['完成10项病原体 LOD 验证', 'performance_validation', 'P0', 'required'],
+            ['完成包容性研究', 'performance_validation', 'P1', 'required'],
+            ['完成交叉反应/特异性研究', 'performance_validation', 'P0', 'required'],
+            ['完成干扰物质研究', 'performance_validation', 'P1', 'required'],
+            ['完成精密度、重复性、再现性研究', 'performance_validation', 'P0', 'required'],
+            ['完成阳性/阴性符合率研究', 'performance_validation', 'P0', 'required'],
+            ['完成稳定性研究报告', 'performance_validation', 'P0', 'required'],
+          ],
+        },
+        {
+          id: 'sub_phase_3_2',
+          order: 2,
+          name: '临床评价',
+          tasks: [
+            ['检索临床评价豁免目录', 'clinical_evaluation', 'P1', 'required'],
+            ['编制临床评价路径判断报告', 'clinical_evaluation', 'P0', 'required'],
+            ['收集同品种器械和临床数据', 'clinical_evaluation', 'P1', 'conditional'],
+            ['编制等同性论证报告', 'clinical_evaluation', 'P1', 'conditional'],
+            ['编制临床评价报告 CER', 'clinical_evaluation', 'P0', 'required'],
+            ['判断是否需要澳门本地临床试验', 'clinical_evaluation', 'P1', 'required'],
+            ['如需，准备临床试验预先许可资料', 'clinical_evaluation', 'P1', 'conditional'],
+          ],
+        },
+        {
+          id: 'sub_phase_3_3',
+          order: 3,
+          name: '软件确认',
+          tasks: [
+            ['编制软件适用性与安全性级别判定', 'software', 'P1', 'conditional'],
+            ['编制软件需求、设计、V&V 和追溯性文件', 'software', 'P1', 'conditional'],
+            ['编制网络安全与现成软件评估资料', 'software', 'P1', 'conditional'],
+          ],
+        },
+      ],
+    },
+    {
+      id: 'major_phase_4',
+      order: 4,
+      name: 'QMS、生产质量与注册提交',
+      color: '#F59E0B',
+      subPhases: [
+        {
+          id: 'sub_phase_4_1',
+          order: 1,
+          name: '质量管理体系',
+          tasks: [
+            ['建立 QMS 适用性矩阵', 'qms', 'P0', 'required'],
+            ['准备 ISO 13485 证书及范围说明', 'qms', 'P1', 'required'],
+            ['准备组织架构、关键人员资质、培训资料', 'qms', 'P0', 'required'],
+            ['准备厂房设施、洁净区布局及环境控制资料', 'qms', 'P0', 'required'],
+            ['准备洁净区监测、压差、温湿度记录', 'qms', 'P0', 'required'],
+            ['准备工艺用水、设备确认、校准资料', 'qms', 'P1', 'required'],
+          ],
+        },
+        {
+          id: 'sub_phase_4_2',
+          order: 2,
+          name: '生产与污染控制',
+          tasks: [
+            ['准备供应商管理和原材料控制资料', 'qms', 'P0', 'required'],
+            ['准备生产过程控制与批记录模板', 'qms', 'P0', 'required'],
+            ['准备质量控制、放行、不合格品控制资料', 'qms', 'P0', 'required'],
+            ['准备生物安全与污染控制资料', 'qms', 'P0', 'required'],
+            ['如适用，准备 PCR/核酸扩增污染控制资料', 'qms', 'P1', 'conditional'],
+            ['如适用，准备无菌组件生产/采购控制资料', 'qms', 'P3', 'conditional'],
+            ['如适用，准备委托制造控制资料', 'qms', 'P3', 'conditional'],
+          ],
+        },
+        {
+          id: 'sub_phase_4_3',
+          order: 3,
+          name: '注册提交',
+          tasks: [
+            ['完成注册卷宗终审', 'submission', 'P0', 'required'],
+            ['完成申请表、目录、索引和电子文件归档', 'submission', 'P0', 'required'],
+            ['正式提交澳门注册申请', 'submission', 'P0', 'required'],
+          ],
+        },
+      ],
+    },
+    {
+      id: 'major_phase_5',
+      order: 5,
+      name: '审评、批准与上市后管理',
+      color: '#10B981',
+      subPhases: [
+        {
+          id: 'sub_phase_5_1',
+          order: 1,
+          name: '审评管理',
+          tasks: [
+            ['建立审评问题台账', 'submission', 'P1', 'required'],
+            ['准备补充资料答复模板', 'submission', 'P1', 'required'],
+            ['评估第三方技术审评机构资料采信可能性', 'strategy', 'P2', 'conditional'],
+          ],
+        },
+        {
+          id: 'sub_phase_5_2',
+          order: 2,
+          name: '批准归档',
+          tasks: [
+            ['注册证领取与归档', 'post_market', 'P1', 'required'],
+          ],
+        },
+        {
+          id: 'sub_phase_5_3',
+          order: 3,
+          name: '上市后管理',
+          tasks: [
+            ['建立注册续期提醒与资料包', 'post_market', 'P2', 'required'],
+            ['建立注册资料变更管理机制', 'post_market', 'P2', 'required'],
+            ['建立上市后质量反馈、不良事件、召回和 CAPA 管理机制', 'post_market', 'P2', 'required'],
+          ],
+        },
+      ],
+    },
+  ];
+
+  const phases = majorPhases.map((phase, index) => {
+    const subPhases = phase.subPhases.map((subPhase, subIndex) => ({
+      id: subPhase.id,
+      order: subPhase.order,
+      name: subPhase.name,
+      enabled: true,
+      tasks: subPhase.tasks.map((task, taskIndex) => ({
+        id: `${subPhase.id}_task_${taskIndex + 1}`,
+        title: task[0],
+        category: task[1],
+        priority: task[2],
+        estimatedDays: task[2] === 'P0' ? 3 : task[2] === 'P1' ? 2 : 1,
+        role: task[3] || 'required',
+        source: 'self',
+        enabled: true,
+      })),
+    }));
+
+    return {
+      id: phase.id,
+      order: phase.order,
+      name: phase.name,
+      color: phase.color,
+      enabled: true,
+      type: 'normal',
+      source: 'self',
+      allowSkip: false,
+      completionTip: '',
+      nextPhaseIds: majorPhases[index + 1] ? [majorPhases[index + 1].id] : [],
+      subPhases,
+      tasks: subPhases.flatMap((subPhase) => subPhase.tasks),
+      events: [],
+    };
+  });
+
+  return JSON.stringify({
+    phases,
+    milestones: [
+      { name: '完成分类与策略', offsetDays: 14 },
+      { name: '完成卷宗与技术资料', offsetDays: 45 },
+      { name: '完成验证与临床评价', offsetDays: 90 },
+      { name: '完成提交', offsetDays: 120 },
+      { name: '完成取证归档', offsetDays: 180 },
+    ],
+    defaults: { priority: '中' },
+  });
+}
+
 async function main() {
   console.log('🌱 开始初始化数据...');
 
@@ -43,6 +440,52 @@ async function main() {
     });
     console.log('✅ 用户创建成功:', user.name);
   }
+
+  // 项目注册管理模板（升级到法规驱动66任务）
+  await prisma.projectTemplate.upsert({
+    where: { code: 'TPL-REGISTRATION-IVD' },
+    update: {
+      name: '项目注册管理（IVD｜法规驱动66任务）',
+      description: '基于 ISAF 2026 的澳门 IVD 注册任务模板（5阶段66任务）',
+      category: 'registration',
+      type: 'IVD',
+      content: buildRegistration66TemplateContent(),
+    },
+    create: {
+      code: 'TPL-REGISTRATION-IVD',
+      name: '项目注册管理（IVD｜法规驱动66任务）',
+      description: '基于 ISAF 2026 的澳门 IVD 注册任务模板（5阶段66任务）',
+      category: 'registration',
+      type: 'IVD',
+      content: buildRegistration66TemplateContent(),
+      createdBy: admin.id
+    }
+  });
+  console.log('✅ 模版创建成功: 项目注册管理（IVD｜法规驱动66任务）');
+
+  for (const doc of ISAF_REGULATORY_DOCUMENTS) {
+    await prisma.regulatoryDocument.upsert({
+      where: { dispatchNo: doc.dispatchNo },
+      update: {
+        title: doc.title,
+        fullTitle: `${doc.dispatchNo}：${doc.title}`,
+        category: doc.category,
+        applicability: doc.applicability,
+        applicableToIvd: doc.applicableToIvd,
+        priorityLevel: doc.priorityLevel,
+      },
+      create: {
+        dispatchNo: doc.dispatchNo,
+        title: doc.title,
+        fullTitle: `${doc.dispatchNo}：${doc.title}`,
+        category: doc.category,
+        applicability: doc.applicability,
+        applicableToIvd: doc.applicableToIvd,
+        priorityLevel: doc.priorityLevel,
+      },
+    });
+  }
+  console.log(`✅ 法规文件种子创建成功: ${ISAF_REGULATORY_DOCUMENTS.length} 项`);
 
   // 试剂/芯片母版：9阶段完整设计
   const reagentMaster = await prisma.projectTemplate.upsert({

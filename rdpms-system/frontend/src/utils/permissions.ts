@@ -27,6 +27,10 @@ export const PERMS = {
   // 模版
   TEMPLATES_CREATE:        'templates.create',
   TEMPLATES_EDIT:          'templates.edit',
+  // 项目注册管理
+  REGISTRATIONS_VIEW:      'registrations.view',
+  REGISTRATIONS_EDIT:      'registrations.edit',
+  REGISTRATIONS_APPROVE:   'registrations.approve',
 } as const;
 
 export type PermCode = typeof PERMS[keyof typeof PERMS];
@@ -43,10 +47,13 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
     PERMS.TASKS_UPDATE_STATUS,
     PERMS.TASKS_DELETE,
     PERMS.TEMPLATES_EDIT,
+    PERMS.REGISTRATIONS_VIEW,
+    PERMS.REGISTRATIONS_EDIT,
   ],
   member: [
     PERMS.TASKS_CREATE,
     PERMS.TASKS_UPDATE_STATUS,
+    PERMS.REGISTRATIONS_VIEW,
   ],
 };
 

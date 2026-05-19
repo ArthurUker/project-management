@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import ProjectCard from '../components/ProjectCard';
 import type { Project } from '../components/ProjectCard';
 import EditProjectModal from '../components/EditProjectModal';
+import CreateProjectModal from '../components/CreateProjectModal';
 import { projectAPI } from '../api/client';
 
 // ── 常量 ─────────────────────────────────────────────
@@ -45,6 +46,7 @@ const ViewIcons = {
 // ── 主页面组件 ────────────────────────────────────────
 const Projects: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // 数据
   const [projects,       setProjects]       = useState<Project[]>([]);
@@ -63,8 +65,9 @@ const Projects: React.FC = () => {
   // 批量操作
   const [selectedIds,    setSelectedIds]    = useState<string[]>([]);
 
-  // 编辑弹窗
+  // 弹窗
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(location.pathname === '/projects/new');
 
 
 
@@ -90,6 +93,7 @@ const Projects: React.FC = () => {
   // ── 前端筛选 ──
   const filteredProjects = useMemo(() => {
     return projects.filter(p => {
+      if (p.type === '项目注册管理') return false;
       const matchType    = !filterType    || p.type    === filterType;
       const matchStatus  = !filterStatus  || p.status  === filterStatus;
       const matchManager = !filterManager || p.manager?.name === filterManager;
@@ -299,7 +303,7 @@ const Projects: React.FC = () => {
           </button>
           {/* 新建 */}
           <button
-            onClick={() => navigate('/projects/new')}
+            onClick={() => setShowCreateModal(true)}
             className="btn btn-primary"
             style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
           >
@@ -462,7 +466,7 @@ const Projects: React.FC = () => {
           ))}
           {/* 新建引导卡 */}
           <div
-            onClick={() => navigate('/projects/new')}
+            onClick={() => setShowCreateModal(true)}
             style={{
               border: '2px dashed #d1d5db', borderRadius: '14px',
               display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -524,6 +528,17 @@ const Projects: React.FC = () => {
           project={editingProject}
           onClose={() => setEditingProject(null)}
           onSaved={() => { setEditingProject(null); loadProjects(); }}
+        />
+      )}
+
+      {/* 新建弹窗 */}
+      {showCreateModal && (
+        <CreateProjectModal
+          onClose={() => {
+            setShowCreateModal(false);
+            if (location.pathname === '/projects/new') navigate('/projects', { replace: true });
+            loadProjects();
+          }}
         />
       )}
 

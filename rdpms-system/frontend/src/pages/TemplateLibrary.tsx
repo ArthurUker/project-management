@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { projectTemplatesAPI } from '../api/client';
 import { useAppStore } from '../store/appStore';
 import { hasPerm, PERMS } from '../utils/permissions';
+import ProjectTemplateEditor from '../components/ProjectTemplateEditor';
 
 const CATEGORIES = [
   { value: '', label: '全部模版' },
@@ -120,6 +121,7 @@ export default function TemplateLibrary() {
   const [statusFilter, setStatusFilter] = useState('');
   const [keyword, setKeyword] = useState('');
   const [showCreate, setShowCreate] = useState(false);
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
 
   useEffect(() => { fetchList(); }, []);
 
@@ -341,6 +343,7 @@ export default function TemplateLibrary() {
               tpl={tpl}
               isAdmin={isAdmin}
               onEdit={() => navigate(`/project-templates/${tpl.id}/edit`)}
+              onEditRoles={() => setEditingTemplateId(tpl.id)}
               onCopy={e => handleCopy(tpl.id, e)}
               onToggleStatus={e => handleToggleStatus(tpl, e)}
               onDelete={e => handleDelete(tpl.id, e)}
@@ -354,14 +357,26 @@ export default function TemplateLibrary() {
       {showCreate && (
         <CreateTemplateModal onClose={() => setShowCreate(false)} onCreated={fetchList} />
       )}
+
+      {editingTemplateId && (
+        <ProjectTemplateEditor
+          templateId={editingTemplateId}
+          onClose={() => setEditingTemplateId(null)}
+          onSave={() => {
+            setEditingTemplateId(null);
+            fetchList();
+          }}
+        />
+      )}
     </div>
   );
 }
 
-function TemplateCard({ tpl, isAdmin, onEdit, onCopy, onToggleStatus, onDelete }: {
+function TemplateCard({ tpl, isAdmin, onEdit, onEditRoles, onCopy, onToggleStatus, onDelete }: {
   tpl: any;
   isAdmin: boolean;
   onEdit: () => void;
+  onEditRoles: () => void;
   onCopy: (e: React.MouseEvent) => void;
   onToggleStatus: (e: React.MouseEvent) => void;
   onDelete: (e: React.MouseEvent) => void;
@@ -446,6 +461,7 @@ function TemplateCard({ tpl, isAdmin, onEdit, onCopy, onToggleStatus, onDelete }
             <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }} onClick={e => e.stopPropagation()}>
               {([
                 { label: '编辑', handler: onEdit, hoverBg: '#eff6ff', hoverColor: '#2563eb' },
+                { label: '角色', handler: onEditRoles, hoverBg: '#f0fdf4', hoverColor: '#16a34a' },
                 { label: '复制', handler: onCopy, hoverBg: '#f0fdf4', hoverColor: '#16a34a' },
                 { label: isArchived ? '启用' : '停用', handler: onToggleStatus, hoverBg: '#fff7ed', hoverColor: '#ea580c' },
                 { label: '删除', handler: onDelete, hoverBg: '#fef2f2', hoverColor: '#dc2626' },
