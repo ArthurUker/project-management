@@ -10,6 +10,7 @@ const COLUMNS = [
   { key: 'name',               label: '引物名称',              mono: false, italic: false, required: true },
   { key: 'sequence',           label: "5'-3'序列",             mono: true,  italic: false, required: true },
   { key: 'targetGene',         label: '目标基因',              mono: false, italic: false },
+  { key: 'detectionTarget',    label: '检测靶标',              mono: false, italic: false },
   { key: 'modification5',      label: "5'标记",                mono: false, italic: false },
   { key: 'modification3',      label: "3'标记",                mono: false, italic: false },
   { key: 'ampliconLength',     label: 'PCR长度(bp)',           mono: false, italic: false, type: 'number' },
@@ -25,12 +26,13 @@ const COLUMNS = [
 ];
 
 // 默认显示的列（可通过列设置调整）
-const DEFAULT_VISIBLE_COLS = ['projectName', 'name', 'sequence', 'targetGene', 'modification5', 'modification3', 'ampliconLength', 'synthesisCompany'];
+const DEFAULT_VISIBLE_COLS = ['projectName', 'name', 'sequence', 'targetGene', 'detectionTarget', 'modification5', 'modification3', 'ampliconLength', 'synthesisCompany'];
 
 // 支持批量编辑的字段
 const BATCH_FIELDS = [
   { key: 'projectName',        label: '所属项目',   type: 'project' },
   { key: 'targetGene',         label: '目标基因',   type: 'text' },
+  { key: 'detectionTarget',    label: '检测靶标',   type: 'text' },
   { key: 'synthesisCompany',   label: '合成公司',   type: 'text' },
   { key: 'synthesisAmount',    label: '合成量',     type: 'text' },
   { key: 'speciesLatinName',   label: '物种拉丁名', type: 'text' },
@@ -41,7 +43,7 @@ const BATCH_FIELDS = [
 ];
 
 const EMPTY_FORM = () => ({
-  name: '', sequence: '', targetGene: '',
+  name: '', sequence: '', targetGene: '', detectionTarget: '',
   modification5: '', modification3: '', ampliconLength: '',
   speciesLatinName: '', speciesChineseName: '', speciesTaxid: '',
   atccStrain: '', validatedStrain: '',
@@ -326,7 +328,7 @@ export default function PrimerLibrary() {
           <input
             value={keyword} onChange={e => setKeyword(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
-            placeholder="搜索引物名称、序列、目标基因..."
+            placeholder="搜索引物名称、序列、目标基因、检测靶标..."
             style={{ width: '100%', padding: '7px 12px 7px 34px', border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
           />
           <svg style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -657,9 +659,10 @@ export default function PrimerLibrary() {
               {/* 基本信息 */}
               <div style={{ background: '#f8fafc', borderRadius: 8, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: '#475569' }}>基本信息</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
                   <Field label="引物名称 *" value={form.name} onChange={v => f('name', v)} placeholder="如 O157_F3" />
                   <Field label="目标基因" value={form.targetGene} onChange={v => f('targetGene', v)} placeholder="如 rfbE" />
+                  <Field label="检测靶标" value={form.detectionTarget} onChange={v => f('detectionTarget', v)} placeholder="如 evpP / O157 / N gene" />
                 </div>
                 <Field label="5'-3' 核酸序列 *" value={form.sequence} onChange={v => f('sequence', v)} placeholder="输入核苷酸序列（5'→3' 方向）" mono />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>

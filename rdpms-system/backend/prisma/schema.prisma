@@ -532,6 +532,7 @@ model Primer {
   name                String   // 引物/探针名称
   sequence            String   // 5'-3' 序列
   targetGene          String?  // 目标基因
+  detectionTarget     String?  // 检测靶标
   modification5       String?  // 5' 标记/修饰
   modification3       String?  // 3' 标记/修饰
   ampliconLength      Int?     // PCR 长度（扩增子长度 bp）
@@ -551,6 +552,7 @@ model Primer {
 
   @@index([projectName])
   @@index([targetGene])
+  @@index([detectionTarget])
   @@index([name])
 }
 

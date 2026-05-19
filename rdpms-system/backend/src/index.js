@@ -153,6 +153,32 @@ async function ensureRegulatoryDocumentTables() {
   }
 }
 
+async function ensurePrimerColumns() {
+  const columns = await prisma.$queryRawUnsafe('PRAGMA table_info("Primer")');
+  const columnNames = new Set((columns || []).map((col) => col.name));
+
+  const missingColumns = [
+    {
+      name: 'detectionTarget',
+      sql: 'ALTER TABLE "Primer" ADD COLUMN "detectionTarget" TEXT'
+    }
+  ].filter((item) => !columnNames.has(item.name));
+
+  if (missingColumns.length === 0) return;
+
+  for (const item of missingColumns) {
+    await prisma.$executeRawUnsafe(item.sql);
+  }
+
+  try {
+    await prisma.$executeRawUnsafe('CREATE INDEX IF NOT EXISTS "Primer_detectionTarget_idx" ON "Primer"("detectionTarget")');
+  } catch (err) {
+    console.warn('⚠️ Failed to create Primer_detectionTarget_idx:', err?.message || err);
+  }
+
+  console.log(`✅ Patched Primer columns: ${missingColumns.map((x) => x.name).join(', ')}`);
+}
+
 // 创建Hono应用
 const app = new Hono();
 
@@ -218,6 +244,7 @@ console.log(`🚀 R&D PMS API starting on port ${port}...`);
 await ensureTaskRegulatoryColumns();
 await ensureProjectTemplateColumns();
 await ensureRegulatoryDocumentTables();
+await ensurePrimerColumns();
 
 serve({
   fetch: app.fetch,

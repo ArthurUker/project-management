@@ -6,16 +6,18 @@ const router = new Hono();
 // GET /api/primers — 列表（支持 keyword / projectName / targetGene / status 过滤）
 router.get('/', async (c) => {
   try {
-    const { keyword, projectName, targetGene, status, page = '1', pageSize = '100' } = c.req.query();
+    const { keyword, projectName, targetGene, detectionTarget, status, page = '1', pageSize = '100' } = c.req.query();
     const where = {};
     if (status) where.status = status;
     if (projectName) where.projectName = { contains: projectName };
     if (targetGene) where.targetGene = { contains: targetGene };
+    if (detectionTarget) where.detectionTarget = { contains: detectionTarget };
     if (keyword) {
       where.OR = [
         { name: { contains: keyword } },
         { sequence: { contains: keyword } },
         { targetGene: { contains: keyword } },
+        { detectionTarget: { contains: keyword } },
         { projectName: { contains: keyword } },
         { speciesChineseName: { contains: keyword } },
         { speciesLatinName: { contains: keyword } },
@@ -58,6 +60,7 @@ router.post('/', async (c) => {
         name:               body.name,
         sequence:           body.sequence,
         targetGene:         body.targetGene || null,
+        detectionTarget:    body.detectionTarget || null,
         modification5:      body.modification5 || null,
         modification3:      body.modification3 || null,
         ampliconLength:     body.ampliconLength ? parseInt(body.ampliconLength) : null,
@@ -92,6 +95,7 @@ router.put('/:id', async (c) => {
         name:               body.name ?? undefined,
         sequence:           body.sequence ?? undefined,
         targetGene:         body.targetGene ?? undefined,
+        detectionTarget:    body.detectionTarget ?? undefined,
         modification5:      body.modification5 ?? undefined,
         modification3:      body.modification3 ?? undefined,
         ampliconLength:     body.ampliconLength !== undefined ? (body.ampliconLength ? parseInt(body.ampliconLength) : null) : undefined,
@@ -136,6 +140,7 @@ router.post('/batch-import', async (c) => {
             name:               r.name || '',
             sequence:           r.sequence || '',
             targetGene:         r.targetGene || null,
+            detectionTarget:    r.detectionTarget || null,
             modification5:      r.modification5 || null,
             modification3:      r.modification3 || null,
             ampliconLength:     r.ampliconLength ? parseInt(r.ampliconLength) : null,
