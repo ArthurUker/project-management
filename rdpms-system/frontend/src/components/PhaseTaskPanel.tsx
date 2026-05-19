@@ -144,7 +144,7 @@ function TaskTemplatePickerModal({ existingTitles, onImport, onClose }: {
           {loading ? (
             <div style={{ textAlign: 'center', color: '#94a3b8', padding: '24px', fontSize: 13 }}>加载中...</div>
           ) : filtered.length === 0 ? (
-            <div style={{ textAlign: 'center', color: '#94a3b8', padding: '24px', fontSize: 13 }}>暂无任务模版，请先在知识库→任务模版库中创建</div>
+            <div style={{ textAlign: 'center', color: '#94a3b8', padding: '24px', fontSize: 13 }}>暂无任务模版，请先在左侧菜单“任务模板”模块中创建</div>
           ) : filtered.map(t => {
             const isSelected = selected.has(t.id);
             const title = t.title || t.name || '任务';

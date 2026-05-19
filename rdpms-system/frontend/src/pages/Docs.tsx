@@ -55,6 +55,8 @@ const DEFAULT_CATEGORIES = [
   { name: '样本库', description: '管理实验样本信息（归属项目/样本类型/来源/浓度等）', icon: '🧫' },
 ];
 
+const EXCLUDED_KNOWLEDGE_CATEGORY_NAMES = new Set(['任务模版库', '任务模板库']);
+
 export default function Docs() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -134,6 +136,8 @@ export default function Docs() {
       // 去重
       const seen = new Set();
       cats = cats.filter((cat: DocCategory) => { if (seen.has(cat.name)) return false; seen.add(cat.name); return true; });
+      // 任务模板已独立为左侧菜单模块，不在知识文档模块中展示
+      cats = cats.filter((cat: DocCategory) => !EXCLUDED_KNOWLEDGE_CATEGORY_NAMES.has(cat.name));
       setCategories(cats);
       const reagent = cats.find((c: DocCategory) => c.name === '试剂原料库'); if (reagent) setReagentCategoryId(reagent.id);
       const amp = cats.find((c: DocCategory) => c.name === '扩增反应体系试剂'); if (amp) setAmpReagentCategoryId(amp.id);
