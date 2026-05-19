@@ -64,6 +64,42 @@ async function ensureTaskRegulatoryColumns() {
   console.log(`✅ Patched Task columns: ${missingColumns.map((x) => x.name).join(', ')}`);
 }
 
+async function ensureProjectTemplateColumns() {
+  const columns = await prisma.$queryRawUnsafe('PRAGMA table_info("ProjectTemplate")');
+  const columnNames = new Set((columns || []).map((col) => col.name));
+
+  const missingColumns = [
+    {
+      name: 'type',
+      sql: 'ALTER TABLE "ProjectTemplate" ADD COLUMN "type" TEXT'
+    },
+    {
+      name: 'parentId',
+      sql: 'ALTER TABLE "ProjectTemplate" ADD COLUMN "parentId" TEXT'
+    },
+    {
+      name: 'isMaster',
+      sql: 'ALTER TABLE "ProjectTemplate" ADD COLUMN "isMaster" BOOLEAN NOT NULL DEFAULT false'
+    },
+    {
+      name: 'preview',
+      sql: 'ALTER TABLE "ProjectTemplate" ADD COLUMN "preview" TEXT'
+    },
+    {
+      name: 'status',
+      sql: 'ALTER TABLE "ProjectTemplate" ADD COLUMN "status" TEXT NOT NULL DEFAULT \"active\"'
+    }
+  ].filter((item) => !columnNames.has(item.name));
+
+  if (missingColumns.length === 0) return;
+
+  for (const item of missingColumns) {
+    await prisma.$executeRawUnsafe(item.sql);
+  }
+
+  console.log(`✅ Patched ProjectTemplate columns: ${missingColumns.map((x) => x.name).join(', ')}`);
+}
+
 // 创建Hono应用
 const app = new Hono();
 
@@ -127,6 +163,7 @@ const port = parseInt(process.env.PORT || '3000');
 console.log(`🚀 R&D PMS API starting on port ${port}...`);
 
 await ensureTaskRegulatoryColumns();
+await ensureProjectTemplateColumns();
 
 serve({
   fetch: app.fetch,
