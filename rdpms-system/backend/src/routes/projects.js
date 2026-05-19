@@ -224,6 +224,14 @@ projects.post('/', async (c) => {
 projects.put('/:id', async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json();
+  const participantIds = Array.isArray(body.participantIds) ? body.participantIds : null;
+  const tasksInput = Array.isArray(body.tasks) ? body.tasks : null;
+  const milestonesInput = Array.isArray(body.milestones) ? body.milestones : null;
+
+  delete body.participantIds;
+  delete body.tasks;
+  delete body.milestones;
+
   const existingProject = await prisma.project.findUnique({
     where: { id },
     select: { managerId: true, status: true }
@@ -266,9 +274,118 @@ projects.put('/:id', async (c) => {
     }
   }
   
-  const project = await prisma.project.update({
+  await prisma.$transaction(async (tx) => {
+    await tx.project.update({
+      where: { id },
+      data: body,
+    });
+
+    const effectiveManagerId = body.managerId || existingProject.managerId;
+
+    if (effectiveManagerId) {
+      await tx.projectMember.upsert({
+        where: {
+          projectId_userId: { projectId: id, userId: effectiveManagerId }
+        },
+        update: { role: 'manager' },
+        create: {
+          projectId: id,
+          userId: effectiveManagerId,
+          role: 'manager'
+        }
+      });
+    }
+
+    if (body.managerId && existingProject.managerId !== body.managerId) {
+      await tx.projectMember.updateMany({
+        where: { projectId: id, userId: existingProject.managerId, role: 'manager' },
+        data: { role: 'member' }
+      });
+    }
+
+    // 同步项目参与人（前端传 participantIds 时生效）
+    if (participantIds) {
+      const normalizedParticipantIds = [...new Set(participantIds.filter((uid) => typeof uid === 'string' && uid && uid !== effectiveManagerId))];
+      const desiredUserIds = new Set([effectiveManagerId, ...normalizedParticipantIds].filter(Boolean));
+
+      const existingMembers = await tx.projectMember.findMany({
+        where: { projectId: id },
+        select: { userId: true }
+      });
+
+      const existingUserIds = existingMembers.map((m) => m.userId);
+      const toDelete = existingUserIds.filter((uid) => !desiredUserIds.has(uid));
+      const toCreate = [...desiredUserIds].filter((uid) => !existingUserIds.includes(uid));
+
+      if (toDelete.length > 0) {
+        await tx.projectMember.deleteMany({
+          where: {
+            projectId: id,
+            userId: { in: toDelete }
+          }
+        });
+      }
+
+      if (toCreate.length > 0) {
+        await tx.projectMember.createMany({
+          data: toCreate.map((uid) => ({
+            projectId: id,
+            userId: uid,
+            role: uid === effectiveManagerId ? 'manager' : 'member'
+          }))
+        });
+      }
+
+      if (normalizedParticipantIds.length > 0) {
+        await tx.projectMember.updateMany({
+          where: {
+            projectId: id,
+            userId: { in: normalizedParticipantIds }
+          },
+          data: { role: 'member' }
+        });
+      }
+    }
+
+    // 前端传入任务数组时，按新内容重建项目任务
+    if (tasksInput) {
+      await tx.task.deleteMany({ where: { projectId: id } });
+      if (tasksInput.length > 0) {
+        await tx.task.createMany({
+          data: tasksInput.map((t, idx) => ({
+            projectId: id,
+            title: t.title || `Task ${idx + 1}`,
+            description: t.description || '',
+            status: t.status || '待开始',
+            priority: t.priority || '中',
+            phase: t.phase || null,
+            phaseId: t.phaseId || null,
+            phaseOrder: t.phaseOrder != null ? t.phaseOrder : null,
+            dueDate: t.dueDate ? new Date(t.dueDate) : null,
+            assigneeId: t.assigneeId || effectiveManagerId || null,
+          }))
+        });
+      }
+    }
+
+    // 前端传入里程碑数组时，按新内容重建项目里程碑
+    if (milestonesInput) {
+      await tx.milestone.deleteMany({ where: { projectId: id } });
+      if (milestonesInput.length > 0) {
+        await tx.milestone.createMany({
+          data: milestonesInput.map((m) => ({
+            projectId: id,
+            name: m.name || '未命名里程碑',
+            date: m.date ? new Date(m.date) : new Date(),
+            status: m.status || '待完成',
+          }))
+        });
+      }
+    }
+  });
+
+  const project = await prisma.project.findUnique({
     where: { id },
-    data: body,
     include: {
       manager: {
         select: { id: true, name: true }
@@ -283,27 +400,6 @@ projects.put('/:id', async (c) => {
     }
   });
 
-  if (body.managerId) {
-    await prisma.projectMember.upsert({
-      where: {
-        projectId_userId: { projectId: id, userId: body.managerId }
-      },
-      update: { role: 'manager' },
-      create: {
-        projectId: id,
-        userId: body.managerId,
-        role: 'manager'
-      }
-    });
-
-    if (existingProject.managerId !== body.managerId) {
-      await prisma.projectMember.updateMany({
-        where: { projectId: id, userId: existingProject.managerId, role: 'manager' },
-        data: { role: 'member' }
-      });
-    }
-  }
-  
   return c.json(project);
 });
 
