@@ -100,6 +100,59 @@ async function ensureProjectTemplateColumns() {
   console.log(`✅ Patched ProjectTemplate columns: ${missingColumns.map((x) => x.name).join(', ')}`);
 }
 
+async function ensureRegulatoryDocumentTables() {
+  // 检查 RegulatoryDocument 表是否存在
+  const tables = await prisma.$queryRawUnsafe(
+    `SELECT name FROM sqlite_master WHERE type='table' AND name IN ('RegulatoryDocument','TaskRegulatoryDocument')`
+  );
+  const existingTables = new Set((tables || []).map((t) => t.name));
+
+  if (!existingTables.has('RegulatoryDocument')) {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE "RegulatoryDocument" (
+        "id" TEXT NOT NULL PRIMARY KEY,
+        "dispatchNo" TEXT NOT NULL,
+        "title" TEXT NOT NULL,
+        "fullTitle" TEXT,
+        "category" TEXT,
+        "applicability" TEXT NOT NULL DEFAULT 'conditional',
+        "applicableToIvd" BOOLEAN NOT NULL DEFAULT false,
+        "priorityLevel" TEXT NOT NULL DEFAULT 'P3',
+        "summary" TEXT,
+        "applicabilityNote" TEXT,
+        "fileName" TEXT,
+        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "RegulatoryDocument_dispatchNo_key" UNIQUE ("dispatchNo")
+      )
+    `);
+    await prisma.$executeRawUnsafe(`CREATE INDEX "RegulatoryDocument_priorityLevel_idx" ON "RegulatoryDocument"("priorityLevel")`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX "RegulatoryDocument_applicability_idx" ON "RegulatoryDocument"("applicability")`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX "RegulatoryDocument_applicableToIvd_idx" ON "RegulatoryDocument"("applicableToIvd")`);
+    console.log('✅ Created table: RegulatoryDocument');
+  }
+
+  if (!existingTables.has('TaskRegulatoryDocument')) {
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE "TaskRegulatoryDocument" (
+        "taskId" TEXT NOT NULL,
+        "regulatoryDocumentId" TEXT NOT NULL,
+        "relationType" TEXT NOT NULL DEFAULT 'basis',
+        "note" TEXT,
+        "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY ("taskId", "regulatoryDocumentId"),
+        CONSTRAINT "TaskRegulatoryDocument_taskId_fkey"
+          FOREIGN KEY ("taskId") REFERENCES "Task" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        CONSTRAINT "TaskRegulatoryDocument_regulatoryDocumentId_fkey"
+          FOREIGN KEY ("regulatoryDocumentId") REFERENCES "RegulatoryDocument" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+      )
+    `);
+    await prisma.$executeRawUnsafe(`CREATE INDEX "TaskRegulatoryDocument_taskId_idx" ON "TaskRegulatoryDocument"("taskId")`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX "TaskRegulatoryDocument_regulatoryDocumentId_idx" ON "TaskRegulatoryDocument"("regulatoryDocumentId")`);
+    console.log('✅ Created table: TaskRegulatoryDocument');
+  }
+}
+
 // 创建Hono应用
 const app = new Hono();
 
@@ -164,6 +217,7 @@ console.log(`🚀 R&D PMS API starting on port ${port}...`);
 
 await ensureTaskRegulatoryColumns();
 await ensureProjectTemplateColumns();
+await ensureRegulatoryDocumentTables();
 
 serve({
   fetch: app.fetch,
