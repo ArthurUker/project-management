@@ -143,7 +143,7 @@ projects.post('/', async (c) => {
   // 生成编号
   const code = body.code || await generateProjectCode();
 
-  const { tasks = [], milestones = [], managerId: _, templateId, ...projectData } = body;
+  const { tasks = [], milestones = [], participantIds = [], managerId: _, templateId, ...projectData } = body;
 
   // 清理不属于 Project 模型的字段
   delete projectData.manager;
@@ -173,13 +173,21 @@ projects.post('/', async (c) => {
   });
 
   // 自动添加负责人为项目成员
-  await prisma.projectMember.create({
-    data: {
-      projectId: project.id,
-      userId: managerId,
-      role: 'manager'
-    }
-  });
+  const memberUserIds = [
+    managerId,
+    ...((Array.isArray(participantIds) ? participantIds : []).filter((id) => typeof id === 'string' && id)),
+  ];
+  const uniqueMemberUserIds = [...new Set(memberUserIds)];
+
+  if (uniqueMemberUserIds.length > 0) {
+    await prisma.projectMember.createMany({
+      data: uniqueMemberUserIds.map((uid) => ({
+        projectId: project.id,
+        userId: uid,
+        role: uid === managerId ? 'manager' : 'member',
+      })),
+    });
+  }
 
   // 批量创建任务（支持 phase 信息）
   if (tasks.length > 0) {

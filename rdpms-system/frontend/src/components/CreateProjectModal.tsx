@@ -25,9 +25,9 @@ export default function CreateProjectModal({ onClose }: Props) {
   // Step 1 form state
   const [name, setName] = useState('');
   const [type, setType] = useState('定制');
-  const [subtype, setSubtype] = useState('');
   const [position, setPosition] = useState('');
   const [managerId, setManagerId] = useState(user?.id || '');
+  const [participantIds, setParticipantIds] = useState<string[]>([]);
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   const [endDate, setEndDate] = useState('');
   const [users, setUsers] = useState<any[]>([]);
@@ -68,6 +68,10 @@ export default function CreateProjectModal({ onClose }: Props) {
     if (step === 2) loadTemplates();
   }, [tmplCategory]);
 
+  useEffect(() => {
+    setParticipantIds((prev) => prev.filter((id) => id !== managerId));
+  }, [managerId]);
+
   function validateStep1() {
     if (!name.trim()) { alert('请输入项目名称'); return false; }
     if (!managerId) { alert('请选择项目负责人'); return false; }
@@ -84,9 +88,9 @@ export default function CreateProjectModal({ onClose }: Props) {
       let payload: any = {
         name,
         type,
-        subtype: subtype || undefined,
         position: position || undefined,
         managerId,
+        participantIds,
         startDate: startDate ? new Date(startDate).toISOString() : undefined,
         endDate: endDate ? new Date(endDate).toISOString() : undefined,
         tasks: [],
@@ -169,13 +173,44 @@ export default function CreateProjectModal({ onClose }: Props) {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">子类型</label>
-                <input
+                <label className="block text-sm font-medium text-gray-700 mb-1">项目参与人</label>
+                <select
                   className="input w-full"
-                  placeholder="如：2.0C / 海南大学"
-                  value={subtype}
-                  onChange={e => setSubtype(e.target.value)}
-                />
+                  value=""
+                  onChange={(e) => {
+                    const uid = e.target.value;
+                    if (!uid) return;
+                    if (!participantIds.includes(uid)) {
+                      setParticipantIds((prev) => [...prev, uid]);
+                    }
+                  }}
+                >
+                  <option value="">请选择参与人（可多选）</option>
+                  {users
+                    .filter((u) => u.id !== managerId && !participantIds.includes(u.id))
+                    .map((u) => (
+                      <option key={u.id} value={u.id}>{u.name} ({u.position || u.role})</option>
+                    ))}
+                </select>
+                {participantIds.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {participantIds.map((uid) => {
+                      const u = users.find((x) => x.id === uid);
+                      return (
+                        <span key={uid} className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded bg-blue-50 text-blue-700">
+                          {u?.name || uid}
+                          <button
+                            type="button"
+                            className="text-blue-500 hover:text-blue-700"
+                            onClick={() => setParticipantIds((prev) => prev.filter((id) => id !== uid))}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">项目负责人 *</label>
