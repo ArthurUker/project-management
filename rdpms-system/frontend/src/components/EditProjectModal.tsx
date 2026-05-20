@@ -32,6 +32,8 @@ interface EditProjectModalProps {
 }
 
 const TYPE_OPTIONS = ['platform', '定制', '合作', '测试', '应用', '科技项目'];
+const TASK_STATUS_OPTIONS = ['待开始', '进行中', '已完成', '已暂停'];
+const MILESTONE_STATUS_OPTIONS = ['待完成', '进行中', '已完成'];
 
 const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) => {
   const [form, setForm] = useState({
@@ -52,6 +54,14 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
   const [showPlanEditor, setShowPlanEditor] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState(false);
   const [planLoaded, setPlanLoaded] = useState(false);
+  const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
+  const [savingTemplate, setSavingTemplate] = useState(false);
+  const [saveTemplateForm, setSaveTemplateForm] = useState({
+    name: '',
+    description: '',
+    category: '',
+    type: '',
+  });
   const [saving, setSaving]     = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(false);
 
@@ -92,6 +102,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
           phase: t.phase || '',
           phaseId: t.phaseId || '',
           phaseOrder: t.phaseOrder ?? null,
+          estimatedDays: t.estimatedDays ?? 3,
           dueDate: t.dueDate ? String(t.dueDate).slice(0, 10) : '',
         }));
         const mappedMilestones = (full?.milestones || []).map((m: any, idx: number) => ({
@@ -187,6 +198,8 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
 
   if (!project) return null;
 
+  const selectedTemplate = templates.find((t: any) => t.id === form.templateId);
+
   const addParticipant = (uid: string) => {
     if (!uid || participantIds.includes(uid) || uid === form.managerId) return;
     setParticipantIds((prev) => [...prev, uid]);
@@ -205,7 +218,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
   };
 
   const addTask = () => {
-    setPlannedTasks((prev) => [...prev, { id: `custom_${Date.now()}`, title: '新增任务', priority: '中', status: '待开始', phase: '', phaseId: '', phaseOrder: null, dueDate: '' }]);
+    setPlannedTasks((prev) => [...prev, { id: `custom_${Date.now()}`, title: '新增任务', priority: '中', status: '待开始', phase: '', phaseId: '', phaseOrder: null, estimatedDays: 3, dueDate: '' }]);
   };
 
   const updateMilestone = (id: string, field: string, value: any) => {
@@ -238,6 +251,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
         phase: t.phase || '',
         phaseId: t.phaseId || '',
         phaseOrder: t.phaseOrder ?? null,
+        estimatedDays: t.estimatedDays ?? 3,
         dueDate: t.dueDate ? String(t.dueDate).slice(0, 10) : '',
       })));
       setPlannedMilestones(milestones.map((m: any, idx: number) => ({
@@ -249,6 +263,105 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
       setPlanLoaded(true);
     } finally {
       setLoadingPlan(false);
+    }
+  };
+
+  const buildTemplateContent = () => {
+    const phaseMap = new Map<string, any[]>();
+    const orderedPhaseNames: string[] = [];
+
+    plannedTasks.forEach((task) => {
+      const phaseName = String(task.phase || '未分组阶段').trim() || '未分组阶段';
+      if (!phaseMap.has(phaseName)) {
+        phaseMap.set(phaseName, []);
+        orderedPhaseNames.push(phaseName);
+      }
+      phaseMap.get(phaseName)!.push(task);
+    });
+
+    const phases = orderedPhaseNames.map((phaseName, idx) => {
+      const list = phaseMap.get(phaseName) || [];
+      return {
+        id: `phase_${idx + 1}`,
+        name: phaseName,
+        order: idx + 1,
+        type: 'normal',
+        source: 'self',
+        enabled: true,
+        completionTip: '',
+        allowSkip: false,
+        totalDays: list.reduce((sum, t) => sum + (Number(t.estimatedDays) || 3), 0),
+        tasks: list.map((t, taskIdx) => ({
+          id: t.id || `task_${idx + 1}_${taskIdx + 1}`,
+          title: t.title || `任务 ${taskIdx + 1}`,
+          priority: (t.priority || '中') as '高' | '中' | '低',
+          estimatedDays: Number(t.estimatedDays) || 3,
+          role: '',
+          source: 'self',
+          enabled: true,
+        })),
+      };
+    });
+
+    const phaseIdByName = new Map(phases.map((p: any) => [p.name, p.id]));
+    const baseDate = form.startDate ? new Date(form.startDate) : new Date();
+    baseDate.setHours(0, 0, 0, 0);
+    const oneDayMs = 24 * 60 * 60 * 1000;
+
+    const milestones = plannedMilestones.map((m, idx) => {
+      const d = m.date ? new Date(m.date) : new Date(baseDate);
+      d.setHours(0, 0, 0, 0);
+      const offsetDays = Math.max(0, Math.round((d.getTime() - baseDate.getTime()) / oneDayMs));
+      const fallbackPhaseId = phases[phases.length - 1]?.id || 'phase_1';
+      return {
+        id: m.id || `milestone_${idx + 1}`,
+        name: m.name || `里程碑 ${idx + 1}`,
+        phaseId: phaseIdByName.get(String(m.phase || '').trim()) || fallbackPhaseId,
+        offsetDays,
+      };
+    });
+
+    return { phases, milestones, defaults: {} };
+  };
+
+  const handleSaveAsTemplate = async () => {
+    const name = saveTemplateForm.name.trim();
+    if (!name) {
+      alert('请输入新模板名称');
+      return;
+    }
+    if (!planLoaded || plannedTasks.length === 0) {
+      alert('当前没有可另存的任务内容，请先编辑任务后再保存');
+      return;
+    }
+
+    setSavingTemplate(true);
+    try {
+      const content = buildTemplateContent();
+      const payload = {
+        name,
+        description: saveTemplateForm.description.trim(),
+        category: saveTemplateForm.category || selectedTemplate?.category || null,
+        type: saveTemplateForm.type || form.type || selectedTemplate?.type || null,
+        parentId: form.templateId || null,
+        isMaster: false,
+        status: 'active',
+        content,
+      };
+      const created = await projectTemplatesAPI.create(payload) as any;
+      const createdTemplate = created?.data || created;
+
+      if (createdTemplate?.id) {
+        setTemplates((prev) => [createdTemplate, ...prev]);
+        setForm((prev) => ({ ...prev, templateId: createdTemplate.id }));
+      }
+
+      setShowSaveTemplateModal(false);
+      alert('已另存为新项目模板，不会影响原模板');
+    } catch (err: any) {
+      alert(err?.error || err?.message || '另存模板失败，请检查权限后重试');
+    } finally {
+      setSavingTemplate(false);
     }
   };
 
@@ -456,7 +569,27 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
                   {loadingPlan ? '加载中...' : '按模板重载'}
                 </button>
               )}
+              {showPlanEditor && planLoaded && (
+                <button
+                  type="button"
+                  className="px-3 py-1.5 text-xs rounded border border-amber-200 text-amber-700 hover:bg-amber-50"
+                  onClick={() => {
+                    setSaveTemplateForm({
+                      name: `${form.name || project.name || '项目'}-定制模板`,
+                      description: `从项目「${form.name || project.name}」另存的模板`,
+                      category: selectedTemplate?.category || '',
+                      type: form.type || selectedTemplate?.type || '',
+                    });
+                    setShowSaveTemplateModal(true);
+                  }}
+                >
+                  另存项目模板
+                </button>
+              )}
             </div>
+            <p className="mt-1 text-xs text-gray-500">
+              当前编辑仅影响本项目的任务与里程碑，不会修改原模板；如需复用，请使用“另存项目模板”。
+            </p>
           </div>
 
           {/* 模版任务编辑区 */}
@@ -464,19 +597,28 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
             <div className="space-y-3 rounded-xl border border-gray-200 p-4 bg-gray-50">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-gray-900">项目任务调整</h3>
+                <div className="text-xs text-gray-500">
+                  共 {plannedTasks.length} 个任务 / {plannedMilestones.length} 个里程碑
+                </div>
+              </div>
+              <div className="flex items-center justify-end">
                 <button type="button" className="px-3 py-1 text-xs rounded border border-gray-200 hover:bg-white" onClick={addTask}>+ 新增任务</button>
               </div>
               {plannedTasks.map((task) => (
-                <div key={task.id} className="bg-white border border-gray-200 rounded-lg p-3 grid grid-cols-2 gap-2">
+                <div key={task.id} className="bg-white border border-gray-200 rounded-lg p-3 grid grid-cols-1 md:grid-cols-2 gap-2">
                   <input className="input" value={task.title} onChange={(e) => updateTask(task.id, 'title', e.target.value)} placeholder="任务标题" />
-                  <input className="input" value={task.phase || ''} onChange={(e) => updateTask(task.id, 'phase', e.target.value)} placeholder="所属阶段" />
+                  <input className="input" value={task.phase || ''} onChange={(e) => updateTask(task.id, 'phase', e.target.value)} placeholder="所属阶段（如：立项、设计、验证）" />
                   <select className="input bg-white" value={task.priority || '中'} onChange={(e) => updateTask(task.id, 'priority', e.target.value)}>
                     <option value="高">高</option>
                     <option value="中">中</option>
                     <option value="低">低</option>
                   </select>
+                  <select className="input bg-white" value={task.status || '待开始'} onChange={(e) => updateTask(task.id, 'status', e.target.value)}>
+                    {TASK_STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                  <input type="number" min={1} className="input" value={task.estimatedDays ?? 3} onChange={(e) => updateTask(task.id, 'estimatedDays', Number(e.target.value) || 3)} placeholder="预计天数" />
                   <input type="date" className="input" value={task.dueDate || ''} onChange={(e) => updateTask(task.id, 'dueDate', e.target.value)} />
-                  <div className="col-span-2 text-right">
+                  <div className="md:col-span-2 text-right">
                     <button type="button" className="text-xs text-red-500 hover:text-red-700" onClick={() => removeTask(task.id)}>删除任务</button>
                   </div>
                 </div>
@@ -488,15 +630,79 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
                 <button type="button" className="px-3 py-1 text-xs rounded border border-gray-200 hover:bg-white" onClick={addMilestone}>+ 新增里程碑</button>
               </div>
               {plannedMilestones.map((m) => (
-                <div key={m.id} className="bg-white border border-gray-200 rounded-lg p-3 grid grid-cols-3 gap-2 items-end">
+                <div key={m.id} className="bg-white border border-gray-200 rounded-lg p-3 grid grid-cols-1 md:grid-cols-3 gap-2 items-end">
                   <input className="input" value={m.name} onChange={(e) => updateMilestone(m.id, 'name', e.target.value)} placeholder="里程碑名称" />
                   <input type="date" className="input" value={m.date || ''} onChange={(e) => updateMilestone(m.id, 'date', e.target.value)} />
+                  <select className="input bg-white" value={m.status || '待完成'} onChange={(e) => updateMilestone(m.id, 'status', e.target.value)}>
+                    {MILESTONE_STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                  </select>
                   <div className="text-right">
                     <button type="button" className="text-xs text-red-500 hover:text-red-700" onClick={() => removeMilestone(m.id)}>删除里程碑</button>
                   </div>
                 </div>
               ))}
               {plannedMilestones.length === 0 && <div className="text-xs text-gray-400">暂无里程碑，可点击“新增里程碑”</div>}
+            </div>
+          )}
+
+          {showSaveTemplateModal && (
+            <div className="fixed inset-0 z-[60] bg-black/45 flex items-center justify-center p-4">
+              <div className="w-full max-w-md rounded-xl bg-white shadow-2xl border border-gray-100">
+                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-gray-900">另存项目模板</h4>
+                  <button type="button" className="text-gray-400 hover:text-gray-600" onClick={() => setShowSaveTemplateModal(false)}>×</button>
+                </div>
+                <div className="p-4 space-y-3">
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">模板名称</label>
+                    <input
+                      className="input w-full"
+                      value={saveTemplateForm.name}
+                      onChange={(e) => setSaveTemplateForm((prev) => ({ ...prev, name: e.target.value }))}
+                      placeholder="请输入模板名称"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">模板描述</label>
+                    <textarea
+                      className="input w-full resize-none"
+                      rows={3}
+                      value={saveTemplateForm.description}
+                      onChange={(e) => setSaveTemplateForm((prev) => ({ ...prev, description: e.target.value }))}
+                      placeholder="可选：说明该模板适用场景"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">类别</label>
+                      <input
+                        className="input w-full"
+                        value={saveTemplateForm.category}
+                        onChange={(e) => setSaveTemplateForm((prev) => ({ ...prev, category: e.target.value }))}
+                        placeholder="如：reagent_chip"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-600 mb-1">类型</label>
+                      <input
+                        className="input w-full"
+                        value={saveTemplateForm.type}
+                        onChange={(e) => setSaveTemplateForm((prev) => ({ ...prev, type: e.target.value }))}
+                        placeholder="如：定制"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    会创建一个新模板，不会修改当前引用的原模板。
+                  </p>
+                </div>
+                <div className="px-4 py-3 border-t border-gray-100 flex justify-end gap-2">
+                  <button type="button" className="px-3 py-1.5 text-xs rounded border border-gray-200 hover:bg-gray-50" onClick={() => setShowSaveTemplateModal(false)} disabled={savingTemplate}>取消</button>
+                  <button type="button" className="px-3 py-1.5 text-xs rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60" onClick={handleSaveAsTemplate} disabled={savingTemplate}>
+                    {savingTemplate ? '保存中...' : '确认另存'}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
