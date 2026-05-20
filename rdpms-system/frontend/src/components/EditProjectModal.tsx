@@ -35,6 +35,13 @@ const TYPE_OPTIONS = ['platform', '定制', '合作', '测试', '应用', '科�
 const TASK_STATUS_OPTIONS = ['待开始', '进行中', '已完成', '已暂停'];
 const MILESTONE_STATUS_OPTIONS = ['待完成', '进行中', '已完成'];
 
+interface Phase {
+  id: string;
+  name: string;
+  order: number;
+  tasks: any[];
+}
+
 const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) => {
   const [form, setForm] = useState({
     name:      '',
@@ -49,7 +56,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
   const [users, setUsers]       = useState<User[]>([]);
   const [templates, setTemplates] = useState<any[]>([]);
   const [participantIds, setParticipantIds] = useState<string[]>([]);
-  const [plannedTasks, setPlannedTasks] = useState<any[]>([]);
+  const [plannedPhases, setPlannedPhases] = useState<Phase[]>([]);
   const [plannedMilestones, setPlannedMilestones] = useState<any[]>([]);
   const [showPlanEditor, setShowPlanEditor] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState(false);
@@ -62,6 +69,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
     category: '',
     type: '',
   });
+  const [expandedPhaseIds, setExpandedPhaseIds] = useState<Set<string>>(new Set());
   const [saving, setSaving]     = useState(false);
   const [loadingUsers, setLoadingUsers] = useState(false);
 
@@ -94,6 +102,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
           .filter((uid: string) => uid !== manager) as string[];
         setParticipantIds(Array.from(new Set(memberIds)));
 
+        // 按阶段组织任务
         const mappedTasks = (full?.tasks || []).map((t: any, idx: number) => ({
           id: t.id || `task_${idx}`,
           title: t.title || `任务 ${idx + 1}`,
@@ -105,14 +114,39 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
           estimatedDays: t.estimatedDays ?? 3,
           dueDate: t.dueDate ? String(t.dueDate).slice(0, 10) : '',
         }));
+
+        const phaseMap = new Map<string, any[]>();
+        const phaseOrder = new Map<string, number>();
+        let maxOrder = 0;
+        
+        mappedTasks.forEach((task) => {
+          const phaseName = String(task.phase || '待分配').trim() || '待分配';
+          if (!phaseMap.has(phaseName)) {
+            phaseMap.set(phaseName, []);
+            phaseOrder.set(phaseName, task.phaseOrder ?? ++maxOrder);
+          }
+          phaseMap.get(phaseName)!.push(task);
+        });
+
+        const phases: Phase[] = Array.from(phaseMap.entries())
+          .sort((a, b) => (phaseOrder.get(a[0]) ?? 999) - (phaseOrder.get(b[0]) ?? 999))
+          .map(([name, tasks], idx) => ({
+            id: `phase_${idx}`,
+            name,
+            order: phaseOrder.get(name) ?? idx + 1,
+            tasks,
+          }));
+
         const mappedMilestones = (full?.milestones || []).map((m: any, idx: number) => ({
           id: m.id || `milestone_${idx}`,
           name: m.name || `里程碑 ${idx + 1}`,
           date: m.date ? String(m.date).slice(0, 10) : '',
           status: m.status || '待完成',
         }));
-        setPlannedTasks(mappedTasks);
+
+        setPlannedPhases(phases);
         setPlannedMilestones(mappedMilestones);
+        setExpandedPhaseIds(new Set(phases.map((p) => p.id)));
         setPlanLoaded(true);
       } catch {
         setPlanLoaded(false);
@@ -157,7 +191,20 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
     if (!project) return;
     setSaving(true);
     try {
-      // 构造提交数据，空字符串转为 null
+      // 从阶段结构展开成平铺任务列表
+      const flatTasks = plannedPhases.flatMap((phase) =>
+        phase.tasks.map((t) => ({
+          title: t.title,
+          priority: t.priority || '中',
+          status: t.status || '待开始',
+          phase: phase.name || null,
+          phaseId: phase.id || null,
+          phaseOrder: phase.order ?? null,
+          dueDate: t.dueDate ? new Date(t.dueDate).toISOString() : null,
+          assigneeId: form.managerId || undefined,
+        }))
+      );
+
       const payload = {
         name:      form.name,
         type:      form.type      || undefined,
@@ -169,16 +216,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
         endDate:   form.endDate   || null,
         templateId: form.templateId || undefined,
         ...(planLoaded ? {
-          tasks: plannedTasks.map((t) => ({
-            title: t.title,
-            priority: t.priority || '中',
-            status: t.status || '待开始',
-            phase: t.phase || null,
-            phaseId: t.phaseId || null,
-            phaseOrder: t.phaseOrder ?? null,
-            dueDate: t.dueDate ? new Date(t.dueDate).toISOString() : null,
-            assigneeId: form.managerId || undefined,
-          })),
+          tasks: flatTasks,
           milestones: plannedMilestones.map((m) => ({
             name: m.name,
             date: m.date ? new Date(m.date).toISOString() : null,
@@ -209,18 +247,6 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
     setParticipantIds((prev) => prev.filter((id) => id !== uid));
   };
 
-  const updateTask = (id: string, field: string, value: any) => {
-    setPlannedTasks((prev) => prev.map((t) => t.id === id ? { ...t, [field]: value } : t));
-  };
-
-  const removeTask = (id: string) => {
-    setPlannedTasks((prev) => prev.filter((t) => t.id !== id));
-  };
-
-  const addTask = () => {
-    setPlannedTasks((prev) => [...prev, { id: `custom_${Date.now()}`, title: '新增任务', priority: '中', status: '待开始', phase: '', phaseId: '', phaseOrder: null, estimatedDays: 3, dueDate: '' }]);
-  };
-
   const updateMilestone = (id: string, field: string, value: any) => {
     setPlannedMilestones((prev) => prev.map((m) => m.id === id ? { ...m, [field]: value } : m));
   };
@@ -243,23 +269,48 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
       const payload = res?.payload || {};
       const tasks = Array.isArray(payload.tasks) ? payload.tasks : [];
       const milestones = Array.isArray(payload.milestones) ? payload.milestones : [];
-      setPlannedTasks(tasks.map((t: any, idx: number) => ({
-        id: `tpl_${idx}_${Date.now()}`,
-        title: t.title || `任务 ${idx + 1}`,
-        priority: t.priority || '中',
-        status: t.status || '待开始',
-        phase: t.phase || '',
-        phaseId: t.phaseId || '',
-        phaseOrder: t.phaseOrder ?? null,
-        estimatedDays: t.estimatedDays ?? 3,
-        dueDate: t.dueDate ? String(t.dueDate).slice(0, 10) : '',
-      })));
+
+      // 按阶段组织任务
+      const phaseMap = new Map<string, any[]>();
+      const phaseOrder = new Map<string, number>();
+      let maxOrder = 0;
+
+      tasks.forEach((t: any, idx: number) => {
+        const phaseName = String(t.phase || '待分配').trim() || '待分配';
+        if (!phaseMap.has(phaseName)) {
+          phaseMap.set(phaseName, []);
+          phaseOrder.set(phaseName, t.phaseOrder ?? ++maxOrder);
+        }
+        phaseMap.get(phaseName)!.push({
+          id: `tpl_${idx}_${Date.now()}`,
+          title: t.title || `任务 ${idx + 1}`,
+          priority: t.priority || '中',
+          status: t.status || '待开始',
+          phase: phaseName,
+          phaseId: t.phaseId || '',
+          phaseOrder: t.phaseOrder ?? null,
+          estimatedDays: t.estimatedDays ?? 3,
+          dueDate: t.dueDate ? String(t.dueDate).slice(0, 10) : '',
+        });
+      });
+
+      const phases: Phase[] = Array.from(phaseMap.entries())
+        .sort((a, b) => (phaseOrder.get(a[0]) ?? 999) - (phaseOrder.get(b[0]) ?? 999))
+        .map(([name, phaseTaskList], idx) => ({
+          id: `phase_tpl_${idx}_${Date.now()}`,
+          name,
+          order: phaseOrder.get(name) ?? idx + 1,
+          tasks: phaseTaskList,
+        }));
+
+      setPlannedPhases(phases);
       setPlannedMilestones(milestones.map((m: any, idx: number) => ({
         id: `tpl_m_${idx}_${Date.now()}`,
         name: m.name || `里程碑 ${idx + 1}`,
         date: m.date ? String(m.date).slice(0, 10) : '',
         status: m.status || '待完成',
       })));
+      setExpandedPhaseIds(new Set(phases.map((p) => p.id)));
       setPlanLoaded(true);
     } finally {
       setLoadingPlan(false);
@@ -267,41 +318,26 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
   };
 
   const buildTemplateContent = () => {
-    const phaseMap = new Map<string, any[]>();
-    const orderedPhaseNames: string[] = [];
-
-    plannedTasks.forEach((task) => {
-      const phaseName = String(task.phase || '未分组阶段').trim() || '未分组阶段';
-      if (!phaseMap.has(phaseName)) {
-        phaseMap.set(phaseName, []);
-        orderedPhaseNames.push(phaseName);
-      }
-      phaseMap.get(phaseName)!.push(task);
-    });
-
-    const phases = orderedPhaseNames.map((phaseName, idx) => {
-      const list = phaseMap.get(phaseName) || [];
-      return {
-        id: `phase_${idx + 1}`,
-        name: phaseName,
-        order: idx + 1,
-        type: 'normal',
+    const phases = plannedPhases.map((phase) => ({
+      id: phase.id,
+      name: phase.name,
+      order: phase.order,
+      type: 'normal',
+      source: 'self',
+      enabled: true,
+      completionTip: '',
+      allowSkip: false,
+      totalDays: phase.tasks.reduce((sum, t) => sum + (Number(t.estimatedDays) || 3), 0),
+      tasks: phase.tasks.map((t, idx) => ({
+        id: t.id || `task_${idx}`,
+        title: t.title || `任务 ${idx + 1}`,
+        priority: (t.priority || '中') as '高' | '中' | '低',
+        estimatedDays: Number(t.estimatedDays) || 3,
+        role: '',
         source: 'self',
         enabled: true,
-        completionTip: '',
-        allowSkip: false,
-        totalDays: list.reduce((sum, t) => sum + (Number(t.estimatedDays) || 3), 0),
-        tasks: list.map((t, taskIdx) => ({
-          id: t.id || `task_${idx + 1}_${taskIdx + 1}`,
-          title: t.title || `任务 ${taskIdx + 1}`,
-          priority: (t.priority || '中') as '高' | '中' | '低',
-          estimatedDays: Number(t.estimatedDays) || 3,
-          role: '',
-          source: 'self',
-          enabled: true,
-        })),
-      };
-    });
+      })),
+    }));
 
     const phaseIdByName = new Map(phases.map((p: any) => [p.name, p.id]));
     const baseDate = form.startDate ? new Date(form.startDate) : new Date();
@@ -316,7 +352,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
       return {
         id: m.id || `milestone_${idx + 1}`,
         name: m.name || `里程碑 ${idx + 1}`,
-        phaseId: phaseIdByName.get(String(m.phase || '').trim()) || fallbackPhaseId,
+        phaseId: phaseIdByName.get(String(m.name || '').trim()) || fallbackPhaseId,
         offsetDays,
       };
     });
@@ -330,7 +366,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
       alert('请输入新模板名称');
       return;
     }
-    if (!planLoaded || plannedTasks.length === 0) {
+    if (!planLoaded || plannedPhases.reduce((sum, p) => sum + p.tasks.length, 0) === 0) {
       alert('当前没有可另存的任务内容，请先编辑任务后再保存');
       return;
     }
@@ -598,32 +634,282 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-gray-900">项目任务调整</h3>
                 <div className="text-xs text-gray-500">
-                  共 {plannedTasks.length} 个任务 / {plannedMilestones.length} 个里程碑
+                  共 {plannedPhases.reduce((sum, p) => sum + p.tasks.length, 0)} 个任务 / {plannedMilestones.length} 个里程碑
                 </div>
               </div>
-              <div className="flex items-center justify-end">
-                <button type="button" className="px-3 py-1 text-xs rounded border border-gray-200 hover:bg-white" onClick={addTask}>+ 新增任务</button>
-              </div>
-              {plannedTasks.map((task) => (
-                <div key={task.id} className="bg-white border border-gray-200 rounded-lg p-3 grid grid-cols-1 md:grid-cols-2 gap-2">
-                  <input className="input" value={task.title} onChange={(e) => updateTask(task.id, 'title', e.target.value)} placeholder="任务标题" />
-                  <input className="input" value={task.phase || ''} onChange={(e) => updateTask(task.id, 'phase', e.target.value)} placeholder="所属阶段（如：立项、设计、验证）" />
-                  <select className="input bg-white" value={task.priority || '中'} onChange={(e) => updateTask(task.id, 'priority', e.target.value)}>
-                    <option value="高">高</option>
-                    <option value="中">中</option>
-                    <option value="低">低</option>
-                  </select>
-                  <select className="input bg-white" value={task.status || '待开始'} onChange={(e) => updateTask(task.id, 'status', e.target.value)}>
-                    {TASK_STATUS_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                  <input type="number" min={1} className="input" value={task.estimatedDays ?? 3} onChange={(e) => updateTask(task.id, 'estimatedDays', Number(e.target.value) || 3)} placeholder="预计天数" />
-                  <input type="date" className="input" value={task.dueDate || ''} onChange={(e) => updateTask(task.id, 'dueDate', e.target.value)} />
-                  <div className="md:col-span-2 text-right">
-                    <button type="button" className="text-xs text-red-500 hover:text-red-700" onClick={() => removeTask(task.id)}>删除任务</button>
-                  </div>
+
+              {/* 阶段和任务管理 */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-medium text-gray-700">项目阶段</h4>
+                  <button
+                    type="button"
+                    className="px-3 py-1 text-xs rounded border border-gray-200 hover:bg-gray-50"
+                    onClick={() => {
+                      const phaseName = prompt('输入新阶段名称');
+                      if (phaseName) {
+                        const newPhase: Phase = {
+                          id: `phase_${Date.now()}`,
+                          name: phaseName,
+                          order: Math.max(0, ...plannedPhases.map(p => p.order)) + 1,
+                          tasks: [],
+                        };
+                        setPlannedPhases([...plannedPhases, newPhase]);
+                      }
+                    }}
+                  >
+                    + 新增阶段
+                  </button>
                 </div>
-              ))}
-              {plannedTasks.length === 0 && <div className="text-xs text-gray-400">暂无任务，可点击“新增任务”</div>}
+
+                {plannedPhases.length === 0 ? (
+                  <div className="text-xs text-gray-400 px-3 py-2">暂无阶段，请点击"新增阶段"</div>
+                ) : (
+                  plannedPhases.map((phase) => {
+                    const isExpanded = expandedPhaseIds.has(phase.id);
+                    const totalDays = phase.tasks.reduce((sum, t) => sum + (Number(t.estimatedDays) || 3), 0);
+                    return (
+                      <div
+                        key={phase.id}
+                        className="border border-gray-200 rounded-lg overflow-hidden bg-white"
+                      >
+                        <div className="px-3 py-2 bg-gray-50 flex items-center justify-between">
+                          <div className="flex items-center gap-2 flex-1">
+                            <button
+                              type="button"
+                              className="text-gray-500 hover:text-gray-700 p-1"
+                              onClick={() => {
+                                const newSet = new Set(expandedPhaseIds);
+                                if (newSet.has(phase.id)) {
+                                  newSet.delete(phase.id);
+                                } else {
+                                  newSet.add(phase.id);
+                                }
+                                setExpandedPhaseIds(newSet);
+                              }}
+                            >
+                              {isExpanded ? '▼' : '▶'}
+                            </button>
+                            <span className="text-sm font-medium text-gray-900 min-w-0 truncate">{phase.name}</span>
+                            <span className="text-xs text-gray-500 whitespace-nowrap">
+                              {phase.tasks.length} 任务 × {totalDays} 天
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              className="text-xs text-gray-500 hover:text-blue-600 px-2 py-1"
+                              onClick={() => {
+                                const newName = prompt('编辑阶段名称', phase.name);
+                                if (newName && newName !== phase.name) {
+                                  setPlannedPhases(
+                                    plannedPhases.map((p) =>
+                                      p.id === phase.id ? { ...p, name: newName } : p
+                                    )
+                                  );
+                                }
+                              }}
+                            >
+                              编辑
+                            </button>
+                            <button
+                              type="button"
+                              className="text-xs text-red-500 hover:text-red-700 px-2 py-1"
+                              onClick={() => {
+                                if (confirm(`确定删除阶段"${phase.name}"及其所有任务吗?`)) {
+                                  setPlannedPhases(plannedPhases.filter((p) => p.id !== phase.id));
+                                  const newSet = new Set(expandedPhaseIds);
+                                  newSet.delete(phase.id);
+                                  setExpandedPhaseIds(newSet);
+                                }
+                              }}
+                            >
+                              删除
+                            </button>
+                          </div>
+                        </div>
+
+                        {isExpanded && (
+                          <div className="px-3 py-3 space-y-2 border-t border-gray-100">
+                            {phase.tasks.length === 0 ? (
+                              <div className="text-xs text-gray-400 py-2">暂无任务</div>
+                            ) : (
+                              phase.tasks.map((task) => (
+                                <div
+                                  key={task.id}
+                                  className="border border-gray-100 rounded p-2 bg-white grid grid-cols-1 md:grid-cols-2 gap-2 text-xs"
+                                >
+                                  <input
+                                    className="input"
+                                    value={task.title}
+                                    onChange={(e) => {
+                                      setPlannedPhases(
+                                        plannedPhases.map((p) =>
+                                          p.id === phase.id
+                                            ? {
+                                                ...p,
+                                                tasks: p.tasks.map((t) =>
+                                                  t.id === task.id
+                                                    ? { ...t, title: e.target.value }
+                                                    : t
+                                                ),
+                                              }
+                                            : p
+                                        )
+                                      );
+                                    }}
+                                    placeholder="任务标题"
+                                  />
+                                  <select
+                                    className="input bg-white"
+                                    value={task.priority || '中'}
+                                    onChange={(e) => {
+                                      setPlannedPhases(
+                                        plannedPhases.map((p) =>
+                                          p.id === phase.id
+                                            ? {
+                                                ...p,
+                                                tasks: p.tasks.map((t) =>
+                                                  t.id === task.id
+                                                    ? { ...t, priority: e.target.value }
+                                                    : t
+                                                ),
+                                              }
+                                            : p
+                                        )
+                                      );
+                                    }}
+                                  >
+                                    <option value="高">高</option>
+                                    <option value="中">中</option>
+                                    <option value="低">低</option>
+                                  </select>
+                                  <select
+                                    className="input bg-white"
+                                    value={task.status || '待开始'}
+                                    onChange={(e) => {
+                                      setPlannedPhases(
+                                        plannedPhases.map((p) =>
+                                          p.id === phase.id
+                                            ? {
+                                                ...p,
+                                                tasks: p.tasks.map((t) =>
+                                                  t.id === task.id
+                                                    ? { ...t, status: e.target.value }
+                                                    : t
+                                                ),
+                                              }
+                                            : p
+                                        )
+                                      );
+                                    }}
+                                  >
+                                    {TASK_STATUS_OPTIONS.map((s) => (
+                                      <option key={s} value={s}>
+                                        {s}
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <input
+                                    type="number"
+                                    min={1}
+                                    className="input"
+                                    value={task.estimatedDays ?? 3}
+                                    onChange={(e) => {
+                                      setPlannedPhases(
+                                        plannedPhases.map((p) =>
+                                          p.id === phase.id
+                                            ? {
+                                                ...p,
+                                                tasks: p.tasks.map((t) =>
+                                                  t.id === task.id
+                                                    ? { ...t, estimatedDays: Number(e.target.value) || 3 }
+                                                    : t
+                                                ),
+                                              }
+                                            : p
+                                        )
+                                      );
+                                    }}
+                                    placeholder="预计天数"
+                                  />
+                                  <input
+                                    type="date"
+                                    className="input"
+                                    value={task.dueDate || ''}
+                                    onChange={(e) => {
+                                      setPlannedPhases(
+                                        plannedPhases.map((p) =>
+                                          p.id === phase.id
+                                            ? {
+                                                ...p,
+                                                tasks: p.tasks.map((t) =>
+                                                  t.id === task.id
+                                                    ? { ...t, dueDate: e.target.value }
+                                                    : t
+                                                ),
+                                              }
+                                            : p
+                                        )
+                                      );
+                                    }}
+                                  />
+                                  <div className="md:col-span-2 text-right">
+                                    <button
+                                      type="button"
+                                      className="text-xs text-red-500 hover:text-red-700"
+                                      onClick={() => {
+                                        setPlannedPhases(
+                                          plannedPhases.map((p) =>
+                                            p.id === phase.id
+                                              ? {
+                                                  ...p,
+                                                  tasks: p.tasks.filter((t) => t.id !== task.id),
+                                                }
+                                              : p
+                                          )
+                                        );
+                                      }}
+                                    >
+                                      删除任务
+                                    </button>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                            <button
+                              type="button"
+                              className="w-full px-3 py-1 text-xs rounded border border-gray-200 hover:bg-gray-50 text-gray-600"
+                              onClick={() => {
+                                const newTask = {
+                                  id: `task_${phase.id}_${Date.now()}`,
+                                  title: '',
+                                  priority: '中',
+                                  status: '待开始',
+                                  phase: phase.name,
+                                  phaseId: phase.id,
+                                  phaseOrder: phase.order,
+                                  estimatedDays: 3,
+                                  dueDate: '',
+                                };
+                                setPlannedPhases(
+                                  plannedPhases.map((p) =>
+                                    p.id === phase.id
+                                      ? { ...p, tasks: [...p.tasks, newTask] }
+                                      : p
+                                  )
+                                );
+                              }}
+                            >
+                              + 新增任务
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
 
               <div className="flex items-center justify-between pt-2 border-t border-gray-200">
                 <h3 className="text-sm font-semibold text-gray-900">里程碑调整</h3>
