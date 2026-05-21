@@ -90,6 +90,91 @@ function flattenTasksFromPhases(phases: PlannedPhase[]) {
   );
 }
 
+function normalizeTaskPriority(priority?: string | null) {
+  const p = String(priority || '').toLowerCase();
+  if (p === '高' || p === 'high' || p === 'urgent' || p === 'p0' || p === 'p1') return '高';
+  if (p === '低' || p === 'low' || p === 'p3') return '低';
+  return '中';
+}
+
+function parseTemplateContentToPlan(template: any, startDateText: string) {
+  if (!template?.content) {
+    return { phases: [] as PlannedPhase[], milestones: [] as any[] };
+  }
+
+  let content: any = {};
+  try {
+    content = typeof template.content === 'string' ? JSON.parse(template.content) : template.content;
+  } catch {
+    return { phases: [] as PlannedPhase[], milestones: [] as any[] };
+  }
+
+  const rawPhases = Array.isArray(content?.phases) ? content.phases : [];
+  const baseDate = startDateText ? new Date(startDateText) : new Date();
+
+  const phases: PlannedPhase[] = rawPhases
+    .filter((phase: any) => phase?.enabled !== false)
+    .map((phase: any, idx: number) => {
+      const phaseId = String(phase.id || phase.key || `phase_${idx + 1}`);
+      const phaseName = String(phase.name || phase.title || `节点 ${idx + 1}`);
+      const phaseOrder = Number(phase.order) || idx + 1;
+
+      const phaseTasks = Array.isArray(phase.tasks) ? phase.tasks : [];
+      const subPhaseTasks = (Array.isArray(phase.subPhases) ? phase.subPhases : [])
+        .filter((sp: any) => sp?.enabled !== false)
+        .flatMap((sp: any) => Array.isArray(sp.tasks) ? sp.tasks : []);
+      const allTasks = [...phaseTasks, ...subPhaseTasks].filter((task: any) => task?.enabled !== false);
+
+      const tasks = allTasks.map((task: any, taskIdx: number) => ({
+        id: String(task.id || `${phaseId}_task_${taskIdx + 1}`),
+        title: String(task.title || `任务 ${taskIdx + 1}`),
+        description: String(task.description || ''),
+        priority: normalizeTaskPriority(task.priority),
+        status: '待开始',
+        phase: phaseName,
+        phaseId,
+        phaseOrder,
+        estimatedDays: Number(task.estimatedDays) || 3,
+        dueDate: '',
+      }));
+
+      return {
+        id: phaseId,
+        name: phaseName,
+        order: phaseOrder,
+        nextPhaseIds: Array.isArray(phase.nextPhaseIds) ? phase.nextPhaseIds.map((x: any) => String(x)) : [],
+        tasks,
+      };
+    })
+    .sort((a, b) => a.order - b.order)
+    .map((phase, idx) => ({
+      ...phase,
+      order: idx + 1,
+      tasks: phase.tasks.map((task: any) => ({ ...task, phaseOrder: idx + 1 })),
+    }));
+
+  const milestones = (Array.isArray(content?.milestones) ? content.milestones : []).map((m: any, idx: number) => {
+    let date = '';
+    const offsetDays = Number(m?.offsetDays);
+    if (!Number.isNaN(offsetDays)) {
+      const d = new Date(baseDate);
+      d.setDate(d.getDate() + offsetDays);
+      date = d.toISOString().slice(0, 10);
+    }
+
+    return {
+      id: `milestone_${idx}_${Date.now()}`,
+      name: String(m?.name || `里程碑 ${idx + 1}`),
+      phaseId: m?.phaseId ? String(m.phaseId) : '',
+      phaseName: m?.phaseName ? String(m.phaseName) : '',
+      date,
+      status: String(m?.status || '待完成'),
+    };
+  });
+
+  return { phases, milestones };
+}
+
 interface Props {
   onClose: () => void;
   initialDraftProjectId?: string;
@@ -243,6 +328,15 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
     setTemplatePreviewError(null);
     setLoadingPlan(true);
     try {
+      const localPlan = parseTemplateContentToPlan(tpl, startDate);
+      if (localPlan.phases.length > 0 || localPlan.milestones.length > 0) {
+        setPlannedPhases(localPlan.phases);
+        setSelectedPhaseId(localPlan.phases[0]?.id || '');
+        setPlannedMilestones(localPlan.milestones);
+        setTemplatePreviewLoaded(true);
+        return true;
+      }
+
       const applyRes = await projectTemplatesAPI.apply(tpl.id, {
         startDate: startDate ? new Date(startDate).toISOString() : new Date().toISOString(),
       });
@@ -312,6 +406,14 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
     if (!selectedTemplate || blankSelected) return;
     setLoadingPlan(true);
     try {
+      const localPlan = parseTemplateContentToPlan(selectedTemplate, startDate);
+      if (localPlan.phases.length > 0 || localPlan.milestones.length > 0) {
+        setPlannedPhases(localPlan.phases);
+        setSelectedPhaseId(localPlan.phases[0]?.id || '');
+        setPlannedMilestones(localPlan.milestones);
+        return true;
+      }
+
       const applyRes = await projectTemplatesAPI.apply(selectedTemplate.id, {
         startDate: startDate ? new Date(startDate).toISOString() : new Date().toISOString(),
       });
