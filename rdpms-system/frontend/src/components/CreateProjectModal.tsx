@@ -129,6 +129,8 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
   const [taskTemplateKeyword, setTaskTemplateKeyword] = useState('');
   const [loadingTaskTemplates, setLoadingTaskTemplates] = useState(false);
   const [selectedTaskTemplateIds, setSelectedTaskTemplateIds] = useState<Set<string>>(new Set());
+  const [templatePreviewLoaded, setTemplatePreviewLoaded] = useState(false);
+  const [templatePreviewError, setTemplatePreviewError] = useState<string | null>(null);
 
   useEffect(() => {
     const raw = localStorage.getItem(CREATE_PROJECT_DRAFT_KEY);
@@ -234,6 +236,55 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
     }
   }
 
+  // 立即为选中的模版预加载 plan（用于在选择模版后即刻展示预览）
+  async function prefetchTemplatePlan(tpl: any) {
+    if (!tpl) return false;
+    setTemplatePreviewLoaded(false);
+    setTemplatePreviewError(null);
+    setLoadingPlan(true);
+    try {
+      const applyRes = await projectTemplatesAPI.apply(tpl.id, {
+        startDate: startDate ? new Date(startDate).toISOString() : new Date().toISOString(),
+      });
+      const applyData = (applyRes as any).payload || {};
+      const tasks = Array.isArray(applyData.tasks) ? applyData.tasks : [];
+      const milestones = Array.isArray(applyData.milestones) ? applyData.milestones : [];
+      const normalizedTasks = tasks.map((task: any, idx: number) => ({
+        id: `${task.phaseId || 'task'}_${idx}_${Date.now()}`,
+        title: task.title || `任务 ${idx + 1}`,
+        priority: task.priority || '中',
+        status: task.status || '待开始',
+        phase: task.phase || '',
+        phaseId: task.phaseId || '',
+        phaseOrder: task.phaseOrder ?? null,
+        estimatedDays: task.estimatedDays ?? 3,
+        dueDate: task.dueDate ? String(task.dueDate).slice(0, 10) : '',
+      }));
+
+      const phases = buildPhasesFromTasks(normalizedTasks);
+      setPlannedPhases(phases);
+      setSelectedPhaseId(phases[0]?.id || '');
+      setPlannedMilestones(milestones.map((m: any, idx: number) => ({
+        id: `milestone_${idx}_${Date.now()}`,
+        name: m.name || `里程碑 ${idx + 1}`,
+        phaseId: m.phaseId || '',
+        phaseName: m.phaseName || '',
+        date: m.date ? String(m.date).slice(0, 10) : '',
+        status: m.status || '待完成',
+      })));
+
+      setTemplatePreviewLoaded(true);
+      return true;
+    } catch (err: any) {
+      console.error('Prefetch template failed:', err);
+      setTemplatePreviewError(err?.message || '加载模版预览失败');
+      setTemplatePreviewLoaded(false);
+      return false;
+    } finally {
+      setLoadingPlan(false);
+    }
+  }
+
   useEffect(() => {
     if (step === 2) loadTemplates();
   }, [tmplCategory]);
@@ -290,6 +341,12 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
         date: m.date ? String(m.date).slice(0, 10) : '',
         status: m.status || '待完成',
       })));
+      return true;
+    } catch (err: any) {
+      console.error('Failed to load template plan:', err);
+      const message = err?.message || (err?.error ? err.error : '加载模版数据失败，请检查网络或重新登录');
+      alert(message);
+      return false;
     } finally {
       setLoadingPlan(false);
     }
@@ -353,8 +410,8 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
     if (step === 1) { setStep(2); return; }
 
     if (step === 2 && hasEditableTemplate) {
-      await loadTemplatePlan();
-      setStep(3);
+      const ok = await loadTemplatePlan();
+      if (ok) setStep(3);
       return;
     }
 
@@ -855,7 +912,7 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
                         className={`border-2 rounded-xl p-4 cursor-pointer transition-all ${
                           isSelected ? 'border-primary-500 bg-primary-50' : 'border-gray-200 hover:border-gray-300'
                         }`}
-                        onClick={() => { setSelectedTemplate(tpl); setBlankSelected(false); }}
+                        onClick={async () => { setSelectedTemplate(tpl); setBlankSelected(false); setTemplatePreviewLoaded(false); setTemplatePreviewError(null); await prefetchTemplatePlan(tpl); }}
                       >
                         <div className="flex items-start justify-between gap-2">
                           <span className="font-medium text-gray-900 text-sm leading-tight">{tpl.name}</span>
@@ -871,6 +928,12 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
                         </div>
                         {tpl.description && (
                           <p className="text-xs text-gray-400 mt-1 line-clamp-1">{tpl.description}</p>
+                        )}
+                        {isSelected && templatePreviewLoaded && (
+                          <div className="text-xs text-green-600 mt-1">已加载预览</div>
+                        )}
+                        {isSelected && templatePreviewError && (
+                          <div className="text-xs text-red-600 mt-1">{templatePreviewError}</div>
                         )}
                       </div>
                     );
