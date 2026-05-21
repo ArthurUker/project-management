@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { projectAPI, userAPI, projectTemplatesAPI } from '../api/client';
 import { getAllowedTransitions } from '../constants/statusColors';
 
@@ -35,6 +35,10 @@ const TYPE_OPTIONS = ['platform', '定制', '合作', '测试', '应用', '科�
 const TASK_STATUS_OPTIONS = ['待开始', '进行中', '已完成', '已暂停'];
 const MILESTONE_STATUS_OPTIONS = ['待完成', '进行中', '已完成'];
 
+function getEditDraftKey(projectId: string) {
+  return `rdpms_edit_project_draft_${projectId}`;
+}
+
 interface Phase {
   id: string;
   name: string;
@@ -62,6 +66,8 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
   const [loadingPlan, setLoadingPlan] = useState(false);
   const [planLoaded, setPlanLoaded] = useState(false);
   const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false);
+  const [showTemplateEditorModal, setShowTemplateEditorModal] = useState(false);
+  const [editingTemplateId, setEditingTemplateId] = useState<string>('');
   const [savingTemplate, setSavingTemplate] = useState(false);
   const [saveTemplateForm, setSaveTemplateForm] = useState({
     name: '',
@@ -144,9 +150,44 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
           status: m.status || '待完成',
         }));
 
-        setPlannedPhases(phases);
-        setPlannedMilestones(mappedMilestones);
-        setExpandedPhaseIds(new Set(phases.map((p) => p.id)));
+        let nextPhases = phases;
+        let nextMilestones = mappedMilestones;
+        let nextFormTemplateId = full?.templateId || project.templateId || '';
+        let nextParticipantIds = Array.from(new Set(memberIds));
+
+        const draftRaw = localStorage.getItem(getEditDraftKey(project.id));
+        if (draftRaw) {
+          try {
+            const draft = JSON.parse(draftRaw);
+            const shouldRestore = window.confirm('检测到本项目的编辑草稿，是否恢复继续编辑？');
+            if (shouldRestore) {
+              setForm((prev) => ({
+                ...prev,
+                name: draft.form?.name ?? prev.name,
+                type: draft.form?.type ?? prev.type,
+                status: draft.form?.status ?? prev.status,
+                position: draft.form?.position ?? prev.position,
+                managerId: draft.form?.managerId ?? prev.managerId,
+                startDate: draft.form?.startDate ?? prev.startDate,
+                endDate: draft.form?.endDate ?? prev.endDate,
+                templateId: draft.form?.templateId ?? prev.templateId,
+              }));
+              nextFormTemplateId = draft.form?.templateId ?? nextFormTemplateId;
+              nextParticipantIds = Array.isArray(draft.participantIds) ? draft.participantIds : nextParticipantIds;
+              nextPhases = Array.isArray(draft.plannedPhases) ? draft.plannedPhases : nextPhases;
+              nextMilestones = Array.isArray(draft.plannedMilestones) ? draft.plannedMilestones : nextMilestones;
+              setShowPlanEditor(!!draft.showPlanEditor);
+            }
+          } catch {
+            localStorage.removeItem(getEditDraftKey(project.id));
+          }
+        }
+
+        setForm((prev) => ({ ...prev, templateId: nextFormTemplateId || prev.templateId }));
+        setParticipantIds(nextParticipantIds);
+        setPlannedPhases(nextPhases);
+        setPlannedMilestones(nextMilestones);
+        setExpandedPhaseIds(new Set(nextPhases.map((p) => p.id)));
         setPlanLoaded(true);
       } catch {
         setPlanLoaded(false);
@@ -161,13 +202,20 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
     setParticipantIds((prev) => prev.filter((id) => id !== form.managerId));
   }, [form.managerId]);
 
+  const loadTemplates = useCallback(async () => {
+    try {
+      const res = await projectTemplatesAPI.list();
+      const list = (res as any).templates ?? (res as any).list ?? (res as any).data ?? res;
+      setTemplates(Array.isArray(list) ? list : []);
+    } catch {
+      // ignore
+    }
+  }, []);
+
   // 加载模版列表
   useEffect(() => {
-    projectTemplatesAPI.list().then((res: any) => {
-      const list = res.templates ?? res.list ?? res.data ?? res;
-      setTemplates(Array.isArray(list) ? list : []);
-    }).catch(() => {});
-  }, []);
+    loadTemplates();
+  }, [loadTemplates]);
 
   // 加载用户列表（用于负责人选择）
   useEffect(() => {
@@ -225,6 +273,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
         } : {}),
       };
       await projectAPI.update(project.id, payload);
+      localStorage.removeItem(getEditDraftKey(project.id));
       onSaved();
       onClose();
     } catch (err: any) {
@@ -399,6 +448,36 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
     } finally {
       setSavingTemplate(false);
     }
+  };
+
+  const saveDraft = () => {
+    if (!project?.id) return;
+    const draft = {
+      projectId: project.id,
+      form,
+      participantIds,
+      plannedPhases,
+      plannedMilestones,
+      showPlanEditor,
+      savedAt: Date.now(),
+    };
+    localStorage.setItem(getEditDraftKey(project.id), JSON.stringify(draft));
+    alert('已暂存草稿，可稍后继续编辑');
+  };
+
+  const openTemplateEditor = () => {
+    if (!form.templateId) {
+      alert('请先选择项目模板');
+      return;
+    }
+    setEditingTemplateId(form.templateId);
+    setShowTemplateEditorModal(true);
+  };
+
+  const closeTemplateEditor = async () => {
+    setShowTemplateEditorModal(false);
+    setEditingTemplateId('');
+    await loadTemplates();
   };
 
   return (
@@ -591,9 +670,9 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
               <button
                 type="button"
                 className="px-3 py-1.5 text-xs rounded border border-gray-200 hover:bg-gray-50"
-                onClick={() => setShowPlanEditor((v) => !v)}
+                onClick={openTemplateEditor}
               >
-                {showPlanEditor ? '收起任务编辑' : '编辑模板任务'}
+                编辑模板
               </button>
               {!!form.templateId && (
                 <button
@@ -1026,6 +1105,15 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
           <div className="flex justify-end gap-3 pt-2 border-t border-gray-100">
             <button
               type="button"
+              className="px-4 py-2 text-sm text-amber-700 border border-amber-200
+                         rounded-lg bg-amber-50 hover:bg-amber-100 transition-colors"
+              onClick={saveDraft}
+              disabled={saving}
+            >
+              暂存草稿
+            </button>
+            <button
+              type="button"
               className="px-4 py-2 text-sm text-gray-600 border border-gray-200
                          rounded-lg hover:bg-gray-50 transition-colors"
               onClick={onClose}
@@ -1055,6 +1143,31 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
 
         </form>
       </div>
+
+      {showTemplateEditorModal && editingTemplateId && (
+        <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4">
+          <div className="w-[min(96vw,1400px)] h-[92vh] rounded-2xl overflow-hidden bg-white shadow-2xl border border-gray-100 flex flex-col">
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-semibold text-gray-900">编辑模板</h4>
+                <p className="text-xs text-gray-500 mt-0.5">关闭后会自动刷新模板列表</p>
+              </div>
+              <button
+                type="button"
+                className="px-3 py-1.5 text-xs rounded border border-gray-200 hover:bg-gray-50"
+                onClick={closeTemplateEditor}
+              >
+                关闭
+              </button>
+            </div>
+            <iframe
+              title="模板编辑器"
+              src={`/project-templates/${editingTemplateId}/edit`}
+              className="w-full flex-1 border-0"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

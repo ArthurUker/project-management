@@ -9,6 +9,7 @@ projects.use('*', authMiddleware);
 
 // ── 状态机：允许的迁移路径（与前端 statusColors.ts 保持一致） ──
 const STATUS_TRANSITIONS = {
+  '草稿': ['规划中', '进行中', '已归档'],
   '规划中': ['进行中', '已归档'],
   '进行中': ['待加工', '待验证', '已完成', '已归档'],
   '待加工': ['进行中', '待验证', '已归档'],
@@ -129,8 +130,10 @@ projects.post('/', async (c) => {
   const userId = c.get('userId');
   const userRole = c.get('userRole');
 
+  const isDraft = body.isDraft === true;
+
   // 验证
-  if (!body.name) {
+  if (!body.name && !isDraft) {
     return c.json({ error: '项目名称不能为空' }, 400);
   }
 
@@ -163,6 +166,7 @@ projects.post('/', async (c) => {
   const project = await prisma.project.create({
     data: {
       ...projectData,
+      name: projectData.name || `未命名草稿-${new Date().toISOString().slice(0, 10)}`,
       code,
       ...(templateId ? { template: { connect: { id: templateId } } } : {}),
       manager: { connect: { id: managerId } },
@@ -211,6 +215,8 @@ projects.post('/', async (c) => {
     const milestonesToCreate = milestones.map((m) => ({
       projectId: project.id,
       name: m.name || '未命名里程碑',
+      phaseId: m.phaseId || null,
+      phaseName: m.phaseName || null,
       date: m.date ? new Date(m.date) : new Date(),
       status: m.status || '待完成'
     }));
@@ -376,6 +382,8 @@ projects.put('/:id', async (c) => {
           data: milestonesInput.map((m) => ({
             projectId: id,
             name: m.name || '未命名里程碑',
+            phaseId: m.phaseId || null,
+            phaseName: m.phaseName || null,
             date: m.date ? new Date(m.date) : new Date(),
             status: m.status || '待完成',
           }))

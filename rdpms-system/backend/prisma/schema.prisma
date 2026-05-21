@@ -45,6 +45,7 @@ model Project {
   code        String   @unique // PRJ-2026-001
   name        String
   type        String   // platform / 定制 / 合作 / 测试 / 应用
+  isDraft     Boolean  @default(false)
   subtype     String?  // 2.0C / 3.0 / 海南大学 / 黑马 等
   status      String   @default("进行中") // 规划中 / 进行中 / 待加工 / 待验证 / 已完成 / 已归档
   position    String?  // 项目定位/描述
@@ -290,6 +291,8 @@ model Milestone {
   id          String    @id @default(uuid())
   projectId   String
   name        String
+  phaseId     String?
+  phaseName   String?
   date        DateTime
   status      String    @default("待完成") // 待完成 / 已完成 / 已延期
   completedAt DateTime?

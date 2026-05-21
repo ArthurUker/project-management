@@ -179,6 +179,43 @@ async function ensurePrimerColumns() {
   console.log(`✅ Patched Primer columns: ${missingColumns.map((x) => x.name).join(', ')}`);
 }
 
+async function ensureProjectDraftAndMilestonePhaseColumns() {
+  const projectColumns = await prisma.$queryRawUnsafe('PRAGMA table_info("Project")');
+  const projectColumnNames = new Set((projectColumns || []).map((col) => col.name));
+  const missingProjectColumns = [
+    {
+      name: 'isDraft',
+      sql: 'ALTER TABLE "Project" ADD COLUMN "isDraft" BOOLEAN NOT NULL DEFAULT false'
+    }
+  ].filter((item) => !projectColumnNames.has(item.name));
+
+  for (const item of missingProjectColumns) {
+    await prisma.$executeRawUnsafe(item.sql);
+  }
+
+  const milestoneColumns = await prisma.$queryRawUnsafe('PRAGMA table_info("Milestone")');
+  const milestoneColumnNames = new Set((milestoneColumns || []).map((col) => col.name));
+  const missingMilestoneColumns = [
+    {
+      name: 'phaseId',
+      sql: 'ALTER TABLE "Milestone" ADD COLUMN "phaseId" TEXT'
+    },
+    {
+      name: 'phaseName',
+      sql: 'ALTER TABLE "Milestone" ADD COLUMN "phaseName" TEXT'
+    }
+  ].filter((item) => !milestoneColumnNames.has(item.name));
+
+  for (const item of missingMilestoneColumns) {
+    await prisma.$executeRawUnsafe(item.sql);
+  }
+
+  const patched = [...missingProjectColumns, ...missingMilestoneColumns].map((x) => x.name);
+  if (patched.length > 0) {
+    console.log(`✅ Patched Project/Milestone columns: ${patched.join(', ')}`);
+  }
+}
+
 // 创建Hono应用
 const app = new Hono();
 
@@ -245,6 +282,7 @@ await ensureTaskRegulatoryColumns();
 await ensureProjectTemplateColumns();
 await ensureRegulatoryDocumentTables();
 await ensurePrimerColumns();
+await ensureProjectDraftAndMilestonePhaseColumns();
 
 serve({
   fetch: app.fetch,

@@ -4,6 +4,7 @@ export interface Project {
   id: string;
   name: string;
   code: string;
+  isDraft?: boolean;
   type?: string;
   subtype?: string;
   status?: string;

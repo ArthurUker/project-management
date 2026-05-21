@@ -8,9 +8,10 @@ import { projectAPI } from '../api/client';
 
 // ── 常量 ─────────────────────────────────────────────
 const TYPE_OPTIONS   = ['platform', '定制', '合作', '测试', '应用', '科技项目'];
-const STATUS_OPTIONS = ['规划中', '进行中', '待加工', '待验证', '已完成', '已归档'];
+const STATUS_OPTIONS = ['草稿', '规划中', '进行中', '待加工', '待验证', '已完成', '已归档'];
 
 const STATUS_CONFIG: Record<string, { label: string; barColor: string; textColor: string; dotColor: string; borderColor: string }> = {
+  '草稿': { label: '草稿', barColor: '#f59e0b', textColor: '#b45309', dotColor: '#f59e0b', borderColor: '#fde68a' },
   '规划中': { label: '规划中', barColor: '#9ca3af', textColor: '#6b7280',  dotColor: '#9ca3af', borderColor: '#e5e7eb' },
   '进行中': { label: '进行中', barColor: '#3b82f6', textColor: '#2563eb',  dotColor: '#3b82f6', borderColor: '#bfdbfe' },
   '待加工': { label: '待加工', barColor: '#f59e0b', textColor: '#d97706',  dotColor: '#f59e0b', borderColor: '#fde68a' },
@@ -68,6 +69,7 @@ const Projects: React.FC = () => {
   // 弹窗
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(location.pathname === '/projects/new');
+  const [draftProjectId, setDraftProjectId] = useState<string>('');
 
 
 
@@ -167,7 +169,14 @@ const Projects: React.FC = () => {
         }}
         onMouseEnter={e => (e.currentTarget.style.background = '#f9fafb')}
         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-        onClick={() => navigate(`/projects/${project.id}`)}
+        onClick={() => {
+          if (project.isDraft) {
+            setDraftProjectId(project.id);
+            setShowCreateModal(true);
+            return;
+          }
+          navigate(`/projects/${project.id}`);
+        }}
       >
         <input type="checkbox" checked={selectedIds.includes(project.id)}
           style={{ accentColor: '#3b82f6' }}
@@ -202,9 +211,17 @@ const Projects: React.FC = () => {
         </div>
         <button
           style={{ fontSize: '12px', color: '#6b7280', border: '1px solid #e5e7eb', borderRadius: '6px', padding: '4px 10px', background: '#fff', cursor: 'pointer' }}
-          onClick={e => { e.stopPropagation(); setEditingProject(project); }}
+          onClick={e => {
+            e.stopPropagation();
+            if (project.isDraft) {
+              setDraftProjectId(project.id);
+              setShowCreateModal(true);
+              return;
+            }
+            setEditingProject(project);
+          }}
         >
-          编辑
+          {project.isDraft ? '继续编辑' : '编辑'}
         </button>
       </div>
     );
@@ -225,7 +242,19 @@ const Projects: React.FC = () => {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {list.map(p => (
-            <ProjectCard key={p.id} project={p} onEdit={setEditingProject} onClick={() => navigate(`/projects/${p.id}`)} />
+            <ProjectCard
+              key={p.id}
+              project={p}
+              onEdit={setEditingProject}
+              onClick={() => {
+                if (p.isDraft) {
+                  setDraftProjectId(p.id);
+                  setShowCreateModal(true);
+                  return;
+                }
+                navigate(`/projects/${p.id}`);
+              }}
+            />
           ))}
           {list.length === 0 && (
             <div style={{ textAlign: 'center', padding: '32px 16px', color: '#d1d5db', fontSize: '14px', border: '2px dashed #e5e7eb', borderRadius: '12px' }}>
@@ -303,7 +332,7 @@ const Projects: React.FC = () => {
           </button>
           {/* 新建 */}
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => { setDraftProjectId(''); setShowCreateModal(true); }}
             className="btn btn-primary"
             style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
           >
@@ -461,12 +490,19 @@ const Projects: React.FC = () => {
               selected={selectedIds.includes(p.id)}
               onSelect={(id, checked) => setSelectedIds(prev => checked ? [...prev, id] : prev.filter(x => x !== id))}
               onEdit={setEditingProject}
-              onClick={() => navigate(`/projects/${p.id}`)}
+              onClick={() => {
+                if (p.isDraft) {
+                  setDraftProjectId(p.id);
+                  setShowCreateModal(true);
+                  return;
+                }
+                navigate(`/projects/${p.id}`);
+              }}
             />
           ))}
           {/* 新建引导卡 */}
           <div
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => { setDraftProjectId(''); setShowCreateModal(true); }}
             style={{
               border: '2px dashed #d1d5db', borderRadius: '14px',
               display: 'flex', flexDirection: 'column', alignItems: 'center',
@@ -534,8 +570,10 @@ const Projects: React.FC = () => {
       {/* 新建弹窗 */}
       {showCreateModal && (
         <CreateProjectModal
+          initialDraftProjectId={draftProjectId || undefined}
           onClose={() => {
             setShowCreateModal(false);
+            setDraftProjectId('');
             if (location.pathname === '/projects/new') navigate('/projects', { replace: true });
             loadProjects();
           }}
