@@ -159,25 +159,23 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
         if (draftRaw) {
           try {
             const draft = JSON.parse(draftRaw);
-            const shouldRestore = window.confirm('检测到本项目的编辑草稿，是否恢复继续编辑？');
-            if (shouldRestore) {
-              setForm((prev) => ({
-                ...prev,
-                name: draft.form?.name ?? prev.name,
-                type: draft.form?.type ?? prev.type,
-                status: draft.form?.status ?? prev.status,
-                position: draft.form?.position ?? prev.position,
-                managerId: draft.form?.managerId ?? prev.managerId,
-                startDate: draft.form?.startDate ?? prev.startDate,
-                endDate: draft.form?.endDate ?? prev.endDate,
-                templateId: draft.form?.templateId ?? prev.templateId,
-              }));
-              nextFormTemplateId = draft.form?.templateId ?? nextFormTemplateId;
-              nextParticipantIds = Array.isArray(draft.participantIds) ? draft.participantIds : nextParticipantIds;
-              nextPhases = Array.isArray(draft.plannedPhases) ? draft.plannedPhases : nextPhases;
-              nextMilestones = Array.isArray(draft.plannedMilestones) ? draft.plannedMilestones : nextMilestones;
-              setShowPlanEditor(!!draft.showPlanEditor);
-            }
+            // 静默恢复编辑草稿，不弹窗询问
+            setForm((prev) => ({
+              ...prev,
+              name: draft.form?.name ?? prev.name,
+              type: draft.form?.type ?? prev.type,
+              status: draft.form?.status ?? prev.status,
+              position: draft.form?.position ?? prev.position,
+              managerId: draft.form?.managerId ?? prev.managerId,
+              startDate: draft.form?.startDate ?? prev.startDate,
+              endDate: draft.form?.endDate ?? prev.endDate,
+              templateId: draft.form?.templateId ?? prev.templateId,
+            }));
+            nextFormTemplateId = draft.form?.templateId ?? nextFormTemplateId;
+            nextParticipantIds = Array.isArray(draft.participantIds) ? draft.participantIds : nextParticipantIds;
+            nextPhases = Array.isArray(draft.plannedPhases) ? draft.plannedPhases : nextPhases;
+            nextMilestones = Array.isArray(draft.plannedMilestones) ? draft.plannedMilestones : nextMilestones;
+            setShowPlanEditor(!!draft.showPlanEditor);
           } catch {
             localStorage.removeItem(getEditDraftKey(project.id));
           }

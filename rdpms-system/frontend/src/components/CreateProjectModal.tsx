@@ -225,42 +225,9 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
   const [templatePreviewError, setTemplatePreviewError] = useState<string | null>(null);
 
   useEffect(() => {
-    const raw = localStorage.getItem(CREATE_PROJECT_DRAFT_KEY);
-    if (!raw) return;
-
-    try {
-      const draft = JSON.parse(raw);
-      const shouldRestore = window.confirm('检测到未完成的新建项目草稿，是否恢复继续编辑？');
-      if (!shouldRestore) {
-        // 用户明确拒绝恢复，清除本地草稿，避免下次再弹
-        localStorage.removeItem(CREATE_PROJECT_DRAFT_KEY);
-        return;
-      }
-
-      setStep(Number(draft.step) || 1);
-      setName(draft.name || '');
-      setType(draft.type || '定制');
-      setPosition(draft.position || '');
-      setManagerId(draft.managerId || user?.id || '');
-      setParticipantIds(Array.isArray(draft.participantIds) ? draft.participantIds : []);
-      setStartDate(draft.startDate || new Date().toISOString().slice(0, 10));
-      setEndDate(draft.endDate || '');
-      setSelectedTemplate(draft.selectedTemplate || null);
-      setBlankSelected(!!draft.blankSelected);
-      setTmplKeyword(draft.tmplKeyword || '');
-      setTmplCategory(draft.tmplCategory || '');
-
-      const restoredPhases = Array.isArray(draft.plannedPhases)
-        ? draft.plannedPhases
-        : Array.isArray(draft.plannedTasks)
-        ? buildPhasesFromTasks(draft.plannedTasks)
-        : [];
-      setPlannedPhases(restoredPhases);
-      setPlannedMilestones(Array.isArray(draft.plannedMilestones) ? draft.plannedMilestones : []);
-      setSelectedPhaseId(draft.selectedPhaseId || restoredPhases[0]?.id || '');
-    } catch {
-      localStorage.removeItem(CREATE_PROJECT_DRAFT_KEY);
-    }
+    // 新建项目时直接清除 localStorage 表单草稿，不弹窗不恢复
+    // 草稿项目已保存在数据库列表中，用户可直接点击列表中的草稿项目继续编辑
+    localStorage.removeItem(CREATE_PROJECT_DRAFT_KEY);
   }, [user?.id]);
 
   useEffect(() => {
