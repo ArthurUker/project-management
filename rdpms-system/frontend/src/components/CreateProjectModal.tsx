@@ -90,6 +90,13 @@ function flattenTasksFromPhases(phases: PlannedPhase[]) {
   );
 }
 
+function extractPhaseCode(phase: PlannedPhase) {
+  const name = String(phase?.name || '').trim();
+  // Keep original template numbering like 0., 1.2, 2-1 when available.
+  const match = name.match(/^(\d+(?:[.-]\d+)*)(?:[.、\-\s]|$)/);
+  return match?.[1] || String(phase.order || '');
+}
+
 function normalizeTaskPriority(priority?: string | null) {
   const p = String(priority || '').toLowerCase();
   if (p === '高' || p === 'high' || p === 'urgent' || p === 'p0' || p === 'p1') return '高';
@@ -1079,7 +1086,7 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
                             onClick={() => setSelectedPhaseId(phase.id)}
                             className={`w-full text-left rounded-lg border px-3 py-2 transition-colors ${selected ? 'border-blue-300 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
                           >
-                            <div className="text-sm font-medium text-gray-900 truncate">{phase.order}. {phase.name}</div>
+                            <div className="text-sm font-medium text-gray-900 truncate">{phase.name}</div>
                             <div className="text-xs text-gray-500 mt-1">{phase.tasks.length} 个任务</div>
                           </button>
                         );
@@ -1107,7 +1114,7 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
                           </div>
                           <div>
                             <label className="block text-xs text-gray-500 mb-1">节点编号</label>
-                            <input className="input w-full bg-gray-50" value={selectedPhase.order} disabled />
+                            <input className="input w-full bg-gray-50" value={extractPhaseCode(selectedPhase)} disabled />
                           </div>
                         </div>
                       )}
