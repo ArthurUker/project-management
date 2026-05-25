@@ -993,11 +993,22 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
 
   /**
    * 计算每个 phase 的显示编号（string），并行层级按 Y 排序（上方编号较小）
+   * 优先使用阶段名称中内嵌的原始编号（如"0.模板定位"→"0"，"2-1 适用产品"→"2-1"），
+   * 仅当名称中没有编号时才按拓扑位置自动生成。
    * @param phs phases list
    * @param nodePositions Map of node id to {x,y}
    */
+  const getOriginalPhaseCode = (name: string): string => {
+    const match = name.match(/^(\d+(?:[.\-]\d+)*)(?:[.、\-\s]|$)/);
+    return match?.[1] ?? '';
+  };
+
   const computeDisplayOrder = (phs: Phase[], nodePositions: Map<string, { x: number; y: number }>) => {
     const displayOrderMap = new Map<string, string>();
+
+    // 预先检查是否所有 phase 都有原始编号
+    const phaseById = new Map(phs.map(p => [p.id, p]));
+
     const inDegree = new Map<string, number>();
     const children = new Map<string, string[]>();
 
@@ -1029,8 +1040,16 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
         : current;
 
       sorted.forEach((id, subIndex) => {
-        if (isParallel) displayOrderMap.set(id, `${order}-${subIndex + 1}`);
-        else displayOrderMap.set(id, `${order}`);
+        // 优先使用阶段名称中已有的原始编号
+        const phase = phaseById.get(id);
+        const originalCode = phase ? getOriginalPhaseCode(phase.name) : '';
+        if (originalCode) {
+          displayOrderMap.set(id, originalCode);
+        } else if (isParallel) {
+          displayOrderMap.set(id, `${order}-${subIndex + 1}`);
+        } else {
+          displayOrderMap.set(id, `${order}`);
+        }
       });
 
       const next: string[] = [];
@@ -1073,8 +1092,8 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       data: {
         label: p.name,
         order: p.order ?? 1,
-        // initial displayOrder uses numeric order; layout will recompute actual strings
-        displayOrder: String(p.order ?? 1),
+        // 优先使用阶段名称中的原始编号，layout 后 computeDisplayOrder 会再次确认
+        displayOrder: getOriginalPhaseCode(p.name) || String(p.order ?? 1),
         taskCount: p.tasks?.length ?? 0,
         totalDays: p.totalDays ?? 0,
         enabled: p.enabled !== false,
