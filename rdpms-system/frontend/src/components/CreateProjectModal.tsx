@@ -231,7 +231,11 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
     try {
       const draft = JSON.parse(raw);
       const shouldRestore = window.confirm('检测到未完成的新建项目草稿，是否恢复继续编辑？');
-      if (!shouldRestore) return;
+      if (!shouldRestore) {
+        // 用户明确拒绝恢复，清除本地草稿，避免下次再弹
+        localStorage.removeItem(CREATE_PROJECT_DRAFT_KEY);
+        return;
+      }
 
       setStep(Number(draft.step) || 1);
       setName(draft.name || '');

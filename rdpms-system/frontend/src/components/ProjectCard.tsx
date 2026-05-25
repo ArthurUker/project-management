@@ -31,6 +31,7 @@ interface ProjectCardProps {
 
 // ── 状态色系统 ────────────────────────────────────────
 const STATUS_COLORS: Record<string, { color: string; bg: string; dot: string; border: string }> = {
+  '草稿':  { color: '#92400e', bg: 'rgba(245,158,11,0.12)', dot: '#f59e0b', border: 'rgba(245,158,11,0.35)' },
   '筹备中': { color: '#64748b', bg: 'rgba(100,116,139,0.10)', dot: '#94a3b8', border: 'rgba(100,116,139,0.25)' },
   '规划中': { color: '#64748b', bg: 'rgba(100,116,139,0.10)', dot: '#94a3b8', border: 'rgba(100,116,139,0.25)' },
   '进行中': { color: '#2563eb', bg: 'rgba(37,99,235,0.10)',   dot: '#3b82f6', border: 'rgba(59,130,246,0.30)'  },
