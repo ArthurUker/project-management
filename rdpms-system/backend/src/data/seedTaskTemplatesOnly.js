@@ -4,7 +4,7 @@
  * 使用场景：
  * - 在已有生产数据的服务器上，安全地初始化或更新任务模板
  * - 不影响项目、用户、报告等其他数据
- * - 支持增量更新（跳过已存在的模板）
+ * - 支持增量更新（已存在模板将自动覆盖为最新 seed 配置）
  * 
  * 用法：
  * cd backend
@@ -64,22 +64,44 @@ const seedTemplatesOnly = async () => {
     // 步骤3：初始化新模板
     log('Step 3: Initializing new task templates...', 'info');
     let created = 0;
+    let updated = 0;
     let skipped = 0;
     const errors = [];
     
     for (const tpl of SEED_TEMPLATES) {
       try {
-        // 检查模板是否已存在（按名称和分类）
+        // 检查模板是否已存在（名称在库内唯一）
         const exists = await prisma.taskTemplate.findFirst({
           where: { 
             name: tpl.name,
-            category: tpl.category,
           },
         });
         
         if (exists) {
-          skipped++;
-          log(`  ⊘ Skipped: ${tpl.name} (already exists)`, 'debug');
+          await prisma.taskTemplate.update({
+            where: { id: exists.id },
+            data: {
+              category: tpl.category,
+              description: tpl.description || null,
+              estimatedDays: tpl.estimatedDays || 0,
+              priority: tpl.priority || 'medium',
+              tags: Array.isArray(tpl.tags) ? tpl.tags.join(',') : (tpl.tags || null),
+              steps: {
+                deleteMany: {},
+                create: (tpl.steps || []).map((s, idx) => ({
+                  order: idx + 1,
+                  title: s.title,
+                  description: s.description || null,
+                  estimatedHours: s.estimatedHours || null,
+                  assigneeRole: s.assigneeRole || null,
+                  checklist: null,
+                })),
+              },
+            },
+          });
+
+          updated++;
+          log(`  ↺ Updated: ${tpl.name} (${(tpl.steps || []).length} steps)`, 'debug');
           continue;
         }
         
@@ -122,7 +144,8 @@ const seedTemplatesOnly = async () => {
     log('═══════════════════════════════════════', 'info');
     log(`✓ Task template initialization completed`, 'info');
     log(`  Created: ${created} new templates`, 'info');
-    log(`  Skipped: ${skipped} (already existed)`, 'info');
+    log(`  Updated: ${updated} existing templates`, 'info');
+    log(`  Skipped: ${skipped}`, 'info');
     log(`  Total templates now: ${final_count}`, 'info');
     log(`  Total steps: ${final_steps}`, 'info');
     
@@ -137,6 +160,7 @@ const seedTemplatesOnly = async () => {
     return {
       success: true,
       created,
+      updated,
       skipped,
       errors: errors.length,
       final: {
