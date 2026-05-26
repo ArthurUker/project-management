@@ -9,6 +9,10 @@ materials.use('*', authMiddleware);
 materials.get('/', async (c) => {
   try {
     const keyword = c.req.query('keyword');
+    const category = c.req.query('category');
+    const state = c.req.query('state');
+    const sortBy = c.req.query('sortBy');
+    const sortOrder = c.req.query('sortOrder') === 'desc' ? 'desc' : 'asc';
     const where = {};
     if (keyword) {
       where.OR = [
@@ -18,7 +22,30 @@ materials.get('/', async (c) => {
         { casNumber: { contains: keyword } },
       ];
     }
-    const list = await prisma.reagentMaterial.findMany({ where, orderBy: { commonName: 'asc' } });
+    if (category && category !== 'all') {
+      where.category = category;
+    }
+    if (state && state !== 'all') {
+      where.state = state;
+    }
+
+    const allowedSortFields = new Set([
+      'commonName',
+      'chineseName',
+      'englishName',
+      'category',
+      'casNumber',
+      'molecularFormula',
+      'mw',
+      'state',
+      'defaultStockConc',
+      'supplier',
+      'createdAt',
+      'updatedAt',
+    ]);
+    const orderBy = allowedSortFields.has(sortBy) ? { [sortBy]: sortOrder } : { commonName: 'asc' };
+
+    const list = await prisma.reagentMaterial.findMany({ where, orderBy });
     return c.json({ success: true, list });
   } catch (err) {
     console.error('获取试剂原料列表失败', err);

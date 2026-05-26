@@ -406,6 +406,7 @@ model ReagentMaterial {
   commonName       String   @unique
   chineseName      String?
   englishName      String?
+  category         String   @default("未分类")
   casNumber        String?
   molecularFormula String?
   mw               Float
@@ -423,6 +424,7 @@ model ReagentMaterial {
   components       FormulaComponent[] @relation("MaterialComponents")
 
   @@index([commonName])
+  @@index([category])
 }
 
 model ReagentFormula {

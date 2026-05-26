@@ -5,6 +5,7 @@ type DefaultMaterial = {
   commonName: string;
   chineseName: string;
   englishName: string;
+  category?: string;
   mw: number;
   state?: string;
   density?: number;
@@ -18,27 +19,27 @@ type DefaultMaterial = {
 };
 
 const DEFAULT_MATERIALS: DefaultMaterial[] = [
-  { commonName:'Tris', chineseName:'三羟甲基氨基甲烷', englishName:'Tris base', mw:121.14 },
-  { commonName:'NaCl', chineseName:'氯化钠', englishName:'Sodium Chloride', mw:58.44 },
-  { commonName:'KCl', chineseName:'氯化钾', englishName:'Potassium Chloride', mw:74.55 },
-  { commonName:'EDTA', chineseName:'乙二胺四乙酸二钠', englishName:'Ethylenediaminetetraacetic acid disodium salt', mw:372.24 },
-  { commonName:'MgCl2', chineseName:'氯化镁', englishName:'Magnesium Chloride', mw:203.30 },
-  { commonName:'CaCl2', chineseName:'氯化钙', englishName:'Calcium Chloride', mw:110.98 },
-  { commonName:'HEPES', chineseName:'羟乙基哌嗪乙硫磺酸', englishName:'4-(2-hydroxyethyl)-1-piperazineethanesulfonic acid', mw:238.30 },
-  { commonName:'SDS', chineseName:'十二烷基硫酸钠', englishName:'Sodium Dodecyl Sulfate', mw:288.38 },
-  { commonName:'DTT', chineseName:'二硫苏糖醇', englishName:'Dithiothreitol', mw:154.25 },
-  { commonName:'β-ME', chineseName:'β-巯基乙醇', englishName:'Beta-Mercaptoethanol', mw:78.13 },
-  { commonName:'GITC', chineseName:'异硫氰酸胍', englishName:'Guanidinium isothiocyanate', mw:118.16 },
-  { commonName:'尿素', chineseName:'尿素', englishName:'Urea', mw:60.06 },
-  { commonName:'蔗糖', chineseName:'蔗糖', englishName:'Sucrose', mw:342.30 },
-  { commonName:'甘油', chineseName:'甘油', englishName:'Glycerol', mw:92.09, state:'liquid', density:1.261 },
-  { commonName:'BSA', chineseName:'牛血清白蛋白', englishName:'Bovine Serum Albumin', mw:66430 },
-  { commonName:'Tween-20', chineseName:'吐温-20', englishName:'Polyoxyethylene sorbitan monolaurate', mw:1228.0, state:'liquid' },
-  { commonName:'Triton X-100', chineseName:'曲拉通X-100', englishName:'Polyethylene glycol tert-octylphenyl ether', mw:625.0, state:'liquid' },
-  { commonName:'NaOH', chineseName:'氢氧化钠', englishName:'Sodium Hydroxide', mw:40.00 },
-  { commonName:'HCl', chineseName:'盐酸', englishName:'Hydrochloric acid', mw:36.46, state:'liquid', density:1.19 },
-  { commonName:'KH2PO4', chineseName:'磷酸二氢钾', englishName:'Potassium dihydrogen phosphate', mw:136.09 },
-  { commonName:'Na2HPO4', chineseName:'磷酸氢二钠', englishName:'Disodium hydrogen phosphate', mw:141.96 },
+  { commonName:'Tris', chineseName:'三羟甲基氨基甲烷', englishName:'Tris base', category:'缓冲体系', mw:121.14 },
+  { commonName:'NaCl', chineseName:'氯化钠', englishName:'Sodium Chloride', category:'盐类', mw:58.44 },
+  { commonName:'KCl', chineseName:'氯化钾', englishName:'Potassium Chloride', category:'盐类', mw:74.55 },
+  { commonName:'EDTA', chineseName:'乙二胺四乙酸二钠', englishName:'Ethylenediaminetetraacetic acid disodium salt', category:'螯合剂', mw:372.24 },
+  { commonName:'MgCl2', chineseName:'氯化镁', englishName:'Magnesium Chloride', category:'盐类', mw:203.30 },
+  { commonName:'CaCl2', chineseName:'氯化钙', englishName:'Calcium Chloride', category:'盐类', mw:110.98 },
+  { commonName:'HEPES', chineseName:'羟乙基哌嗪乙硫磺酸', englishName:'4-(2-hydroxyethyl)-1-piperazineethanesulfonic acid', category:'缓冲体系', mw:238.30 },
+  { commonName:'SDS', chineseName:'十二烷基硫酸钠', englishName:'Sodium Dodecyl Sulfate', category:'去污剂', mw:288.38 },
+  { commonName:'DTT', chineseName:'二硫苏糖醇', englishName:'Dithiothreitol', category:'稳定剂', mw:154.25 },
+  { commonName:'β-ME', chineseName:'β-巯基乙醇', englishName:'Beta-Mercaptoethanol', category:'稳定剂', mw:78.13 },
+  { commonName:'GITC', chineseName:'异硫氰酸胍', englishName:'Guanidinium isothiocyanate', category:'变性剂', mw:118.16 },
+  { commonName:'尿素', chineseName:'尿素', englishName:'Urea', category:'变性剂', mw:60.06 },
+  { commonName:'蔗糖', chineseName:'蔗糖', englishName:'Sucrose', category:'稳定剂', mw:342.30 },
+  { commonName:'甘油', chineseName:'甘油', englishName:'Glycerol', category:'稳定剂', mw:92.09, state:'liquid', density:1.261 },
+  { commonName:'BSA', chineseName:'牛血清白蛋白', englishName:'Bovine Serum Albumin', category:'酶/蛋白', mw:66430 },
+  { commonName:'Tween-20', chineseName:'吐温-20', englishName:'Polyoxyethylene sorbitan monolaurate', category:'去污剂', mw:1228.0, state:'liquid' },
+  { commonName:'Triton X-100', chineseName:'曲拉通X-100', englishName:'Polyethylene glycol tert-octylphenyl ether', category:'去污剂', mw:625.0, state:'liquid' },
+  { commonName:'NaOH', chineseName:'氢氧化钠', englishName:'Sodium Hydroxide', category:'pH调节剂', mw:40.00 },
+  { commonName:'HCl', chineseName:'盐酸', englishName:'Hydrochloric acid', category:'pH调节剂', mw:36.46, state:'liquid', density:1.19 },
+  { commonName:'KH2PO4', chineseName:'磷酸二氢钾', englishName:'Potassium dihydrogen phosphate', category:'盐类', mw:136.09 },
+  { commonName:'Na2HPO4', chineseName:'磷酸氢二钠', englishName:'Disodium hydrogen phosphate', category:'盐类', mw:141.96 },
 ];
 
 const STOCK_UNIT_OPTIONS = [
@@ -47,6 +48,8 @@ const STOCK_UNIT_OPTIONS = [
   { value: '%', label: '% (m/v)' },
   { value: 'mg/mL', label: 'mg/mL' },
 ];
+
+const CATEGORY_OPTIONS = ['未分类', '缓冲体系', '盐类', '去污剂', '变性剂', '螯合剂', '稳定剂', '酶/蛋白', 'pH调节剂', '染料/指示剂', '其他'];
 
 export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: number; hideTopButton?: boolean }) {
   // openKey: 当父组件需要触发打开新建抽屉时，传入一个不断递增的数值即可触发打开
@@ -65,6 +68,10 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
   const [list, setList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [stateFilter, setStateFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('commonName');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [editing, setEditing] = useState<any | null>(null);
   const [showDrawer, setShowDrawer] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -90,10 +97,22 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
     setEditing(null);
   };
 
+  const categoryOptions = React.useMemo(() => {
+    const merged = new Set(CATEGORY_OPTIONS);
+    list.forEach((item) => merged.add(item.category || '未分类'));
+    return Array.from(merged);
+  }, [list]);
+
   const load = async () => {
     setLoading(true);
     try {
-      const res = await reagentMaterialsAPI.list({ keyword });
+      const res = await reagentMaterialsAPI.list({
+        keyword,
+        category: categoryFilter,
+        state: stateFilter,
+        sortBy,
+        sortOrder,
+      });
       const items = res.list || [];
 
       // 如果数据库为空，按需初始化默认数据
@@ -104,6 +123,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
               commonName: m.commonName,
               chineseName: m.chineseName || null,
               englishName: m.englishName || null,
+              category: m.category || '未分类',
               casNumber: m.casNumber || null,
               molecularFormula: m.molecularFormula || null,
               mw: m.mw,
@@ -119,10 +139,19 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
             // ignore
           }
         }
-        const res2 = await reagentMaterialsAPI.list({ keyword });
-        setList(res2.list || []);
+        const res2 = await reagentMaterialsAPI.list({
+          keyword,
+          category: categoryFilter,
+          state: stateFilter,
+          sortBy,
+          sortOrder,
+        });
+        const nextList = res2.list || [];
+        setList(nextList);
+        setSelectedIds(prev => prev.filter(id => nextList.some((item: any) => item.id === id)));
       } else {
         setList(items);
+        setSelectedIds(prev => prev.filter(id => items.some((item: any) => item.id === id)));
       }
       // 恢复保存前的滚动位置
       if (savedScrollRef.current !== null) {
@@ -138,7 +167,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [categoryFilter, stateFilter, sortBy, sortOrder]);
 
   const openNew = () => { setEditing(null); setShowDrawer(true); };
 
@@ -209,19 +238,72 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
     return 'bg-gray-100 text-gray-700';
   };
 
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+      return;
+    }
+    setSortBy(field);
+    setSortOrder('asc');
+  };
+
+  const renderSortHeader = (field: string, label: string) => {
+    const isActive = sortBy === field;
+    return (
+      <button
+        type="button"
+        className={`flex items-center gap-1 font-semibold ${isActive ? 'text-primary-700' : 'text-gray-900'}`}
+        onClick={() => handleSort(field)}
+      >
+        <span>{label}</span>
+        <span className={`text-xs ${isActive ? 'text-primary-600' : 'text-gray-400'}`}>{isActive ? (sortOrder === 'asc' ? '↑' : '↓') : '↕'}</span>
+      </button>
+    );
+  };
+
   return (
     <div ref={containerRef}>
-      {!hideTopButton && (
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <input className="border p-2 rounded" placeholder="搜索常用名/中文名/英文名/CAS号" value={keyword} onChange={e => setKeyword(e.target.value)} />
-            <button className="btn" onClick={load}>搜索</button>
-          </div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            className="border p-2 rounded"
+            placeholder="搜索常用名/中文名/英文名/CAS号"
+            value={keyword}
+            onChange={e => setKeyword(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && load()}
+          />
+          <select className="border p-2 rounded bg-white" value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}>
+            <option value="all">全部分类</option>
+            {categoryOptions.map(category => (
+              <option key={category} value={category}>{category}</option>
+            ))}
+          </select>
+          <select className="border p-2 rounded bg-white" value={stateFilter} onChange={e => setStateFilter(e.target.value)}>
+            <option value="all">全部物态</option>
+            <option value="solid">固体</option>
+            <option value="liquid">液体</option>
+            <option value="solution">溶液</option>
+          </select>
+          <button className="btn" onClick={load}>搜索</button>
+          <button
+            type="button"
+            className="px-3 py-2 rounded border border-gray-200 text-gray-600 hover:bg-gray-50"
+            onClick={() => {
+              setCategoryFilter('all');
+              setStateFilter('all');
+              setSortBy('commonName');
+              setSortOrder('asc');
+            }}
+          >
+            重置筛选
+          </button>
+        </div>
+        {!hideTopButton && (
           <div>
             <button className="btn btn-primary" onClick={openNew}>+ 新增试剂原料</button>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-4">
@@ -237,30 +319,32 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <table className="min-w-[1200px] w-full table-auto border-collapse">
+        <table className="min-w-[1320px] w-full table-auto border-collapse">
           <thead className="sticky top-0 bg-gray-100 z-10">
             <tr className="bg-gray-100">
               <th className="p-2 text-left"> </th>
-              <th className="p-2 text-left">常用名</th>
-              <th className="p-2 text-left">中文名称</th>
-              <th className="p-2 text-left">英文名称</th>
-              <th className="p-2 text-left">CAS号</th>
-              <th className="p-2 text-left">分子式</th>
-              <th className="p-2 text-left">MW (g/mol)</th>
-              <th className="p-2 text-left">物态</th>
-              <th className="p-2 text-left">默认储液浓度</th>
-              <th className="p-2 text-left">供应商</th>
+              <th className="p-2 text-left">{renderSortHeader('commonName', '常用名')}</th>
+              <th className="p-2 text-left">{renderSortHeader('chineseName', '中文名称')}</th>
+              <th className="p-2 text-left">{renderSortHeader('englishName', '英文名称')}</th>
+              <th className="p-2 text-left">{renderSortHeader('category', '试剂分类')}</th>
+              <th className="p-2 text-left">{renderSortHeader('casNumber', 'CAS号')}</th>
+              <th className="p-2 text-left">{renderSortHeader('molecularFormula', '分子式')}</th>
+              <th className="p-2 text-left">{renderSortHeader('mw', 'MW (g/mol)')}</th>
+              <th className="p-2 text-left">{renderSortHeader('state', '物态')}</th>
+              <th className="p-2 text-left">{renderSortHeader('defaultStockConc', '默认储液浓度')}</th>
+              <th className="p-2 text-left">{renderSortHeader('supplier', '供应商')}</th>
               <th className="p-2 text-left">操作</th>
             </tr>
           </thead>
           <tbody>
-            {loading ? <tr><td colSpan={11} className="p-4 text-center text-gray-500">加载中...</td></tr> : (
+            {loading ? <tr><td colSpan={12} className="p-4 text-center text-gray-500">加载中...</td></tr> : (
               list.map((r:any) => (
                 <tr key={r.id} className="border-t border-gray-100 bg-white">
                   <td className="p-2"><input type="checkbox" checked={selectedIds.includes(r.id)} onChange={() => toggleSelect(r.id)} /></td>
                   <td className="p-2 whitespace-nowrap">{r.commonName || r.name}</td>
                   <td className="p-2 whitespace-nowrap">{r.chineseName || ''}</td>
                   <td className="p-2">{r.englishName || ''}</td>
+                  <td className="p-2 whitespace-nowrap">{r.category || '未分类'}</td>
                   <td className="p-2 whitespace-nowrap">{r.casNumber || ''}</td>
                   <td className="p-2 whitespace-nowrap">{r.molecularFormula || ''}</td>
                   <td className="p-2 whitespace-nowrap">{r.mw ?? '-'}</td>
@@ -320,6 +404,14 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
                       <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700">英文名称</label>
                         <input name="englishName" defaultValue={editing?.englishName || ''} placeholder="填写英文名称" className="input" />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">试剂分类</label>
+                        <select name="category" defaultValue={editing?.category || '未分类'} className="input bg-white">
+                          {categoryOptions.map(category => (
+                            <option key={category} value={category}>{category}</option>
+                          ))}
+                        </select>
                       </div>
                       <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700">CAS号</label>
@@ -403,6 +495,10 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
                       <div>
                         <div className="text-xs uppercase tracking-wide text-gray-400">双语名称</div>
                         <div className="mt-1 leading-6">{editing?.chineseName || '未填写'} / {editing?.englishName || '未填写'}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs uppercase tracking-wide text-gray-400">试剂分类</div>
+                        <div className="mt-1 leading-6">{editing?.category || '未分类'}</div>
                       </div>
                       <div>
                         <div className="text-xs uppercase tracking-wide text-gray-400">当前理化属性</div>
