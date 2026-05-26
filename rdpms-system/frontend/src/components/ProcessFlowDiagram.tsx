@@ -1176,7 +1176,10 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
 
     const isInitialRender = !hasInitialAutoFitRef.current;
     const initialLayoutMode = DEFAULT_INITIAL_LAYOUT_MODE;
-    const shouldRespectSavedPositions = hasAllSavedPositions && !isInitialRender;
+    // After first render, keep current on-canvas positions as source of truth.
+    // This prevents whole-graph relayout from overriding newly inserted node positions.
+    const hasCurrentCanvasPositions = currentNodes.length > 0;
+    const shouldRespectSavedPositions = !isInitialRender && (hasAllSavedPositions || hasCurrentCanvasPositions);
 
     const { nodes: ln, edges: le } = shouldRespectSavedPositions
       ? { nodes: rawNodes, edges: mergedEdges }
