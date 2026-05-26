@@ -1528,15 +1528,31 @@ export default function TemplateEditor() {
                       <textarea rows={3} placeholder="自定义提醒文案，作为节点二次确认框内容展示" className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none" value={selectedPhase.completionTip || ''} onChange={(e) => updatePhase(selectedPhase.id, { completionTip: e.target.value })} />
                     </div>
 
-                    <div className="space-y-3">
-                      {[{ key: 'allowSkip', label: '允许跳过节点' },{ key: 'showProgress', label: '展示估分排期填写入口' },{ key: 'requireActualHours', label: '节点需填写实际工时' }].map(({ key, label }) => (
-                        <div key={key} className="flex items-center justify-between">
-                          <span className="text-xs text-gray-600">{label}</span>
-                          <button onClick={() => updatePhase(selectedPhase.id, { [key]: !((selectedPhase as any)[key]) })} className={`relative w-8 h-4 rounded-full transition-colors ${((selectedPhase as any)[key]) ? 'bg-blue-500' : 'bg-gray-200'}`}>
-                            <span className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-transform ${((selectedPhase as any)[key]) ? 'translate-x-4' : 'translate-x-0.5'}`} />
-                          </button>
-                        </div>
-                      ))}
+                    <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                      <div className="mb-2 text-[11px] text-gray-400">开关说明：蓝色表示已开启，灰色表示已关闭。</div>
+                      <div className="space-y-2">
+                        {[{ key: 'allowSkip', label: '允许跳过节点' },{ key: 'showProgress', label: '展示估分排期填写入口' },{ key: 'requireActualHours', label: '节点需填写实际工时' }].map(({ key, label }) => {
+                          const enabled = !!(selectedPhase as any)[key];
+                          return (
+                            <div key={key} className="flex items-center justify-between rounded-md bg-white px-2.5 py-2 border border-gray-100">
+                              <span className="text-xs text-gray-600">{label}</span>
+                              <div className="flex items-center gap-2">
+                                <span className={`text-[11px] font-medium ${enabled ? 'text-blue-600' : 'text-gray-400'}`}>{enabled ? '已开启' : '已关闭'}</span>
+                                <button
+                                  type="button"
+                                  role="switch"
+                                  aria-checked={enabled}
+                                  aria-label={label}
+                                  onClick={() => updatePhase(selectedPhase.id, { [key]: !enabled })}
+                                  className={`relative w-10 h-5 rounded-full transition-colors ${enabled ? 'bg-blue-500' : 'bg-gray-300'}`}
+                                >
+                                  <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
 
                     <div>
