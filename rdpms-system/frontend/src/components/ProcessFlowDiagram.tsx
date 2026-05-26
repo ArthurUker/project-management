@@ -54,6 +54,7 @@ interface ProcessFlowDiagramProps {
   onDropInsertBefore?: (draggedId: string, targetId: string, x?: number, y?: number) => void;
   onNodePositionChange?: (phaseId: string, x: number, y: number) => void;
   onNodesPositionChange?: (positions: Array<{ id: string; x: number; y: number }>) => void;
+  onRegisterViewportCenterGetter?: (getter: (() => { x: number; y: number }) | null) => void;
   readonly?: boolean;
 }
 
@@ -892,11 +893,13 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
   onDropInsertBefore,
   onNodePositionChange,
   onNodesPositionChange,
+  onRegisterViewportCenterGetter,
   readonly = false,
 }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const { fitView, getNodes, getEdges } = useReactFlow();
+  const { fitView, getNodes, getEdges, getViewport, screenToFlowPosition } = useReactFlow();
+  const flowWrapperRef = useRef<HTMLDivElement>(null);
 
   // drag-to-snap: disabled (set to 0 so menu never triggers; users connect via handles)
   const [dragOverNodeId, setDragOverNodeId] = useState<string | null>(null);
@@ -1331,8 +1334,33 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     [phases, onPhaseClick]
   );
 
+  useEffect(() => {
+    if (!onRegisterViewportCenterGetter) return;
+
+    const getter = () => {
+      const wrapper = flowWrapperRef.current;
+      if (wrapper) {
+        const rect = wrapper.getBoundingClientRect();
+        return screenToFlowPosition({
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2,
+        });
+      }
+
+      // Fallback: derive center from viewport transform
+      const viewport = getViewport();
+      return {
+        x: -viewport.x / viewport.zoom,
+        y: -viewport.y / viewport.zoom,
+      };
+    };
+
+    onRegisterViewportCenterGetter(getter);
+    return () => onRegisterViewportCenterGetter(null);
+  }, [onRegisterViewportCenterGetter, screenToFlowPosition, getViewport]);
+
   return (
-    <>
+    <div ref={flowWrapperRef} className="w-full h-full">
     <svg style={{ position: 'absolute', top: 0, left: 0, width: 0, height: 0 }}>
       <defs>
         <marker id="arrow-default" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
@@ -1568,7 +1596,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       </>
     )}
 
-    </>
+    </div>
   );
 };
 

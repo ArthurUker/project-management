@@ -1015,11 +1015,67 @@ export default function TemplateEditor() {
     setActiveTab(0);
   }, [phases]);
 
+  const viewportCenterGetterRef = useRef<(() => { x: number; y: number }) | null>(null);
+
+  const getNewPhasePosition = useCallback(() => {
+    const center = viewportCenterGetterRef.current?.();
+
+    // fallback: place after right-most phase if center is unavailable
+    const existingX = phases
+      .map((p) => (typeof p.x === 'number' ? p.x : null))
+      .filter((v): v is number => v !== null);
+    const existingY = phases
+      .map((p) => (typeof p.y === 'number' ? p.y : null))
+      .filter((v): v is number => v !== null);
+
+    const fallbackX = existingX.length > 0 ? Math.max(...existingX) + 220 : 0;
+    const fallbackY = existingY.length > 0 ? existingY[Math.floor(existingY.length / 2)] : 0;
+
+    const base = {
+      x: center?.x ?? fallbackX,
+      y: center?.y ?? fallbackY,
+    };
+
+    const occupied = phases
+      .map((p) => ({
+        x: typeof p.x === 'number' ? p.x : null,
+        y: typeof p.y === 'number' ? p.y : null,
+      }))
+      .filter((pos): pos is { x: number; y: number } => pos.x !== null && pos.y !== null);
+
+    const offsets = [
+      { x: 0, y: 0 },
+      { x: 0, y: 96 },
+      { x: 0, y: -96 },
+      { x: 180, y: 0 },
+      { x: -180, y: 0 },
+      { x: 180, y: 96 },
+      { x: 180, y: -96 },
+      { x: -180, y: 96 },
+      { x: -180, y: -96 },
+    ];
+
+    const isOccupied = (x: number, y: number) => {
+      return occupied.some((pos) => Math.abs(pos.x - x) < 140 && Math.abs(pos.y - y) < 72);
+    };
+
+    for (const offset of offsets) {
+      const x = base.x + offset.x;
+      const y = base.y + offset.y;
+      if (!isOccupied(x, y)) return { x, y };
+    }
+
+    return { x: base.x + 220, y: base.y + 120 };
+  }, [phases]);
+
   function addPhase() {
+    const position = getNewPhasePosition();
     const newPhase: Phase = {
       id: `phase_${Date.now()}`,
       name: '新阶段',
       order: phases.length + 1,
+      x: position.x,
+      y: position.y,
       type: 'normal',
       source: 'self',
       enabled: true,
@@ -1030,6 +1086,8 @@ export default function TemplateEditor() {
     };
     const updated = [...phases, newPhase];
     setPhases(updated);
+    setSelectedPhaseId(newPhase.id);
+    setActiveTab(0);
   }
 
   const handleNodePositionChange = useCallback((phaseId: string, x: number, y: number) => {
@@ -1327,6 +1385,9 @@ export default function TemplateEditor() {
               <ProcessFlowDiagram
                 phases={flowPhases}
                 readonly={false}
+                onRegisterViewportCenterGetter={(getter) => {
+                  viewportCenterGetterRef.current = getter;
+                }}
                 onPhaseConnect={handlePhaseConnect}
                 onPhaseClick={handlePhaseClick}
                 onAddParallel={handleAddParallel}

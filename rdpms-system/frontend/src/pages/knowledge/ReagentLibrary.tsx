@@ -1,6 +1,27 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { reagentMaterialsAPI } from '../../api/client';
 
+type ColumnKey =
+  | 'commonName'
+  | 'chineseName'
+  | 'englishName'
+  | 'category'
+  | 'casNumber'
+  | 'molecularFormula'
+  | 'mw'
+  | 'state'
+  | 'defaultStockConc'
+  | 'supplier';
+
+type TableColumn = {
+  key: ColumnKey;
+  label: string;
+  sortField: string;
+  thClassName?: string;
+  tdClassName?: string;
+  renderCell: (row: any) => React.ReactNode;
+};
+
 type DefaultMaterial = {
   commonName: string;
   chineseName: string;
@@ -50,6 +71,19 @@ const STOCK_UNIT_OPTIONS = [
 ];
 
 const CATEGORY_OPTIONS = ['未分类', '缓冲体系', '盐类', '去污剂', '变性剂', '螯合剂', '稳定剂', '酶/蛋白', 'pH调节剂', '染料/指示剂', '其他'];
+const COLUMN_ORDER_STORAGE_KEY = 'reagentLibrary:columnOrder';
+const DEFAULT_COLUMN_ORDER: ColumnKey[] = [
+  'commonName',
+  'chineseName',
+  'englishName',
+  'category',
+  'casNumber',
+  'molecularFormula',
+  'mw',
+  'state',
+  'defaultStockConc',
+  'supplier',
+];
 
 export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: number; hideTopButton?: boolean }) {
   // openKey: 当父组件需要触发打开新建抽屉时，传入一个不断递增的数值即可触发打开
@@ -79,6 +113,8 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
   const [confirmTargets, setConfirmTargets] = useState<any[]>([]);
   const [showForceConfirm, setShowForceConfirm] = useState(false);
   const [forceDetails, setForceDetails] = useState<any[]>([]);
+  const [showColumnSettings, setShowColumnSettings] = useState(false);
+  const [columnOrder, setColumnOrder] = useState<ColumnKey[]>(DEFAULT_COLUMN_ORDER);
 
   // 滚动位置保持：编辑保存后恢复原位
   const containerRef = useRef<HTMLDivElement>(null);
@@ -102,6 +138,33 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
     list.forEach((item) => merged.add(item.category || '未分类'));
     return Array.from(merged);
   }, [list]);
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(COLUMN_ORDER_STORAGE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return;
+
+      const incoming = parsed.filter((item): item is ColumnKey => DEFAULT_COLUMN_ORDER.includes(item));
+      const missing = DEFAULT_COLUMN_ORDER.filter((item) => !incoming.includes(item));
+      const nextOrder = [...incoming, ...missing];
+
+      if (nextOrder.length === DEFAULT_COLUMN_ORDER.length) {
+        setColumnOrder(nextOrder);
+      }
+    } catch (err) {
+      // ignore invalid local storage data
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(COLUMN_ORDER_STORAGE_KEY, JSON.stringify(columnOrder));
+    } catch (err) {
+      // ignore write failure
+    }
+  }, [columnOrder]);
 
   const load = async () => {
     setLoading(true);
@@ -261,6 +324,106 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
     );
   };
 
+  const moveColumn = (key: ColumnKey, direction: 'left' | 'right') => {
+    setColumnOrder((prev) => {
+      const index = prev.indexOf(key);
+      if (index === -1) return prev;
+
+      if (direction === 'left' && index === 0) return prev;
+      if (direction === 'right' && index === prev.length - 1) return prev;
+
+      const targetIndex = direction === 'left' ? index - 1 : index + 1;
+      const next = [...prev];
+      const [item] = next.splice(index, 1);
+      next.splice(targetIndex, 0, item);
+      return next;
+    });
+  };
+
+  const resetColumnOrder = () => {
+    setColumnOrder(DEFAULT_COLUMN_ORDER);
+  };
+
+  const columnsByKey = React.useMemo<Record<ColumnKey, TableColumn>>(() => ({
+    commonName: {
+      key: 'commonName',
+      label: '常用名',
+      sortField: 'commonName',
+      tdClassName: 'p-2 whitespace-nowrap',
+      renderCell: (row) => row.commonName || row.name,
+    },
+    chineseName: {
+      key: 'chineseName',
+      label: '中文名称',
+      sortField: 'chineseName',
+      tdClassName: 'p-2 whitespace-nowrap',
+      renderCell: (row) => row.chineseName || '',
+    },
+    englishName: {
+      key: 'englishName',
+      label: '英文名称',
+      sortField: 'englishName',
+      tdClassName: 'p-2',
+      renderCell: (row) => row.englishName || '',
+    },
+    category: {
+      key: 'category',
+      label: '试剂分类',
+      sortField: 'category',
+      tdClassName: 'p-2 whitespace-nowrap',
+      renderCell: (row) => row.category || '未分类',
+    },
+    casNumber: {
+      key: 'casNumber',
+      label: 'CAS号',
+      sortField: 'casNumber',
+      tdClassName: 'p-2 whitespace-nowrap',
+      renderCell: (row) => row.casNumber || '',
+    },
+    molecularFormula: {
+      key: 'molecularFormula',
+      label: '分子式',
+      sortField: 'molecularFormula',
+      tdClassName: 'p-2 whitespace-nowrap',
+      renderCell: (row) => row.molecularFormula || '',
+    },
+    mw: {
+      key: 'mw',
+      label: 'MW (g/mol)',
+      sortField: 'mw',
+      tdClassName: 'p-2 whitespace-nowrap',
+      renderCell: (row) => row.mw ?? '-',
+    },
+    state: {
+      key: 'state',
+      label: '物态',
+      sortField: 'state',
+      tdClassName: 'p-2 whitespace-nowrap',
+      renderCell: (row) => (
+        <span className={`px-2 py-1 rounded-full text-xs ${stateBadge(row.state)}`}>{row.state}</span>
+      ),
+    },
+    defaultStockConc: {
+      key: 'defaultStockConc',
+      label: '默认储液浓度',
+      sortField: 'defaultStockConc',
+      tdClassName: 'p-2 whitespace-nowrap',
+      renderCell: (row) => (row.defaultStockConc != null ? `${row.defaultStockConc}${row.defaultStockUnit ? ' ' + row.defaultStockUnit : ''}` : '-'),
+    },
+    supplier: {
+      key: 'supplier',
+      label: '供应商',
+      sortField: 'supplier',
+      tdClassName: 'p-2',
+      renderCell: (row) => row.supplier || '',
+    },
+  }), []);
+
+  const orderedColumns = React.useMemo(
+    () => columnOrder.map((key) => columnsByKey[key]).filter(Boolean),
+    [columnOrder, columnsByKey]
+  );
+
   return (
     <div ref={containerRef}>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -299,8 +462,26 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
           </button>
         </div>
         {!hideTopButton && (
-          <div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="px-3 py-2 rounded border border-gray-200 text-gray-600 hover:bg-gray-50"
+              onClick={() => setShowColumnSettings(true)}
+            >
+              列设置
+            </button>
             <button className="btn btn-primary" onClick={openNew}>+ 新增试剂原料</button>
+          </div>
+        )}
+        {hideTopButton && (
+          <div>
+            <button
+              type="button"
+              className="px-3 py-2 rounded border border-gray-200 text-gray-600 hover:bg-gray-50"
+              onClick={() => setShowColumnSettings(true)}
+            >
+              列设置
+            </button>
           </div>
         )}
       </div>
@@ -323,34 +504,22 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
           <thead className="sticky top-0 bg-gray-100 z-10">
             <tr className="bg-gray-100">
               <th className="p-2 text-left"> </th>
-              <th className="p-2 text-left">{renderSortHeader('commonName', '常用名')}</th>
-              <th className="p-2 text-left">{renderSortHeader('chineseName', '中文名称')}</th>
-              <th className="p-2 text-left">{renderSortHeader('englishName', '英文名称')}</th>
-              <th className="p-2 text-left">{renderSortHeader('category', '试剂分类')}</th>
-              <th className="p-2 text-left">{renderSortHeader('casNumber', 'CAS号')}</th>
-              <th className="p-2 text-left">{renderSortHeader('molecularFormula', '分子式')}</th>
-              <th className="p-2 text-left">{renderSortHeader('mw', 'MW (g/mol)')}</th>
-              <th className="p-2 text-left">{renderSortHeader('state', '物态')}</th>
-              <th className="p-2 text-left">{renderSortHeader('defaultStockConc', '默认储液浓度')}</th>
-              <th className="p-2 text-left">{renderSortHeader('supplier', '供应商')}</th>
+              {orderedColumns.map((column) => (
+                <th key={column.key} className={`p-2 text-left ${column.thClassName || ''}`}>
+                  {renderSortHeader(column.sortField, column.label)}
+                </th>
+              ))}
               <th className="p-2 text-left">操作</th>
             </tr>
           </thead>
           <tbody>
-            {loading ? <tr><td colSpan={12} className="p-4 text-center text-gray-500">加载中...</td></tr> : (
+            {loading ? <tr><td colSpan={orderedColumns.length + 2} className="p-4 text-center text-gray-500">加载中...</td></tr> : (
               list.map((r:any) => (
                 <tr key={r.id} className="border-t border-gray-100 bg-white">
                   <td className="p-2"><input type="checkbox" checked={selectedIds.includes(r.id)} onChange={() => toggleSelect(r.id)} /></td>
-                  <td className="p-2 whitespace-nowrap">{r.commonName || r.name}</td>
-                  <td className="p-2 whitespace-nowrap">{r.chineseName || ''}</td>
-                  <td className="p-2">{r.englishName || ''}</td>
-                  <td className="p-2 whitespace-nowrap">{r.category || '未分类'}</td>
-                  <td className="p-2 whitespace-nowrap">{r.casNumber || ''}</td>
-                  <td className="p-2 whitespace-nowrap">{r.molecularFormula || ''}</td>
-                  <td className="p-2 whitespace-nowrap">{r.mw ?? '-'}</td>
-                  <td className="p-2 whitespace-nowrap"><span className={`px-2 py-1 rounded-full text-xs ${stateBadge(r.state)}`}>{r.state}</span></td>
-                  <td className="p-2 whitespace-nowrap">{r.defaultStockConc != null ? `${r.defaultStockConc}${r.defaultStockUnit ? ' ' + r.defaultStockUnit : ''}` : '-'}</td>
-                  <td className="p-2">{r.supplier || ''}</td>
+                  {orderedColumns.map((column) => (
+                    <td key={column.key} className={column.tdClassName || 'p-2'}>{column.renderCell(r)}</td>
+                  ))}
                   <td className="p-2 whitespace-nowrap">
                     <button className="mr-2 text-primary-600" onClick={() => { setEditing(r); setShowDrawer(true); }}>编辑</button>
                   </td>
@@ -524,6 +693,80 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
                 <button type="submit" className="btn btn-primary">保存</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showColumnSettings && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 py-6">
+          <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-white/60 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
+            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">列顺序设置</h3>
+                <p className="mt-1 text-sm text-gray-500">把高频信息左移，低频信息右移。设置会自动保存到当前浏览器。</p>
+              </div>
+              <button
+                type="button"
+                className="text-gray-400 hover:text-gray-700"
+                onClick={() => setShowColumnSettings(false)}
+                aria-label="关闭列设置"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="max-h-[60vh] overflow-y-auto px-5 py-4">
+              <div className="space-y-2">
+                {columnOrder.map((key, index) => {
+                  const column = columnsByKey[key];
+                  return (
+                    <div key={key} className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white text-xs text-gray-500">{index + 1}</span>
+                        <span>{column.label}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          className="rounded border border-gray-200 px-2 py-1 text-sm text-gray-600 hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                          disabled={index === 0}
+                          onClick={() => moveColumn(key, 'left')}
+                        >
+                          左移
+                        </button>
+                        <button
+                          type="button"
+                          className="rounded border border-gray-200 px-2 py-1 text-sm text-gray-600 hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                          disabled={index === columnOrder.length - 1}
+                          onClick={() => moveColumn(key, 'right')}
+                        >
+                          右移
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between border-t border-gray-100 px-5 py-4">
+              <button
+                type="button"
+                className="rounded border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50"
+                onClick={resetColumnOrder}
+              >
+                恢复默认顺序
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={() => setShowColumnSettings(false)}
+              >
+                完成
+              </button>
+            </div>
           </div>
         </div>
       )}
