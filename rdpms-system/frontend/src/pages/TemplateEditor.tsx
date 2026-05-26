@@ -1140,12 +1140,15 @@ export default function TemplateEditor() {
     });
   }
 
-  async function saveTemplate() {
+  async function persistTemplate(options?: { silent?: boolean }) {
+    const silent = options?.silent === true;
     if (!template) return;
     const templateName = (editingTitle ? titleDraft : (template as any).name || '').trim();
     if (!templateName) {
-      alert('模版名称不能为空');
-      return;
+      if (!silent) {
+        alert('模版名称不能为空');
+      }
+      return false;
     }
 
     const content = {
@@ -1190,14 +1193,40 @@ export default function TemplateEditor() {
       setTemplate((t: any) => ({ ...t, name: templateName }));
       setTitleDraft(templateName);
       setEditingTitle(false);
-      alert('模版已保存！');
+      if (!silent) {
+        alert('模版已保存！');
+      }
+      return true;
     } catch (e) {
       console.error(e);
       alert('保存失败');
+      return false;
     } finally {
       setSaving(false);
     }
   }
+
+  async function saveTemplate() {
+    await persistTemplate();
+  }
+
+  const closePhaseEditorWithSave = useCallback(async () => {
+    const ok = await persistTemplate({ silent: true });
+    if (ok) {
+      setSelectedPhaseId(null);
+    }
+  }, [template, editingTitle, titleDraft, phases, milestones]);
+
+  const handlePhaseEditorKeyDown = useCallback(async (e: React.KeyboardEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const tag = target.tagName;
+    const isInputLike = tag === 'INPUT' || tag === 'SELECT';
+
+    if (e.key === 'Enter' && isInputLike && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
+      e.preventDefault();
+      await closePhaseEditorWithSave();
+    }
+  }, [closePhaseEditorWithSave]);
 
   // selectedPhase 从 phases 派生，确保编辑后右侧面板实时更新
   const selectedPhase = phases.find(p => p.id === selectedPhaseId) ?? null;
@@ -1451,17 +1480,18 @@ export default function TemplateEditor() {
           <div
             className="fixed inset-0 z-50 flex items-center justify-center"
             style={{ background: 'rgba(15,23,42,0.45)' }}
-            onClick={() => setSelectedPhaseId(null)}
+            onClick={() => { void closePhaseEditorWithSave(); }}
           >
             <div
               className="flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden"
               style={{ width: 'min(90vw, 860px)', height: 'min(85vh, 720px)' }}
               onClick={e => e.stopPropagation()}
+              onKeyDown={(e) => { void handlePhaseEditorKeyDown(e); }}
             >
               {/* 弹窗顶部 */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
                 <h3 className="text-sm font-semibold text-gray-800 truncate">{selectedPhase.name}</h3>
-                <button onClick={() => setSelectedPhaseId(null)} className="p-1 rounded hover:bg-gray-100 text-gray-400">✕</button>
+                <button onClick={() => { void closePhaseEditorWithSave(); }} className="p-1 rounded hover:bg-gray-100 text-gray-400">✕</button>
               </div>
 
               {/* 标签页 */}

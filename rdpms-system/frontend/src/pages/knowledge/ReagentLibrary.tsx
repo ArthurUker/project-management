@@ -70,7 +70,25 @@ const STOCK_UNIT_OPTIONS = [
   { value: 'mg/mL', label: 'mg/mL' },
 ];
 
-const CATEGORY_OPTIONS = ['未分类', '缓冲体系', '盐类', '去污剂', '变性剂', '螯合剂', '稳定剂', '酶/蛋白', 'pH调节剂', '染料/指示剂', '其他'];
+const CATEGORY_OPTIONS = [
+  '未分类',
+  '缓冲体系',
+  '盐类',
+  '去污剂',
+  '变性剂',
+  '螯合剂',
+  '稳定剂',
+  '酶/蛋白',
+  'pH调节剂',
+  '酸碱试剂',
+  '培养基成分',
+  '核酸沉淀剂',
+  '还原剂',
+  '材料',
+  '电泳',
+  '染料/指示剂',
+  '其他',
+];
 const COLUMN_ORDER_STORAGE_KEY = 'reagentLibrary:columnOrder';
 const DEFAULT_COLUMN_ORDER: ColumnKey[] = [
   'commonName',
