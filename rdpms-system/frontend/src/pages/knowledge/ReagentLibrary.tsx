@@ -120,12 +120,15 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
   const [list, setList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [stateFilter, setStateFilter] = useState('all');
   const [sortBy, setSortBy] = useState('commonName');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [editing, setEditing] = useState<any | null>(null);
   const [showDrawer, setShowDrawer] = useState(false);
+  const [categoryDraft, setCategoryDraft] = useState<string[]>(['未分类']);
+  const [recognitionText, setRecognitionText] = useState('');
+  const [recognitionHint, setRecognitionHint] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmTargets, setConfirmTargets] = useState<any[]>([]);
@@ -136,7 +139,125 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
 
   // 滚动位置保持：编辑保存后恢复原位
   const containerRef = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLFormElement | null>(null);
   const savedScrollRef = useRef<number | null>(null);
+
+  const parseCategories = React.useCallback((value: string | null | undefined) => {
+    const raw = String(value || '').trim();
+    if (!raw) return ['未分类'];
+    const parts = raw
+      .split(/[，,;；|、/\s]+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+    const unique = Array.from(new Set(parts));
+    return unique.length > 0 ? unique : ['未分类'];
+  }, []);
+
+  const stringifyCategories = React.useCallback((values: string[]) => {
+    const cleaned = values.map((item) => item.trim()).filter(Boolean);
+    return cleaned.length > 0 ? Array.from(new Set(cleaned)).join(',') : '未分类';
+  }, []);
+
+  const toggleCategoryDraft = React.useCallback((category: string) => {
+    setCategoryDraft((prev) => {
+      const exists = prev.includes(category);
+      if (exists) {
+        const next = prev.filter((item) => item !== category);
+        return next.length > 0 ? next : ['未分类'];
+      }
+      const withoutDefault = prev.filter((item) => item !== '未分类');
+      return Array.from(new Set([...withoutDefault, category]));
+    });
+  }, []);
+
+  const toggleCategoryFilter = React.useCallback((category: string) => {
+    setCategoryFilter((prev) => {
+      if (prev.includes(category)) {
+        return prev.filter((item) => item !== category);
+      }
+      return [...prev, category];
+    });
+  }, []);
+
+  const setFormValue = React.useCallback((name: string, value: string) => {
+    const form = formRef.current;
+    if (!form) return;
+    const input = form.querySelector(`[name="${name}"]`) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
+    if (!input) return;
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  }, []);
+
+  const detectCategoriesFromText = React.useCallback((text: string) => {
+    const lowered = text.toLowerCase();
+    const mapping: Array<{ category: string; keywords: string[] }> = [
+      { category: '缓冲体系', keywords: ['buffer', 'tris', 'hepes', 'pbs', '缓冲'] },
+      { category: '盐类', keywords: ['nacl', 'kcl', 'cacl2', 'mgcl2', '盐'] },
+      { category: '去污剂', keywords: ['sds', 'tween', 'triton', '去污'] },
+      { category: '变性剂', keywords: ['urea', 'gitc', '异硫氰酸胍', '变性'] },
+      { category: '螯合剂', keywords: ['edta', '螯合'] },
+      { category: '稳定剂', keywords: ['glycerol', '甘油', '蔗糖', '稳定'] },
+      { category: '酶/蛋白', keywords: ['bsa', 'protein', '酶', '蛋白'] },
+      { category: '酸碱试剂', keywords: ['naoh', 'hcl', '酸', '碱'] },
+      { category: 'pH调节剂', keywords: ['ph', '调节'] },
+      { category: '培养基成分', keywords: ['培养基', 'medium', 'peptone', 'tryptone', 'yeast extract'] },
+      { category: '核酸沉淀剂', keywords: ['isopropanol', 'ethanol', '乙醇', '异丙醇', '沉淀'] },
+      { category: '还原剂', keywords: ['dtt', 'β-me', 'mercaptoethanol', '还原'] },
+      { category: '材料', keywords: ['膜', 'beads', '磁珠', '耗材', 'material'] },
+      { category: '电泳', keywords: ['agarose', '琼脂糖', 'tae', 'tbe', '电泳'] },
+      { category: '染料/指示剂', keywords: ['染料', '指示剂', 'dye', 'indicator'] },
+    ];
+
+    const detected = mapping
+      .filter((item) => item.keywords.some((keyword) => lowered.includes(keyword.toLowerCase())))
+      .map((item) => item.category);
+
+    return detected.length > 0 ? Array.from(new Set(detected)) : ['未分类'];
+  }, []);
+
+  const handleRecognizeText = React.useCallback(() => {
+    const text = recognitionText.trim();
+    if (!text) {
+      setRecognitionHint('请先粘贴试剂说明文本。');
+      return;
+    }
+
+    const parts: string[] = [];
+    const commonName = text.match(/(?:常用名|简称|名称)\s*[:：]\s*([^\n,，;；]+)/)?.[1]?.trim();
+    const chineseName = text.match(/(?:中文名|中文名称)\s*[:：]\s*([^\n,，;；]+)/)?.[1]?.trim();
+    const englishName = text.match(/(?:英文名|英文名称)\s*[:：]\s*([^\n,，;；]+)/)?.[1]?.trim();
+    const cas = text.match(/(?:CAS(?:号)?\s*[:：]?\s*)(\d{2,7}-\d{2}-\d)/i)?.[1]?.trim();
+    const molecularFormula = text.match(/(?:分子式|formula)\s*[:：]\s*([A-Za-z0-9()\-+]+)/i)?.[1]?.trim();
+    const mw = text.match(/(?:MW|分子量|相对分子质量)\s*[:：]?\s*(\d+(?:\.\d+)?)/i)?.[1]?.trim();
+    const supplier = text.match(/(?:供应商|厂家|品牌)\s*[:：]\s*([^\n,，;；]+)/)?.[1]?.trim();
+
+    if (commonName) { setFormValue('commonName', commonName); parts.push('常用名'); }
+    if (chineseName) { setFormValue('chineseName', chineseName); parts.push('中文名称'); }
+    if (englishName) { setFormValue('englishName', englishName); parts.push('英文名称'); }
+    if (cas) { setFormValue('casNumber', cas); parts.push('CAS号'); }
+    if (molecularFormula) { setFormValue('molecularFormula', molecularFormula); parts.push('分子式'); }
+    if (mw) { setFormValue('mw', mw); parts.push('MW'); }
+    if (supplier) { setFormValue('supplier', supplier); parts.push('供应商'); }
+
+    const stateText = text.toLowerCase();
+    if (stateText.includes('solution') || stateText.includes('溶液')) {
+      setFormValue('state', 'solution');
+      parts.push('物态');
+    } else if (stateText.includes('liquid') || stateText.includes('液体')) {
+      setFormValue('state', 'liquid');
+      parts.push('物态');
+    } else if (stateText.includes('solid') || stateText.includes('固体') || stateText.includes('powder') || stateText.includes('粉末')) {
+      setFormValue('state', 'solid');
+      parts.push('物态');
+    }
+
+    const categories = detectCategoriesFromText(text);
+    setCategoryDraft(categories);
+    parts.push('试剂分类');
+
+    setRecognitionHint(`已识别并填充：${Array.from(new Set(parts)).join('、')}。如有不准确可手动修改。`);
+  }, [recognitionText, detectCategoriesFromText, setFormValue]);
   const findScrollParent = (el: HTMLElement | null): HTMLElement | null => {
     while (el) {
       const style = window.getComputedStyle(el);
@@ -149,13 +270,15 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
   const closeEditor = () => {
     setShowDrawer(false);
     setEditing(null);
+    setRecognitionText('');
+    setRecognitionHint('');
   };
 
   const categoryOptions = React.useMemo(() => {
     const merged = new Set(CATEGORY_OPTIONS);
-    list.forEach((item) => merged.add(item.category || '未分类'));
+    list.forEach((item) => parseCategories(item.category || '未分类').forEach((part) => merged.add(part)));
     return Array.from(merged);
-  }, [list]);
+  }, [list, parseCategories]);
 
   useEffect(() => {
     try {
@@ -189,7 +312,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
     try {
       const res = await reagentMaterialsAPI.list({
         keyword,
-        category: categoryFilter,
+        category: categoryFilter.length > 0 ? categoryFilter.join(',') : 'all',
         state: stateFilter,
         sortBy,
         sortOrder,
@@ -222,7 +345,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
         }
         const res2 = await reagentMaterialsAPI.list({
           keyword,
-          category: categoryFilter,
+          category: categoryFilter.length > 0 ? categoryFilter.join(',') : 'all',
           state: stateFilter,
           sortBy,
           sortOrder,
@@ -250,12 +373,27 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
 
   useEffect(() => { load(); }, [categoryFilter, stateFilter, sortBy, sortOrder]);
 
-  const openNew = () => { setEditing(null); setShowDrawer(true); };
+  const openNew = () => {
+    setEditing(null);
+    setCategoryDraft(['未分类']);
+    setRecognitionText('');
+    setRecognitionHint('');
+    setShowDrawer(true);
+  };
+
+  const openEdit = (material: any) => {
+    setEditing(material);
+    setCategoryDraft(parseCategories(material?.category || '未分类'));
+    setRecognitionText('');
+    setRecognitionHint('');
+    setShowDrawer(true);
+  };
 
   const save = async (e: any) => {
     e.preventDefault();
     const form = new FormData(e.target);
     const data: any = Object.fromEntries(form as any);
+    data.category = stringifyCategories(categoryDraft);
 
     // 校验 MW 必填
     if (!data.mw) { alert('请填写 MW (g/mol)'); return; }
@@ -388,8 +526,8 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
       key: 'category',
       label: '试剂分类',
       sortField: 'category',
-      tdClassName: 'p-2 whitespace-nowrap',
-      renderCell: (row) => row.category || '未分类',
+      tdClassName: 'p-2',
+      renderCell: (row) => parseCategories(row.category || '未分类').join('、'),
     },
     casNumber: {
       key: 'casNumber',
@@ -435,7 +573,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
       tdClassName: 'p-2',
       renderCell: (row) => row.supplier || '',
     },
-  }), []);
+  }), [parseCategories]);
 
   const orderedColumns = React.useMemo(
     () => columnOrder.map((key) => columnsByKey[key]).filter(Boolean),
@@ -453,12 +591,38 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
             onChange={e => setKeyword(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && load()}
           />
-          <select className="border p-2 rounded bg-white" value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}>
-            <option value="all">全部分类</option>
-            {categoryOptions.map(category => (
-              <option key={category} value={category}>{category}</option>
-            ))}
-          </select>
+          <details className="relative">
+            <summary className="list-none border p-2 rounded bg-white text-sm text-gray-700 cursor-pointer min-w-[180px]">
+              {categoryFilter.length > 0 ? `已选分类 ${categoryFilter.length} 项` : '全部分类'}
+            </summary>
+            <div className="absolute z-20 mt-1 w-72 rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-xs text-gray-500">可多选分类筛选</span>
+                <button
+                  type="button"
+                  className="text-xs text-primary-600"
+                  onClick={() => setCategoryFilter([])}
+                >
+                  清空
+                </button>
+              </div>
+              <div className="grid max-h-52 grid-cols-2 gap-2 overflow-y-auto pr-1">
+                {categoryOptions.map((category) => {
+                  const checked = categoryFilter.includes(category);
+                  return (
+                    <label key={category} className="flex items-center gap-2 text-xs text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleCategoryFilter(category)}
+                      />
+                      <span>{category}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          </details>
           <select className="border p-2 rounded bg-white" value={stateFilter} onChange={e => setStateFilter(e.target.value)}>
             <option value="all">全部物态</option>
             <option value="solid">固体</option>
@@ -470,7 +634,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
             type="button"
             className="px-3 py-2 rounded border border-gray-200 text-gray-600 hover:bg-gray-50"
             onClick={() => {
-              setCategoryFilter('all');
+              setCategoryFilter([]);
               setStateFilter('all');
               setSortBy('commonName');
               setSortOrder('asc');
@@ -539,7 +703,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
                     <td key={column.key} className={column.tdClassName || 'p-2'}>{column.renderCell(r)}</td>
                   ))}
                   <td className="p-2 whitespace-nowrap">
-                    <button className="mr-2 text-primary-600" onClick={() => { setEditing(r); setShowDrawer(true); }}>编辑</button>
+                    <button className="mr-2 text-primary-600" onClick={() => openEdit(r)}>编辑</button>
                   </td>
                 </tr>
               ))
@@ -568,9 +732,29 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
               </button>
             </div>
 
-            <form onSubmit={save} className="max-h-[82vh] overflow-y-auto">
+            <form ref={formRef} onSubmit={save} className="max-h-[82vh] overflow-y-auto">
               <div className="grid gap-6 px-6 py-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.9fr)]">
                 <div className="space-y-6">
+                  <section className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm">
+                    <div className="mb-3">
+                      <h4 className="text-sm font-semibold text-gray-900">文本识别自动填充</h4>
+                      <p className="mt-1 text-xs text-gray-500">粘贴试剂说明文本，自动识别常用名/CAS/MW/分类等信息并填入下方表单，识别后可手动修正。</p>
+                    </div>
+                    <textarea
+                      value={recognitionText}
+                      onChange={(e) => setRecognitionText(e.target.value)}
+                      rows={4}
+                      placeholder="示例：常用名: DTT; 中文名: 二硫苏糖醇; CAS: 3483-12-3; MW: 154.25; 物态: 固体; 供应商: 麦克林"
+                      className="input min-h-[110px] resize-y"
+                    />
+                    <div className="mt-3 flex items-center justify-between gap-3">
+                      <button type="button" className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700" onClick={handleRecognizeText}>
+                        识别并填充
+                      </button>
+                      <span className="text-xs text-emerald-700">{recognitionHint}</span>
+                    </div>
+                  </section>
+
                   <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
                     <div className="mb-4 flex items-center justify-between">
                       <div>
@@ -594,11 +778,27 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
                       </div>
                       <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700">试剂分类</label>
-                        <select name="category" defaultValue={editing?.category || '未分类'} className="input bg-white">
-                          {categoryOptions.map(category => (
-                            <option key={category} value={category}>{category}</option>
-                          ))}
-                        </select>
+                        <input type="hidden" name="category" value={stringifyCategories(categoryDraft)} readOnly />
+                        <div className="rounded-lg border border-gray-200 p-3">
+                          <div className="mb-2 text-xs text-gray-500">支持多选，可为同一试剂选择多个分类。</div>
+                          <div className="mb-2 flex flex-wrap gap-2">
+                            {categoryDraft.map((category) => (
+                              <span key={category} className="rounded-full bg-primary-50 px-2 py-1 text-xs text-primary-700">{category}</span>
+                            ))}
+                          </div>
+                          <div className="grid max-h-44 grid-cols-2 gap-2 overflow-y-auto pr-1">
+                            {categoryOptions.map((category) => (
+                              <label key={category} className="flex items-center gap-2 text-xs text-gray-700">
+                                <input
+                                  type="checkbox"
+                                  checked={categoryDraft.includes(category)}
+                                  onChange={() => toggleCategoryDraft(category)}
+                                />
+                                <span>{category}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                       <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700">CAS号</label>
@@ -685,7 +885,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
                       </div>
                       <div>
                         <div className="text-xs uppercase tracking-wide text-gray-400">试剂分类</div>
-                        <div className="mt-1 leading-6">{editing?.category || '未分类'}</div>
+                        <div className="mt-1 leading-6">{stringifyCategories(categoryDraft)}</div>
                       </div>
                       <div>
                         <div className="text-xs uppercase tracking-wide text-gray-400">当前理化属性</div>

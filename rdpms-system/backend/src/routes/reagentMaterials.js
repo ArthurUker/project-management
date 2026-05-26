@@ -5,6 +5,21 @@ import { authMiddleware } from './auth.js';
 const materials = new Hono();
 materials.use('*', authMiddleware);
 
+const normalizeCategory = (value) => {
+  if (Array.isArray(value)) {
+    const cleaned = value.map((item) => String(item || '').trim()).filter(Boolean);
+    return cleaned.length > 0 ? Array.from(new Set(cleaned)).join(',') : '未分类';
+  }
+  if (value == null) return '未分类';
+  const text = String(value).trim();
+  if (!text) return '未分类';
+  const parts = text
+    .split(/[，,;；|、/\s]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+  return parts.length > 0 ? Array.from(new Set(parts)).join(',') : '未分类';
+};
+
 // GET /api/reagent-materials - 列表，支持 ?keyword=
 materials.get('/', async (c) => {
   try {
@@ -22,8 +37,15 @@ materials.get('/', async (c) => {
         { casNumber: { contains: keyword } },
       ];
     }
-    if (category && category !== 'all') {
-      where.category = category;
+    const categoryValues = String(category || '')
+      .split(',')
+      .map((item) => item.trim())
+      .filter((item) => item && item !== 'all');
+    if (categoryValues.length > 0) {
+      where.AND = where.AND || [];
+      where.AND.push({
+        OR: categoryValues.map((item) => ({ category: { contains: item } })),
+      });
     }
     if (state && state !== 'all') {
       where.state = state;
@@ -80,6 +102,8 @@ materials.post('/', async (c) => {
     if ('purity' in data) { const p = toFloat(data.purity); data.purity = p !== undefined ? p : 98; }
     if ('density' in data) data.density = toFloatOrNull(data.density);
     if ('defaultStockConc' in data) data.defaultStockConc = toFloatOrNull(data.defaultStockConc);
+    if ('category' in data) data.category = normalizeCategory(data.category);
+    if (!('category' in data)) data.category = '未分类';
 
     Object.keys(data).forEach(k => data[k] === undefined && delete data[k]);
 
@@ -108,6 +132,7 @@ materials.put('/:id', async (c) => {
     if ('purity' in data) { const p = toFloat(data.purity); data.purity = p !== undefined ? p : 98; }
     if ('density' in data) data.density = toFloatOrNull(data.density);
     if ('defaultStockConc' in data) data.defaultStockConc = toFloatOrNull(data.defaultStockConc);
+    if ('category' in data) data.category = normalizeCategory(data.category);
 
     // 移除 undefined 值，避免 Prisma 类型校验失败
     Object.keys(data).forEach(k => data[k] === undefined && delete data[k]);
