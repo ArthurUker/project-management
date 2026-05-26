@@ -559,6 +559,7 @@ export default function TemplateEditor() {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
   const [copiedSuggestionKey, setCopiedSuggestionKey] = useState<string | null>(null);
+  const [quickSuccessorName, setQuickSuccessorName] = useState('');
   const [phaseHistory, setPhaseHistory] = useState<Phase[][]>([]);
   const [, setPhaseFuture] = useState<Phase[][]>([]);
 
@@ -769,6 +770,46 @@ export default function TemplateEditor() {
     },
     []
   );
+
+  const handleCreateSuccessorPhase = useCallback((fromId: string, rawName: string) => {
+    const name = rawName.trim();
+    if (!name) {
+      alert('请先输入后继阶段名称');
+      return;
+    }
+
+    const newId = `phase_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
+    setPhases((prev) => {
+      const fromPhase = prev.find((p) => p.id === fromId);
+      const siblingCount = (fromPhase?.nextPhaseIds ?? []).length;
+      const maxOrder = prev.reduce((max, p) => Math.max(max, p.order || 0), 0);
+
+      const newPhase: Phase = {
+        id: newId,
+        name,
+        order: maxOrder + 1,
+        x: typeof fromPhase?.x === 'number' ? fromPhase.x + 220 : undefined,
+        y: typeof fromPhase?.y === 'number' ? fromPhase.y + siblingCount * 90 : undefined,
+        type: 'normal',
+        source: 'self',
+        enabled: true,
+        completionTip: '',
+        allowSkip: false,
+        tasks: [],
+        events: [],
+        nextPhaseIds: [],
+      };
+
+      return prev.map((p) =>
+        p.id === fromId
+          ? { ...p, nextPhaseIds: [...new Set([...(p.nextPhaseIds ?? []), newId])] }
+          : p
+      ).concat(newPhase);
+    });
+
+    setQuickSuccessorName('');
+  }, []);
 
   // 右侧面板：删除后继阶段
   const handleRemoveTransition = useCallback(
@@ -1220,6 +1261,9 @@ export default function TemplateEditor() {
 
   const handlePhaseEditorKeyDown = useCallback(async (e: React.KeyboardEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
+    if (target.closest('[data-prevent-save-enter="true"]')) {
+      return;
+    }
     const tag = target.tagName;
     const isInputLike = tag === 'INPUT' || tag === 'SELECT';
 
@@ -1231,6 +1275,10 @@ export default function TemplateEditor() {
 
   // selectedPhase 从 phases 派生，确保编辑后右侧面板实时更新
   const selectedPhase = phases.find(p => p.id === selectedPhaseId) ?? null;
+  useEffect(() => {
+    setQuickSuccessorName('');
+  }, [selectedPhaseId]);
+
   const phaseInfoSuggestionSections = useMemo(() => {
     const phaseName = selectedPhase?.name?.trim() || '项目立项';
     return [
@@ -1825,6 +1873,31 @@ export default function TemplateEditor() {
                           ))
                         }
                       </select>
+
+                      <div className="mt-2 rounded-lg border border-blue-100 bg-blue-50/60 px-3 py-2" data-prevent-save-enter="true">
+                        <div className="text-[11px] text-blue-600 mb-1.5">快速新增后继阶段：仅填写名称，后续可在画布中继续完善详细配置。</div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            value={quickSuccessorName}
+                            onChange={(e) => setQuickSuccessorName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleCreateSuccessorPhase(selectedPhase.id, quickSuccessorName);
+                              }
+                            }}
+                            placeholder="输入新阶段名称，例如：样机验证"
+                            className="flex-1 text-xs border border-blue-200 rounded-md px-2.5 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleCreateSuccessorPhase(selectedPhase.id, quickSuccessorName)}
+                            className="rounded-md bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700"
+                          >
+                            新增并连接
+                          </button>
+                        </div>
+                      </div>
 
                       {/* 并行说明 */}
                       {(selectedPhase.nextPhaseIds ?? []).length > 1 && (
