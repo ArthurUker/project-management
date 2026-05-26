@@ -158,6 +158,41 @@ const ACTION_OPTIONS: { value: EventActionType; label: string; icon: string }[] 
 
 const NOTIFY_ROLES = ['项目负责人', '研发工程师', '测试工程师', '质量经理', '项目管理员'];
 
+const EVENT_RECOMMENDATIONS = [
+  {
+    key: 'evt-enter-notify',
+    title: '事件 1：项目进入“项目立项”时自动通知相关人员',
+    trigger: '当项目进入“项目立项”节点',
+    actions: '通知项目负责人、研发负责人、市场/客户接口人、质量/文档负责人',
+    note: '项目已进入立项阶段，请在规定时间内完成项目基本信息、需求来源、应用场景、样本范围、技术可行性、资源评估及风险初评。',
+    value: '避免项目已经创建，但相关人员不知道需要补资料。',
+  },
+  {
+    key: 'evt-submit-approval',
+    title: '事件 2：立项资料提交后自动发起审批',
+    trigger: '当“立项资料状态”变更为“已提交”',
+    actions: '发起立项审批',
+    note: '审批人建议：研发负责人 → 项目管理负责人/质量负责人 → 总经理/技术负责人（轻量组织可简化为：研发负责人 → 总经理/技术负责人）。',
+    value: '确保立项评审流程标准化，减少漏审和口头决策。',
+  },
+  {
+    key: 'evt-approval-pass',
+    title: '事件 3：立项审批通过后自动进入下一阶段',
+    trigger: '当“立项审批结果”为“通过”',
+    actions: '更新项目状态为“已立项”；流转至“需求确认与产品定义”；自动生成下一阶段任务',
+    note: '建议与任务模板联动，自动生成下一阶段标准任务清单。',
+    value: '避免审批通过后靠人工推进，缩短等待和交接时间。',
+  },
+  {
+    key: 'evt-approval-reject',
+    title: '事件 4：立项审批不通过时自动退回',
+    trigger: '当“立项审批结果”为“不通过”或“退回修改”',
+    actions: '通知项目发起人补充资料；项目状态更新为“立项退回”；保留审批意见',
+    note: '建议必须填写退回原因：需求不清晰、样本不可获得、技术路线不明确、资源不足、商业价值不足、风险不可接受、不符合公司战略。',
+    value: '确保退回有据可查，避免“退回但无原因”导致反复沟通。',
+  },
+];
+
 function ActionEditor({ action, onChange, onDelete }: {
   action: PhaseEventAction;
   onChange: (a: PhaseEventAction) => void;
@@ -304,6 +339,12 @@ function EventRuleCard({ event, phases: _phases, onUpdate, onDelete }: {
           {triggerOpt && (
             <div style={{ fontSize: 10, color: '#94a3b8', marginTop: 4 }}>{triggerOpt.desc}</div>
           )}
+          <input
+            value={event.label || ''}
+            onChange={(e) => onUpdate({ ...event, label: e.target.value })}
+            placeholder="可选：补充更精确的触发条件（例如：当立项资料状态=已提交）"
+            style={{ width: '100%', marginTop: 6, padding: '5px 8px', border: '1px solid #e2e8f0', borderRadius: 6, fontSize: 11, color: '#475569', outline: 'none', boxSizing: 'border-box' }}
+          />
         </div>
         {/* 启用开关 + 删除 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
@@ -348,10 +389,13 @@ function EventRuleCard({ event, phases: _phases, onUpdate, onDelete }: {
   );
 }
 
-function PhaseEventsPanel({ events, onEventsChange }: {
+function PhaseEventsPanel({ events, onEventsChange, phaseName }: {
   events: PhaseEvent[];
   onEventsChange: (events: PhaseEvent[]) => void;
+  phaseName?: string;
 }) {
+  const [copiedSuggestionKey, setCopiedSuggestionKey] = useState<string | null>(null);
+
   const addEvent = () => {
     const newEvent: PhaseEvent = {
       id: `evt_${Date.now()}`,
@@ -372,11 +416,165 @@ function PhaseEventsPanel({ events, onEventsChange }: {
     onEventsChange(events.filter((_, i) => i !== idx));
   };
 
+  const copyText = useCallback(async (key: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedSuggestionKey(key);
+      window.setTimeout(() => {
+        setCopiedSuggestionKey((prev) => (prev === key ? null : prev));
+      }, 1200);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopiedSuggestionKey(key);
+      window.setTimeout(() => {
+        setCopiedSuggestionKey((prev) => (prev === key ? null : prev));
+      }, 1200);
+    }
+  }, []);
+
+  const buildRecommendedEvent = useCallback((idx: number): PhaseEvent | null => {
+    const phaseLabel = phaseName || '当前节点';
+    if (idx === 0) {
+      return {
+        id: `evt_${Date.now()}_${idx}`,
+        trigger: 'onEnter',
+        enabled: true,
+        label: `当项目进入“${phaseLabel}”节点`,
+        actions: [
+          {
+            id: `act_${Date.now()}_${idx}_0`,
+            type: 'notify',
+            config: {
+              notifyRoles: ['项目负责人', '研发工程师', '质量经理'],
+              notifyContent: '项目已进入立项阶段，请在规定时间内完成项目基本信息、需求来源、应用场景、样本范围、技术可行性、资源评估及风险初评。',
+            },
+          },
+        ],
+      };
+    }
+    if (idx === 1) {
+      return {
+        id: `evt_${Date.now()}_${idx}`,
+        trigger: 'onComplete',
+        enabled: true,
+        label: '当“立项资料状态”变更为“已提交”',
+        actions: [
+          {
+            id: `act_${Date.now()}_${idx}_0`,
+            type: 'startApproval',
+            config: {
+              approvalProcess: '立项审批（研发负责人→项目管理/质量负责人→总经理/技术负责人）',
+            },
+          },
+        ],
+      };
+    }
+    if (idx === 2) {
+      return {
+        id: `evt_${Date.now()}_${idx}`,
+        trigger: 'onComplete',
+        enabled: true,
+        label: '当“立项审批结果”为“通过”',
+        actions: [
+          { id: `act_${Date.now()}_${idx}_0`, type: 'updateField', config: { fieldName: 'projectStatus', fieldValue: '已立项' } },
+          { id: `act_${Date.now()}_${idx}_1`, type: 'updateField', config: { fieldName: 'nextPhase', fieldValue: '需求确认与产品定义' } },
+          { id: `act_${Date.now()}_${idx}_2`, type: 'webhook', config: { webhookUrl: 'auto://generate-next-stage-tasks' } },
+        ],
+      };
+    }
+    if (idx === 3) {
+      return {
+        id: `evt_${Date.now()}_${idx}`,
+        trigger: 'onComplete',
+        enabled: true,
+        label: '当“立项审批结果”为“不通过”或“退回修改”',
+        actions: [
+          { id: `act_${Date.now()}_${idx}_0`, type: 'notify', config: { notifyRoles: ['项目负责人'], notifyContent: '立项审批未通过，请根据审批意见补充资料后重新提交。' } },
+          { id: `act_${Date.now()}_${idx}_1`, type: 'updateField', config: { fieldName: 'projectStatus', fieldValue: '立项退回' } },
+          { id: `act_${Date.now()}_${idx}_2`, type: 'updateField', config: { fieldName: 'approvalCommentRequired', fieldValue: 'true' } },
+        ],
+      };
+    }
+    return null;
+  }, [phaseName]);
+
+  const addRecommendedEvent = useCallback((idx: number) => {
+    const next = buildRecommendedEvent(idx);
+    if (!next) return;
+    onEventsChange([...events, next]);
+  }, [buildRecommendedEvent, events, onEventsChange]);
+
+  const replaceWithRecommendedEvents = useCallback(() => {
+    const next = EVENT_RECOMMENDATIONS
+      .map((_, idx) => buildRecommendedEvent(idx))
+      .filter((item): item is PhaseEvent => !!item);
+    if (next.length === 0) return;
+    onEventsChange(next);
+  }, [buildRecommendedEvent, onEventsChange]);
+
   return (
     <div style={{ padding: '12px 0' }}>
       {/* 说明 */}
       <div style={{ margin: '0 16px 12px', padding: '8px 12px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 8, fontSize: 11, color: '#0369a1', lineHeight: 1.6 }}>
         <strong>节点事件</strong>：当阶段进入特定状态时，自动触发预设动作（发通知、更新字段、发起审批或调用 Webhook）。
+      </div>
+
+      <div style={{ margin: '0 16px 12px', border: '1px solid #e2e8f0', borderRadius: 10, background: 'linear-gradient(180deg, #faf5ff 0%, #ffffff 65%)', padding: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#334155' }}>节点事件配置建议</div>
+            <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>项目立项节点建议设置 4 类事件，适合用于提醒、审批、字段更新和任务生成。</div>
+          </div>
+          <button
+            type="button"
+            onClick={replaceWithRecommendedEvents}
+            style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #c4b5fd', background: '#ede9fe', color: '#5b21b6', fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+          >
+            一键套用 4 类事件
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {EVENT_RECOMMENDATIONS.map((item, idx) => {
+            const blockText = `${item.title}\n触发条件：${item.trigger}\n自动动作：${item.actions}\n通知/备注建议：${item.note}\n适用价值：${item.value}`;
+            return (
+              <div key={item.key} style={{ border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden', background: '#fff' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, background: '#f8fafc', padding: '8px 10px' }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: '#334155' }}>{item.title}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button
+                      type="button"
+                      onClick={() => { void copyText(item.key, blockText); }}
+                      style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #e2e8f0', background: copiedSuggestionKey === item.key ? '#ecfeff' : '#fff', color: copiedSuggestionKey === item.key ? '#0e7490' : '#475569', fontSize: 11, cursor: 'pointer' }}
+                    >
+                      {copiedSuggestionKey === item.key ? '已复制' : 'Copy'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => addRecommendedEvent(idx)}
+                      style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      添加到规则
+                    </button>
+                  </div>
+                </div>
+                <div style={{ padding: '8px 10px', fontSize: 11, lineHeight: 1.7, color: '#475569' }}>
+                  <div><strong>触发条件：</strong>{item.trigger}</div>
+                  <div><strong>自动动作：</strong>{item.actions}</div>
+                  <div><strong>通知/备注建议：</strong>{item.note}</div>
+                  <div><strong>适用价值：</strong>{item.value}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* 事件规则列表 */}
@@ -1921,6 +2119,7 @@ export default function TemplateEditor() {
                 )}
                 {activeTab === 2 && selectedPhase && (
                   <PhaseEventsPanel
+                    phaseName={selectedPhase.name}
                     events={selectedPhase.events || []}
                     onEventsChange={(newEvents) => updatePhase(selectedPhase.id, { events: newEvents })}
                   />
