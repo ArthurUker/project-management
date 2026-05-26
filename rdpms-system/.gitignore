@@ -37,6 +37,8 @@ src/data/*.csv
 db_backups/
 *.sql
 *.dump
+# Keep Prisma schema migrations in Git for production deploy
+!backend/prisma/migrations/**/migration.sql
 
 # Editor and OS files
 .DS_Store
