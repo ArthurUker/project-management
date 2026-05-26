@@ -558,6 +558,7 @@ export default function TemplateEditor() {
   const [showBatchOp, setShowBatchOp] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
+  const [copiedSuggestionKey, setCopiedSuggestionKey] = useState<string | null>(null);
   const [phaseHistory, setPhaseHistory] = useState<Phase[][]>([]);
   const [, setPhaseFuture] = useState<Phase[][]>([]);
 
@@ -1230,6 +1231,76 @@ export default function TemplateEditor() {
 
   // selectedPhase 从 phases 派生，确保编辑后右侧面板实时更新
   const selectedPhase = phases.find(p => p.id === selectedPhaseId) ?? null;
+  const phaseInfoSuggestionSections = useMemo(() => {
+    const phaseName = selectedPhase?.name?.trim() || '项目立项';
+    return [
+      {
+        key: 'phase-name',
+        title: '节点名称',
+        intro: '建议名称：',
+        text: phaseName,
+      },
+      {
+        key: 'phase-goal',
+        title: '节点目标',
+        intro: '建议写：',
+        text: '完成项目需求、应用场景、产品边界、技术可行性、资源投入和风险的初步确认，形成项目是否进入方案设计阶段的立项决策。',
+      },
+      {
+        key: 'phase-description',
+        title: '节点说明',
+        intro: '可以写得稍微正式一点：',
+        text: '本阶段用于判断项目是否具备研发启动条件。需明确项目来源、目标用户、应用场景、样本类型、检测对象、预期用途、交付形式、开发等级、初步技术路线、关键风险、资源投入及计划周期。阶段结束时应形成立项简表、用户需求记录、可行性初评和Go/No-Go决策。',
+      },
+      {
+        key: 'phase-apply-scope',
+        title: '适用项目类型',
+        intro: '建议在说明中加入：',
+        text: '适用于非医疗分子检测芯片项目、食品安全检测项目、水产病原检测项目、中药材鉴定项目、海关检疫项目、客户定制芯片项目、合作开发项目及准注册级试剂项目。',
+      },
+      {
+        key: 'phase-exit-criteria',
+        title: '阶段完成标准',
+        intro: '建议配置为：',
+        text: '1. 项目基本信息已填写完整；\n2. 目标用户、应用场景、样本范围和检测对象已明确；\n3. 产品声称边界和不适用范围已初步确认；\n4. 已完成技术可行性和资源可行性初评；\n5. 已完成项目等级判定；\n6. 已识别主要风险和外部依赖；\n7. 已完成Go/No-Go决策并指定项目负责人。',
+      },
+    ];
+  }, [selectedPhase?.name]);
+
+  const handleCopySuggestion = useCallback(async (key: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedSuggestionKey(key);
+      window.setTimeout(() => {
+        setCopiedSuggestionKey((prev) => (prev === key ? null : prev));
+      }, 1200);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopiedSuggestionKey(key);
+      window.setTimeout(() => {
+        setCopiedSuggestionKey((prev) => (prev === key ? null : prev));
+      }, 1200);
+    }
+  }, []);
+
+  const handleApplySuggestionToCompletionTip = useCallback((mode: 'replace' | 'append') => {
+    if (!selectedPhase) return;
+    const mergedText = phaseInfoSuggestionSections
+      .slice(1)
+      .map((section) => `【${section.title}】\n${section.text}`)
+      .join('\n\n');
+    const current = (selectedPhase.completionTip || '').trim();
+    const next = mode === 'append' && current ? `${current}\n\n${mergedText}` : mergedText;
+    updatePhase(selectedPhase.id, { completionTip: next });
+  }, [selectedPhase, phaseInfoSuggestionSections]);
+
   const totalTasks = phases.reduce((s, p) => s + p.tasks.filter(t => t.enabled).length, 0);
   const previewContent = useMemo(() => buildTemplatePreviewContent((template as any)?.name || '模板预览', phases, milestones), [template, phases, milestones]);
 
@@ -1526,6 +1597,54 @@ export default function TemplateEditor() {
                     <div>
                       <label className="text-xs font-medium text-gray-500 mb-1 block">节点完成提示</label>
                       <textarea rows={3} placeholder="自定义提醒文案，作为节点二次确认框内容展示" className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none" value={selectedPhase.completionTip || ''} onChange={(e) => updatePhase(selectedPhase.id, { completionTip: e.target.value })} />
+                    </div>
+
+                    <div className="rounded-xl border border-indigo-100 bg-gradient-to-b from-indigo-50/60 to-white p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <h4 className="text-sm font-semibold text-gray-900">三、节点信息配置建议</h4>
+                          <p className="mt-1 text-xs text-gray-500">你可以在“节点信息”里设置这个阶段的基本说明，并一键填入节点完成提示。</p>
+                        </div>
+                        <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-[11px] font-medium text-indigo-700">建议模版</span>
+                      </div>
+
+                      <div className="mt-3 space-y-3">
+                        {phaseInfoSuggestionSections.map((section) => (
+                          <div key={section.key} className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+                            <div className="flex items-center justify-between bg-gray-50 px-3 py-2">
+                              <div>
+                                <div className="text-xs font-semibold text-gray-700">{section.title}</div>
+                                <div className="text-[11px] text-gray-400 mt-0.5">{section.intro}</div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => { void handleCopySuggestion(section.key, section.text); }}
+                                className={`rounded-md border px-2.5 py-1 text-xs transition-colors ${copiedSuggestionKey === section.key ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-gray-200 text-gray-600 hover:bg-white'}`}
+                              >
+                                {copiedSuggestionKey === section.key ? '已复制' : 'Copy'}
+                              </button>
+                            </div>
+                            <div className="px-3 py-2 text-sm leading-6 text-gray-700 whitespace-pre-wrap">{section.text}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleApplySuggestionToCompletionTip('append')}
+                          className="rounded-md border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-white"
+                        >
+                          追加到节点完成提示
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleApplySuggestionToCompletionTip('replace')}
+                          className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs text-white hover:bg-indigo-700"
+                        >
+                          一键覆盖到节点完成提示
+                        </button>
+                      </div>
                     </div>
 
                     <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
