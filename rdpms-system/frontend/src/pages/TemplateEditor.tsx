@@ -216,17 +216,25 @@ const PHASE_PROJECT_TYPE_OPTIONS = [
   '三类IVD注册项目',
 ];
 
-function buildRecommendedPhaseInfo(phaseName: string) {
-  const normalizedPhaseName = phaseName.trim() || '项目立项';
+const COMPLETION_TIP_TEMPLATE = `请确认项目立项资料已填写完整，并已完成立项评审。
+
+完成本节点后，项目将进入下一阶段。请确认：
+1. 项目负责人已明确；
+2. Go/No-Go结论已记录；
+3. 主要风险已识别；
+4. 下一阶段任务已安排。`;
+
+const COMPLETION_TIP_SHORT = '请确认项目立项资料已填写完整，并已完成立项评审。完成本节点后，项目将进入下一阶段。';
+
+function buildRecommendedPhaseInfo(_phaseName: string) {
   return {
     goal: '完成项目需求、应用场景、产品边界、技术可行性、资源投入和风险的初步确认，形成项目是否进入方案设计阶段的立项决策。',
-    description: `本阶段用于判断${normalizedPhaseName}是否具备研发启动条件。需明确项目来源、目标用户、应用场景、样本类型、检测对象、预期用途、交付形式、开发等级、初步技术路线、关键风险、资源投入及计划周期。阶段结束时应形成立项简表、用户需求记录、可行性初评和Go/No-Go决策。`,
+    description: '本阶段用于判断项目是否具备研发启动条件。需明确项目来源、目标用户、应用场景、样本类型、检测对象、预期用途、交付形式、开发等级、初步技术路线、关键风险、资源投入及计划周期。\n\n阶段结束时应形成立项简表、用户需求记录、技术可行性初评、资源可行性初评、风险清单和Go/No-Go决策记录。',
     projectTypes: [
-      '非医疗分子检测芯片项目',
+      '非医疗分子检测产品',
       '食品安全检测项目',
       '水产病原检测项目',
       '中药材鉴定项目',
-      '海关检疫项目',
       '客户定制芯片项目',
       '合作开发项目',
       '准注册级试剂项目',
@@ -239,32 +247,10 @@ function buildRecommendedPhaseInfo(phaseName: string) {
       '已完成项目等级判定',
       '已识别主要风险和外部依赖',
       '已完成Go/No-Go决策并指定项目负责人',
+      '已明确下一阶段负责人、任务和交付物',
     ],
     goNoGoRule: 'Go 条件：核心需求明确、技术路线可行、关键资源到位、风险可控。No-Go 条件：需求不清晰、关键样本不可获得、技术不可行、资源缺口无法补齐、风险不可接受。',
   };
-}
-
-function buildCompletionTipFromPhaseInfo(phaseInfo: {
-  goal: string;
-  description: string;
-  projectTypes: string[];
-  exitCriteria: string[];
-  goNoGoRule: string;
-}) {
-  return [
-    `【节点目标】\n${phaseInfo.goal || '请填写节点目标。'}`,
-    `【节点说明】\n${phaseInfo.description || '请填写节点说明。'}`,
-    `【适用项目类型】\n${phaseInfo.projectTypes.length > 0 ? phaseInfo.projectTypes.join('、') : '请填写适用项目类型。'}`,
-    `【阶段完成标准】\n${phaseInfo.exitCriteria.length > 0 ? phaseInfo.exitCriteria.map((item, idx) => `${idx + 1}. ${item}`).join('\n') : '请填写阶段完成标准。'}`,
-    `【Go/No-Go 判定】\n${phaseInfo.goNoGoRule || '请填写进入下一阶段的判定条件。'}`,
-  ].join('\n\n');
-}
-
-function splitByLine(value: string) {
-  return value
-    .split(/\n|；|;/)
-    .map((item) => item.trim())
-    .filter(Boolean);
 }
 
 function ActionEditor({ action, onChange, onDelete }: {
@@ -470,7 +456,6 @@ function PhaseEventsPanel({ events, onEventsChange, phaseName, eventTemplates, o
   eventTemplates?: PhaseEvent[];
   onEventTemplatesChange?: (templates: PhaseEvent[]) => void;
 }) {
-  const [copiedSuggestionKey, setCopiedSuggestionKey] = useState<string | null>(null);
   const [templatesLocal, setTemplatesLocal] = useState<PhaseEvent[]>([]);
 
   useEffect(() => {
@@ -587,7 +572,7 @@ function PhaseEventsPanel({ events, onEventsChange, phaseName, eventTemplates, o
           </div>
           <button
             type="button"
-            onClick={replaceWithRecommendedEvents}
+            onClick={replaceWithTemplates}
             style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #c4b5fd', background: '#ede9fe', color: '#5b21b6', fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
           >
             一键套用 4 类事件
@@ -938,7 +923,7 @@ export default function TemplateEditor() {
           enabled: t.enabled !== false,
         }));
 
-        const tasks = rootTasks.length > 0 ? rootTasks : subPhases.flatMap((sub) => sub.tasks);
+        const tasks = rootTasks.length > 0 ? rootTasks : subPhases.flatMap((sub: { tasks: PhaseTask[] }) => sub.tasks);
 
         const nextPhaseIds = raw.nextPhaseIds ?? (raw.transitions ? (raw.transitions || []).map((x: any) => x.toPhaseId || x.targetId || x.to) : undefined) ?? [];
 
@@ -1590,15 +1575,8 @@ export default function TemplateEditor() {
   const handleApplyPhaseInfoTemplate = useCallback(() => {
     if (!selectedPhase) return;
     updateCurrentPhaseInfo(buildRecommendedPhaseInfo(selectedPhase.name || '项目立项'));
-  }, [selectedPhase, updateCurrentPhaseInfo]);
-
-  const handleApplyPhaseInfoToCompletionTip = useCallback((mode: 'replace' | 'append') => {
-    if (!selectedPhase) return;
-    const tip = buildCompletionTipFromPhaseInfo(currentPhaseInfo);
-    const current = (selectedPhase.completionTip || '').trim();
-    const next = mode === 'append' && current ? `${current}\n\n${tip}` : tip;
-    updatePhase(selectedPhase.id, { completionTip: next });
-  }, [selectedPhase, currentPhaseInfo]);
+    updatePhase(selectedPhase.id, { completionTip: COMPLETION_TIP_TEMPLATE });
+  }, [selectedPhase, updateCurrentPhaseInfo, updatePhase]);
 
   const totalTasks = phases.reduce((s, p) => s + p.tasks.filter(t => t.enabled).length, 0);
   const previewContent = useMemo(() => buildTemplatePreviewContent((template as any)?.name || '模板预览', phases, milestones), [template, phases, milestones]);
@@ -2156,8 +2134,7 @@ export default function TemplateEditor() {
                               type="button"
                               className="text-xs font-semibold text-blue-600 hover:underline"
                               onClick={() => {
-                                const tip = buildCompletionTipFromPhaseInfo(currentPhaseInfo);
-                                navigator.clipboard?.writeText(tip).catch(() => {});
+                                navigator.clipboard?.writeText(COMPLETION_TIP_SHORT).catch(() => {});
                               }}
                             >复制</button>
                           </div>
@@ -2167,7 +2144,7 @@ export default function TemplateEditor() {
                           <div className="mt-2">
                             <button
                               type="button"
-                              onClick={() => handleApplyPhaseInfoToCompletionTip('replace')}
+                              onClick={() => selectedPhase && updatePhase(selectedPhase.id, { completionTip: COMPLETION_TIP_SHORT })}
                               className="px-3 py-1.5 text-xs font-semibold border border-gray-300 bg-white text-gray-600 rounded-lg hover:bg-gray-50"
                             >填入字段</button>
                           </div>
