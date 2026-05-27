@@ -201,6 +201,21 @@ const EVENT_RECOMMENDATIONS = [
   },
 ];
 
+const PHASE_PROJECT_TYPE_OPTIONS = [
+  '非医疗分子检测产品',
+  '食品安全检测项目',
+  '水产病原检测项目',
+  '中药材鉴定项目',
+  '海关检疫项目',
+  '客户定制芯片项目',
+  '客户定制设备项目',
+  '合作开发项目',
+  '平台设备开发项目',
+  '平台软件开发项目',
+  '准注册级试剂项目',
+  '三类IVD注册项目',
+];
+
 function buildRecommendedPhaseInfo(phaseName: string) {
   const normalizedPhaseName = phaseName.trim() || '项目立项';
   return {
@@ -800,6 +815,8 @@ export default function TemplateEditor() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<number>(0);
+  const [showCompletionPreview, setShowCompletionPreview] = useState(false);
+  const [showApplyConfirm, setShowApplyConfirm] = useState(false);
   const [leftPanelOpen, setLeftPanelOpen] = useState(true);
   const [searchText, setSearchText] = useState('');
   const [showSearch, setShowSearch] = useState(false);
@@ -1836,15 +1853,18 @@ export default function TemplateEditor() {
             onClick={() => { void closePhaseEditorWithSave(); }}
           >
             <div
-              className="flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden"
-              style={{ width: 'min(90vw, 860px)', height: 'min(85vh, 720px)' }}
+              className="relative flex flex-col bg-white rounded-2xl shadow-2xl overflow-hidden"
+              style={{ width: 'min(92vw, 1220px)', height: 'min(92vh, calc(100vh - 56px))' }}
               onClick={e => e.stopPropagation()}
               onKeyDown={(e) => { void handlePhaseEditorKeyDown(e); }}
             >
               {/* 弹窗顶部 */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
-                <h3 className="text-sm font-semibold text-gray-800 truncate">{selectedPhase.name}</h3>
-                <button onClick={() => { void closePhaseEditorWithSave(); }} className="p-1 rounded hover:bg-gray-100 text-gray-400">✕</button>
+              <div className="flex items-start justify-between px-7 py-4 border-b border-gray-100 flex-shrink-0">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">编辑阶段</h3>
+                  <p className="mt-1 text-xs text-gray-500">节点信息用于定义阶段本身；右侧模板建议仅辅助填写，不会自动污染表单。</p>
+                </div>
+                <button onClick={() => { void closePhaseEditorWithSave(); }} className="mt-0.5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 text-xl leading-none">×</button>
               </div>
 
               {/* 标签页 */}
@@ -1857,154 +1877,324 @@ export default function TemplateEditor() {
               </div>
 
               {/* 内容区 */}
-              <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              <div className="flex-1 overflow-hidden flex flex-col" style={{ background: '#f8fafc' }}>
                 {activeTab === 0 && (
-                  <>
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 mb-1 block">节点名称 <span className="text-red-400">*</span></label>
-                      <input className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300" value={selectedPhase.name} onChange={(e) => updatePhase(selectedPhase.id, { name: e.target.value })} />
-                    </div>
+                  <div className="flex-1 overflow-hidden grid" style={{ gridTemplateColumns: 'minmax(0,1fr) 340px' }}>
 
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 mb-1 block">节点类型</label>
-                      <div className="flex gap-2">
-                        {[{ value: 'normal', label: '普通' },{ value: 'milestone', label: '里程碑' },{ value: 'approval', label: '审批' }].map(({ value, label }) => (
-                          <button key={value} onClick={() => updatePhase(selectedPhase.id, { type: value as any })} className={`flex-1 py-1.5 text-xs rounded-md border transition-colors ${selectedPhase.type === value ? 'border-blue-400 bg-blue-50 font-medium text-blue-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'}`}>
-                            {label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                    {/* ── 左侧：正式表单 ── */}
+                    <div className="overflow-y-auto p-5 space-y-4" style={{ borderRight: '1px solid #edf0f5' }}>
 
-                    <div>
-                      <label className="text-xs font-medium text-gray-500 mb-1 block">节点完成提示</label>
-                      <textarea rows={3} placeholder="自定义提醒文案，作为节点二次确认框内容展示" className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none" value={selectedPhase.completionTip || ''} onChange={(e) => updatePhase(selectedPhase.id, { completionTip: e.target.value })} />
-                    </div>
-
-                    <div className="rounded-xl border border-indigo-100 bg-gradient-to-b from-indigo-50/60 to-white p-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <h4 className="text-sm font-semibold text-gray-900">三、节点信息结构化录入</h4>
-                          <p className="mt-1 text-xs text-gray-500">将建议直接转成可保存字段。你可以先一键填入草稿，再按项目实际调整。</p>
+                      {/* 卡片 1：基础信息 */}
+                      <div className="bg-white border border-gray-200 rounded-2xl p-5">
+                        <div className="flex items-start justify-between mb-4">
+                          <div>
+                            <h4 className="text-sm font-bold text-gray-900">基础信息</h4>
+                            <p className="mt-1 text-xs text-gray-500">这里填写正式保存到系统的节点字段，不展示说明性长文。</p>
+                          </div>
+                          <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">正式表单区</span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={handleApplyPhaseInfoTemplate}
-                          className="rounded-full bg-indigo-100 px-2.5 py-1 text-[11px] font-medium text-indigo-700 hover:bg-indigo-200"
-                        >
-                          一键填充草稿
-                        </button>
-                      </div>
-
-                      <div className="mt-3 space-y-3">
-                        <div>
-                          <label className="text-xs font-medium text-gray-500 mb-1 block">节点目标</label>
-                          <textarea
-                            rows={2}
-                            className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none"
-                            placeholder="一句话描述这个节点要达成的决策或成果"
-                            value={currentPhaseInfo.goal}
-                            onChange={(e) => updateCurrentPhaseInfo({ goal: e.target.value })}
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-xs font-medium text-gray-500 mb-1 block">节点说明</label>
-                          <textarea
-                            rows={4}
-                            className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none"
-                            placeholder="说明该节点需要明确的信息和产出文档"
-                            value={currentPhaseInfo.description}
-                            onChange={(e) => updateCurrentPhaseInfo({ description: e.target.value })}
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-xs font-medium text-gray-500 mb-1 block">适用项目类型（每行一个）</label>
-                          <textarea
-                            rows={3}
-                            className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none"
-                            placeholder={'非医疗分子检测芯片项目\n食品安全检测项目'}
-                            value={currentPhaseInfo.projectTypes.join('\n')}
-                            onChange={(e) => updateCurrentPhaseInfo({ projectTypes: splitByLine(e.target.value) })}
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-xs font-medium text-gray-500 mb-1 block">阶段完成标准（每行一条）</label>
-                          <textarea
-                            rows={4}
-                            className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none"
-                            placeholder={'项目基本信息已填写完整\n已完成Go/No-Go决策并指定项目负责人'}
-                            value={currentPhaseInfo.exitCriteria.join('\n')}
-                            onChange={(e) => updateCurrentPhaseInfo({ exitCriteria: splitByLine(e.target.value) })}
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-xs font-medium text-gray-500 mb-1 block">Go/No-Go 判定条件</label>
-                          <textarea
-                            rows={3}
-                            className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none"
-                            placeholder="填写进入下一阶段与否决条件"
-                            value={currentPhaseInfo.goNoGoRule}
-                            onChange={(e) => updateCurrentPhaseInfo({ goNoGoRule: e.target.value })}
-                          />
+                        <div className="space-y-4">
+                          <div>
+                            <div className="flex justify-between items-center mb-1.5">
+                              <label className="text-sm font-semibold text-gray-700">节点名称 <span className="text-red-500">*</span></label>
+                              <span className="text-xs text-gray-400">阶段显示名称</span>
+                            </div>
+                            <input
+                              className="w-full text-sm border border-gray-300 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+                              value={selectedPhase.name}
+                              onChange={(e) => updatePhase(selectedPhase.id, { name: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <div className="flex justify-between items-center mb-1.5">
+                              <label className="text-sm font-semibold text-gray-700">节点类型</label>
+                              <span className="text-xs text-gray-400">项目立项建议选择"审批"</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2.5">
+                              {[{ value: 'normal', label: '普通' },{ value: 'milestone', label: '里程碑' },{ value: 'approval', label: '审批' }].map(({ value, label }) => (
+                                <button key={value} onClick={() => updatePhase(selectedPhase.id, { type: value as any })} className={`h-10 text-sm font-semibold rounded-xl border transition-colors ${selectedPhase.type === value ? 'border-blue-500 bg-blue-50 text-blue-600' : 'border-gray-300 bg-white text-gray-500 hover:border-gray-400'}`}>
+                                  {label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="flex justify-between items-center mb-1.5">
+                              <label className="text-sm font-semibold text-gray-700">节点目标</label>
+                              <span className="text-xs text-gray-400">说明该阶段要达成什么</span>
+                            </div>
+                            <textarea
+                              rows={3}
+                              className="w-full text-sm border border-gray-300 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-vertical"
+                              placeholder="一句话描述这个节点要达成的决策或成果"
+                              value={currentPhaseInfo.goal}
+                              onChange={(e) => updateCurrentPhaseInfo({ goal: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <div className="flex justify-between items-center mb-1.5">
+                              <label className="text-sm font-semibold text-gray-700">节点说明</label>
+                              <span className="text-xs text-gray-400">说明工作范围、输入、输出和管理要求</span>
+                            </div>
+                            <textarea
+                              rows={5}
+                              className="w-full text-sm border border-gray-300 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-vertical"
+                              placeholder="说明该节点需要明确的信息和产出文档"
+                              value={currentPhaseInfo.description}
+                              onChange={(e) => updateCurrentPhaseInfo({ description: e.target.value })}
+                            />
+                          </div>
                         </div>
                       </div>
 
-                      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleApplyPhaseInfoToCompletionTip('append')}
-                          className="rounded-md border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-white"
-                        >
-                          追加到节点完成提示
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleApplyPhaseInfoToCompletionTip('replace')}
-                          className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs text-white hover:bg-indigo-700"
-                        >
-                          一键覆盖到节点完成提示
-                        </button>
+                      {/* 卡片 2：适用项目类型 */}
+                      <div className="bg-white border border-gray-200 rounded-2xl p-5">
+                        <div className="mb-4">
+                          <h4 className="text-sm font-bold text-gray-900">适用项目类型</h4>
+                          <p className="mt-1 text-xs text-gray-500">用于区分模板适用于哪些研发项目，后续可影响任务模板推荐。</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {PHASE_PROJECT_TYPE_OPTIONS.map((pt) => {
+                            const active = currentPhaseInfo.projectTypes.includes(pt);
+                            return (
+                              <button
+                                key={pt}
+                                type="button"
+                                onClick={() => {
+                                  const next = active
+                                    ? currentPhaseInfo.projectTypes.filter((t) => t !== pt)
+                                    : [...currentPhaseInfo.projectTypes, pt];
+                                  updateCurrentPhaseInfo({ projectTypes: next });
+                                }}
+                                className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${active ? 'bg-blue-50 text-blue-600 border-blue-500 font-semibold' : 'bg-white text-gray-500 border-gray-300 hover:border-gray-400'}`}
+                              >
+                                {pt}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
-                      <div className="mb-2 text-[11px] text-gray-400">开关说明：蓝色表示已开启，灰色表示已关闭。</div>
-                      <div className="space-y-2">
-                        {[{ key: 'allowSkip', label: '允许跳过节点' },{ key: 'showProgress', label: '展示估分排期填写入口' },{ key: 'requireActualHours', label: '节点需填写实际工时' }].map(({ key, label }) => {
-                          const enabled = !!(selectedPhase as any)[key];
-                          return (
-                            <div key={key} className="flex items-center justify-between rounded-md bg-white px-2.5 py-2 border border-gray-100">
-                              <span className="text-xs text-gray-600">{label}</span>
-                              <div className="flex items-center gap-2">
-                                <span className={`text-[11px] font-medium ${enabled ? 'text-blue-600' : 'text-gray-400'}`}>{enabled ? '已开启' : '已关闭'}</span>
+                      {/* 卡片 3：完成规则 */}
+                      <div className="bg-white border border-gray-200 rounded-2xl p-5">
+                        <div className="mb-4">
+                          <h4 className="text-sm font-bold text-gray-900">完成规则</h4>
+                          <p className="mt-1 text-xs text-gray-500">用于控制节点是否可以关闭，以及完成节点时给用户的二次确认提示。</p>
+                        </div>
+                        <div className="space-y-4">
+                          <div>
+                            <div className="flex justify-between items-center mb-1.5">
+                              <label className="text-sm font-semibold text-gray-700">阶段完成标准</label>
+                              <span className="text-xs text-gray-400">判断该阶段是否可流转</span>
+                            </div>
+                            <textarea
+                              rows={8}
+                              className="w-full text-sm border border-gray-300 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-vertical"
+                              placeholder={'1. 项目基本信息已填写完整\n2. 已完成Go/No-Go决策并指定项目负责人'}
+                              value={currentPhaseInfo.exitCriteria.map((item, i) => `${i + 1}. ${item}`).join('\n')}
+                              onChange={(e) => {
+                                const lines = e.target.value.split('\n').map(l => l.replace(/^\d+\.\s*/, '').trim()).filter(Boolean);
+                                updateCurrentPhaseInfo({ exitCriteria: lines });
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <div className="flex justify-between items-center mb-1.5">
+                              <label className="text-sm font-semibold text-gray-700">节点完成提示</label>
+                              <button
+                                type="button"
+                                className="text-xs font-semibold text-blue-600 hover:underline"
+                                onClick={() => setShowCompletionPreview(v => !v)}
+                              >
+                                {showCompletionPreview ? '收起预览' : '预览完成确认弹窗'}
+                              </button>
+                            </div>
+                            <textarea
+                              rows={5}
+                              className="w-full text-sm border border-gray-300 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-400 resize-vertical"
+                              placeholder="自定义提醒文案，作为节点二次确认框内容展示"
+                              value={selectedPhase.completionTip || ''}
+                              onChange={(e) => updatePhase(selectedPhase.id, { completionTip: e.target.value })}
+                            />
+                            {showCompletionPreview && (
+                              <div className="mt-2 p-3 border border-dashed border-blue-300 rounded-xl bg-blue-50 text-blue-800 text-xs leading-relaxed whitespace-pre-line">
+                                {`是否确认完成「${selectedPhase.name || '当前节点'}」阶段？\n\n${selectedPhase.completionTip || '（暂无节点完成提示）'}`}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 卡片 4：节点控制 */}
+                      <div className="bg-white border border-gray-200 rounded-2xl p-5">
+                        <div className="mb-4">
+                          <h4 className="text-sm font-bold text-gray-900">节点控制</h4>
+                          <p className="mt-1 text-xs text-gray-500">控制该阶段是否允许跳过、是否需要排期估算和实际工时。</p>
+                        </div>
+                        <div className="space-y-2.5">
+                          {([
+                            { key: 'allowSkip', label: '允许跳过节点', desc: '项目立项是强制关卡，建议关闭。' },
+                            { key: 'showProgress', label: '展示估分排期填写入口', desc: '立项阶段需要初步评估资源、周期和排期，建议开启。' },
+                            { key: 'requireActualHours', label: '节点需填写实际工时', desc: '如需统计研发管理工时可开启；默认建议关闭。' },
+                          ] as { key: string; label: string; desc: string }[]).map(({ key, label, desc }) => {
+                            const enabled = !!(selectedPhase as any)[key];
+                            return (
+                              <div key={key} className="flex items-center justify-between border border-gray-200 rounded-xl px-4 py-3 bg-white gap-4">
+                                <div className="min-w-0">
+                                  <div className="text-sm font-semibold text-gray-900">{label}</div>
+                                  <div className="text-xs text-gray-500 mt-0.5">{desc}</div>
+                                </div>
                                 <button
                                   type="button"
                                   role="switch"
                                   aria-checked={enabled}
                                   aria-label={label}
                                   onClick={() => updatePhase(selectedPhase.id, { [key]: !enabled })}
-                                  className={`relative w-10 h-5 rounded-full transition-colors ${enabled ? 'bg-blue-500' : 'bg-gray-300'}`}
+                                  className={`relative flex-shrink-0 w-11 h-6 rounded-full transition-colors ${enabled ? 'bg-blue-500' : 'bg-gray-300'}`}
                                 >
-                                  <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                                  <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${enabled ? 'translate-x-6' : 'translate-x-1'}`} />
                                 </button>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
+
                     </div>
 
-                    <div>
-                      <label className="text-xs font-medium text-gray-400 mb-1 block">节点 ID</label>
-                      <div className="text-xs text-gray-400 font-mono bg-gray-50 px-3 py-2 rounded-md border border-gray-100">{selectedPhase.id}</div>
+                    {/* ── 右侧：模板建议面板 ── */}
+                    <div className="overflow-y-auto p-4 space-y-3">
+
+                      {/* 模板建议（蓝色） */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+                        <h4 className="text-sm font-bold text-gray-900">模板建议</h4>
+                        <p className="mt-1.5 text-xs text-gray-500 leading-relaxed">右侧内容只是辅助建议，只有点击"应用模板"或"填入字段"时才写入左侧表单。</p>
+                        <div className="mt-3 p-3 bg-white border border-blue-200 rounded-xl">
+                          <div className="text-sm font-bold text-gray-900">{selectedPhase.name || '节点'}模板</div>
+                          <p className="mt-1.5 text-xs text-gray-500 leading-relaxed">
+                            适用于非医疗分子检测产品、食品安全、水产病原、中药材鉴定、客户定制、合作开发和准注册级试剂项目。
+                          </p>
+                          <div className="mt-3 flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setShowApplyConfirm(true)}
+                              className="flex-1 py-2 text-xs font-bold bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                            >
+                              应用模板
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setShowCompletionPreview(v => !v)}
+                              className="flex-1 py-2 text-xs font-semibold border border-gray-300 bg-white text-gray-600 rounded-xl hover:bg-gray-50 transition-colors"
+                            >
+                              预览完成提示
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 字段建议 */}
+                      <div className="bg-white border border-gray-200 rounded-2xl p-4">
+                        <h4 className="text-sm font-bold text-gray-900">字段建议</h4>
+                        <p className="mt-1.5 text-xs text-gray-500 leading-relaxed">点击"填入字段"可将建议内容写入对应字段，避免复制粘贴错误。</p>
+
+                        {/* 节点目标建议 */}
+                        <div className="mt-3 border border-gray-200 rounded-xl p-3">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs font-bold text-gray-700">节点目标建议</span>
+                            <button
+                              type="button"
+                              className="text-xs font-semibold text-blue-600 hover:underline"
+                              onClick={() => {
+                                const draft = buildRecommendedPhaseInfo(selectedPhase.name);
+                                navigator.clipboard?.writeText(draft.goal).catch(() => {});
+                              }}
+                            >复制</button>
+                          </div>
+                          <div className="text-xs text-gray-500 leading-relaxed line-clamp-4">
+                            {buildRecommendedPhaseInfo(selectedPhase.name).goal}
+                          </div>
+                          <div className="mt-2">
+                            <button
+                              type="button"
+                              onClick={() => updateCurrentPhaseInfo({ goal: buildRecommendedPhaseInfo(selectedPhase.name).goal })}
+                              className="px-3 py-1.5 text-xs font-semibold border border-gray-300 bg-white text-gray-600 rounded-lg hover:bg-gray-50"
+                            >填入字段</button>
+                          </div>
+                        </div>
+
+                        {/* 阶段完成标准建议 */}
+                        <div className="mt-2 border border-gray-200 rounded-xl p-3">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs font-bold text-gray-700">阶段完成标准建议</span>
+                            <button
+                              type="button"
+                              className="text-xs font-semibold text-blue-600 hover:underline"
+                              onClick={() => {
+                                const draft = buildRecommendedPhaseInfo(selectedPhase.name);
+                                navigator.clipboard?.writeText(draft.exitCriteria.map((c, i) => `${i + 1}. ${c}`).join('\n')).catch(() => {});
+                              }}
+                            >复制</button>
+                          </div>
+                          <div className="text-xs text-gray-500 leading-relaxed line-clamp-5 whitespace-pre-line">
+                            {buildRecommendedPhaseInfo(selectedPhase.name).exitCriteria.map((c, i) => `${i + 1}. ${c}`).join('\n')}
+                          </div>
+                          <div className="mt-2">
+                            <button
+                              type="button"
+                              onClick={() => updateCurrentPhaseInfo({ exitCriteria: buildRecommendedPhaseInfo(selectedPhase.name).exitCriteria })}
+                              className="px-3 py-1.5 text-xs font-semibold border border-gray-300 bg-white text-gray-600 rounded-lg hover:bg-gray-50"
+                            >填入字段</button>
+                          </div>
+                        </div>
+
+                        {/* 节点完成提示建议 */}
+                        <div className="mt-2 border border-gray-200 rounded-xl p-3">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs font-bold text-gray-700">节点完成提示建议</span>
+                            <button
+                              type="button"
+                              className="text-xs font-semibold text-blue-600 hover:underline"
+                              onClick={() => {
+                                const tip = buildCompletionTipFromPhaseInfo(currentPhaseInfo);
+                                navigator.clipboard?.writeText(tip).catch(() => {});
+                              }}
+                            >复制</button>
+                          </div>
+                          <div className="text-xs text-gray-500 leading-relaxed line-clamp-3">
+                            请确认项目立项资料已填写完整，并已完成立项评审。完成本节点后，项目将进入下一阶段。
+                          </div>
+                          <div className="mt-2">
+                            <button
+                              type="button"
+                              onClick={() => handleApplyPhaseInfoToCompletionTip('replace')}
+                              className="px-3 py-1.5 text-xs font-semibold border border-gray-300 bg-white text-gray-600 rounded-lg hover:bg-gray-50"
+                            >填入字段</button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 常见遗漏项（amber） */}
+                      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                        <h4 className="text-sm font-bold text-gray-900">{selectedPhase.name || '节点'}阶段常见遗漏项</h4>
+                        <ul className="mt-2 space-y-1 list-disc list-inside text-xs text-amber-900 leading-relaxed">
+                          <li>未明确项目负责人</li>
+                          <li>只写技术目标，没有写业务目标</li>
+                          <li>未定义样本范围</li>
+                          <li>未定义不适用范围</li>
+                          <li>未判断项目等级</li>
+                          <li>未评估样本获取风险</li>
+                          <li>未设置 Go / No-Go 决策</li>
+                          <li>未明确下一阶段交付物</li>
+                        </ul>
+                      </div>
+
                     </div>
-                  </>
+                  </div>
                 )}
 
+                {activeTab !== 0 && (
+                  <div className="flex-1 overflow-y-auto p-5 space-y-4">
                 {activeTab === 1 && selectedPhase && (
 
                   <div className="p-4 space-y-6">
@@ -2219,6 +2409,51 @@ export default function TemplateEditor() {
                   </div>
                 )}
               </div>
+                )}
+              </div>
+
+              {/* 弹窗底部 */}
+              <div className="flex-shrink-0 flex items-center justify-between px-7 py-4 border-t border-gray-100 bg-white">
+                <span className="text-xs text-gray-400">当前编辑：{['节点信息','节点流转','节点事件','节点任务'][activeTab]}｜建议区不会自动保存为表单内容</span>
+                <div className="flex gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedPhaseId(null); }}
+                    className="px-4 py-2 text-sm font-semibold border border-gray-300 bg-white text-gray-600 rounded-xl hover:bg-gray-50 transition-colors"
+                  >取消</button>
+                  <button
+                    type="button"
+                    onClick={() => { void closePhaseEditorWithSave(); }}
+                    className="px-5 py-2 text-sm font-bold bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                  >保存阶段</button>
+                </div>
+              </div>
+
+              {/* 应用模板确认弹窗 */}
+              {showApplyConfirm && (
+                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl" style={{ background: 'rgba(15,23,42,0.42)' }}>
+                  <div className="w-[440px] bg-white rounded-2xl p-6 shadow-2xl">
+                    <h3 className="text-base font-bold text-gray-900">应用「{selectedPhase.name}模板」？</h3>
+                    <p className="mt-3 text-sm text-gray-500 leading-relaxed">
+                      应用后将自动填入节点目标、节点说明、阶段完成标准和适用项目类型。<br/>
+                      已填写的内容将被覆盖，请确认后操作。
+                    </p>
+                    <div className="mt-5 flex justify-end gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => setShowApplyConfirm(false)}
+                        className="px-4 py-2 text-sm font-semibold border border-gray-300 bg-white text-gray-600 rounded-xl hover:bg-gray-50"
+                      >取消</button>
+                      <button
+                        type="button"
+                        onClick={() => { handleApplyPhaseInfoTemplate(); setShowApplyConfirm(false); }}
+                        className="px-5 py-2 text-sm font-bold bg-blue-600 text-white rounded-xl hover:bg-blue-700"
+                      >确认应用</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
         )}
