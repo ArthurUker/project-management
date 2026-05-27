@@ -192,28 +192,36 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
   const detectCategoriesFromText = React.useCallback((text: string) => {
     const lowered = text.toLowerCase();
     const mapping: Array<{ category: string; keywords: string[] }> = [
-      { category: '缓冲体系', keywords: ['buffer', 'tris', 'hepes', 'pbs', '缓冲'] },
-      { category: '盐类', keywords: ['nacl', 'kcl', 'cacl2', 'mgcl2', '盐'] },
-      { category: '去污剂', keywords: ['sds', 'tween', 'triton', '去污'] },
-      { category: '变性剂', keywords: ['urea', 'gitc', '异硫氰酸胍', '变性'] },
-      { category: '螯合剂', keywords: ['edta', '螯合'] },
-      { category: '稳定剂', keywords: ['glycerol', '甘油', '蔗糖', '稳定'] },
-      { category: '酶/蛋白', keywords: ['bsa', 'protein', '酶', '蛋白'] },
-      { category: '酸碱试剂', keywords: ['naoh', 'hcl', '酸', '碱'] },
-      { category: 'pH调节剂', keywords: ['ph', '调节'] },
+      { category: '缓冲体系', keywords: ['buffer', 'tris', 'hepes', 'pbs', 'mops', '缓冲'] },
+      { category: '盐类', keywords: ['nacl', 'kcl', 'cacl2', 'mgcl2', 'nh4cl', '盐'] },
+      { category: '去污剂', keywords: ['sds', 'tween', 'triton', 'ctab', '去污'] },
+      { category: '变性剂', keywords: ['urea', 'guanidine', 'gitc', '异硫氰酸胍', '变性'] },
+      { category: '螯合剂', keywords: ['edta', 'egta', '螯合'] },
+      { category: '稳定剂', keywords: ['glycerol', '甘油', '海藻糖', '蔗糖', '稳定'] },
+      { category: '酶/蛋白', keywords: ['bsa', 'protein', 'polymerase', 'ligase', '酶', '蛋白'] },
+      { category: '酸碱试剂', keywords: ['naoh', 'koh', 'hcl', 'h2so4', '酸', '碱'] },
+      { category: 'pH调节剂', keywords: ['ph', 'neutralization', '调节'] },
       { category: '培养基成分', keywords: ['培养基', 'medium', 'peptone', 'tryptone', 'yeast extract'] },
       { category: '核酸沉淀剂', keywords: ['isopropanol', 'ethanol', '乙醇', '异丙醇', '沉淀'] },
-      { category: '还原剂', keywords: ['dtt', 'β-me', 'mercaptoethanol', '还原'] },
+      { category: '还原剂', keywords: ['dtt', 'β-me', 'mercaptoethanol', 'tcep', '还原'] },
       { category: '材料', keywords: ['膜', 'beads', '磁珠', '耗材', 'material'] },
       { category: '电泳', keywords: ['agarose', '琼脂糖', 'tae', 'tbe', '电泳'] },
-      { category: '染料/指示剂', keywords: ['染料', '指示剂', 'dye', 'indicator'] },
+      { category: '染料/指示剂', keywords: ['染料', '指示剂', 'dye', 'indicator', 'sybr'] },
+      { category: '螯合剂', keywords: ['acetate', 'citrate', '乙酸', '柠檬酸', '络合'] },
     ];
 
-    const detected = mapping
-      .filter((item) => item.keywords.some((keyword) => lowered.includes(keyword.toLowerCase())))
-      .map((item) => item.category);
+    const scored = mapping
+      .map((item) => {
+        const score = item.keywords.reduce((acc, keyword) => {
+          return lowered.includes(keyword.toLowerCase()) ? acc + 1 : acc;
+        }, 0);
+        return { category: item.category, score };
+      })
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score);
 
-    return detected.length > 0 ? Array.from(new Set(detected)) : ['未分类'];
+    const detected = scored.map((item) => item.category);
+    return detected.length > 0 ? Array.from(new Set(detected)).slice(0, 4) : ['未分类'];
   }, []);
 
   const handleRecognizeText = React.useCallback(() => {
@@ -223,40 +231,175 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
       return;
     }
 
-    const parts: string[] = [];
-    const commonName = text.match(/(?:常用名|简称|名称)\s*[:：]\s*([^\n,，;；]+)/)?.[1]?.trim();
-    const chineseName = text.match(/(?:中文名|中文名称)\s*[:：]\s*([^\n,，;；]+)/)?.[1]?.trim();
-    const englishName = text.match(/(?:英文名|英文名称)\s*[:：]\s*([^\n,，;；]+)/)?.[1]?.trim();
-    const cas = text.match(/(?:CAS(?:号)?\s*[:：]?\s*)(\d{2,7}-\d{2}-\d)/i)?.[1]?.trim();
-    const molecularFormula = text.match(/(?:分子式|formula)\s*[:：]\s*([A-Za-z0-9()\-+]+)/i)?.[1]?.trim();
-    const mw = text.match(/(?:MW|分子量|相对分子质量)\s*[:：]?\s*(\d+(?:\.\d+)?)/i)?.[1]?.trim();
-    const supplier = text.match(/(?:供应商|厂家|品牌)\s*[:：]\s*([^\n,，;；]+)/)?.[1]?.trim();
+    const fieldBoundary = /(?:常用名|简称|名称|中文名|中文名称|中文别名|英文名|英文名称|英文别名|english\s*name|CAS(?:\s*No\.?)?|CAS号|分子式|化学式|formula|molecular\s*formula|分子量|MW|molecular\s*weight|纯度|purity|供应商|厂家|品牌|厂商|supplier|vendor|brand|形态|状态|CBNumber|MOLFile|化学性质|安全信息|用途|价格|图谱|储存条件|熔点|溶解度|密度|PH值)\s*[:：]/i;
+    const normalizeSpace = (value: string) => value.replace(/\s+/g, ' ').trim();
+    const stripNoise = (value: string) => {
+      return normalizeSpace(value)
+        .replace(/网站主页>>?/g, '')
+        .replace(/CAS数据库列表/g, '')
+        .replace(/\bChemicalbook\b/ig, '')
+        .replace(/[【\[][^\]】]*[\]】]/g, (segment) => segment.includes('纯度') ? segment : '')
+        .replace(/^[-—:：,，;；|\s]+/, '')
+        .replace(/[-—:：,，;；|\s]+$/, '');
+    };
+    const firstItem = (value: string) => {
+      const cleaned = stripNoise(value);
+      return cleaned.split(/[;；|]/).map((item) => stripNoise(item)).find(Boolean) || '';
+    };
+    const isLikelyBadName = (value: string) => {
+      if (!value) return true;
+      if (value.length > 48) return true;
+      if (/[>]{2}|主页|数据库|列表|价格|图谱|用途|安全信息/.test(value)) return true;
+      return false;
+    };
+    const extractAfterLabel = (source: string, labels: RegExp[]) => {
+      for (const label of labels) {
+        const match = label.exec(source);
+        if (!match) continue;
+        const start = match.index + match[0].length;
+        const rest = source.slice(start);
+        const stop = rest.search(fieldBoundary);
+        const raw = stop >= 0 ? rest.slice(0, stop) : rest;
+        const cleaned = stripNoise(raw);
+        if (cleaned) return cleaned;
+      }
+      return '';
+    };
 
+    const segmentedText = text
+      .replace(/(CAS(?:\s*No\.?)?\s*[:：]?\s*\d{2,7}-\d{2}-\d)/ig, '\n$1')
+      .replace(/((?:中文名|中文名称|中文别名|英文名|英文名称|英文别名|分子式|化学式|分子量|MW|纯度|供应商|厂家|品牌|厂商|形态|状态|CBNumber|MOLFile)\s*[:：])/ig, '\n$1')
+      .replace(/\s+/g, ' ');
+
+    const lines = text
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    let commonName = extractAfterLabel(segmentedText, [
+      /(?:常用名|简称)\s*[:：=]/i,
+      /(?:名称|name)\s*[:：=]/i,
+    ]);
+    let chineseName = firstItem(extractAfterLabel(segmentedText, [
+      /(?:中文名|中文名称)\s*[:：=]/i,
+    ]));
+    let englishName = firstItem(extractAfterLabel(segmentedText, [
+      /(?:英文名|英文名称|英文|english\s*name)\s*[:：=]/i,
+    ])).replace(/\s+/g, ' ');
+
+    let cas = extractAfterLabel(segmentedText, [
+      /(?:CAS(?:\s*No\.?)?|CAS号)\s*[:：=]?/i,
+    ]).match(/\d{2,7}-\d{2}-\d/)?.[0] || '';
+    if (!cas) cas = text.match(/\d{2,7}-\d{2}-\d/)?.[0] || '';
+
+    const molecularFormulaRaw = extractAfterLabel(segmentedText, [
+      /(?:分子式|化学式|formula|molecular\s*formula)\s*[:：=]?/i,
+    ]);
+    const molecularFormula = molecularFormulaRaw.match(/[A-Z][A-Za-z]?[0-9]*(?:[A-Z][A-Za-z]?[0-9]*)+/)?.[0]
+      || text.match(/\b([A-Z][A-Za-z]?[0-9]*(?:[A-Z][A-Za-z]?[0-9]*){2,})\b/)?.[1]
+      || '';
+
+    const mwRaw = extractAfterLabel(segmentedText, [
+      /(?:MW|分子量|相对分子质量|molecular\s*weight)\s*[:：=]?/i,
+    ]);
+    const mw = mwRaw.match(/\d+(?:\.\d+)?/)?.[0]
+      || text.match(/(?:分子量|MW)\s*[:：=]?\s*(\d+(?:\.\d+)?)/i)?.[1]
+      || text.match(/(\d+(?:\.\d+)?)\s*(?:g\/?mol|Da)\b/i)?.[1]
+      || '';
+
+    const purityRaw = extractAfterLabel(segmentedText, [
+      /(?:纯度|purity)\s*[:：=]?/i,
+    ]);
+    const purity = purityRaw.match(/\d+(?:\.\d+)?/)?.[0]
+      || text.match(/(?:纯度|purity)\s*[:：=]?\s*(?:>=|＞=|>\s*)?(\d+(?:\.\d+)?)/i)?.[1]
+      || '';
+
+    const supplier = firstItem(extractAfterLabel(segmentedText, [
+      /(?:供应商|厂家|品牌|厂商|supplier|vendor|brand)\s*[:：=]/i,
+    ]));
+
+    if (!chineseName) {
+      const candidate = lines.find((line) => /[\u4e00-\u9fa5]/.test(line) && !/CAS|分子式|化学式|MW|纯度|供应商|安全信息|用途|价格|图谱/i.test(line));
+      if (candidate) chineseName = stripNoise(candidate.replace(/[（(].*?[）)]/g, ''));
+    }
+
+    if (!englishName) {
+      const candidate = lines.find((line) => /[A-Za-z]{4,}/.test(line) && !/CAS|formula|MW|purity|supplier|safety|price|用途/i.test(line));
+      if (candidate) {
+        const fromBracket = candidate.match(/[（(]([^)）]*[A-Za-z][^)）]*)[）)]/);
+        englishName = stripNoise(fromBracket?.[1] || candidate).replace(/\s+/g, ' ');
+      }
+    }
+
+    if (!commonName || isLikelyBadName(commonName)) {
+      const preferredName = chineseName || englishName;
+      if (preferredName) {
+        commonName = preferredName;
+      } else {
+        const lineCandidate = lines.find((line) => {
+          const candidate = stripNoise(line.replace(/[（(].*?[）)]/g, ''));
+          return candidate.length > 1 && candidate.length <= 32 && !isLikelyBadName(candidate);
+        });
+        commonName = lineCandidate ? stripNoise(lineCandidate) : '';
+      }
+    }
+
+    const bracketPair = lines.find((line) => /[\u4e00-\u9fa5].*[（(][A-Za-z].*[）)]/.test(line) || /[A-Za-z].*[（(][\u4e00-\u9fa5].*[）)]/.test(line));
+    if (bracketPair) {
+      const cnInLine = bracketPair.match(/([\u4e00-\u9fa5A-Za-z0-9\-\s]+)[（(]([^)）]+)[）)]/);
+      if (cnInLine) {
+        const left = cnInLine[1].trim();
+        const right = cnInLine[2].trim();
+        if (!chineseName && /[\u4e00-\u9fa5]/.test(left)) chineseName = left;
+        if (!englishName && /[A-Za-z]/.test(right)) englishName = right;
+      }
+    }
+
+    const parts: string[] = [];
     if (commonName) { setFormValue('commonName', commonName); parts.push('常用名'); }
     if (chineseName) { setFormValue('chineseName', chineseName); parts.push('中文名称'); }
     if (englishName) { setFormValue('englishName', englishName); parts.push('英文名称'); }
     if (cas) { setFormValue('casNumber', cas); parts.push('CAS号'); }
     if (molecularFormula) { setFormValue('molecularFormula', molecularFormula); parts.push('分子式'); }
     if (mw) { setFormValue('mw', mw); parts.push('MW'); }
+    if (purity) { setFormValue('purity', purity); parts.push('纯度'); }
     if (supplier) { setFormValue('supplier', supplier); parts.push('供应商'); }
 
+    const explicitState = extractAfterLabel(segmentedText, [/(?:形态|状态)\s*[:：=]/i]).toLowerCase();
     const stateText = text.toLowerCase();
-    if (stateText.includes('solution') || stateText.includes('溶液')) {
-      setFormValue('state', 'solution');
+    const hasSolidSignal = /powder|solid|crystal|颗粒|粉末|固体/.test(explicitState) || /powder|solid|crystal|粉末|固体/.test(stateText);
+    const hasLiquidSignal = /liquid|液体/.test(explicitState) || /liquid|液体/.test(stateText);
+    const hasSolutionSignal = /solution|溶液/.test(explicitState) || /(^|[^a-z])solution([^a-z]|$)/.test(stateText) || /(?<!水)溶液/.test(text);
+
+    if (hasSolidSignal) {
+      setFormValue('state', 'solid');
       parts.push('物态');
-    } else if (stateText.includes('liquid') || stateText.includes('液体')) {
+    } else if (hasLiquidSignal) {
       setFormValue('state', 'liquid');
       parts.push('物态');
-    } else if (stateText.includes('solid') || stateText.includes('固体') || stateText.includes('powder') || stateText.includes('粉末')) {
-      setFormValue('state', 'solid');
+    } else if (hasSolutionSignal && !/soluble|易溶于|溶解度/.test(stateText)) {
+      setFormValue('state', 'solution');
       parts.push('物态');
     }
 
-    const categories = detectCategoriesFromText(text);
+    const categoryFocusText = [
+      commonName,
+      chineseName,
+      englishName,
+      firstItem(extractAfterLabel(segmentedText, [/(?:中文别名|英文别名)\s*[:：=]/i])),
+      molecularFormula,
+    ].filter(Boolean).join('\n');
+    const categories = detectCategoriesFromText(categoryFocusText || text.slice(0, 300));
     setCategoryDraft(categories);
     parts.push('试剂分类');
 
-    setRecognitionHint(`已识别并填充：${Array.from(new Set(parts)).join('、')}。如有不准确可手动修改。`);
+    if (parts.length <= 1) {
+      setRecognitionHint('识别到的信息较少，请补充包含名称/CAS/化学式/MW的文本后重试。');
+      return;
+    }
+
+    const confidence = parts.length >= 6 ? '较高' : parts.length >= 4 ? '中等' : '一般';
+    setRecognitionHint(`已识别并填充：${Array.from(new Set(parts)).join('、')}（置信度${confidence}）。如有不准确可手动修改。`);
   }, [recognitionText, detectCategoriesFromText, setFormValue]);
   const findScrollParent = (el: HTMLElement | null): HTMLElement | null => {
     while (el) {

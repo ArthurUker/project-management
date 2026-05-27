@@ -74,6 +74,13 @@ interface Phase {
   source: 'self' | 'inherited';
   enabled: boolean;
   completionTip: string;
+  phaseInfo?: {
+    goal: string;
+    description: string;
+    projectTypes: string[];
+    exitCriteria: string[];
+    goNoGoRule: string;
+  };
   allowSkip: boolean;
   tasks: PhaseTask[];
   isSubPhase?: boolean;
@@ -192,6 +199,57 @@ const EVENT_RECOMMENDATIONS = [
     value: '确保退回有据可查，避免“退回但无原因”导致反复沟通。',
   },
 ];
+
+function buildRecommendedPhaseInfo(phaseName: string) {
+  const normalizedPhaseName = phaseName.trim() || '项目立项';
+  return {
+    goal: '完成项目需求、应用场景、产品边界、技术可行性、资源投入和风险的初步确认，形成项目是否进入方案设计阶段的立项决策。',
+    description: `本阶段用于判断${normalizedPhaseName}是否具备研发启动条件。需明确项目来源、目标用户、应用场景、样本类型、检测对象、预期用途、交付形式、开发等级、初步技术路线、关键风险、资源投入及计划周期。阶段结束时应形成立项简表、用户需求记录、可行性初评和Go/No-Go决策。`,
+    projectTypes: [
+      '非医疗分子检测芯片项目',
+      '食品安全检测项目',
+      '水产病原检测项目',
+      '中药材鉴定项目',
+      '海关检疫项目',
+      '客户定制芯片项目',
+      '合作开发项目',
+      '准注册级试剂项目',
+    ],
+    exitCriteria: [
+      '项目基本信息已填写完整',
+      '目标用户、应用场景、样本范围和检测对象已明确',
+      '产品声称边界和不适用范围已初步确认',
+      '已完成技术可行性和资源可行性初评',
+      '已完成项目等级判定',
+      '已识别主要风险和外部依赖',
+      '已完成Go/No-Go决策并指定项目负责人',
+    ],
+    goNoGoRule: 'Go 条件：核心需求明确、技术路线可行、关键资源到位、风险可控。No-Go 条件：需求不清晰、关键样本不可获得、技术不可行、资源缺口无法补齐、风险不可接受。',
+  };
+}
+
+function buildCompletionTipFromPhaseInfo(phaseInfo: {
+  goal: string;
+  description: string;
+  projectTypes: string[];
+  exitCriteria: string[];
+  goNoGoRule: string;
+}) {
+  return [
+    `【节点目标】\n${phaseInfo.goal || '请填写节点目标。'}`,
+    `【节点说明】\n${phaseInfo.description || '请填写节点说明。'}`,
+    `【适用项目类型】\n${phaseInfo.projectTypes.length > 0 ? phaseInfo.projectTypes.join('、') : '请填写适用项目类型。'}`,
+    `【阶段完成标准】\n${phaseInfo.exitCriteria.length > 0 ? phaseInfo.exitCriteria.map((item, idx) => `${idx + 1}. ${item}`).join('\n') : '请填写阶段完成标准。'}`,
+    `【Go/No-Go 判定】\n${phaseInfo.goNoGoRule || '请填写进入下一阶段的判定条件。'}`,
+  ].join('\n\n');
+}
+
+function splitByLine(value: string) {
+  return value
+    .split(/\n|；|;/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
 
 function ActionEditor({ action, onChange, onDelete }: {
   action: PhaseEventAction;
@@ -756,7 +814,6 @@ export default function TemplateEditor() {
   const [showBatchOp, setShowBatchOp] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState('');
-  const [copiedSuggestionKey, setCopiedSuggestionKey] = useState<string | null>(null);
   const [quickSuccessorName, setQuickSuccessorName] = useState('');
   const [phaseHistory, setPhaseHistory] = useState<Phase[][]>([]);
   const [, setPhaseFuture] = useState<Phase[][]>([]);
@@ -884,6 +941,7 @@ export default function TemplateEditor() {
           source: raw.source || 'self',
           enabled: raw.enabled !== false,
           completionTip: raw.completionTip || '',
+          phaseInfo: raw.phaseInfo,
           allowSkip: raw.allowSkip || false,
           tasks,
           subPhases,
@@ -1402,6 +1460,7 @@ export default function TemplateEditor() {
         source: p.source,
         enabled: p.enabled,
         completionTip: p.completionTip,
+        phaseInfo: p.phaseInfo,
         allowSkip: p.allowSkip,
         nextPhaseIds: p.nextPhaseIds ?? [],
         tasks: p.tasks.map(t => ({
@@ -1477,75 +1536,51 @@ export default function TemplateEditor() {
     setQuickSuccessorName('');
   }, [selectedPhaseId]);
 
-  const phaseInfoSuggestionSections = useMemo(() => {
-    const phaseName = selectedPhase?.name?.trim() || '项目立项';
-    return [
-      {
-        key: 'phase-name',
-        title: '节点名称',
-        intro: '建议名称：',
-        text: phaseName,
-      },
-      {
-        key: 'phase-goal',
-        title: '节点目标',
-        intro: '建议写：',
-        text: '完成项目需求、应用场景、产品边界、技术可行性、资源投入和风险的初步确认，形成项目是否进入方案设计阶段的立项决策。',
-      },
-      {
-        key: 'phase-description',
-        title: '节点说明',
-        intro: '可以写得稍微正式一点：',
-        text: '本阶段用于判断项目是否具备研发启动条件。需明确项目来源、目标用户、应用场景、样本类型、检测对象、预期用途、交付形式、开发等级、初步技术路线、关键风险、资源投入及计划周期。阶段结束时应形成立项简表、用户需求记录、可行性初评和Go/No-Go决策。',
-      },
-      {
-        key: 'phase-apply-scope',
-        title: '适用项目类型',
-        intro: '建议在说明中加入：',
-        text: '适用于非医疗分子检测芯片项目、食品安全检测项目、水产病原检测项目、中药材鉴定项目、海关检疫项目、客户定制芯片项目、合作开发项目及准注册级试剂项目。',
-      },
-      {
-        key: 'phase-exit-criteria',
-        title: '阶段完成标准',
-        intro: '建议配置为：',
-        text: '1. 项目基本信息已填写完整；\n2. 目标用户、应用场景、样本范围和检测对象已明确；\n3. 产品声称边界和不适用范围已初步确认；\n4. 已完成技术可行性和资源可行性初评；\n5. 已完成项目等级判定；\n6. 已识别主要风险和外部依赖；\n7. 已完成Go/No-Go决策并指定项目负责人。',
-      },
-    ];
-  }, [selectedPhase?.name]);
-
-  const handleCopySuggestion = useCallback(async (key: string, text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedSuggestionKey(key);
-      window.setTimeout(() => {
-        setCopiedSuggestionKey((prev) => (prev === key ? null : prev));
-      }, 1200);
-    } catch {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      setCopiedSuggestionKey(key);
-      window.setTimeout(() => {
-        setCopiedSuggestionKey((prev) => (prev === key ? null : prev));
-      }, 1200);
+  const currentPhaseInfo = useMemo(() => {
+    if (!selectedPhase) {
+      return {
+        goal: '',
+        description: '',
+        projectTypes: [] as string[],
+        exitCriteria: [] as string[],
+        goNoGoRule: '',
+      };
     }
-  }, []);
+    return selectedPhase.phaseInfo || {
+      goal: '',
+      description: '',
+      projectTypes: [],
+      exitCriteria: [],
+      goNoGoRule: '',
+    };
+  }, [selectedPhase]);
 
-  const handleApplySuggestionToCompletionTip = useCallback((mode: 'replace' | 'append') => {
+  const updateCurrentPhaseInfo = useCallback((updates: Partial<NonNullable<Phase['phaseInfo']>>) => {
     if (!selectedPhase) return;
-    const mergedText = phaseInfoSuggestionSections
-      .slice(1)
-      .map((section) => `【${section.title}】\n${section.text}`)
-      .join('\n\n');
+    updatePhase(selectedPhase.id, {
+      phaseInfo: {
+        goal: currentPhaseInfo.goal,
+        description: currentPhaseInfo.description,
+        projectTypes: currentPhaseInfo.projectTypes,
+        exitCriteria: currentPhaseInfo.exitCriteria,
+        goNoGoRule: currentPhaseInfo.goNoGoRule,
+        ...updates,
+      },
+    });
+  }, [selectedPhase, currentPhaseInfo]);
+
+  const handleApplyPhaseInfoTemplate = useCallback(() => {
+    if (!selectedPhase) return;
+    updateCurrentPhaseInfo(buildRecommendedPhaseInfo(selectedPhase.name || '项目立项'));
+  }, [selectedPhase, updateCurrentPhaseInfo]);
+
+  const handleApplyPhaseInfoToCompletionTip = useCallback((mode: 'replace' | 'append') => {
+    if (!selectedPhase) return;
+    const tip = buildCompletionTipFromPhaseInfo(currentPhaseInfo);
     const current = (selectedPhase.completionTip || '').trim();
-    const next = mode === 'append' && current ? `${current}\n\n${mergedText}` : mergedText;
+    const next = mode === 'append' && current ? `${current}\n\n${tip}` : tip;
     updatePhase(selectedPhase.id, { completionTip: next });
-  }, [selectedPhase, phaseInfoSuggestionSections]);
+  }, [selectedPhase, currentPhaseInfo]);
 
   const totalTasks = phases.reduce((s, p) => s + p.tasks.filter(t => t.enabled).length, 0);
   const previewContent = useMemo(() => buildTemplatePreviewContent((template as any)?.name || '模板预览', phases, milestones), [template, phases, milestones]);
@@ -1848,44 +1883,86 @@ export default function TemplateEditor() {
                     <div className="rounded-xl border border-indigo-100 bg-gradient-to-b from-indigo-50/60 to-white p-4">
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <h4 className="text-sm font-semibold text-gray-900">三、节点信息配置建议</h4>
-                          <p className="mt-1 text-xs text-gray-500">你可以在“节点信息”里设置这个阶段的基本说明，并一键填入节点完成提示。</p>
+                          <h4 className="text-sm font-semibold text-gray-900">三、节点信息结构化录入</h4>
+                          <p className="mt-1 text-xs text-gray-500">将建议直接转成可保存字段。你可以先一键填入草稿，再按项目实际调整。</p>
                         </div>
-                        <span className="rounded-full bg-indigo-100 px-2.5 py-1 text-[11px] font-medium text-indigo-700">建议模版</span>
+                        <button
+                          type="button"
+                          onClick={handleApplyPhaseInfoTemplate}
+                          className="rounded-full bg-indigo-100 px-2.5 py-1 text-[11px] font-medium text-indigo-700 hover:bg-indigo-200"
+                        >
+                          一键填充草稿
+                        </button>
                       </div>
 
                       <div className="mt-3 space-y-3">
-                        {phaseInfoSuggestionSections.map((section) => (
-                          <div key={section.key} className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-                            <div className="flex items-center justify-between bg-gray-50 px-3 py-2">
-                              <div>
-                                <div className="text-xs font-semibold text-gray-700">{section.title}</div>
-                                <div className="text-[11px] text-gray-400 mt-0.5">{section.intro}</div>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => { void handleCopySuggestion(section.key, section.text); }}
-                                className={`rounded-md border px-2.5 py-1 text-xs transition-colors ${copiedSuggestionKey === section.key ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-gray-200 text-gray-600 hover:bg-white'}`}
-                              >
-                                {copiedSuggestionKey === section.key ? '已复制' : 'Copy'}
-                              </button>
-                            </div>
-                            <div className="px-3 py-2 text-sm leading-6 text-gray-700 whitespace-pre-wrap">{section.text}</div>
-                          </div>
-                        ))}
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 mb-1 block">节点目标</label>
+                          <textarea
+                            rows={2}
+                            className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none"
+                            placeholder="一句话描述这个节点要达成的决策或成果"
+                            value={currentPhaseInfo.goal}
+                            onChange={(e) => updateCurrentPhaseInfo({ goal: e.target.value })}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 mb-1 block">节点说明</label>
+                          <textarea
+                            rows={4}
+                            className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none"
+                            placeholder="说明该节点需要明确的信息和产出文档"
+                            value={currentPhaseInfo.description}
+                            onChange={(e) => updateCurrentPhaseInfo({ description: e.target.value })}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 mb-1 block">适用项目类型（每行一个）</label>
+                          <textarea
+                            rows={3}
+                            className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none"
+                            placeholder={'非医疗分子检测芯片项目\n食品安全检测项目'}
+                            value={currentPhaseInfo.projectTypes.join('\n')}
+                            onChange={(e) => updateCurrentPhaseInfo({ projectTypes: splitByLine(e.target.value) })}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 mb-1 block">阶段完成标准（每行一条）</label>
+                          <textarea
+                            rows={4}
+                            className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none"
+                            placeholder={'项目基本信息已填写完整\n已完成Go/No-Go决策并指定项目负责人'}
+                            value={currentPhaseInfo.exitCriteria.join('\n')}
+                            onChange={(e) => updateCurrentPhaseInfo({ exitCriteria: splitByLine(e.target.value) })}
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-medium text-gray-500 mb-1 block">Go/No-Go 判定条件</label>
+                          <textarea
+                            rows={3}
+                            className="w-full text-sm border border-gray-200 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-none"
+                            placeholder="填写进入下一阶段与否决条件"
+                            value={currentPhaseInfo.goNoGoRule}
+                            onChange={(e) => updateCurrentPhaseInfo({ goNoGoRule: e.target.value })}
+                          />
+                        </div>
                       </div>
 
                       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
                         <button
                           type="button"
-                          onClick={() => handleApplySuggestionToCompletionTip('append')}
+                          onClick={() => handleApplyPhaseInfoToCompletionTip('append')}
                           className="rounded-md border border-gray-200 px-3 py-1.5 text-xs text-gray-600 hover:bg-white"
                         >
                           追加到节点完成提示
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleApplySuggestionToCompletionTip('replace')}
+                          onClick={() => handleApplyPhaseInfoToCompletionTip('replace')}
                           className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs text-white hover:bg-indigo-700"
                         >
                           一键覆盖到节点完成提示
