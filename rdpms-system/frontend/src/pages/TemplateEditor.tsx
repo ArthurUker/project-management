@@ -81,6 +81,7 @@ interface Phase {
     exitCriteria: string[];
     goNoGoRule: string;
   };
+  eventTemplates?: PhaseEvent[];
   allowSkip: boolean;
   tasks: PhaseTask[];
   isSubPhase?: boolean;
@@ -447,12 +448,33 @@ function EventRuleCard({ event, phases: _phases, onUpdate, onDelete }: {
   );
 }
 
-function PhaseEventsPanel({ events, onEventsChange, phaseName }: {
+function PhaseEventsPanel({ events, onEventsChange, phaseName, eventTemplates, onEventTemplatesChange }: {
   events: PhaseEvent[];
   onEventsChange: (events: PhaseEvent[]) => void;
   phaseName?: string;
+  eventTemplates?: PhaseEvent[];
+  onEventTemplatesChange?: (templates: PhaseEvent[]) => void;
 }) {
   const [copiedSuggestionKey, setCopiedSuggestionKey] = useState<string | null>(null);
+  const [templatesLocal, setTemplatesLocal] = useState<PhaseEvent[]>([]);
+
+  useEffect(() => {
+    if (eventTemplates && eventTemplates.length > 0) {
+      setTemplatesLocal(eventTemplates.map(t => ({ ...t })));
+      return;
+    }
+    // fallback to built-in recommendations
+    const built = EVENT_RECOMMENDATIONS.map((_, idx) => {
+      // buildRecommendedEvent exists below, so skip here and generate minimal defaults
+      const phaseLabel = phaseName || '当前节点';
+      if (idx === 0) return { id: `tmpl_${Date.now()}_${idx}`, trigger: 'onEnter', enabled: true, label: `当项目进入“${phaseLabel}”节点`, actions: [{ id: `act_${Date.now()}_${idx}_0`, type: 'notify', config: { notifyRoles: ['项目负责人', '研发工程师', '质量经理'], notifyContent: '项目已进入立项阶段，请在规定时间内完成资料。' } }] } as PhaseEvent;
+      if (idx === 1) return { id: `tmpl_${Date.now()}_${idx}`, trigger: 'onComplete', enabled: true, label: '当“立项资料状态”变更为“已提交”', actions: [{ id: `act_${Date.now()}_${idx}_0`, type: 'startApproval', config: { approvalProcess: '立项审批' } }] } as PhaseEvent;
+      if (idx === 2) return { id: `tmpl_${Date.now()}_${idx}`, trigger: 'onComplete', enabled: true, label: '当“立项审批结果”为“通过”', actions: [{ id: `act_${Date.now()}_${idx}_0`, type: 'updateField', config: { fieldName: 'projectStatus', fieldValue: '已立项' } }] } as PhaseEvent;
+      if (idx === 3) return { id: `tmpl_${Date.now()}_${idx}`, trigger: 'onComplete', enabled: true, label: '当“立项审批结果”为“不通过”或“退回修改”', actions: [{ id: `act_${Date.now()}_${idx}_0`, type: 'notify', config: { notifyRoles: ['项目负责人'], notifyContent: '立项审批未通过，请补充资料。' } }] } as PhaseEvent;
+      return null;
+    }).filter(Boolean) as PhaseEvent[];
+    setTemplatesLocal(built);
+  }, [eventTemplates, phaseName]);
 
   const addEvent = () => {
     const newEvent: PhaseEvent = {
@@ -474,108 +496,66 @@ function PhaseEventsPanel({ events, onEventsChange, phaseName }: {
     onEventsChange(events.filter((_, i) => i !== idx));
   };
 
-  const copyText = useCallback(async (key: string, text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopiedSuggestionKey(key);
-      window.setTimeout(() => {
-        setCopiedSuggestionKey((prev) => (prev === key ? null : prev));
-      }, 1200);
-    } catch {
-      const textarea = document.createElement('textarea');
-      textarea.value = text;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      setCopiedSuggestionKey(key);
-      window.setTimeout(() => {
-        setCopiedSuggestionKey((prev) => (prev === key ? null : prev));
-      }, 1200);
-    }
-  }, []);
+  const cloneEventInstance = (tmpl: PhaseEvent) => {
+    return {
+      ...tmpl,
+      id: `evt_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      actions: (tmpl.actions || []).map((a, i) => ({ ...a, id: `act_${Date.now()}_${Math.floor(Math.random() * 1000)}_${i}` })),
+    } as PhaseEvent;
+  };
 
-  const buildRecommendedEvent = useCallback((idx: number): PhaseEvent | null => {
-    const phaseLabel = phaseName || '当前节点';
-    if (idx === 0) {
-      return {
-        id: `evt_${Date.now()}_${idx}`,
-        trigger: 'onEnter',
-        enabled: true,
-        label: `当项目进入“${phaseLabel}”节点`,
-        actions: [
-          {
-            id: `act_${Date.now()}_${idx}_0`,
-            type: 'notify',
-            config: {
-              notifyRoles: ['项目负责人', '研发工程师', '质量经理'],
-              notifyContent: '项目已进入立项阶段，请在规定时间内完成项目基本信息、需求来源、应用场景、样本范围、技术可行性、资源评估及风险初评。',
-            },
-          },
-        ],
-      };
-    }
-    if (idx === 1) {
-      return {
-        id: `evt_${Date.now()}_${idx}`,
-        trigger: 'onComplete',
-        enabled: true,
-        label: '当“立项资料状态”变更为“已提交”',
-        actions: [
-          {
-            id: `act_${Date.now()}_${idx}_0`,
-            type: 'startApproval',
-            config: {
-              approvalProcess: '立项审批（研发负责人→项目管理/质量负责人→总经理/技术负责人）',
-            },
-          },
-        ],
-      };
-    }
-    if (idx === 2) {
-      return {
-        id: `evt_${Date.now()}_${idx}`,
-        trigger: 'onComplete',
-        enabled: true,
-        label: '当“立项审批结果”为“通过”',
-        actions: [
-          { id: `act_${Date.now()}_${idx}_0`, type: 'updateField', config: { fieldName: 'projectStatus', fieldValue: '已立项' } },
-          { id: `act_${Date.now()}_${idx}_1`, type: 'updateField', config: { fieldName: 'nextPhase', fieldValue: '需求确认与产品定义' } },
-          { id: `act_${Date.now()}_${idx}_2`, type: 'webhook', config: { webhookUrl: 'auto://generate-next-stage-tasks' } },
-        ],
-      };
-    }
-    if (idx === 3) {
-      return {
-        id: `evt_${Date.now()}_${idx}`,
-        trigger: 'onComplete',
-        enabled: true,
-        label: '当“立项审批结果”为“不通过”或“退回修改”',
-        actions: [
-          { id: `act_${Date.now()}_${idx}_0`, type: 'notify', config: { notifyRoles: ['项目负责人'], notifyContent: '立项审批未通过，请根据审批意见补充资料后重新提交。' } },
-          { id: `act_${Date.now()}_${idx}_1`, type: 'updateField', config: { fieldName: 'projectStatus', fieldValue: '立项退回' } },
-          { id: `act_${Date.now()}_${idx}_2`, type: 'updateField', config: { fieldName: 'approvalCommentRequired', fieldValue: 'true' } },
-        ],
-      };
-    }
-    return null;
-  }, [phaseName]);
+  const addTemplateToEvents = (idx: number) => {
+    const tmpl = templatesLocal[idx];
+    if (!tmpl) return;
+    onEventsChange([...events, cloneEventInstance(tmpl)]);
+  };
 
-  const addRecommendedEvent = useCallback((idx: number) => {
-    const next = buildRecommendedEvent(idx);
-    if (!next) return;
-    onEventsChange([...events, next]);
-  }, [buildRecommendedEvent, events, onEventsChange]);
+  const replaceWithTemplates = () => {
+    if (!templatesLocal || templatesLocal.length === 0) return;
+    onEventsChange(templatesLocal.map(t => cloneEventInstance(t)));
+  };
 
-  const replaceWithRecommendedEvents = useCallback(() => {
-    const next = EVENT_RECOMMENDATIONS
-      .map((_, idx) => buildRecommendedEvent(idx))
-      .filter((item): item is PhaseEvent => !!item);
-    if (next.length === 0) return;
-    onEventsChange(next);
-  }, [buildRecommendedEvent, onEventsChange]);
+  const saveTemplates = () => {
+    onEventTemplatesChange?.(templatesLocal.map(t => ({ ...t })));
+  };
+
+  const updateTemplate = (idx: number, next: PhaseEvent) => {
+    const arr = [...templatesLocal];
+    arr[idx] = next;
+    setTemplatesLocal(arr);
+  };
+
+  const deleteTemplate = (idx: number) => {
+    setTemplatesLocal(templatesLocal.filter((_, i) => i !== idx));
+  };
+
+  const addTemplate = () => {
+    setTemplatesLocal([...templatesLocal, { id: `tmpl_${Date.now()}`, trigger: 'onEnter', enabled: true, label: '新模板', actions: [] } as PhaseEvent]);
+  };
+
+  const updateTemplateAction = (tplIdx: number, actionIdx: number, updated: PhaseEventAction) => {
+    const arr = [...templatesLocal];
+    const tpl = { ...arr[tplIdx] };
+    tpl.actions = (tpl.actions || []).map((a, i) => i === actionIdx ? updated : a);
+    arr[tplIdx] = tpl;
+    setTemplatesLocal(arr);
+  };
+
+  const addTemplateAction = (tplIdx: number) => {
+    const arr = [...templatesLocal];
+    const tpl = { ...arr[tplIdx] };
+    tpl.actions = [...(tpl.actions || []), { id: `act_${Date.now()}`, type: 'notify', config: {} }];
+    arr[tplIdx] = tpl;
+    setTemplatesLocal(arr);
+  };
+
+  const deleteTemplateAction = (tplIdx: number, actionIdx: number) => {
+    const arr = [...templatesLocal];
+    const tpl = { ...arr[tplIdx] };
+    tpl.actions = (tpl.actions || []).filter((_, i) => i !== actionIdx);
+    arr[tplIdx] = tpl;
+    setTemplatesLocal(arr);
+  };
 
   return (
     <div style={{ padding: '12px 0' }}>
@@ -600,38 +580,51 @@ function PhaseEventsPanel({ events, onEventsChange, phaseName }: {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {EVENT_RECOMMENDATIONS.map((item, idx) => {
-            const blockText = `${item.title}\n触发条件：${item.trigger}\n自动动作：${item.actions}\n通知/备注建议：${item.note}\n适用价值：${item.value}`;
-            return (
-              <div key={item.key} style={{ border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden', background: '#fff' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#334155' }}>推荐事件模板</div>
+              <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>将常用事件保存为模板，方便一键套用或批量替换。</div>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button type="button" onClick={addTemplate} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#334155', fontSize: 11, cursor: 'pointer' }}>新增模板</button>
+              <button type="button" onClick={saveTemplates} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #c4b5fd', background: '#ede9fe', color: '#5b21b6', fontSize: 11, cursor: 'pointer' }}>保存模板</button>
+              <button type="button" onClick={replaceWithTemplates} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>一键套用全部模板</button>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+            {templatesLocal.map((tmpl, tIdx) => (
+              <div key={tmpl.id} style={{ border: '1px solid #e2e8f0', borderRadius: 8, overflow: 'hidden', background: '#fff' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, background: '#f8fafc', padding: '8px 10px' }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: '#334155' }}>{item.title}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <button
-                      type="button"
-                      onClick={() => { void copyText(item.key, blockText); }}
-                      style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #e2e8f0', background: copiedSuggestionKey === item.key ? '#ecfeff' : '#fff', color: copiedSuggestionKey === item.key ? '#0e7490' : '#475569', fontSize: 11, cursor: 'pointer' }}
-                    >
-                      {copiedSuggestionKey === item.key ? '已复制' : 'Copy'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => addRecommendedEvent(idx)}
-                      style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
-                    >
-                      添加到规则
-                    </button>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <input value={tmpl.label || ''} onChange={(e) => updateTemplate(tIdx, { ...tmpl, label: e.target.value })} placeholder="模板标题" style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 13 }} />
+                    <select value={tmpl.trigger} onChange={(e) => updateTemplate(tIdx, { ...tmpl, trigger: e.target.value as EventTrigger })} style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 12 }}>
+                      {TRIGGER_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button type="button" onClick={() => addTemplateToEvents(tIdx)} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', fontSize: 11, fontWeight: 600 }}>添加到规则</button>
+                    <button type="button" onClick={() => deleteTemplate(tIdx)} style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #fee2e2', background: '#fff1f2', color: '#b91c1c', fontSize: 11 }}>删除模板</button>
                   </div>
                 </div>
                 <div style={{ padding: '8px 10px', fontSize: 11, lineHeight: 1.7, color: '#475569' }}>
-                  <div><strong>触发条件：</strong>{item.trigger}</div>
-                  <div><strong>自动动作：</strong>{item.actions}</div>
-                  <div><strong>通知/备注建议：</strong>{item.note}</div>
-                  <div><strong>适用价值：</strong>{item.value}</div>
+                  <div style={{ marginBottom: 8 }}><strong>动作列表：</strong></div>
+                  {(tmpl.actions || []).map((action, aIdx) => (
+                    <div key={action.id} style={{ marginBottom: 8 }}>
+                      <ActionEditor
+                        action={action}
+                        onChange={(updated) => updateTemplateAction(tIdx, aIdx, updated)}
+                        onDelete={() => deleteTemplateAction(tIdx, aIdx)}
+                      />
+                    </div>
+                  ))}
+                  <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                    <button type="button" onClick={() => addTemplateAction(tIdx)} style={{ padding: '6px 10px', borderRadius: 6, border: '1px dashed #93c5fd', background: '#fff', color: '#3b82f6', fontSize: 12 }}>＋ 添加动作</button>
+                  </div>
                 </div>
               </div>
-            );
-          })}
+            ))}
+          </div>
         </div>
       </div>
 
@@ -942,6 +935,7 @@ export default function TemplateEditor() {
           enabled: raw.enabled !== false,
           completionTip: raw.completionTip || '',
           phaseInfo: raw.phaseInfo,
+          eventTemplates: raw.eventTemplates || [],
           allowSkip: raw.allowSkip || false,
           tasks,
           subPhases,
@@ -1473,6 +1467,13 @@ export default function TemplateEditor() {
           enabled: t.enabled,
         })),
         events: (p.events || []).map((ev: PhaseEvent) => ({
+          id: ev.id,
+          trigger: ev.trigger,
+          label: ev.label,
+          enabled: ev.enabled,
+          actions: ev.actions,
+        })),
+        eventTemplates: (p.eventTemplates || []).map((ev: PhaseEvent) => ({
           id: ev.id,
           trigger: ev.trigger,
           label: ev.label,
@@ -2198,7 +2199,9 @@ export default function TemplateEditor() {
                   <PhaseEventsPanel
                     phaseName={selectedPhase.name}
                     events={selectedPhase.events || []}
+                    eventTemplates={selectedPhase.eventTemplates || []}
                     onEventsChange={(newEvents) => updatePhase(selectedPhase.id, { events: newEvents })}
+                    onEventTemplatesChange={(newTemplates) => updatePhase(selectedPhase.id, { eventTemplates: newTemplates })}
                   />
                 )}
 
