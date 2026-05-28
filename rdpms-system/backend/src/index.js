@@ -2,6 +2,8 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { serve } from '@hono/node-server';
 import { PrismaClient } from '@prisma/client';
+import { createIdempotencyMiddleware } from './middleware/idempotency.js';
+import { ConflictError } from './utils/errors.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import projectRoutes from './routes/projects.js';
@@ -225,6 +227,9 @@ app.use('*', cors({
   credentials: true
 }));
 
+// 幂等键中间件（PUT 请求去重，防止低性能服务器重传导致重复写入）
+app.use('/api/*', createIdempotencyMiddleware());
+
 // 根路由
 app.get('/', (c) => c.json({ 
   name: 'R&D PMS API',
@@ -262,6 +267,10 @@ app.route('/api/regulatory-documents', regulatoryDocumentsRoutes);
 // 错误处理
 app.onError((err, c) => {
   console.error('Error:', err);
+  // ConflictError（409 版本冲突）返回结构化响应供前端 AdaptiveUploadQueue 处理
+  if (err.name === 'ConflictError') {
+    return c.json({ error: err.message, ...err.payload }, 409);
+  }
   return c.json({ 
     error: err.message || 'Internal Server Error',
     code: err.status || 500
