@@ -201,6 +201,79 @@ const EVENT_RECOMMENDATIONS = [
   },
 ];
 
+function buildDefaultEventTemplates(phaseName?: string): PhaseEvent[] {
+  const phaseLabel = phaseName || '当前节点';
+  return EVENT_RECOMMENDATIONS.map((_, idx) => {
+    if (idx === 0) {
+      return {
+        id: `tmpl_${Date.now()}_${idx}`,
+        trigger: 'onEnter',
+        enabled: true,
+        label: `当项目进入“${phaseLabel}”节点`,
+        actions: [
+          {
+            id: `act_${Date.now()}_${idx}_0`,
+            type: 'notify',
+            config: {
+              notifyRoles: ['项目负责人', '研发工程师', '质量经理'],
+              notifyContent: '项目已进入立项阶段，请在规定时间内完成资料。',
+            },
+          },
+        ],
+      } as PhaseEvent;
+    }
+    if (idx === 1) {
+      return {
+        id: `tmpl_${Date.now()}_${idx}`,
+        trigger: 'onComplete',
+        enabled: true,
+        label: '当“立项资料状态”变更为“已提交”',
+        actions: [
+          {
+            id: `act_${Date.now()}_${idx}_0`,
+            type: 'startApproval',
+            config: { approvalProcess: '立项审批' },
+          },
+        ],
+      } as PhaseEvent;
+    }
+    if (idx === 2) {
+      return {
+        id: `tmpl_${Date.now()}_${idx}`,
+        trigger: 'onComplete',
+        enabled: true,
+        label: '当“立项审批结果”为“通过”',
+        actions: [
+          {
+            id: `act_${Date.now()}_${idx}_0`,
+            type: 'updateField',
+            config: { fieldName: 'projectStatus', fieldValue: '已立项' },
+          },
+        ],
+      } as PhaseEvent;
+    }
+    if (idx === 3) {
+      return {
+        id: `tmpl_${Date.now()}_${idx}`,
+        trigger: 'onComplete',
+        enabled: true,
+        label: '当“立项审批结果”为“不通过”或“退回修改”',
+        actions: [
+          {
+            id: `act_${Date.now()}_${idx}_0`,
+            type: 'notify',
+            config: {
+              notifyRoles: ['项目负责人'],
+              notifyContent: '立项审批未通过，请补充资料。',
+            },
+          },
+        ],
+      } as PhaseEvent;
+    }
+    return null;
+  }).filter(Boolean) as PhaseEvent[];
+}
+
 const PHASE_PROJECT_TYPE_OPTIONS = [
   '非医疗分子检测产品',
   '食品安全检测项目',
@@ -456,24 +529,18 @@ function PhaseEventsPanel({ events, onEventsChange, phaseName, eventTemplates, o
   eventTemplates?: PhaseEvent[];
   onEventTemplatesChange?: (templates: PhaseEvent[]) => void;
 }) {
-  const [templatesLocal, setTemplatesLocal] = useState<PhaseEvent[]>([]);
+  const [templatesLocal, setTemplatesLocal] = useState<PhaseEvent[]>(() => buildDefaultEventTemplates(phaseName));
 
   useEffect(() => {
-    if (eventTemplates && eventTemplates.length > 0) {
-      setTemplatesLocal(eventTemplates.map(t => ({ ...t })));
+    const safeTemplates = Array.isArray(eventTemplates)
+      ? eventTemplates.filter((t): t is PhaseEvent => !!t && typeof t === 'object')
+      : [];
+
+    if (safeTemplates.length > 0) {
+      setTemplatesLocal(safeTemplates.map(t => ({ ...t })));
       return;
     }
-    // fallback to built-in recommendations
-    const built = EVENT_RECOMMENDATIONS.map((_, idx) => {
-      // buildRecommendedEvent exists below, so skip here and generate minimal defaults
-      const phaseLabel = phaseName || '当前节点';
-      if (idx === 0) return { id: `tmpl_${Date.now()}_${idx}`, trigger: 'onEnter', enabled: true, label: `当项目进入“${phaseLabel}”节点`, actions: [{ id: `act_${Date.now()}_${idx}_0`, type: 'notify', config: { notifyRoles: ['项目负责人', '研发工程师', '质量经理'], notifyContent: '项目已进入立项阶段，请在规定时间内完成资料。' } }] } as PhaseEvent;
-      if (idx === 1) return { id: `tmpl_${Date.now()}_${idx}`, trigger: 'onComplete', enabled: true, label: '当“立项资料状态”变更为“已提交”', actions: [{ id: `act_${Date.now()}_${idx}_0`, type: 'startApproval', config: { approvalProcess: '立项审批' } }] } as PhaseEvent;
-      if (idx === 2) return { id: `tmpl_${Date.now()}_${idx}`, trigger: 'onComplete', enabled: true, label: '当“立项审批结果”为“通过”', actions: [{ id: `act_${Date.now()}_${idx}_0`, type: 'updateField', config: { fieldName: 'projectStatus', fieldValue: '已立项' } }] } as PhaseEvent;
-      if (idx === 3) return { id: `tmpl_${Date.now()}_${idx}`, trigger: 'onComplete', enabled: true, label: '当“立项审批结果”为“不通过”或“退回修改”', actions: [{ id: `act_${Date.now()}_${idx}_0`, type: 'notify', config: { notifyRoles: ['项目负责人'], notifyContent: '立项审批未通过，请补充资料。' } }] } as PhaseEvent;
-      return null;
-    }).filter(Boolean) as PhaseEvent[];
-    setTemplatesLocal(built);
+    setTemplatesLocal(buildDefaultEventTemplates(phaseName));
   }, [eventTemplates, phaseName]);
 
   const addEvent = () => {
@@ -510,9 +577,53 @@ function PhaseEventsPanel({ events, onEventsChange, phaseName, eventTemplates, o
     onEventsChange([...events, cloneEventInstance(tmpl)]);
   };
 
-  const replaceWithTemplates = () => {
-    if (!templatesLocal || templatesLocal.length === 0) return;
-    onEventsChange(templatesLocal.map(t => cloneEventInstance(t)));
+  const buildApplyConfirmMessage = (mode: 'default' | 'templates', sourceCount: number) => {
+    const phaseLabel = phaseName || '当前节点';
+    const currentCount = events.length;
+    const title = mode === 'default'
+      ? `确认套用系统默认 4 类事件到「${phaseLabel}」吗？`
+      : `确认用模板库覆盖「${phaseLabel}」事件规则吗？`;
+    const scopeLine = mode === 'default'
+      ? `将写入系统内置的 4 条标准事件（进入通知、提交审批、审批通过、审批退回）。`
+      : `将写入当前模板库中的 ${sourceCount} 条模板事件。`;
+
+    return [
+      title,
+      '',
+      `当前规则数：${currentCount} 条`,
+      `套用后规则数：${sourceCount} 条`,
+      scopeLine,
+      '',
+      '注意：',
+      '1. 当前“事件规则列表”会被整体替换，未保存的手工修改将丢失。',
+      '2. 仅替换本节点的事件规则，不会修改其他节点。',
+      '3. 模板内容本身不会被删除；若需持久化模板改动，请单独点击“保存模板”。',
+      '',
+      '点击“确定”继续，点击“取消”放弃本次操作。',
+    ].join('\n');
+  };
+
+  const applyDefaultFourEvents = () => {
+    const defaults = buildDefaultEventTemplates(phaseName);
+    if (defaults.length === 0) return;
+
+    const shouldApply = confirm(buildApplyConfirmMessage('default', defaults.length));
+    if (!shouldApply) return;
+
+    onEventsChange(defaults.map(t => cloneEventInstance(t)));
+  };
+
+  const applyAllTemplates = () => {
+    const source = templatesLocal.length > 0 ? templatesLocal : buildDefaultEventTemplates(phaseName);
+    if (source.length === 0) return;
+
+    const shouldApply = confirm(buildApplyConfirmMessage('templates', source.length));
+    if (!shouldApply) return;
+
+    if (templatesLocal.length === 0) {
+      setTemplatesLocal(source);
+    }
+    onEventsChange(source.map(t => cloneEventInstance(t)));
   };
 
   const saveTemplates = () => {
@@ -572,7 +683,7 @@ function PhaseEventsPanel({ events, onEventsChange, phaseName, eventTemplates, o
           </div>
           <button
             type="button"
-            onClick={replaceWithTemplates}
+            onClick={applyDefaultFourEvents}
             style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #c4b5fd', background: '#ede9fe', color: '#5b21b6', fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
           >
             一键套用 4 类事件
@@ -588,7 +699,7 @@ function PhaseEventsPanel({ events, onEventsChange, phaseName, eventTemplates, o
             <div style={{ display: 'flex', gap: 8 }}>
               <button type="button" onClick={addTemplate} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #e2e8f0', background: '#fff', color: '#334155', fontSize: 11, cursor: 'pointer' }}>新增模板</button>
               <button type="button" onClick={saveTemplates} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #c4b5fd', background: '#ede9fe', color: '#5b21b6', fontSize: 11, cursor: 'pointer' }}>保存模板</button>
-              <button type="button" onClick={replaceWithTemplates} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>一键套用全部模板</button>
+              <button type="button" onClick={applyAllTemplates} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #bfdbfe', background: '#eff6ff', color: '#1d4ed8', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>一键套用全部模板</button>
             </div>
           </div>
 
@@ -2028,9 +2139,9 @@ export default function TemplateEditor() {
                                   aria-checked={enabled}
                                   aria-label={label}
                                   onClick={() => updatePhase(selectedPhase.id, { [key]: !enabled })}
-                                  className={`relative flex-shrink-0 w-11 h-6 rounded-full transition-colors ${enabled ? 'bg-blue-500' : 'bg-gray-300'}`}
+                                  className={`relative flex-shrink-0 w-[86px] h-11 rounded-full border-2 transition-colors duration-200 ease-out ${enabled ? 'bg-blue-600 border-blue-600' : 'bg-slate-300 border-slate-300'}`}
                                 >
-                                  <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${enabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                  <span className={`absolute top-[2px] left-[2px] h-9 w-9 bg-white rounded-full shadow-[0_1px_3px_rgba(15,23,42,0.25)] transition-transform duration-200 ease-out ${enabled ? 'translate-x-[42px]' : 'translate-x-0'}`} />
                                 </button>
                               </div>
                             );
