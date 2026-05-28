@@ -786,15 +786,17 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
 
   return (
     <div ref={containerRef}>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <input
-            className="border p-2 rounded"
-            placeholder="搜索常用名/中文名/英文名/CAS号"
-            value={keyword}
-            onChange={e => setKeyword(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && load()}
-          />
+      <div className="mb-4">
+        <div className="rounded-2xl border border-slate-200/80 bg-white px-4 py-3 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                className="border p-2 rounded min-w-[260px]"
+                placeholder="搜索常用名/中文名/英文名/CAS号"
+                value={keyword}
+                onChange={e => setKeyword(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && load()}
+              />
           <details className="relative">
             <summary className="list-none border p-2 rounded bg-white text-sm text-gray-700 cursor-pointer min-w-[180px]">
               {categoryFilter.length > 0 ? `已选分类 ${categoryFilter.length} 项` : '全部分类'}
@@ -819,19 +821,46 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
                         type="checkbox"
                         checked={checked}
                         onChange={() => toggleCategoryFilter(category)}
-                      />
-                      <span>{category}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          </details>
-          <select className="border p-2 rounded bg-white" value={stateFilter} onChange={e => setStateFilter(e.target.value)}>
-            <option value="all">全部物态</option>
-            <option value="solid">固体</option>
-            <option value="liquid">液体</option>
-            <option value="solution">溶液</option>
+                          </div>
+                          {!hideTopButton && (
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                className="px-3 py-2 rounded border border-gray-200 text-gray-600 hover:bg-gray-50"
+                                onClick={() => setShowColumnSettings(true)}
+                              >
+                                列设置
+                              </button>
+                              <button className="btn btn-primary" onClick={openNew}>+ 新增试剂原料</button>
+                            </div>
+                          )}
+                          {hideTopButton && (
+                            <div>
+                              <button
+                                type="button"
+                                className="px-3 py-2 rounded border border-gray-200 text-gray-600 hover:bg-gray-50"
+                                onClick={() => setShowColumnSettings(true)}
+                              >
+                                列设置
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center justify-between mt-3">
+                          <div className="flex items-center gap-4">
+                            <input type="checkbox" checked={selectedIds.length === list.length && list.length>0} onChange={toggleSelectAll} />
+                            {selectedIds.length > 0 && (
+                              <div className="flex items-center gap-2">
+                                <span>已选 {selectedIds.length} 条</span>
+                                <button className="px-3 py-1 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 rounded" onClick={initiateDeleteSelected}>🗑️ 删除所选</button>
+                              </div>
+                            )}
+                          </div>
+                          <div />
+                        </div>
+                      </div>
+                    </div>
           </select>
           <button className="btn" onClick={load}>搜索</button>
           <button
