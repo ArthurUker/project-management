@@ -103,6 +103,16 @@ const DEFAULT_COLUMN_ORDER: ColumnKey[] = [
   'supplier',
 ];
 
+const truncateWithTitle = (value: string | null | undefined, fallback = '-') => {
+  const text = String(value || '').trim();
+  if (!text) return fallback;
+  return (
+    <span className="block truncate" title={text}>
+      {text}
+    </span>
+  );
+};
+
 export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: number; hideTopButton?: boolean }) {
   // openKey: 当父组件需要触发打开新建抽屉时，传入一个不断递增的数值即可触发打开
   // hideTopButton: 当父级页面有全局新建按钮时，可隐藏组件内部的顶部新建按钮以避免重复
@@ -668,39 +678,46 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
       key: 'commonName',
       label: '常用名',
       sortField: 'commonName',
-      thClassName: 'text-left w-[120px]',
-      tdClassName: 'p-3 text-left font-semibold text-gray-900 min-w-[120px] whitespace-nowrap',
-      renderCell: (row) => row.commonName || row.name,
+      thClassName: 'text-left w-[140px] min-w-[140px]',
+      tdClassName: 'px-4 py-3 text-left font-semibold text-gray-900 min-w-[140px] whitespace-nowrap',
+      renderCell: (row) => truncateWithTitle(row.commonName || row.name),
     },
     chineseName: {
       key: 'chineseName',
       label: '中文名称',
       sortField: 'chineseName',
-      thClassName: 'text-left w-[160px]',
-      tdClassName: 'p-3 text-left text-gray-700 min-w-[160px] max-w-[220px] truncate',
-      renderCell: (row) => row.chineseName || '-',
+      thClassName: 'text-left w-[180px] min-w-[180px]',
+      tdClassName: 'px-4 py-3 text-left text-gray-700 min-w-[180px] max-w-[220px]',
+      renderCell: (row) => truncateWithTitle(row.chineseName),
     },
     englishName: {
       key: 'englishName',
       label: '英文名称',
       sortField: 'englishName',
-      thClassName: 'text-left w-[220px]',
-      tdClassName: 'p-3 text-left text-gray-500 text-xs min-w-[220px] max-w-[300px] break-words leading-relaxed',
-      renderCell: (row) => row.englishName || '-',
+      thClassName: 'text-left w-[260px] min-w-[260px]',
+      tdClassName: 'px-4 py-3 text-left text-gray-500 text-xs min-w-[260px] max-w-[340px]',
+      renderCell: (row) => truncateWithTitle(row.englishName),
     },
     category: {
       key: 'category',
       label: '试剂分类',
       sortField: 'category',
-      thClassName: 'text-center w-[130px]',
-      tdClassName: 'p-3 text-center min-w-[130px] whitespace-nowrap',
+      thClassName: 'text-center w-[150px] min-w-[150px]',
+      tdClassName: 'px-4 py-3 text-center min-w-[150px] whitespace-nowrap',
       renderCell: (row) => {
         const cats = parseCategories(row.category || '未分类');
+        const primary = cats[0] || '未分类';
+        const remain = Math.max(cats.length - 1, 0);
         return (
-          <div className="flex flex-wrap justify-center gap-1">
-            {cats.map((c, idx) => (
-              <span key={idx} className="inline-block rounded px-2 py-0.5 text-[11px] bg-slate-100 text-slate-600 whitespace-nowrap">{c}</span>
-            ))}
+          <div className="flex items-center justify-center gap-1.5" title={cats.join(' / ')}>
+            <span className="inline-flex max-w-[104px] items-center truncate rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] text-slate-700">
+              {primary}
+            </span>
+            {remain > 0 && (
+              <span className="inline-flex items-center rounded-full bg-slate-200/80 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
+                +{remain}
+              </span>
+            )}
           </div>
         );
       },
@@ -709,24 +726,24 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
       key: 'casNumber',
       label: 'CAS号',
       sortField: 'casNumber',
-      thClassName: 'text-center w-[120px]',
-      tdClassName: 'p-3 text-center font-mono text-gray-600 text-xs min-w-[120px] whitespace-nowrap',
+      thClassName: 'text-center w-[130px] min-w-[130px]',
+      tdClassName: 'px-4 py-3 text-center font-mono text-gray-600 text-xs min-w-[130px] whitespace-nowrap',
       renderCell: (row) => row.casNumber || '-',
     },
     molecularFormula: {
       key: 'molecularFormula',
       label: '分子式',
       sortField: 'molecularFormula',
-      thClassName: 'text-left w-[150px]',
-      tdClassName: 'p-3 text-left min-w-[150px] whitespace-nowrap',
+      thClassName: 'text-left w-[170px] min-w-[170px]',
+      tdClassName: 'px-4 py-3 text-left min-w-[170px] whitespace-nowrap',
       renderCell: (row) => renderChemicalFormula(row.molecularFormula),
     },
     mw: {
       key: 'mw',
       label: 'MW (g/mol)',
       sortField: 'mw',
-      thClassName: 'text-right w-[120px]',
-      tdClassName: 'p-3 text-right font-mono text-gray-800 text-sm min-w-[120px] whitespace-nowrap',
+      thClassName: 'text-right w-[120px] min-w-[120px]',
+      tdClassName: 'px-4 py-3 text-right font-mono text-gray-800 text-sm min-w-[120px] whitespace-nowrap',
       renderCell: (row) => {
         const value = typeof row.mw === 'number' ? row.mw : Number(row.mw);
         return Number.isFinite(value) ? value.toFixed(2) : '-';
@@ -736,10 +753,10 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
       key: 'state',
       label: '物态',
       sortField: 'state',
-      thClassName: 'text-center w-[100px]',
-      tdClassName: 'p-3 text-center min-w-[100px] whitespace-nowrap',
+      thClassName: 'text-center w-[110px] min-w-[110px]',
+      tdClassName: 'px-4 py-3 text-center min-w-[110px] whitespace-nowrap',
       renderCell: (row) => (
-        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${stateBadge(row.state)}`}>
+        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${stateBadge(row.state)}`}>
           {stateLabel(row.state)}
         </span>
       ),
@@ -748,17 +765,17 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
       key: 'defaultStockConc',
       label: '默认储液浓度',
       sortField: 'defaultStockConc',
-      thClassName: 'text-right w-[150px]',
-      tdClassName: 'p-3 text-right font-mono text-gray-700 min-w-[150px] whitespace-nowrap',
+      thClassName: 'text-right w-[170px] min-w-[170px]',
+      tdClassName: 'px-4 py-3 text-right font-mono text-gray-700 min-w-[170px] whitespace-nowrap',
       renderCell: (row) => (row.defaultStockConc != null ? `${row.defaultStockConc}${row.defaultStockUnit ? ' ' + row.defaultStockUnit : ''}` : '-'),
     },
     supplier: {
       key: 'supplier',
       label: '供应商',
       sortField: 'supplier',
-      thClassName: 'text-left w-[140px]',
-      tdClassName: 'p-3 text-left text-gray-600 text-sm min-w-[140px] truncate',
-      renderCell: (row) => row.supplier || '-',
+      thClassName: 'text-left w-[160px] min-w-[160px]',
+      tdClassName: 'px-4 py-3 text-left text-gray-600 text-sm min-w-[160px] max-w-[200px]',
+      renderCell: (row) => truncateWithTitle(row.supplier),
     },
   }), [parseCategories]);
 
@@ -868,11 +885,11 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
         <div></div>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200/80 bg-white shadow-sm">
-        <table className="min-w-[1400px] w-full table-fixed border-collapse divide-y divide-slate-100">
-          <thead className="sticky top-0 z-10 bg-slate-50">
+      <div className="overflow-x-auto rounded-2xl border border-slate-200/90 bg-white shadow-sm">
+        <table className="min-w-[1580px] w-full table-auto border-separate border-spacing-0">
+          <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur">
             <tr>
-              <th className="w-[50px] p-3 text-center">
+              <th className="w-[52px] px-3 py-3 text-center border-b border-slate-200">
                 <input
                   type="checkbox"
                   className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
@@ -883,7 +900,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
               {orderedColumns.map((column) => (
                 <th
                   key={column.key}
-                  className={`p-3 text-xs font-semibold uppercase tracking-wider text-slate-500 ${column.thClassName || ''}`}
+                  className={`px-4 py-3 text-xs font-semibold text-slate-600 whitespace-nowrap [word-break:keep-all] border-b border-slate-200 ${column.thClassName || ''}`}
                 >
                   <div
                     className={`flex items-center gap-1 ${
@@ -898,26 +915,32 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
                   </div>
                 </th>
               ))}
-              <th className="w-[80px] p-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-500">操作</th>
+              <th className="w-[84px] min-w-[84px] px-4 py-3 text-center text-xs font-semibold text-slate-600 whitespace-nowrap border-b border-slate-200">操作</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 bg-white">
+          <tbody className="bg-white">
             {loading ? (
               <tr>
-                <td colSpan={orderedColumns.length + 2} className="p-8 text-center text-slate-400">
+                <td colSpan={orderedColumns.length + 2} className="px-4 py-10 text-center text-slate-400 border-b border-slate-100">
                   <div className="flex flex-col items-center justify-center gap-2">
-                    <span className="text-lg animate-spin">⏳</span>
+                    <span className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-slate-500" />
                     <span>加载中...</span>
                   </div>
+                </td>
+              </tr>
+            ) : list.length === 0 ? (
+              <tr>
+                <td colSpan={orderedColumns.length + 2} className="px-4 py-10 text-center text-slate-400 border-b border-slate-100">
+                  暂无试剂数据，请调整筛选条件或新增试剂原料。
                 </td>
               </tr>
             ) : (
               list.map((r: any) => (
                 <tr
                   key={r.id}
-                  className="odd:bg-white even:bg-slate-50/30 hover:bg-slate-50/80 transition-colors duration-150"
+                  className="odd:bg-white even:bg-slate-50/40 hover:bg-sky-50/40 transition-colors duration-150"
                 >
-                  <td className="p-3 text-center">
+                  <td className="px-3 py-3 text-center border-b border-slate-100 align-middle">
                     <input
                       type="checkbox"
                       className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
@@ -926,13 +949,13 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
                     />
                   </td>
                   {orderedColumns.map((column) => (
-                    <td key={column.key} className={column.tdClassName || 'p-3 text-sm text-slate-600'}>
+                    <td key={column.key} className={`${column.tdClassName || 'px-4 py-3 text-sm text-slate-600'} border-b border-slate-100 align-middle`}>
                       {column.renderCell(r)}
                     </td>
                   ))}
-                  <td className="p-3 text-center whitespace-nowrap">
+                  <td className="px-4 py-3 text-center whitespace-nowrap border-b border-slate-100 align-middle">
                     <button
-                      className="text-sm font-medium text-primary-600 transition-colors hover:text-primary-700"
+                      className="inline-flex items-center rounded-md border border-primary-100 bg-primary-50 px-2.5 py-1 text-sm font-medium text-primary-700 transition-colors hover:border-primary-200 hover:bg-primary-100"
                       onClick={() => openEdit(r)}
                     >
                       编辑
