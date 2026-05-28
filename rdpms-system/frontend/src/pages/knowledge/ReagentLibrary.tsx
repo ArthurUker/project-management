@@ -797,121 +797,98 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
                 onChange={e => setKeyword(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && load()}
               />
-          <details className="relative">
-            <summary className="list-none border p-2 rounded bg-white text-sm text-gray-700 cursor-pointer min-w-[180px]">
-              {categoryFilter.length > 0 ? `已选分类 ${categoryFilter.length} 项` : '全部分类'}
-            </summary>
-            <div className="absolute z-20 mt-1 w-72 rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs text-gray-500">可多选分类筛选</span>
+              <details className="relative">
+                <summary className="list-none border p-2 rounded bg-white text-sm text-gray-700 cursor-pointer min-w-[180px]">
+                  {categoryFilter.length > 0 ? `已选分类 ${categoryFilter.length} 项` : '全部分类'}
+                </summary>
+                <div className="absolute z-20 mt-1 w-72 rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-xs text-gray-500">可多选分类筛选</span>
+                    <button
+                      type="button"
+                      className="text-xs text-primary-600"
+                      onClick={() => setCategoryFilter([])}
+                    >
+                      清空
+                    </button>
+                  </div>
+                  <div className="grid max-h-52 grid-cols-2 gap-2 overflow-y-auto pr-1">
+                    {categoryOptions.map((category) => {
+                      const checked = categoryFilter.includes(category);
+                      return (
+                        <label key={category} className="flex items-center gap-2 text-xs text-gray-700">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => toggleCategoryFilter(category)}
+                          />
+                          <span>{category}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              </details>
+
+              <select className="border p-2 rounded bg-white" value={stateFilter} onChange={e => setStateFilter(e.target.value)}>
+                <option value="all">全部物态</option>
+                <option value="solid">固体</option>
+                <option value="liquid">液体</option>
+                <option value="solution">溶液</option>
+              </select>
+              <button className="btn" onClick={load}>搜索</button>
+              <button
+                type="button"
+                className="px-3 py-2 rounded border border-gray-200 text-gray-600 hover:bg-gray-50"
+                onClick={() => {
+                  setCategoryFilter([]);
+                  setStateFilter('all');
+                  setSortBy('commonName');
+                  setSortOrder('asc');
+                }}
+              >
+                重置筛选
+              </button>
+            </div>
+
+            {!hideTopButton && (
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="text-xs text-primary-600"
-                  onClick={() => setCategoryFilter([])}
+                  className="px-3 py-2 rounded border border-gray-200 text-gray-600 hover:bg-gray-50"
+                  onClick={() => setShowColumnSettings(true)}
                 >
-                  清空
+                  列设置
+                </button>
+                <button className="btn btn-primary" onClick={openNew}>+ 新增试剂原料</button>
+              </div>
+            )}
+            {hideTopButton && (
+              <div>
+                <button
+                  type="button"
+                  className="px-3 py-2 rounded border border-gray-200 text-gray-600 hover:bg-gray-50"
+                  onClick={() => setShowColumnSettings(true)}
+                >
+                  列设置
                 </button>
               </div>
-              <div className="grid max-h-52 grid-cols-2 gap-2 overflow-y-auto pr-1">
-                {categoryOptions.map((category) => {
-                  const checked = categoryFilter.includes(category);
-                  return (
-                    <label key={category} className="flex items-center gap-2 text-xs text-gray-700">
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={() => toggleCategoryFilter(category)}
-                          </div>
-                          {!hideTopButton && (
-                            <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                className="px-3 py-2 rounded border border-gray-200 text-gray-600 hover:bg-gray-50"
-                                onClick={() => setShowColumnSettings(true)}
-                              >
-                                列设置
-                              </button>
-                              <button className="btn btn-primary" onClick={openNew}>+ 新增试剂原料</button>
-                            </div>
-                          )}
-                          {hideTopButton && (
-                            <div>
-                              <button
-                                type="button"
-                                className="px-3 py-2 rounded border border-gray-200 text-gray-600 hover:bg-gray-50"
-                                onClick={() => setShowColumnSettings(true)}
-                              >
-                                列设置
-                              </button>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex items-center justify-between mt-3">
-                          <div className="flex items-center gap-4">
-                            <input type="checkbox" checked={selectedIds.length === list.length && list.length>0} onChange={toggleSelectAll} />
-                            {selectedIds.length > 0 && (
-                              <div className="flex items-center gap-2">
-                                <span>已选 {selectedIds.length} 条</span>
-                                <button className="px-3 py-1 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 rounded" onClick={initiateDeleteSelected}>🗑️ 删除所选</button>
-                              </div>
-                            )}
-                          </div>
-                          <div />
-                        </div>
-                      </div>
-                    </div>
-          </select>
-          <button className="btn" onClick={load}>搜索</button>
-          <button
-            type="button"
-            className="px-3 py-2 rounded border border-gray-200 text-gray-600 hover:bg-gray-50"
-            onClick={() => {
-              setCategoryFilter([]);
-              setStateFilter('all');
-              setSortBy('commonName');
-              setSortOrder('asc');
-            }}
-          >
-            重置筛选
-          </button>
-        </div>
-        {!hideTopButton && (
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              className="px-3 py-2 rounded border border-gray-200 text-gray-600 hover:bg-gray-50"
-              onClick={() => setShowColumnSettings(true)}
-            >
-              列设置
-            </button>
-            <button className="btn btn-primary" onClick={openNew}>+ 新增试剂原料</button>
+            )}
           </div>
-        )}
-        {hideTopButton && (
-          <div>
-            <button
-              type="button"
-              className="px-3 py-2 rounded border border-gray-200 text-gray-600 hover:bg-gray-50"
-              onClick={() => setShowColumnSettings(true)}
-            >
-              列设置
-            </button>
-          </div>
-        )}
-      </div>
 
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-4">
-          <input type="checkbox" checked={selectedIds.length === list.length && list.length>0} onChange={toggleSelectAll} />
-          {selectedIds.length > 0 && (
-            <div className="flex items-center gap-2">
-              <span>已选 {selectedIds.length} 条</span>
-              <button className="px-3 py-1 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 rounded" onClick={initiateDeleteSelected}>🗑️ 删除所选</button>
+          <div className="flex items-center justify-between mt-3">
+            <div className="flex items-center gap-4">
+              <input type="checkbox" checked={selectedIds.length === list.length && list.length > 0} onChange={toggleSelectAll} />
+              {selectedIds.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span>已选 {selectedIds.length} 条</span>
+                  <button className="px-3 py-1 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 rounded" onClick={initiateDeleteSelected}>🗑️ 删除所选</button>
+                </div>
+              )}
             </div>
-          )}
+            <div />
+          </div>
         </div>
-        <div></div>
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-slate-200/90 bg-white shadow-sm">
