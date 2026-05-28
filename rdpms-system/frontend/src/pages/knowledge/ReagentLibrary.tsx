@@ -594,10 +594,30 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
     } catch (err:any) { alert(err?.error || err?.message || '强制删除失败'); }
   };
 
+  const renderChemicalFormula = (formula: string) => {
+    if (!formula) return '-';
+    const parts = formula.split(/(\d+)/);
+    return (
+      <span className="font-mono tracking-wider text-gray-800">
+        {parts.map((part, i) =>
+          /^\d+$/.test(part)
+            ? <sub key={i} className="relative bottom-[-0.1em] text-[10px]">{part}</sub>
+            : part
+        )}
+      </span>
+    );
+  };
+
   const stateBadge = (state: string) => {
-    if (state === 'liquid') return 'bg-blue-100 text-blue-700';
-    if (state === 'solution') return 'bg-green-100 text-green-700';
-    return 'bg-gray-100 text-gray-700';
+    if (state === 'liquid') return 'bg-sky-50 text-sky-700 border border-sky-100';
+    if (state === 'solution') return 'bg-emerald-50 text-emerald-700 border border-emerald-100';
+    return 'bg-slate-100 text-slate-700 border border-slate-200';
+  };
+
+  const stateLabel = (state: string) => {
+    if (state === 'liquid') return '液体';
+    if (state === 'solution') return '溶液';
+    return '固体';
   };
 
   const handleSort = (field: string) => {
@@ -648,73 +668,97 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
       key: 'commonName',
       label: '常用名',
       sortField: 'commonName',
-      tdClassName: 'p-2 whitespace-nowrap',
+      thClassName: 'text-left w-[120px]',
+      tdClassName: 'p-3 text-left font-semibold text-gray-900 min-w-[120px] whitespace-nowrap',
       renderCell: (row) => row.commonName || row.name,
     },
     chineseName: {
       key: 'chineseName',
       label: '中文名称',
       sortField: 'chineseName',
-      tdClassName: 'p-2 whitespace-nowrap',
-      renderCell: (row) => row.chineseName || '',
+      thClassName: 'text-left w-[160px]',
+      tdClassName: 'p-3 text-left text-gray-700 min-w-[160px] max-w-[220px] truncate',
+      renderCell: (row) => row.chineseName || '-',
     },
     englishName: {
       key: 'englishName',
       label: '英文名称',
       sortField: 'englishName',
-      tdClassName: 'p-2',
-      renderCell: (row) => row.englishName || '',
+      thClassName: 'text-left w-[220px]',
+      tdClassName: 'p-3 text-left text-gray-500 text-xs min-w-[220px] max-w-[300px] break-words leading-relaxed',
+      renderCell: (row) => row.englishName || '-',
     },
     category: {
       key: 'category',
       label: '试剂分类',
       sortField: 'category',
-      tdClassName: 'p-2',
-      renderCell: (row) => parseCategories(row.category || '未分类').join('、'),
+      thClassName: 'text-center w-[130px]',
+      tdClassName: 'p-3 text-center min-w-[130px] whitespace-nowrap',
+      renderCell: (row) => {
+        const cats = parseCategories(row.category || '未分类');
+        return (
+          <div className="flex flex-wrap justify-center gap-1">
+            {cats.map((c, idx) => (
+              <span key={idx} className="inline-block rounded px-2 py-0.5 text-[11px] bg-slate-100 text-slate-600 whitespace-nowrap">{c}</span>
+            ))}
+          </div>
+        );
+      },
     },
     casNumber: {
       key: 'casNumber',
       label: 'CAS号',
       sortField: 'casNumber',
-      tdClassName: 'p-2 whitespace-nowrap',
-      renderCell: (row) => row.casNumber || '',
+      thClassName: 'text-center w-[120px]',
+      tdClassName: 'p-3 text-center font-mono text-gray-600 text-xs min-w-[120px] whitespace-nowrap',
+      renderCell: (row) => row.casNumber || '-',
     },
     molecularFormula: {
       key: 'molecularFormula',
       label: '分子式',
       sortField: 'molecularFormula',
-      tdClassName: 'p-2 whitespace-nowrap',
-      renderCell: (row) => row.molecularFormula || '',
+      thClassName: 'text-left w-[150px]',
+      tdClassName: 'p-3 text-left min-w-[150px] whitespace-nowrap',
+      renderCell: (row) => renderChemicalFormula(row.molecularFormula),
     },
     mw: {
       key: 'mw',
       label: 'MW (g/mol)',
       sortField: 'mw',
-      tdClassName: 'p-2 whitespace-nowrap',
-      renderCell: (row) => row.mw ?? '-',
+      thClassName: 'text-right w-[120px]',
+      tdClassName: 'p-3 text-right font-mono text-gray-800 text-sm min-w-[120px] whitespace-nowrap',
+      renderCell: (row) => {
+        const value = typeof row.mw === 'number' ? row.mw : Number(row.mw);
+        return Number.isFinite(value) ? value.toFixed(2) : '-';
+      },
     },
     state: {
       key: 'state',
       label: '物态',
       sortField: 'state',
-      tdClassName: 'p-2 whitespace-nowrap',
+      thClassName: 'text-center w-[100px]',
+      tdClassName: 'p-3 text-center min-w-[100px] whitespace-nowrap',
       renderCell: (row) => (
-        <span className={`px-2 py-1 rounded-full text-xs ${stateBadge(row.state)}`}>{row.state}</span>
+        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${stateBadge(row.state)}`}>
+          {stateLabel(row.state)}
+        </span>
       ),
     },
     defaultStockConc: {
       key: 'defaultStockConc',
       label: '默认储液浓度',
       sortField: 'defaultStockConc',
-      tdClassName: 'p-2 whitespace-nowrap',
+      thClassName: 'text-right w-[150px]',
+      tdClassName: 'p-3 text-right font-mono text-gray-700 min-w-[150px] whitespace-nowrap',
       renderCell: (row) => (row.defaultStockConc != null ? `${row.defaultStockConc}${row.defaultStockUnit ? ' ' + row.defaultStockUnit : ''}` : '-'),
     },
     supplier: {
       key: 'supplier',
       label: '供应商',
       sortField: 'supplier',
-      tdClassName: 'p-2',
-      renderCell: (row) => row.supplier || '',
+      thClassName: 'text-left w-[140px]',
+      tdClassName: 'p-3 text-left text-gray-600 text-sm min-w-[140px] truncate',
+      renderCell: (row) => row.supplier || '-',
     },
   }), [parseCategories]);
 
@@ -824,29 +868,75 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
         <div></div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <table className="min-w-[1320px] w-full table-auto border-collapse">
-          <thead className="sticky top-0 bg-gray-100 z-10">
-            <tr className="bg-gray-100">
-              <th className="p-2 text-left"> </th>
+      <div className="overflow-x-auto rounded-xl border border-slate-200/80 bg-white shadow-sm">
+        <table className="min-w-[1400px] w-full table-fixed border-collapse divide-y divide-slate-100">
+          <thead className="sticky top-0 z-10 bg-slate-50">
+            <tr>
+              <th className="w-[50px] p-3 text-center">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                  checked={selectedIds.length === list.length && list.length > 0}
+                  onChange={toggleSelectAll}
+                />
+              </th>
               {orderedColumns.map((column) => (
-                <th key={column.key} className={`p-2 text-left ${column.thClassName || ''}`}>
-                  {renderSortHeader(column.sortField, column.label)}
+                <th
+                  key={column.key}
+                  className={`p-3 text-xs font-semibold uppercase tracking-wider text-slate-500 ${column.thClassName || ''}`}
+                >
+                  <div
+                    className={`flex items-center gap-1 ${
+                      column.thClassName?.includes('text-right')
+                        ? 'justify-end'
+                        : column.thClassName?.includes('text-center')
+                          ? 'justify-center'
+                          : 'justify-start'
+                    }`}
+                  >
+                    {renderSortHeader(column.sortField, column.label)}
+                  </div>
                 </th>
               ))}
-              <th className="p-2 text-left">操作</th>
+              <th className="w-[80px] p-3 text-center text-xs font-semibold uppercase tracking-wider text-slate-500">操作</th>
             </tr>
           </thead>
-          <tbody>
-            {loading ? <tr><td colSpan={orderedColumns.length + 2} className="p-4 text-center text-gray-500">加载中...</td></tr> : (
-              list.map((r:any) => (
-                <tr key={r.id} className="border-t border-gray-100 bg-white">
-                  <td className="p-2"><input type="checkbox" checked={selectedIds.includes(r.id)} onChange={() => toggleSelect(r.id)} /></td>
+          <tbody className="divide-y divide-slate-100 bg-white">
+            {loading ? (
+              <tr>
+                <td colSpan={orderedColumns.length + 2} className="p-8 text-center text-slate-400">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <span className="text-lg animate-spin">⏳</span>
+                    <span>加载中...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              list.map((r: any) => (
+                <tr
+                  key={r.id}
+                  className="odd:bg-white even:bg-slate-50/30 hover:bg-slate-50/80 transition-colors duration-150"
+                >
+                  <td className="p-3 text-center">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                      checked={selectedIds.includes(r.id)}
+                      onChange={() => toggleSelect(r.id)}
+                    />
+                  </td>
                   {orderedColumns.map((column) => (
-                    <td key={column.key} className={column.tdClassName || 'p-2'}>{column.renderCell(r)}</td>
+                    <td key={column.key} className={column.tdClassName || 'p-3 text-sm text-slate-600'}>
+                      {column.renderCell(r)}
+                    </td>
                   ))}
-                  <td className="p-2 whitespace-nowrap">
-                    <button className="mr-2 text-primary-600" onClick={() => openEdit(r)}>编辑</button>
+                  <td className="p-3 text-center whitespace-nowrap">
+                    <button
+                      className="text-sm font-medium text-primary-600 transition-colors hover:text-primary-700"
+                      onClick={() => openEdit(r)}
+                    >
+                      编辑
+                    </button>
                   </td>
                 </tr>
               ))
