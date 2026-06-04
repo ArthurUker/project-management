@@ -4,6 +4,8 @@
 **文档版本：** v1.0  
 **状态：** 活跃维护中
 
+> **状态更新（2026-05-29）：** 已完成一次后端/前端/Prisma 的全量审阅抽检。当前最高风险从“类型构建阻断”转为“权限与事务一致性风险”。
+
 ---
 
 ## 一、当前开发阶段总览
@@ -167,9 +169,94 @@
 
 ---
 
+## 六、2026-05-29 全量代码审阅结果与整改计划
+
+### 6.1 审阅范围与方法
+
+- 审阅范围：`backend/src/routes/*`、`backend/prisma/schema.prisma`、`frontend/src/api/client.ts`、`frontend/src/constants/statusColors.ts`。
+- 审阅方式：全量静态审阅 + 高风险点抽检（删除操作权限、批量更新事务、状态机一致性、输入校验）。
+- 结论：架构总体稳定，但存在可导致越权修改/删除和数据不一致的 P0/P1 问题，需要在本轮冲刺优先处理。
+
+### 6.2 已确认问题（按优先级）
+
+#### P0（需立即修复）
+
+1. 项目删除接口缺少权限校验  
+  文件：`rdpms-system/backend/src/routes/projects.js`  
+  现状：`DELETE /projects/:id` 直接删除项目，未校验当前用户是否具备删除权限。
+
+2. 任务删除接口缺少权限校验  
+  文件：`rdpms-system/backend/src/routes/tasks.js`  
+  现状：`DELETE /tasks/:id` 直接删除任务，未校验当前用户与项目关系。
+
+3. 批量任务状态更新未使用事务  
+  文件：`rdpms-system/backend/src/routes/tasks.js`  
+  现状：`POST /tasks/batch/status` 使用 `Promise.all` 执行多次 `update`，中途失败可能出现部分成功、部分失败。
+
+4. 月度进展写入接口缺少项目权限校验  
+  文件：`rdpms-system/backend/src/routes/progress.js`  
+  现状：`POST /progress/project/:projectId` 未校验当前用户是否项目成员/负责人。
+
+#### P1（本周内修复）
+
+1. 任务状态更新接口缺少状态值校验与状态机约束  
+  文件：`rdpms-system/backend/src/routes/tasks.js`  
+  现状：`PATCH /tasks/:id/status` 接收任意字符串；与项目状态机策略不一致。
+
+2. `docRefs` JSON 字段缺少结构校验  
+  文件：`rdpms-system/backend/src/routes/tasks.js`  
+  现状：更新时直接 `JSON.stringify`，可能写入不符合约定结构的数据。
+
+3. 项目日期合法性缺少防御性校验  
+  文件：`rdpms-system/backend/src/routes/projects.js`  
+  现状：允许开始时间晚于结束时间的输入。
+
+4. 任务前置依赖仅做浅层循环校验  
+  文件：`rdpms-system/backend/src/routes/tasks.js`  
+  现状：只检查互指，未覆盖深层环（例如 A→B→C→A）。
+
+#### P2（排入优化）
+
+1. 路由层输入校验方式分散，缺少统一验证中间件（建议 Zod/Joi）。
+2. 操作日志覆盖面不足（目前重点在登录等行为，业务修改审计不足）。
+3. 任务列表排序索引可进一步优化（按 `priority + dueDate` 的查询压力场景）。
+
+### 6.3 整改执行计划（新增）
+
+#### Sprint-A（48 小时内，P0）
+
+- [ ] 为 `projects.delete('/:id')` 增加权限校验（至少：管理员或项目负责人）。
+- [ ] 为 `tasks.delete('/:id')` 增加权限校验（至少：管理员、项目负责人、任务负责人中的授权角色）。
+- [ ] 将 `tasks.post('/batch/status')` 改造为 `prisma.$transaction`，失败整体回滚。
+- [ ] 为 `progress.post('/project/:projectId')` 增加项目成员权限校验。
+
+#### Sprint-B（本周内，P1）
+
+- [ ] 引入 `VALID_TASK_STATUSES` 与任务状态迁移规则，统一前后端状态机。
+- [ ] 为任务 `docRefs` 建立结构校验（数组元素字段白名单、类型检查）。
+- [ ] 增加项目日期区间校验（`startDate <= endDate`）。
+- [ ] 将前置依赖校验从“浅层”升级为 DAG 检测（DFS/拓扑校验）。
+
+#### Sprint-C（两周内，P2）
+
+- [ ] 设计并接入统一请求校验中间件。
+- [ ] 补齐核心写操作的 `SystemLog` 审计记录。
+- [ ] 对高频筛选/排序路径补充索引与分页策略。
+
+### 6.4 回归测试与验收要求（新增）
+
+- 权限回归：非项目成员不得删除项目、任务，不得写入他人项目进展。
+- 事务回归：批量更新任一项失败时，数据库应保持全量回滚。
+- 状态回归：非法任务状态值必须返回 4xx，不写库。
+- 依赖回归：禁止创建任意深度循环前置依赖。
+- 验收输出：每个 P0/P1 项都需附带最小复现步骤与修复后验证记录。
+
+---
+
 ## 五、文档变更记录
 
 | 日期 | 变更内容 | 变更人 |
 |------|----------|--------|
 | 2026-04-23 | 创建文档，分析当前开发阶段，记录 BUG-001 修复计划 | Copilot |
 | 2026-04-23 | 执行 P0/P1/P2 计划：修复 BUG-001、添加 fadeInUp、创建 statusColors.ts + permissions.ts、后端权限列表与状态机、EditProjectModal 联动、前端统一 hasPerm | Copilot |
+| 2026-05-29 | 新增“全量代码审阅结果与整改计划”：确认权限缺失、事务一致性、状态校验、依赖环检测等问题，并形成 Sprint-A/B/C 执行清单 | Copilot |
