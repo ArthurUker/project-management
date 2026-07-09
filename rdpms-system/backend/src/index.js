@@ -155,7 +155,7 @@ async function ensureRegulatoryDocumentTables() {
   }
 }
 
-async function ensureProjectRegistrationProfileTable() {
+async function ensureProjectRegistrationProfileTables() {
   const tables = await prisma.$queryRawUnsafe(
     `SELECT name FROM sqlite_master WHERE type='table' AND name='ProjectRegistrationProfile'`
   );
@@ -330,7 +330,7 @@ await ensureProjectTemplateColumns();
 await ensureRegulatoryDocumentTables();
 await ensurePrimerColumns();
 await ensureProjectDraftAndMilestonePhaseColumns();
-await ensureProjectRegistrationProfileTable();
+await ensureProjectRegistrationProfileTables();
 
 serve({
   fetch: app.fetch,
