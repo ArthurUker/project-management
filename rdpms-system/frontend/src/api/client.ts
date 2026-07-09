@@ -149,7 +149,13 @@ export const taskAPI = {
 
 export const syncAPI = {
   init: (lastSync?: string) => get<ApiResponse<any>>('/sync/init', { params: { lastSync } }),
-  push: (data: { reports?: any[]; tasks?: any[] }) => post<ApiResponse<any>>('/sync/push', data),
+  push: (data: {
+    reports?: any[];
+    tasks?: any[];
+    milestones?: any[];
+    monthlyProgress?: any[];
+    projectMembers?: any[];
+  }) => post<ApiResponse<any>>('/sync/push', data),
 };
 
 export const statsAPI = {
@@ -211,23 +217,6 @@ export const docsAPI = {
 };
 
 export default api;
-
-// 旧的试剂配方API兼容层（保留）
-export const reagentsAPI = {
-  categories: {
-    list: (): Promise<ApiResponse<any>> => get<ApiResponse<any>>('/reagents/categories'),
-    create: (data: any): Promise<ApiResponse> => post<ApiResponse<any>>('/reagents/categories', data),
-    update: (id: string, data: any): Promise<ApiResponse> => put<ApiResponse<any>>(`/reagents/categories/${id}`, data),
-    delete: (id: string): Promise<ApiResponse> => del<ApiResponse<any>>(`/reagents/categories/${id}`),
-  },
-  recipes: {
-    list: (params?: any): Promise<ApiResponse<any>> => get<ApiResponse<any>>('/reagents/recipes', { params }),
-    get: (id: string) => get<ApiResponse<any>>(`/reagents/recipes/${id}`),
-    create: (data: any): Promise<ApiResponse> => post<ApiResponse<any>>('/reagents/recipes', data),
-    update: (id: string, data: any): Promise<ApiResponse> => put<ApiResponse<any>>(`/reagents/recipes/${id}`, data),
-    delete: (id: string): Promise<ApiResponse> => del<ApiResponse<any>>(`/reagents/recipes/${id}`),
-  },
-};
 
 // 新的试剂/配方/配制API
 export const reagentAPI = {

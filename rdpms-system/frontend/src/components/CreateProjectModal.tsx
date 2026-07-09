@@ -517,7 +517,11 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
       selectedPhaseId,
       savedAt: Date.now(),
     };
-    localStorage.setItem(CREATE_PROJECT_DRAFT_KEY, JSON.stringify(draft));
+    try {
+      localStorage.setItem(CREATE_PROJECT_DRAFT_KEY, JSON.stringify(draft));
+    } catch {
+      // 隐私模式或存储配额已满时静默失败，不影响主流程
+    }
 
     try {
       const payload: any = {

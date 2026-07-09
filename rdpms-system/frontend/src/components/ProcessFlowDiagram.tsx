@@ -1286,12 +1286,13 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       setNodes(lnUpdated);
       setEdges(le);
       onNodesPositionChange?.(lnUpdated.map((n) => ({ id: n.id, x: n.position.x, y: n.position.y })));
-      setTimeout(() => fitView({ padding: cfg.fitPadding, duration: 400 }), 50);
+      const fitTimer = setTimeout(() => fitView({ padding: cfg.fitPadding, duration: 400 }), 50);
     };
 
     window.addEventListener('flow:fitView', fitHandler);
     window.addEventListener('flow:reLayout', handleReLayout);
     return () => {
+      clearTimeout(fitTimer);
       window.removeEventListener('flow:fitView', fitHandler);
       window.removeEventListener('flow:reLayout', handleReLayout);
     };

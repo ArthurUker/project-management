@@ -21,7 +21,7 @@ export default function Login() {
       await login(username, password);
       navigate('/');
     } catch (err: any) {
-      setError(err.error || '登录失败，请检查用户名和密码');
+      setError(err?.error || err?.message || '登录失败，请检查用户名和密码');
     } finally {
       setLoading(false);
     }

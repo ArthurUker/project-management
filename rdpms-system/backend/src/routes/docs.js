@@ -1,7 +1,11 @@
 import { Hono } from 'hono';
 import { prisma } from '../index.js';
+import { authMiddleware, adminOrManagerMiddleware } from './auth.js';
 
 const docs = new Hono();
+
+// 所有知识库接口均需登录（CODE_REVIEW #4）
+docs.use('*', authMiddleware);
 
 // 获取所有分类
 docs.get('/categories', async (c) => {
@@ -61,8 +65,8 @@ docs.put('/categories/:id', async (c) => {
   }
 });
 
-// 删除分类
-docs.delete('/categories/:id', async (c) => {
+// 删除分类（仅管理员或项目经理，CODE_REVIEW #6）
+docs.delete('/categories/:id', adminOrManagerMiddleware, async (c) => {
   try {
     const { id } = c.req.param();
     await prisma.docCategory.delete({ where: { id } });
@@ -245,8 +249,8 @@ docs.put('/documents/:id', async (c) => {
   }
 });
 
-// 删除文档
-docs.delete('/documents/:id', async (c) => {
+// 删除文档（仅管理员或项目经理，CODE_REVIEW #6）
+docs.delete('/documents/:id', adminOrManagerMiddleware, async (c) => {
   try {
     const { id } = c.req.param();
     await prisma.docDocument.delete({ where: { id } });

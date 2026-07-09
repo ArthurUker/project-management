@@ -10,6 +10,7 @@ export const STATUS_COLORS: Record<string, {
   dot: string;
   border: string;
 }> = {
+  '草稿':   { color: '#b45309', bg: 'rgba(245,158,11,0.10)', dot: '#f59e0b', border: 'rgba(245,158,11,0.25)' },
   '筹备中': { color: '#64748b', bg: 'rgba(100,116,139,0.10)', dot: '#94a3b8',  border: 'rgba(100,116,139,0.25)' },
   '规划中': { color: '#64748b', bg: 'rgba(100,116,139,0.10)', dot: '#94a3b8',  border: 'rgba(100,116,139,0.25)' },
   '进行中': { color: '#2563eb', bg: 'rgba(37,99,235,0.10)',   dot: '#3b82f6',  border: 'rgba(59,130,246,0.30)'  },
@@ -27,6 +28,7 @@ export const STATUS_CONFIG: Record<string, {
   dotColor: string;
   borderColor: string;
 }> = {
+  '草稿':   { label: '草稿', barColor: '#f59e0b', textColor: '#b45309', dotColor: '#f59e0b', borderColor: '#fde68a' },
   '规划中': { label: '规划中', barColor: '#9ca3af', textColor: '#6b7280',  dotColor: '#9ca3af', borderColor: '#e5e7eb' },
   '进行中': { label: '进行中', barColor: '#3b82f6', textColor: '#2563eb',  dotColor: '#3b82f6', borderColor: '#bfdbfe' },
   '待加工': { label: '待加工', barColor: '#f59e0b', textColor: '#d97706',  dotColor: '#f59e0b', borderColor: '#fde68a' },
@@ -35,11 +37,12 @@ export const STATUS_CONFIG: Record<string, {
   '已归档': { label: '已归档', barColor: '#d1d5db', textColor: '#9ca3af',  dotColor: '#d1d5db', borderColor: '#e5e7eb' },
 };
 
-export const ALL_STATUSES = ['规划中', '进行中', '待加工', '待验证', '已完成', '已归档'] as const;
+export const ALL_STATUSES = ['草稿', '规划中', '进行中', '待加工', '待验证', '已完成', '已归档'] as const;
 export type ProjectStatus = typeof ALL_STATUSES[number];
 
-// ── 状态机：允许的迁移路径 ────────────────────────────
+// ── 状态机：允许的迁移路径（与后端 projects.js 保持一致） ────────────────────────────
 export const STATUS_TRANSITIONS: Record<string, string[]> = {
+  '草稿': ['规划中', '进行中', '已归档'],
   '规划中': ['进行中', '已归档'],
   '进行中': ['待加工', '待验证', '已完成', '已归档'],
   '待加工': ['进行中', '待验证', '已归档'],

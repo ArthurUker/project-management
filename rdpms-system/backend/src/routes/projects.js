@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { prisma } from '../index.js';
 import { nanoid } from 'nanoid';
-import { authMiddleware, adminMiddleware } from './auth.js';
+import { authMiddleware, adminMiddleware, adminOrManagerMiddleware } from './auth.js';
 
 const projects = new Hono();
 
@@ -126,7 +126,6 @@ projects.get('/:id', async (c) => {
 // 创建项目
 projects.post('/', async (c) => {
   const body = await c.req.json();
-  console.log('[CREATE PROJECT] req.body:', JSON.stringify(body, null, 2));
   const userId = c.get('userId');
   const userRole = c.get('userRole');
 
@@ -252,18 +251,14 @@ projects.put('/:id', async (c) => {
   // 清理计算字段
   delete body.allowedTransitions;
 
-  if (body.startDate) {
-    body.startDate = new Date(body.startDate);
-  }
-  if (body.startDate === null || body.startDate === '') {
-    body.startDate = null;
-  }
-  if (body.endDate) {
-    body.endDate = new Date(body.endDate);
-  }
-  if (body.endDate === null || body.endDate === '') {
-    body.endDate = null;
-  }
+  // 日期归一：空串/无效值统一为 null，避免写入 Invalid Date（CODE_REVIEW #17）
+  const toDateOrNull = (v) => {
+    if (v === null || v === undefined || v === '') return null;
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  };
+  body.startDate = toDateOrNull(body.startDate);
+  body.endDate = toDateOrNull(body.endDate);
 
   // ── 状态机校验：检查目标状态是否允许 ──────────────────
   if (body.status) {
@@ -411,8 +406,8 @@ projects.put('/:id', async (c) => {
   return c.json(project);
 });
 
-// 删除项目
-projects.delete('/:id', async (c) => {
+// 删除项目（仅管理员或项目经理，CODE_REVIEW #6）
+projects.delete('/:id', adminOrManagerMiddleware, async (c) => {
   const id = c.req.param('id');
   
   await prisma.project.delete({ where: { id } });
@@ -436,8 +431,8 @@ projects.get('/:id/members', async (c) => {
   return c.json(members);
 });
 
-// 添加项目成员
-projects.post('/:id/members', async (c) => {
+// 添加项目成员（仅管理员或项目经理，CODE_REVIEW #6）
+projects.post('/:id/members', adminOrManagerMiddleware, async (c) => {
   const id = c.req.param('id');
   const { userId, role = 'member' } = await c.req.json();
   
@@ -472,8 +467,8 @@ projects.post('/:id/members', async (c) => {
   return c.json(member, 201);
 });
 
-// 移除项目成员
-projects.delete('/:id/members/:userId', async (c) => {
+// 移除项目成员（仅管理员或项目经理，CODE_REVIEW #6）
+projects.delete('/:id/members/:userId', adminOrManagerMiddleware, async (c) => {
   const id = c.req.param('id');
   const userId = c.req.param('userId');
   
@@ -522,8 +517,8 @@ projects.get('/stats/status', async (c) => {
   })));
 });
 
-// 套用模版到已有项目（为项目批量生成任务和里程碑）
-projects.post('/:id/apply-template', async (c) => {
+// 套用模版到已有项目（为项目批量生成任务和里程碑，仅管理员或项目经理）
+projects.post('/:id/apply-template', adminOrManagerMiddleware, async (c) => {
   const id = c.req.param('id');
   const { templateId, startDate } = await c.req.json();
 
@@ -577,8 +572,8 @@ projects.post('/:id/apply-template', async (c) => {
   return c.json({ success: true, taskCount: tasksToCreate.length, milestoneCount: milestonesToCreate.length });
 });
 
-// 批量删除项目
-projects.post('/batch-delete', async (c) => {
+// 批量删除项目（仅管理员或项目经理，CODE_REVIEW #20）
+projects.post('/batch-delete', adminOrManagerMiddleware, async (c) => {
   try {
     const body = await c.req.json();
     const ids = body.ids || [];
@@ -593,8 +588,8 @@ projects.post('/batch-delete', async (c) => {
   }
 });
 
-// 批量更新项目状态
-projects.post('/batch-update-status', async (c) => {
+// 批量更新项目状态（仅管理员或项目经理，CODE_REVIEW #20）
+projects.post('/batch-update-status', adminOrManagerMiddleware, async (c) => {
   try {
     const { ids, status } = await c.req.json();
     if (!Array.isArray(ids) || ids.length === 0 || !status) {

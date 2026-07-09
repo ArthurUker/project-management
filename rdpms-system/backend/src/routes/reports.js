@@ -88,7 +88,17 @@ reports.post('/', async (c) => {
   if (!projectId || !month) {
     return c.json({ error: '项目和月份不能为空' }, 400);
   }
-  
+
+  // 校验项目存在且当前用户为项目成员/负责人（CODE_REVIEW #18）
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    include: { members: { where: { userId }, select: { id: true } } }
+  });
+  if (!project) return c.json({ error: '项目不存在' }, 404);
+  if (project.managerId !== userId && project.members.length === 0) {
+    return c.json({ error: '无权为未参与的项目创建汇报' }, 403);
+  }
+
   const type = reportType || '日报';
   
   const exists = await prisma.report.findUnique({
@@ -140,11 +150,10 @@ reports.put('/:id', async (c) => {
     if (!existing) return c.json({ error: '汇报不存在' }, 404);
     if (existing.userId !== userId) return c.json({ error: '无权修改他人的汇报' }, 403);
 
+    // month/reportType 属唯一约束标识，禁止在此处修改以免破坏一致性（CODE_REVIEW #19）
     const data = {};
     if (body.content !== undefined) data.content = body.content;
     if (body.status !== undefined) data.status = body.status;
-    if (body.month !== undefined) data.month = body.month;
-    if (body.reportType !== undefined) data.reportType = body.reportType;
 
     const updated = await prisma.report.update({ where: { id }, data, include: { user: { select: { id: true, name: true } }, project: { select: { id: true, name: true } } } });
     return c.json(updated);

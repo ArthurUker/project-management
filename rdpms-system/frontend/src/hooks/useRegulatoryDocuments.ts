@@ -12,23 +12,26 @@ export function useRegulatoryDocuments(params?: UseRegulatoryDocumentsParams) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDocuments = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await regulatoryDocumentsAPI.list(params);
-      const list = (res as any).list || (res as any).data?.list || [];
-      setDocuments(Array.isArray(list) ? (list as RegulatoryDocument[]) : []);
-    } catch (e: any) {
-      setError(e?.error || e?.message || '加载法规文件失败');
-      setDocuments([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchDocuments();
+    let cancelled = false;
+    const run = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await regulatoryDocumentsAPI.list(params);
+        if (cancelled) return;
+        const list = (res as any).list || (res as any).data?.list || [];
+        setDocuments(Array.isArray(list) ? (list as RegulatoryDocument[]) : []);
+      } catch (e: any) {
+        if (cancelled) return;
+        setError(e?.error || e?.message || '加载法规文件失败');
+        setDocuments([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    run();
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params?.applicability, params?.priorityLevel]);
 

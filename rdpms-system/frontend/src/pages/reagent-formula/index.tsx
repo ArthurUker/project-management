@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { formulaAPI, prepAPI, reagentAPI } from '../../api/client';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, FlaskConical, Pencil, TableProperties } from 'lucide-react';
@@ -66,8 +66,12 @@ export default function FormulaMatrix(): JSX.Element {
     } catch (e) { console.error(e); }
   };
 
-  useEffect(() => { load(); }, [selectedCategory]);
-  useEffect(() => { const t = setTimeout(() => load(), 300); return () => clearTimeout(t); }, [searchText]);
+  // 用 ref 持有最新 load，避免闭包捕获过期状态的 searchText/selectedCategory
+  const loadRef = useRef(load);
+  loadRef.current = load;
+
+  useEffect(() => { loadRef.current(); }, [selectedCategory]);
+  useEffect(() => { const t = setTimeout(() => loadRef.current(), 300); return () => clearTimeout(t); }, [searchText]);
 
   const categories = useMemo(() => {
     const cats = Array.from(new Set(allFormulas.map(f => (f.type || f.category || '').toString()))).filter(Boolean);

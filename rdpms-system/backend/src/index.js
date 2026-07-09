@@ -259,9 +259,19 @@ async function ensureProjectDraftAndMilestonePhaseColumns() {
 // 创建Hono应用
 const app = new Hono();
 
-// CORS中间件
+// CORS中间件（CODE_REVIEW #2：避免 origin:'*' 与 credentials:true 同时使用）。
+// 通过环境变量 CORS_ORIGINS 配置允许的来源（逗号分隔），默认仅放行本地前端。
+const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 app.use('*', cors({
-  origin: '*',
+  origin: (origin) => {
+    // 同源请求（无 origin）或命中白名单时放行，否则拒绝（返回 false 即不带 CORS 头）
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) return origin || ALLOWED_ORIGINS[0];
+    return false;
+  },
   credentials: true
 }));
 

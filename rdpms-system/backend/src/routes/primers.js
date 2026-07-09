@@ -1,7 +1,11 @@
 import { Hono } from 'hono';
 import { prisma } from '../index.js';
+import { authMiddleware } from './auth.js';
 
 const router = new Hono();
+
+// 所有引物/探针接口均需登录（CODE_REVIEW #3）
+router.use('*', authMiddleware);
 
 // GET /api/primers — 列表（支持 keyword / projectName / targetGene / status 过滤）
 router.get('/', async (c) => {
@@ -74,7 +78,7 @@ router.post('/', async (c) => {
         tubeCount:          body.tubeCount ? parseInt(body.tubeCount) : null,
         notes:              body.notes || null,
         status:             body.status || 'active',
-        createdBy:          body.createdBy || null,
+        createdBy:          c.get('userId') || null,
       },
     });
     return c.json({ success: true, data: primer }, 201);
@@ -154,7 +158,7 @@ router.post('/batch-import', async (c) => {
             tubeCount:          r.tubeCount ? parseInt(r.tubeCount) : null,
             notes:              r.notes || null,
             status:             'active',
-            createdBy:          r.createdBy || null,
+            createdBy:          c.get('userId') || null,
           },
         })
       )

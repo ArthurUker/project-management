@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { prisma } from '../index.js';
-import { authMiddleware } from './auth.js';
+import { authMiddleware, adminOrManagerMiddleware } from './auth.js';
 
 const tasks = new Hono();
 
@@ -183,8 +183,12 @@ tasks.put('/:id', async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json();
   
-  // 处理日期字段
-  if (body.dueDate) body.dueDate = new Date(body.dueDate);
+  // 处理日期字段：空串/无效值归一为 null，避免写入 Invalid Date（CODE_REVIEW #17）
+  if (body.dueDate !== undefined) {
+    body.dueDate = (body.dueDate === null || body.dueDate === '' || isNaN(new Date(body.dueDate).getTime()))
+      ? null
+      : new Date(body.dueDate);
+  }
   
   // 处理 docRefs 字段
   if (body.docRefs !== undefined) {
@@ -229,8 +233,8 @@ tasks.patch('/:id/status', async (c) => {
   return c.json(task);
 });
 
-// 删除任务
-tasks.delete('/:id', async (c) => {
+// 删除任务（仅管理员或项目经理，CODE_REVIEW #6）
+tasks.delete('/:id', adminOrManagerMiddleware, async (c) => {
   const id = c.req.param('id');
   await prisma.task.delete({ where: { id } });
   return c.json({ success: true });
@@ -265,8 +269,8 @@ tasks.get('/board/:projectId', async (c) => {
   return c.json(board);
 });
 
-// 批量更新任务状态
-tasks.post('/batch/status', async (c) => {
+// 批量更新任务状态（仅管理员或项目经理，CODE_REVIEW #21）
+tasks.post('/batch/status', adminOrManagerMiddleware, async (c) => {
   const { updates } = await c.req.json();
   
   if (!Array.isArray(updates)) return c.json({ error: '更新数据格式错误' }, 400);

@@ -63,6 +63,7 @@ function parseDates(record) {
   const DATE_FIELDS = [
     'createdAt', 'updatedAt', 'startDate', 'endDate', 'completedAt',
     'submittedAt', 'approvedAt', 'date', 'joinedAt',
+    'plannedSubmissionDate', 'expectedApprovalDate', 'expiryDate', 'collectionDate',
   ];
   const result = { ...record };
   for (const field of DATE_FIELDS) {
@@ -127,111 +128,113 @@ backup.post('/restore', async (c) => {
   const d = body.data;
 
   try {
-    await prisma.$executeRaw`PRAGMA foreign_keys = OFF`;
+    // 整体包在事务中，任意一步失败自动回滚，避免"半恢复"残损库（CODE_REVIEW #8）
+    await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`PRAGMA foreign_keys = OFF`;
 
-    // ── 按备份中实际包含的数据决定删除范围 ──────────────────────────────────
+      // ── 按备份中实际包含的数据决定删除范围 ──────────────────────────────
 
-    // 依赖最深的子表先删
-    if (d.prepRecords)        await prisma.prepRecord.deleteMany();
-    if (d.formulaComponents)  await prisma.formulaComponent.deleteMany();
-    if (d.reagentFormulas)    await prisma.reagentFormula.deleteMany();
-    if (d.taskDependencies)   await prisma.taskDependency.deleteMany();
-    if (d.reportVersions)     await prisma.reportVersion.deleteMany();
-    if (d.docVersions)        await prisma.docVersion.deleteMany();
-    if (d.monthlyProgress)    await prisma.monthlyProgress.deleteMany();
-    if (d.milestones)         await prisma.milestone.deleteMany();
-    if (d.systemLogs)         await prisma.systemLog.deleteMany();
-    if (d.tasks)              await prisma.task.deleteMany();
-    if (d.reports)            await prisma.report.deleteMany();
-    if (d.docDocuments)       await prisma.docDocument.deleteMany();
-    if (d.projectMembers)     await prisma.projectMember.deleteMany();
-    if (d.projects)           await prisma.project.deleteMany();
-    if (d.docCategories)      await prisma.docCategory.deleteMany();
-    if (d.projectTemplates)   await prisma.projectTemplate.deleteMany();
-    if (d.taskTemplateSteps)  await prisma.taskTemplateStep.deleteMany();
-    if (d.taskTemplates)      await prisma.taskTemplate.deleteMany();
-    if (d.primers)            await prisma.primer.deleteMany();
-    if (d.reagentMaterials)   await prisma.reagentMaterial.deleteMany();
-    if (d.reagents)           await prisma.reagent.deleteMany();
-    if (d.phaseTransitions)   await prisma.phaseTransition.deleteMany();
-    if (d.users)              await prisma.user.deleteMany();
+      // 依赖最深的子表先删
+      if (d.prepRecords)        await tx.prepRecord.deleteMany();
+      if (d.formulaComponents)  await tx.formulaComponent.deleteMany();
+      if (d.reagentFormulas)    await tx.reagentFormula.deleteMany();
+      if (d.taskDependencies)   await tx.taskDependency.deleteMany();
+      if (d.reportVersions)     await tx.reportVersion.deleteMany();
+      if (d.docVersions)        await tx.docVersion.deleteMany();
+      if (d.monthlyProgress)    await tx.monthlyProgress.deleteMany();
+      if (d.milestones)         await tx.milestone.deleteMany();
+      if (d.systemLogs)         await tx.systemLog.deleteMany();
+      if (d.tasks)              await tx.task.deleteMany();
+      if (d.reports)            await tx.report.deleteMany();
+      if (d.docDocuments)       await tx.docDocument.deleteMany();
+      if (d.projectMembers)     await tx.projectMember.deleteMany();
+      if (d.projects)           await tx.project.deleteMany();
+      if (d.docCategories)      await tx.docCategory.deleteMany();
+      if (d.projectTemplates)   await tx.projectTemplate.deleteMany();
+      if (d.taskTemplateSteps)  await tx.taskTemplateStep.deleteMany();
+      if (d.taskTemplates)      await tx.taskTemplate.deleteMany();
+      if (d.primers)            await tx.primer.deleteMany();
+      if (d.reagentMaterials)   await tx.reagentMaterial.deleteMany();
+      if (d.reagents)           await tx.reagent.deleteMany();
+      if (d.phaseTransitions)   await tx.phaseTransition.deleteMany();
+      if (d.users)              await tx.user.deleteMany();
 
-    // ── 按依赖顺序插入（父表先，子表后）────────────────────────────────────
+      // ── 按依赖顺序插入（父表先，子表后）────────────────────────────────────
 
-    if (d.users?.length)
-      await prisma.user.createMany({ data: d.users.map(parseDates), skipDuplicates: true });
+      if (d.users?.length)
+        await tx.user.createMany({ data: d.users.map(parseDates), skipDuplicates: true });
 
-    if (d.docCategories?.length)
-      await prisma.docCategory.createMany({ data: d.docCategories.map(parseDates), skipDuplicates: true });
+      if (d.docCategories?.length)
+        await tx.docCategory.createMany({ data: d.docCategories.map(parseDates), skipDuplicates: true });
 
-    if (d.taskTemplates?.length)
-      await prisma.taskTemplate.createMany({ data: d.taskTemplates.map(parseDates), skipDuplicates: true });
+      if (d.taskTemplates?.length)
+        await tx.taskTemplate.createMany({ data: d.taskTemplates.map(parseDates), skipDuplicates: true });
 
-    if (d.taskTemplateSteps?.length)
-      await prisma.taskTemplateStep.createMany({ data: d.taskTemplateSteps.map(parseDates), skipDuplicates: true });
+      if (d.taskTemplateSteps?.length)
+        await tx.taskTemplateStep.createMany({ data: d.taskTemplateSteps.map(parseDates), skipDuplicates: true });
 
-    if (d.reagents?.length)
-      await prisma.reagent.createMany({ data: d.reagents.map(parseDates), skipDuplicates: true });
+      if (d.reagents?.length)
+        await tx.reagent.createMany({ data: d.reagents.map(parseDates), skipDuplicates: true });
 
-    if (d.reagentMaterials?.length)
-      await prisma.reagentMaterial.createMany({ data: d.reagentMaterials.map(parseDates), skipDuplicates: true });
+      if (d.reagentMaterials?.length)
+        await tx.reagentMaterial.createMany({ data: d.reagentMaterials.map(parseDates), skipDuplicates: true });
 
-    if (d.projectTemplates?.length)
-      await prisma.projectTemplate.createMany({ data: d.projectTemplates.map(parseDates), skipDuplicates: true });
+      if (d.projectTemplates?.length)
+        await tx.projectTemplate.createMany({ data: d.projectTemplates.map(parseDates), skipDuplicates: true });
 
-    if (d.projects?.length)
-      await prisma.project.createMany({ data: d.projects.map(parseDates), skipDuplicates: true });
+      if (d.projects?.length)
+        await tx.project.createMany({ data: d.projects.map(parseDates), skipDuplicates: true });
 
-    if (d.projectMembers?.length)
-      await prisma.projectMember.createMany({ data: d.projectMembers.map(parseDates), skipDuplicates: true });
+      if (d.projectMembers?.length)
+        await tx.projectMember.createMany({ data: d.projectMembers.map(parseDates), skipDuplicates: true });
 
-    if (d.tasks?.length)
-      await prisma.task.createMany({ data: d.tasks.map(parseDates), skipDuplicates: true });
+      if (d.tasks?.length)
+        await tx.task.createMany({ data: d.tasks.map(parseDates), skipDuplicates: true });
 
-    if (d.taskDependencies?.length)
-      await prisma.taskDependency.createMany({ data: d.taskDependencies.map(parseDates), skipDuplicates: true });
+      if (d.taskDependencies?.length)
+        await tx.taskDependency.createMany({ data: d.taskDependencies.map(parseDates), skipDuplicates: true });
 
-    if (d.milestones?.length)
-      await prisma.milestone.createMany({ data: d.milestones.map(parseDates), skipDuplicates: true });
+      if (d.milestones?.length)
+        await tx.milestone.createMany({ data: d.milestones.map(parseDates), skipDuplicates: true });
 
-    if (d.reports?.length)
-      await prisma.report.createMany({ data: d.reports.map(parseDates), skipDuplicates: true });
+      if (d.reports?.length)
+        await tx.report.createMany({ data: d.reports.map(parseDates), skipDuplicates: true });
 
-    if (d.reportVersions?.length)
-      await prisma.reportVersion.createMany({ data: d.reportVersions.map(parseDates), skipDuplicates: true });
+      if (d.reportVersions?.length)
+        await tx.reportVersion.createMany({ data: d.reportVersions.map(parseDates), skipDuplicates: true });
 
-    if (d.monthlyProgress?.length)
-      await prisma.monthlyProgress.createMany({ data: d.monthlyProgress.map(parseDates), skipDuplicates: true });
+      if (d.monthlyProgress?.length)
+        await tx.monthlyProgress.createMany({ data: d.monthlyProgress.map(parseDates), skipDuplicates: true });
 
-    if (d.docDocuments?.length)
-      await prisma.docDocument.createMany({ data: d.docDocuments.map(parseDates), skipDuplicates: true });
+      if (d.docDocuments?.length)
+        await tx.docDocument.createMany({ data: d.docDocuments.map(parseDates), skipDuplicates: true });
 
-    if (d.docVersions?.length)
-      await prisma.docVersion.createMany({ data: d.docVersions.map(parseDates), skipDuplicates: true });
+      if (d.docVersions?.length)
+        await tx.docVersion.createMany({ data: d.docVersions.map(parseDates), skipDuplicates: true });
 
-    if (d.reagentFormulas?.length)
-      await prisma.reagentFormula.createMany({ data: d.reagentFormulas.map(parseDates), skipDuplicates: true });
+      if (d.reagentFormulas?.length)
+        await tx.reagentFormula.createMany({ data: d.reagentFormulas.map(parseDates), skipDuplicates: true });
 
-    if (d.formulaComponents?.length)
-      await prisma.formulaComponent.createMany({ data: d.formulaComponents.map(parseDates), skipDuplicates: true });
+      if (d.formulaComponents?.length)
+        await tx.formulaComponent.createMany({ data: d.formulaComponents.map(parseDates), skipDuplicates: true });
 
-    if (d.prepRecords?.length)
-      await prisma.prepRecord.createMany({ data: d.prepRecords.map(parseDates), skipDuplicates: true });
+      if (d.prepRecords?.length)
+        await tx.prepRecord.createMany({ data: d.prepRecords.map(parseDates), skipDuplicates: true });
 
-    if (d.systemLogs?.length)
-      await prisma.systemLog.createMany({ data: d.systemLogs.map(parseDates), skipDuplicates: true });
+      if (d.systemLogs?.length)
+        await tx.systemLog.createMany({ data: d.systemLogs.map(parseDates), skipDuplicates: true });
 
-    if (d.primers?.length)
-      await prisma.primer.createMany({ data: d.primers.map(parseDates), skipDuplicates: true });
+      if (d.primers?.length)
+        await tx.primer.createMany({ data: d.primers.map(parseDates), skipDuplicates: true });
 
-    if (d.phaseTransitions?.length)
-      await prisma.phaseTransition.createMany({ data: d.phaseTransitions.map(parseDates), skipDuplicates: true });
+      if (d.phaseTransitions?.length)
+        await tx.phaseTransition.createMany({ data: d.phaseTransitions.map(parseDates), skipDuplicates: true });
 
-    await prisma.$executeRaw`PRAGMA foreign_keys = ON`;
+      await tx.$executeRaw`PRAGMA foreign_keys = ON`;
+    });
 
     return c.json({ success: true, message: '数据恢复成功，请重新登录' });
   } catch (err) {
-    try { await prisma.$executeRaw`PRAGMA foreign_keys = ON`; } catch {}
     console.error('[Backup] restore failed:', err);
     return c.json({ error: '数据恢复失败: ' + (err.message || String(err)) }, 500);
   }

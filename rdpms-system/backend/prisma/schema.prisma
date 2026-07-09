@@ -171,6 +171,7 @@ model Report {
   versions   ReportVersion[]
 
   @@unique([userId, projectId, month, reportType])
+  @@index([updatedAt])
 }
 
 // 汇报历史版本
@@ -205,6 +206,7 @@ model MonthlyProgress {
   submitter  User    @relation("ProgressSubmitter", fields: [submittedBy], references: [id])
 
   @@unique([projectId, month])
+  @@index([updatedAt])
 }
 
 model Task {
@@ -300,6 +302,8 @@ model Milestone {
   updatedAt   DateTime @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
 }
 
 model SystemLog {

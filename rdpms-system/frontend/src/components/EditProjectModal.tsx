@@ -459,7 +459,11 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
       showPlanEditor,
       savedAt: Date.now(),
     };
-    localStorage.setItem(getEditDraftKey(project.id), JSON.stringify(draft));
+    try {
+      localStorage.setItem(getEditDraftKey(project.id), JSON.stringify(draft));
+    } catch {
+      // 隐私模式或存储配额已满时静默失败，不影响主流程
+    }
     alert('已暂存草稿，可稍后继续编辑');
   };
 

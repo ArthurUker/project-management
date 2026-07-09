@@ -4,9 +4,22 @@ import pkg from 'bcryptjs';
 const bcrypt = pkg;
 import pkg2 from 'jsonwebtoken';
 const jwt = pkg2;
+import { randomBytes } from 'crypto';
 
 const auth = new Hono();
-const JWT_SECRET = process.env.JWT_SECRET || 'rdpms-jwt-secret';
+
+// JWT 密钥：优先使用环境变量；未配置时生成一次性随机密钥并告警。
+// 避免硬编码弱密钥被攻击者伪造任意身份令牌（CODE_REVIEW #1）。
+function resolveJwtSecret() {
+  if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
+  const generated = randomBytes(32).toString('hex');
+  console.warn(
+    '⚠️ 安全警告：未设置环境变量 JWT_SECRET，已生成临时随机密钥（服务重启后旧 token 将失效）。' +
+    '生产环境请通过 JWT_SECRET 配置固定强密钥。'
+  );
+  return generated;
+}
+const JWT_SECRET = resolveJwtSecret();
 
 // 角色权限映射 — 与前端 permissions.ts 保持一致
 const ROLE_PERMISSIONS = {
@@ -207,7 +220,11 @@ auth.put('/password', authMiddleware, async (c) => {
   const user = await prisma.user.findUnique({
     where: { id: userId }
   });
-  
+
+  if (!user) {
+    return c.json({ error: '用户不存在' }, 404);
+  }
+
   const valid = await bcrypt.compare(oldPassword, user.password);
   if (!valid) {
     return c.json({ error: '旧密码错误' }, 400);
