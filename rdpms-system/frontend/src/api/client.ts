@@ -12,13 +12,36 @@ const api = axios.create({
   },
 });
 
-// API响应类型
+// API响应类型（CODE_REVIEW #28：移除 [key:string]:any 弱类型索引，改为显式字段，
+// 契约变更可在编译期被发现。动态返回字段统一在此补充，避免散落 any）
 export interface ApiResponse<T = any> {
   success: boolean;
   message?: string;
+  data?: any;
   list?: T[];
   flat?: T[];
-  [key: string]: any;
+  roles?: any[];
+  role?: any;
+  user?: any;
+  users?: any[];
+  projects?: any[];
+  project?: any;
+  members?: any[];
+  tasks?: any[];
+  reports?: any[];
+  milestones?: any[];
+  monthlyProgress?: any[];
+  total?: number;
+  page?: number;
+  pageSize?: number;
+  syncTime?: string;
+  serverTime?: number;
+  preview?: any;
+  content?: any;
+  children?: any[];
+  phases?: any[];
+  stats?: any;
+  token?: string;
 }
 
 // 简单的请求包装器，确保返回的是 response.data 的类型
