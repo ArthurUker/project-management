@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+// API 基址：默认同源 '/api'（经 Vite 代理）；生产环境通过 VITE_API_URL 指定完整基址（需含 /api 前缀）。
+// 部署约定（CODE_REVIEW #16）：仅当独立域名/网关部署时才设置 VITE_API_URL，且必须包含 /api 后缀。
 const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE || '/api';
 
 const api = axios.create({

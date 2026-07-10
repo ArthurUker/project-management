@@ -35,7 +35,9 @@ export const PERMS = {
 
 export type PermCode = typeof PERMS[keyof typeof PERMS];
 
-// ── 角色权限映射（当后端未返回 permissions 字段时的回退） ──
+// ── 角色权限映射（仅用于前端按钮显隐的“提示”，非安全边界） ──
+// 安全权威在后端：所有写操作均经 authMiddleware / adminOrManagerMiddleware 校验（CODE_REVIEW #6）。
+// 本映射仅作为后端未返回 permissions 字段时的 UI 回退。
 const ROLE_PERMISSIONS: Record<string, string[]> = {
   admin: Object.values(PERMS),
   manager: [

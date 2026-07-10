@@ -31,6 +31,8 @@ export const prisma = new PrismaClient();
 
 async function ensureTaskRegulatoryColumns() {
   // 兼容历史数据库：某些环境已升级 Prisma Client，但 Task 表仍缺少新增列。
+  // 注意：下方 $executeRawUnsafe 的 DDL 均为固定白名单（列名来自本文件常量，无用户可控输入），
+  // 非拼接外部参数，故无注入风险（CODE_REVIEW #40）。
   const columns = await prisma.$queryRawUnsafe('PRAGMA table_info("Task")');
   const columnNames = new Set((columns || []).map((col) => col.name));
 

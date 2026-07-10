@@ -5,20 +5,13 @@ import type { Project } from '../components/ProjectCard';
 import EditProjectModal from '../components/EditProjectModal';
 import CreateProjectModal from '../components/CreateProjectModal';
 import { projectAPI } from '../api/client';
+import { STATUS_CONFIG } from '../constants/statusColors';
 
 // ── 常量 ─────────────────────────────────────────────
 const TYPE_OPTIONS   = ['platform', '定制', '合作', '测试', '应用', '科技项目'];
 const STATUS_OPTIONS = ['草稿', '规划中', '进行中', '待加工', '待验证', '已完成', '已归档'];
 
-const STATUS_CONFIG: Record<string, { label: string; barColor: string; textColor: string; dotColor: string; borderColor: string }> = {
-  '草稿': { label: '草稿', barColor: '#f59e0b', textColor: '#b45309', dotColor: '#f59e0b', borderColor: '#fde68a' },
-  '规划中': { label: '规划中', barColor: '#9ca3af', textColor: '#6b7280',  dotColor: '#9ca3af', borderColor: '#e5e7eb' },
-  '进行中': { label: '进行中', barColor: '#3b82f6', textColor: '#2563eb',  dotColor: '#3b82f6', borderColor: '#bfdbfe' },
-  '待加工': { label: '待加工', barColor: '#f59e0b', textColor: '#d97706',  dotColor: '#f59e0b', borderColor: '#fde68a' },
-  '待验证': { label: '待验证', barColor: '#8b5cf6', textColor: '#7c3aed',  dotColor: '#8b5cf6', borderColor: '#e9d5ff' },
-  '已完成': { label: '已完成', barColor: '#10b981', textColor: '#059669',  dotColor: '#10b981', borderColor: '#a7f3d0' },
-  '已归档': { label: '已归档', barColor: '#d1d5db', textColor: '#9ca3af',  dotColor: '#d1d5db', borderColor: '#e5e7eb' },
-};
+// 状态色/进度色统一引用 statusColors.ts（CODE_REVIEW #43：消除重复定义）
 
 type ViewMode = 'card' | 'list' | 'kanban';
 
