@@ -15,7 +15,9 @@ class RDPDatabase extends Dexie {
 
   constructor() {
     super('RDPDatabase');
-    this.version(1).stores({
+    // 版本提升到 2：补齐 milestones / monthlyProgress / projectMembers 等本地仓库。
+    // 旧版本(1)的本地库在打开时会自动升级并创建缺失的 object store，已有数据保留（CODE_REVIEW #10-#13 同步落地修复）。
+    this.version(2).stores({
       projects: 'id, code, type, status, managerId, updatedAt',
       reports: 'id, userId, projectId, month, status, updatedAt',
       tasks: 'id, projectId, assigneeId, status, updatedAt',
