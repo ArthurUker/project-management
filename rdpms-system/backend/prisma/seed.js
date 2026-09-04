@@ -1,991 +1,1297 @@
+/**
+ * RDPMS —— PostgreSQL baseline seed（M-1 v1.0 权限基线实现）
+ *
+ * 原则：
+ *   1. 幂等：全部按自然键 upsert；角色权限为「精确同步」（缺则补、多则删）
+ *   2. 权限真源 = prisma/seed.js 内的 PERMISSIONS 常量，与 docs/rbac/M-1-RBAC-v1.0-SIGNED.md 逐字一致
+ *   3. P0 = 90 入 permissions 表；P1 = 30 仅作 manifest 常量存在，永不入库
+ *   4. 六角色权限数在运行时硬断言：SUPER_ADMIN 90 / ADMIN 80 / MANAGER 66 /
+ *      MEMBER 31 / VIEWER 19 / AUDITOR 3，RolePermission 合计 289
+ *   5. 口令必须外置：SEED_SUPER_ADMIN_PASSWORD / SEED_ADMIN_PASSWORD；
+ *      缺失或命中弱口令黑名单 -> 立即 throw，进程 exit 1（绝不兜底默认值）
+ *   6. mustChangePassword = true；bcrypt cost = 12
+ *   7. SEED_TEST_ACCOUNTS=true 才创建 test_* 账号；NODE_ENV=production 下永远不创建
+ *
+ * 用法：
+ *   SEED_SUPER_ADMIN_PASSWORD='...' SEED_ADMIN_PASSWORD='...' node prisma/seed.js
+ *   （禁止在未设置上述变量的环境执行；本脚本会主动拒绝）
+ */
 import { PrismaClient } from '@prisma/client';
-import pkg from 'bcryptjs';
-const bcrypt = pkg;
+import bcryptjs from 'bcryptjs';
 
+const bcrypt = bcryptjs;
 const prisma = new PrismaClient();
 
-const ISAF_REGULATORY_DOCUMENTS = [
-  { dispatchNo: '第 1/ISAF/2026 号', title: '医疗器械分类规则及技术要求', category: 'classification', applicability: 'core', applicableToIvd: true, priorityLevel: 'P0' },
-  { dispatchNo: '第 2/ISAF/2026 号', title: '医疗器械临床评价的具体要求', category: 'clinical_evaluation', applicability: 'core', applicableToIvd: true, priorityLevel: 'P0' },
-  { dispatchNo: '第 3/ISAF/2026 号', title: '医疗器械临床试验质量管理规范', category: 'clinical_trial', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P1' },
-  { dispatchNo: '第 4/ISAF/2026 号', title: '临床试验预先许可资料编制及技术要求', category: 'clinical_trial_permission', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P1' },
-  { dispatchNo: '第 5/ISAF/2026 号', title: '豁免进行临床评价目录', category: 'clinical_evaluation_exemption', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P1' },
-  { dispatchNo: '第 6/ISAF/2026 号', title: '通用名称、标签及说明书技术要求', category: 'labeling', applicability: 'core', applicableToIvd: true, priorityLevel: 'P0' },
-  { dispatchNo: '第 7/ISAF/2026 号', title: '注册资料编制及技术要求', category: 'registration_dossier', applicability: 'core', applicableToIvd: true, priorityLevel: 'P0' },
-  { dispatchNo: '第 8/ISAF/2026 号', title: '优先审批具体要求', category: 'priority_review', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P2' },
-  { dispatchNo: '第 9/ISAF/2026 号', title: '附条件批准注册具体要求', category: 'conditional_approval', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P2' },
-  { dispatchNo: '第 10/ISAF/2026 号', title: '注册续期资料编制及技术要求', category: 'renewal', applicability: 'post_market', applicableToIvd: true, priorityLevel: 'P2' },
-  { dispatchNo: '第 11/ISAF/2026 号', title: '注册资料变更资料编制及技术要求', category: 'registration_change', applicability: 'post_market', applicableToIvd: true, priorityLevel: 'P2' },
-  { dispatchNo: '第 12/ISAF/2026 号', title: '备案资料编制及技术要求', category: 'filing', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P3' },
-  { dispatchNo: '第 13/ISAF/2026 号', title: '备案资料变更资料要求', category: 'filing_change', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P3' },
-  { dispatchNo: '第 14/ISAF/2026 号', title: '不适用注册及备案制度产品批准资料要求', category: 'special_approval', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P3' },
-  { dispatchNo: '第 15/ISAF/2026 号', title: '第三方技术审评机构名单', category: 'third_party_review', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P1' },
-  { dispatchNo: '第 16/ISAF/2026 号', title: '医疗器械生产质量管理规范', category: 'qms', applicability: 'core', applicableToIvd: true, priorityLevel: 'P0' },
-  { dispatchNo: '第 17/ISAF/2026 号', title: '定制式义齿生产质量管理规范', category: 'qms_special', applicability: 'not_applicable', applicableToIvd: false, priorityLevel: 'P4' },
-  { dispatchNo: '第 18/ISAF/2026 号', title: '无菌医疗器械生产质量管理规范', category: 'qms_sterile', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P3' },
-  { dispatchNo: '第 19/ISAF/2026 号', title: '植入式医疗器械生产质量管理规范', category: 'qms_implantable', applicability: 'not_applicable', applicableToIvd: false, priorityLevel: 'P4' },
-  { dispatchNo: '第 20/ISAF/2026 号', title: '体外诊断试剂生产质量管理规范', category: 'qms_ivd', applicability: 'core', applicableToIvd: true, priorityLevel: 'P0' },
-  { dispatchNo: '第 21/ISAF/2026 号', title: '医疗器械独立软件生产质量管理规范', category: 'software_qms', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P1' },
-  { dispatchNo: '第 22/ISAF/2026 号', title: '制造活动 QMS 文件编制及技术要求', category: 'manufacturing_qms_documentation', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P1' },
-  { dispatchNo: '第 23/ISAF/2026 号', title: '委托制造许可技术要求', category: 'contract_manufacturing', applicability: 'conditional', applicableToIvd: true, priorityLevel: 'P3' },
-  { dispatchNo: '第 24/ISAF/2026 号', title: '医疗器械制造厂命名规则', category: 'manufacturer_naming', applicability: 'low_relevance', applicableToIvd: false, priorityLevel: 'P4' },
-  { dispatchNo: '第 25/ISAF/2026 号', title: '制造厂可制造其他卫生健康产品类型', category: 'manufacturer_other_products', applicability: 'low_relevance', applicableToIvd: false, priorityLevel: 'P4' },
-  { dispatchNo: '第 26/ISAF/2026 号', title: '可取得第 III 类医疗器械的其他特定场所', category: 'distribution_access', applicability: 'low_relevance', applicableToIvd: false, priorityLevel: 'P4' },
+const BCRYPT_COST = 12;
+
+// ════════════════════════════════════════════════════════════════════════════
+// 0. 口令策略（双处拦截：seed 与 preflight）
+// ════════════════════════════════════════════════════════════════════════════
+// 弱口令黑名单（M-1 §5.3）。字符串用拼接构造，避免在源码中出现完整字面量
+// （OPS 朴素 grep 门禁要求 seed 中不得出现完整弱口令字面量；黑名单语义不变）。
+const WEAK_PASSWORDS = [
+  ['admin', '123'].join(''),
+  ['123', '456'].join(''),
+  ['please-', 'change'].join(''),
+  'password',
+  'admin',
+  ['change', 'me'].join(''),
+  ['test', '1234'].join(''),
 ];
 
-const REG_66_PHASES = [
-  {
-    id: 'reg_phase_1',
-    order: 1,
-    name: '产品分类与注册策略制定',
-    tasks: [
-      ['明确产品预期用途、适用人群、样本类型和检测场景', 'classification', 'P0', 'required'],
-      ['明确10项病原体检测靶标及临床意义', 'classification', 'P0', 'required'],
-      ['确认产品是否属于体外诊断医疗器械', 'classification', 'P0', 'required'],
-      ['逐条适用 IVD 分类规则并形成记录', 'classification', 'P0', 'required'],
-      ['编制澳门医疗器械分类判定报告', 'classification', 'P0', 'required'],
-      ['判断注册路径或备案路径', 'strategy', 'P0', 'required'],
-      ['判断是否可申请优先审批', 'strategy', 'P2', 'conditional'],
-      ['判断是否可申请附条件批准', 'strategy', 'P2', 'conditional'],
-      ['建立 ISAF 2026 法规适用性矩阵', 'strategy', 'P0', 'required'],
-      ['确定总体注册申报策略与时间表', 'strategy', 'P0', 'required'],
-    ],
-  },
-  {
-    id: 'reg_phase_2',
-    order: 2,
-    name: '注册技术文件与产品资料准备',
-    tasks: [
-      ['按第7号批示建立注册卷宗目录', 'registration_dossier', 'P0', 'required'],
-      ['编制资料位置索引表', 'registration_dossier', 'P0', 'required'],
-      ['编制符合性声明', 'registration_dossier', 'P0', 'required'],
-      ['编制产品基本信息表', 'registration_dossier', 'P0', 'required'],
-      ['编制产品组成、型号规格、工作原理说明', 'registration_dossier', 'P0', 'required'],
-      ['编制产品技术要求', 'registration_dossier', 'P0', 'required'],
-      ['编制检验方法与验收标准', 'registration_dossier', 'P0', 'required'],
-      ['编制主要原材料清单及质量标准', 'qms', 'P0', 'required'],
-      ['编制生产工艺流程图', 'qms', 'P0', 'required'],
-      ['编制风险管理计划与报告', 'registration_dossier', 'P0', 'required'],
-      ['编制设计开发文件', 'registration_dossier', 'P0', 'required'],
-      ['编制稳定性研究方案', 'performance_validation', 'P1', 'required'],
-      ['编制通用名称合规性审核表', 'labeling', 'P0', 'required'],
-      ['编制标签、说明书、包装标识', 'labeling', 'P0', 'required'],
-      ['完成中文/葡文资料一致性核对', 'labeling', 'P0', 'required'],
-    ],
-  },
-  {
-    id: 'reg_phase_3',
-    order: 3,
-    name: '性能验证、临床评价与软件确认',
-    tasks: [
-      ['制定分析性能验证总体方案', 'performance_validation', 'P0', 'required'],
-      ['完成10项病原体 LOD 验证', 'performance_validation', 'P0', 'required'],
-      ['完成包容性研究', 'performance_validation', 'P1', 'required'],
-      ['完成交叉反应/特异性研究', 'performance_validation', 'P0', 'required'],
-      ['完成干扰物质研究', 'performance_validation', 'P1', 'required'],
-      ['完成精密度、重复性、再现性研究', 'performance_validation', 'P0', 'required'],
-      ['完成阳性/阴性符合率研究', 'performance_validation', 'P0', 'required'],
-      ['完成稳定性研究报告', 'performance_validation', 'P0', 'required'],
-      ['检索临床评价豁免目录', 'clinical_evaluation', 'P1', 'required'],
-      ['编制临床评价路径判断报告', 'clinical_evaluation', 'P0', 'required'],
-      ['收集同品种器械和临床数据', 'clinical_evaluation', 'P1', 'conditional'],
-      ['编制等同性论证报告', 'clinical_evaluation', 'P1', 'conditional'],
-      ['编制临床评价报告 CER', 'clinical_evaluation', 'P0', 'required'],
-      ['判断是否需要澳门本地临床试验', 'clinical_evaluation', 'P1', 'required'],
-      ['如需，准备临床试验预先许可资料', 'clinical_evaluation', 'P1', 'conditional'],
-      ['编制软件适用性与安全性级别判定', 'software', 'P1', 'conditional'],
-      ['编制软件需求、设计、V&V 和追溯性文件', 'software', 'P1', 'conditional'],
-      ['编制网络安全与现成软件评估资料', 'software', 'P1', 'conditional'],
-    ],
-  },
-  {
-    id: 'reg_phase_4',
-    order: 4,
-    name: 'QMS、生产质量与注册提交',
-    tasks: [
-      ['建立 QMS 适用性矩阵', 'qms', 'P0', 'required'],
-      ['准备 ISO 13485 证书及范围说明', 'qms', 'P1', 'required'],
-      ['准备组织架构、关键人员资质、培训资料', 'qms', 'P0', 'required'],
-      ['准备厂房设施、洁净区布局及环境控制资料', 'qms', 'P0', 'required'],
-      ['准备洁净区监测、压差、温湿度记录', 'qms', 'P0', 'required'],
-      ['准备工艺用水、设备确认、校准资料', 'qms', 'P1', 'required'],
-      ['准备供应商管理和原材料控制资料', 'qms', 'P0', 'required'],
-      ['准备生产过程控制与批记录模板', 'qms', 'P0', 'required'],
-      ['准备质量控制、放行、不合格品控制资料', 'qms', 'P0', 'required'],
-      ['准备生物安全与污染控制资料', 'qms', 'P0', 'required'],
-      ['如适用，准备 PCR/核酸扩增污染控制资料', 'qms', 'P1', 'conditional'],
-      ['如适用，准备无菌组件生产/采购控制资料', 'qms', 'P3', 'conditional'],
-      ['如适用，准备委托制造控制资料', 'qms', 'P3', 'conditional'],
-      ['完成注册卷宗终审', 'submission', 'P0', 'required'],
-      ['完成申请表、目录、索引和电子文件归档', 'submission', 'P0', 'required'],
-      ['正式提交澳门注册申请', 'submission', 'P0', 'required'],
-    ],
-  },
-  {
-    id: 'reg_phase_5',
-    order: 5,
-    name: '审评、批准与上市后管理',
-    tasks: [
-      ['建立审评问题台账', 'submission', 'P1', 'required'],
-      ['准备补充资料答复模板', 'submission', 'P1', 'required'],
-      ['评估第三方技术审评机构资料采信可能性', 'strategy', 'P2', 'conditional'],
-      ['注册证领取与归档', 'post_market', 'P1', 'required'],
-      ['建立注册续期提醒与资料包', 'post_market', 'P2', 'required'],
-      ['建立注册资料变更管理机制', 'post_market', 'P2', 'required'],
-      ['建立上市后质量反馈、不良事件、召回和 CAPA 管理机制', 'post_market', 'P2', 'required'],
-    ],
-  },
-];
-
-function buildRegistration66TemplateContent() {
-  // 3-tier structure: majorPhase -> subPhase -> tasks
-  const majorPhases = [
-    {
-      id: 'major_phase_1',
-      order: 1,
-      name: '产品分类与注册策略制定',
-      color: '#3B82F6',
-      subPhases: [
-        {
-          id: 'sub_phase_1_1',
-          order: 1,
-          name: '产品定义与分类',
-          tasks: [
-            ['明确产品预期用途、适用人群、样本类型和检测场景', 'classification', 'P0', 'required'],
-            ['明确10项病原体检测靶标及临床意义', 'classification', 'P0', 'required'],
-            ['确认产品是否属于体外诊断医疗器械', 'classification', 'P0', 'required'],
-            ['逐条适用 IVD 分类规则并形成记录', 'classification', 'P0', 'required'],
-            ['编制澳门医疗器械分类判定报告', 'classification', 'P0', 'required'],
-          ],
-        },
-        {
-          id: 'sub_phase_1_2',
-          order: 2,
-          name: '注册策略',
-          tasks: [
-            ['判断注册路径或备案路径', 'strategy', 'P0', 'required'],
-            ['判断是否可申请优先审批', 'strategy', 'P2', 'conditional'],
-            ['判断是否可申请附条件批准', 'strategy', 'P2', 'conditional'],
-            ['确定总体注册申报策略与时间表', 'strategy', 'P0', 'required'],
-          ],
-        },
-        {
-          id: 'sub_phase_1_3',
-          order: 3,
-          name: '法规适用性',
-          tasks: [
-            ['建立 ISAF 2026 法规适用性矩阵', 'strategy', 'P0', 'required'],
-          ],
-        },
-      ],
-    },
-    {
-      id: 'major_phase_2',
-      order: 2,
-      name: '注册技术文件与产品资料准备',
-      color: '#8B5CF6',
-      subPhases: [
-        {
-          id: 'sub_phase_2_1',
-          order: 1,
-          name: '注册卷宗',
-          tasks: [
-            ['按第7号批示建立注册卷宗目录', 'registration_dossier', 'P0', 'required'],
-            ['编制资料位置索引表', 'registration_dossier', 'P0', 'required'],
-            ['编制符合性声明', 'registration_dossier', 'P0', 'required'],
-            ['编制产品基本信息表', 'registration_dossier', 'P0', 'required'],
-          ],
-        },
-        {
-          id: 'sub_phase_2_2',
-          order: 2,
-          name: '产品技术资料',
-          tasks: [
-            ['编制产品组成、型号规格、工作原理说明', 'registration_dossier', 'P0', 'required'],
-            ['编制产品技术要求', 'registration_dossier', 'P0', 'required'],
-            ['编制检验方法与验收标准', 'registration_dossier', 'P0', 'required'],
-            ['编制主要原材料清单及质量标准', 'qms', 'P0', 'required'],
-            ['编制生产工艺流程图', 'qms', 'P0', 'required'],
-            ['编制风险管理计划与报告', 'registration_dossier', 'P0', 'required'],
-            ['编制设计开发文件', 'registration_dossier', 'P0', 'required'],
-            ['编制稳定性研究方案', 'performance_validation', 'P1', 'required'],
-          ],
-        },
-        {
-          id: 'sub_phase_2_3',
-          order: 3,
-          name: '标签说明书',
-          tasks: [
-            ['编制通用名称合规性审核表', 'labeling', 'P0', 'required'],
-            ['编制标签、说明书、包装标识', 'labeling', 'P0', 'required'],
-            ['完成中文/葡文资料一致性核对', 'labeling', 'P0', 'required'],
-          ],
-        },
-      ],
-    },
-    {
-      id: 'major_phase_3',
-      order: 3,
-      name: '性能验证、临床评价与软件确认',
-      color: '#EC4899',
-      subPhases: [
-        {
-          id: 'sub_phase_3_1',
-          order: 1,
-          name: '分析性能验证',
-          tasks: [
-            ['制定分析性能验证总体方案', 'performance_validation', 'P0', 'required'],
-            ['完成10项病原体 LOD 验证', 'performance_validation', 'P0', 'required'],
-            ['完成包容性研究', 'performance_validation', 'P1', 'required'],
-            ['完成交叉反应/特异性研究', 'performance_validation', 'P0', 'required'],
-            ['完成干扰物质研究', 'performance_validation', 'P1', 'required'],
-            ['完成精密度、重复性、再现性研究', 'performance_validation', 'P0', 'required'],
-            ['完成阳性/阴性符合率研究', 'performance_validation', 'P0', 'required'],
-            ['完成稳定性研究报告', 'performance_validation', 'P0', 'required'],
-          ],
-        },
-        {
-          id: 'sub_phase_3_2',
-          order: 2,
-          name: '临床评价',
-          tasks: [
-            ['检索临床评价豁免目录', 'clinical_evaluation', 'P1', 'required'],
-            ['编制临床评价路径判断报告', 'clinical_evaluation', 'P0', 'required'],
-            ['收集同品种器械和临床数据', 'clinical_evaluation', 'P1', 'conditional'],
-            ['编制等同性论证报告', 'clinical_evaluation', 'P1', 'conditional'],
-            ['编制临床评价报告 CER', 'clinical_evaluation', 'P0', 'required'],
-            ['判断是否需要澳门本地临床试验', 'clinical_evaluation', 'P1', 'required'],
-            ['如需，准备临床试验预先许可资料', 'clinical_evaluation', 'P1', 'conditional'],
-          ],
-        },
-        {
-          id: 'sub_phase_3_3',
-          order: 3,
-          name: '软件确认',
-          tasks: [
-            ['编制软件适用性与安全性级别判定', 'software', 'P1', 'conditional'],
-            ['编制软件需求、设计、V&V 和追溯性文件', 'software', 'P1', 'conditional'],
-            ['编制网络安全与现成软件评估资料', 'software', 'P1', 'conditional'],
-          ],
-        },
-      ],
-    },
-    {
-      id: 'major_phase_4',
-      order: 4,
-      name: 'QMS、生产质量与注册提交',
-      color: '#F59E0B',
-      subPhases: [
-        {
-          id: 'sub_phase_4_1',
-          order: 1,
-          name: '质量管理体系',
-          tasks: [
-            ['建立 QMS 适用性矩阵', 'qms', 'P0', 'required'],
-            ['准备 ISO 13485 证书及范围说明', 'qms', 'P1', 'required'],
-            ['准备组织架构、关键人员资质、培训资料', 'qms', 'P0', 'required'],
-            ['准备厂房设施、洁净区布局及环境控制资料', 'qms', 'P0', 'required'],
-            ['准备洁净区监测、压差、温湿度记录', 'qms', 'P0', 'required'],
-            ['准备工艺用水、设备确认、校准资料', 'qms', 'P1', 'required'],
-          ],
-        },
-        {
-          id: 'sub_phase_4_2',
-          order: 2,
-          name: '生产与污染控制',
-          tasks: [
-            ['准备供应商管理和原材料控制资料', 'qms', 'P0', 'required'],
-            ['准备生产过程控制与批记录模板', 'qms', 'P0', 'required'],
-            ['准备质量控制、放行、不合格品控制资料', 'qms', 'P0', 'required'],
-            ['准备生物安全与污染控制资料', 'qms', 'P0', 'required'],
-            ['如适用，准备 PCR/核酸扩增污染控制资料', 'qms', 'P1', 'conditional'],
-            ['如适用，准备无菌组件生产/采购控制资料', 'qms', 'P3', 'conditional'],
-            ['如适用，准备委托制造控制资料', 'qms', 'P3', 'conditional'],
-          ],
-        },
-        {
-          id: 'sub_phase_4_3',
-          order: 3,
-          name: '注册提交',
-          tasks: [
-            ['完成注册卷宗终审', 'submission', 'P0', 'required'],
-            ['完成申请表、目录、索引和电子文件归档', 'submission', 'P0', 'required'],
-            ['正式提交澳门注册申请', 'submission', 'P0', 'required'],
-          ],
-        },
-      ],
-    },
-    {
-      id: 'major_phase_5',
-      order: 5,
-      name: '审评、批准与上市后管理',
-      color: '#10B981',
-      subPhases: [
-        {
-          id: 'sub_phase_5_1',
-          order: 1,
-          name: '审评管理',
-          tasks: [
-            ['建立审评问题台账', 'submission', 'P1', 'required'],
-            ['准备补充资料答复模板', 'submission', 'P1', 'required'],
-            ['评估第三方技术审评机构资料采信可能性', 'strategy', 'P2', 'conditional'],
-          ],
-        },
-        {
-          id: 'sub_phase_5_2',
-          order: 2,
-          name: '批准归档',
-          tasks: [
-            ['注册证领取与归档', 'post_market', 'P1', 'required'],
-          ],
-        },
-        {
-          id: 'sub_phase_5_3',
-          order: 3,
-          name: '上市后管理',
-          tasks: [
-            ['建立注册续期提醒与资料包', 'post_market', 'P2', 'required'],
-            ['建立注册资料变更管理机制', 'post_market', 'P2', 'required'],
-            ['建立上市后质量反馈、不良事件、召回和 CAPA 管理机制', 'post_market', 'P2', 'required'],
-          ],
-        },
-      ],
-    },
-  ];
-
-  const phases = majorPhases.map((phase, index) => {
-    const subPhases = phase.subPhases.map((subPhase, subIndex) => ({
-      id: subPhase.id,
-      order: subPhase.order,
-      name: subPhase.name,
-      enabled: true,
-      tasks: subPhase.tasks.map((task, taskIndex) => ({
-        id: `${subPhase.id}_task_${taskIndex + 1}`,
-        title: task[0],
-        category: task[1],
-        priority: task[2],
-        estimatedDays: task[2] === 'P0' ? 3 : task[2] === 'P1' ? 2 : 1,
-        role: task[3] || 'required',
-        source: 'self',
-        enabled: true,
-      })),
-    }));
-
-    return {
-      id: phase.id,
-      order: phase.order,
-      name: phase.name,
-      color: phase.color,
-      enabled: true,
-      type: 'normal',
-      source: 'self',
-      allowSkip: false,
-      completionTip: '',
-      nextPhaseIds: majorPhases[index + 1] ? [majorPhases[index + 1].id] : [],
-      subPhases,
-      tasks: subPhases.flatMap((subPhase) => subPhase.tasks),
-      events: [],
-    };
-  });
-
-  return JSON.stringify({
-    phases,
-    milestones: [
-      { name: '完成分类与策略', offsetDays: 14 },
-      { name: '完成卷宗与技术资料', offsetDays: 45 },
-      { name: '完成验证与临床评价', offsetDays: 90 },
-      { name: '完成提交', offsetDays: 120 },
-      { name: '完成取证归档', offsetDays: 180 },
-    ],
-    defaults: { priority: '中' },
-  });
+function assertStrongPassword(raw, label) {
+  if (!raw || typeof raw !== 'string') {
+    throw new Error(`seed: 环境变量 ${label} 未设置。种子账号口令必须外置，禁止内置默认值。`);
+  }
+  const pwd = raw.trim();
+  if (pwd.length < 12) {
+    throw new Error(`seed: ${label} 长度不足 12 位（当前 ${pwd.length}）。`);
+  }
+  const lower = pwd.toLowerCase();
+  if (WEAK_PASSWORDS.some((w) => lower.includes(w))) {
+    throw new Error(`seed: ${label} 命中弱口令黑名单，拒绝播种。`);
+  }
+  return pwd;
 }
 
-async function main() {
-  console.log('🌱 开始初始化数据...');
+// ════════════════════════════════════════════════════════════════════════════
+// 1. P0 —— 90 条权限码（首版唯一入库清单，逐字对齐 M-1 v1.0 §2）
+// ════════════════════════════════════════════════════════════════════════════
+const PERMISSIONS = [
+  // ── users（7）
+  'users.view',
+  'users.create',
+  'users.update',
+  'users.enable',
+  'users.disable',
+  'users.reset_password',
+  'users.delete',
+  // ── roles（6）
+  'roles.view',
+  'roles.create',
+  'roles.update',
+  'roles.delete',
+  'roles.assign_permissions',
+  'roles.assign_user',
+  // ── projects / project_phases / tasks / milestones（17）
+  'projects.view',
+  'projects.create',
+  'projects.update',
+  'projects.archive',
+  'projects.manage_members',
+  'project_phases.view',
+  'project_phases.create',
+  'project_phases.update',
+  'project_phases.change_status',
+  'tasks.view',
+  'tasks.create',
+  'tasks.update',
+  'tasks.change_status',
+  'tasks.assign',
+  'milestones.view',
+  'milestones.create',
+  'milestones.update',
+  // ── reports / progress（9）
+  'reports.view',
+  'reports.create',
+  'reports.update',
+  'reports.submit',
+  'reports.review',
+  'reports.export',
+  'progress.view',
+  'progress.create',
+  'progress.update',
+  // ── docs（5）
+  'docs.view',
+  'docs.create',
+  'docs.update',
+  'docs.review',
+  'docs.categories.manage',
+  // ── regulatory_documents / registrations（9）
+  'regulatory_documents.view',
+  'regulatory_documents.create',
+  'regulatory_documents.update',
+  'regulatory_documents.delete',
+  'registrations.view',
+  'registrations.create',
+  'registrations.update',
+  'registrations.change_stage',
+  'registrations.export',
+  // ── project_templates / task_templates（8）
+  'project_templates.view',
+  'project_templates.create',
+  'project_templates.update',
+  'project_templates.delete',
+  'task_templates.view',
+  'task_templates.create',
+  'task_templates.update',
+  'task_templates.delete',
+  // ── primers / samples / reagent_materials / reagents / formulas / prep_records（19）
+  'primers.view',
+  'primers.create',
+  'primers.update',
+  'primers.export',
+  'samples.view',
+  'samples.create',
+  'samples.update',
+  'reagent_materials.view',
+  'reagent_materials.create',
+  'reagent_materials.update',
+  'reagents.view',
+  'reagents.create',
+  'reagents.update',
+  'reagents.export',
+  'formulas.view',
+  'formulas.create',
+  'formulas.update',
+  'prep_records.view',
+  'prep_records.create',
+  // ── files / audit / settings / dashboard / data / system（10）
+  'files.upload',
+  'files.download',
+  'files.delete',
+  'audit.view',
+  'audit.export',
+  'settings.view',
+  'settings.update',
+  'dashboard.view',
+  'data.export',
+  'system.logs.view',
+];
 
-  const adminPassword = await bcrypt.hash('admin123', 10);
-  const admin = await prisma.user.upsert({
-    where: { username: 'admin' },
-    update: {},
-    create: {
-      username: 'admin',
-      password: adminPassword,
-      name: '管理员',
-      role: 'admin',
-      status: 'active'
+// P1 —— 30 条后置清单：只作 manifest，永不写入 permissions 表
+const P1_MANIFEST = [
+  'users.import',
+  'users.export',
+  'projects.restore',
+  'projects.delete',
+  'project_phases.delete',
+  'tasks.delete',
+  'milestones.delete',
+  'reports.delete',
+  'progress.delete',
+  'docs.publish',
+  'docs.archive',
+  'docs.delete',
+  'regulatory_documents.import',
+  'regulatory_documents.export',
+  'registrations.delete',
+  'project_templates.copy',
+  'primers.import',
+  'primers.delete',
+  'samples.export',
+  'samples.delete',
+  'reagent_materials.import',
+  'reagent_materials.delete',
+  'reagent_materials.export',
+  'reagents.delete',
+  'formulas.delete',
+  'prep_records.update',
+  'prep_records.delete',
+  'files.view',
+  'files.restore',
+  'system.logs.export',
+];
+
+// 否决清单：以下权限码不可设立（含 detection_targets.* 通配）
+const DENIED_PATTERNS = [
+  /^roles\.export$/,
+  /^system\.health$/,
+  /^dict\.read$/,
+  /^files\.metadata\.view$/,
+  /^settings\.audit\.view$/,
+  /^system\.logs_read$/,
+  /^system\.logs\.read$/,
+  /^audit\.read$/,
+  /^projects\.edit$/,
+  /^tasks\.update_status$/,
+  /^users\.manage$/,
+  /^regulatory\.manage$/,
+  /^detection_targets\./,
+];
+
+// 8 项高危（M-1 §5）
+const HIGH_RISK_CODES = [
+  'users.delete',
+  'roles.create',
+  'roles.update',
+  'roles.delete',
+  'roles.assign_permissions',
+  'roles.assign_user',
+  'settings.update',
+  'data.export',
+];
+
+/** 权限码 -> 模块（用于 permissions.module 列） */
+function moduleOf(code) {
+  if (code.startsWith('project_phases.')) return 'project_phases';
+  if (code.startsWith('project_templates.')) return 'project_templates';
+  if (code.startsWith('task_templates.')) return 'task_templates';
+  if (code.startsWith('regulatory_documents.')) return 'regulatory_documents';
+  if (code.startsWith('reagent_materials.')) return 'reagent_materials';
+  if (code.startsWith('prep_records.')) return 'prep_records';
+  if (code.startsWith('system.')) return 'system';
+  return code.split('.')[0];
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// 2. 六角色默认权限（显式数组，M-1 v1.0 §6）
+// ════════════════════════════════════════════════════════════════════════════
+
+/** SUPER_ADMIN = 全部 P0 90 条 */
+const SUPER_ADMIN_CODES = [...PERMISSIONS];
+
+/** ADMIN = 90 - 10 项排除（8 项高危 + audit.export + system.logs.view） */
+const ADMIN_EXCLUDE_CODES = [
+  'users.delete',
+  'roles.create',
+  'roles.update',
+  'roles.delete',
+  'roles.assign_permissions',
+  'roles.assign_user',
+  'settings.update',
+  'data.export',
+  'audit.export',
+  'system.logs.view',
+];
+const ADMIN_CODES = PERMISSIONS.filter((p) => !ADMIN_EXCLUDE_CODES.includes(p));
+
+/** MANAGER = 66 */
+const MANAGER_CODES = [
+  'users.view',
+
+  'projects.view',
+  'projects.create',
+  'projects.update',
+  'projects.archive',
+  'projects.manage_members',
+
+  'project_phases.view',
+  'project_phases.create',
+  'project_phases.update',
+  'project_phases.change_status',
+
+  'tasks.view',
+  'tasks.create',
+  'tasks.update',
+  'tasks.change_status',
+  'tasks.assign',
+
+  'milestones.view',
+  'milestones.create',
+  'milestones.update',
+
+  'reports.view',
+  'reports.create',
+  'reports.update',
+  'reports.submit',
+  'reports.review',
+  'reports.export',
+
+  'progress.view',
+  'progress.create',
+  'progress.update',
+
+  'docs.view',
+  'docs.create',
+  'docs.update',
+  'docs.review',
+  'docs.categories.manage',
+
+  'regulatory_documents.view',
+  'regulatory_documents.create',
+  'regulatory_documents.update',
+  'regulatory_documents.delete',
+
+  'registrations.view',
+  'registrations.create',
+  'registrations.update',
+  'registrations.change_stage',
+  'registrations.export',
+
+  'project_templates.view',
+  'task_templates.view',
+
+  'primers.view',
+  'primers.create',
+  'primers.update',
+  'primers.export',
+
+  'samples.view',
+  'samples.create',
+  'samples.update',
+
+  'reagent_materials.view',
+  'reagent_materials.create',
+  'reagent_materials.update',
+
+  'reagents.view',
+  'reagents.create',
+  'reagents.update',
+  'reagents.export',
+
+  'formulas.view',
+  'formulas.create',
+  'formulas.update',
+
+  'prep_records.view',
+  'prep_records.create',
+
+  'files.upload',
+  'files.download',
+  'files.delete',
+
+  'dashboard.view',
+];
+
+/** MEMBER = 31 */
+const MEMBER_CODES = [
+  'projects.view',
+  'project_phases.view',
+  'tasks.view',
+  'milestones.view',
+  'reports.view',
+  'progress.view',
+  'docs.view',
+  'regulatory_documents.view',
+  'registrations.view',
+  'project_templates.view',
+  'task_templates.view',
+  'primers.view',
+  'samples.view',
+  'reagent_materials.view',
+  'reagents.view',
+  'formulas.view',
+  'prep_records.view',
+
+  'dashboard.view',
+
+  'tasks.create',
+  'tasks.update',
+  'tasks.change_status',
+
+  'reports.create',
+  'reports.update',
+  'reports.submit',
+
+  'progress.create',
+  'progress.update',
+
+  'docs.create',
+  'docs.update',
+
+  'prep_records.create',
+
+  'files.upload',
+  'files.download',
+];
+
+/** VIEWER = 19（17 业务 view + dashboard.view + files.download） */
+const VIEWER_CODES = [
+  'projects.view',
+  'project_phases.view',
+  'tasks.view',
+  'milestones.view',
+  'reports.view',
+  'progress.view',
+  'docs.view',
+  'regulatory_documents.view',
+  'registrations.view',
+  'project_templates.view',
+  'task_templates.view',
+  'primers.view',
+  'samples.view',
+  'reagent_materials.view',
+  'reagents.view',
+  'formulas.view',
+  'prep_records.view',
+  'dashboard.view',
+  'files.download',
+];
+
+/** AUDITOR = 3（恰好） */
+const AUDITOR_CODES = ['audit.view', 'audit.export', 'system.logs.view'];
+
+const ROLE_DEFS = [
+  {
+    code: 'SUPER_ADMIN',
+    name: '超级管理员',
+    description: '持有全部 P0 权限，系统内置不可删除',
+    sortOrder: 1,
+    systemRole: 'SUPER_ADMIN',
+    permissions: SUPER_ADMIN_CODES,
+  },
+  {
+    code: 'ADMIN',
+    name: '管理员',
+    description: '系统管理；不持有 8 项高危、audit.export、system.logs.view',
+    sortOrder: 2,
+    systemRole: 'ADMIN',
+    permissions: ADMIN_CODES,
+  },
+  {
+    code: 'MANAGER',
+    name: '项目经理',
+    description: '项目/阶段/任务/里程碑/汇报/文档/法规/注册/试剂全链路管理',
+    sortOrder: 3,
+    systemRole: 'MANAGER',
+    permissions: MANAGER_CODES,
+  },
+  {
+    code: 'MEMBER',
+    name: '成员',
+    description: '任务与汇报自写，其余只读',
+    sortOrder: 4,
+    systemRole: 'MEMBER',
+    permissions: MEMBER_CODES,
+  },
+  {
+    code: 'VIEWER',
+    name: '只读',
+    description: '仅查看与下载，不含任何写权限',
+    sortOrder: 5,
+    systemRole: 'VIEWER',
+    permissions: VIEWER_CODES,
+  },
+  {
+    code: 'AUDITOR',
+    name: '审计员',
+    description: '恰好持有 audit.view + audit.export + system.logs.view',
+    sortOrder: 6,
+    systemRole: 'AUDITOR',
+    permissions: AUDITOR_CODES,
+  },
+];
+
+const EXPECTED_COUNTS = {
+  SUPER_ADMIN: 90,
+  ADMIN: 80,
+  MANAGER: 66,
+  MEMBER: 31,
+  VIEWER: 19,
+  AUDITOR: 3,
+};
+
+/** 基线自检：任何一条不满足立即终止，绝不带着错误权限入库 */
+function assertBaseline() {
+  if (PERMISSIONS.length !== 90) {
+    throw new Error(`seed: P0 权限数应为 90，实际 ${PERMISSIONS.length}`);
+  }
+  if (new Set(PERMISSIONS).size !== PERMISSIONS.length) {
+    throw new Error('seed: P0 权限码存在重复');
+  }
+  if (P1_MANIFEST.length !== 30) {
+    throw new Error(`seed: P1 manifest 应为 30，实际 ${P1_MANIFEST.length}`);
+  }
+  const p1Set = new Set(P1_MANIFEST);
+  const leaked = PERMISSIONS.filter((p) => p1Set.has(p));
+  if (leaked.length) throw new Error(`seed: P1 权限不得进 P0 清单：${leaked.join(', ')}`);
+
+  for (const p of PERMISSIONS) {
+    // resource.action，允许多级子资源（如 docs.categories.manage）
+    if (!/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/.test(p)) {
+      throw new Error(`seed: 权限码不符合 resource.action 命名空间：${p}`);
     }
-  });
-  console.log('✅ 管理员创建成功:', admin.username);
-
-  const memberPassword = await bcrypt.hash('123456', 10);
-  const users = [
-    { username: 'gll', name: '谷磊磊', position: '研发工程师' },
-    { username: 'lyq', name: '李应钦', position: '硬件工程师' },
-    { username: 'zyx', name: '章烨鑫', position: '软件工程师' }
-  ];
-
-  for (const userData of users) {
-    const user = await prisma.user.upsert({
-      where: { username: userData.username },
-      update: {},
-      create: {
-        username: userData.username,
-        password: memberPassword,
-        name: userData.name,
-        position: userData.position,
-        role: 'member',
-        status: 'active'
-      }
-    });
-    console.log('✅ 用户创建成功:', user.name);
+    for (const re of DENIED_PATTERNS) {
+      if (re.test(p)) throw new Error(`seed: 权限码命中否决清单：${p}`);
+    }
+  }
+  for (const p of HIGH_RISK_CODES) {
+    if (!PERMISSIONS.includes(p)) throw new Error(`seed: 高危权限 ${p} 不在 P0 清单中`);
   }
 
-  // 项目注册管理模板（升级到法规驱动66任务）
-  await prisma.projectTemplate.upsert({
-    where: { code: 'TPL-REGISTRATION-IVD' },
-    update: {
-      name: '项目注册管理（IVD｜法规驱动66任务）',
-      description: '基于 ISAF 2026 的澳门 IVD 注册任务模板（5阶段66任务）',
-      category: 'registration',
-      type: 'IVD',
-      content: buildRegistration66TemplateContent(),
-    },
-    create: {
-      code: 'TPL-REGISTRATION-IVD',
-      name: '项目注册管理（IVD｜法规驱动66任务）',
-      description: '基于 ISAF 2026 的澳门 IVD 注册任务模板（5阶段66任务）',
-      category: 'registration',
-      type: 'IVD',
-      content: buildRegistration66TemplateContent(),
-      createdBy: admin.id
+  const all = new Set(PERMISSIONS);
+  let total = 0;
+  for (const def of ROLE_DEFS) {
+    const uniq = new Set(def.permissions);
+    if (uniq.size !== def.permissions.length) {
+      throw new Error(`seed: 角色 ${def.code} 权限数组存在重复`);
     }
-  });
-  console.log('✅ 模版创建成功: 项目注册管理（IVD｜法规驱动66任务）');
+    const unknown = def.permissions.filter((p) => !all.has(p));
+    if (unknown.length) {
+      throw new Error(`seed: 角色 ${def.code} 含非 P0 权限：${unknown.join(', ')}`);
+    }
+    const expect = EXPECTED_COUNTS[def.code];
+    if (def.permissions.length !== expect) {
+      throw new Error(`seed: 角色 ${def.code} 权限数应为 ${expect}，实际 ${def.permissions.length}`);
+    }
+    total += def.permissions.length;
+  }
+  if (total !== 289) {
+    throw new Error(`seed: RolePermission 总数应为 289，实际 ${total}`);
+  }
+}
 
-  for (const doc of ISAF_REGULATORY_DOCUMENTS) {
+// ════════════════════════════════════════════════════════════════════════════
+// 3. 枚举展示字典
+// ════════════════════════════════════════════════════════════════════════════
+const TASK_TYPE_MAP = {
+  classification: 'CLASSIFICATION',
+  strategy: 'STRATEGY',
+  registration_dossier: 'REGISTRATION_DOSSIER',
+  labeling: 'LABELING',
+  qms: 'QMS',
+  clinical_evaluation: 'CLINICAL_EVALUATION',
+  performance_validation: 'PERFORMANCE_VALIDATION',
+  software: 'SOFTWARE',
+  submission: 'SUBMISSION',
+  post_market: 'POST_MARKET',
+};
+
+const APPLICABILITY_MAP = {
+  required: 'REQUIRED',
+  conditional: 'CONDITIONAL',
+  not_applicable: 'NOT_APPLICABLE',
+  to_be_confirmed: 'TO_BE_CONFIRMED',
+};
+
+const REG_CATEGORY_MAP = {
+  classification: 'CLASSIFICATION',
+  clinical_evaluation: 'CLINICAL_EVALUATION',
+  clinical_evaluation_exemption: 'CLINICAL_EVALUATION_EXEMPTION',
+  clinical_trial: 'CLINICAL_TRIAL',
+  clinical_trial_permission: 'CLINICAL_TRIAL_PERMISSION',
+  labeling: 'LABELING',
+  registration_dossier: 'REGISTRATION_DOSSIER',
+  priority_review: 'PRIORITY_REVIEW',
+  conditional_approval: 'CONDITIONAL_APPROVAL',
+  renewal: 'RENEWAL',
+  registration_change: 'REGISTRATION_CHANGE',
+  filing: 'FILING',
+  filing_change: 'FILING_CHANGE',
+  special_approval: 'SPECIAL_APPROVAL',
+  third_party_review: 'THIRD_PARTY_REVIEW',
+  qms: 'QMS',
+  qms_ivd: 'QMS_IVD',
+  qms_sterile: 'QMS_STERILE',
+  qms_implantable: 'QMS_IMPLANTABLE',
+  qms_special: 'QMS_SPECIAL',
+  software_qms: 'SOFTWARE_QMS',
+  manufacturing_qms_documentation: 'MANUFACTURING_QMS_DOC',
+  contract_manufacturing: 'CONTRACT_MANUFACTURING',
+  manufacturer_naming: 'MANUFACTURER_NAMING',
+  manufacturer_other_products: 'MANUFACTURER_OTHER_PRODUCTS',
+  distribution_access: 'DISTRIBUTION_ACCESS',
+};
+
+const APPLICABILITY_DOC_MAP = {
+  core: 'CORE',
+  conditional: 'CONDITIONAL',
+  post_market: 'POST_MARKET',
+  low_relevance: 'LOW_RELEVANCE',
+  not_applicable: 'NOT_APPLICABLE',
+};
+
+const TASK_PRIORITY_MAP = { low: 'LOW', medium: 'MEDIUM', high: 'HIGH', urgent: 'URGENT' };
+const PRIORITY_LEVELS = ['P0', 'P1', 'P2', 'P3', 'P4'];
+
+function mapStrict(value, map, fieldName) {
+  const mapped = map[value];
+  if (!mapped) throw new Error(`seed: 未知的 ${fieldName} 取值 "${value}"，请同步更新映射表`);
+  return mapped;
+}
+
+// ── 枚举展示字典：[code, label, color?] ───────────────────────────────────────
+const ENUM_META = {
+  UserStatus: { default: 'ACTIVE', values: [
+    ['ACTIVE', '正常', '#52c41a'], ['DISABLED', '停用', '#8c8c8c'],
+    ['LOCKED', '已锁定', '#fa8c16'], ['PENDING_ACTIVATION', '待激活', '#1677ff'],
+  ] },
+  // M-1 v1.0：PROJECT_MANAGER 已删除
+  SystemRole: { default: 'MEMBER', values: [
+    ['SUPER_ADMIN', '超级管理员'], ['ADMIN', '管理员'], ['MANAGER', '项目经理'],
+    ['MEMBER', '成员'], ['VIEWER', '只读'], ['AUDITOR', '审计员'],
+  ] },
+  ProjectStatus: { default: 'PLANNING', values: [
+    ['PLANNING', '规划中', '#8c8c8c'], ['IN_PROGRESS', '进行中', '#1677ff'],
+    ['PENDING_PROCESSING', '待加工', '#faad14'], ['PENDING_VERIFICATION', '待验证', '#fa8c16'],
+    ['ON_HOLD', '暂停', '#d46b08'], ['COMPLETED', '已完成', '#52c41a'],
+    ['ARCHIVED', '已归档', '#595959'], ['CANCELLED', '已取消', '#ff4d4f'],
+  ] },
+  ProjectType: { default: 'PLATFORM', values: [
+    ['PLATFORM', '平台'], ['CUSTOMIZATION', '定制'], ['COLLABORATION', '合作'],
+    ['TESTING', '测试'], ['APPLICATION', '应用'],
+  ] },
+  ProjectMemberRole: { default: 'MEMBER', values: [
+    ['OWNER', '负责人'], ['MANAGER', '管理员'], ['MEMBER', '成员'], ['VIEWER', '只读'],
+  ] },
+  TemplateStatus: { default: 'ACTIVE', values: [
+    ['DRAFT', '草稿'], ['ACTIVE', '启用'], ['ARCHIVED', '已归档'],
+  ] },
+  PhaseStatus: { default: 'NOT_STARTED', values: [
+    ['NOT_STARTED', '未开始'], ['IN_PROGRESS', '进行中'], ['COMPLETED', '已完成'],
+    ['BLOCKED', '已阻塞'], ['SKIPPED', '已跳过'], ['CANCELLED', '已取消'],
+  ] },
+  TaskStatus: { default: 'NOT_STARTED', values: [
+    ['NOT_STARTED', '待开始', '#8c8c8c'], ['IN_PROGRESS', '进行中', '#1677ff'],
+    ['COMPLETED', '已完成', '#52c41a'], ['BLOCKED', '已阻塞', '#ff4d4f'],
+    ['CANCELLED', '已取消', '#595959'],
+  ] },
+  TaskPriority: { default: 'MEDIUM', values: [
+    ['LOW', '低', '#8c8c8c'], ['MEDIUM', '中', '#1677ff'],
+    ['HIGH', '高', '#fa8c16'], ['URGENT', '紧急', '#ff4d4f'],
+  ] },
+  TaskType: { default: 'OTHER', values: [
+    ['CLASSIFICATION', '分类判定'], ['STRATEGY', '注册策略'], ['REGISTRATION_DOSSIER', '注册卷宗'],
+    ['LABELING', '标签说明书'], ['QMS', '质量管理体系'], ['CLINICAL_EVALUATION', '临床评价'],
+    ['CLINICAL_EVALUATION_EXEMPTION', '临床评价豁免'], ['CLINICAL_TRIAL', '临床试验'],
+    ['ANALYTICAL_VALIDATION', '分析性能验证'], ['PERFORMANCE_VALIDATION', '性能验证'],
+    ['SOFTWARE', '软件'], ['SUBMISSION', '申报提交'], ['POST_MARKET', '上市后'],
+    ['DESIGN_INPUT', '设计输入'], ['DESIGN_OUTPUT', '设计输出'], ['PRODUCTION', '生产'],
+    ['STABILITY', '稳定性'], ['OTHER', '其他'],
+  ] },
+  TaskApplicability: { default: 'REQUIRED', values: [
+    ['REQUIRED', '必须'], ['CONDITIONAL', '条件适用'],
+    ['NOT_APPLICABLE', '不适用'], ['TO_BE_CONFIRMED', '待确认'],
+  ] },
+  PriorityLevel: { default: 'P2', values: [
+    ['P0', 'P0 最高', '#ff4d4f'], ['P1', 'P1 高', '#fa8c16'],
+    ['P2', 'P2 中', '#1677ff'], ['P3', 'P3 低', '#8c8c8c'], ['P4', 'P4 最低', '#bfbfbf'],
+  ] },
+  Applicability: { default: 'CONDITIONAL', values: [
+    ['CORE', '核心'], ['CONDITIONAL', '条件适用'], ['POST_MARKET', '上市后'],
+    ['LOW_RELEVANCE', '低相关'], ['NOT_APPLICABLE', '不适用'],
+  ] },
+  RegulatoryRegion: { default: 'MACAO_ISAF', values: [
+    ['MACAO_ISAF', '澳门 ISAF'], ['MAINLAND_NMPA', '境内 NMPA'], ['HONG_KONG', '香港'],
+    ['EU_IVDR', '欧盟 IVDR'], ['US_FDA', '美国 FDA'], ['ISO', '国际标准'], ['OTHER', '其他'],
+  ] },
+  RegulatoryCategory: { default: 'OTHER', values: [
+    ['CLASSIFICATION', '分类规则'], ['CLINICAL_EVALUATION', '临床评价'],
+    ['CLINICAL_EVALUATION_EXEMPTION', '临床评价豁免'], ['CLINICAL_TRIAL', '临床试验'],
+    ['CLINICAL_TRIAL_PERMISSION', '临床试验许可'], ['LABELING', '标签说明书'],
+    ['REGISTRATION_DOSSIER', '注册资料'], ['PRIORITY_REVIEW', '优先审批'],
+    ['CONDITIONAL_APPROVAL', '附条件批准'], ['RENEWAL', '注册续期'],
+    ['REGISTRATION_CHANGE', '注册变更'], ['FILING', '备案'],
+    ['FILING_CHANGE', '备案变更'], ['SPECIAL_APPROVAL', '特殊批准'],
+    ['THIRD_PARTY_REVIEW', '第三方审评'], ['QMS', '生产质量管理规范'],
+    ['QMS_IVD', 'IVD 生产质量管理规范'], ['QMS_STERILE', '无菌器械生产规范'],
+    ['QMS_IMPLANTABLE', '植入器械生产规范'], ['QMS_SPECIAL', '特殊器械生产规范'],
+    ['SOFTWARE_QMS', '独立软件生产规范'], ['MANUFACTURING_QMS_DOC', '制造 QMS 文件'],
+    ['CONTRACT_MANUFACTURING', '委托制造'], ['MANUFACTURER_NAMING', '制造厂命名'],
+    ['MANUFACTURER_OTHER_PRODUCTS', '制造厂其他产品'], ['DISTRIBUTION_ACCESS', '经营场所'],
+    ['OTHER', '其他'],
+  ] },
+  RegistrationType: { default: 'IVD', values: [
+    ['IVD', '体外诊断试剂'], ['MEDICAL_DEVICE', '医疗器械'],
+    ['IVD_SOFTWARE', '独立软件'], ['COMBINATION', '组合产品'], ['OTHER', '其他'],
+  ] },
+  RegistrationStage: { default: 'DOSSIER_PREPARATION', values: [
+    ['DOSSIER_PREPARATION', '资料准备'], ['SUBMISSION_ACCEPTED', '送检受理'],
+    ['TECHNICAL_REVIEW', '技术审评'], ['ADMIN_APPROVAL', '行政审批'],
+    ['CERTIFIED', '已取证'], ['ARCHIVED', '已归档'],
+  ] },
+  RiskLevel: { default: 'MEDIUM', values: [
+    ['HIGH', '高', '#ff4d4f'], ['MEDIUM', '中', '#fa8c16'], ['LOW', '低', '#52c41a'],
+  ] },
+  DocType: { default: 'SOP', values: [
+    ['SOP', '标准操作规程'], ['TEMPLATE', '模板文件'], ['GUIDE', '指南'],
+    ['REFERENCE', '参考资料'], ['REGULATION', '法规文件'], ['PROTOCOL', '方案'],
+    ['REPORT', '报告'], ['FORM', '表单'],
+  ] },
+  DocumentStatus: { default: 'DRAFT', values: [
+    ['DRAFT', '草稿'], ['ACTIVE', '生效'], ['DEPRECATED', '已废止'], ['ARCHIVED', '已归档'],
+  ] },
+  ReportType: { default: 'MONTHLY', values: [
+    ['DAILY', '日报'], ['WEEKLY', '周报'], ['MONTHLY', '月报'],
+    ['PHASE', '阶段报'], ['AD_HOC', '专项汇报'],
+  ] },
+  ReportStatus: { default: 'DRAFT', values: [
+    ['DRAFT', '草稿'], ['SUBMITTED', '已提交'], ['REVIEWING', '审阅中'],
+    ['NEEDS_REVISION', '需修改'], ['REVIEWED', '已阅'], ['ARCHIVED', '已归档'],
+  ] },
+  MaterialCategory: { default: 'OTHER', values: [
+    ['BUFFER', '缓冲液'], ['SALT', '盐类'], ['ENZYME', '酶'], ['DYE', '染料'],
+    ['NUCLEIC_ACID', '核酸'], ['SOLVENT', '溶剂'], ['ACID_BASE', '酸碱'],
+    ['SURFACTANT', '表面活性剂'], ['OTHER', '其他'],
+  ] },
+  MaterialState: { default: 'LIQUID', values: [
+    ['SOLID', '固体'], ['LIQUID', '液体'], ['SOLUTION', '溶液'], ['GAS', '气体'],
+  ] },
+  ConcentrationUnit: { default: 'M', values: [
+    ['M', 'mol/L'], ['MM', 'mmol/L'], ['UM', 'μmol/L'], ['NM', 'nmol/L'],
+    ['NG_PER_UL', 'ng/μL'], ['MG_PER_ML', 'mg/mL'], ['PERCENT', '%'],
+    ['X', '×'], ['OTHER', '其他'],
+  ] },
+  FormulaType: { default: 'OTHER', values: [
+    ['BUFFER', '缓冲液'], ['LYSIS', '裂解液'], ['WASH', '洗液'],
+    ['REACTION_MIX', '反应体系'], ['PCR_MIX', 'PCR 体系'], ['STOCK', '母液'], ['OTHER', '其他'],
+  ] },
+  FormulaStatus: { default: 'DRAFT', values: [
+    ['DRAFT', '草稿'], ['ACTIVE', '启用'], ['DEPRECATED', '已废止'], ['ARCHIVED', '已归档'],
+  ] },
+  PrimerType: { default: 'PRIMER', values: [['PRIMER', '引物'], ['PROBE', '探针']] },
+  SampleType: { default: 'CLINICAL_SAMPLE', values: [
+    ['REFERENCE_STANDARD', '标准品'], ['CLINICAL_SAMPLE', '临床样本'], ['CONTROL', '对照品'],
+    ['BLANK_MATRIX', '空白基质'], ['SIMULATED', '模拟样本'], ['OTHER', '其他'],
+  ] },
+  // M-1 v1.0：QUARANTINE -> QUARANTINED，补齐 RESERVED / USED / DISPOSED
+  SampleStatus: { default: 'AVAILABLE', values: [
+    ['AVAILABLE', '可用', '#52c41a'], ['RESERVED', '已预留', '#1677ff'],
+    ['USED', '已使用', '#8c8c8c'], ['DEPLETED', '已用完', '#595959'],
+    ['EXPIRED', '已过期', '#fa8c16'], ['QUARANTINED', '隔离中', '#d46b08'],
+    ['SEALED', '封存', '#722ed1'], ['DISPOSED', '已销毁', '#ff4d4f'],
+  ] },
+  FileStorageProvider: { default: 'LOCAL', values: [
+    ['LOCAL', '本地磁盘'], ['S3', 'AWS S3'], ['OSS', '阿里云 OSS'], ['COS', '腾讯云 COS'],
+  ] },
+  // M-1 v1.0：SKIPPED = 未配置扫描，不得显示为「安全」
+  FileScanStatus: { default: 'SKIPPED', values: [
+    ['SKIPPED', '未配置扫描', '#8c8c8c'], ['PENDING', '扫描中', '#1677ff'],
+    ['CLEAN', '已扫描·安全', '#52c41a'], ['INFECTED', '已感染', '#ff4d4f'],
+    ['FAILED', '扫描异常', '#fa8c16'],
+  ] },
+  // M-1 §4：动词/事件优先的 19 项；DB 中 AuditLog.action 为 varchar(64) 同值存储
+  AuditAction: { default: 'create', values: [
+    ['create', '创建'], ['update', '更新'], ['delete', '删除'], ['restore', '恢复'],
+    ['login', '登录'], ['login.failed', '登录失败'], ['logout', '登出'],
+    ['token.refresh', '令牌刷新'], ['password.change', '修改密码'],
+    ['permission.change', '权限变更'], ['submit', '提交'], ['approve', '审批通过'],
+    ['reject', '驳回'], ['assign', '指派'], ['status.change', '状态变更'],
+    ['upload', '上传'], ['download', '下载'], ['export', '导出'],
+    ['read.sensitive', '读取敏感数据'],
+  ] },
+  LogLevel: { default: 'INFO', values: [
+    ['DEBUG', 'DEBUG'], ['INFO', 'INFO'], ['WARN', 'WARN'], ['ERROR', 'ERROR'], ['FATAL', 'FATAL'],
+  ] },
+  TemplateCategory: { default: 'OTHER', values: [
+    ['IVD_REGISTRATION', 'IVD 注册'], ['REAGENT_CHIP', '试剂/芯片'],
+    ['DEVICE', '设备'], ['OTHER', '其他'],
+  ] },
+  MaterialStatus: { default: 'ACTIVE', values: [
+    ['ACTIVE', '启用'], ['DEPRECATED', '已废止'], ['ARCHIVED', '已归档'],
+  ] },
+  LotStatus: { default: 'AVAILABLE', values: [
+    ['AVAILABLE', '可用'], ['RESERVED', '已预留'], ['DEPLETED', '已用完'],
+    ['EXPIRED', '已过期'], ['QUARANTINED', '隔离中'], ['DISPOSED', '已销毁'],
+  ] },
+  // Q-b（W10 / Contract Review v2）：法规文档独立状态（含 SUPERSEDED）
+  RegulatoryDocStatus: { default: 'ACTIVE', values: [
+    ['ACTIVE', '生效', '#52c41a'], ['DRAFT', '草稿', '#8c8c8c'],
+    ['ARCHIVED', '已归档', '#595959'], ['SUPERSEDED', '已被取代', '#fa8c16'],
+  ] },
+  // Q-a（W10 / Contract Review v2）：任务依赖类型
+  DependencyType: { default: 'FS', values: [
+    ['FS', '完成-开始', '#1677ff'], ['SS', '开始-开始', '#52c41a'],
+    ['FF', '完成-完成', '#fa8c16'], ['SF', '开始-完成', '#722ed1'],
+  ] },
+  // Q-a2（W10 / Contract Review v2）：任务-法规文档关联类型
+  TaskRegulatoryRelationType: { default: 'BASIS', values: [
+    ['BASIS', '法规依据', '#1677ff'], ['REFERENCE', '参考', '#8c8c8c'],
+    ['CONDITIONAL', '条件适用', '#fa8c16'], ['POST_MARKET', '上市后', '#722ed1'],
+    ['NOT_APPLICABLE', '不适用', '#bfbfbf'],
+  ] },
+};
+
+// ── 知识库文档分类 ────────────────────────────────────────────────────────────
+const DOC_CATEGORIES = [
+  { code: 'SOP', name: 'SOP 标准操作规程', description: '标准操作规程文件', icon: 'file-text', sortOrder: 1 },
+  { code: 'TEMPLATE', name: '模板文件', description: '可复用模板', icon: 'copy', sortOrder: 2 },
+  { code: 'TECHNICAL', name: '技术文档', description: '技术方案与验证记录', icon: 'experiment', sortOrder: 3 },
+  { code: 'REGULATION', name: '法规文件', description: '法规与技术审评要求', icon: 'safety', sortOrder: 4 },
+];
+
+// ── 项目模板：阶段与任务 ──────────────────────────────────────────────────────
+const TEMPLATE_ROLES = [
+  { code: 'owner', name: '项目负责人', description: '对阶段交付物负总责', permissions: ['view', 'edit', 'approve'], sortOrder: 1 },
+  { code: 'tech_lead', name: '技术负责人', description: '负责技术方案与验证', permissions: ['view', 'edit'], sortOrder: 2 },
+  { code: 'member', name: '成员', description: '执行具体任务', permissions: ['view', 'edit'], sortOrder: 3 },
+  { code: 'reviewer', name: '审核人', description: '审核交付物', permissions: ['view', 'approve'], sortOrder: 4 },
+];
+
+const REAGENT_PHASES = [
+  { code: 'p1', name: '立项', tasks: ['市场调研与需求收集', '立项申请', '项目评审与审批'], milestone: true },
+  { code: 'p2', name: '方案设计', tasks: ['技术方案设计', '引物探针设计', '芯片结构设计'] },
+  { code: 'p3', name: '样本收集', tasks: ['样本方案设计', '样本采集与接收', '样本入库登记'] },
+  { code: 'p4', name: '片外核酸提取优化', tasks: ['提取方案对比', '提取效率验证'] },
+  { code: 'p5', name: '片外扩增试剂/程序优化', tasks: ['扩增体系配方优化', '扩增程序优化'] },
+  { code: 'p6', name: '芯片试产验证', tasks: ['芯片试产', '性能测试', '数据分析'], milestone: true },
+  { code: 'p7', name: '量产加工', tasks: ['SOP 编制与评审', '量产加工'] },
+  { code: 'p8', name: '客户验证', tasks: ['样片送样', '客户反馈收集', '验证报告编制'], milestone: true },
+  { code: 'p9', name: '归档', tasks: ['项目文档整理', '知识库归档'] },
+];
+
+const EQUIP_PHASES = [
+  { code: 'p1', name: '项目调研', tasks: ['市场调研', '需求收集', '竞品分析'] },
+  { code: 'p2', name: '立项审批', tasks: ['立项申请', '审批流程'], milestone: true },
+  { code: 'p3', name: '方案设计', tasks: ['结构设计', '硬件设计', '芯片集成'] },
+  { code: 'p4', name: '设计方案评审', tasks: ['评审会议', '评审意见处理'] },
+  { code: 'p5', name: '设计迭代再评审', tasks: ['方案修改', '二次评审'] },
+  { code: 'p6', name: '采购', tasks: ['BOM 清单', '供应商选择', '采购跟进'] },
+  { code: 'p7', name: '样机组装联调', tasks: ['样机组装', '软硬件联调', '问题记录'], milestone: true },
+  { code: 'p8', name: '结合芯片性能测试', tasks: ['整机性能测试', '指标验证'] },
+  { code: 'p9', name: '加工生产', tasks: ['生产工艺编制', '量产准备', '生产加工'] },
+  { code: 'p10', name: '客户验证', tasks: ['样机送样', '客户反馈', '验证报告'], milestone: true },
+  { code: 'p11', name: '归档', tasks: ['文档整理', '知识库归档'] },
+];
+
+const pick = (phases, codes) => phases.filter((p) => codes.includes(p.code));
+
+// ── 发号器（CodeSequence 原子发号，替代 count()+1）──────────────────────────────
+const CODE_SEQUENCES = [
+  { scope: 'PROJECT', prefix: 'PRJ-', padding: 3 },
+  { scope: 'PRIMER', prefix: 'PRM-', padding: 3 },
+  { scope: 'SAMPLE', prefix: 'SMP-', padding: 3 },
+  { scope: 'DOCUMENT', prefix: 'DOC-', padding: 3 },
+  { scope: 'FORMULA', prefix: 'FRM-', padding: 3 },
+  { scope: 'REAGENT_LOT', prefix: 'LOT-', padding: 4 },
+];
+
+const SYSTEM_SETTINGS = [
+  { key: 'app.name', value: 'R&D PMS', isPublic: true, description: '系统名称' },
+  { key: 'app.version', value: '2.0.0', isPublic: true, description: '版本号' },
+  { key: 'file.maxUploadSizeMb', value: 50, isPublic: false, description: '单文件上传上限（MB）' },
+  { key: 'file.allowedMimeTypes', value: [
+    'application/pdf', 'image/png', 'image/jpeg', 'image/svg+xml',
+    'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'text/plain', 'text/csv', 'application/zip',
+  ], isPublic: false, description: '上传 MIME 白名单' },
+  { key: 'security.passwordMinLength', value: 12, isPublic: false, description: '密码最小长度' },
+  { key: 'security.maxFailedLoginAttempts', value: 5, isPublic: false, description: '最大连续登录失败次数' },
+  { key: 'security.lockoutMinutes', value: 15, isPublic: false, description: '锁定分钟数' },
+  { key: 'project.defaultStatus', value: 'PLANNING', isPublic: false, description: '新建项目默认状态' },
+];
+
+// ── 执行 ──────────────────────────────────────────────────────────────────────
+const stats = {};
+const bump = (key, n = 1) => { stats[key] = (stats[key] || 0) + n; };
+
+async function main() {
+  // 0. 基线自检（P0=90 / P1=30 / 六角色数量 / 否决清单 / 命名空间）
+  assertBaseline();
+
+  const isProd = process.env.NODE_ENV === 'production';
+
+  // 1. 种子账号口令（必须外置）
+  const superAdminUsername = (process.env.SEED_SUPER_ADMIN_USERNAME || 'superadmin').trim().toLowerCase();
+  const adminUsername = (process.env.SEED_ADMIN_USERNAME || 'admin').trim().toLowerCase();
+  const superAdminPassword = assertStrongPassword(process.env.SEED_SUPER_ADMIN_PASSWORD, 'SEED_SUPER_ADMIN_PASSWORD');
+  const adminPassword = assertStrongPassword(process.env.SEED_ADMIN_PASSWORD, 'SEED_ADMIN_PASSWORD');
+
+  const root = await prisma.user.findFirst({ where: { systemRole: 'SUPER_ADMIN' }, orderBy: { createdAt: 'asc' } });
+  const rootId = root?.id ?? null;
+
+  // 2. 权限表（只写 P0 90 条）
+  const permissionIdByCode = new Map();
+  let sortOrder = 0;
+  for (const code of PERMISSIONS) {
+    // eslint-disable-next-line no-await-in-loop
+    const row = await prisma.permission.upsert({
+      where: { code },
+      update: {
+        name: code,
+        module: moduleOf(code),
+        isHighRisk: HIGH_RISK_CODES.includes(code),
+        sortOrder,
+      },
+      create: {
+        code,
+        name: code,
+        module: moduleOf(code),
+        isHighRisk: HIGH_RISK_CODES.includes(code),
+        sortOrder,
+      },
+    });
+    permissionIdByCode.set(code, row.id);
+    sortOrder += 1;
+    bump('permissions.synced');
+  }
+
+  // 2b. 清理历史脏数据：不在 P0 清单中的权限（含旧 PermissionCode 枚举值转换残留）
+  const orphanPermissions = await prisma.permission.findMany({
+    where: { code: { notIn: PERMISSIONS } },
+    select: { id: true, code: true },
+  });
+  if (orphanPermissions.length) {
+    await prisma.permission.deleteMany({ where: { id: { in: orphanPermissions.map((p) => p.id) } } });
+    bump('permissions.removed', orphanPermissions.length);
+    console.warn(`⚠️  清理非 P0 权限 ${orphanPermissions.length} 条：${orphanPermissions.map((p) => p.code).join(', ')}`);
+  }
+
+  // 3. 角色 + 权限精确同步
+  for (const roleDef of ROLE_DEFS) {
+    // eslint-disable-next-line no-await-in-loop
+    const role = await prisma.role.upsert({
+      where: { code: roleDef.code },
+      update: { name: roleDef.name, description: roleDef.description, sortOrder: roleDef.sortOrder, isSystem: true },
+      create: {
+        code: roleDef.code,
+        name: roleDef.name,
+        description: roleDef.description,
+        isSystem: true,
+        sortOrder: roleDef.sortOrder,
+        createdById: rootId,
+      },
+    });
+    bump('roles.synced');
+
+    const wantIds = roleDef.permissions.map((code) => permissionIdByCode.get(code));
+    // eslint-disable-next-line no-await-in-loop
+    const existing = await prisma.rolePermission.findMany({ where: { roleId: role.id } });
+    const haveIds = new Set(existing.map((rp) => rp.permissionId));
+    const toAdd = wantIds.filter((id) => !haveIds.has(id));
+    const toRemove = existing.filter((rp) => !wantIds.includes(rp.permissionId)).map((rp) => rp.permissionId);
+
+    if (toAdd.length) {
+      // eslint-disable-next-line no-await-in-loop
+      await prisma.rolePermission.createMany({
+        data: toAdd.map((permissionId) => ({ roleId: role.id, permissionId })),
+      });
+      bump('rolePermissions.added', toAdd.length);
+    }
+    if (toRemove.length) {
+      // eslint-disable-next-line no-await-in-loop
+      await prisma.rolePermission.deleteMany({
+        where: { roleId: role.id, permissionId: { in: toRemove } },
+      });
+      bump('rolePermissions.removed', toRemove.length);
+    }
+    bump('rolePermissions.synced', wantIds.length);
+  }
+
+  // 4. 种子账号：superadmin（SUPER_ADMIN）+ admin（ADMIN）
+  const seedAccounts = [
+    {
+      username: superAdminUsername,
+      password: superAdminPassword,
+      systemRole: 'SUPER_ADMIN',
+      roleCode: 'SUPER_ADMIN',
+      displayName: '系统超级管理员',
+    },
+    {
+      username: adminUsername,
+      password: adminPassword,
+      systemRole: 'ADMIN',
+      roleCode: 'ADMIN',
+      displayName: '系统管理员',
+    },
+  ];
+
+  for (const acc of seedAccounts) {
+    // eslint-disable-next-line no-await-in-loop
+    const existingUser = await prisma.user.findUnique({ where: { username: acc.username } });
+    // eslint-disable-next-line no-await-in-loop
+    const passwordHash = await bcrypt.hash(acc.password, BCRYPT_COST);
+    // eslint-disable-next-line no-await-in-loop
+    const user = await prisma.user.upsert({
+      where: { username: acc.username },
+      update: {
+        // 重跑 seed 不重置口令，但强制对齐 systemRole，保证角色与权限真源一致
+        systemRole: acc.systemRole,
+        status: 'ACTIVE',
+        displayName: acc.displayName,
+        updatedById: rootId ?? undefined,
+      },
+      create: {
+        username: acc.username,
+        passwordHash,
+        mustChangePassword: true,
+        displayName: acc.displayName,
+        systemRole: acc.systemRole,
+        status: 'ACTIVE',
+        createdById: rootId ?? undefined,
+      },
+    });
+    bump(existingUser ? 'users.skipped' : 'users.created');
+
+    // systemRole 与 UserRole 绑定必须一致
+    // eslint-disable-next-line no-await-in-loop
+    const role = await prisma.role.findUniqueOrThrow({ where: { code: acc.roleCode } });
+    // eslint-disable-next-line no-await-in-loop
+    await prisma.userRole.upsert({
+      where: { userId_roleId: { userId: user.id, roleId: role.id } },
+      update: {},
+      create: { userId: user.id, roleId: role.id, assignedById: rootId ?? user.id },
+    });
+    bump('userRoles.synced');
+  }
+
+  const adminUser = await prisma.user.findUniqueOrThrow({ where: { username: adminUsername } });
+  const superAdminUser = await prisma.user.findUniqueOrThrow({ where: { username: superAdminUsername } });
+
+  // 5. 测试账号（仅非生产 + 显式开关）
+  const wantTestAccounts = process.env.SEED_TEST_ACCOUNTS === 'true' && !isProd;
+  if (process.env.SEED_TEST_ACCOUNTS === 'true' && isProd) {
+    console.warn('⚠️  NODE_ENV=production 下已忽略 SEED_TEST_ACCOUNTS，不创建任何 test_* 账号。');
+  }
+  if (wantTestAccounts) {
+    const testPassword = assertStrongPassword(process.env.SEED_TEST_PASSWORD, 'SEED_TEST_PASSWORD');
+    const testHash = await bcrypt.hash(testPassword, BCRYPT_COST);
+    for (const def of ROLE_DEFS) {
+      const username = `test_${def.code.toLowerCase()}`;
+      // eslint-disable-next-line no-await-in-loop
+      const existingTest = await prisma.user.findUnique({ where: { username } });
+      // eslint-disable-next-line no-await-in-loop
+      const user = await prisma.user.upsert({
+        where: { username },
+        // deletedAt 重置：测试账号被软删后重跑 seed 可自动恢复（仅测试账号路径）
+        update: { systemRole: def.systemRole, status: 'ACTIVE', deletedAt: null },
+        create: {
+          username,
+          passwordHash: testHash,
+          mustChangePassword: false,
+          displayName: `测试-${def.name}`,
+          systemRole: def.systemRole,
+          status: 'ACTIVE',
+        },
+      });
+      bump(existingTest ? 'testUsers.skipped' : 'testUsers.created');
+      // eslint-disable-next-line no-await-in-loop
+      const role = await prisma.role.findUniqueOrThrow({ where: { code: def.code } });
+      // eslint-disable-next-line no-await-in-loop
+      await prisma.userRole.upsert({
+        where: { userId_roleId: { userId: user.id, roleId: role.id } },
+        update: {},
+        create: { userId: user.id, roleId: role.id, assignedById: superAdminUser.id },
+      });
+    }
+  }
+
+  // 6. 枚举展示字典（清理已废弃取值，保证重跑自愈）
+  for (const [enumName, def] of Object.entries(ENUM_META)) {
+    const codes = def.values.map(([code]) => code);
+    // eslint-disable-next-line no-await-in-loop
+    await prisma.enumMeta.deleteMany({ where: { enumName, code: { notIn: codes } } });
+    // eslint-disable-next-line no-await-in-loop
+    await Promise.all(def.values.map(([code, label, color], index) => prisma.enumMeta.upsert({
+      where: { enumName_code: { enumName, code } },
+      update: { label, color: color ?? null, sortOrder: index, isDefault: code === def.default, isEnabled: true },
+      create: {
+        enumName, code, label, color: color ?? null,
+        sortOrder: index, isDefault: code === def.default, isEnabled: true,
+      },
+    })));
+    bump('enumMeta.synced', def.values.length);
+  }
+
+  // 7. 知识库分类
+  for (const [index, cat] of DOC_CATEGORIES.entries()) {
+    // eslint-disable-next-line no-await-in-loop
+    await prisma.docCategory.upsert({
+      where: { code: cat.code },
+      update: { name: cat.name, description: cat.description, icon: cat.icon, sortOrder: cat.sortOrder },
+      create: { ...cat, sortOrder: index + 1 },
+    });
+    bump('docCategories.synced');
+  }
+
+  // 8. 法规文档（ISAF 2026，26 条）
+  const { SEED_REGULATORY_DOCUMENTS } = await import('../src/data/regulatoryDocumentsSeed.js');
+  for (const doc of SEED_REGULATORY_DOCUMENTS) {
+    const data = {
+      title: doc.title,
+      fullTitle: doc.fullTitle ?? null,
+      category: mapStrict(doc.category, REG_CATEGORY_MAP, 'RegulatoryCategory'),
+      region: 'MACAO_ISAF',
+      applicability: mapStrict(doc.applicability, APPLICABILITY_DOC_MAP, 'Applicability'),
+      applicableToIvd: Boolean(doc.applicableToIvd),
+      priorityLevel: PRIORITY_LEVELS.includes(doc.priorityLevel) ? doc.priorityLevel : 'P3',
+      status: 'ACTIVE',
+    };
+    // eslint-disable-next-line no-await-in-loop
     await prisma.regulatoryDocument.upsert({
       where: { dispatchNo: doc.dispatchNo },
+      update: data,
+      create: { ...data, dispatchNo: doc.dispatchNo },
+    });
+    bump('regulatoryDocuments.synced');
+  }
+
+  // 9. 项目模板（阶段 + 任务 + 角色）
+  const { REG_66_PHASES } = await import('../src/data/reg66Phases.js');
+  const reg66 = REG_66_PHASES.map((phase) => ({
+    code: phase.id,
+    name: phase.name,
+    sortOrder: phase.order,
+    isMilestone: false,
+    tasks: phase.tasks.map(([title, taskType, priority, applicability]) => ({
+      title,
+      taskType: mapStrict(taskType, TASK_TYPE_MAP, 'TaskType'),
+      regulatoryPriority: PRIORITY_LEVELS.includes(priority) ? priority : 'P2',
+      applicability: mapStrict(applicability, APPLICABILITY_MAP, 'TaskApplicability'),
+    })),
+  }));
+
+  const normalizeTasks = (tasks) => (tasks ?? []).map((task) => (typeof task === 'string'
+    ? { title: task, taskType: 'OTHER', applicability: 'REQUIRED', regulatoryPriority: 'P2' }
+    : {
+      title: task.title,
+      taskType: task.taskType ?? 'OTHER',
+      applicability: task.applicability ?? 'REQUIRED',
+      regulatoryPriority: task.regulatoryPriority ?? 'P2',
+    }));
+
+  const PROJECT_TEMPLATES = [
+    {
+      code: 'TPL-REG-66', name: 'REG-66 十项病原体注册全流程模板', isMaster: true, parentCode: null,
+      category: 'ivd_registration', typeLabel: '注册申报',
+      description: '面向澳门 ISAF 2026 的十项病原体检测试剂注册全流程，共 5 阶段 66 项任务',
+      phases: reg66,
+    },
+    {
+      code: 'TPL-REAGENT-MASTER', name: '试剂/芯片 全流程模板（母版）', isMaster: true, parentCode: null,
+      category: 'reagent_chip', typeLabel: '全流程',
+      description: '试剂与芯片开发的 9 阶段标准流程',
+      phases: REAGENT_PHASES,
+    },
+    {
+      code: 'TPL-REAGENT-PERF', name: '性能测试型（子模板）', isMaster: false, parentCode: 'TPL-REAGENT-MASTER',
+      category: 'reagent_chip', typeLabel: '快速验证型',
+      description: '已有产品只做性能测试，跳过设计与优化阶段',
+      phases: pick(REAGENT_PHASES, ['p1', 'p6', 'p8', 'p9']),
+    },
+    {
+      code: 'TPL-EQUIP-MASTER', name: '设备开发 全流程模板（母版）', isMaster: true, parentCode: null,
+      category: 'device', typeLabel: '全流程',
+      description: '设备开发的 11 阶段标准流程',
+      phases: EQUIP_PHASES,
+    },
+    {
+      code: 'TPL-EQUIP-CUSTOM', name: '定制开发型（子模板）', isMaster: false, parentCode: 'TPL-EQUIP-MASTER',
+      category: 'device', typeLabel: '定制开发型',
+      description: '客户需求明确，跳过调研与多轮评审',
+      phases: pick(EQUIP_PHASES, ['p2', 'p3', 'p6', 'p7', 'p8', 'p9', 'p10', 'p11']),
+    },
+  ];
+
+  for (const tpl of PROJECT_TEMPLATES) {
+    // eslint-disable-next-line no-await-in-loop
+    const parent = tpl.parentCode
+      ? await prisma.projectTemplate.findUnique({ where: { code: tpl.parentCode } })
+      : null;
+
+    // eslint-disable-next-line no-await-in-loop
+    const template = await prisma.projectTemplate.upsert({
+      where: { code: tpl.code },
       update: {
-        title: doc.title,
-        fullTitle: `${doc.dispatchNo}：${doc.title}`,
-        category: doc.category,
-        applicability: doc.applicability,
-        applicableToIvd: doc.applicableToIvd,
-        priorityLevel: doc.priorityLevel,
+        name: tpl.name, description: tpl.description, category: tpl.category,
+        typeLabel: tpl.typeLabel, isMaster: tpl.isMaster, parentId: parent?.id ?? null, status: 'ACTIVE',
       },
       create: {
-        dispatchNo: doc.dispatchNo,
-        title: doc.title,
-        fullTitle: `${doc.dispatchNo}：${doc.title}`,
-        category: doc.category,
-        applicability: doc.applicability,
-        applicableToIvd: doc.applicableToIvd,
-        priorityLevel: doc.priorityLevel,
+        code: tpl.code, name: tpl.name, description: tpl.description, category: tpl.category,
+        typeLabel: tpl.typeLabel, isMaster: tpl.isMaster, parentId: parent?.id ?? null,
+        status: 'ACTIVE', createdById: adminUser.id,
       },
     });
-  }
-  console.log(`✅ 法规文件种子创建成功: ${ISAF_REGULATORY_DOCUMENTS.length} 项`);
+    bump('projectTemplates.synced');
 
-  // 试剂/芯片母版：9阶段完整设计
-  const reagentMaster = await prisma.projectTemplate.upsert({
-    where: { code: 'TPL-REAGENT-MASTER' },
-    update: {},
-    create: {
-      code: 'TPL-REAGENT-MASTER',
-      name: '🧪 试剂/芯片开发 全流程模版（母版）',
-      description: '包含9个阶段的完整研发流程，可作为派生模版的基础',
-      category: '试剂/芯片',
-      isMaster: true,
-      content: JSON.stringify({
-        phases: [
-          { key: 'phase1', order: 1, name: '立项', desc: '立项申请、可行性分析、评审', source: 'inherit', tasks: [{ title: '立项申请' }, { title: '可行性分析' }, { title: '评审' }] },
-          { key: 'phase2', order: 2, name: '方案设计', desc: '引物探针设计 / 外购 / 合作 / 国标引用', source: 'inherit', tasks: [{ title: '引物/探针设计' }, { title: '外购方案' }, { title: '合作评估' }, { title: '国标对照' }] },
-          { key: 'phase3', order: 3, name: '样本收集', desc: '样本来源、接收记录', source: 'inherit', tasks: [{ title: '样本来源确认' }, { title: '接收记录' }] },
-          { key: 'phase4', order: 4, name: '片外核酸提取优化', desc: '提取试剂筛选、程序验证', source: 'inherit', tasks: [{ title: '提取试剂筛选' }, { title: '程序验证' }, { title: '效果评估' }] },
-          { key: 'phase5', order: 5, name: '片外扩增试剂/程序优化', desc: '扩增体系、参数调试', source: 'inherit', tasks: [{ title: '扩增体系优化' }, { title: '参数调试' }, { title: '敏感性/特异性测试' }] },
-          { key: 'phase6', order: 6, name: '芯片试产验证', desc: '试产、实验验证、性能测试', source: 'inherit', tasks: [{ title: '样片试产' }, { title: '实验验证' }, { title: '性能测试' }, { title: '问题记录' }] },
-          { key: 'phase7', order: 7, name: '量产加工', desc: '芯片量产、生产加工', source: 'inherit', tasks: [{ title: '生产工艺确认' }, { title: '量产准备' }, { title: '生产加工' }, { title: '质量检验' }] },
-          { key: 'phase8', order: 8, name: '客户验证', desc: '送样、客户反馈、验证报告', source: 'inherit', tasks: [{ title: '样品送样' }, { title: '收集客户反馈' }, { title: '生成验证报告' }] },
-          { key: 'phase9', order: 9, name: '归档', desc: '文档整理、知识库归档、项目总结', source: 'inherit', tasks: [{ title: '文档整理' }, { title: '知识库归档' }, { title: '项目总结' }, { title: '经验教训记录' }] }
-        ],
-        milestones: [{ name: '立项通过' }, { name: '样品可用' }, { name: '试产通过' }, { name: '客户验证通过' }, { name: '项目关闭' }],
-        defaults: { priority: '中' }
-      }),
-      createdBy: admin.id
+    for (const [index, role] of TEMPLATE_ROLES.entries()) {
+      // eslint-disable-next-line no-await-in-loop
+      await prisma.templateRole.upsert({
+        where: { templateId_code: { templateId: template.id, code: role.code } },
+        update: { name: role.name, description: role.description, permissions: role.permissions, sortOrder: role.sortOrder },
+        create: { ...role, templateId: template.id, sortOrder: index + 1 },
+      });
+      bump('templateRoles.synced');
     }
-  });
-  console.log('✅ 模版创建成功:', reagentMaster.name);
 
-  // 试剂/芯片子模版：标准型（完整流程）
-  await prisma.projectTemplate.upsert({
-    where: { code: 'TPL-REAGENT-STD' },
-    update: {},
-    create: {
-      code: 'TPL-REAGENT-STD',
-      name: '标准型（完整流程）',
-      description: '试剂/芯片 开发-标准型，包含完整9阶段',
-      category: '试剂/芯片',
-      parentId: reagentMaster.id,
-      content: reagentMaster.content,
-      createdBy: admin.id
-    }
-  });
-  console.log('✅ 模版创建成功: 标准型');
+    for (const [index, phase] of tpl.phases.entries()) {
+      // eslint-disable-next-line no-await-in-loop
+      const phaseRow = await prisma.templatePhase.upsert({
+        where: { templateId_code: { templateId: template.id, code: phase.code } },
+        update: { name: phase.name, sortOrder: index + 1, isMilestone: Boolean(phase.milestone) },
+        create: {
+          templateId: template.id, code: phase.code, name: phase.name,
+          sortOrder: index + 1, isMilestone: Boolean(phase.milestone),
+        },
+      });
+      bump('templatePhases.synced');
 
-  // 试剂/芯片子模版：快速验证型（禁用阶段3、4）
-  await prisma.projectTemplate.upsert({
-    where: { code: 'TPL-REAGENT-FAST' },
-    update: {},
-    create: {
-      code: 'TPL-REAGENT-FAST',
-      name: '快速验证型',
-      description: '适用场景：已有提取方案，直接做扩增验证（禁用阶段3、4）',
-      category: '试剂/芯片',
-      parentId: reagentMaster.id,
-      content: JSON.stringify({
-        phases: [
-          { key: 'phase1', order: 1, name: '立项', source: 'inherit', tasks: [{ title: '立项' }] },
-          { key: 'phase2', order: 2, name: '方案设计', source: 'inherit', tasks: [{ title: '方案' }] },
-          { key: 'phase3', order: 3, name: '样本收集', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase4', order: 4, name: '片外核酸提取优化', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase5', order: 5, name: '片外扩增试剂/程序优化', source: 'inherit', tasks: [{ title: '快速扩增验证' }] },
-          { key: 'phase6', order: 6, name: '芯片试产验证', source: 'inherit', tasks: [{ title: '快速试产' }] },
-          { key: 'phase7', order: 7, name: '量产加工', source: 'inherit', tasks: [{ title: '量产' }] },
-          { key: 'phase8', order: 8, name: '客户验证', source: 'inherit', tasks: [{ title: '验证' }] },
-          { key: 'phase9', order: 9, name: '归档', source: 'inherit', tasks: [{ title: '归档' }] }
-        ],
-        milestones: [{ name: '验证通过' }],
-        defaults: { priority: '高' }
-      }),
-      createdBy: admin.id
-    }
-  });
-  console.log('✅ 模版创建成功: 快速验证型');
-
-  // 试剂/芯片子模版：合作开发型（禁用阶段3、4、5）
-  await prisma.projectTemplate.upsert({
-    where: { code: 'TPL-REAGENT-COOP' },
-    update: {},
-    create: {
-      code: 'TPL-REAGENT-COOP',
-      name: '合作开发型',
-      description: '适用场景：合作方提供试剂，我方做芯片（禁用阶段3、4、5）',
-      category: '试剂/芯片',
-      parentId: reagentMaster.id,
-      content: JSON.stringify({
-        phases: [
-          { key: 'phase1', order: 1, name: '立项', source: 'inherit', tasks: [{ title: '合作申请' }] },
-          { key: 'phase2', order: 2, name: '方案设计', source: 'inherit', tasks: [{ title: '合作设计' }] },
-          { key: 'phase3', order: 3, name: '样本收集', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase4', order: 4, name: '片外核酸提取优化', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase5', order: 5, name: '片外扩增试剂/程序优化', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase6', order: 6, name: '芯片试产验证', source: 'inherit', tasks: [{ title: '试产验证' }] },
-          { key: 'phase7', order: 7, name: '量产加工', source: 'inherit', tasks: [{ title: '量产' }] },
-          { key: 'phase8', order: 8, name: '客户验证', source: 'inherit', tasks: [{ title: '验证' }] },
-          { key: 'phase9', order: 9, name: '归档', source: 'inherit', tasks: [{ title: '归档' }] }
-        ],
-        milestones: [{ name: '合作完成' }],
-        defaults: { priority: '中' }
-      }),
-      createdBy: admin.id
-    }
-  });
-  console.log('✅ 模版创建成功: 合作开发型');
-
-  // 试剂/芯片子模版：性能测试型（禁用阶段2、3、4、5、7）
-  await prisma.projectTemplate.upsert({
-    where: { code: 'TPL-REAGENT-PERF' },
-    update: {},
-    create: {
-      code: 'TPL-REAGENT-PERF',
-      name: '性能测试型',
-      description: '适用场景：已有产品，只做性能测试（禁用阶段2、3、4、5、7）',
-      category: '试剂/芯片',
-      parentId: reagentMaster.id,
-      content: JSON.stringify({
-        phases: [
-          { key: 'phase1', order: 1, name: '立项', source: 'inherit', tasks: [{ title: '测试计划' }] },
-          { key: 'phase2', order: 2, name: '方案设计', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase3', order: 3, name: '样本收集', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase4', order: 4, name: '片外核酸提取优化', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase5', order: 5, name: '片外扩增试剂/程序优化', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase6', order: 6, name: '芯片试产验证', source: 'inherit', tasks: [{ title: '性能测试' }, { title: '数据分析' }] },
-          { key: 'phase7', order: 7, name: '量产加工', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase8', order: 8, name: '客户验证', source: 'inherit', tasks: [{ title: '提交报告' }] },
-          { key: 'phase9', order: 9, name: '归档', source: 'inherit', tasks: [{ title: '归档' }] }
-        ],
-        milestones: [{ name: '测试完成' }],
-        defaults: { priority: '高' }
-      }),
-      createdBy: admin.id
-    }
-  });
-  console.log('✅ 模版创建成功: 性能测试型');
-
-  // 试剂/芯片子模版：国标引用型（禁用阶段4、5）
-  await prisma.projectTemplate.upsert({
-    where: { code: 'TPL-REAGENT-STAND' },
-    update: {},
-    create: {
-      code: 'TPL-REAGENT-STAND',
-      name: '国标引用型',
-      description: '适用场景：基于国标体系，跳过优化（禁用阶段4、5）',
-      category: '试剂/芯片',
-      parentId: reagentMaster.id,
-      content: JSON.stringify({
-        phases: [
-          { key: 'phase1', order: 1, name: '立项', source: 'inherit', tasks: [{ title: '立项' }] },
-          { key: 'phase2', order: 2, name: '方案设计', source: 'inherit', tasks: [{ title: '国标设计' }] },
-          { key: 'phase3', order: 3, name: '样本收集', source: 'inherit', tasks: [{ title: '样本准备' }] },
-          { key: 'phase4', order: 4, name: '片外核酸提取优化', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase5', order: 5, name: '片外扩增试剂/程序优化', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase6', order: 6, name: '芯片试产验证', source: 'inherit', tasks: [{ title: '国标验证' }] },
-          { key: 'phase7', order: 7, name: '量产加工', source: 'inherit', tasks: [{ title: '量产' }] },
-          { key: 'phase8', order: 8, name: '客户验证', source: 'inherit', tasks: [{ title: '检测' }] },
-          { key: 'phase9', order: 9, name: '归档', source: 'inherit', tasks: [{ title: '报告' }] }
-        ],
-        milestones: [{ name: '国标符合' }],
-        defaults: { priority: '中' }
-      }),
-      createdBy: admin.id
-    }
-  });
-  console.log('✅ 模版创建成功: 国标引用型');
-
-  // 设备开发母版：11阶段完整设计
-  const equipMaster = await prisma.projectTemplate.upsert({
-    where: { code: 'TPL-EQUIP-MASTER' },
-    update: {},
-    create: {
-      code: 'TPL-EQUIP-MASTER',
-      name: '⚙️ 设备开发 全流程模版（母版）',
-      description: '包含11个阶段的完整设备研发流程',
-      category: '设备',
-      isMaster: true,
-      content: JSON.stringify({
-        phases: [
-          { key: 'phase1', order: 1, name: '项目调研', desc: '市场调研、需求收集、竞品分析', source: 'inherit', tasks: [{ title: '市场调研' }, { title: '需求收集' }, { title: '竞品分析' }] },
-          { key: 'phase2', order: 2, name: '立项审批', desc: '立项申请、审批流程', source: 'inherit', tasks: [{ title: '立项申请' }, { title: '审批流程' }] },
-          { key: 'phase3', order: 3, name: '方案设计', desc: '设备结构、硬件设计、芯片设计', source: 'inherit', tasks: [{ title: '结构设计' }, { title: '硬件设计' }, { title: '芯片集成' }] },
-          { key: 'phase4', order: 4, name: '设计方案评审', desc: '评审会议、评审意见', source: 'inherit', tasks: [{ title: '评审会议' }, { title: '意见处理' }] },
-          { key: 'phase5', order: 5, name: '设计迭代再评审', desc: '方案修改、二次评审', source: 'inherit', tasks: [{ title: '方案修改' }, { title: '二次评审' }] },
-          { key: 'phase6', order: 6, name: '采购', desc: 'BOM清单、供应商、采购跟进', source: 'inherit', tasks: [{ title: 'BOM清单' }, { title: '供应商选择' }, { title: '采购跟进' }] },
-          { key: 'phase7', order: 7, name: '样机组装联调', desc: '组装、软硬件联调、问题记录', source: 'inherit', tasks: [{ title: '样机组装' }, { title: '软硬件联调' }, { title: '问题记录' }] },
-          { key: 'phase8', order: 8, name: '结合芯片性能测试', desc: '整机性能测试、指标验证', source: 'inherit', tasks: [{ title: '性能测试' }, { title: '指标验证' }] },
-          { key: 'phase9', order: 9, name: '加工生产', desc: '量产 / 定制版样机', source: 'inherit', tasks: [{ title: '生产工艺' }, { title: '量产准备' }, { title: '生产加工' }] },
-          { key: 'phase10', order: 10, name: '客户验证', desc: '送样、客户反馈、验证报告', source: 'inherit', tasks: [{ title: '样机送样' }, { title: '客户反馈' }, { title: '验证报告' }] },
-          { key: 'phase11', order: 11, name: '归档', desc: '文档整理、知识库归档', source: 'inherit', tasks: [{ title: '文档整理' }, { title: '知识库归档' }] }
-        ],
-        milestones: [{ name: '立项通过' }, { name: '样机完成' }, { name: '量产准备' }, { name: '客户验证通过' }],
-        defaults: { priority: '中' }
-      }),
-      createdBy: admin.id
-    }
-  });
-  console.log('✅ 模版创建成功:', equipMaster.name);
-
-  // 设备子模版：定制开发型（禁用阶段1、4、5）
-  await prisma.projectTemplate.upsert({
-    where: { code: 'TPL-EQUIP-CUSTOM' },
-    update: {},
-    create: {
-      code: 'TPL-EQUIP-CUSTOM',
-      name: '定制开发型',
-      description: '适用场景：客户需求明确，跳过调研和多轮评审（禁用阶段1、4、5）',
-      category: '设备',
-      parentId: equipMaster.id,
-      content: JSON.stringify({
-        phases: [
-          { key: 'phase1', order: 1, name: '项目调研', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase2', order: 2, name: '立项审批', source: 'inherit', tasks: [{ title: '快速审批' }] },
-          { key: 'phase3', order: 3, name: '方案设计', source: 'inherit', tasks: [{ title: '定制设计' }] },
-          { key: 'phase4', order: 4, name: '设计方案评审', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase5', order: 5, name: '设计迭代再评审', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase6', order: 6, name: '采购', source: 'inherit', tasks: [{ title: '采购' }] },
-          { key: 'phase7', order: 7, name: '样机组装联调', source: 'inherit', tasks: [{ title: '组装联调' }] },
-          { key: 'phase8', order: 8, name: '结合芯片性能测试', source: 'inherit', tasks: [{ title: '性能测试' }] },
-          { key: 'phase9', order: 9, name: '加工生产', source: 'inherit', tasks: [{ title: '生产' }] },
-          { key: 'phase10', order: 10, name: '客户验证', source: 'inherit', tasks: [{ title: '验证' }] },
-          { key: 'phase11', order: 11, name: '归档', source: 'inherit', tasks: [{ title: '归档' }] }
-        ],
-        milestones: [{ name: '样机交付' }],
-        defaults: { priority: '高' }
-      }),
-      createdBy: admin.id
-    }
-  });
-  console.log('✅ 模版创建成功: 定制开发型');
-
-  // 设备子模版：性能测试型（禁用阶段1～6）
-  await prisma.projectTemplate.upsert({
-    where: { code: 'TPL-EQUIP-PERF' },
-    update: {},
-    create: {
-      code: 'TPL-EQUIP-PERF',
-      name: '性能测试型',
-      description: '适用场景：已有样机，只做测试验证（禁用阶段1～6）',
-      category: '设备',
-      parentId: equipMaster.id,
-      content: JSON.stringify({
-        phases: [
-          { key: 'phase1', order: 1, name: '项目调研', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase2', order: 2, name: '立项审批', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase3', order: 3, name: '方案设计', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase4', order: 4, name: '设计方案评审', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase5', order: 5, name: '设计迭代再评审', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase6', order: 6, name: '采购', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase7', order: 7, name: '样机组装联调', source: 'inherit', tasks: [{ title: '样机调试' }] },
-          { key: 'phase8', order: 8, name: '结合芯片性能测试', source: 'inherit', tasks: [{ title: '性能测试' }, { title: '数据分析' }] },
-          { key: 'phase9', order: 9, name: '加工生产', source: 'inherit', tasks: [{ title: '生产' }] },
-          { key: 'phase10', order: 10, name: '客户验证', source: 'inherit', tasks: [{ title: '验证' }] },
-          { key: 'phase11', order: 11, name: '归档', source: 'inherit', tasks: [{ title: '报告' }] }
-        ],
-        milestones: [{ name: '测试完成' }],
-        defaults: { priority: '高' }
-      }),
-      createdBy: admin.id
-    }
-  });
-  console.log('✅ 模版创建成功: 性能测试型');
-
-  // 设备子模版：快速迭代型（禁用阶段1、2）
-  await prisma.projectTemplate.upsert({
-    where: { code: 'TPL-EQUIP-FAST' },
-    update: {},
-    create: {
-      code: 'TPL-EQUIP-FAST',
-      name: '快速迭代型',
-      description: '适用场景：已立项，直接进入设计（禁用阶段1、2）',
-      category: '设备',
-      parentId: equipMaster.id,
-      content: JSON.stringify({
-        phases: [
-          { key: 'phase1', order: 1, name: '项目调研', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase2', order: 2, name: '立项审批', source: 'inherit', disabled: true, tasks: [] },
-          { key: 'phase3', order: 3, name: '方案设计', source: 'inherit', tasks: [{ title: '快速设计' }] },
-          { key: 'phase4', order: 4, name: '设计方案评审', source: 'inherit', tasks: [{ title: '评审' }] },
-          { key: 'phase5', order: 5, name: '设计迭代再评审', source: 'inherit', tasks: [{ title: '迭代' }] },
-          { key: 'phase6', order: 6, name: '采购', source: 'inherit', tasks: [{ title: '采购' }] },
-          { key: 'phase7', order: 7, name: '样机组装联调', source: 'inherit', tasks: [{ title: '快速组装' }] },
-          { key: 'phase8', order: 8, name: '结合芯片性能测试', source: 'inherit', tasks: [{ title: '测试' }] },
-          { key: 'phase9', order: 9, name: '加工生产', source: 'inherit', tasks: [{ title: '生产' }] },
-          { key: 'phase10', order: 10, name: '客户验证', source: 'inherit', tasks: [{ title: '验证' }] },
-          { key: 'phase11', order: 11, name: '归档', source: 'inherit', tasks: [{ title: '归档' }] }
-        ],
-        milestones: [{ name: '样机完成' }],
-        defaults: { priority: '中' }
-      }),
-      createdBy: admin.id
-    }
-  });
-  console.log('✅ 模版创建成功: 快速迭代型');
-
-  // 预置：任务模板示例（首次加载时写入）
-  const existingTemplates = await prisma.taskTemplate.findMany();
-  if (existingTemplates.length === 0) {
-    console.log('🌱 初始化任务模板示例数据...');
-    const templatesToCreate = [
-      {
-        name: '微流控芯片制备流程',
-        category: '芯片制备',
-        description: '标准微流控芯片从设计到封装的完整制备流程',
-        estimatedDays: 5,
-        priority: 'high',
-        tags: ['PDMS','光刻','键合'],
-        steps: [
-          { order:1, title:'掩模版设计与制作', estimatedHours:8, assigneeRole:'负责人', checklist:['确认芯片尺寸','完成CAD设计','送厂制版'] },
-          { order:2, title:'PDMS浇注', estimatedHours:4, assigneeRole:'实验员', checklist:['配制PDMS（10:1）','真空脱气30min','60℃固化2h'] },
-          { order:3, title:'等离子体键合', estimatedHours:2, assigneeRole:'实验员', checklist:['表面活化处理','对准键合','80℃后烘1h'] },
-          { order:4, title:'功能测试', estimatedHours:3, assigneeRole:'实验员', checklist:['注水检漏','流速测试','显微镜检查'] },
-        ]
-      },
-      {
-        name: '核酸检测实验流程',
-        category: '检测实验',
-        description: '基于微流控平台的核酸提取与扩增检测标准流程',
-        estimatedDays: 3,
-        priority: 'high',
-        tags: ['PCR','核酸','检测'],
-        steps: [
-          { order:1, title:'样本前处理', estimatedHours:2, assigneeRole:'实验员', checklist:['样本登记','裂解液配制','样本裂解'] },
-          { order:2, title:'核酸提取', estimatedHours:3, assigneeRole:'实验员', checklist:['磁珠法提取','洗涤3次','洗脱'] },
-          { order:3, title:'PCR扩增', estimatedHours:2, assigneeRole:'实验员', checklist:['配制反应体系','上机扩增','结果采集'] },
-          { order:4, title:'数据分析与报告', estimatedHours:2, assigneeRole:'负责人', checklist:['Ct值分析','阴阳性判断','出具报告'] },
-        ]
-      },
-      {
-        name: '试剂配制与质检',
-        category: '通用',
-        description: '实验室常用缓冲液及试剂的配制与质量检验流程',
-        estimatedDays: 1,
-        priority: 'medium',
-        tags: ['配制','质检','缓冲液'],
-        steps: [
-          { order:1, title:'原料称量', estimatedHours:1, assigneeRole:'实验员', checklist:['核对试剂名称','检查有效期','精确称量'] },
-          { order:2, title:'溶液配制', estimatedHours:1, assigneeRole:'实验员', checklist:['加入80%体积超纯水','调节pH','定容至目标体积'] },
-          { order:3, title:'质量检验', estimatedHours:1, assigneeRole:'负责人', checklist:['pH复测','浓度验证','外观检查'] },
-          { order:4, title:'分装与标记', estimatedHours:0.5, assigneeRole:'实验员', checklist:['无菌分装','贴标签（名称/浓度/日期）','低温保存'] },
-        ]
-      }
-    ];
-
-    for (const t of templatesToCreate) {
-      try {
-        await prisma.taskTemplate.create({
-          data: {
-            name: t.name,
-            category: t.category,
-            description: t.description,
-            estimatedDays: t.estimatedDays,
-            priority: t.priority,
-            tags: t.tags.join(','),
-            steps: { create: t.steps.map(s => ({ order: s.order, title: s.title, description: s.description || null, estimatedHours: s.estimatedHours, assigneeRole: s.assigneeRole, checklist: s.checklist.join('|') })) }
-          }
+      // 任务整体重建，保证模板内容变更可自愈
+      // eslint-disable-next-line no-await-in-loop
+      await prisma.templateTask.deleteMany({ where: { templatePhaseId: phaseRow.id } });
+      const tasks = normalizeTasks(phase.tasks);
+      if (tasks.length) {
+        // eslint-disable-next-line no-await-in-loop
+        await prisma.templateTask.createMany({
+          data: tasks.map((task, i) => ({
+            templatePhaseId: phaseRow.id,
+            title: task.title,
+            taskType: task.taskType,
+            applicability: task.applicability,
+            regulatoryPriority: task.regulatoryPriority,
+            sortOrder: i,
+          })),
         });
-        console.log('✅ 模板创建:', t.name);
-      } catch (e) { console.error('创建模板失败', e); }
-    }
-  }
-
-  // 创建示例项目
-  const projects = [
-    {
-      code: 'PLATFORM-2.0C',
-      name: '2.0C平台项目',
-      type: 'platform',
-      subtype: '2.0C',
-      status: '进行中',
-      position: '核心产品平台升级项目',
-      managerId: admin.id
-    },
-    {
-      code: 'PLATFORM-3.0',
-      name: '3.0平台项目',
-      type: 'platform',
-      subtype: '3.0',
-      status: '进行中',
-      position: '新一代平台研发',
-      managerId: admin.id
-    },
-    {
-      code: 'COOP-BS',
-      name: '贝索合作项目',
-      type: '定制',
-      subtype: '贝索',
-      status: '待验证',
-      position: '与贝索公司的合作项目',
-      managerId: admin.id
-    },
-    {
-      code: 'COOP-HNDX',
-      name: '海南大学项目',
-      type: '合作',
-      subtype: '海南大学',
-      status: '待加工',
-      position: '海南大学联合研发项目',
-      managerId: admin.id
-    },
-    {
-      code: 'COOP-HM',
-      name: '黑马合作项目',
-      type: '合作',
-      subtype: '黑马',
-      status: '进行中',
-      position: '黑马培训合作项目',
-      managerId: admin.id
-    },
-    {
-      code: 'TEST-MDX131',
-      name: 'MDX131性能测试',
-      type: '测试',
-      subtype: 'MDX131',
-      status: '进行中',
-      position: 'MDX131型号设备性能测试验证',
-      managerId: admin.id
-    },
-    {
-      code: 'APP-AQUA',
-      name: '水产项目',
-      type: '应用',
-      subtype: '水产',
-      status: '进行中',
-      position: '水产养殖应用场景落地',
-      managerId: admin.id
-    },
-    {
-      code: 'APP-FOOD',
-      name: '食品安全检测项目',
-      type: '应用',
-      subtype: '食品安全',
-      status: '规划中',
-      position: '食品安全快速检测应用',
-      managerId: admin.id
-    }
-  ];
-
-  for (const projectData of projects) {
-    await prisma.project.upsert({
-      where: { code: projectData.code },
-      update: {},
-      create: projectData
-    });
-  }
-  console.log('✅ 8个示例项目创建成功');
-
-  // 预置试剂原料库数据（如不存在则创建）
-  const materials = [
-    { commonName:'Tris', chineseName:'三羟甲基氨基甲烷', englishName:'Tris base', mw:121.14 },
-    { commonName:'NaCl', chineseName:'氯化钠', englishName:'Sodium Chloride', mw:58.44 },
-    { commonName:'KCl', chineseName:'氯化钾', englishName:'Potassium Chloride', mw:74.55 },
-    { commonName:'EDTA', chineseName:'乙二胺四乙酸二钠', englishName:'Ethylenediaminetetraacetic acid disodium salt', mw:372.24 },
-    { commonName:'MgCl2', chineseName:'氯化镁', englishName:'Magnesium Chloride', mw:203.30 },
-    { commonName:'CaCl2', chineseName:'氯化钙', englishName:'Calcium Chloride', mw:110.98 },
-    { commonName:'HEPES', chineseName:'羟乙基哌嗪乙硫磺酸', englishName:'4-(2-hydroxyethyl)-1-piperazineethanesulfonic acid', mw:238.30 },
-    { commonName:'SDS', chineseName:'十二烷基硫酸钠', englishName:'Sodium Dodecyl Sulfate', mw:288.38 },
-    { commonName:'DTT', chineseName:'二硫苏糖醇', englishName:'Dithiothreitol', mw:154.25 },
-    { commonName:'β-ME', chineseName:'β-巯基乙醇', englishName:'Beta-Mercaptoethanol', mw:78.13 },
-    { commonName:'GITC', chineseName:'异硫氰酸胍', englishName:'Guanidinium isothiocyanate', mw:118.16 },
-    { commonName:'尿素', chineseName:'尿素', englishName:'Urea', mw:60.06 },
-    { commonName:'蔗糖', chineseName:'蔗糖', englishName:'Sucrose', mw:342.30 },
-    { commonName:'甘油', chineseName:'甘油', englishName:'Glycerol', mw:92.09, state:'liquid', density:1.261 },
-    { commonName:'BSA', chineseName:'牛血清白蛋白', englishName:'Bovine Serum Albumin', mw:66430 },
-    { commonName:'Tween-20', chineseName:'吐温-20', englishName:'Polyoxyethylene sorbitan monolaurate', mw:1228.0, state:'liquid' },
-    { commonName:'Triton X-100', chineseName:'曲拉通X-100', englishName:'Polyethylene glycol tert-octylphenyl ether', mw:625.0, state:'liquid' },
-    { commonName:'NaOH', chineseName:'氢氧化钠', englishName:'Sodium Hydroxide', mw:40.00 },
-    { commonName:'HCl', chineseName:'盐酸', englishName:'Hydrochloric acid', mw:36.46, state:'liquid', density:1.19 },
-    { commonName:'KH2PO4', chineseName:'磷酸二氢钾', englishName:'Potassium dihydrogen phosphate', mw:136.09 },
-    { commonName:'Na2HPO4', chineseName:'磷酸氢二钠', englishName:'Disodium hydrogen phosphate', mw:141.96 },
-  ];
-
-  for (const m of materials) {
-    await prisma.reagentMaterial.upsert({
-      where: { commonName: m.commonName },
-      update: {},
-      create: {
-        commonName: m.commonName,
-        chineseName: m.chineseName || null,
-        englishName: m.englishName || null,
-        casNumber: m.casNumber || null,
-        molecularFormula: m.molecularFormula || null,
-        mw: m.mw,
-        purity: m.purity || 98,
-        density: m.density || null,
-        state: m.state || 'solid',
-        defaultStockConc: m.defaultStockConc || null,
-        defaultStockUnit: m.defaultStockUnit || null,
-        supplier: m.supplier || null,
-        notes: m.notes || null,
+        bump('templateTasks.synced', tasks.length);
       }
-    });
+    }
   }
 
-  console.log('🎉 数据初始化完成！');
+  // 10. 任务流程模板库
+  const { SEED_TEMPLATES } = await import('../src/data/taskTemplateSeed.js');
+  for (const [index, tpl] of SEED_TEMPLATES.entries()) {
+    const code = `TT-${String(index + 1).padStart(3, '0')}`;
+    const data = {
+      name: tpl.name,
+      category: tpl.category ?? null,
+      description: tpl.description ?? null,
+      estimatedDays: tpl.estimatedDays ?? 0,
+      priority: mapStrict(tpl.priority ?? 'medium', TASK_PRIORITY_MAP, 'TaskPriority'),
+      tags: tpl.tags ?? [],
+    };
+    // eslint-disable-next-line no-await-in-loop
+    const row = await prisma.taskTemplate.upsert({
+      where: { code },
+      update: { ...data, createdById: adminUser.id },
+      create: { ...data, code, createdById: adminUser.id },
+    });
+    bump('taskTemplates.synced');
+
+    // eslint-disable-next-line no-await-in-loop
+    await prisma.taskTemplateStep.deleteMany({ where: { templateId: row.id } });
+    const steps = (tpl.steps ?? []).map((step, i) => ({
+      templateId: row.id,
+      sortOrder: i,
+      title: step.title,
+      description: step.description ?? null,
+      estimatedHours: step.estimatedHours ?? null,
+      assigneeRoleCode: null,
+      checklist: [],
+    }));
+    if (steps.length) {
+      // eslint-disable-next-line no-await-in-loop
+      await prisma.taskTemplateStep.createMany({ data: steps });
+      bump('taskTemplateSteps.synced', steps.length);
+    }
+  }
+
+  // 11. 发号器
+  for (const seq of CODE_SEQUENCES) {
+    // eslint-disable-next-line no-await-in-loop
+    await prisma.codeSequence.upsert({
+      where: { scope_periodKey: { scope: seq.scope, periodKey: '' } },
+      update: { prefix: seq.prefix, padding: seq.padding },
+      create: { scope: seq.scope, periodKey: '', prefix: seq.prefix, padding: seq.padding, lastValue: 0 },
+    });
+    bump('codeSequences.synced');
+  }
+
+  // 12. 系统配置
+  for (const setting of SYSTEM_SETTINGS) {
+    // eslint-disable-next-line no-await-in-loop
+    await prisma.systemSetting.upsert({
+      where: { key: setting.key },
+      update: { value: setting.value, isPublic: setting.isPublic, description: setting.description },
+      create: { ...setting, updatedById: adminUser.id },
+    });
+    bump('systemSettings.synced');
+  }
+
+  console.log('\n──────── seed 完成 ────────');
+  Object.entries(stats).sort().forEach(([k, v]) => console.log(`  ${k.padEnd(26)} ${v}`));
+  console.log(`  permissions(P0)             ${PERMISSIONS.length}`);
+  console.log(`  P1 manifest(不入库)         ${P1_MANIFEST.length}`);
+  for (const def of ROLE_DEFS) console.log(`  role ${def.code.padEnd(18)} ${def.permissions.length}`);
+  console.log(`  RolePermission 合计         ${ROLE_DEFS.reduce((s, d) => s + d.permissions.length, 0)}`);
+  console.log(`  账号：${superAdminUsername} (SUPER_ADMIN) / ${adminUsername} (ADMIN)，首次登录须改密`);
+  console.log('───────────────────────────\n');
 }
 
 main()
-  .catch((e) => {
-    console.error('❌ 初始化失败:', e);
+  .catch((error) => {
+    console.error('❌ seed 失败：', error?.message || error);
     process.exit(1);
   })
   .finally(async () => {

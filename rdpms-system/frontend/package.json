@@ -24,8 +24,6 @@
     "axios": "^1.6.7",
     "clsx": "^2.1.0",
     "dayjs": "^1.11.10",
-    "dexie": "^3.2.5",
-    "dexie-react-hooks": "^1.1.7",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
     "lucide-react": "^1.8.0",

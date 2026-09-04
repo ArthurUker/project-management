@@ -1,17 +1,25 @@
 {
   "name": "rdpms-backend",
-  "version": "1.0.0",
-  "description": "R&D Project Management System - Backend API",
+  "version": "2.0.0",
+  "description": "R&D Project Management System - Backend API (PostgreSQL-only)",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "db:push": "prisma db push",
+
+    "db:validate": "prisma validate",
     "db:generate": "prisma generate",
+    "test": "node --test tests/rbac.test.mjs",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:create": "prisma migrate dev --create-only",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:migrate:status": "prisma migrate status",
+    "db:migrate:reset": "prisma migrate reset",
+    "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-    "seed:templates-only": "node src/data/seedTaskTemplatesOnly.js",
-    "seed:templates-only:prod": "NODE_ENV=production node src/data/seedTaskTemplatesOnly.js"
+
+    "db:push:local-only": "prisma db push"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

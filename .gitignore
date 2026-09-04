@@ -21,6 +21,16 @@ parallel_run.log
 *.db-shm
 *.db-wal
 
+# ── 上传 / 备份 / 导出产物（绝不入库）──
+# 注意：只忽略目录与压缩包，不要忽略 *.sql，
+# 否则 prisma/migrations/**/migration.sql 会被误伤
+uploads/
+backups/
+dumps/
+*.dump
+*.sql.gz
+*.tar.gz
+
 # ── 环境变量（含密钥，绝对不提交）──
 .env
 .env.local

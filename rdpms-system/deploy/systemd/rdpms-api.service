@@ -1,0 +1,53 @@
+[Unit]
+Description=RDPMS API (Hono + Prisma + PostgreSQL)
+Documentation=file:///opt/rdpms/.deploy-meta
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rdpms
+Group=rdpms
+WorkingDirectory=/opt/rdpms/current/rdpms-system/backend
+Environment=NODE_ENV=production
+Environment=HOME=/var/lib/rdpms
+EnvironmentFile=/srv/rdpms/.env
+ExecStart=/usr/bin/node src/index.js
+
+Restart=always
+RestartSec=5
+StartLimitIntervalSec=300
+StartLimitBurst=5
+TimeoutStartSec=90
+TimeoutStopSec=25
+KillSignal=SIGTERM
+KillMode=mixed
+UMask=0027
+LimitNOFILE=65535
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=rdpms-api
+
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=full
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+ProtectClock=true
+ProtectKernelLogs=true
+ProtectHostname=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+RestrictRealtime=true
+LockPersonality=true
+RemoveIPC=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+ReadWritePaths=/srv/rdpms/uploads /var/log/rdpms
+
+[Install]
+WantedBy=multi-user.target

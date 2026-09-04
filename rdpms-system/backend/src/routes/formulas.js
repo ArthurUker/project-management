@@ -1,212 +1,193 @@
 import { Hono } from 'hono';
 import { prisma } from '../index.js';
-import { authMiddleware } from './auth.js';
+import { authenticate as authMiddleware, requirePermission, getAuth } from '../kernel/rbac.js';
+import { AUDIT_ACTIONS } from '../kernel/constants.js';
+import { writeAudit } from '../kernel/audit.js';
+import { nextCode } from '../kernel/sequence.js';
+import { notFound } from '../kernel/http.js';
 
+/**
+ * /api/formulas（M-1 P0）：
+ *   GET    /api/formulas           formulas.view
+ *   GET    /api/formulas/:id       formulas.view
+ *   POST   /api/formulas           formulas.create
+ *   PUT    /api/formulas/:id       formulas.update
+ *   POST   /api/formulas/:id/duplicate  formulas.create
+ *   DELETE 不提供（formulas.delete 为 P1）
+ *
+ * 新 schema：FormulaComponent 仅含 materialId（ReagentMaterial），无 reagentId。
+ */
 const formulas = new Hono();
+
 formulas.use('*', authMiddleware);
 
-// GET /api/formulas - 列表 支持 ?type=&pH=&reagentId=
-formulas.get('/', async (c) => {
-  try {
-    const type = c.req.query('type');
-    const reagentId = c.req.query('reagentId');
-    const pH = c.req.query('pH');
+const FORMULA_FIELDS = ['name', 'type', 'pH', 'status', 'projectId', 'procedure', 'notes'];
+const COMPONENT_FIELDS = ['materialId', 'customName', 'concentration', 'unit', 'concentrationText', 'notes', 'sortOrder'];
 
-    const where = {};
-    if (type) where.type = type;
-    if (pH) where.pH = Number(pH);
+function cleanComponents(components) {
+  return (components ?? [])
+    .filter((c) => c && typeof c === 'object')
+    .map((c, idx) => {
+      const out = {};
+      for (const k of COMPONENT_FIELDS) if (c[k] !== undefined) out[k] = c[k];
+      if (out.unit === undefined) out.unit = 'M';
+      if (out.sortOrder === undefined) out.sortOrder = idx;
+      return out;
+    });
+}
 
-    if (reagentId) {
-      // 通过 join 查询包含该试剂的配方
-      const comps = await prisma.formulaComponent.findMany({ where: { reagentId }, include: { formula: true } });
-      const formulasList = comps.map((c) => c.formula);
-      return c.json({ success: true, list: formulasList });
-    }
-
-    const list = await prisma.reagentFormula.findMany({ where, orderBy: { updatedAt: 'desc' } });
-    return c.json({ success: true, list });
-  } catch (err) {
-    console.error('获取配方列表失败', err);
-    return c.json({ error: '获取配方列表失败' }, 500);
+// GET / —— 列表（?type=&materialId=）
+formulas.get('/', requirePermission('formulas.view'), async (c) => {
+  const { type, materialId } = c.req.query();
+  const where = {};
+  if (type) where.type = type;
+  if (materialId) {
+    where.components = { some: { materialId } };
   }
+  const list = await prisma.reagentFormula.findMany({
+    where,
+    orderBy: { updatedAt: 'desc' },
+    include: { components: { include: { material: true }, orderBy: { sortOrder: 'asc' } } },
+  });
+  return c.json({ success: true, list });
 });
 
-// GET /api/formulas/:id 详情（含完整组分）
-formulas.get('/:id', async (c) => {
+// GET /:id —— 详情
+formulas.get('/:id', requirePermission('formulas.view'), async (c) => {
+  const formula = await prisma.reagentFormula.findUnique({
+    where: { id: c.req.param('id') },
+    include: {
+      components: { include: { material: true }, orderBy: { sortOrder: 'asc' } },
+      creator: { select: { id: true, displayName: true } },
+    },
+  });
+  if (!formula) return c.json({ error: '配方不存在' }, 404);
+  return c.json({ success: true, formula });
+});
+
+// POST / —— 新建（编号走 CodeSequence 原子发号）
+formulas.post('/', requirePermission('formulas.create'), async (c) => {
+  const auth = getAuth(c);
+  const raw = await c.req.json().catch(() => null);
+  if (raw && typeof raw === 'object' && 'code' in raw) {
+    return c.json({ error: 'code 由服务端统一发号，禁止客户端提交' }, 400);
+  }
+  const data = {};
+  for (const k of FORMULA_FIELDS) if (raw?.[k] !== undefined) data[k] = raw[k];
+  if (!data.name) return c.json({ error: '配方名称不能为空' }, 400);
+  if (!data.type) return c.json({ error: '配方类型不能为空' }, 400);
+
+  const code = await nextCode(prisma, 'FORMULA', { fallbackPrefix: 'FRM-', padding: 3 });
+  const created = await prisma.reagentFormula.create({
+    data: {
+      code,
+      name: data.name,
+      type: data.type,
+      pH: data.pH ?? null,
+      status: data.status ?? 'DRAFT',
+      projectId: data.projectId || null,
+      procedure: data.procedure ?? null,
+      notes: data.notes ?? null,
+      createdById: auth.userId,
+      components: { create: cleanComponents(raw?.components) },
+    },
+    include: { components: { include: { material: true } } },
+  });
+
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.CREATE,
+    entityType: 'FORMULA',
+    entityId: created.id,
+    entityLabel: created.code,
+    metadata: { permissionCode: 'formulas.create' },
+  });
+  return c.json({ success: true, formula: created });
+});
+
+// PUT /:id —— 更新（组分整体重建）
+formulas.put('/:id', requirePermission('formulas.update'), async (c) => {
   const id = c.req.param('id');
-  try {
-    const formula = await prisma.reagentFormula.findUnique({
-      where: { id },
-      include: {
-        components: { include: { reagent: true, reagentMaterial: true }, orderBy: { sortOrder: 'asc' } },
-        creator: { select: { id: true, name: true } }
-      }
-    });
-    if (!formula) return c.json({ error: '配方不存在' }, 404);
-    return c.json({ success: true, formula });
-  } catch (err) {
-    console.error('获取配方详情失败', err);
-    return c.json({ error: '获取配方详情失败' }, 500);
-  }
-});
+  const auth = getAuth(c);
+  const raw = await c.req.json().catch(() => null);
 
-// POST /api/formulas 新建（同时创建 FormulaComponent）
-formulas.post('/', async (c) => {
-  try {
-    const data = await c.req.json();
-    const userId = c.get('userId');
+  const before = await prisma.reagentFormula.findFirst({ where: { id, deletedAt: null } });
+  if (!before) throw notFound('FORMULA_NOT_FOUND', '配方不存在');
 
-    // 生成唯一 code（使用事务式自增以避免并发冲突）
-    const code = data.code || await prisma.$transaction(async (tx) => {
-      const last = await tx.reagentFormula.findFirst({
-        where: { type: data.type },
-        orderBy: { code: 'desc' }
-      })
-      const nextNum = last
-        ? parseInt(last.code.split('-')[1]) + 1
-        : 1
-      return `${data.type}-${String(nextNum).padStart(2, '0')}`
-    });
+  const data = {};
+  for (const k of FORMULA_FIELDS) if (raw?.[k] !== undefined) data[k] = raw[k];
+  data.updatedById = auth.userId;
 
-    const created = await prisma.reagentFormula.create({
-      data: {
-        code,
-        name: data.name,
-        type: data.type,
-        pH: data.pH,
-        status: data.status || '草稿',
-        projectId: data.projectId || null,
-        procedure: data.procedure,
-        notes: data.notes,
-        createdBy: userId,
-        components: {
-          create: (data.components || []).map((comp) => ({
-            reagentId: comp.reagentId || null,
-            reagentMaterialId: comp.reagentMaterialId || null,
-            componentName: comp.componentName || null,
-            concentration: comp.concentration,
-            unit: comp.unit || 'M',
-            notes: comp.notes || '',
-            sortOrder: comp.sortOrder || 0,
-          }))
-        }
-      },
-      include: { components: { include: { reagent: true } } }
-    });
-
-    return c.json({ success: true, formula: created });
-  } catch (err) {
-    console.error('创建配方失败', err);
-    return c.json({ error: '创建配方失败' }, 500);
-  }
-});
-
-// PUT /api/formulas/:id 更新（支持增删改组分）
-formulas.put('/:id', async (c) => {
-  const id = c.req.param('id');
-  try {
-    const data = await c.req.json();
-
-    // 更新主表
-    const updated = await prisma.reagentFormula.update({
-      where: { id },
-      data: {
-        name: data.name,
-        pH: data.pH,
-        status: data.status,
-        procedure: data.procedure,
-        notes: data.notes,
-        projectId: data.projectId || null,
-        // 不直接处理 components 这里先简单策略：删除原组件并重建
-      }
-    });
-
-    if (data.components) {
-      await prisma.formulaComponent.deleteMany({ where: { formulaId: id } });
-      const comps = data.components.map((comp) => ({
-        id: undefined,
-        formulaId: id,
-        reagentId: comp.reagentId || null,
-        reagentMaterialId: comp.reagentMaterialId || null,
-        componentName: comp.componentName || null,
-        concentration: comp.concentration,
-        unit: comp.unit || 'M',
-        notes: comp.notes || '',
-        sortOrder: comp.sortOrder || 0,
-      }));
-      for (const comp of comps) {
-        await prisma.formulaComponent.create({ data: comp });
+  const updated = await prisma.$transaction(async (tx) => {
+    await tx.reagentFormula.update({ where: { id }, data });
+    if (raw?.components !== undefined) {
+      await tx.formulaComponent.deleteMany({ where: { formulaId: id } });
+      if (raw.components.length) {
+        await tx.formulaComponent.createMany({
+          data: cleanComponents(raw.components).map((comp) => ({ ...comp, formulaId: id })),
+        });
       }
     }
-
-    const result = await prisma.reagentFormula.findUnique({ where: { id }, include: { components: { include: { reagent: true } } } });
-
-    return c.json({ success: true, formula: result });
-  } catch (err) {
-    console.error('更新配方失败', err);
-    return c.json({ error: '更新配方失败' }, 500);
-  }
-});
-
-// DELETE /api/formulas/:id
-formulas.delete('/:id', async (c) => {
-  const id = c.req.param('id');
-  try {
-    await prisma.reagentFormula.delete({ where: { id } });
-    return c.json({ success: true });
-  } catch (err) {
-    console.error('删除配方失败', err);
-    return c.json({ error: '删除配方失败' }, 500);
-  }
-});
-
-// POST /api/formulas/:id/duplicate 复制配方（生成新编号）
-formulas.post('/:id/duplicate', async (c) => {
-  const id = c.req.param('id');
-  try {
-    const orig = await prisma.reagentFormula.findUnique({ where: { id }, include: { components: true } });
-    if (!orig) return c.json({ error: '配方不存在' }, 404);
-
-    // 生成新 code: type-<seq>（事务式自增）
-    const newCode = await prisma.$transaction(async (tx) => {
-      const last = await tx.reagentFormula.findFirst({
-        where: { type: orig.type },
-        orderBy: { code: 'desc' }
-      });
-      const nextNum = last ? parseInt(last.code.split('-')[1]) + 1 : 1;
-      return `${orig.type}-${String(nextNum).padStart(2, '0')}`;
+    return tx.reagentFormula.findUnique({
+      where: { id },
+      include: { components: { include: { material: true }, orderBy: { sortOrder: 'asc' } } },
     });
-    const created = await prisma.reagentFormula.create({
-      data: {
-        code: newCode,
-        name: orig.name ? `${orig.name} (复制)` : `${orig.code} (复制)`,
-        type: orig.type,
-        pH: orig.pH,
-        status: '草稿',
-        projectId: orig.projectId,
-        procedure: orig.procedure,
-        notes: orig.notes,
-        createdBy: c.get('userId'),
-        components: {
-          create: orig.components.map((comp) => ({
-            reagentId: comp.reagentId,
-            reagentMaterialId: comp.reagentMaterialId || null,
-            componentName: comp.componentName || null,
-            concentration: comp.concentration,
-            unit: comp.unit,
-            notes: comp.notes,
-            sortOrder: comp.sortOrder
-          }))
-        }
+  });
+
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.UPDATE,
+    entityType: 'FORMULA',
+    entityId: id,
+    entityLabel: before.code,
+    changedFields: Object.keys(data),
+    metadata: { permissionCode: 'formulas.update' },
+  });
+  return c.json({ success: true, formula: updated });
+});
+
+// POST /:id/duplicate —— 复制（formulas.create）
+formulas.post('/:id/duplicate', requirePermission('formulas.create'), async (c) => {
+  const auth = getAuth(c);
+  const orig = await prisma.reagentFormula.findUnique({
+    where: { id: c.req.param('id') },
+    include: { components: true },
+  });
+  if (!orig) return c.json({ error: '配方不存在' }, 404);
+
+  const code = await nextCode(prisma, 'FORMULA', { fallbackPrefix: 'FRM-', padding: 3 });
+  const created = await prisma.reagentFormula.create({
+    data: {
+      code,
+      name: orig.name ? `${orig.name}（复制）` : `${orig.code}（复制）`,
+      type: orig.type,
+      pH: orig.pH,
+      status: 'DRAFT',
+      projectId: orig.projectId,
+      procedure: orig.procedure,
+      notes: orig.notes,
+      createdById: auth.userId,
+      components: {
+        create: orig.components.map((comp) => ({
+          materialId: comp.materialId,
+          customName: comp.customName,
+          concentration: comp.concentration,
+          unit: comp.unit,
+          concentrationText: comp.concentrationText,
+          notes: comp.notes,
+          sortOrder: comp.sortOrder,
+        })),
       },
-      include: { components: true }
-    });
-
-    return c.json({ success: true, formula: created });
-  } catch (err) {
-    console.error('复制配方失败', err);
-    return c.json({ error: '复制配方失败' }, 500);
-  }
+    },
+    include: { components: true },
+  });
+  return c.json({ success: true, formula: created });
 });
 
 export default formulas;

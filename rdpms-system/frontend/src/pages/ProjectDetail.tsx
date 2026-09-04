@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { projectAPI, progressAPI, userAPI } from '../api/client';
-import { useAppStore } from '../store/appStore';
+import { projectAPI, progressAPI, userAPI } from '@/api';
+import { useHasPerm, PERMS } from '../auth/permissions';
 import KanbanBoard from '../components/KanbanBoard';
 import PhaseProgressBar from '../components/PhaseProgressBar';
 import EditProjectModal from '../components/EditProjectModal';
@@ -9,7 +9,9 @@ import AddMemberModal from '../components/AddMemberModal';
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
-  const { projects: _projects } = useAppStore();
+
+  const canEdit = useHasPerm(PERMS.PROJECTS_EDIT);
+  const canManageMembers = useHasPerm(PERMS.PROJECTS_MANAGE_MEMBERS);
   const [project, setProject] = useState<any>(null);
   const [progress, setProgress] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,10 +38,9 @@ export default function ProjectDetail() {
         projectAPI.get(id),
         progressAPI.get(id, 6)
       ]);
-      const proj = (projectData as any).data ? (projectData as any).data : projectData;
-      const progRaw = (progressData as any).data ? (progressData as any).data : progressData;
-      setProject(proj);
-      setProgress(Array.isArray(progRaw) ? progRaw : (progRaw?.list || []));
+      setProject(projectData);
+      const progRaw = progressData as any;
+      setProgress(Array.isArray(progRaw) ? progRaw : (progRaw?.items ?? progRaw?.items ?? []));
     } catch (err) {
       console.error('Failed to load project:', err);
     } finally {
@@ -48,11 +49,11 @@ export default function ProjectDetail() {
   };
 
   const statusColors: Record<string, string> = {
-    '进行中': 'bg-primary-500',
-    '已完成': 'bg-green-500',
-    '待加工': 'bg-orange-500',
-    '待验证': 'bg-yellow-500',
-    '规划中': 'bg-gray-400',
+    'IN_PROGRESS': 'bg-primary-500',
+    'COMPLETED': 'bg-green-500',
+    'PENDING_PROCESSING': 'bg-orange-500',
+    'PENDING_VERIFICATION': 'bg-yellow-500',
+    'PLANNING': 'bg-gray-400',
   };
 
   const availableUsers = useMemo(() => {
@@ -60,14 +61,16 @@ export default function ProjectDetail() {
     return users.filter((user) => !memberIds.has(user.id));
   }, [project?.members, users]);
 
+
   const openMemberModal = async () => {
+    if (!canManageMembers) return;
     setShowMemberModal(true);
     setSelectedMemberId('');
     setMemberRole('member');
     setLoadingUsers(true);
     try {
       const res = await userAPI.list();
-      const data = res.users ?? res.list ?? res.data ?? res;
+      const data = res.items ?? [];
       setUsers(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Failed to load users:', err);
@@ -132,8 +135,12 @@ export default function ProjectDetail() {
             </div>
           </div>
           <div className="flex space-x-2">
-            <button className="btn btn-secondary" onClick={() => setShowEditModal(true)}>编辑</button>
-            <button className="btn btn-primary" onClick={openMemberModal}>添加成员</button>
+            {canEdit && (
+              <button className="btn btn-secondary" onClick={() => setShowEditModal(true)}>编辑</button>
+            )}
+            {canManageMembers && (
+              <button className="btn btn-primary" onClick={openMemberModal}>添加成员</button>
+            )}
           </div>
         </div>
         
@@ -247,9 +254,9 @@ export default function ProjectDetail() {
                   <div key={task.id} className="px-5 py-3 flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <div className={`w-2 h-2 rounded-full ${
-                        task.status === '已完成' ? 'bg-green-500' :
-                        task.status === '进行中' ? 'bg-primary-500' :
-                        task.status === '已阻塞' ? 'bg-red-500' : 'bg-gray-300'
+                        task.status === 'COMPLETED' ? 'bg-green-500' :
+                        task.status === 'IN_PROGRESS' ? 'bg-primary-500' :
+                        task.status === 'BLOCKED' ? 'bg-red-500' : 'bg-gray-300'
                       }`} />
                       <span className="text-gray-900">{task.title}</span>
                     </div>

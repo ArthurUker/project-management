@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { prisma } from '../index.js';
-import { authMiddleware, adminMiddleware } from './auth.js';
+import { authenticate as authMiddleware, requirePermission, getAuth } from '../kernel/rbac.js';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { SEED_REGULATORY_DOCUMENTS } from '../data/regulatoryDocumentsSeed.js';
@@ -10,15 +10,9 @@ const STORAGE_DIR = path.resolve(process.cwd(), 'uploads', 'regulatory-documents
 
 regulatoryDocuments.use('*', authMiddleware);
 
-const ROLE_PERMISSIONS = {
-  admin: ['registrations.view', 'registrations.edit', 'registrations.approve'],
-  manager: ['registrations.view', 'registrations.edit'],
-  member: ['registrations.view'],
-};
-
-function hasPerm(role, perm) {
-  const perms = ROLE_PERMISSIONS[role] || [];
-  return perms.includes(perm);
+// M-1：权限真源 = permissions 表（系统权限）；本路由使用 requirePermission/内嵌权限判定
+function hasPerm(c, perm) {
+  return getAuth(c).permissions.includes(perm);
 }
 
 function sanitizeFileName(fileName = '') {
@@ -73,9 +67,9 @@ async function findOriginalFile(documentId) {
   return { fileBuffer, originalName };
 }
 
-regulatoryDocuments.get('/', async (c) => {
-  const role = c.get('userRole');
-  if (!hasPerm(role, 'registrations.view')) {
+regulatoryDocuments.get('/', requirePermission('regulatory_documents.view'), async (c) => {
+  const role = c.get('auth')?.systemRole;
+  if (!hasPerm(c, 'regulatory_documents.view')) {
     return c.json({ error: 'Forbidden', code: 403 }, 403);
   }
 
@@ -124,9 +118,9 @@ regulatoryDocuments.get('/', async (c) => {
   });
 });
 
-regulatoryDocuments.get('/:id', async (c) => {
-  const role = c.get('userRole');
-  if (!hasPerm(role, 'registrations.view')) {
+regulatoryDocuments.get('/:id', requirePermission('regulatory_documents.view'), async (c) => {
+  const role = c.get('auth')?.systemRole;
+  if (!hasPerm(c, 'regulatory_documents.view')) {
     return c.json({ error: 'Forbidden', code: 403 }, 403);
   }
 
@@ -142,9 +136,9 @@ regulatoryDocuments.get('/:id', async (c) => {
   return c.json(item);
 });
 
-regulatoryDocuments.post('/', async (c) => {
-  const role = c.get('userRole');
-  if (!hasPerm(role, 'registrations.edit')) {
+regulatoryDocuments.post('/', requirePermission('regulatory_documents.create'), async (c) => {
+  const role = c.get('auth')?.systemRole;
+  if (!hasPerm(c, 'regulatory_documents.update')) {
     return c.json({ error: 'Forbidden', code: 403 }, 403);
   }
 
@@ -176,9 +170,9 @@ regulatoryDocuments.post('/', async (c) => {
   return c.json(item, 201);
 });
 
-regulatoryDocuments.put('/:id', async (c) => {
-  const role = c.get('userRole');
-  if (!hasPerm(role, 'registrations.edit')) {
+regulatoryDocuments.put('/:id', requirePermission('regulatory_documents.update'), async (c) => {
+  const role = c.get('auth')?.systemRole;
+  if (!hasPerm(c, 'regulatory_documents.update')) {
     return c.json({ error: 'Forbidden', code: 403 }, 403);
   }
 
@@ -216,9 +210,9 @@ regulatoryDocuments.put('/:id', async (c) => {
   return c.json(item);
 });
 
-regulatoryDocuments.delete('/:id', async (c) => {
-  const role = c.get('userRole');
-  if (!hasPerm(role, 'registrations.edit')) {
+regulatoryDocuments.delete('/:id', requirePermission('regulatory_documents.delete'), async (c) => {
+  const role = c.get('auth')?.systemRole;
+  if (!hasPerm(c, 'regulatory_documents.update')) {
     return c.json({ error: 'Forbidden', code: 403 }, 403);
   }
 
@@ -239,8 +233,8 @@ regulatoryDocuments.delete('/:id', async (c) => {
 });
 
 regulatoryDocuments.post('/import', async (c) => {
-  const role = c.get('userRole');
-  if (!hasPerm(role, 'registrations.edit')) {
+  const role = c.get('auth')?.systemRole;
+  if (!hasPerm(c, 'regulatory_documents.update')) {
     return c.json({ error: 'Forbidden', code: 403 }, 403);
   }
 
@@ -289,7 +283,7 @@ regulatoryDocuments.post('/import', async (c) => {
   return c.json(item, 201);
 });
 
-regulatoryDocuments.post('/seed', adminMiddleware, async (c) => {
+regulatoryDocuments.post('/seed', requirePermission('regulatory_documents.create'), async (c) => {
   try {
     let created = 0;
     let skipped = 0;
@@ -337,8 +331,8 @@ regulatoryDocuments.post('/seed', adminMiddleware, async (c) => {
 });
 
 regulatoryDocuments.post('/:id/original-file', async (c) => {
-  const role = c.get('userRole');
-  if (!hasPerm(role, 'registrations.edit')) {
+  const role = c.get('auth')?.systemRole;
+  if (!hasPerm(c, 'regulatory_documents.update')) {
     return c.json({ error: 'Forbidden', code: 403 }, 403);
   }
 
@@ -369,8 +363,8 @@ regulatoryDocuments.post('/:id/original-file', async (c) => {
 });
 
 regulatoryDocuments.get('/:id/original-file', async (c) => {
-  const role = c.get('userRole');
-  if (!hasPerm(role, 'registrations.view')) {
+  const role = c.get('auth')?.systemRole;
+  if (!hasPerm(c, 'regulatory_documents.view')) {
     return c.json({ error: 'Forbidden', code: 403 }, 403);
   }
 

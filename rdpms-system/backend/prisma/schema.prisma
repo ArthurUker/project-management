@@ -1,589 +1,1499 @@
-// Prisma Schema for RD PMS
-// Database: SQLite
+// =============================================================================
+// RDPMS / IVD 注册研发项目管理系统 —— PostgreSQL-only baseline schema
+//
+// 唯一真值：本文件。任何 DDL 变更必须先改本文件 → 生成迁移 → migrate deploy。
+// 旧 SQLite 迁移与 dev.db 已于本次重构删除，不做任何兼容。
+//
+// 约定（违反即为缺陷）：
+//   1. 所有时间戳用 @db.Timestamptz(3)（Prisma 默认 timestamp 不带时区，必须显式覆盖）
+//   2. 所有 JSON 用 Json @db.JsonB
+//   3. 所有业务日期（无时刻语义）用 @db.Date
+//   4. 所有金额/浓度/分子量用 Decimal 并显式精度
+//   5. 表与列统一 snake_case（@@map / @map）
+//   6. 状态/类型一律 Prisma enum（英文值），中文展示由 enum_meta 提供
+//   7. 业务编号一经生成永不复用；删除后只能 restore，不能重建同编号
+//   8. 文件只存元数据，二进制绝不入库
+// =============================================================================
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
+
+// ============================== 枚举 ========================================
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+  LOCKED
+  PENDING_ACTIVATION
+}
+
+// M-1 v1.0：六角色固定集合。旧的两个项目侧角色成员已废弃删除（详见 M-1 v1.0 §5.1）。
+enum SystemRole {
+  SUPER_ADMIN
+  ADMIN
+  MANAGER
+  MEMBER
+  VIEWER
+  AUDITOR
+}
+
+// ── 前端/后端共用的补充枚举（preflight 5.2 门禁要求；M-1 §5.1 未列明，
+//    见 W9 报告「未闭环问题」P1 项）─────────────────────────────────────────
+enum TemplateCategory {
+  IVD_REGISTRATION
+  REAGENT_CHIP
+  DEVICE
+  OTHER
+}
+
+enum MaterialStatus {
+  ACTIVE
+  DEPRECATED
+  ARCHIVED
+}
+
+enum LotStatus {
+  AVAILABLE
+  RESERVED
+  DEPLETED
+  EXPIRED
+  QUARANTINED
+  DISPOSED
+}
+
+// Q-b（W10 / Contract Review v2）：法规文档独立状态枚举（含 SUPERSEDED）
+enum RegulatoryDocStatus {
+  ACTIVE
+  DRAFT
+  ARCHIVED
+  SUPERSEDED
+}
+
+enum ProjectStatus {
+  PLANNING
+  IN_PROGRESS
+  PENDING_PROCESSING
+  PENDING_VERIFICATION
+  ON_HOLD
+  COMPLETED
+  ARCHIVED
+  CANCELLED
+}
+
+enum ProjectType {
+  PLATFORM
+  CUSTOMIZATION
+  COLLABORATION
+  TESTING
+  APPLICATION
+}
+
+enum ProjectMemberRole {
+  OWNER
+  MANAGER
+  MEMBER
+  VIEWER
+}
+
+enum TemplateStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum PhaseStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  BLOCKED
+  SKIPPED
+  CANCELLED
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  BLOCKED
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TaskType {
+  CLASSIFICATION
+  STRATEGY
+  REGISTRATION_DOSSIER
+  LABELING
+  QMS
+  CLINICAL_EVALUATION
+  CLINICAL_EVALUATION_EXEMPTION
+  CLINICAL_TRIAL
+  ANALYTICAL_VALIDATION
+  PERFORMANCE_VALIDATION
+  SOFTWARE
+  SUBMISSION
+  POST_MARKET
+  DESIGN_INPUT
+  DESIGN_OUTPUT
+  PRODUCTION
+  STABILITY
+  OTHER
+}
+
+enum TaskApplicability {
+  REQUIRED
+  CONDITIONAL
+  NOT_APPLICABLE
+  TO_BE_CONFIRMED
+}
+
+enum PriorityLevel {
+  P0
+  P1
+  P2
+  P3
+  P4
+}
+
+enum Applicability {
+  CORE
+  CONDITIONAL
+  POST_MARKET
+  LOW_RELEVANCE
+  NOT_APPLICABLE
+}
+
+enum RegulatoryRegion {
+  MACAO_ISAF
+  MAINLAND_NMPA
+  HONG_KONG
+  EU_IVDR
+  US_FDA
+  ISO
+  OTHER
+}
+
+enum RegulatoryCategory {
+  CLASSIFICATION
+  CLINICAL_EVALUATION
+  CLINICAL_EVALUATION_EXEMPTION
+  CLINICAL_TRIAL
+  CLINICAL_TRIAL_PERMISSION
+  LABELING
+  REGISTRATION_DOSSIER
+  PRIORITY_REVIEW
+  CONDITIONAL_APPROVAL
+  RENEWAL
+  REGISTRATION_CHANGE
+  FILING
+  FILING_CHANGE
+  SPECIAL_APPROVAL
+  THIRD_PARTY_REVIEW
+  QMS
+  QMS_IVD
+  QMS_STERILE
+  QMS_IMPLANTABLE
+  QMS_SPECIAL
+  SOFTWARE_QMS
+  MANUFACTURING_QMS_DOC
+  CONTRACT_MANUFACTURING
+  MANUFACTURER_NAMING
+  MANUFACTURER_OTHER_PRODUCTS
+  DISTRIBUTION_ACCESS
+  OTHER
+}
+
+enum RegistrationType {
+  IVD
+  MEDICAL_DEVICE
+  IVD_SOFTWARE
+  COMBINATION
+  OTHER
+}
+
+enum RegistrationStage {
+  DOSSIER_PREPARATION
+  SUBMISSION_ACCEPTED
+  TECHNICAL_REVIEW
+  ADMIN_APPROVAL
+  CERTIFIED
+  ARCHIVED
+}
+
+enum RiskLevel {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum DocType {
+  SOP
+  TEMPLATE
+  GUIDE
+  REFERENCE
+  REGULATION
+  PROTOCOL
+  REPORT
+  FORM
+}
+
+enum DocumentStatus {
+  DRAFT
+  ACTIVE
+  DEPRECATED
+  ARCHIVED
+}
+
+enum ReportType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  PHASE
+  AD_HOC
+}
+
+enum ReportStatus {
+  DRAFT
+  SUBMITTED
+  REVIEWING
+  NEEDS_REVISION
+  REVIEWED
+  ARCHIVED
+}
+
+enum MaterialCategory {
+  BUFFER
+  SALT
+  ENZYME
+  DYE
+  NUCLEIC_ACID
+  SOLVENT
+  ACID_BASE
+  SURFACTANT
+  OTHER
+}
+
+enum MaterialState {
+  SOLID
+  LIQUID
+  SOLUTION
+  GAS
+}
+
+enum ConcentrationUnit {
+  M
+  MM
+  UM
+  NM
+  NG_PER_UL
+  MG_PER_ML
+  PERCENT
+  X
+  OTHER
+}
+
+enum FormulaType {
+  BUFFER
+  LYSIS
+  WASH
+  REACTION_MIX
+  PCR_MIX
+  STOCK
+  OTHER
+}
+
+enum FormulaStatus {
+  DRAFT
+  ACTIVE
+  DEPRECATED
+  ARCHIVED
+}
+
+enum PrimerType {
+  PRIMER
+  PROBE
+}
+
+enum SampleType {
+  REFERENCE_STANDARD
+  CLINICAL_SAMPLE
+  CONTROL
+  BLANK_MATRIX
+  SIMULATED
+  OTHER
+}
+
+// M-1 v1.0：隔离状态统一使用 QUARANTINED（废弃旧的全词拼写），并补齐 RESERVED/USED/DISPOSED。
+enum SampleStatus {
+  AVAILABLE
+  RESERVED
+  USED
+  DEPLETED
+  EXPIRED
+  QUARANTINED
+  SEALED
+  DISPOSED
+}
+
+enum EntityType {
+  USER
+  PROJECT
+  PROJECT_PHASE
+  TASK
+  MILESTONE
+  REPORT
+  MONTHLY_PROGRESS
+  DOCUMENT
+  DOC_VERSION
+  REGULATORY_DOCUMENT
+  REGISTRATION_PROFILE
+  FORMULA
+  PREP_RECORD
+  PRIMER
+  SAMPLE
+  TEMPLATE
+}
+
+enum FileStorageProvider {
+  LOCAL
+  S3
+  OSS
+  COS
+}
+
+// M-1 v1.0：SKIPPED = 未配置扫描（不得在 UI 显示为「安全」）。
+enum FileScanStatus {
+  SKIPPED
+  PENDING
+  CLEAN
+  INFECTED
+  FAILED
+}
+
+// M-1 §4：AuditLog.action 为 String @db.VarChar(64)，19 项取值走 EnumMeta('AuditAction')。
+// 禁止恢复 Prisma enum AuditAction。
+
+enum LogLevel {
+  DEBUG
+  INFO
+  WARN
+  ERROR
+  FATAL
+}
+
+// ======================= 身份、角色、权限、会话 ==============================
 
 model User {
-  id          String   @id @default(uuid())
-  username    String   @unique
-  password    String
-  name        String
-  position    String   @default("")
-  department  String   @default("")
-  role        String   @default("member") // admin / manager / member
-  status      String   @default("active")  // active / disabled
-  avatar      String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                 String     @id @default(uuid()) @map("id")
+  // 规范化小写存储（DB 层 CHECK(username = lower(username)) 兜底），避免大小写产生第二个身份
+  username           String     @unique @map("username") @db.VarChar(64)
+  email              String?    @unique @map("email") @db.VarChar(255)
+  passwordHash       String     @map("password_hash") @db.VarChar(255)
+  mustChangePassword Boolean    @default(false) @map("must_change_password")
+  passwordChangedAt  DateTime?  @map("password_changed_at") @db.Timestamptz(3)
+  displayName        String     @map("display_name") @db.VarChar(128)
+  position           String?    @map("position") @db.VarChar(128)
+  department         String?    @map("department") @db.VarChar(128)
+  phone              String?    @map("phone") @db.VarChar(32)
+  systemRole         SystemRole @default(MEMBER) @map("system_role")
+  status             UserStatus @default(ACTIVE) @map("status")
+  avatarFileId       String?    @unique @map("avatar_file_id")
 
-  managedProjects  Project[]        @relation("ProjectManager")
-  projectMembers  ProjectMember[]
-  assignedTasks   Task[]           @relation("TaskAssignee")
-  reports         Report[]
-  submittedProgress MonthlyProgress[] @relation("ProgressSubmitter")
-  approvedReports Report[]         @relation("ReportApprover")
-  systemLogs      SystemLog[]
-  createdDocs     DocDocument[]    @relation("DocCreator")
-  approvedDocs    DocDocument[]    @relation("DocApprover")
-  createdDocVersions DocVersion[]  @relation("DocVersionCreator")
-  createdTemplates ProjectTemplate[] @relation("TemplateCreator")
+  // 登录安全
+  lastLoginAt         DateTime? @map("last_login_at") @db.Timestamptz(3)
+  lastLoginIp         String?   @map("last_login_ip") @db.VarChar(45)
+  failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
+  lockedUntil         DateTime? @map("locked_until") @db.Timestamptz(3)
 
-  createdFormulas  ReagentFormula[] @relation("FormulaCreator")
-  prepRecords      PrepRecord[]     @relation("PrepRecordCreator")
-  registrationProfilesOwned ProjectRegistrationProfile[] @relation("RegistrationComplianceOwner")
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdById String?   @map("created_by_id")
+  updatedById String?   @map("updated_by_id")
+
+  avatarFile   FileObject? @relation("UserAvatar", fields: [avatarFileId], references: [id], onDelete: SetNull)
+  createdBy    User?       @relation("UserCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy    User?       @relation("UserUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  createdUsers User[]      @relation("UserCreatedBy")
+  updatedUsers User[]      @relation("UserUpdatedBy")
+
+  roles                UserRole[]
+  refreshTokens        RefreshToken[]
+  managedProjects      Project[]             @relation("ProjectManager")
+  memberships          ProjectMember[]
+  assignedTasks        Task[]                @relation("TaskAssignee")
+  authoredReports      Report[]              @relation("ReportAuthor")
+  reviewedReports      Report[]              @relation("ReportReviewer")
+  monthlyProgress      MonthlyProgress[]
+  ownedDocs            DocDocument[]         @relation("DocOwner")
+  reviewedDocs         DocDocument[]         @relation("DocReviewer")
+  docVersions          DocVersion[]
+  reportVersions       ReportVersion[]       @relation("ReportVersionCreator")
+  createdTemplates     ProjectTemplate[]     @relation("TemplateCreator")
+  createdTaskTemplates TaskTemplate[]        @relation("TaskTemplateCreator")
+  formulas             ReagentFormula[]      @relation("FormulaCreator")
+  prepRecords          PrepRecord[]
+  primers              Primer[]
+  samples              SampleMaterial[]
+  uploadedFiles        FileObject[]
+  attachments          Attachment[]
+  registrationProfiles RegistrationProfile[] @relation("RegistrationComplianceOwner")
+  auditLogs            AuditLog[]
+  systemLogs           SystemLog[]
+
+  @@index([systemRole, status])
+  @@index([department])
+  @@index([deletedAt])
+  @@map("users")
 }
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @map("id")
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash") @db.VarChar(128)
+  familyId  String    @map("family_id") // 刷新令牌轮换与重放检测
+  userAgent String?   @map("user_agent") @db.VarChar(512)
+  ip        String?   @map("ip") @db.VarChar(45)
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model Role {
+  id          String  @id @default(uuid()) @map("id")
+  code        String  @unique @map("code") @db.VarChar(64)
+  name        String  @map("name") @db.VarChar(128)
+  description String? @map("description")
+  isSystem    Boolean @default(false) @map("is_system") // 系统内置角色不可删除
+  sortOrder   Int     @default(0) @map("sort_order")
+
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdById String?   @map("created_by_id")
+  updatedById String?   @map("updated_by_id")
+
+  permissions RolePermission[]
+  users       UserRole[]
+
+  @@index([deletedAt])
+  @@map("roles")
+}
+
+// M-1 v1.0：权限真源。code 命名空间 = resource.action（小写下划线）。
+// 首版只播种 P0 90 条；P1 30 条不入库。
+// isHighRisk 标注 8 项高危（见 M-1 §5），仅作展示/审计提示，不参与鉴权判定。
+model Permission {
+  id          String   @id @default(uuid()) @map("id")
+  code        String   @unique @map("code") @db.VarChar(64)
+  name        String   @map("name") @db.VarChar(128)
+  description String?  @map("description")
+  module      String?  @map("module") @db.VarChar(64) // users / projects / reagents ...
+  isHighRisk  Boolean  @default(false) @map("is_high_risk")
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  roles RolePermission[]
+
+  @@index([module, sortOrder])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String @map("role_id")
+  permissionId String @map("permission_id")
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userId       String   @map("user_id")
+  roleId       String   @map("role_id")
+  assignedAt   DateTime @default(now()) @map("assigned_at") @db.Timestamptz(3)
+  assignedById String?  @map("assigned_by_id")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@index([roleId])
+  @@map("user_roles")
+}
+
+// ============================ 项目与模板 ====================================
 
 model Project {
-  id          String   @id @default(uuid())
-  code        String   @unique // PRJ-2026-001
-  name        String
-  type        String   // platform / 定制 / 合作 / 测试 / 应用
-  isDraft     Boolean  @default(false)
-  subtype     String?  // 2.0C / 3.0 / 海南大学 / 黑马 等
-  status      String   @default("进行中") // 规划中 / 进行中 / 待加工 / 待验证 / 已完成 / 已归档
-  position    String?  // 项目定位/描述
-  managerId   String
-  templateId  String?  // 套用的模版ID，空白项目为null
-  startDate   DateTime?
-  endDate     DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String        @id @default(uuid()) @map("id")
+  code          String        @unique @map("code") @db.VarChar(64) // PRJ-2026-001，编号永不复用
+  name          String        @map("name") @db.VarChar(255)
+  type          ProjectType   @map("type")
+  subtype       String?       @map("subtype") @db.VarChar(128)
+  status        ProjectStatus @default(PLANNING) @map("status")
+  isDraft       Boolean       @default(false) @map("is_draft")
+  positioning   String?       @map("positioning") // 项目定位/描述（旧字段名 position 与"职位"歧义）
+  managerId     String        @map("manager_id")
+  templateId    String?       @map("template_id")
+  startDate     DateTime?     @map("start_date") @db.Date
+  endDate       DateTime?     @map("end_date") @db.Date
+  actualEndDate DateTime?     @map("actual_end_date") @db.Date
+  metadata      Json?         @map("metadata") @db.JsonB // 仅扩展属性，禁止堆放业务字段
 
-  manager         User              @relation("ProjectManager", fields: [managerId], references: [id])
-  template        ProjectTemplate?  @relation("ProjectTemplate", fields: [templateId], references: [id], onDelete: SetNull)
-  members         ProjectMember[]
-  reports         Report[]
-  tasks           Task[]
-  milestones      Milestone[]
-  monthlyProgress MonthlyProgress[]
-  reagentFormulas ReagentFormula[]
-  samples         SampleMaterial[]  @relation("ProjectSamples")
-  registrationProfile ProjectRegistrationProfile?
-}
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdById String?   @map("created_by_id")
+  updatedById String?   @map("updated_by_id")
 
-model ProjectRegistrationProfile {
-  id                    String   @id @default(uuid())
-  projectId             String   @unique
-  registrationType      String   @default("IVD")
-  region                String?
-  authority             String?
-  submissionNo          String?
-  certificateNo         String?
-  currentStage          String?  // 资料准备 / 送检受理 / 技术审评 / 行政审批 / 取证归档
-  plannedSubmissionDate DateTime?
-  expectedApprovalDate  DateTime?
-  complianceOwnerId     String?
-  riskLevel             String   @default("中") // 高 / 中 / 低
-  notes                 String?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  manager             User                 @relation("ProjectManager", fields: [managerId], references: [id], onDelete: Restrict)
+  template            ProjectTemplate?     @relation("ProjectTemplate", fields: [templateId], references: [id], onDelete: SetNull)
+  members             ProjectMember[]
+  phases              ProjectPhase[]
+  tasks               Task[]
+  milestones          Milestone[]
+  reports             Report[]
+  monthlyProgress     MonthlyProgress[]
+  formulas            ReagentFormula[]
+  primers             Primer[]
+  samples             SampleMaterial[]
+  registrationProfile RegistrationProfile?
 
-  project          Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  complianceOwner  User?   @relation("RegistrationComplianceOwner", fields: [complianceOwnerId], references: [id], onDelete: SetNull)
-
-  @@index([registrationType])
-  @@index([currentStage])
-  @@index([complianceOwnerId])
-}
-
-// 项目模板中的角色定义
-model ProjectRoleDefinition {
-  id          String   @id @default(uuid())
-  templateId  String
-  name        String   // 角色名称，如"项目负责人"、"技术负责人"、"成员"、"参与者"
-  description String?  // 角色描述
-  permissions String?  // 权限标签（逗号分隔），如"view,edit,approve"
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  template    ProjectTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-
-  @@unique([templateId, name])
+  @@index([status, deletedAt])
+  @@index([managerId])
+  @@index([type])
   @@index([templateId])
-}
-
-model ProjectTemplate {
-  id          String   @id @default(uuid())
-  code        String   @unique
-  name        String
-  description String?
-  category    String?  // reagent_chip | device
-  type        String?  // 子类型标签，如"快速验证型"
-  parentId    String?
-  isMaster    Boolean  @default(false)
-  content     String?  // JSON 描述模版内容，如 phases/tasks/milestones
-  preview     String?  // 模板结构预览（JSON），包含阶段数、角色、任务数统计
-  createdBy   String
-  status      String   @default("active") // active | archived
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  parent      ProjectTemplate?  @relation("TemplateTree", fields: [parentId], references: [id])
-  children    ProjectTemplate[] @relation("TemplateTree")
-  creator     User              @relation("TemplateCreator", fields: [createdBy], references: [id])
-  projects    Project[]         @relation("ProjectTemplate")
-  roles       ProjectRoleDefinition[]
-
-  @@index([category])
-  @@index([parentId])
+  @@index([startDate])
+  @@map("projects")
 }
 
 model ProjectMember {
-  id        String   @id @default(uuid())
-  projectId String
-  userId    String
-  role      String   @default("member") // manager / member / viewer
-  joinedAt  DateTime @default(now())
+  id          String            @id @default(uuid()) @map("id")
+  projectId   String            @map("project_id")
+  userId      String            @map("user_id")
+  role        ProjectMemberRole @default(MEMBER) @map("role")
+  joinedAt    DateTime          @default(now()) @map("joined_at") @db.Timestamptz(3)
+  leftAt      DateTime?         @map("left_at") @db.Timestamptz(3) // 退出不删行，保证成员全量唯一
+  createdById String?           @map("created_by_id")
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, userId])
+  @@index([userId, leftAt])
+  @@map("project_members")
 }
 
-// 汇报主表（最新状态）
-model Report {
-  id          String    @id @default(uuid())
-  userId      String
-  projectId   String
-  reportType  String    @default("日报") // 日报 / 周报 / 月报
-  month       String    // 2026-03
-  content     String    // JSON格式汇报内容
-  status      String    @default("草稿") // 草稿 / 已提交 / 已阅 / 需修改
-  submittedAt DateTime?
-  approvedBy  String?
-  approvedAt  DateTime?
-  approveNote String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+model ProjectTemplate {
+  id          String         @id @default(uuid()) @map("id")
+  code        String         @unique @map("code") @db.VarChar(64)
+  name        String         @map("name") @db.VarChar(255)
+  description String?        @map("description")
+  category    String?        @map("category") @db.VarChar(64) // reagent_chip | device
+  typeLabel   String?        @map("type_label") @db.VarChar(128)
+  status      TemplateStatus @default(ACTIVE) @map("status")
+  isMaster    Boolean        @default(false) @map("is_master")
+  parentId    String?        @map("parent_id")
+  config      Json?          @map("config") @db.JsonB // 仅保留真正无固定结构的配置
 
-  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  project    Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  approver   User?            @relation("ReportApprover", fields: [approvedBy], references: [id])
-  versions   ReportVersion[]
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdById String    @map("created_by_id")
+  updatedById String?   @map("updated_by_id")
 
-  @@unique([userId, projectId, month, reportType])
+  parent   ProjectTemplate?  @relation("TemplateTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children ProjectTemplate[] @relation("TemplateTree")
+  creator  User              @relation("TemplateCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  projects Project[]         @relation("ProjectTemplate")
+  phases   TemplatePhase[]
+  roles    TemplateRole[]
+
+  @@index([parentId])
+  @@index([category, status])
+  @@map("project_templates")
 }
 
-// 汇报历史版本
-model ReportVersion {
-  id          String   @id @default(uuid())
-  reportId    String
-  version     Int
-  content     String   // 该版本的内容
-  createdAt   DateTime @default(now())
+model TemplateRole {
+  id          String   @id @default(uuid()) @map("id")
+  templateId  String   @map("template_id")
+  code        String   @map("code") @db.VarChar(64) // owner / tech_lead / member
+  name        String   @map("name") @db.VarChar(128)
+  description String?  @map("description")
+  permissions String[] @map("permissions") // PG 原生 text[]，替代逗号分隔字符串
+  sortOrder   Int      @default(0) @map("sort_order")
 
-  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  template ProjectTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
-  @@unique([reportId, version])
+  @@unique([templateId, code])
+  @@index([templateId])
+  @@map("template_roles")
 }
 
-// 项目月度进展
-model MonthlyProgress {
-  id            String   @id @default(uuid())
-  projectId     String
-  month         String   // 2026-03
-  actualWork    String?  // 本月实际工作
-  completion    Int      @default(0) // 完成度百分比 0-100
-  nextPlan      String?  // 下月计划
-  risks         String?  // 风险问题
-  projectStatus String?  // 项目综合判断
-  submittedBy   String
-  submittedAt   DateTime @default(now())
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+model TemplatePhase {
+  id                     String  @id @default(uuid()) @map("id")
+  templateId             String  @map("template_id")
+  code                   String  @map("code") @db.VarChar(64)
+  name                   String  @map("name") @db.VarChar(255)
+  description            String? @map("description")
+  sortOrder              Int     @map("sort_order")
+  plannedStartOffsetDays Int?    @map("planned_start_offset_days") // 相对项目开始日的偏移
+  plannedDurationDays    Int?    @map("planned_duration_days")
+  isMilestone            Boolean @default(false) @map("is_milestone")
 
-  project    Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  submitter  User    @relation("ProgressSubmitter", fields: [submittedBy], references: [id])
+  template  ProjectTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  tasks     TemplateTask[]
+  instances ProjectPhase[]
 
-  @@unique([projectId, month])
+  @@unique([templateId, code])
+  @@index([templateId, sortOrder])
+  @@map("template_phases")
 }
+
+model TemplateTask {
+  id                  String            @id @default(uuid()) @map("id")
+  templatePhaseId     String            @map("template_phase_id")
+  code                String?           @map("code") @db.VarChar(64)
+  title               String            @map("title") @db.VarChar(500)
+  description         String?           @map("description")
+  taskType            TaskType          @default(OTHER) @map("task_type")
+  applicability       TaskApplicability @default(REQUIRED) @map("applicability")
+  regulatoryPriority  PriorityLevel     @default(P2) @map("regulatory_priority")
+  expectedDeliverable String?           @map("expected_deliverable")
+  regulatoryNotes     String?           @map("regulatory_notes")
+  estimatedHours      Decimal?          @map("estimated_hours") @db.Decimal(10, 2)
+  assigneeRoleCode    String?           @map("assignee_role_code") @db.VarChar(64) // 指向 TemplateRole.code
+  sortOrder           Int               @default(0) @map("sort_order")
+
+  templatePhase TemplatePhase @relation(fields: [templatePhaseId], references: [id], onDelete: Cascade)
+
+  @@unique([templatePhaseId, sortOrder, title])
+  @@index([templatePhaseId])
+  @@index([taskType])
+  @@map("template_tasks")
+}
+
+// 项目实例化后的阶段（旧系统只有字符串 phaseId，此处为结构性修复）
+model ProjectPhase {
+  id              String      @id @default(uuid()) @map("id")
+  projectId       String      @map("project_id")
+  templatePhaseId String?     @map("template_phase_id")
+  code            String      @map("code") @db.VarChar(64)
+  name            String      @map("name") @db.VarChar(255)
+  sortOrder       Int         @map("sort_order")
+  status          PhaseStatus @default(NOT_STARTED) @map("status")
+  plannedStart    DateTime?   @map("planned_start") @db.Date
+  plannedEnd      DateTime?   @map("planned_end") @db.Date
+  actualStart     DateTime?   @map("actual_start") @db.Date
+  actualEnd       DateTime?   @map("actual_end") @db.Date
+  progressPercent Int         @default(0) @map("progress_percent") // 0-100，CHECK 约束
+  isMilestone     Boolean     @default(false) @map("is_milestone")
+  notes           String?     @map("notes")
+
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdById String?   @map("created_by_id")
+  updatedById String?   @map("updated_by_id")
+
+  project       Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  templatePhase TemplatePhase?    @relation(fields: [templatePhaseId], references: [id], onDelete: SetNull)
+  tasks         Task[]
+  milestones    Milestone[]
+  outgoing      PhaseTransition[] @relation("TransitionFrom")
+  incoming      PhaseTransition[] @relation("TransitionTo")
+
+  @@unique([projectId, code])
+  @@index([projectId, sortOrder])
+  @@index([status, deletedAt])
+  @@map("project_phases")
+}
+
+model PhaseTransition {
+  id          String   @id @default(uuid()) @map("id")
+  fromPhaseId String   @map("from_phase_id")
+  toPhaseId   String   @map("to_phase_id")
+  condition   String?  @map("condition")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  fromPhase ProjectPhase @relation("TransitionFrom", fields: [fromPhaseId], references: [id], onDelete: Cascade)
+  toPhase   ProjectPhase @relation("TransitionTo", fields: [toPhaseId], references: [id], onDelete: Cascade)
+
+  @@unique([fromPhaseId, toPhaseId])
+  @@index([toPhaseId])
+  @@map("phase_transitions")
+}
+
+model Milestone {
+  id          String     @id @default(uuid()) @map("id")
+  projectId   String     @map("project_id")
+  phaseId     String?    @map("phase_id")
+  name        String     @map("name") @db.VarChar(255)
+  description String?    @map("description")
+  dueDate     DateTime   @map("due_date") @db.Date
+  status      TaskStatus @default(NOT_STARTED) @map("status")
+  completedAt DateTime?  @map("completed_at") @db.Timestamptz(3)
+
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdById String?   @map("created_by_id")
+  updatedById String?   @map("updated_by_id")
+
+  project Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  phase   ProjectPhase? @relation(fields: [phaseId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, dueDate])
+  @@index([status, dueDate])
+  @@index([phaseId])
+  @@map("milestones")
+}
+
+// ================================ 任务 ======================================
 
 model Task {
-  id          String    @id @default(uuid())
-  projectId   String
-  title       String
-  description String?
-  assigneeId  String?
-  status      String    @default("待开始") // 待开始 / 进行中 / 已完成 / 已阻塞
-  priority    String    @default("中") // 高 / 中 / 低
-  phase       String?   // 所属阶段名称（来自模版）
-  phaseId     String?   // 所属阶段ID（来自模版）
-  phaseOrder  Int?      // 阶段排序（用于进度条计算）
-  taskType    String?   // classification / registration_dossier / ...
-  applicabilityStatus String? @default("required") // required / conditional / not_applicable / to_be_confirmed
-  regulatoryPriority  String? @default("P2") // P0 / P1 / P2 / P3 / P4
-  expectedDeliverable String?
-  regulatoryNotes     String?
-  dueDate     DateTime?
-  completedAt DateTime?
-  docRefs     String?   // JSON数组，存储文档引用 {id, code, title, docType, version}
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id                  String            @id @default(uuid()) @map("id")
+  projectId           String            @map("project_id")
+  phaseId             String?           @map("phase_id")
+  parentId            String?           @map("parent_id")
+  templateTaskId      String?           @map("template_task_id")
+  code                String?           @map("code") @db.VarChar(64)
+  title               String            @map("title") @db.VarChar(500)
+  description         String?           @map("description")
+  assigneeId          String?           @map("assignee_id")
+  status              TaskStatus        @default(NOT_STARTED) @map("status")
+  priority            TaskPriority      @default(MEDIUM) @map("priority")
+  taskType            TaskType?         @map("task_type")
+  applicability       TaskApplicability @default(REQUIRED) @map("applicability")
+  regulatoryPriority  PriorityLevel?    @map("regulatory_priority")
+  expectedDeliverable String?           @map("expected_deliverable")
+  regulatoryNotes     String?           @map("regulatory_notes")
+  sortOrder           Int               @default(0) @map("sort_order")
+  estimatedHours      Decimal?          @map("estimated_hours") @db.Decimal(10, 2)
+  actualHours         Decimal?          @map("actual_hours") @db.Decimal(10, 2)
+  progressPercent     Int               @default(0) @map("progress_percent")
+  startDate           DateTime?         @map("start_date") @db.Date
+  dueDate             DateTime?         @map("due_date") @db.Date
+  startedAt           DateTime?         @map("started_at") @db.Timestamptz(3)
+  completedAt         DateTime?         @map("completed_at") @db.Timestamptz(3)
 
-  project  Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  assignee User?   @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdById String?   @map("created_by_id")
+  updatedById String?   @map("updated_by_id")
 
-  // 新增：前置任务依赖关系
-  prerequisites     TaskDependency[] @relation("TaskDependencies")
-  dependents        TaskDependency[] @relation("DependentTasks")
+  project  Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  phase    ProjectPhase? @relation(fields: [phaseId], references: [id], onDelete: SetNull)
+  parent   Task?         @relation("TaskHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children Task[]        @relation("TaskHierarchy")
+  assignee User?         @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+
+  prerequisites       TaskDependency[]         @relation("TaskDependencies")
+  dependents          TaskDependency[]         @relation("DependentTasks")
   regulatoryDocuments TaskRegulatoryDocument[]
+
+  @@unique([projectId, code])
+  @@index([projectId, status, deletedAt])
+  @@index([projectId, phaseId])
+  @@index([assigneeId, status])
+  @@index([dueDate])
+  @@index([parentId])
+  @@map("tasks")
+}
+
+// Q-a（W10 / Contract Review v2）：任务依赖类型四值枚举
+enum DependencyType {
+  FS
+  SS
+  FF
+  SF
 }
 
 model TaskDependency {
-  id              String   @id @default(cuid())
-  taskId          String
-  prerequisiteId  String
-  createdAt       DateTime @default(now())
+  id             String         @id @default(uuid()) @map("id")
+  taskId         String         @map("task_id")
+  prerequisiteId String         @map("prerequisite_id")
+  dependencyType DependencyType @default(FS) @map("dependency_type")
+  lagDays        Int            @default(0) @map("lag_days")
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
 
-  task            Task     @relation("DependentTasks", fields: [taskId], references: [id], onDelete: Cascade)
-  prerequisite    Task     @relation("TaskDependencies", fields: [prerequisiteId], references: [id], onDelete: Cascade)
+  task         Task @relation("DependentTasks", fields: [taskId], references: [id], onDelete: Cascade)
+  prerequisite Task @relation("TaskDependencies", fields: [prerequisiteId], references: [id], onDelete: Cascade)
 
   @@unique([taskId, prerequisiteId])
+  @@index([prerequisiteId])
+  @@map("task_dependencies")
 }
 
+model TaskTemplate {
+  id            String       @id @default(uuid()) @map("id")
+  code          String       @unique @map("code") @db.VarChar(64)
+  name          String       @map("name") @db.VarChar(255)
+  category      String?      @map("category") @db.VarChar(64)
+  description   String?      @map("description")
+  estimatedDays Int          @default(0) @map("estimated_days")
+  priority      TaskPriority @default(MEDIUM) @map("priority")
+  tags          String[]     @map("tags") // PG 原生 text[]
+
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdById String?   @map("created_by_id")
+  updatedById String?   @map("updated_by_id")
+
+  creator User?              @relation("TaskTemplateCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  steps   TaskTemplateStep[]
+
+  @@index([category, deletedAt])
+  @@map("task_templates")
+}
+
+model TaskTemplateStep {
+  id               String   @id @default(uuid()) @map("id")
+  templateId       String   @map("template_id")
+  sortOrder        Int      @map("sort_order")
+  title            String   @map("title") @db.VarChar(500)
+  description      String?  @map("description")
+  estimatedHours   Decimal? @map("estimated_hours") @db.Decimal(10, 2)
+  assigneeRoleCode String?  @map("assignee_role_code") @db.VarChar(64)
+  checklist        String[] @map("checklist") // PG 原生 text[]，替代逗号分隔
+
+  template TaskTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, sortOrder])
+  @@map("task_template_steps")
+}
+
+// =========================== 法规与注册资料 =================================
+
 model RegulatoryDocument {
-  id                String   @id @default(uuid())
-  dispatchNo        String   @unique
-  title             String
-  fullTitle         String?
-  category          String?
-  applicability     String   @default("conditional") // core / conditional / post_market / low_relevance / not_applicable
-  applicableToIvd   Boolean  @default(false)
-  priorityLevel     String   @default("P3") // P0 / P1 / P2 / P3 / P4
-  summary           String?
-  applicabilityNote String?
-  fileName          String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id                String             @id @default(uuid()) @map("id")
+  dispatchNo        String             @unique @map("dispatch_no") @db.VarChar(128)
+  title             String             @map("title") @db.VarChar(500)
+  fullTitle         String?            @map("full_title")
+  category          RegulatoryCategory @default(OTHER) @map("category")
+  region            RegulatoryRegion   @default(MACAO_ISAF) @map("region")
+  applicability     Applicability      @default(CONDITIONAL) @map("applicability")
+  applicableToIvd   Boolean            @default(false) @map("applicable_to_ivd")
+  priorityLevel     PriorityLevel      @default(P3) @map("priority_level")
+  summary           String?            @map("summary")
+  applicabilityNote String?            @map("applicability_note")
+  status            RegulatoryDocStatus @default(ACTIVE) @map("status")
+  effectiveDate     DateTime?          @map("effective_date") @db.Date
+  sourceUrl         String?            @map("source_url") @db.VarChar(1024)
+
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdById String?   @map("created_by_id")
+  updatedById String?   @map("updated_by_id")
 
   taskRelations TaskRegulatoryDocument[]
 
   @@index([priorityLevel])
-  @@index([applicability])
-  @@index([applicableToIvd])
+  @@index([applicability, applicableToIvd])
+  @@index([category, region])
+  @@map("regulatory_documents")
+}
+
+// Q-a2（W10 / Contract Review v2）：任务-法规文档关联类型五值枚举
+enum TaskRegulatoryRelationType {
+  BASIS
+  REFERENCE
+  CONDITIONAL
+  POST_MARKET
+  NOT_APPLICABLE
 }
 
 model TaskRegulatoryDocument {
-  taskId               String
-  regulatoryDocumentId String
-  relationType         String   @default("basis") // basis / reference / conditional / post_market / not_applicable
-  note                 String?
-  createdAt            DateTime @default(now())
+  taskId               String                    @map("task_id")
+  regulatoryDocumentId String                    @map("regulatory_document_id")
+  relationType         TaskRegulatoryRelationType @default(BASIS) @map("relation_type")
+  note                 String?                   @map("note")
+  createdAt            DateTime                  @default(now()) @map("created_at") @db.Timestamptz(3)
+  createdById          String?                   @map("created_by_id")
 
   task               Task               @relation(fields: [taskId], references: [id], onDelete: Cascade)
   regulatoryDocument RegulatoryDocument @relation(fields: [regulatoryDocumentId], references: [id], onDelete: Cascade)
 
   @@id([taskId, regulatoryDocumentId])
-  @@index([taskId])
   @@index([regulatoryDocumentId])
+  @@map("task_regulatory_documents")
 }
 
-model Milestone {
-  id          String    @id @default(uuid())
-  projectId   String
-  name        String
-  phaseId     String?
-  phaseName   String?
-  date        DateTime
-  status      String    @default("待完成") // 待完成 / 已完成 / 已延期
-  completedAt DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime @updatedAt
+model RegistrationProfile {
+  id                    String            @id @default(uuid()) @map("id")
+  projectId             String            @unique @map("project_id")
+  registrationType      RegistrationType  @default(IVD) @map("registration_type")
+  region                RegulatoryRegion  @default(MACAO_ISAF) @map("region")
+  authority             String?           @map("authority") @db.VarChar(255)
+  submissionNo          String?           @map("submission_no") @db.VarChar(128)
+  certificateNo         String?           @map("certificate_no") @db.VarChar(128)
+  currentStage          RegistrationStage @default(DOSSIER_PREPARATION) @map("current_stage")
+  riskLevel             RiskLevel         @default(MEDIUM) @map("risk_level")
+  plannedSubmissionDate DateTime?         @map("planned_submission_date") @db.Date
+  actualSubmissionDate  DateTime?         @map("actual_submission_date") @db.Date
+  expectedApprovalDate  DateTime?         @map("expected_approval_date") @db.Date
+  approvalDate          DateTime?         @map("approval_date") @db.Date
+  complianceOwnerId     String?           @map("compliance_owner_id")
+  notes                 String?           @map("notes")
 
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdById String?  @map("created_by_id")
+  updatedById String?  @map("updated_by_id")
+
+  project         Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  complianceOwner User?   @relation("RegistrationComplianceOwner", fields: [complianceOwnerId], references: [id], onDelete: SetNull)
+
+  @@index([registrationType, currentStage])
+  @@index([complianceOwnerId])
+  @@index([region])
+  @@map("registration_profiles")
 }
 
-model SystemLog {
-  id        String   @id @default(uuid())
-  action    String   // login / logout / report_submit / report_approve 等
-  userId    String
-  targetId  String?  // 关联的记录ID
-  detail    String?  // 详细描述
-  ip        String?
-  createdAt DateTime @default(now())
+// ========================= 汇报与月度进展 ===================================
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+model Report {
+  id             String       @id @default(uuid()) @map("id")
+  projectId      String       @map("project_id")
+  authorId       String       @map("author_id")
+  reviewerId     String?      @map("reviewer_id")
+  reportType     ReportType   @default(MONTHLY) @map("report_type")
+  periodKey      String       @map("period_key") @db.VarChar(16) // 2026-03 / 2026-W12 / 2026-03-05
+  periodStart    DateTime?    @map("period_start") @db.Date
+  periodEnd      DateTime?    @map("period_end") @db.Date
+  content        Json         @map("content") @db.JsonB
+  status         ReportStatus @default(DRAFT) @map("status")
+  currentVersion Int          @default(1) @map("current_version")
+  submittedAt    DateTime?    @map("submitted_at") @db.Timestamptz(3)
+  reviewedAt     DateTime?    @map("reviewed_at") @db.Timestamptz(3)
+  reviewNote     String?      @map("review_note")
+
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdById String?   @map("created_by_id")
+  updatedById String?   @map("updated_by_id")
+
+  project  Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author   User            @relation("ReportAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  reviewer User?           @relation("ReportReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  versions ReportVersion[]
+
+  @@unique([projectId, authorId, reportType, periodKey])
+  @@index([projectId, status, deletedAt])
+  @@index([authorId, periodKey])
+  @@map("reports")
 }
 
-// 知识库文档分类
+model ReportVersion {
+  id          String   @id @default(uuid()) @map("id")
+  reportId    String   @map("report_id")
+  version     Int      @map("version")
+  content     Json     @map("content") @db.JsonB
+  changelog   String?  @map("changelog")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  createdById String?  @map("created_by_id")
+
+  report  Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  creator User?  @relation("ReportVersionCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([reportId, version])
+  @@map("report_versions")
+}
+
+model MonthlyProgress {
+  id                String         @id @default(uuid()) @map("id")
+  projectId         String         @map("project_id")
+  periodKey         String         @map("period_key") @db.VarChar(7) // 2026-03
+  actualWork        String?        @map("actual_work")
+  completionPercent Int            @default(0) @map("completion_percent") // CHECK 0-100
+  nextPlan          String?        @map("next_plan")
+  risks             String?        @map("risks")
+  projectStatus     ProjectStatus? @map("project_status")
+  submittedById     String         @map("submitted_by_id")
+  submittedAt       DateTime       @default(now()) @map("submitted_at") @db.Timestamptz(3)
+
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdById String?   @map("created_by_id")
+  updatedById String?   @map("updated_by_id")
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  submitter User    @relation(fields: [submittedById], references: [id], onDelete: Restrict)
+
+  @@unique([projectId, periodKey])
+  @@index([submittedById])
+  @@map("monthly_progress")
+}
+
+// ============================ 知识库文档 ====================================
+
 model DocCategory {
-  id          String   @id @default(uuid())
-  name        String   // 分类名称，如：SOP标准操作规程 / 模板文件 / 技术文档
-  description String?  // 分类描述
-  icon        String?  // 图标
-  sortOrder   Int      @default(0)  // 排序
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id          String         @id @default(uuid()) @map("id")
+  code        String         @unique @map("code") @db.VarChar(64)
+  name        String         @map("name") @db.VarChar(128)
+  description String?        @map("description")
+  icon        String?        @map("icon") @db.VarChar(64)
+  parentId    String?        @map("parent_id")
+  sortOrder   Int            @default(0) @map("sort_order")
+  status      DocumentStatus @default(ACTIVE) @map("status")
 
-  documents   DocDocument[]
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  parent    DocCategory?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children  DocCategory[] @relation("CategoryTree")
+  documents DocDocument[]
+
+  @@index([parentId, sortOrder])
+  @@map("doc_categories")
 }
 
-// 知识库文档
 model DocDocument {
-  id          String   @id @default(uuid())
-  categoryId  String
-  code        String   @unique  // 文档编号，如 SOP-RG-LAMP-001
-  title       String   // 文档标题
-  description String?  // 文档描述
-  docType     String   @default("sop")  // sop / template / guide / reference
-  content     String?  // 文档内容（富文本或Markdown）
-  fileUrl     String?  // 附件文件URL
-  fileName    String?  // 附件文件名
-  version     String   @default("V1.0")  // 当前版本
-  status      String   @default("active")  // active / archived / deprecated
-  tags        String?  // 标签，逗号分隔
-  createdBy   String
-  approvedBy  String?
-  approvedAt  DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String         @id @default(uuid()) @map("id")
+  categoryId     String         @map("category_id")
+  code           String         @unique @map("code") @db.VarChar(64) // SOP-RG-LAMP-001
+  title          String         @map("title") @db.VarChar(500)
+  description    String?        @map("description")
+  docType        DocType        @default(SOP) @map("doc_type")
+  content        String?        @map("content") // 富文本/Markdown 正文
+  currentVersion String         @default("V1.0") @map("current_version") @db.VarChar(16)
+  status         DocumentStatus @default(DRAFT) @map("status")
+  tags           String[]       @map("tags") // text[]，GIN 索引见 baseline 迁移
+  ownerId        String         @map("owner_id")
+  reviewerId     String?        @map("reviewer_id")
+  reviewedAt     DateTime?      @map("reviewed_at") @db.Timestamptz(3)
+  effectiveDate  DateTime?      @map("effective_date") @db.Date
+  reviewDueDate  DateTime?      @map("review_due_date") @db.Date
 
-  category    DocCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  creator     User        @relation("DocCreator", fields: [createdBy], references: [id])
-  approver    User?       @relation("DocApprover", fields: [approvedBy], references: [id])
-  versions    DocVersion[]
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdById String?   @map("created_by_id")
+  updatedById String?   @map("updated_by_id")
 
-  @@index([categoryId])
+  category DocCategory  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  owner    User         @relation("DocOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  reviewer User?        @relation("DocReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  versions DocVersion[]
+
+  @@index([categoryId, status, deletedAt])
   @@index([docType])
-  @@index([status])
+  @@map("doc_documents")
 }
 
-// 文档版本历史
 model DocVersion {
-  id          String   @id @default(uuid())
-  documentId  String
-  version     String   // 版本号，如 V1.0, V1.1, V2.0
-  content     String   // 该版本的完整内容
-  changelog   String?  // 变更说明
-  createdBy   String
-  createdAt   DateTime @default(now())
+  id          String   @id @default(uuid()) @map("id")
+  documentId  String   @map("document_id")
+  version     String   @map("version") @db.VarChar(16)
+  content     String   @map("content")
+  changelog   String?  @map("changelog")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  createdById String   @map("created_by_id")
 
-  document    DocDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  creator     User        @relation("DocVersionCreator", fields: [createdBy], references: [id])
+  document DocDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  creator  User        @relation(fields: [createdById], references: [id], onDelete: Restrict)
 
   @@unique([documentId, version])
+  @@map("doc_versions")
 }
 
-// 试剂与配方：新增模型
-model Reagent {
-  id              String   @id @default(uuid())
-  name            String   @unique        // 简称，如 "GITC"
-  fullName        String?
-  casNumber       String?
-  category        String   @default("其他")
-  molecularWeight Float?
-  purity          Float?   @default(100)
-  density         Float?
-  defaultUnit     String   @default("M")
-  hazardLevel     String?
-  supplier        String?
-  storageCondition String?
-  notes           String?
-  status          String   @default("active")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+// ========================= 试剂物料、配方、配制 =============================
 
-  components      FormulaComponent[]
-
-  @@index([category])
-}
-
-// 新增：试剂原料库（ReagentMaterial），用于知识库管理与配方参数引用
+// 合并旧 Reagent 与 ReagentMaterial：单一物料主数据，消除双写漂移
 model ReagentMaterial {
-  id               String   @id @default(uuid())
-  // legacy name kept for backward compatibility
-  name             String?
-  // New fields
-  commonName       String   @unique
-  chineseName      String?
-  englishName      String?
-  category         String   @default("未分类")
-  casNumber        String?
-  molecularFormula String?
-  mw               Float
-  purity           Float    @default(98)
-  density          Float?
-  state            String   // 'solid' | 'liquid' | 'solution'
-  defaultStockConc Float?
-  defaultStockUnit String?
-  supplier         String?
-  notes            String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id               String            @id @default(uuid()) @map("id")
+  code             String            @unique @map("code") @db.VarChar(64)
+  commonName       String            @map("common_name") @db.VarChar(255)
+  chineseName      String?           @map("chinese_name") @db.VarChar(255)
+  englishName      String?           @map("english_name") @db.VarChar(255)
+  category         MaterialCategory  @default(OTHER) @map("category")
+  casNumber        String?           @map("cas_number") @db.VarChar(32)
+  molecularFormula String?           @map("molecular_formula") @db.VarChar(128)
+  molecularWeight  Decimal?          @map("molecular_weight") @db.Decimal(12, 4)
+  purity           Decimal?          @map("purity") @db.Decimal(8, 4) // 百分数，CHECK 0-100
+  density          Decimal?          @map("density") @db.Decimal(12, 6)
+  state            MaterialState     @default(LIQUID) @map("state")
+  defaultStockConc Decimal?          @map("default_stock_conc") @db.Decimal(18, 8)
+  defaultStockUnit ConcentrationUnit @default(M) @map("default_stock_unit")
+  hazardLevel      String?           @map("hazard_level") @db.VarChar(32)
+  supplier         String?           @map("supplier") @db.VarChar(255)
+  storageCondition String?           @map("storage_condition") @db.VarChar(128)
+  notes            String?           @map("notes")
+  status           DocumentStatus    @default(ACTIVE) @map("status")
 
-  // 被 FormulaComponent 引用
-  components       FormulaComponent[] @relation("MaterialComponents")
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdById String?   @map("created_by_id")
+  updatedById String?   @map("updated_by_id")
+
+  components FormulaComponent[]
+  lots       ReagentLot[]
 
   @@index([commonName])
-  @@index([category])
+  @@index([category, status])
+  @@index([casNumber])
+  @@map("reagent_materials")
+}
+
+model ReagentLot {
+  id             String    @id @default(uuid()) @map("id")
+  materialId     String    @map("material_id")
+  lotNo          String    @map("lot_no") @db.VarChar(64)
+  quantity       Decimal   @map("quantity") @db.Decimal(14, 4)
+  unit           String    @default("g") @map("unit") @db.VarChar(16)
+  receivedAt     DateTime? @map("received_at") @db.Date
+  expiryDate     DateTime? @map("expiry_date") @db.Date
+  location       String?   @map("location") @db.VarChar(128)
+  supplier       String?   @map("supplier") @db.VarChar(255)
+  certificateUrl String?   @map("certificate_url") @db.VarChar(1024)
+  status         LotStatus @default(AVAILABLE) @map("status")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  material ReagentMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@unique([materialId, lotNo])
+  @@index([expiryDate])
+  @@map("reagent_lots")
 }
 
 model ReagentFormula {
-  id          String   @id @default(uuid())
-  code        String   @unique
-  name        String?
-  type        String
-  pH          Float?
-  status      String   @default("草稿")
-  projectId   String?
-  procedure   String?
-  notes       String?
-  createdBy   String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String        @id @default(uuid()) @map("id")
+  code      String        @unique @map("code") @db.VarChar(64)
+  name      String?       @map("name") @db.VarChar(255)
+  type      FormulaType   @default(OTHER) @map("type")
+  pH        Decimal?      @map("ph") @db.Decimal(6, 2)
+  status    FormulaStatus @default(DRAFT) @map("status")
+  projectId String?       @map("project_id")
+  procedure String?       @map("procedure")
+  notes     String?       @map("notes")
+  version   Int           @default(1) @map("version")
 
-  creator     User               @relation("FormulaCreator", fields: [createdBy], references: [id])
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdById String    @map("created_by_id")
+  updatedById String?   @map("updated_by_id")
+
+  creator     User               @relation("FormulaCreator", fields: [createdById], references: [id], onDelete: Restrict)
   project     Project?           @relation(fields: [projectId], references: [id], onDelete: SetNull)
   components  FormulaComponent[]
   prepRecords PrepRecord[]
 
-  @@index([type])
-  @@index([status])
+  @@index([type, status, deletedAt])
+  @@index([projectId])
+  @@map("reagent_formulas")
 }
 
 model FormulaComponent {
-  id                 String   @id @default(uuid())
-  formulaId          String
-  reagentId          String?
-  reagentMaterialId  String?  // 新增：关联知识库中的试剂原料ID
-  componentName      String?  // 自定义组分名称（用于PCR等非标准化学试剂组分）
-  concentration      Float
-  unit               String   @default("M")
-  notes              String?  // PCR配方中存储终浓度描述，如"1×"、"0.2μM"
-  sortOrder          Int      @default(0)
+  id                String            @id @default(uuid()) @map("id")
+  formulaId         String            @map("formula_id")
+  materialId        String?           @map("material_id")
+  customName        String?           @map("custom_name") @db.VarChar(255) // 非标准组分（如引物）
+  concentration     Decimal?          @map("concentration") @db.Decimal(18, 8)
+  unit              ConcentrationUnit @default(M) @map("unit")
+  concentrationText String?           @map("concentration_text") @db.VarChar(64) // 终浓度描述："1×"、"0.2μM"
+  notes             String?           @map("notes")
+  sortOrder         Int               @default(0) @map("sort_order")
 
-  formula            ReagentFormula @relation(fields: [formulaId], references: [id], onDelete: Cascade)
-  reagent            Reagent?       @relation(fields: [reagentId], references: [id])
-  reagentMaterial    ReagentMaterial? @relation("MaterialComponents", fields: [reagentMaterialId], references: [id])
+  formula  ReagentFormula   @relation(fields: [formulaId], references: [id], onDelete: Cascade)
+  material ReagentMaterial? @relation(fields: [materialId], references: [id], onDelete: Restrict)
 
-  // 兼容性：允许同一配方包含相同原料（通过 reagentId/reagentMaterialId 区分）
-  @@index([formulaId])
+  @@index([formulaId, sortOrder])
+  @@index([materialId])
+  @@map("formula_components")
 }
 
 model PrepRecord {
-  id            String   @id @default(uuid())
-  formulaId     String
-  targetVolume  Float
-  calcResult    String
-  prepDate      String
-  operator      String?
-  batchNo       String?
-  notes         String?
-  createdBy     String
-  createdAt     DateTime @default(now())
+  id           String   @id @default(uuid()) @map("id")
+  formulaId    String   @map("formula_id")
+  targetVolume Decimal  @map("target_volume") @db.Decimal(14, 4)
+  volumeUnit   String   @default("mL") @map("volume_unit") @db.VarChar(16)
+  calcResult   Json     @map("calc_result") @db.JsonB // 计算明细（旧版为 String）
+  prepDate     DateTime @map("prep_date") @db.Timestamptz(3) // 旧版为 String
+  operator     String?  @map("operator") @db.VarChar(128)
+  batchNo      String?  @map("batch_no") @db.VarChar(64)
+  notes        String?  @map("notes")
 
-  formula       ReagentFormula @relation(fields: [formulaId], references: [id], onDelete: Cascade)
-  creator       User           @relation("PrepRecordCreator", fields: [createdBy], references: [id])
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdById String   @map("created_by_id")
 
-  @@index([formulaId])
+  formula ReagentFormula @relation(fields: [formulaId], references: [id], onDelete: Restrict)
+  creator User           @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([formulaId, prepDate])
+  @@index([batchNo])
+  @@map("prep_records")
 }
 
-// 阶段流转关系（用于表示从一个阶段到多个并行后续阶段）
-model PhaseTransition {
-  id          String @id @default(cuid())
-  fromPhaseId String
-  toPhaseId   String
-  createdAt   DateTime @default(now())
+// ========================== 检测靶标与引物 ==================================
 
-  @@unique([fromPhaseId, toPhaseId])
+model DetectionTarget {
+  id              String         @id @default(uuid()) @map("id")
+  code            String         @unique @map("code") @db.VarChar(64)
+  name            String         @map("name") @db.VarChar(255)
+  geneSymbol      String?        @map("gene_symbol") @db.VarChar(64)
+  organismLatin   String?        @map("organism_latin") @db.VarChar(255)
+  organismChinese String?        @map("organism_chinese") @db.VarChar(255)
+  taxid           String?        @map("taxid") @db.VarChar(32)
+  atccStrain      String?        @map("atcc_strain") @db.VarChar(128)
+  notes           String?        @map("notes")
+  status          DocumentStatus @default(ACTIVE) @map("status")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  primers Primer[]
+
+  @@index([organismLatin])
+  @@index([geneSymbol])
+  @@map("detection_targets")
 }
 
-// 任务模板库：可复用的任务流程模板
-model TaskTemplate {
-  id           String   @id @default(uuid())
-  name         String   @unique
-  category     String?
-  description  String?
-  estimatedDays Int?    @default(0)
-  priority     String   @default("medium")
-  tags         String?  // 逗号分隔
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  steps        TaskTemplateStep[]
-
-  @@index([category])
-}
-
-model TaskTemplateStep {
-  id             String   @id @default(uuid())
-  templateId     String
-  order          Int
-  title          String
-  description    String?
-  estimatedHours Float?
-  assigneeRole   String?
-  checklist      String?  // 逗号分隔
-
-  template       TaskTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-
-  @@index([templateId])
-  @@index([order])
-}
-
-// 引物探针设计库
 model Primer {
-  id                  String   @id @default(uuid())
-  projectName         String?  // 所属项目（文本，便于录入）
-  name                String   // 引物/探针名称
-  sequence            String   // 5'-3' 序列
-  targetGene          String?  // 目标基因
-  detectionTarget     String?  // 检测靶标
-  modification5       String?  // 5' 标记/修饰
-  modification3       String?  // 3' 标记/修饰
-  ampliconLength      Int?     // PCR 长度（扩增子长度 bp）
-  speciesLatinName    String?  // 物种丁名（拉丁名）
-  speciesChineseName  String?  // 物种中文名
-  speciesTaxid        String?  // 物种 taxid
-  atccStrain          String?  // ATCC 标准菌株/参考菌株
-  validatedStrain     String?  // 验证菌株
-  synthesisAmount     String?  // 合成量（如 200nmol）
-  synthesisCompany    String?  // 合成公司
-  tubeCount           Int?     // 管数
-  notes               String?  // 备注
-  status              String   @default("active") // active | archived
-  createdBy           String?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id               String         @id @default(uuid()) @map("id")
+  code             String         @unique @map("code") @db.VarChar(64) // PRM-2026-001
+  name             String         @map("name") @db.VarChar(255)
+  type             PrimerType     @default(PRIMER) @map("type")
+  sequence         String         @map("sequence") @db.VarChar(512) // 5'-3'
+  projectId        String?        @map("project_id") // 旧版为文本 projectName
+  targetId         String?        @map("target_id") // 旧版为文本 detectionTarget
+  targetGene       String?        @map("target_gene") @db.VarChar(128)
+  modification5    String?        @map("modification5") @db.VarChar(128)
+  modification3    String?        @map("modification3") @db.VarChar(128)
+  ampliconLength   Int?           @map("amplicon_length")
+  synthesisAmount  String?        @map("synthesis_amount") @db.VarChar(64)
+  synthesisCompany String?        @map("synthesis_company") @db.VarChar(255)
+  tubeCount        Int?           @map("tube_count")
+  notes            String?        @map("notes")
+  status           DocumentStatus @default(ACTIVE) @map("status")
 
-  @@index([projectName])
-  @@index([targetGene])
-  @@index([detectionTarget])
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdById String?   @map("created_by_id")
+  updatedById String?   @map("updated_by_id")
+
+  project Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  target  DetectionTarget? @relation(fields: [targetId], references: [id], onDelete: SetNull)
+  creator User?            @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([projectId, status, deletedAt])
+  @@index([targetId])
   @@index([name])
+  @@map("primers")
 }
 
-// 样本库：实验样本信息管理，与项目关联
+// ================================ 样本 ======================================
+
 model SampleMaterial {
-  id               String   @id @default(uuid())
-  sampleCode       String   @unique  // 样本编号，如 SMP-2026-001
-  sampleName       String            // 样本名称
-  sampleType       String   @default("临床样本")  // 标准品/临床样本/对照品/空白基质/模拟样本/其他
-  species          String?           // 物种/来源生物，如 Homo sapiens
-  tissue           String?           // 组织/部位/基质，如 血清
-  concentration    String?           // 浓度，如 1×10^6 copies/mL
-  volume           String?           // 体积或数量，如 500μL × 10管
-  storageCondition String   @default("-80°C")  // 保存条件
-  collectionDate   String?           // 采集/接收日期
-  expiryDate       String?           // 有效期
-  supplier         String?           // 来源/供应商
-  status           String   @default("可用")  // 可用/已用完/过期/封存
-  projectId        String?           // 归属项目
-  notes            String?           // 备注
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id               String       @id @default(uuid()) @map("id")
+  sampleCode       String       @unique @map("sample_code") @db.VarChar(64) // SMP-2026-001
+  sampleName       String       @map("sample_name") @db.VarChar(255)
+  sampleType       SampleType   @default(CLINICAL_SAMPLE) @map("sample_type")
+  projectId        String?      @map("project_id")
+  species          String?      @map("species") @db.VarChar(255)
+  tissue           String?      @map("tissue") @db.VarChar(255)
+  concentration    String?      @map("concentration") @db.VarChar(128) // 自由文本，如 1×10^6 copies/mL
+  volume           String?      @map("volume") @db.VarChar(128)
+  storageCondition String       @default("-80°C") @map("storage_condition") @db.VarChar(128)
+  receivedAt       DateTime?    @map("received_at") @db.Date
+  expiryDate       DateTime?    @map("expiry_date") @db.Date
+  supplier         String?      @map("supplier") @db.VarChar(255)
+  status           SampleStatus @default(AVAILABLE) @map("status")
+  notes            String?      @map("notes")
 
-  project          Project? @relation("ProjectSamples", fields: [projectId], references: [id], onDelete: SetNull)
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdById String?   @map("created_by_id")
+  updatedById String?   @map("updated_by_id")
 
-  @@index([projectId])
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  creator User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([projectId, status, deletedAt])
   @@index([sampleType])
-  @@index([status])
+  @@index([expiryDate])
+  @@map("sample_materials")
+}
+
+// ========================= 文件元数据与附件 =================================
+
+// 只存元数据，二进制永远不在数据库
+model FileObject {
+  id           String              @id @default(uuid()) @map("id")
+  storageKey   String              @unique @map("storage_key") @db.VarChar(1024) // 存储对象键，全局唯一
+  provider     FileStorageProvider @default(LOCAL) @map("provider")
+  bucket       String?             @map("bucket") @db.VarChar(255)
+  originalName String              @map("original_name") @db.VarChar(512)
+  mimeType     String              @map("mime_type") @db.VarChar(255)
+  sizeBytes    Int                 @map("size_bytes") // 单文件 ≤ 2GB
+  checksum     String?             @map("checksum") @db.VarChar(128) // sha256，用于去重与完整性校验
+  scanStatus   FileScanStatus      @default(SKIPPED) @map("scan_status") // 未配置扫描时不做安全承诺
+  scannedAt    DateTime?           @map("scanned_at") @db.Timestamptz(3)
+  isPublic     Boolean             @default(false) @map("is_public")
+  uploadedById String?             @map("uploaded_by_id")
+  metadata     Json?               @map("metadata") @db.JsonB // 图片宽高、PDF 页数等
+
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3) // 逻辑删除，物理清理由独立任务处理
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  uploadedBy  User?        @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  avatarOf    User?        @relation("UserAvatar")
+  attachments Attachment[]
+
+  @@index([uploadedById])
+  @@index([checksum])
+  @@index([scanStatus])
+  @@map("file_objects")
+}
+
+model Attachment {
+  id           String     @id @default(uuid()) @map("id")
+  fileId       String     @map("file_id")
+  entityType   EntityType @map("entity_type")
+  entityId     String     @map("entity_id")
+  label        String?    @map("label") @db.VarChar(255)
+  sortOrder    Int        @default(0) @map("sort_order")
+  uploadedById String?    @map("uploaded_by_id")
+
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  file       FileObject @relation(fields: [fileId], references: [id], onDelete: Restrict)
+  uploadedBy User?      @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId, deletedAt])
+  @@index([fileId])
+  @@map("attachments")
+}
+
+// ============================ 审计与系统日志 ================================
+
+// 只追加：数据库层用触发器禁止 UPDATE/DELETE（见 baseline 迁移）
+model AuditLog {
+  id            String      @id @default(uuid()) @map("id")
+  actorId       String?     @map("actor_id")
+  actorName     String?     @map("actor_name") @db.VarChar(128) // 快照：用户被删后仍可追溯
+  actorRole     String?     @map("actor_role") @db.VarChar(64) // 快照
+  // M-1 §4：动词/事件优先的 19 项取值（create / login.failed / status.change ...）
+  // 禁止恢复 Prisma enum AuditAction；展示标签走 EnumMeta(enumName='AuditAction')。
+  action        String      @map("action") @db.VarChar(64)
+  entityType    EntityType? @map("entity_type")
+  entityId      String?     @map("entity_id")
+  entityLabel   String?     @map("entity_label") @db.VarChar(255) // 快照，如项目名
+  before        Json?       @map("before") @db.JsonB
+  after         Json?       @map("after") @db.JsonB
+  changedFields String[]    @map("changed_fields")
+  // elevated / override / breakGlass / permissionCode 等审计上下文
+  metadata      Json?       @map("metadata") @db.JsonB
+  ip            String?     @map("ip") @db.VarChar(45)
+  userAgent     String?     @map("user_agent") @db.VarChar(512)
+  requestId     String?     @map("request_id") @db.VarChar(64)
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+  // GIN 索引 audit_logs_metadata_gin_idx 由 baseline 迁移「手工补充部分」创建
+  // （Prisma schema 无法声明 jsonb GIN，见 migrations/*/migration.sql 尾部）
+  @@map("audit_logs")
+}
+
+model SystemLog {
+  id        String   @id @default(uuid()) @map("id")
+  level     LogLevel @default(INFO) @map("level")
+  category  String   @map("category") @db.VarChar(64) // auth / project / report ...
+  action    String   @map("action") @db.VarChar(64)
+  message   String   @map("message")
+  context   Json?    @map("context") @db.JsonB
+  userId    String?  @map("user_id")
+  ip        String?  @map("ip") @db.VarChar(45)
+  requestId String?  @map("request_id") @db.VarChar(64)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([level, createdAt])
+  @@index([userId, createdAt])
+  @@index([category, action])
+  @@map("system_logs")
+}
+
+// ============================== 系统支撑表 ==================================
+
+// 枚举展示字典：DB 存英文 enum 值，中文名/颜色/排序由本表提供，前端下拉与字典接口读此表
+model EnumMeta {
+  id        String  @id @default(uuid()) @map("id")
+  enumName  String  @map("enum_name") @db.VarChar(64) // ProjectStatus / TaskPriority ...
+  code      String  @map("code") @db.VarChar(64) // IN_PROGRESS
+  label     String  @map("label") @db.VarChar(128) // 进行中
+  color     String? @map("color") @db.VarChar(32)
+  sortOrder Int     @default(0) @map("sort_order")
+  isDefault Boolean @default(false) @map("is_default")
+  isEnabled Boolean @default(true) @map("is_enabled")
+
+  @@unique([enumName, code])
+  @@index([enumName, sortOrder])
+  @@map("enum_meta")
+}
+
+// 业务编号发号器：避免应用层 count()+1 竞态
+model CodeSequence {
+  id        String   @id @default(uuid()) @map("id")
+  scope     String   @map("scope") @db.VarChar(64) // PROJECT / PRIMER / SAMPLE ...
+  periodKey String   @default("") @map("period_key") @db.VarChar(16) // "" 或 "2026"
+  prefix    String   @map("prefix") @db.VarChar(32) // PRJ-2026-
+  padding   Int      @default(3) @map("padding")
+  lastValue Int      @default(0) @map("last_value")
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([scope, periodKey])
+  @@map("code_sequences")
+}
+
+model SystemSetting {
+  key         String   @id @map("key") @db.VarChar(128)
+  value       Json     @map("value") @db.JsonB
+  description String?  @map("description")
+  isPublic    Boolean  @default(false) @map("is_public") // 是否可下发给未登录前端
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  updatedById String?  @map("updated_by_id")
+
+  @@map("system_settings")
 }
