@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { projectAPI, projectTemplatesAPI, taskTemplatesAPI, userAPI } from '../api/client';
-import { useAppStore } from '../store/appStore';
+import { projectAPI, projectTemplatesAPI, taskTemplatesAPI, userAPI } from '@/api';
+import { useAuth } from '../auth/useAuth';
 import ProcessFlowDiagram from './ProcessFlowDiagram';
 
 const PROJECT_TYPES = ['platform', '定制', '合作', '测试', '应用', '科技项目'];
@@ -137,7 +137,7 @@ function parseTemplateContentToPlan(template: any, startDateText: string) {
         title: String(task.title || `任务 ${taskIdx + 1}`),
         description: String(task.description || ''),
         priority: normalizeTaskPriority(task.priority),
-        status: '待开始',
+        status: 'NOT_STARTED',
         phase: phaseName,
         phaseId,
         phaseOrder,
@@ -189,7 +189,7 @@ interface Props {
 
 export default function CreateProjectModal({ onClose, initialDraftProjectId }: Props) {
   const navigate = useNavigate();
-  const { user } = useAppStore();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
 
   // Step 1 form state
@@ -279,7 +279,7 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
 
   useEffect(() => {
     userAPI.list({ pageSize: 200 }).then((res: any) => {
-      setUsers(res.list || []);
+      setUsers(res.items || []);
     }).catch(() => {});
   }, []);
 
@@ -292,7 +292,7 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
     try {
       const params: any = { pageSize: 200, status: 'active' };
       const res = await projectTemplatesAPI.list(params);
-      const list = (res as any).list || (res as any).templates || (res as any).data || [];
+      const list = (res as any).items || (res as any).templates || (res as any).data || [];
       setTemplates(Array.isArray(list) ? list : []);
     } catch { /* noop */ } finally {
       setLoadingTemplates(false);
@@ -325,7 +325,7 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
         id: `${task.phaseId || 'task'}_${idx}_${Date.now()}`,
         title: task.title || `任务 ${idx + 1}`,
         priority: task.priority || '中',
-        status: task.status || '待开始',
+        status: task.status || 'NOT_STARTED',
         phase: task.phase || '',
         phaseId: task.phaseId || '',
         phaseOrder: task.phaseOrder ?? null,
@@ -402,7 +402,7 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
         id: `${task.phaseId || 'task'}_${idx}_${Date.now()}`,
         title: task.title || `任务 ${idx + 1}`,
         priority: task.priority || '中',
-        status: task.status || '待开始',
+        status: task.status || 'NOT_STARTED',
         phase: task.phase || '',
         phaseId: task.phaseId || '',
         phaseOrder: task.phaseOrder ?? null,
@@ -439,7 +439,7 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
         name,
         type,
         isDraft: false,
-        status: '规划中',
+        status: 'PLANNING',
         position: position || undefined,
         managerId,
         participantIds,
@@ -455,7 +455,7 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
         payload.tasks = plannedTasks.map((task) => ({
           title: task.title,
           description: task.description || '',
-          status: task.status || '待开始',
+          status: task.status || 'NOT_STARTED',
           priority: task.priority || '中',
           phase: task.phase || null,
           phaseId: task.phaseId || null,
@@ -534,7 +534,7 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
         tasks: flattenTasksFromPhases(plannedPhases).map((task: any) => ({
           title: task.title,
           description: task.description || '',
-          status: task.status || '待开始',
+          status: task.status || 'NOT_STARTED',
           priority: task.priority || '中',
           phase: task.phase || null,
           phaseId: task.phaseId || null,
@@ -641,7 +641,7 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
       id: `task_${Date.now()}`,
       title: '新增任务',
       priority: '中',
-      status: '待开始',
+      status: 'NOT_STARTED',
       phase: selectedPhase.name,
       phaseId: selectedPhase.id,
       phaseOrder: selectedPhase.order,
@@ -762,7 +762,7 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
     setLoadingTaskTemplates(true);
     try {
       const res = await taskTemplatesAPI.list({ pageSize: 200 });
-      const list = (res as any).list || (res as any).data || [];
+      const list = (res as any).items || (res as any).data || [];
       setTaskTemplateList(Array.isArray(list) ? list : []);
     } finally {
       setLoadingTaskTemplates(false);
@@ -798,7 +798,7 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
       title: tpl.name || '模板任务',
       description: tpl.description || '',
       priority: priorityMap[String(tpl.priority || '').toLowerCase()] || '中',
-      status: '待开始',
+      status: 'NOT_STARTED',
       phase: selectedPhase.name,
       phaseId: selectedPhase.id,
       phaseOrder: selectedPhase.order,
@@ -1216,8 +1216,8 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
                         <label className="block text-xs text-gray-500 mb-1">状态</label>
                         <select className="input w-full bg-white" value={milestone.status || '待完成'} onChange={(e) => updateMilestone(milestone.id, 'status', e.target.value)}>
                           <option value="待完成">待完成</option>
-                          <option value="进行中">进行中</option>
-                          <option value="已完成">已完成</option>
+                          <option value="IN_PROGRESS">进行中</option>
+                          <option value="COMPLETED">已完成</option>
                         </select>
                       </div>
                       <button type="button" className="text-red-500 hover:text-red-700" onClick={() => removeMilestone(milestone.id)}>删除</button>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formulaAPI, prepAPI } from '../../api/client';
+import { formulaAPI, prepAPI } from '@/api';
 
 export default function PrepCalculator(){
   const [formulas, setFormulas] = useState<any[]>([]);
@@ -8,12 +8,12 @@ export default function PrepCalculator(){
   const [result, setResult] = useState<any | null>(null);
 
   useEffect(()=>{ load(); },[]);
-  const load = async ()=>{ const res = await formulaAPI.list(); setFormulas(res.list || []); };
+  const load = async ()=>{ const res = await formulaAPI.list(); setFormulas(res.items || []); };
 
   const calculate = async ()=>{
     if (!selected) return alert('请选择配方');
     const res = await prepAPI.calculate({ formulaId: selected, targetVolume });
-    if (res.success) setResult(res);
+    if ((res as any)?.success) setResult(res as any);
   }; // 后端已支持 reagentMaterial 关联，前端无需额外处理 here
 
   const saveRecord = async ()=>{

@@ -3,7 +3,7 @@
  * 支持 CRUD、CSV 导入/导出、列设置、批量编辑
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { primerAPI, projectAPI } from '../../api/client';
+import { primerAPI, projectAPI } from '@/api';
 
 const COLUMNS = [
   { key: 'projectName',        label: '所属项目',              mono: false, italic: false },
@@ -118,7 +118,7 @@ export default function PrimerLibrary() {
   const loadProjects = async () => {
     try {
       const res = await projectAPI.list({ pageSize: 200 }) as any;
-      setProjects(res.list || res.projects || []);
+      setProjects(res.items || res.projects || []);
     } catch { setProjects([]); }
   };
 
@@ -126,7 +126,7 @@ export default function PrimerLibrary() {
     setLoading(true);
     try {
       const res = await primerAPI.list({ keyword: kw ?? keyword }) as any;
-      setList(res.list || []);
+      setList(res.items || []);
     } catch { setList([]); }
     setLoading(false);
   };
@@ -181,14 +181,14 @@ export default function PrimerLibrary() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('确定删除该引物记录？')) return;
-    await primerAPI.delete(id);
+    await primerAPI.remove(id);
     load();
   };
 
   const handleBatchDelete = async () => {
     if (selectedIds.length === 0) return;
     if (!confirm(`确定删除选中的 ${selectedIds.length} 条记录？`)) return;
-    await Promise.all(selectedIds.map(id => primerAPI.delete(id)));
+    await Promise.all(selectedIds.map(id => primerAPI.remove(id)));
     setSelectedIds([]);
     load();
   };

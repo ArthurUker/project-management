@@ -1,195 +1,175 @@
 import { Hono } from 'hono';
 import { prisma } from '../index.js';
-import { authMiddleware } from './auth.js';
+import { authenticate as authMiddleware, requirePermission, getAuth } from '../kernel/rbac.js';
+import { pickAllowed } from '../kernel/massAssign.js';
+import { AUDIT_ACTIONS } from '../kernel/constants.js';
+import { writeAudit } from '../kernel/audit.js';
+import { badRequest, notFound } from '../kernel/http.js';
 
+/**
+ * /api/reagent-materials —— 试剂原料（W10 PG baseline 迁移）。
+ *
+ * 迁移要点：
+ *   category 自由文本（'未分类'/逗号串）→ MaterialCategory 枚举（未识别值 → OTHER）；
+ *   mw → molecularWeight；code @unique 必填（缺省自动生成）；
+ *   status 'active' → ACTIVE（DocumentStatus 枚举）；
+ *   FormulaComponent.reagentMaterialId → materialId；
+ *   DELETE / bulk-delete 为 P1（reagent_materials.delete 不进首版库）→ 403。
+ */
 const materials = new Hono();
+
 materials.use('*', authMiddleware);
 
-const normalizeCategory = (value) => {
-  if (Array.isArray(value)) {
-    const cleaned = value.map((item) => String(item || '').trim()).filter(Boolean);
-    return cleaned.length > 0 ? Array.from(new Set(cleaned)).join(',') : '未分类';
-  }
-  if (value == null) return '未分类';
-  const text = String(value).trim();
-  if (!text) return '未分类';
-  const parts = text
-    .split(/[，,;；|、/\s]+/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-  return parts.length > 0 ? Array.from(new Set(parts)).join(',') : '未分类';
+const MATERIAL_CATEGORIES = new Set([
+  'BUFFER', 'SALT', 'ENZYME', 'DYE', 'NUCLEIC_ACID', 'SOLVENT', 'ACID_BASE', 'SURFACTANT', 'OTHER',
+]);
+const CATEGORY_ALIASES = {
+  '缓冲液': 'BUFFER', buffer: 'BUFFER',
+  '盐类': 'SALT', salt: 'SALT',
+  '酶': 'ENZYME', enzyme: 'ENZYME',
+  '染料': 'DYE', dye: 'DYE',
+  '核酸': 'NUCLEIC_ACID', 'nucleic acid': 'NUCLEIC_ACID',
+  '溶剂': 'SOLVENT', solvent: 'SOLVENT',
+  '酸碱': 'ACID_BASE',
+  '表面活性剂': 'SURFACTANT', surfactant: 'SURFACTANT',
+  '未分类': 'OTHER', other: 'OTHER',
 };
 
-// GET /api/reagent-materials - 列表，支持 ?keyword=
-materials.get('/', async (c) => {
-  try {
-    const keyword = c.req.query('keyword');
-    const category = c.req.query('category');
-    const state = c.req.query('state');
-    const sortBy = c.req.query('sortBy');
-    const sortOrder = c.req.query('sortOrder') === 'desc' ? 'desc' : 'asc';
-    const where = {};
-    if (keyword) {
-      where.OR = [
-        { commonName: { contains: keyword } },
-        { chineseName: { contains: keyword } },
-        { englishName: { contains: keyword } },
-        { casNumber: { contains: keyword } },
-      ];
-    }
-    const categoryValues = String(category || '')
-      .split(',')
-      .map((item) => item.trim())
-      .filter((item) => item && item !== 'all');
-    if (categoryValues.length > 0) {
-      where.AND = where.AND || [];
-      where.AND.push({
-        OR: categoryValues.map((item) => ({ category: { contains: item } })),
-      });
-    }
-    if (state && state !== 'all') {
-      where.state = state;
-    }
+function toCategory(value) {
+  const key = String(value ?? '').trim().toLowerCase();
+  return CATEGORY_ALIASES[key] ?? (MATERIAL_CATEGORIES.has(String(value ?? '').toUpperCase()) ? String(value).toUpperCase() : 'OTHER');
+}
 
-    const allowedSortFields = new Set([
-      'commonName',
-      'chineseName',
-      'englishName',
-      'category',
-      'casNumber',
-      'molecularFormula',
-      'mw',
-      'state',
-      'defaultStockConc',
-      'supplier',
-      'createdAt',
-      'updatedAt',
-    ]);
-    const orderBy = allowedSortFields.has(sortBy) ? { [sortBy]: sortOrder } : { commonName: 'asc' };
+function toFloatOrNull(v) {
+  if (v === '' || v == null) return null;
+  const n = Number.parseFloat(String(v));
+  return Number.isNaN(n) ? null : n;
+}
 
-    const list = await prisma.reagentMaterial.findMany({ where, orderBy });
-    return c.json({ success: true, list });
-  } catch (err) {
-    console.error('获取试剂原料列表失败', err);
-    return c.json({ error: '获取试剂原料列表失败' }, 500);
+const SORT_FIELD_MAP = {
+  commonName: 'commonName', chineseName: 'chineseName', englishName: 'englishName',
+  category: 'category', casNumber: 'casNumber', molecularFormula: 'molecularFormula',
+  mw: 'molecularWeight', molecularWeight: 'molecularWeight', state: 'state',
+  defaultStockConc: 'defaultStockConc', supplier: 'supplier', createdAt: 'createdAt', updatedAt: 'updatedAt',
+};
+
+// GET / —— 列表
+materials.get('/', requirePermission('reagent_materials.view'), async (c) => {
+  const keyword = c.req.query('keyword');
+  const category = c.req.query('category');
+  const state = c.req.query('state');
+  const sortBy = c.req.query('sortBy');
+  const sortOrder = c.req.query('sortOrder') === 'desc' ? 'desc' : 'asc';
+
+  const where = { deletedAt: null };
+  if (keyword) {
+    where.OR = [
+      { commonName: { contains: keyword } },
+      { chineseName: { contains: keyword } },
+      { englishName: { contains: keyword } },
+      { casNumber: { contains: keyword } },
+      { code: { contains: keyword } },
+    ];
   }
+  const categoryValues = String(category || '').split(',').map((s) => s.trim()).filter((s) => s && s !== 'all');
+  if (categoryValues.length > 0) {
+    const enums = categoryValues.map(toCategory);
+    where.category = enums.length === 1 ? enums[0] : { in: enums };
+  }
+  if (state && state !== 'all') where.state = state;
+
+  const orderByField = SORT_FIELD_MAP[sortBy] || 'commonName';
+  const list = await prisma.reagentMaterial.findMany({ where, orderBy: { [orderByField]: sortOrder } });
+  return c.json({ success: true, list });
 });
 
-// GET /api/reagent-materials/:id
-materials.get('/:id', async (c) => {
+// GET /:id
+materials.get('/:id', requirePermission('reagent_materials.view'), async (c) => {
+  const mat = await prisma.reagentMaterial.findUnique({ where: { id: c.req.param('id') } });
+  if (!mat || mat.deletedAt) throw notFound('MATERIAL_NOT_FOUND', '试剂原料不存在');
+  return c.json({ success: true, material: mat });
+});
+
+function normalizeMaterialData(raw, { forCreate }) {
+  const data = pickAllowed(raw, [
+    'code', 'commonName', 'chineseName', 'englishName', 'category', 'casNumber',
+    'molecularFormula', 'molecularWeight', 'mw', 'purity', 'density', 'state',
+    'defaultStockConc', 'defaultStockUnit', 'hazardLevel', 'supplier',
+    'storageCondition', 'notes', 'status',
+  ], { entityLabel: '试剂原料', allowEmpty: false });
+
+  if ('mw' in data) { data.molecularWeight = toFloatOrNull(data.mw); delete data.mw; }
+  if ('molecularWeight' in data) data.molecularWeight = toFloatOrNull(data.molecularWeight);
+  if ('purity' in data) data.purity = toFloatOrNull(data.purity);
+  if ('density' in data) data.density = toFloatOrNull(data.density);
+  if ('defaultStockConc' in data) data.defaultStockConc = toFloatOrNull(data.defaultStockConc);
+  if ('category' in data) data.category = toCategory(data.category);
+  if ('status' in data) data.status = String(data.status).toUpperCase();
+  for (const k of Object.keys(data)) if (data[k] === undefined) delete data[k];
+  return data;
+}
+
+// POST /
+materials.post('/', requirePermission('reagent_materials.create'), async (c) => {
+  const auth = getAuth(c);
+  const raw = await c.req.json().catch(() => null);
+  const data = normalizeMaterialData(raw, { forCreate: true });
+  if (!data.commonName) throw badRequest('VALIDATION_ERROR', 'commonName 必填');
+  if (!data.code) {
+    data.code = `RM-${Date.now().toString(36).toUpperCase()}`;
+  }
+  const exists = await prisma.reagentMaterial.findUnique({ where: { code: data.code }, select: { id: true } });
+  if (exists) throw badRequest('VALIDATION_ERROR', '原料编号已存在');
+
+  const created = await prisma.reagentMaterial.create({ data: { ...data, createdById: auth.userId } });
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.CREATE,
+    entityType: 'REAGENT_MATERIAL',
+    entityId: created.id,
+    entityLabel: created.commonName,
+    metadata: { permissionCode: 'reagent_materials.create' },
+  });
+  return c.json({ success: true, material: created }, 201);
+});
+
+// PUT /:id
+materials.put('/:id', requirePermission('reagent_materials.update'), async (c) => {
+  const auth = getAuth(c);
   const id = c.req.param('id');
-  try {
-    const mat = await prisma.reagentMaterial.findUnique({ where: { id } });
-    if (!mat) return c.json({ error: '试剂原料不存在' }, 404);
-    return c.json({ success: true, material: mat });
-  } catch (err) {
-    console.error('获取试剂原料详情失败', err);
-    return c.json({ error: '获取试剂原料详情失败' }, 500);
-  }
+  const raw = await c.req.json().catch(() => null);
+  const data = normalizeMaterialData(raw, { forCreate: false });
+  if ('code' in data) delete data.code; // 编号不可改
+
+  const before = await prisma.reagentMaterial.findUnique({ where: { id } });
+  if (!before || before.deletedAt) throw notFound('MATERIAL_NOT_FOUND', '试剂原料不存在');
+
+  const updated = await prisma.reagentMaterial.update({ where: { id }, data: { ...data, updatedById: auth.userId } });
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.UPDATE,
+    entityType: 'REAGENT_MATERIAL',
+    entityId: id,
+    entityLabel: updated.commonName,
+    changedFields: Object.keys(data),
+    metadata: { permissionCode: 'reagent_materials.update' },
+  });
+  return c.json({ success: true, material: updated });
 });
 
-// POST /api/reagent-materials
-materials.post('/', async (c) => {
-  try {
-    const raw = await c.req.json();
-    const { id: _id, createdAt, updatedAt, components, ...rest } = raw;
-
-    const toFloat = (v) => { const n = parseFloat(String(v ?? '')); return isNaN(n) ? undefined : n; };
-    const toFloatOrNull = (v) => { if (v === '' || v == null) return null; const n = parseFloat(String(v)); return isNaN(n) ? null : n; };
-
-    const data = { ...rest };
-    if ('mw' in data) data.mw = toFloat(data.mw) ?? 0;
-    if ('purity' in data) { const p = toFloat(data.purity); data.purity = p !== undefined ? p : 98; }
-    if ('density' in data) data.density = toFloatOrNull(data.density);
-    if ('defaultStockConc' in data) data.defaultStockConc = toFloatOrNull(data.defaultStockConc);
-    if ('category' in data) data.category = normalizeCategory(data.category);
-    if (!('category' in data)) data.category = '未分类';
-
-    Object.keys(data).forEach(k => data[k] === undefined && delete data[k]);
-
-    const created = await prisma.reagentMaterial.create({ data });
-    return c.json({ success: true, material: created });
-  } catch (err) {
-    console.error('创建试剂原料失败', err);
-    return c.json({ error: '创建试剂原料失败' }, 500);
-  }
-});
-
-// PUT /api/reagent-materials/:id
-materials.put('/:id', async (c) => {
-  const id = c.req.param('id');
-  try {
-    const raw = await c.req.json();
-    // 去除不可更新字段（Prisma 不允许在 data 中包含主键或关联列表）
-    const { id: _id, createdAt, updatedAt, components, ...rest } = raw;
-
-    // FormData 传来的数值都是字符串，需要强转；空字符串的可选字段转为 null
-    const toFloat = (v) => { const n = parseFloat(String(v ?? '')); return isNaN(n) ? undefined : n; };
-    const toFloatOrNull = (v) => { if (v === '' || v == null) return null; const n = parseFloat(String(v)); return isNaN(n) ? null : n; };
-
-    const data = { ...rest };
-    if ('mw' in data) data.mw = toFloat(data.mw);
-    if ('purity' in data) { const p = toFloat(data.purity); data.purity = p !== undefined ? p : 98; }
-    if ('density' in data) data.density = toFloatOrNull(data.density);
-    if ('defaultStockConc' in data) data.defaultStockConc = toFloatOrNull(data.defaultStockConc);
-    if ('category' in data) data.category = normalizeCategory(data.category);
-
-    // 移除 undefined 值，避免 Prisma 类型校验失败
-    Object.keys(data).forEach(k => data[k] === undefined && delete data[k]);
-
-    const updated = await prisma.reagentMaterial.update({ where: { id }, data });
-    return c.json({ success: true, material: updated });
-  } catch (err) {
-    console.error('更新试剂原料失败', err);
-    return c.json({ error: '更新试剂原料失败' }, 500);
-  }
-});
-
-// DELETE /api/reagent-materials/:id（检查引用）
+// M-1：reagent_materials.delete 为 P1 后置权限，端点暂不提供
 materials.delete('/:id', async (c) => {
-  const id = c.req.param('id');
-  try {
-    const refCount = await prisma.formulaComponent.count({ where: { reagentMaterialId: id } });
-    if (refCount > 0) return c.json({ error: '该原料被配方引用，无法删除' }, 400);
-    await prisma.reagentMaterial.delete({ where: { id } });
-    return c.json({ success: true });
-  } catch (err) {
-    console.error('删除试剂原料失败', err);
-    return c.json({ error: '删除试剂原料失败' }, 500);
-  }
+  return c.json({ error: '试剂原料删除属 P1 后置权限，本轮未启用', code: 'PERMISSION_NOT_AVAILABLE' }, 403);
 });
 
-// POST /api/reagent-materials/bulk-delete
 materials.post('/bulk-delete', async (c) => {
-  try {
-    const body = await c.req.json();
-    const ids = body.ids || [];
-    const force = !!body.force;
-
-    // check references
-    const refs = [];
-    for (const id of ids) {
-      const count = await prisma.formulaComponent.count({ where: { reagentMaterialId: id } });
-      if (count > 0) refs.push({ id, count });
-    }
-
-    if (refs.length > 0 && !force) {
-      return c.json({ error: 'has_references', details: refs }, 400);
-    }
-
-    // start transaction: if force, nullify references first
-    await prisma.$transaction(async (tx) => {
-      if (refs.length > 0 && force) {
-        await tx.formulaComponent.updateMany({ where: { reagentMaterialId: { in: ids } }, data: { reagentMaterialId: null } });
-      }
-      await tx.reagentMaterial.deleteMany({ where: { id: { in: ids } } });
-    });
-
-    return c.json({ success: true });
-  } catch (err) {
-    console.error('批量删除试剂原料失败', err);
-    return c.json({ error: '批量删除试剂原料失败' }, 500);
-  }
+  return c.json({ error: '试剂原料删除属 P1 后置权限，本轮未启用', code: 'PERMISSION_NOT_AVAILABLE' }, 403);
 });
 
 export default materials;

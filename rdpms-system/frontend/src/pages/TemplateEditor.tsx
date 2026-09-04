@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { projectTemplatesAPI } from '../api/client';
+import { projectTemplatesAPI } from '@/api';
 import ProcessFlowDiagram from '../components/ProcessFlowDiagram';
 import MindMapView from '../components/MindMapView';
 import PhaseTaskPanel from '../components/PhaseTaskPanel';
@@ -998,8 +998,8 @@ export default function TemplateEditor() {
         }
 
         // list => take first
-        if (Array.isArray(payload.list) && payload.list.length > 0) {
-          return parsePhases(payload.list[0]);
+        if (Array.isArray(payload.items) && payload.items.length > 0) {
+          return parsePhases(payload.items[0]);
         }
 
         return [];

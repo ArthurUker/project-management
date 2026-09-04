@@ -1,23 +1,35 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { statsAPI } from '../api/client';
-import { useAppStore } from '../store/appStore';
+import { statsAPI, projectAPI, taskAPI, reportAPI } from '@/api';
+import { useAuth } from '../auth/useAuth';
 
 export default function Dashboard() {
-  const { user, projects, tasks, reports } = useAppStore();
+  const { user } = useAuth();
   const [stats, setStats] = useState<any>(null);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
-    loadStats();
+    loadData();
   }, []);
-  
-  const loadStats = async () => {
+
+  /** 仪表盘数据一律来自后端在线请求，前端不持有业务数据副本 */
+  const loadData = async () => {
     try {
-      const data = await statsAPI.dashboard();
-      setStats(data);
+      const [s, p, t, r] = await Promise.allSettled([
+        statsAPI.dashboard(),
+        projectAPI.list({ pageSize: 5 }),
+        taskAPI.list({ pageSize: 200 }),
+        reportAPI.list({ pageSize: 200 }),
+      ]);
+      if (s.status === 'fulfilled') setStats(s.value);
+      if (p.status === 'fulfilled') setProjects(p.value.items ?? []);
+      if (t.status === 'fulfilled') setTasks(t.value.items ?? []);
+      if (r.status === 'fulfilled') setReports(r.value.items ?? []);
     } catch (err) {
-      console.error('Failed to load stats:', err);
+      console.error('Failed to load dashboard:', err);
     } finally {
       setLoading(false);
     }
@@ -25,7 +37,7 @@ export default function Dashboard() {
   
   // 获取我的任务
   const myTasks = tasks.filter(t => t.assigneeId === user?.id);
-  const pendingTasks = myTasks.filter(t => t.status !== '已完成');
+  const pendingTasks = myTasks.filter(t => t.status !== 'COMPLETED');
   
   // 获取我的汇报
   const now = new Date();
@@ -33,12 +45,12 @@ export default function Dashboard() {
   const myReports = reports.filter(r => r.userId === user?.id && r.month === currentMonth);
   
   const statusColors: Record<string, string> = {
-    '进行中': 'bg-primary-100 text-primary-700',
-    '已完成': 'bg-green-100 text-green-700',
-    '待加工': 'bg-orange-100 text-orange-700',
-    '待验证': 'bg-yellow-100 text-yellow-700',
-    '待开始': 'bg-gray-100 text-gray-700',
-    '已归档': 'bg-gray-100 text-gray-500',
+    'IN_PROGRESS': 'bg-primary-100 text-primary-700',
+    'COMPLETED': 'bg-green-100 text-green-700',
+    'PENDING_PROCESSING': 'bg-orange-100 text-orange-700',
+    'PENDING_VERIFICATION': 'bg-yellow-100 text-yellow-700',
+    'NOT_STARTED': 'bg-gray-100 text-gray-700',
+    'ARCHIVED': 'bg-gray-100 text-gray-500',
   };
   
   if (loading) {

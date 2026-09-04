@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { samplesAPI, projectAPI } from '../../api/client';
+import { samplesAPI, projectAPI } from '@/api';
 
 const SAMPLE_TYPES = ['标准品', '临床样本', '对照品', '空白基质', '模拟样本', '质控样本', '参考品', '其他'];
 const STATUS_OPTIONS = ['可用', '已用完', '过期', '封存'];
@@ -41,7 +41,7 @@ export default function SampleLibrary({ openKey, hideTopButton }: { openKey?: nu
   const loadProjects = async () => {
     try {
       const res = await projectAPI.list({ pageSize: 200 });
-      setProjects(res.list || []);
+      setProjects(res.items || []);
     } catch (e) { console.error(e); }
   };
 
@@ -52,7 +52,7 @@ export default function SampleLibrary({ openKey, hideTopButton }: { openKey?: nu
       if (keyword) params.keyword = keyword;
       if (filterProjectId) params.projectId = filterProjectId;
       const res = await samplesAPI.list(params);
-      setList(res.list || []);
+      setList(res.items || []);
       if (savedScrollRef.current !== null) {
         const pos = savedScrollRef.current;
         savedScrollRef.current = null;
@@ -115,14 +115,14 @@ export default function SampleLibrary({ openKey, hideTopButton }: { openKey?: nu
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`确定要删除样本「${name}」吗？`)) return;
-    try { await samplesAPI.delete(id); load(); } catch (err: any) { alert(err.message || '删除失败'); }
+    try { await samplesAPI.remove(id); load(); } catch (err: any) { alert(err.message || '删除失败'); }
   };
 
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
     if (!confirm(`确定要删除选中的 ${selectedIds.length} 个样本吗？`)) return;
     try {
-      for (const id of selectedIds) await samplesAPI.delete(id);
+      for (const id of selectedIds) await samplesAPI.remove(id);
       setSelectedIds([]);
       load();
     } catch (e) { alert('批量删除失败'); }

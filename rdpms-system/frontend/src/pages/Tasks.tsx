@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { useAppStore } from '../store/appStore';
-import { taskAPI, projectAPI } from '../api/client';
+import { useAuth } from '../auth/useAuth';
+import { useHasPerm, PERMS } from '../auth/permissions';
+import { taskAPI, projectAPI } from '@/api';
 import DocReference from '../components/DocReference';
 
 // ── Types ───────────────────────────────────────────────
@@ -23,10 +24,10 @@ interface Task {
 
 // ── Constants ────────────────────────────────────────────
 const STATUS_CONFIG: Record<string, { dotColor: string; barColor: string; textColor: string; bgColor: string }> = {
-  '待开始': { dotColor: '#9ca3af', barColor: '#9ca3af', textColor: '#6b7280', bgColor: '#f9fafb' },
-  '进行中': { dotColor: '#3b82f6', barColor: '#3b82f6', textColor: '#2563eb', bgColor: '#eff6ff' },
-  '已完成': { dotColor: '#10b981', barColor: '#10b981', textColor: '#059669', bgColor: '#f0fdf4' },
-  '已阻塞': { dotColor: '#ef4444', barColor: '#ef4444', textColor: '#dc2626', bgColor: '#fef2f2' },
+  'NOT_STARTED': { dotColor: '#9ca3af', barColor: '#9ca3af', textColor: '#6b7280', bgColor: '#f9fafb' },
+  'IN_PROGRESS': { dotColor: '#3b82f6', barColor: '#3b82f6', textColor: '#2563eb', bgColor: '#eff6ff' },
+  'COMPLETED': { dotColor: '#10b981', barColor: '#10b981', textColor: '#059669', bgColor: '#f0fdf4' },
+  'BLOCKED': { dotColor: '#ef4444', barColor: '#ef4444', textColor: '#dc2626', bgColor: '#fef2f2' },
 };
 
 const PRIORITY_CONFIG: Record<string, { barColor: string; textColor: string; bgColor: string; dotColor: string }> = {
@@ -62,7 +63,7 @@ function TaskCard({ task, onEdit, onDragStart }: {
   onEdit: (task: Task) => void;
   onDragStart?: (e: React.DragEvent, task: Task) => void;
 }) {
-  const sCfg = STATUS_CONFIG[task.status] ?? STATUS_CONFIG['待开始'];
+  const sCfg = STATUS_CONFIG[task.status] ?? STATUS_CONFIG['NOT_STARTED'];
   const pCfg = PRIORITY_CONFIG[task.priority] ?? PRIORITY_CONFIG['低'];
   const isOverdue = task.dueDate && !task.completedAt && new Date(task.dueDate) < new Date();
 
@@ -125,7 +126,7 @@ function KanbanView({ tasks, onEdit, onAddTask, onUpdateStatus }: {
 }) {
   const dragItem = useRef<Task | null>(null);
   const [dragOver, setDragOver] = useState<string | null>(null);
-  const statuses = ['待开始', '进行中', '已完成', '已阻塞'];
+  const statuses = ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'BLOCKED'];
 
   const handleDragStart = (e: React.DragEvent, task: Task) => {
     dragItem.current = task;
@@ -215,7 +216,7 @@ function ListView({ tasks, onEdit }: { tasks: Task[]; onEdit: (task: Task) => vo
         <span>任务名称</span><span>所属项目</span><span>优先级</span><span>状态</span><span>负责人</span><span>截止日期</span>
       </div>
       {tasks.map(task => {
-        const sCfg = STATUS_CONFIG[task.status] ?? STATUS_CONFIG['待开始'];
+        const sCfg = STATUS_CONFIG[task.status] ?? STATUS_CONFIG['NOT_STARTED'];
         const pCfg = PRIORITY_CONFIG[task.priority] ?? PRIORITY_CONFIG['低'];
         const isOverdue = task.dueDate && !task.completedAt && new Date(task.dueDate) < new Date();
         return (
@@ -358,10 +359,10 @@ function TaskModal({ task, defaultStatus, defaultPriority, projectList, currentU
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">状态</label>
               <select className="input" value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}>
-                <option value="待开始">待开始</option>
-                <option value="进行中">进行中</option>
-                <option value="已完成">已完成</option>
-                <option value="已阻塞">已阻塞</option>
+                <option value="NOT_STARTED">待开始</option>
+                <option value="IN_PROGRESS">进行中</option>
+                <option value="COMPLETED">已完成</option>
+                <option value="BLOCKED">已阻塞</option>
               </select>
             </div>
           </div>
@@ -393,8 +394,11 @@ function TaskModal({ task, defaultStatus, defaultPriority, projectList, currentU
 
 // ── Main Page ────────────────────────────────────────────
 export default function Tasks() {
-  const { tasks: storeTasks, saveTaskLocal, user } = useAppStore();
+  const { user } = useAuth();
+  const canCreate = useHasPerm(PERMS.TASKS_CREATE);
+  const canUpdateStatus = useHasPerm(PERMS.TASKS_UPDATE_STATUS);
   const [projects, setProjects] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
 
@@ -407,28 +411,28 @@ export default function Tasks() {
   // Modal
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [defaultStatus, setDefaultStatus] = useState('待开始');
+  const [defaultStatus, setDefaultStatus] = useState('NOT_STARTED');
   const [defaultPriority, setDefaultPriority] = useState('中');
 
   useEffect(() => {
-    projectAPI.list({ pageSize: 999 }).then((res: any) => {
-      setProjects(res.list || res.projects || res.data || []);
+    projectAPI.list({ pageSize: 999 }).then((res) => {
+      setProjects(res.items ?? []);
     }).catch(() => {});
   }, []);
 
   const loadTasks = useCallback(async () => {
     setLoading(true);
     try {
-      const res: any = await taskAPI.list({ pageSize: 500 });
-      const list: any[] = res.list || res.data || res.tasks || [];
-      for (const t of list) await saveTaskLocal(t);
-    } catch {}
-    finally { setLoading(false); }
-  }, [saveTaskLocal]);
+      const res = await taskAPI.list({ pageSize: 500 });
+      setTasks(res.items ?? []);
+    } catch {
+      setTasks([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => { loadTasks(); }, [loadTasks]);
-
-  const tasks = storeTasks as Task[];
 
   // Stats
   const stats = useMemo(() => {
@@ -438,10 +442,10 @@ export default function Tasks() {
     const overdue = tasks.filter(t => t.dueDate && !t.completedAt && new Date(t.dueDate) < new Date()).length;
     return [
       { label: '全部', count: total, percent: 100, barColor: '#9ca3af', textColor: '#6b7280', dotColor: '#9ca3af', action: () => { setFilterStatus(''); } },
-      { label: '进行中', count: c('进行中'), percent: pct(c('进行中')), barColor: '#3b82f6', textColor: '#2563eb', dotColor: '#3b82f6', action: () => setFilterStatus('进行中') },
-      { label: '待开始', count: c('待开始'), percent: pct(c('待开始')), barColor: '#9ca3af', textColor: '#6b7280', dotColor: '#9ca3af', action: () => setFilterStatus('待开始') },
-      { label: '已完成', count: c('已完成'), percent: pct(c('已完成')), barColor: '#10b981', textColor: '#059669', dotColor: '#10b981', action: () => setFilterStatus('已完成') },
-      { label: '已阻塞', count: c('已阻塞'), percent: pct(c('已阻塞')), barColor: '#ef4444', textColor: '#dc2626', dotColor: '#ef4444', action: () => setFilterStatus('已阻塞') },
+      { label: 'IN_PROGRESS', count: c('IN_PROGRESS'), percent: pct(c('IN_PROGRESS')), barColor: '#3b82f6', textColor: '#2563eb', dotColor: '#3b82f6', action: () => setFilterStatus('IN_PROGRESS') },
+      { label: 'NOT_STARTED', count: c('NOT_STARTED'), percent: pct(c('NOT_STARTED')), barColor: '#9ca3af', textColor: '#6b7280', dotColor: '#9ca3af', action: () => setFilterStatus('NOT_STARTED') },
+      { label: 'COMPLETED', count: c('COMPLETED'), percent: pct(c('COMPLETED')), barColor: '#10b981', textColor: '#059669', dotColor: '#10b981', action: () => setFilterStatus('COMPLETED') },
+      { label: 'BLOCKED', count: c('BLOCKED'), percent: pct(c('BLOCKED')), barColor: '#ef4444', textColor: '#dc2626', dotColor: '#ef4444', action: () => setFilterStatus('BLOCKED') },
       { label: '已逾期', count: overdue, percent: pct(overdue), barColor: '#f59e0b', textColor: '#d97706', dotColor: '#f59e0b', action: () => {} },
     ];
   }, [tasks]);
@@ -454,28 +458,45 @@ export default function Tasks() {
     return mP && mPr && mS && mK;
   }), [tasks, filterProject, filterPriority, filterStatus, searchKeyword]);
 
-  const handleEditTask = (task: Task) => { setEditingTask(task); setDefaultStatus(task.status); setDefaultPriority(task.priority); setShowModal(true); };
-  const handleAddTask = (status: string) => { setEditingTask(null); setDefaultStatus(status); setDefaultPriority('中'); setShowModal(true); };
-  const handleAddByPriority = (priority: string) => { setEditingTask(null); setDefaultStatus('待开始'); setDefaultPriority(priority); setShowModal(true); };
+  const handleEditTask = (task: Task) => {
+    if (!canCreate) return;
+    setEditingTask(task); setDefaultStatus(task.status); setDefaultPriority(task.priority); setShowModal(true);
+  };
+  const handleAddTask = (status: string) => {
+    if (!canCreate) return;
+    setEditingTask(null); setDefaultStatus(status); setDefaultPriority('中'); setShowModal(true);
+  };
+  const handleAddByPriority = (priority: string) => {
+    if (!canCreate) return;
+    setEditingTask(null); setDefaultStatus('NOT_STARTED'); setDefaultPriority(priority); setShowModal(true);
+  };
 
   const handleUpdateStatus = async (task: Task, status: string) => {
-    await saveTaskLocal({ ...task, status });
-    try { await taskAPI.updateStatus(task.id, status); } catch {}
+    if (!canUpdateStatus) return;
+    // 乐观更新，失败回滚
+    const prev = tasks;
+    setTasks((list) => list.map((t) => (t.id === task.id ? { ...t, status } : t)));
+    try {
+      await taskAPI.updateStatus(task.id, status);
+    } catch {
+      setTasks(prev);
+      await loadTasks();
+    }
   };
 
   const handleSaveTask = async (data: any) => {
     try {
       if (editingTask) {
-        const res: any = await taskAPI.update(editingTask.id, data);
-        await saveTaskLocal(res.data ?? res);
+        await taskAPI.update(editingTask.id, data);
       } else {
-        const res: any = await taskAPI.create({ ...data, status: data.status || defaultStatus });
-        await saveTaskLocal(res.data ?? res);
+        await taskAPI.create({ ...data, status: data.status || defaultStatus });
       }
       setShowModal(false);
       setEditingTask(null);
-      loadTasks();
-    } catch (err) { console.error(err); }
+      await loadTasks();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
@@ -516,10 +537,12 @@ export default function Tasks() {
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
             刷新
           </button>
-          <button onClick={() => handleAddTask('待开始')} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" d="M12 4v16m8-8H4"/></svg>
-            新建任务
-          </button>
+          {canCreate && (
+            <button onClick={() => handleAddTask('NOT_STARTED')} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2.5"><path strokeLinecap="round" d="M12 4v16m8-8H4"/></svg>
+              新建任务
+            </button>
+          )}
         </div>
       </div>
 
@@ -584,7 +607,7 @@ export default function Tasks() {
             style={{ padding: '7px 24px 7px 10px', border: '1.5px solid #e5e7eb', borderRadius: '8px', fontSize: '13px', color: '#374151', background: '#f9fafb', cursor: 'pointer', outline: 'none', fontWeight: 500 }}
           >
             <option value="">全部状态</option>
-            {['待开始', '进行中', '已完成', '已阻塞'].map(s => <option key={s} value={s}>{s}</option>)}
+            {['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'BLOCKED'].map(s => <option key={s} value={s}>{s}</option>)}
           </select>
           <div style={{ width: '1px', height: '26px', background: '#e5e7eb' }} />
           {/* Priority filter tags */}

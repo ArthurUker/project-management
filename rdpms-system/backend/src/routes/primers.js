@@ -1,168 +1,162 @@
 import { Hono } from 'hono';
 import { prisma } from '../index.js';
+import { authenticate as authMiddleware, requirePermission, getAuth } from '../kernel/rbac.js';
+import { pickAllowed } from '../kernel/massAssign.js';
+import { AUDIT_ACTIONS } from '../kernel/constants.js';
+import { writeAudit } from '../kernel/audit.js';
+import { nextCode } from '../kernel/sequence.js';
+import { badRequest, notFound, parsePaging, paged } from '../kernel/http.js';
 
+/**
+ * /api/primers —— 引物探针库（W10 PG baseline 迁移）。
+ *
+ * 迁移要点：
+ *   projectName（文本）→ projectId（外键）；detectionTarget（文本）→ targetId（DetectionTarget 外键）；
+ *   speciesLatinName 等旧样本字段与 atccStrain、validatedStrain 已删除；
+ *   code @unique 必填 → CodeSequence 原子发号（PRM-）；
+ *   status 'active' → ACTIVE（DocumentStatus 枚举）；createdBy → createdById。
+ */
 const router = new Hono();
 
-// GET /api/primers — 列表（支持 keyword / projectName / targetGene / status 过滤）
-router.get('/', async (c) => {
-  try {
-    const { keyword, projectName, targetGene, detectionTarget, status, page = '1', pageSize = '100' } = c.req.query();
-    const where = {};
-    if (status) where.status = status;
-    if (projectName) where.projectName = { contains: projectName };
-    if (targetGene) where.targetGene = { contains: targetGene };
-    if (detectionTarget) where.detectionTarget = { contains: detectionTarget };
-    if (keyword) {
-      where.OR = [
-        { name: { contains: keyword } },
-        { sequence: { contains: keyword } },
-        { targetGene: { contains: keyword } },
-        { detectionTarget: { contains: keyword } },
-        { projectName: { contains: keyword } },
-        { speciesChineseName: { contains: keyword } },
-        { speciesLatinName: { contains: keyword } },
-      ];
-    }
-    const skip = (parseInt(page) - 1) * parseInt(pageSize);
-    const [list, total] = await Promise.all([
-      prisma.primer.findMany({
-        where,
-        orderBy: [{ projectName: 'asc' }, { name: 'asc' }],
-        skip,
-        take: parseInt(pageSize),
-      }),
-      prisma.primer.count({ where }),
-    ]);
-    return c.json({ success: true, list, total });
-  } catch (e) {
-    return c.json({ error: e.message }, 500);
-  }
-});
+router.use('*', authMiddleware);
 
-// GET /api/primers/:id
-router.get('/:id', async (c) => {
-  try {
-    const primer = await prisma.primer.findUnique({ where: { id: c.req.param('id') } });
-    if (!primer) return c.json({ error: '未找到' }, 404);
-    return c.json(primer);
-  } catch (e) {
-    return c.json({ error: e.message }, 500);
-  }
-});
+const PRIMER_FIELDS = [
+  'name', 'type', 'sequence', 'projectId', 'targetId', 'targetGene',
+  'modification5', 'modification3', 'ampliconLength', 'synthesisAmount',
+  'synthesisCompany', 'tubeCount', 'notes', 'status',
+];
 
-// POST /api/primers
-router.post('/', async (c) => {
-  try {
-    const body = await c.req.json();
-    const primer = await prisma.primer.create({
-      data: {
-        projectName:        body.projectName || null,
-        name:               body.name,
-        sequence:           body.sequence,
-        targetGene:         body.targetGene || null,
-        detectionTarget:    body.detectionTarget || null,
-        modification5:      body.modification5 || null,
-        modification3:      body.modification3 || null,
-        ampliconLength:     body.ampliconLength ? parseInt(body.ampliconLength) : null,
-        speciesLatinName:   body.speciesLatinName || null,
-        speciesChineseName: body.speciesChineseName || null,
-        speciesTaxid:       body.speciesTaxid || null,
-        atccStrain:         body.atccStrain || null,
-        validatedStrain:    body.validatedStrain || null,
-        synthesisAmount:    body.synthesisAmount || null,
-        synthesisCompany:   body.synthesisCompany || null,
-        tubeCount:          body.tubeCount ? parseInt(body.tubeCount) : null,
-        notes:              body.notes || null,
-        status:             body.status || 'active',
-        createdBy:          body.createdBy || null,
+function normalizePrimerData(raw) {
+  const data = pickAllowed(raw, PRIMER_FIELDS, { entityLabel: '引物', allowEmpty: true });
+  if ('ampliconLength' in data) {
+    data.ampliconLength = data.ampliconLength ? Number.parseInt(data.ampliconLength, 10) : null;
+  }
+  if ('tubeCount' in data) {
+    data.tubeCount = data.tubeCount ? Number.parseInt(data.tubeCount, 10) : null;
+  }
+  if ('status' in data) data.status = String(data.status).toUpperCase();
+  for (const k of Object.keys(data)) if (data[k] === undefined) delete data[k];
+  return data;
+}
+
+// GET / —— 列表（keyword / projectId / targetGene / status）
+router.get('/', requirePermission('primers.view'), async (c) => {
+  const { keyword, projectId, projectName, targetGene, targetId, detectionTarget, status } = c.req.query();
+  const { page, pageSize, skip, take } = parsePaging(c.req.query(), 100);
+
+  const where = { deletedAt: null };
+  if (status) where.status = String(status).toUpperCase();
+  if (projectId || projectName) where.projectId = projectId || projectName;
+  if (targetId || detectionTarget) where.targetId = targetId || detectionTarget;
+  if (targetGene) where.targetGene = { contains: targetGene };
+  if (keyword) {
+    where.OR = [
+      { name: { contains: keyword } },
+      { sequence: { contains: keyword } },
+      { targetGene: { contains: keyword } },
+      { code: { contains: keyword } },
+    ];
+  }
+
+  const [total, list] = await Promise.all([
+    prisma.primer.count({ where }),
+    prisma.primer.findMany({
+      where,
+      orderBy: [{ projectId: 'asc' }, { name: 'asc' }],
+      skip,
+      take,
+      include: {
+        project: { select: { id: true, name: true, code: true } },
+        target: { select: { id: true, name: true } },
+        creator: { select: { id: true, displayName: true } },
       },
-    });
-    return c.json({ success: true, data: primer }, 201);
-  } catch (e) {
-    return c.json({ error: e.message }, 400);
-  }
+    }),
+  ]);
+  return c.json({ success: true, list, total, ...paged(list, total, { page, pageSize }) });
 });
 
-// PUT /api/primers/:id
-router.put('/:id', async (c) => {
-  try {
-    const id = c.req.param('id');
-    const body = await c.req.json();
-    const primer = await prisma.primer.update({
-      where: { id },
-      data: {
-        projectName:        body.projectName ?? undefined,
-        name:               body.name ?? undefined,
-        sequence:           body.sequence ?? undefined,
-        targetGene:         body.targetGene ?? undefined,
-        detectionTarget:    body.detectionTarget ?? undefined,
-        modification5:      body.modification5 ?? undefined,
-        modification3:      body.modification3 ?? undefined,
-        ampliconLength:     body.ampliconLength !== undefined ? (body.ampliconLength ? parseInt(body.ampliconLength) : null) : undefined,
-        speciesLatinName:   body.speciesLatinName ?? undefined,
-        speciesChineseName: body.speciesChineseName ?? undefined,
-        speciesTaxid:       body.speciesTaxid ?? undefined,
-        atccStrain:         body.atccStrain ?? undefined,
-        validatedStrain:    body.validatedStrain ?? undefined,
-        synthesisAmount:    body.synthesisAmount ?? undefined,
-        synthesisCompany:   body.synthesisCompany ?? undefined,
-        tubeCount:          body.tubeCount !== undefined ? (body.tubeCount ? parseInt(body.tubeCount) : null) : undefined,
-        notes:              body.notes ?? undefined,
-        status:             body.status ?? undefined,
-      },
-    });
-    return c.json({ success: true, data: primer });
-  } catch (e) {
-    return c.json({ error: e.message }, 400);
-  }
+// GET /:id
+router.get('/:id', requirePermission('primers.view'), async (c) => {
+  const primer = await prisma.primer.findUnique({
+    where: { id: c.req.param('id') },
+    include: {
+      project: { select: { id: true, name: true, code: true } },
+      target: { select: { id: true, name: true } },
+      creator: { select: { id: true, displayName: true } },
+    },
+  });
+  if (!primer || primer.deletedAt) throw notFound('PRIMER_NOT_FOUND', '引物不存在');
+  return c.json(primer);
 });
 
-// DELETE /api/primers/:id
+// POST /
+router.post('/', requirePermission('primers.create'), async (c) => {
+  const auth = getAuth(c);
+  const raw = await c.req.json().catch(() => null);
+  const data = normalizePrimerData(raw);
+  if (!data.name) throw badRequest('VALIDATION_ERROR', 'name 必填');
+  if (!data.sequence) throw badRequest('VALIDATION_ERROR', 'sequence 必填');
+
+  const year = new Date().getFullYear();
+  const code = await nextCode(prisma, 'PRIMER', { periodKey: String(year), fallbackPrefix: `PRM-${year}-`, padding: 3 });
+
+  const created = await prisma.primer.create({
+    data: { ...data, code, status: data.status || 'ACTIVE', createdById: auth.userId },
+    include: {
+      project: { select: { id: true, name: true, code: true } },
+      target: { select: { id: true, name: true } },
+    },
+  });
+
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.CREATE,
+    entityType: 'PRIMER',
+    entityId: created.id,
+    entityLabel: created.code,
+    metadata: { permissionCode: 'primers.create' },
+  });
+  return c.json({ success: true, data: created }, 201);
+});
+
+// PUT /:id
+router.put('/:id', requirePermission('primers.update'), async (c) => {
+  const auth = getAuth(c);
+  const id = c.req.param('id');
+  const raw = await c.req.json().catch(() => null);
+  const data = normalizePrimerData(raw);
+  if ('code' in data) delete data.code;
+
+  const before = await prisma.primer.findUnique({ where: { id } });
+  if (!before || before.deletedAt) throw notFound('PRIMER_NOT_FOUND', '引物不存在');
+
+  const updated = await prisma.primer.update({ where: { id }, data: { ...data, updatedById: auth.userId } });
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.UPDATE,
+    entityType: 'PRIMER',
+    entityId: id,
+    entityLabel: before.code,
+    changedFields: Object.keys(data),
+    metadata: { permissionCode: 'primers.update' },
+  });
+  return c.json({ success: true, data: updated });
+});
+
+// M-1：primers.delete 为 P1 后置权限，端点暂不提供
 router.delete('/:id', async (c) => {
-  try {
-    await prisma.primer.delete({ where: { id: c.req.param('id') } });
-    return c.json({ success: true });
-  } catch (e) {
-    return c.json({ error: e.message }, 400);
-  }
+  return c.json({ error: '引物删除属 P1 后置权限，本轮未启用', code: 'PERMISSION_NOT_AVAILABLE' }, 403);
 });
 
-// POST /api/primers/batch-import — CSV 批量导入（前端解析 CSV 后传数组）
+// M-1：primers.import 为 P1 后置权限，端点暂不提供
 router.post('/batch-import', async (c) => {
-  try {
-    const { rows } = await c.req.json();
-    if (!Array.isArray(rows) || rows.length === 0) return c.json({ error: '无数据' }, 400);
-    const created = await prisma.$transaction(
-      rows.map((r) =>
-        prisma.primer.create({
-          data: {
-            projectName:        r.projectName || null,
-            name:               r.name || '',
-            sequence:           r.sequence || '',
-            targetGene:         r.targetGene || null,
-            detectionTarget:    r.detectionTarget || null,
-            modification5:      r.modification5 || null,
-            modification3:      r.modification3 || null,
-            ampliconLength:     r.ampliconLength ? parseInt(r.ampliconLength) : null,
-            speciesLatinName:   r.speciesLatinName || null,
-            speciesChineseName: r.speciesChineseName || null,
-            speciesTaxid:       r.speciesTaxid || null,
-            atccStrain:         r.atccStrain || null,
-            validatedStrain:    r.validatedStrain || null,
-            synthesisAmount:    r.synthesisAmount || null,
-            synthesisCompany:   r.synthesisCompany || null,
-            tubeCount:          r.tubeCount ? parseInt(r.tubeCount) : null,
-            notes:              r.notes || null,
-            status:             'active',
-            createdBy:          r.createdBy || null,
-          },
-        })
-      )
-    );
-    return c.json({ success: true, count: created.length });
-  } catch (e) {
-    return c.json({ error: e.message }, 400);
-  }
+  return c.json({ error: '引物批量导入属 P1 后置权限，本轮未启用', code: 'PERMISSION_NOT_AVAILABLE' }, 403);
 });
 
 export default router;

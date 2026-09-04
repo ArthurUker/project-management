@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { docsAPI } from '../api/client';
+import { docsAPI } from '@/api';
 
 interface DocRef {
   id: string;
@@ -56,7 +56,7 @@ export default function DocReference({
         const res = await docsAPI.documents.search(keyword);
         // 过滤掉已选中的文档
         const selectedIds = new Set(value.map(v => v.id));
-        setResults((res.list || []).filter((doc: DocRef) => !selectedIds.has(doc.id)));
+        setResults(((res ?? []) as unknown as DocRef[]).filter((doc: DocRef) => !selectedIds.has(doc.id)));
       } catch (error) {
         console.error('搜索文档失败:', error);
         setResults([]);

@@ -5,7 +5,7 @@
  * 可通过"添加列"从知识库选择试剂；通过"添加行"新增配方
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { formulaAPI, reagentMaterialsAPI } from '../../api/client';
+import { formulaAPI, reagentMaterialsAPI } from '@/api';
 
 const FORMULA_TYPES = ['XDY', 'LJY', 'CLY', 'HCY', 'JHY'];
 const PCR_TYPES = ['PCR', 'qPCR', 'RT-PCR', 'RT-qPCR'];
@@ -66,7 +66,7 @@ export default function FormulaBatchEditor({ initialFormulaIds, initialFormulas,
     try {
       // 1. 加载试剂原料知识库
       const matRes = await reagentMaterialsAPI.list() as any;
-      const mats: any[] = matRes.list || [];
+      const mats: any[] = matRes.items || [];
       setMaterials(mats);
 
       // 2. 获取需要编辑的配方详细数据

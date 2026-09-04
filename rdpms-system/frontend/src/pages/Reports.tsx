@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { reportAPI } from '../api/client';
-import { useAppStore } from '../store/appStore';
+import { reportAPI } from '@/api';
+import { useAuth } from '../auth/useAuth';
+import { useHasPerm, PERMS } from '../auth/permissions';
 
 const STATUS_COLORS: Record<string, string> = {
-  '草稿': 'bg-gray-100 text-gray-600',
-  '已提交': 'bg-yellow-100 text-yellow-700',
-  '已阅': 'bg-green-100 text-green-700',
-  '需修改': 'bg-orange-100 text-orange-700',
+  'DRAFT': 'bg-gray-100 text-gray-600',
+  'SUBMITTED': 'bg-yellow-100 text-yellow-700',
+  'REVIEWED': 'bg-green-100 text-green-700',
+  'NEEDS_REVISION': 'bg-orange-100 text-orange-700',
 };
 
 const REPORT_TYPES = [
@@ -45,12 +46,13 @@ function getCurrentReportType(): string {
 }
 
 export default function Reports() {
-  const { user } = useAppStore();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [activeType, setActiveType] = useState<string>(getCurrentReportType());
-  // 管理员默认显示"全部汇报"，其他用户默认显示"我的汇报"
-  const [filter, setFilter] = useState<'my' | 'all' | 'pending'>(user?.role === 'admin' ? 'all' : 'my');
+  // 有审批权限者默认看"全部汇报"，其余默认看"我的汇报"
+  const canReviewAll = useHasPerm(PERMS.REPORTS_APPROVE);
+  const [filter, setFilter] = useState<'my' | 'all' | 'pending'>(canReviewAll ? 'all' : 'my');
   const [reportList, setReportList] = useState<any[]>([]);
   
   useEffect(() => {
@@ -62,10 +64,10 @@ export default function Reports() {
     try {
       const params: any = { reportType: activeType, pageSize: 100 };
       if (filter === 'my') params.userId = user?.id;
-      if (filter === 'pending') params.status = '已提交';
+      if (filter === 'pending') params.status = 'SUBMITTED';
       
       const res = await reportAPI.list(params);
-      setReportList(res.list || []);
+      setReportList(res.items || []);
     } catch (err) {
       console.error('Failed to load reports:', err);
     } finally {
@@ -78,7 +80,7 @@ export default function Reports() {
     e.stopPropagation();
     if (!window.confirm('确认删除该草稿？')) return;
     try {
-      await reportAPI.delete(id);
+      await reportAPI.remove(id);
       await loadReports();
     } catch (err) {
       console.error('删除失败', err);
@@ -112,8 +114,8 @@ export default function Reports() {
     const isOwnReport = report.userId === user?.id;
     if (!isOwnReport) return `/reports/${report.id}/review`;
 
-    const submittedStatus = report.status === '已提交' || report.status === 'submitted';
-    if ((user?.role === 'admin' || user?.role === 'manager') && submittedStatus) {
+    const submittedStatus = report.status === 'SUBMITTED' || report.status === 'submitted';
+    if (canReviewAll && submittedStatus) {
       return `/reports/${report.id}/review`;
     }
 
@@ -202,9 +204,9 @@ export default function Reports() {
             onClick={() => setFilter('pending')}
           >
             待审阅
-            {reportList.filter(r => r.status === '已提交').length > 0 && (
+            {reportList.filter(r => r.status === 'SUBMITTED').length > 0 && (
               <span className="ml-1.5 bg-yellow-500 text-white text-xs px-1.5 py-0.5 rounded-full">
-                {reportList.filter(r => r.status === '已提交').length}
+                {reportList.filter(r => r.status === 'SUBMITTED').length}
               </span>
             )}
           </button>
@@ -280,7 +282,7 @@ export default function Reports() {
                                 return null;
                               })()}
                             </p>
-                            {report.status === '需修改' && report.approveNote && (
+                            {report.status === 'NEEDS_REVISION' && report.approveNote && (
                               <p className="text-xs text-orange-600 mt-1.5 bg-orange-50 border border-orange-200 rounded px-2 py-1">
                                 批示：{report.approveNote}
                               </p>
@@ -291,7 +293,7 @@ export default function Reports() {
                           <span className={`px-3 py-1 rounded-full text-sm font-medium ${STATUS_COLORS[report.status]}`}>
                             {report.status}
                           </span>
-                          {(report.userId === user?.id) && (report.status === '已提交' || report.status === 'submitted') && (
+                          {(report.userId === user?.id) && (report.status === 'SUBMITTED' || report.status === 'submitted') && (
                             <button
                               onClick={async (e) => {
                                 e.preventDefault();
@@ -310,7 +312,7 @@ export default function Reports() {
                               撤回
                             </button>
                           )}
-                          {(report.userId === user?.id) && (report.status === '草稿' || report.status === 'draft') && (
+                          {(report.userId === user?.id) && (report.status === 'DRAFT' || report.status === 'draft') && (
                             <button
                               onClick={(e) => handleDeleteReport(e, report.id)}
                               className="text-red-500 hover:text-red-700 text-sm"

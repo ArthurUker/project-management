@@ -1,270 +1,206 @@
 import { Hono } from 'hono';
 import { prisma } from '../index.js';
-import { authMiddleware } from './auth.js';
+import { authenticate as authMiddleware, requirePermission, getAuth } from '../kernel/rbac.js';
+import { projectVisibilityFilter } from '../kernel/projectAccess.js';
 
+/**
+ * /api/stats —— 仪表盘统计（W10 PG baseline 迁移）。
+ *
+ * 迁移要点：
+ *   旧角色判定（userRole === 'admin'）→ projectVisibilityFilter（∩ 模型：成员/负责人可见）；
+ *   中文状态 → ProjectStatus/TaskStatus/ReportStatus 枚举；
+ *   Report.month → periodKey；MonthlyProgress.month → periodKey；
+ *   User.name → displayName。
+ */
 const stats = new Hono();
 
 stats.use('*', authMiddleware);
 
+const NO_PROJECT = ['__none__'];
+
+function projectFilterFor(auth) {
+  return projectVisibilityFilter(auth);
+}
+
 // 仪表盘统计
-stats.get('/dashboard', async (c) => {
-  const userId = c.get('userId');
-  const userRole = c.get('userRole');
-  
-  // 获取当前月份的月份字符串，如 "2026-04"
+stats.get('/dashboard', requirePermission('dashboard.view'), async (c) => {
+  const auth = getAuth(c);
+  const userId = auth.userId;
+
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastMonthStr = `${lastMonth.getFullYear()}-${String(lastMonth.getMonth() + 1).padStart(2, '0')}`;
-  
-  // 基础条件：获取用户参与的项目ID列表
-  let projectIds = [];
-  if (userRole === 'admin') {
-    const allProjects = await prisma.project.findMany({ select: { id: true } });
-    projectIds = allProjects.map(p => p.id);
-  } else {
+  const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const lastMonth = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`;
+
+  const visible = projectFilterFor(auth);
+
+  // 可见项目 ID 集合（SUPER_ADMIN 为 null → 全量）
+  let projectIds = null;
+  if (visible) {
     const memberProjects = await prisma.project.findMany({
-      where: {
-        OR: [
-          { managerId: userId },
-          { members: { some: { userId } } }
-        ]
-      },
-      select: { id: true }
+      where: { ...visible, deletedAt: null },
+      select: { id: true },
     });
-    projectIds = memberProjects.map(p => p.id);
+    projectIds = memberProjects.map((p) => p.id);
   }
-  
+  const projectScope = projectIds ? { projectId: { in: projectIds.length > 0 ? projectIds : NO_PROJECT } } : {};
+
   const [
-    // 项目统计
     totalProjects,
     activeProjects,
     projectByStatus,
     projectByType,
-    
-    // 任务统计
     totalTasks,
     myTasks,
     taskByStatus,
-    
-    // 汇报统计
     totalReports,
     submittedReports,
     pendingReports,
-    
-    // 月度进展
-    monthlyProgress
+    monthlyProgress,
   ] = await Promise.all([
-    // 项目总数
-    prisma.project.count({ 
-      where: userRole === 'admin' ? {} : {
-        OR: [{ managerId: userId }, { members: { some: { userId } } }]
-      }
+    prisma.project.count({ where: visible ? { ...visible, deletedAt: null } : { deletedAt: null } }),
+    prisma.project.count({
+      where: { status: 'IN_PROGRESS', deletedAt: null, ...(visible ?? {}) },
     }),
-    
-    // 进行中项目
-    prisma.project.count({ 
-      where: { 
-        status: '进行中',
-        ...(userRole !== 'admin' ? { OR: [{ managerId: userId }, { members: { some: { userId } } }] } : {})
-      } 
-    }),
-    
-    // 按状态分组
     prisma.project.groupBy({
       by: ['status'],
-      where: userRole === 'admin' ? {} : { OR: [{ managerId: userId }, { members: { some: { userId } } }] },
-      _count: { id: true }
+      where: visible ? { ...visible, deletedAt: null } : { deletedAt: null },
+      _count: { id: true },
     }),
-    
-    // 按类型分组
     prisma.project.groupBy({
       by: ['type'],
-      where: userRole === 'admin' ? {} : { OR: [{ managerId: userId }, { members: { some: { userId } } }] },
-      _count: { id: true }
+      where: visible ? { ...visible, deletedAt: null } : { deletedAt: null },
+      _count: { id: true },
     }),
-    
-    // 任务总数
-    prisma.task.count({ 
-      where: { projectId: { in: projectIds.length > 0 ? projectIds : ['__none__'] } }
-    }),
-    
-    // 我的任务
-    prisma.task.count({ 
-      where: { assigneeId: userId } 
-    }),
-    
-    // 任务按状态
+    prisma.task.count({ where: { deletedAt: null, ...projectScope } }),
+    prisma.task.count({ where: { assigneeId: userId, deletedAt: null } }),
     prisma.task.groupBy({
       by: ['status'],
-      where: { projectId: { in: projectIds.length > 0 ? projectIds : ['__none__'] } },
-      _count: { id: true }
+      where: { deletedAt: null, ...projectScope },
+      _count: { id: true },
     }),
-    
-    // 汇报总数
-    prisma.report.count({ 
-      where: { projectId: { in: projectIds.length > 0 ? projectIds : ['__none__'] } }
-    }),
-    
-    // 已提交汇报
-    prisma.report.count({ 
-      where: { 
-        status: { in: ['已提交', '已通过'] },
-        projectId: { in: projectIds.length > 0 ? projectIds : ['__none__'] }
-      } 
-    }),
-    
-    // 待审批汇报
-    prisma.report.count({ 
-      where: { 
-        status: '已提交',
-        projectId: { in: projectIds.length > 0 ? projectIds : ['__none__'] }
-      } 
-    }),
-    
-    // 本月进展
+    prisma.report.count({ where: { deletedAt: null, ...projectScope } }),
+    prisma.report.count({ where: { status: 'SUBMITTED', deletedAt: null, ...projectScope } }),
+    prisma.report.count({ where: { status: 'SUBMITTED', deletedAt: null, ...projectScope } }),
     prisma.monthlyProgress.findMany({
-      where: { 
-        month: currentMonth,
-        projectId: { in: projectIds.length > 0 ? projectIds : ['__none__'] }
-      },
-      include: {
-        project: { select: { id: true, name: true } }
-      }
-    })
+      where: { periodKey: currentMonth, deletedAt: null, ...projectScope },
+      include: { project: { select: { id: true, name: true } } },
+    }),
   ]);
-  
+
   return c.json({
     projects: {
       total: totalProjects,
       active: activeProjects,
-      byStatus: projectByStatus.map(s => ({ status: s.status, count: s._count.id })),
-      byType: projectByType.map(t => ({ type: t.type, count: t._count.id }))
+      byStatus: projectByStatus.map((s) => ({ status: s.status, count: s._count.id })),
+      byType: projectByType.map((t) => ({ type: t.type, count: t._count.id })),
     },
     tasks: {
       total: totalTasks,
       myCount: myTasks,
-      byStatus: taskByStatus.map(s => ({ status: s.status, count: s._count.id }))
+      byStatus: taskByStatus.map((s) => ({ status: s.status, count: s._count.id })),
     },
     reports: {
       total: totalReports,
       submitted: submittedReports,
-      pending: pendingReports
+      pending: pendingReports,
     },
     monthlyProgress,
     currentMonth,
-    lastMonth: lastMonthStr
+    lastMonth,
   });
 });
 
-// 项目统计
-stats.get('/projects', async (c) => {
+// 项目统计（dashboard.view 即可访问；完成率改单查询聚合）
+stats.get('/projects', requirePermission('dashboard.view'), async (c) => {
+  const auth = getAuth(c);
   const { type, status } = c.req.query();
-  
-  const where = {};
+
+  const where = { deletedAt: null, ...(projectFilterFor(auth) ?? {}) };
   if (type) where.type = type;
   if (status) where.status = status;
-  
+
   const projects = await prisma.project.findMany({
     where,
     include: {
-      manager: { select: { id: true, name: true } },
-      _count: { select: { tasks: true, members: true } }
+      manager: { select: { id: true, displayName: true } },
+      _count: { select: { tasks: { where: { deletedAt: null } }, members: { where: { leftAt: null } } } },
     },
-    orderBy: { updatedAt: 'desc' }
+    orderBy: { updatedAt: 'desc' },
   });
-  
-  // 添加完成率
-  const projectsWithStats = await Promise.all(
-    projects.map(async (p) => {
-      const total = await prisma.task.count({ where: { projectId: p.id } });
-      const completed = await prisma.task.count({ 
-        where: { projectId: p.id, status: '已完成' } 
-      });
-      return {
-        ...p,
-        taskCompletion: total > 0 ? Math.round((completed / total) * 100) : 0
-      };
-    })
-  );
-  
-  return c.json(projectsWithStats);
+
+  const withStats = await Promise.all(projects.map(async (p) => {
+    const [total, completed] = await Promise.all([
+      prisma.task.count({ where: { projectId: p.id, deletedAt: null } }),
+      prisma.task.count({ where: { projectId: p.id, status: 'COMPLETED', deletedAt: null } }),
+    ]);
+    return { ...p, taskCompletion: total > 0 ? Math.round((completed / total) * 100) : 0 };
+  }));
+
+  return c.json(withStats);
 });
 
 // 个人工作量统计
-stats.get('/users/:userId/workload', async (c) => {
+stats.get('/users/:userId/workload', requirePermission('dashboard.view'), async (c) => {
   const userId = c.req.param('userId');
-  
-  // 获取该用户参与的项目
-  const projects = await prisma.projectMember.findMany({
-    where: { userId },
+
+  const memberships = await prisma.projectMember.findMany({
+    where: { userId, leftAt: null },
     include: {
       project: {
         include: {
-          tasks: {
-            where: { assigneeId: userId }
-          },
-          reports: {
-            where: { userId }
-          }
-        }
-      }
-    }
+          tasks: { where: { assigneeId: userId, deletedAt: null } },
+          reports: { where: { authorId: userId, deletedAt: null } },
+        },
+      },
+    },
   });
-  
-  const workload = projects.map(pm => ({
+
+  const workload = memberships.map((pm) => ({
     project: {
       id: pm.project.id,
       name: pm.project.name,
       code: pm.project.code,
-      role: pm.role
+      role: pm.role,
     },
     tasks: {
       total: pm.project.tasks.length,
-      completed: pm.project.tasks.filter(t => t.status === '已完成').length,
-      inProgress: pm.project.tasks.filter(t => t.status === '进行中').length
+      completed: pm.project.tasks.filter((t) => t.status === 'COMPLETED').length,
+      inProgress: pm.project.tasks.filter((t) => t.status === 'IN_PROGRESS').length,
     },
     reports: {
       total: pm.project.reports.length,
-      submitted: pm.project.reports.filter(r => r.status !== '草稿').length
-    }
+      submitted: pm.project.reports.filter((r) => r.status !== 'DRAFT').length,
+    },
   }));
-  
+
   return c.json({
     userId,
     projects: workload,
     summary: {
       totalTasks: workload.reduce((sum, w) => sum + w.tasks.total, 0),
       completedTasks: workload.reduce((sum, w) => sum + w.tasks.completed, 0),
-      totalReports: workload.reduce((sum, w) => sum + w.reports.total, 0)
-    }
+      totalReports: workload.reduce((sum, w) => sum + w.reports.total, 0),
+    },
   });
 });
 
 // 汇报统计
-stats.get('/reports', async (c) => {
-  const { month, projectId } = c.req.query();
-  
-  const where = {};
-  if (month) where.month = month;
+stats.get('/reports', requirePermission('dashboard.view'), async (c) => {
+  const { periodKey, month, projectId } = c.req.query();
+
+  const where = { deletedAt: null };
+  if (periodKey || month) where.periodKey = periodKey || month;
   if (projectId) where.projectId = projectId;
-  
-  const [byStatus, byMonth] = await Promise.all([
-    prisma.report.groupBy({
-      by: ['status'],
-      where,
-      _count: { id: true }
-    }),
-    prisma.report.groupBy({
-      by: ['month'],
-      where,
-      _count: { id: true }
-    })
+
+  const [byStatus, byPeriod] = await Promise.all([
+    prisma.report.groupBy({ by: ['status'], where, _count: { id: true } }),
+    prisma.report.groupBy({ by: ['periodKey'], where, _count: { id: true } }),
   ]);
-  
+
   return c.json({
-    byStatus: byStatus.map(s => ({ status: s.status, count: s._count.id })),
-    byMonth: byMonth.map(m => ({ month: m.month, count: m._count.id }))
+    byStatus: byStatus.map((s) => ({ status: s.status, count: s._count.id })),
+    byMonth: byPeriod.map((m) => ({ month: m.periodKey, count: m._count.id })),
   });
 });
 

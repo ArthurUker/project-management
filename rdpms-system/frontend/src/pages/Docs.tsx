@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { docsAPI, formulaAPI } from '../api/client';
-import { useAppStore } from '../store/appStore';
+import { docsAPI, formulaAPI } from '@/api';
+import { useAuth } from '../auth/useAuth';
 import ReagentLibrary from './knowledge/ReagentLibrary';
 import PrimerLibrary from './knowledge/PrimerLibrary';
 import AmplificationReagentLibrary from './knowledge/AmplificationReagentLibrary';
@@ -60,7 +60,7 @@ const EXCLUDED_KNOWLEDGE_CATEGORY_NAMES = new Set(['任务模版库', '任务模
 export default function Docs() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { user } = useAppStore();
+  const { user } = useAuth();
   const moduleParam = searchParams.get('module');
   const [activeModule, setActiveModule] = useState<'docs' | 'regulatory'>(moduleParam === 'regulatory' ? 'regulatory' : 'docs');
 
@@ -123,7 +123,7 @@ export default function Docs() {
   const loadCategories = async () => {
     try {
       const res = await docsAPI.categories.list();
-      let cats = res.list || [];
+      let cats = res ?? [];
       const existingNames = new Set(cats.map((c: DocCategory) => c.name));
       const missingCategories = DEFAULT_CATEGORIES.filter(cat => !existingNames.has(cat.name));
       if (missingCategories.length > 0) {
@@ -131,7 +131,7 @@ export default function Docs() {
           try { await docsAPI.categories.create(cat); } catch (e: any) { if (!e.message?.includes('已存在')) console.error('创建分类失败:', e); }
         }
         const res2 = await docsAPI.categories.list();
-        cats = res2.list || [];
+        cats = res2 ?? [];
       }
       // 去重
       const seen = new Set();
@@ -159,7 +159,7 @@ export default function Docs() {
       if (filterType) params.docType = filterType;
       if (searchKeyword) params.keyword = searchKeyword;
       const res = await docsAPI.documents.list(params);
-      setDocuments(res.list || []);
+      setDocuments((res.items ?? []) as unknown as DocDocument[]);
     } catch (error) { console.error('加载文档失败:', error); } finally { setLoading(false); }
   };
 
@@ -170,7 +170,7 @@ export default function Docs() {
   const handleOpenFormulaPicker = async () => {
     try {
       const res = await formulaAPI.list({});
-      setFormulaList((res as any).list || res as any || []);
+      setFormulaList((res as any).items || res as any || []);
     } catch (e) { setFormulaList([]); }
     setFormulaSearch('');
     setShowFormulaPicker(true);
@@ -210,7 +210,7 @@ export default function Docs() {
     try { await docsAPI.documents.create({ ...docForm, createdBy: user?.id }); setShowCreateModal(false); resetForm(); loadDocuments(); } catch (e: any) { alert(e.message || '创建失败'); }
   };
   const handleUpdateDoc = async () => { if (!editingDoc || !docForm.title) return; try { await docsAPI.documents.update(editingDoc.id, { ...docForm, updatedBy: user?.id }); setEditingDoc(null); resetForm(); loadDocuments(); } catch (e: any) { alert(e.message || '更新失败'); } };
-  const handleDeleteDoc = async (id: string) => { if (!confirm('确定要删除这个文档吗？')) return; try { await docsAPI.documents.delete(id); loadDocuments(); } catch (e) { alert('删除失败'); } };
+  const handleDeleteDoc = async (id: string) => { if (!confirm('确定要删除这个文档吗？')) return; try { await docsAPI.documents.remove(id); loadDocuments(); } catch (e) { alert('删除失败'); } };
   const resetForm = () => setDocForm({ categoryId: selectedCategory || '', code: '', title: '', description: '', docType: 'sop', content: '', tags: '', version: 'V1.0' });
   const openEditModal = (doc: DocDocument) => {
     setEditingDoc(doc);

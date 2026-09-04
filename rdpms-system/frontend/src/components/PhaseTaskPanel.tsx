@@ -6,7 +6,7 @@
  *  3. 手动新建自定义任务
  */
 import React, { useState, useCallback, useEffect } from 'react';
-import { taskTemplatesAPI } from '../api/client';
+import { taskTemplatesAPI } from '@/api';
 
 interface Task {
   id: string;
@@ -99,7 +99,7 @@ function TaskTemplatePickerModal({ existingTitles, onImport, onClose }: {
 
   useEffect(() => {
     taskTemplatesAPI.list({ pageSize: 200 })
-      .then((res: any) => setTemplateList(res?.list || res?.data || []))
+      .then((res: any) => setTemplateList(res?.items || res?.data || []))
       .catch(() => setTemplateList([]))
       .finally(() => setLoading(false));
   }, []);

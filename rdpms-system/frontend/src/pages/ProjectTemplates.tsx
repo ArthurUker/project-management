@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { projectTemplatesAPI } from '../api/client';
-import { useAppStore } from '../store/appStore';
-import { hasPerm, PERMS } from '../utils/permissions';
+import { projectTemplatesAPI } from '@/api';
+import { useHasPerm, PERMS } from '../auth/permissions';
 
 export default function ProjectTemplates() {
-  const { user } = useAppStore();
+
+  const canCreate = useHasPerm(PERMS.TEMPLATES_CREATE);
   const [templates, setTemplates] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -16,7 +16,7 @@ export default function ProjectTemplates() {
     setLoading(true);
     try {
       const res = await projectTemplatesAPI.list({ pageSize: 100 });
-      setTemplates((res as any).list || []);
+      setTemplates((res as any).items || []);
     } catch (err) {
       console.error('Load templates failed:', err);
     } finally {
@@ -39,7 +39,7 @@ export default function ProjectTemplates() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold">项目研发模版</h1>
-        {hasPerm(user, PERMS.TEMPLATES_CREATE) && (
+        {canCreate && (
           <button onClick={handleCreate} className="btn btn-primary">新建模版</button>
         )}
       </div>

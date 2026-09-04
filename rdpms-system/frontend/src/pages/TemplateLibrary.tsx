@@ -1,8 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { projectTemplatesAPI } from '../api/client';
-import { useAppStore } from '../store/appStore';
-import { hasPerm, PERMS } from '../utils/permissions';
+import { projectTemplatesAPI } from '@/api';
+import { useHasPerm, PERMS } from '../auth/permissions';
 import ProjectTemplateEditor from '../components/ProjectTemplateEditor';
 
 const CATEGORIES = [
@@ -22,7 +21,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 function CreateTemplateModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const { user } = useAppStore();
+  const canCreate = useHasPerm(PERMS.TEMPLATES_CREATE);
   const [form, setForm] = useState({ name: '', category: 'reagent_chip', description: '', isMaster: false });
   const [saving, setSaving] = useState(false);
 
@@ -41,13 +40,13 @@ function CreateTemplateModal({ onClose, onCreated }: { onClose: () => void; onCr
       onCreated();
       onClose();
     } catch (err: any) {
-      alert(err?.error || '创建失败');
+      alert(err?.error || err?.message || '创建失败');
     } finally {
       setSaving(false);
     }
   }
 
-  if (!hasPerm(user, PERMS.TEMPLATES_CREATE)) {
+  if (!canCreate) {
     return (
       <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
         <div className="bg-white rounded-xl p-6 w-80 text-center">
@@ -114,7 +113,7 @@ function CreateTemplateModal({ onClose, onCreated }: { onClose: () => void; onCr
 
 export default function TemplateLibrary() {
   const navigate = useNavigate();
-  const { user } = useAppStore();
+  const isAdmin = useHasPerm(PERMS.TEMPLATES_EDIT);
   const [list, setList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [category, setCategory] = useState('');
@@ -129,7 +128,7 @@ export default function TemplateLibrary() {
     setLoading(true);
     try {
       const res = await projectTemplatesAPI.list({ page: 1, pageSize: 200 });
-      setList((res as any).list || []);
+      setList((res as any).items || []);
     } catch (e) {
       console.error(e);
     } finally {
@@ -162,7 +161,7 @@ export default function TemplateLibrary() {
     e.stopPropagation();
     if (!window.confirm('确定删除此模版？')) return;
     try {
-      await projectTemplatesAPI.delete(id);
+      await projectTemplatesAPI.remove(id);
       fetchList();
     } catch {
       alert('删除失败');
@@ -196,7 +195,6 @@ export default function TemplateLibrary() {
     });
   }, [list, category, statusFilter, keyword]);
 
-  const isAdmin = user?.role === 'admin';
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { reagentMaterialsAPI } from '../../api/client';
+import { reagentMaterialsAPI } from '@/api';
 
 type ColumnKey =
   | 'commonName'
@@ -143,7 +143,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
   const [showConfirm, setShowConfirm] = useState(false);
   const [confirmTargets, setConfirmTargets] = useState<any[]>([]);
   const [showForceConfirm, setShowForceConfirm] = useState(false);
-  const [forceDetails, setForceDetails] = useState<any[]>([]);
+  const [forceDetails] = useState<any[]>([]);
   const [showColumnSettings, setShowColumnSettings] = useState(false);
   const [columnOrder, setColumnOrder] = useState<ColumnKey[]>(DEFAULT_COLUMN_ORDER);
 
@@ -470,7 +470,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
         sortBy,
         sortOrder,
       });
-      const items = res.list || [];
+      const items = res.items || [];
 
       // 如果数据库为空，按需初始化默认数据
       if (items.length === 0) {
@@ -503,7 +503,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
           sortBy,
           sortOrder,
         });
-        const nextList = res2.list || [];
+        const nextList = res2.items || [];
         setList(nextList);
         setSelectedIds(prev => prev.filter(id => nextList.some((item: any) => item.id === id)));
       } else {
@@ -581,27 +581,18 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
   const confirmDelete = async () => {
     setShowConfirm(false);
     try {
-      await reagentMaterialsAPI.bulkDelete(selectedIds);
-      // success
-      setSelectedIds([]);
-      load();
+      // M-1：reagent_materials.delete 为 P1 后置权限，本轮未启用
+      alert('试剂删除属 P1 后置权限，本轮未启用');
+      setShowConfirm(false);
     } catch (err: any) {
-      if (err?.error === 'has_references' && err?.details) {
-        setForceDetails(err.details);
-        setShowForceConfirm(true);
-      } else {
-        alert(err?.error || err?.message || '删除失败');
-      }
+      alert(err?.error || err?.message || '删除失败');
     }
   };
 
   const forceDelete = async () => {
-    try {
-      await reagentMaterialsAPI.bulkDelete(selectedIds, true);
-      setShowForceConfirm(false);
-      setSelectedIds([]);
-      load();
-    } catch (err:any) { alert(err?.error || err?.message || '强制删除失败'); }
+    // M-1：reagent_materials.delete 为 P1 后置权限，本轮未启用
+    setShowForceConfirm(false);
+    alert('试剂删除属 P1 后置权限，本轮未启用');
   };
 
   const renderChemicalFormula = (formula: string) => {

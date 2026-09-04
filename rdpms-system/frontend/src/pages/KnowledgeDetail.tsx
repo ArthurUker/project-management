@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { docsAPI, formulaAPI } from '../api/client';
-import { useAppStore } from '../store/appStore';
+import { docsAPI, formulaAPI } from '@/api';
+import { useAuth } from '../auth/useAuth';
+import { useHasPerm, PERMS } from '../auth/permissions';
 import { ArrowLeft, Edit2, Trash2, Clock, User, Tag, FileText, Save, X, Maximize2, Minimize2 } from 'lucide-react';
 import MindMapView, { MindMapEditor } from '../components/MindMapView';
 import VisualTableEditor from '../components/VisualTableEditor';
@@ -215,7 +216,8 @@ function renderContent(content: string, options: RenderContentOptions = {}): JSX
 export default function KnowledgeDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAppStore();
+  const { user } = useAuth();
+  const canDelete = useHasPerm(PERMS.DOCS_WRITE);
 
   const [doc, setDoc] = useState<DocDocument | null>(null);
   const [loading, setLoading] = useState(true);
@@ -284,7 +286,7 @@ export default function KnowledgeDetail() {
   const handleDelete = async () => {
     if (!doc || !confirm('确定要删除这个文档吗？')) return;
     try {
-      await docsAPI.documents.delete(doc.id);
+      await docsAPI.documents.remove(doc.id);
       navigate('/knowledge');
     } catch (e) {
       alert('删除失败');
@@ -294,7 +296,7 @@ export default function KnowledgeDetail() {
   const loadFormulas = async () => {
     try {
       const res = await formulaAPI.list();
-      setFormulaList(res.list || []);
+      setFormulaList(res.items || []);
     } catch (e) {
       console.error(e);
     }
@@ -438,7 +440,7 @@ export default function KnowledgeDetail() {
               <button onClick={() => setEditing(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', border: '1px solid #e2e8f0', borderRadius: 8, cursor: 'pointer', background: '#fff', color: '#374151', fontSize: 13 }}>
                 <Edit2 size={14} /> 编辑
               </button>
-              {user?.role === 'admin' && (
+              {canDelete && (
                 <button onClick={handleDelete} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', border: '1px solid #fecaca', borderRadius: 8, cursor: 'pointer', background: '#fff', color: '#dc2626', fontSize: 13 }}>
                   <Trash2 size={14} /> 删除
                 </button>

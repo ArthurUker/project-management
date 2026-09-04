@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { formulaAPI, reagentMaterialsAPI } from '../../api/client';
+import { formulaAPI, reagentMaterialsAPI } from '@/api';
 import { useNavigate, useParams } from 'react-router-dom';
 
 const PCR_TYPES = ['PCR', 'qPCR', 'RT-PCR', 'RT-qPCR'];
@@ -42,7 +42,7 @@ export default function FormulaEditor() {
   useEffect(() => { loadMaterials(); if (id) loadFormula(); }, [id]);
 
   const loadMaterials = async () => {
-    try { const res = await reagentMaterialsAPI.list(); setMaterials(res.list || []); }
+    try { const res = await reagentMaterialsAPI.list(); setMaterials(res.items || []); }
     catch (e) { console.error(e); }
   };
   const loadFormula = async () => {

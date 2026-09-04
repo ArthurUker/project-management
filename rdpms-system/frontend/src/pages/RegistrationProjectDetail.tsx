@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { registrationsAPI, userAPI } from '../api/client';
-import { useHasPerm, PERMS } from '../utils/permissions';
+import { registrationsAPI, userAPI } from '@/api';
+import { useHasPerm, PERMS } from '../auth/permissions';
 import HierarchicalTaskList from '../components/HierarchicalTaskList';
 
 const STAGES = ['资料准备', '送检受理', '技术审评', '行政审批', '取证归档'];
@@ -32,7 +32,7 @@ export default function RegistrationProjectDetail() {
 
   const [form, setForm] = useState({
     name: '',
-    status: '规划中',
+    status: 'PLANNING',
     registrationType: 'IVD',
     region: '',
     authority: '',
@@ -56,7 +56,7 @@ export default function RegistrationProjectDetail() {
       ]);
 
       const detail = (detailRes as any).data || detailRes;
-      const userList = (usersRes as any).users || (usersRes as any).list || (usersRes as any).data || [];
+      const userList = (usersRes as any).users || (usersRes as any).items || (usersRes as any).data || [];
 
       setProject(detail);
       setUsers(Array.isArray(userList) ? userList : []);
@@ -67,7 +67,7 @@ export default function RegistrationProjectDetail() {
 
       setForm({
         name: detail.name || '',
-        status: detail.status || '规划中',
+        status: detail.status || 'PLANNING',
         registrationType: detail.registrationProfile?.registrationType || detail.subtype || 'IVD',
         region: detail.registrationProfile?.region || '',
         authority: detail.registrationProfile?.authority || '',
@@ -265,12 +265,12 @@ export default function RegistrationProjectDetail() {
               <div>
                 <label className="text-xs text-gray-500">项目状态</label>
                 <select className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg" value={form.status} disabled={!canEdit} onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value }))}>
-                  <option value="规划中">规划中</option>
-                  <option value="进行中">进行中</option>
-                  <option value="待加工">待加工</option>
-                  <option value="待验证">待验证</option>
-                  <option value="已完成">已完成</option>
-                  <option value="已归档">已归档</option>
+                  <option value="PLANNING">规划中</option>
+                  <option value="IN_PROGRESS">进行中</option>
+                  <option value="PENDING_PROCESSING">待加工</option>
+                  <option value="PENDING_VERIFICATION">待验证</option>
+                  <option value="COMPLETED">已完成</option>
+                  <option value="ARCHIVED">已归档</option>
                 </select>
               </div>
               <div>

@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
 import { BookOpen, Filter } from 'lucide-react';
 import { useRegulatoryDocuments } from '../hooks/useRegulatoryDocuments';
-import { regulatoryDocumentsAPI } from '../api/client';
+import { downloadFile, regulatoryDocumentsAPI, toMessage, uploadFile } from '@/api';
+import type { RegulatoryDocument } from '@/api';
 import type { RegulatoryApplicability, RegulatoryPriority } from '../types/regulatory';
 
 const applicabilityLabels: Record<RegulatoryApplicability, string> = {
@@ -48,14 +49,10 @@ const emptyForm: RegulatoryFormState = {
   applicabilityNote: '',
 };
 
-function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
+/**
+ * 原文上传统一走 /api/files 的 multipart 接口。
+ * 已移除 base64-in-JSON 上传（体积膨胀 33%、易触发请求体上限、无法流式限速）。
+ */
 
 export default function RegulatoryDocumentsPage({ embedded = false }: RegulatoryDocumentsPageProps) {
   const { documents, loading, error, refetch } = useRegulatoryDocuments();
@@ -128,22 +125,23 @@ export default function RegulatoryDocumentsPage({ embedded = false }: Regulatory
         await regulatoryDocumentsAPI.update(editingId, payload);
       } else {
         const created = await regulatoryDocumentsAPI.create(payload);
-        id = (created as any)?.id || (created as any)?.data?.id || null;
+        id = created?.id ?? null;
       }
 
       if (id && pendingOriginalFile) {
-        const fileDataBase64 = await fileToBase64(pendingOriginalFile);
-        await regulatoryDocumentsAPI.uploadOriginalFile(id, {
-          fileName: pendingOriginalFile.name,
-          fileDataBase64,
+        await uploadFile(pendingOriginalFile, {
+          resourceType: 'regulatory-document',
+          resourceId: id,
         });
+        // 回写文件元信息，便于列表展示与下载
+        await regulatoryDocumentsAPI.update(id, { originalFileId: id });
       }
 
       setShowEditor(false);
       setPendingOriginalFile(null);
       await refetch();
-    } catch (e: any) {
-      alert(e?.error || e?.message || '保存失败');
+    } catch (e) {
+      alert(toMessage(e, '保存失败'));
     } finally {
       setSaving(false);
     }
@@ -152,28 +150,50 @@ export default function RegulatoryDocumentsPage({ embedded = false }: Regulatory
   const handleDelete = async (id: string) => {
     if (!window.confirm('确认删除该法规文件吗？')) return;
     try {
-      await regulatoryDocumentsAPI.delete(id);
+      await regulatoryDocumentsAPI.remove(id);
       await refetch();
-    } catch (e: any) {
-      alert(e?.error || e?.message || '删除失败');
+    } catch (e) {
+      alert(toMessage(e, '删除失败'));
+    }
+  };
+
+  /** 下载走 blob + Authorization，禁止 window.open 裸鉴权 URL */
+  const handleDownload = async (doc: RegulatoryDocument) => {
+    if (!doc.originalFileId) return;
+    try {
+      await downloadFile(doc.originalFileId, doc.fileName ?? `${doc.dispatchNo}.pdf`);
+    } catch (e) {
+      alert(toMessage(e, '下载失败'));
     }
   };
 
   const handleImportNewPdf = async (file: File) => {
     setImporting(true);
     try {
-      const fileDataBase64 = await fileToBase64(file);
-      await regulatoryDocumentsAPI.importPdf({
-        fileName: file.name,
-        fileDataBase64,
+      // 先建文档占位，再以 multipart 上传原文（不再使用 base64-in-JSON）
+      const created = await regulatoryDocumentsAPI.create({
+        dispatchNo: file.name.replace(/\.pdf$/i, '').slice(0, 100),
+        title: file.name.replace(/\.pdf$/i, '').slice(0, 200),
+        fullTitle: file.name,
+        category: null,
+        summary: null,
+        applicabilityNote: null,
         applicability: 'conditional',
         priorityLevel: 'P2',
         applicableToIvd: true,
+        fileName: file.name,
       });
+      if (created?.id) {
+        await uploadFile(file, {
+          resourceType: 'regulatory-document',
+          resourceId: created.id,
+        });
+        await regulatoryDocumentsAPI.update(created.id, { originalFileId: created.id });
+      }
       await refetch();
       alert('PDF 导入成功，可在列表中继续补充字段');
-    } catch (e: any) {
-      alert(e?.error || e?.message || 'PDF 导入失败');
+    } catch (e) {
+      alert(toMessage(e, 'PDF 导入失败'));
     } finally {
       setImporting(false);
     }
@@ -323,7 +343,14 @@ export default function RegulatoryDocumentsPage({ embedded = false }: Regulatory
               {doc.applicabilityNote ? <p className="text-sm text-gray-500 mt-1">适用说明：{doc.applicabilityNote}</p> : null}
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <button className="btn btn-secondary" onClick={() => openEditEditor(doc)}>编辑</button>
-                <button className="btn btn-secondary" onClick={() => window.open(regulatoryDocumentsAPI.originalFileUrl(doc.id), '_blank')}>下载原文</button>
+                <button
+                  className="btn btn-secondary"
+                  disabled={!(doc as any).originalFileId}
+                  title={(doc as any).originalFileId ? undefined : '该法规暂无原文附件'}
+                  onClick={() => handleDownload(doc)}
+                >
+                  下载原文
+                </button>
                 <button className="btn btn-secondary" onClick={() => handleDelete(doc.id)}>删除</button>
               </div>
             </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { regulatoryDocumentsAPI } from '../api/client';
+import { regulatoryDocumentsAPI } from '@/api';
 import type { RegulatoryDocument } from '../types/regulatory';
 
 interface UseRegulatoryDocumentsParams {
@@ -17,7 +17,7 @@ export function useRegulatoryDocuments(params?: UseRegulatoryDocumentsParams) {
     setError(null);
     try {
       const res = await regulatoryDocumentsAPI.list(params);
-      const list = (res as any).list || (res as any).data?.list || [];
+      const list = (res as any).items || (res as any).data?.items || [];
       setDocuments(Array.isArray(list) ? (list as RegulatoryDocument[]) : []);
     } catch (e: any) {
       setError(e?.error || e?.message || '加载法规文件失败');

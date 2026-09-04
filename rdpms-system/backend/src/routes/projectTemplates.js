@@ -1,34 +1,70 @@
 import { Hono } from 'hono';
 import { prisma } from '../index.js';
-import { authMiddleware, adminMiddleware, adminOrManagerMiddleware } from './auth.js';
+import { authenticate as authMiddleware, requirePermission, getAuth } from '../kernel/rbac.js';
+import { pickAllowed } from '../kernel/massAssign.js';
+import { AUDIT_ACTIONS } from '../kernel/constants.js';
+import { writeAudit } from '../kernel/audit.js';
+import { badRequest, notFound } from '../kernel/http.js';
 
+/**
+ * /api/project-templates —— 项目模板（W10 PG baseline 迁移）。
+ *
+ * 迁移要点：
+ *   template.content JSON 大字段 → 已删除；结构化为 TemplatePhase/TemplateTask/TemplateRole 行；
+ *   自由 JSON 兜底落 config（仅无固定结构配置）；
+ *   type → typeLabel；createdBy → createdById；status 'active' → ACTIVE（TemplateStatus 枚举）；
+ *   projectRoleDefinition → templateRole（code 必填，permissions 为 text[]）。
+ *   FE 兼容：/:id 与 /:id/preview 输出归一化 phases 形状（id/name/order/tasks/subPhases）。
+ */
 const templates = new Hono();
 
 templates.use('*', authMiddleware);
 
-// 解析模版 content JSON
-function parseContent(tpl) {
-  if (!tpl.content) return { phases: [], milestones: [] };
-  try {
-    return typeof tpl.content === 'string' ? JSON.parse(tpl.content) : tpl.content;
-  } catch {
-    return { phases: [], milestones: [] };
-  }
+/** 将模板行结构归一化为 FE 兼容形状 */
+function toCompatPhases(tpl) {
+  return (tpl.phases ?? []).map((p, idx) => ({
+    id: p.id,
+    key: p.code,
+    name: p.name,
+    order: p.sortOrder ?? idx + 1,
+    totalDays: p.plannedDurationDays ?? 0,
+    isMilestone: p.isMilestone,
+    enabled: true,
+    subPhases: [],
+    nextPhaseIds: [],
+    tasks: (p.tasks ?? []).map((t) => ({
+      id: t.id,
+      title: t.title,
+      description: t.description || null,
+      taskType: t.taskType,
+      applicability: t.applicability.toLowerCase(),
+      regulatoryPriority: t.regulatoryPriority,
+      estimatedDays: t.estimatedHours ? Math.ceil(t.estimatedHours / 8) : 3,
+      enabled: true,
+    })),
+  }));
 }
 
-// 获取模版列表
-templates.get('/', async (c) => {
+const TEMPLATE_INCLUDE = {
+  creator: { select: { id: true, displayName: true } },
+  parent: { select: { id: true, name: true, code: true } },
+  phases: { orderBy: { sortOrder: 'asc' }, include: { tasks: { orderBy: { sortOrder: 'asc' } } } },
+  roles: { orderBy: { sortOrder: 'asc' } },
+};
+
+// ── 列表 ─────────────────────────────────────────────────────────────────────
+templates.get('/', requirePermission('project_templates.view'), async (c) => {
   const { page = 1, pageSize = 50, category, parentId, keyword, status } = c.req.query();
-  const where = {};
+  const where = { deletedAt: null };
   if (category) where.category = category;
   if (parentId === 'null') where.parentId = null;
   else if (parentId) where.parentId = parentId;
-  if (status) where.status = status;
+  if (status) where.status = String(status).toUpperCase();
   if (keyword) {
     where.OR = [
       { name: { contains: keyword } },
       { code: { contains: keyword } },
-      { description: { contains: keyword } }
+      { description: { contains: keyword } },
     ];
   }
 
@@ -36,373 +72,297 @@ templates.get('/', async (c) => {
     prisma.projectTemplate.count({ where }),
     prisma.projectTemplate.findMany({
       where,
-      skip: (parseInt(page) - 1) * parseInt(pageSize),
-      take: parseInt(pageSize),
+      skip: (Number.parseInt(page, 10) - 1) * Number.parseInt(pageSize, 10),
+      take: Number.parseInt(pageSize, 10),
       orderBy: [{ isMaster: 'desc' }, { createdAt: 'asc' }],
       include: {
-        creator: { select: { id: true, name: true } },
+        creator: { select: { id: true, displayName: true } },
         parent: { select: { id: true, name: true, code: true } },
-        _count: { select: { children: true, projects: true } }
-      }
-    })
+        _count: { select: { children: true, projects: true, phases: true, tasks: true } },
+      },
+    }),
   ]);
 
-  // 计算每个模版的阶段数和任务数
-  const listWithStats = list.map(tpl => {
-    const content = parseContent(tpl);
-    const phases = (content.phases || []).filter(p => p.enabled !== false);
-    const taskCount = phases.reduce((sum, p) => sum + (p.tasks || []).filter(t => t.enabled !== false).length, 0);
-    return { ...tpl, phaseCount: phases.length, taskCount };
-  });
-
-  return c.json({ list: listWithStats, total, page: parseInt(page), pageSize: parseInt(pageSize) });
+  const listWithStats = list.map((tpl) => ({
+    ...tpl,
+    phaseCount: tpl._count.phases,
+    taskCount: tpl._count.tasks,
+  }));
+  return c.json({ list: listWithStats, total, page: Number.parseInt(page, 10), pageSize: Number.parseInt(pageSize, 10) });
 });
 
-// 获取单个模版（含子模版列表）
-templates.get('/:id', async (c) => {
+// ── 详情 ─────────────────────────────────────────────────────────────────────
+templates.get('/:id', requirePermission('project_templates.view'), async (c) => {
   const id = c.req.param('id');
   const tpl = await prisma.projectTemplate.findUnique({
     where: { id },
     include: {
-      creator: { select: { id: true, name: true } },
-      parent: { select: { id: true, name: true, code: true } },
-      children: {
-        include: { creator: { select: { id: true, name: true } } }
-      }
-    }
+      ...TEMPLATE_INCLUDE,
+      children: { include: { creator: { select: { id: true, displayName: true } } } },
+    },
   });
-  if (!tpl) return c.json({ error: '模版不存在' }, 404);
-
-  // 解析 content 并附加 nextPhaseIds（如果有 PhaseTransition）
-  const content = parseContent(tpl);
-  const phases = (content.phases || []).filter(p => p.enabled !== false);
-
-  const normalizedPhases = phases.map((p, idx) => ({
-    id: p.id || p.key || `phase_${idx}`,
-    name: p.name || p.title || `阶段 ${idx + 1}`,
-    order: p.order ?? idx + 1,
-    totalDays: p.totalDays ?? p.estimatedDays ?? 0,
-    tasks: p.tasks || [],
-    subPhases: p.subPhases || [],
-    enabled: p.enabled !== false,
-    nextPhaseIds: Array.isArray(p.nextPhaseIds) ? p.nextPhaseIds : []
-  }));
-
-  const tplOut = {
-    ...tpl,
-    phases: normalizedPhases
-  };
-
-  return c.json(tplOut);
+  if (!tpl || tpl.deletedAt) throw notFound('TEMPLATE_NOT_FOUND', '模版不存在');
+  return c.json({ ...tpl, phases: toCompatPhases(tpl) });
 });
 
-// 创建模版（管理员）
-templates.post('/', adminMiddleware, async (c) => {
-  const body = await c.req.json();
-  const userId = c.get('userId');
+// ── 创建 ─────────────────────────────────────────────────────────────────────
+templates.post('/', requirePermission('project_templates.create'), async (c) => {
+  const auth = getAuth(c);
+  const body = await c.req.json().catch(() => null);
+  if (!body?.name) throw badRequest('VALIDATION_ERROR', '模版名称不能为空');
 
-  if (!body.name) return c.json({ error: '模版名称不能为空' }, 400);
+  const code = body.code || `TPL-${Date.now().toString(36).toUpperCase()}`;
+  const exists = await prisma.projectTemplate.findUnique({ where: { code }, select: { id: true } });
+  if (exists) throw badRequest('VALIDATION_ERROR', '模版编号已存在');
 
-  const code = body.code || `TPL-${Date.now()}`;
-
-  const tpl = await prisma.projectTemplate.create({
+  const created = await prisma.projectTemplate.create({
     data: {
       code,
       name: body.name,
-      description: body.description || '',
+      description: body.description || null,
       category: body.category || null,
-      type: body.type || null,
+      typeLabel: body.typeLabel || body.type || null,
       parentId: body.parentId || null,
       isMaster: body.isMaster || false,
-      content: body.content ? (typeof body.content === 'string' ? body.content : JSON.stringify(body.content)) : null,
-      status: body.status || 'active',
-      createdBy: userId,
-    }
+      status: body.status ? String(body.status).toUpperCase() : 'ACTIVE',
+      config: body.config ?? body.content ?? null,
+      createdById: auth.userId,
+    },
   });
-
-  return c.json(tpl, 201);
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.CREATE,
+    entityType: 'PROJECT_TEMPLATE',
+    entityId: created.id,
+    entityLabel: created.name,
+    metadata: { permissionCode: 'project_templates.create' },
+  });
+  return c.json(created, 201);
 });
 
-// 更新模版（管理员或项目经理）
-templates.put('/:id', adminOrManagerMiddleware, async (c) => {
+// ── 更新 ─────────────────────────────────────────────────────────────────────
+templates.put('/:id', requirePermission('project_templates.update'), async (c) => {
+  const auth = getAuth(c);
   const id = c.req.param('id');
-  const body = await c.req.json();
-  delete body.code;
-  delete body.createdAt;
-  delete body.createdBy;
+  const raw = await c.req.json().catch(() => null);
+  const data = pickAllowed(raw, ['name', 'description', 'category', 'typeLabel', 'parentId', 'isMaster', 'status', 'config'], { entityLabel: '更新项目模板', allowEmpty: true });
+  if ('status' in data) data.status = String(data.status).toUpperCase();
+  if (raw?.content !== undefined && data.config === undefined) data.config = raw.content;
+  data.updatedById = auth.userId;
 
-  if (body.content && typeof body.content !== 'string') {
-    body.content = JSON.stringify(body.content);
-  }
+  const before = await prisma.projectTemplate.findUnique({ where: { id } });
+  if (!before || before.deletedAt) throw notFound('TEMPLATE_NOT_FOUND', '模版不存在');
 
-  const tpl = await prisma.projectTemplate.update({ where: { id }, data: body });
+  const tpl = await prisma.projectTemplate.update({ where: { id }, data });
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.UPDATE,
+    entityType: 'PROJECT_TEMPLATE',
+    entityId: id,
+    entityLabel: before.name,
+    changedFields: Object.keys(data),
+    metadata: { permissionCode: 'project_templates.update' },
+  });
   return c.json(tpl);
 });
 
-// 部分更新（管理员或项目经理）
-templates.patch('/:id', adminOrManagerMiddleware, async (c) => {
+templates.patch('/:id', requirePermission('project_templates.update'), async (c) => {
   const id = c.req.param('id');
-  const body = await c.req.json();
-
-  const updateData = {};
-  if (body.content !== undefined) {
-    updateData.content = typeof body.content === 'string' ? body.content : JSON.stringify(body.content);
+  const body = await c.req.json().catch(() => ({}));
+  const data = {};
+  if (body.name !== undefined) data.name = body.name;
+  if (body.description !== undefined) data.description = body.description;
+  if (body.status !== undefined) data.status = String(body.status).toUpperCase();
+  if (body.typeLabel !== undefined) data.typeLabel = body.typeLabel;
+  if (body.type !== undefined) data.typeLabel = body.type;
+  if (body.config !== undefined || body.content !== undefined) {
+    data.config = body.config ?? body.content;
   }
-  if (body.name !== undefined) updateData.name = body.name;
-  if (body.description !== undefined) updateData.description = body.description;
-  if (body.status !== undefined) updateData.status = body.status;
-  if (body.type !== undefined) updateData.type = body.type;
-
-  const tpl = await prisma.projectTemplate.update({ where: { id }, data: updateData });
+  const tpl = await prisma.projectTemplate.update({ where: { id }, data });
   return c.json(tpl);
 });
 
-// 删除模版（管理员）
-templates.delete('/:id', adminMiddleware, async (c) => {
+// ── 删除（project_templates.delete 为 P0；软删 + 引用检查）───────────────────
+templates.delete('/:id', requirePermission('project_templates.delete'), async (c) => {
+  const auth = getAuth(c);
   const id = c.req.param('id');
 
-  // 检查是否有子模版
-  const childCount = await prisma.projectTemplate.count({
-    where: { parentId: id }
-  });
+  const childCount = await prisma.projectTemplate.count({ where: { parentId: id, deletedAt: null } });
   if (childCount > 0) {
-    return c.json({
-      success: false,
-      error: `无法删除：该模版下存在 ${childCount} 个子模版，请先删除所有子模版后再操作`
-    }, 400);
+    throw badRequest('VALIDATION_ERROR', `无法删除：该模版下存在 ${childCount} 个子模版，请先删除所有子模版`);
   }
-
-  // 检查是否有项目正在使用该模版
-  const projectCount = await prisma.project.count({
-    where: { templateId: id }
-  });
+  const projectCount = await prisma.project.count({ where: { templateId: id, deletedAt: null } });
   if (projectCount > 0) {
-    return c.json({
-      success: false,
-      error: `无法删除：已有 ${projectCount} 个项目套用了该模版，删除后这些项目的模版关联将断开，请确认后使用「停用」功能替代删除`
-    }, 400);
+    throw badRequest('VALIDATION_ERROR', `无法删除：已有 ${projectCount} 个项目套用该模版，请使用「停用」替代删除`);
   }
 
-  await prisma.projectTemplate.delete({ where: { id } });
+  const tpl = await prisma.projectTemplate.findUnique({ where: { id } });
+  if (!tpl || tpl.deletedAt) throw notFound('TEMPLATE_NOT_FOUND', '模版不存在');
+
+  await prisma.projectTemplate.update({ where: { id }, data: { deletedAt: new Date() } });
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.DELETE,
+    entityType: 'PROJECT_TEMPLATE',
+    entityId: id,
+    entityLabel: tpl.name,
+    metadata: { permissionCode: 'project_templates.delete' },
+  });
   return c.json({ success: true });
 });
 
-// 复制模版
-templates.post('/:id/copy', adminMiddleware, async (c) => {
-  const id = c.req.param('id');
-  const userId = c.get('userId');
-  const tpl = await prisma.projectTemplate.findUnique({ where: { id } });
-  if (!tpl) return c.json({ error: '模版不存在' }, 404);
-
-  const newCode = `TPL-COPY-${Date.now()}`;
-  const copy = await prisma.projectTemplate.create({
-    data: {
-      code: newCode,
-      name: `${tpl.name}（副本）`,
-      description: tpl.description || '',
-      category: tpl.category,
-      type: tpl.type,
-      parentId: tpl.parentId,
-      isMaster: false,
-      content: tpl.content,
-      status: 'active',
-      createdBy: userId,
-    }
-  });
-  return c.json(copy, 201);
+// M-1：project_templates.copy 为 P1 后置权限（不进首版库），端点暂不提供
+templates.post('/:id/copy', async (c) => {
+  return c.json({ error: '模板复制能力属 P1 后置权限，本轮未启用', code: 'PERMISSION_NOT_AVAILABLE' }, 403);
 });
 
-// 预览模版阶段结构（用于新建项目选择）
-templates.get('/:id/preview', async (c) => {
+// ── 预览 ─────────────────────────────────────────────────────────────────────
+templates.get('/:id/preview', requirePermission('project_templates.view'), async (c) => {
   const id = c.req.param('id');
-  const tpl = await prisma.projectTemplate.findUnique({ where: { id } });
-  if (!tpl) return c.json({ error: '模版不存在' }, 404);
+  const tpl = await prisma.projectTemplate.findUnique({
+    where: { id },
+    include: { phases: { orderBy: { sortOrder: 'asc' }, include: { tasks: { orderBy: { sortOrder: 'asc' } } } } },
+  });
+  if (!tpl || tpl.deletedAt) throw notFound('TEMPLATE_NOT_FOUND', '模版不存在');
 
-  const content = parseContent(tpl);
-  const phases = (content.phases || []).filter(p => p.enabled !== false);
-  const milestones = (content.milestones || []);
-  const taskCount = phases.reduce((sum, p) => sum + (p.tasks || []).filter(t => t.enabled !== false).length, 0);
-
+  const phases = toCompatPhases(tpl);
+  const taskCount = phases.reduce((sum, p) => sum + p.tasks.length, 0);
   return c.json({
     id: tpl.id,
     name: tpl.name,
     description: tpl.description,
     category: tpl.category,
-    phases: phases.map((p, idx) => ({
-      id: p.id || p.key || `phase_${idx}`,
-      name: p.name,
-      order: p.order,
-      type: p.type || 'normal',
-      taskCount: (p.tasks || []).filter(t => t.enabled !== false).length,
-      nextPhaseIds: Array.isArray(p.nextPhaseIds) ? p.nextPhaseIds : [],
-    })),
-
-    milestones,
+    typeLabel: tpl.typeLabel,
+    phases,
+    milestones: [],
     phaseCount: phases.length,
     taskCount,
   });
 });
 
-// 应用模版：生成任务和里程碑数据（前端用于创建项目时预览）
-templates.post('/:id/apply', async (c) => {
+// ── 应用预览（前端创建项目时预览生成结果）────────────────────────────────────
+templates.post('/:id/apply', requirePermission('project_templates.view'), async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json().catch(() => ({}));
-  const tpl = await prisma.projectTemplate.findUnique({ where: { id } });
-  if (!tpl) return c.json({ error: '模版不存在' }, 404);
+  const tpl = await prisma.projectTemplate.findUnique({
+    where: { id },
+    include: { phases: { orderBy: { sortOrder: 'asc' }, include: { tasks: { orderBy: { sortOrder: 'asc' } } } } },
+  });
+  if (!tpl || tpl.deletedAt) throw notFound('TEMPLATE_NOT_FOUND', '模版不存在');
 
-  const content = parseContent(tpl);
   const startDate = body.startDate ? new Date(body.startDate) : new Date();
-
-  // 只处理 enabled 的阶段和任务
-  const phases = (content.phases || []).filter(p => p.enabled !== false);
-
-  const tasks = [];
   let dayOffset = 0;
+  const phases = toCompatPhases(tpl);
+  const tasks = [];
   for (const phase of phases) {
-    const phaseTasks = (phase.tasks || []).filter(t => t.enabled !== false);
-    for (const t of phaseTasks) {
+    for (const t of phase.tasks) {
       const dueDate = new Date(startDate);
       dueDate.setDate(dueDate.getDate() + dayOffset + (t.estimatedDays || 3));
       tasks.push({
         title: t.title,
-        priority: t.priority || '中',
-        status: '待开始',
-        phase: phase.name,
-        phaseId: phase.id,
+        taskType: t.taskType,
+        applicability: t.applicability,
+        regulatoryPriority: t.regulatoryPriority,
+        priority: 'MEDIUM',
+        status: 'NOT_STARTED',
+        phaseKey: phase.key,
+        phaseId: phase.key,
         phaseOrder: phase.order,
         estimatedDays: t.estimatedDays || 3,
         dueDate: dueDate.toISOString(),
       });
-      dayOffset += (t.estimatedDays || 3);
+      dayOffset += t.estimatedDays || 3;
     }
   }
-
-  // 里程碑按 offsetDays 计算
-  const milestones = (content.milestones || []).map(m => {
-    const date = new Date(startDate);
-    date.setDate(date.getDate() + (m.offsetDays || 0));
-    return { name: m.name, date: date.toISOString(), status: '待完成' };
-  });
-
   return c.json({
     payload: {
       tasks,
-      milestones,
+      milestones: [],
       templateId: tpl.id,
-      defaults: content.defaults || {},
-    }
+      defaults: tpl.config?.defaults ?? {},
+    },
   });
 });
 
-// ─────────────────────────────── 角色管理 ───────────────────────────────
-
-// 获取模板的角色定义列表
-templates.get('/:templateId/roles', async (c) => {
-  try {
-    const { templateId } = c.req.param();
-    const roles = await prisma.projectRoleDefinition.findMany({
-      where: { templateId },
-      orderBy: { sortOrder: 'asc' },
-    });
-    return c.json({ roles });
-  } catch (err) {
-    console.error('Failed to get template roles:', err);
-    return c.json({ error: err.message }, 500);
-  }
+// ── 模板角色（templateRole；code 必填）───────────────────────────────────────
+templates.get('/:templateId/roles', requirePermission('project_templates.view'), async (c) => {
+  const { templateId } = c.req.param();
+  const roles = await prisma.templateRole.findMany({
+    where: { templateId },
+    orderBy: { sortOrder: 'asc' },
+  });
+  return c.json({ roles });
 });
 
-// 创建新角色
-templates.post('/:templateId/roles', adminOrManagerMiddleware, async (c) => {
-  try {
-    const { templateId } = c.req.param();
-    const body = await c.req.json();
-    
-    const role = await prisma.projectRoleDefinition.create({
+templates.post('/:templateId/roles', requirePermission('project_templates.update'), async (c) => {
+  const { templateId } = c.req.param();
+  const body = await c.req.json().catch(() => ({}));
+  if (!body.code) throw badRequest('VALIDATION_ERROR', '角色 code 必填');
+  const role = await prisma.templateRole.create({
+    data: {
+      templateId,
+      code: body.code,
+      name: body.name,
+      description: body.description || null,
+      permissions: Array.isArray(body.permissions) ? body.permissions : [],
+      sortOrder: body.sortOrder || 0,
+    },
+  });
+  return c.json({ role }, 201);
+});
+
+templates.put('/:templateId/roles/:roleId', requirePermission('project_templates.update'), async (c) => {
+  const { roleId } = c.req.param();
+  const body = await c.req.json().catch(() => ({}));
+  const role = await prisma.templateRole.update({
+    where: { id: roleId },
+    data: {
+      name: body.name,
+      description: body.description,
+      permissions: Array.isArray(body.permissions) ? body.permissions : undefined,
+      sortOrder: body.sortOrder,
+    },
+  });
+  return c.json({ role });
+});
+
+templates.delete('/:templateId/roles/:roleId', requirePermission('project_templates.update'), async (c) => {
+  const { roleId } = c.req.param();
+  await prisma.templateRole.delete({ where: { id: roleId } });
+  return c.json({ success: true });
+});
+
+templates.post('/:templateId/roles/batch', requirePermission('project_templates.update'), async (c) => {
+  const { templateId } = c.req.param();
+  const body = await c.req.json().catch(() => ({}));
+  const { roles } = body;
+
+  await prisma.templateRole.deleteMany({ where: { templateId } });
+  const createdRoles = [];
+  for (const [index, role] of (roles || []).entries()) {
+    // eslint-disable-next-line no-await-in-loop
+    const row = await prisma.templateRole.create({
       data: {
         templateId,
-        name: body.name,
-        description: body.description,
-        permissions: body.permissions,
-        sortOrder: body.sortOrder || 0,
+        code: role.code || `role_${index + 1}`,
+        name: role.name,
+        description: role.description || null,
+        permissions: Array.isArray(role.permissions) ? role.permissions : [],
+        sortOrder: role.sortOrder ?? index,
       },
     });
-    
-    return c.json({ role }, 201);
-  } catch (err) {
-    console.error('Failed to create role:', err);
-    return c.json({ error: err.message }, 500);
+    createdRoles.push(row);
   }
-});
-
-// 更新角色
-templates.put('/:templateId/roles/:roleId', adminOrManagerMiddleware, async (c) => {
-  try {
-    const { templateId, roleId } = c.req.param();
-    const body = await c.req.json();
-    
-    const role = await prisma.projectRoleDefinition.update({
-      where: { id: roleId },
-      data: {
-        name: body.name,
-        description: body.description,
-        permissions: body.permissions,
-        sortOrder: body.sortOrder,
-      },
-    });
-    
-    return c.json({ role });
-  } catch (err) {
-    console.error('Failed to update role:', err);
-    return c.json({ error: err.message }, 500);
-  }
-});
-
-// 删除角色
-templates.delete('/:templateId/roles/:roleId', adminOrManagerMiddleware, async (c) => {
-  try {
-    const { roleId } = c.req.param();
-    await prisma.projectRoleDefinition.delete({
-      where: { id: roleId },
-    });
-    return c.json({ success: true });
-  } catch (err) {
-    console.error('Failed to delete role:', err);
-    return c.json({ error: err.message }, 500);
-  }
-});
-
-// 批量设置角色（用于模板编辑时一次性保存所有角色）
-templates.post('/:templateId/roles/batch', adminOrManagerMiddleware, async (c) => {
-  try {
-    const { templateId } = c.req.param();
-    const body = await c.req.json();
-    const { roles } = body;
-
-    // 删除现有的所有角色
-    await prisma.projectRoleDefinition.deleteMany({
-      where: { templateId },
-    });
-
-    // 创建新的角色
-    const createdRoles = await Promise.all(
-      (roles || []).map((role, index) =>
-        prisma.projectRoleDefinition.create({
-          data: {
-            templateId,
-            name: role.name,
-            description: role.description,
-            permissions: role.permissions,
-            sortOrder: index,
-          },
-        })
-      )
-    );
-
-    return c.json({ roles: createdRoles }, 201);
-  } catch (err) {
-    console.error('Failed to batch set roles:', err);
-    return c.json({ error: err.message }, 500);
-  }
+  return c.json({ roles: createdRoles }, 201);
 });
 
 export default templates;

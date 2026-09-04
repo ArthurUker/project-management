@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { formulaAPI, prepAPI, reagentAPI } from '../../api/client';
+import { formulaAPI, prepAPI, reagentAPI } from '@/api';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, FlaskConical, Pencil, TableProperties } from 'lucide-react';
 import FormulaBatchEditor from './FormulaBatchEditor';
@@ -49,20 +49,20 @@ export default function FormulaMatrix(): JSX.Element {
   const load = async () => {
     try {
       const res = await formulaAPI.list({ type: selectedCategory === 'all' ? '' : selectedCategory, keyword: searchText });
-      const base = res.list || [];
+      const base = res.items || [];
       const detailed = await Promise.all(
         base.map(async (f: any) => {
           try {
-            const det = await formulaAPI.get(f.id || f.code);
+            const det = (await formulaAPI.get(f.id || f.code)) as any;
             if (det?.formula) return { ...f, ...det.formula };
-            return { ...f, components: det.formula?.components || det.components || [] };
+            return { ...f, components: det?.formula?.components ?? det?.components ?? [] };
           } catch { return { ...f, components: f.components || [] }; }
         })
       );
       setAllFormulas(detailed);
       setFormulas(detailed);
       const rres = await reagentAPI.list();
-      setReagents(rres.list || []);
+      setReagents(rres.items ?? (rres as any).list ?? []);
     } catch (e) { console.error(e); }
   };
 
@@ -203,9 +203,9 @@ export default function FormulaMatrix(): JSX.Element {
       const results = await Promise.all(
         calcFormulaIds.map(fid => prepAPI.calculate({ formulaId: fid, targetVolume: normalizedTargetVolume }))
       );
-      const successResults = results.filter(r => r.success);
+      const successResults = results.filter((r: any) => r?.success);
       if (successResults.length === 0) {
-        setCalcError(results[0]?.error || '计算失败，请重试');
+        setCalcError((results[0] as any)?.error || '计算失败，请重试');
       } else {
         setCalcResults(successResults);
       }

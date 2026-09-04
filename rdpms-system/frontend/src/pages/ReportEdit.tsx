@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { reportAPI, projectAPI } from '../api/client';
-import { useAppStore } from '../store/appStore';
+import { reportAPI, projectAPI } from '@/api';
+import { useAuth } from '../auth/useAuth';
 import ReagentDailyReport from '../components/ReagentDailyReport';
 import DocReference from '../components/DocReference';
 
@@ -72,7 +72,7 @@ export default function ReportEdit() {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { user } = useAppStore();
+  const { user } = useAuth();
   
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,7 +112,7 @@ export default function ReportEdit() {
     try {
       // 获取项目列表
       const projectsRes = await projectAPI.list({ pageSize: 100 });
-      const projectList = projectsRes.list || [];
+      const projectList = projectsRes.items || [];
       setProjects(projectList);
       
       if (id && id !== 'new') {
@@ -122,7 +122,7 @@ export default function ReportEdit() {
         // 解析内容
         try {
           const content = JSON.parse(reportData.content);
-          setReportType(reportData.reportType || '日报');
+          setReportType(String(reportData.reportType ?? '日报'));
           setMonth(reportData.month);
           setProjectReports(content.projectReports || []);
           const normalizedReagentReports = (content.reagentReports || []).map((r: any) => {
@@ -209,7 +209,7 @@ export default function ReportEdit() {
         content = { reagentReports };
       }
       
-      const commonStatus = asDraft ? '草稿' : '已提交';
+      const commonStatus = asDraft ? 'DRAFT' : 'SUBMITTED';
 
       // 如果正在编辑已有汇报（id）则直接更新该汇报，确保草稿回填正常
       if (id && id !== 'new') {
@@ -621,7 +621,7 @@ export default function ReportEdit() {
               onClick={async () => {
                 if (!window.confirm('确认删除该草稿？')) return;
                 try {
-                  await reportAPI.delete(id as string);
+                  await reportAPI.remove(id as string);
                   navigate('/reports');
                 } catch (err) {
                   console.error('删除失败', err);

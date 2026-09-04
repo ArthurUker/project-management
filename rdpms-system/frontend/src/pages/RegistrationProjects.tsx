@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { registrationsAPI, taskAPI } from '../api/client';
-import { useHasPerm, PERMS } from '../utils/permissions';
+import { registrationsAPI, taskAPI } from '@/api';
+import { useHasPerm, PERMS } from '../auth/permissions';
 
 interface RegistrationItem {
   id: string;
@@ -126,9 +126,9 @@ export default function RegistrationProjects() {
         registrationsAPI.templates(),
       ]);
 
-      const list = (listRes as any).list || (listRes as any).data?.list || [];
+      const list = (listRes as any).items || (listRes as any).data?.items || [];
       const statsData = (statsRes as any).data || statsRes;
-      const tplList = (templatesRes as any).list || (templatesRes as any).data?.list || [];
+      const tplList = (templatesRes as any).items || (templatesRes as any).data?.items || [];
 
       setItems(Array.isArray(list) ? list : []);
       setStats(statsData || {});
@@ -142,7 +142,7 @@ export default function RegistrationProjects() {
       if (Array.isArray(list) && list.length > 0) {
         try {
           const taskRes = await taskAPI.list({ pageSize: 500, status: 'pending,in_progress,todo' });
-          const allTasks = (taskRes as any).list || (taskRes as any).data?.list || [];
+          const allTasks = (taskRes as any).items || (taskRes as any).data?.items || [];
           setTasks(Array.isArray(allTasks) ? allTasks : []);
         } catch { /* 任务加载失败不影响主流程 */ }
       }

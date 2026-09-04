@@ -1,6 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
-import { useAppStore } from '../store/appStore';
-import { taskAPI, projectAPI } from '../api/client';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useAuth } from '../auth/useAuth';
+import { useHasPerm, PERMS } from '../auth/permissions';
+import { taskAPI, projectAPI } from '@/api';
+import type { Project } from '../types/project';
 import DocReference from './DocReference';
 
 // 任务类型定义
@@ -242,26 +244,29 @@ interface DocRef {
 function TaskModal({
   task,
   projectId,
+  projects,
   onClose,
   onSave
 }: {
   task?: Task | null;
   projectId?: string;
+  projects: Project[];
   onClose: () => void;
   onSave: (data: any) => void;
 }) {
-  const { projects, user } = useAppStore();
+
   const [formData, setFormData] = useState({
     title: task?.title || '',
     description: task?.description || '',
     projectId: task?.projectId || projectId || '',
     assigneeId: task?.assigneeId || '',
     priority: task?.priority || '中',
-    status: task?.status || '待开始',
+    status: task?.status || 'NOT_STARTED',
     dueDate: task?.dueDate ? task.dueDate.split('T')[0] : ''
   });
   const [docRefs, setDocRefs] = useState<DocRef[]>(task?.docRefs || []);
   const [saving, setSaving] = useState(false);
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -355,10 +360,10 @@ function TaskModal({
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                 className="input"
               >
-                <option value="待开始">待开始</option>
-                <option value="进行中">进行中</option>
-                <option value="已完成">已完成</option>
-                <option value="已阻塞">已阻塞</option>
+                <option value="NOT_STARTED">待开始</option>
+                <option value="IN_PROGRESS">进行中</option>
+                <option value="COMPLETED">已完成</option>
+                <option value="BLOCKED">已阻塞</option>
               </select>
             </div>
           </div>
@@ -427,7 +432,12 @@ interface KanbanBoardProps {
 }
 
 export default function KanbanBoard({ projectId }: KanbanBoardProps) {
-  const { tasks, projects, saveTaskLocal, setTasks: _setTasks, setProjects } = useAppStore();
+
+  const canUpdateStatus = useHasPerm(PERMS.TASKS_UPDATE_STATUS);
+  const canCreate = useHasPerm(PERMS.TASKS_CREATE);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterProject, setFilterProject] = useState(projectId || '');
   const [showModal, setShowModal] = useState(false);
@@ -435,28 +445,33 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
   const [addingColumn, setAddingColumn] = useState<string | null>(null);
   const dragItem = useRef<Task | null>(null);
 
-  // Ensure projects are loaded the same way Projects page does
+  /** 看板数据来自后端在线请求，刷新后重新拉取 */
+  const loadBoard = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [taskRes, projectRes] = await Promise.all([
+        taskAPI.list({ pageSize: 500, projectId: projectId || undefined }),
+        projectAPI.list({ pageSize: 999 }),
+      ]);
+      setTasks(taskRes.items ?? []);
+      setProjects(projectRes.items ?? []);
+    } catch (err) {
+      console.error('[KanbanBoard] failed to load board', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [projectId]);
+
   useEffect(() => {
-    const loadProjects = async () => {
-      try {
-        if (projects && projects.length > 0) return;
-        const res: any = await projectAPI.list({ pageSize: 999 });
-        const list = res.list || res.data?.list || res.data || [];
-        setProjects(list);
-        console.log('[KanbanBoard] loaded projects for dropdown:', list.length);
-      } catch (err) {
-        console.error('[KanbanBoard] failed to load projects for dropdown', err);
-      }
-    };
-    loadProjects();
-  }, []);
+    void loadBoard();
+  }, [loadBoard]);
 
   // 定义看板列
   const columns: KanbanColumn[] = [
-    { id: '待开始', title: '待开始', color: 'bg-gray-400', bgColor: 'bg-gray-50/50', tasks: [] },
-    { id: '进行中', title: '进行中', color: 'bg-blue-500', bgColor: 'bg-blue-50/30', tasks: [] },
-    { id: '已完成', title: '已完成', color: 'bg-green-500', bgColor: 'bg-green-50/30', tasks: [] },
-    { id: '已阻塞', title: '已阻塞', color: 'bg-red-500', bgColor: 'bg-red-50/30', tasks: [] }
+    { id: 'NOT_STARTED', title: 'NOT_STARTED', color: 'bg-gray-400', bgColor: 'bg-gray-50/50', tasks: [] },
+    { id: 'IN_PROGRESS', title: 'IN_PROGRESS', color: 'bg-blue-500', bgColor: 'bg-blue-50/30', tasks: [] },
+    { id: 'COMPLETED', title: 'COMPLETED', color: 'bg-green-500', bgColor: 'bg-green-50/30', tasks: [] },
+    { id: 'BLOCKED', title: 'BLOCKED', color: 'bg-red-500', bgColor: 'bg-red-50/30', tasks: [] }
   ];
 
   // 过滤任务
@@ -488,20 +503,22 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
   const handleDrop = async (e: React.DragEvent, newStatus: string) => {
     e.preventDefault();
     if (!dragItem.current) return;
-    
+    if (!canUpdateStatus) return;
+
     const task = dragItem.current;
+    dragItem.current = null;
     if (task.status === newStatus) return;
 
-    // 更新本地状态
-    const updatedTask = { ...task, status: newStatus };
-    await saveTaskLocal(updatedTask);
-    dragItem.current = null;
+    // 乐观更新：先改本地，失败回滚并重新拉取
+    const prev = tasks;
+    setTasks((list) => list.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t)));
 
-    // 同步到服务器
     try {
       await taskAPI.updateStatus(task.id, newStatus);
     } catch (err) {
+      setTasks(prev);
       console.error('Failed to update task:', err);
+      await loadBoard();
     }
   };
 
@@ -522,22 +539,17 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
   const handleSaveTask = async (data: any) => {
     try {
       if (editingTask) {
-        // 更新任务
-        const res = await taskAPI.update(editingTask.id, data);
-        const taskRes = (res as any).data ? (res as any).data : res;
-        await saveTaskLocal(taskRes);
+        await taskAPI.update(editingTask.id, data);
       } else {
-        // 创建任务
-        const res = await taskAPI.create({
+        await taskAPI.create({
           ...data,
-          status: data.status || addingColumn || '待开始'
+          status: data.status || addingColumn || 'NOT_STARTED'
         });
-        const taskRes = (res as any).data ? (res as any).data : res;
-        await saveTaskLocal(taskRes);
       }
       setShowModal(false);
       setEditingTask(null);
       setAddingColumn(null);
+      await loadBoard();
     } catch (err) {
       console.error('Failed to save task:', err);
     }
@@ -576,19 +588,24 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
         </div>
         
         {/* 新建任务按钮 */}
-        <button 
-          onClick={() => handleAddTask('待开始')}
-          className="btn btn-primary flex items-center space-x-2"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          <span>新建任务</span>
-        </button>
+        {canCreate && (
+          <button
+            onClick={() => handleAddTask('NOT_STARTED')}
+            className="btn btn-primary flex items-center space-x-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            <span>新建任务</span>
+          </button>
+        )}
       </div>
 
       {/* 看板主体 */}
       <div className="flex-1 overflow-x-auto">
+        {loading && tasks.length === 0 ? (
+          <div className="p-8 text-center text-sm text-gray-400">加载中…</div>
+        ) : (
         <div className="flex space-x-4 h-full pb-4">
           {boardData.map((column) => (
             <KanbanColumnComponent
@@ -598,10 +615,11 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
               onDrop={handleDrop}
               onDragStart={handleDragStart}
               onTaskClick={handleTaskClick}
-              onAddTask={handleAddTask}
+              onAddTask={canCreate ? handleAddTask : () => {}}
             />
           ))}
         </div>
+        )}
       </div>
 
       {/* 任务编辑弹窗 */}
@@ -609,6 +627,7 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
         <TaskModal
           task={editingTask}
           projectId={addingColumn ? undefined : projectId}
+          projects={projects}
           onClose={() => {
             setShowModal(false);
             setEditingTask(null);

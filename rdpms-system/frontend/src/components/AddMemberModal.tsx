@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { projectTemplatesAPI } from '../api/client';
+import { projectTemplatesAPI } from '@/api';
 
 interface Role {
   id?: string;

@@ -1,7 +1,6 @@
 ﻿import { useEffect, useState, useMemo } from 'react';
-import { taskTemplatesAPI } from '../../api/client';
-import { useAppStore } from '../../store/appStore';
-import { hasPerm, PERMS } from '../../utils/permissions';
+import { taskTemplatesAPI } from '@/api';
+import { PERMS, useHasPerm } from '../../auth/permissions';
 
 // ────────────────────────────────────────────────────────────────
 // 5 大阶段（统计卡片用）
@@ -299,8 +298,7 @@ function TemplateFormModal({
 // 主页面
 // ────────────────────────────────────────────────────────────────
 export default function TaskTemplateLibrary() {
-  const { user } = useAppStore();
-  const canSeedTemplates = hasPerm(user, PERMS.USERS_MANAGE);
+  const canSeedTemplates = useHasPerm(PERMS.TEMPLATES_CREATE);
   const [list, setList]                         = useState<any[]>([]);
   const [loading, setLoading]                   = useState(false);
   const [seeding, setSeeding]                   = useState(false);
@@ -319,7 +317,7 @@ export default function TaskTemplateLibrary() {
     setLoading(true);
     try {
       const res = await taskTemplatesAPI.list({});
-      setList(res.list || []);
+      setList(res.items || []);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };

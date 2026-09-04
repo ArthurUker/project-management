@@ -1,17 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { reportAPI } from '../api/client';
-import { useAppStore } from '../store/appStore';
+import { reportAPI } from '@/api';
+import { useAuth } from '../auth/useAuth';
+import { useHasPerm, PERMS } from '../auth/permissions';
 
 const STATUS_COLORS: Record<string, string> = {
-  '草稿': 'bg-gray-100 text-gray-600',
-  '已提交': 'bg-yellow-100 text-yellow-700',
+  'DRAFT': 'bg-gray-100 text-gray-600',
+  'SUBMITTED': 'bg-yellow-100 text-yellow-700',
   'submitted': 'bg-yellow-100 text-yellow-700',
-  '已阅': 'bg-green-100 text-green-700',
-  '需修改': 'bg-orange-100 text-orange-700',
+  'REVIEWED': 'bg-green-100 text-green-700',
+  'NEEDS_REVISION': 'bg-orange-100 text-orange-700',
 };
 
-const submittedStatuses = ['已提交', 'submitted'];
+const submittedStatuses = ['SUBMITTED', 'submitted'];
 
 function safeParseContent(content: string) {
   try {
@@ -42,14 +43,15 @@ function getNextPlanLabel(reportType?: string) {
 export default function ReportReview() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAppStore();
+  const { user } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [report, setReport] = useState<any>(null);
   const [submitting, setSubmitting] = useState(false);
   const [reviewNote, setReviewNote] = useState('');
 
-  const isReviewer = user?.role === 'admin' || user?.role === 'manager';
+  // 审批资格由权限点决定，不再用角色字符串判断
+  const isReviewer = useHasPerm(PERMS.REPORTS_APPROVE);
   const canApprove = useMemo(() => {
     if (!report || !isReviewer) return false;
     return submittedStatuses.includes(report.status) && report.userId !== user?.id;
@@ -65,7 +67,7 @@ export default function ReportReview() {
     try {
       const data = await reportAPI.get(reportId);
       setReport(data);
-      setReviewNote(data?.approveNote || '');
+      setReviewNote(String(data?.approveNote ?? ''));
     } catch (err) {
       console.error('Failed to load report:', err);
       alert('加载汇报失败');
@@ -160,18 +162,18 @@ export default function ReportReview() {
               <div className="text-gray-500">提交时间</div>
               <div className="text-gray-900 font-medium mt-1">{report.submittedAt ? new Date(report.submittedAt).toLocaleString() : '-'}</div>
             </div>
-            {(report.status === '已阅' || report.status === '需修改') && report.approvedAt && (
-              <div className={`rounded-lg p-3 ${report.status === '已阅' ? 'bg-green-50' : 'bg-orange-50'}`}>
-                <div className={`text-sm font-medium ${report.status === '已阅' ? 'text-green-700' : 'text-orange-700'}`}>
-                  {report.status === '已阅' ? '✓ 已阅时间' : '↩ 批示时间'}
+            {(report.status === 'REVIEWED' || report.status === 'NEEDS_REVISION') && report.approvedAt && (
+              <div className={`rounded-lg p-3 ${report.status === 'REVIEWED' ? 'bg-green-50' : 'bg-orange-50'}`}>
+                <div className={`text-sm font-medium ${report.status === 'REVIEWED' ? 'text-green-700' : 'text-orange-700'}`}>
+                  {report.status === 'REVIEWED' ? '✓ 已阅时间' : '↩ 批示时间'}
                 </div>
                 <div className="text-gray-900 font-medium mt-1">{new Date(report.approvedAt).toLocaleString()}</div>
               </div>
             )}
-            {(report.status === '已阅' || report.status === '需修改') && report.approveNote && (
-              <div className={`rounded-lg p-3 md:col-span-2 ${report.status === '已阅' ? 'bg-green-50' : 'bg-orange-50'}`}>
-                <div className={`text-sm font-medium ${report.status === '已阅' ? 'text-green-700' : 'text-orange-700'}`}>
-                  {report.status === '已阅' ? '批示意见' : '修改意见'}
+            {(report.status === 'REVIEWED' || report.status === 'NEEDS_REVISION') && report.approveNote && (
+              <div className={`rounded-lg p-3 md:col-span-2 ${report.status === 'REVIEWED' ? 'bg-green-50' : 'bg-orange-50'}`}>
+                <div className={`text-sm font-medium ${report.status === 'REVIEWED' ? 'text-green-700' : 'text-orange-700'}`}>
+                  {report.status === 'REVIEWED' ? '批示意见' : '修改意见'}
                 </div>
                 <div className="text-gray-900 mt-1 whitespace-pre-wrap">{report.approveNote}</div>
               </div>

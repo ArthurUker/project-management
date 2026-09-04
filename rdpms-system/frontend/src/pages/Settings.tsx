@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { authAPI } from '../api/client';
-import { useAppStore } from '../store/appStore';
+import { authAPI } from '@/api';
+import { useAuth } from '../auth/useAuth';
+import { roleLabel } from '../types/user';
 
 export default function Settings() {
-  const { user } = useAppStore();
+  const { user } = useAuth();
   
   const [passwords, setPasswords] = useState({
     old: '',
@@ -70,7 +71,7 @@ export default function Settings() {
               <div>
                 <p className="text-sm text-gray-500">角色</p>
                 <p className="font-medium text-gray-900">
-                  {user?.role === 'admin' ? '管理员' : user?.role === 'manager' ? '项目经理' : '成员'}
+                  {roleLabel(user?.systemRole ?? user?.role)}
                 </p>
               </div>
             </div>

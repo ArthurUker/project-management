@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useAppStore } from '../store/appStore';
+import { useAuth } from '../auth/useAuth';
 import DocReference from './DocReference';
-import { samplesAPI } from '../api/client';
+import { samplesAPI } from '@/api';
 
 // ==================== 下拉选项（整合自Excel） ====================
 export const DROPDOWN_OPTIONS = {
@@ -315,14 +315,15 @@ interface ReagentDailyReportProps {
 }
 
 export default function ReagentDailyReport({ date, projects: projectsProp, value, onChange }: ReagentDailyReportProps) {
-  const { user, projects: storeProjects } = useAppStore();
-  const projects = projectsProp && projectsProp.length > 0 ? projectsProp : storeProjects;
+  const { user } = useAuth();
+  // 项目列表只由父组件传入（在线获取），不再依赖全局缓存
+  const projects = projectsProp ?? [];
   const initialReports = value.length > 0 ? value : [createEmptyReport(date, user?.name || '')];
   const [reports, setReports] = useState<ReagentDailyReport[]>(initialReports);
   const [allSamples, setAllSamples] = useState<any[]>([]);
 
   useEffect(() => {
-    samplesAPI.list().then(res => setAllSamples(res.list || [])).catch(() => {});
+    samplesAPI.list().then(res => setAllSamples(res.items || [])).catch(() => {});
   }, []);
   
   const updateReport = (index: number, field: string, newValue: any) => {

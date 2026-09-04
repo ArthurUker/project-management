@@ -5,7 +5,7 @@
  * 复用 reagentMaterialsAPI，通过 notes 字段标记 category=amplification
  */
 import React, { useState, useEffect } from 'react';
-import { reagentMaterialsAPI } from '../../api/client';
+import { reagentMaterialsAPI } from '@/api';
 
 const AMP_TAG = '[AMP]'; // 用于在 notes 中区分扩增体系试剂
 
@@ -61,7 +61,7 @@ export default function AmplificationReagentLibrary() {
     setLoading(true);
     try {
       const res = await reagentMaterialsAPI.list({ keyword: kw ?? keyword }) as any;
-      const all: AmpReagent[] = res.list || [];
+      const all: AmpReagent[] = res.items || [];
       // 过滤出标记了 AMP_TAG 的试剂
       const amp = all.filter((r: any) => r.notes?.includes(AMP_TAG));
       setList(amp);
@@ -90,7 +90,7 @@ export default function AmplificationReagentLibrary() {
     }
     // reload
     const res2 = await reagentMaterialsAPI.list({}) as any;
-    const all2: AmpReagent[] = res2.list || [];
+    const all2: AmpReagent[] = res2.items || [];
     setList(all2.filter((r: any) => r.notes?.includes(AMP_TAG)));
   };
 
@@ -127,10 +127,9 @@ export default function AmplificationReagentLibrary() {
     setSaving(false);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('确定删除该试剂？')) return;
-    await reagentMaterialsAPI.delete(id);
-    load();
+  // M-1：reagent_materials.delete 为 P1 后置权限，端点与 UI 均不启用
+  const handleDelete = async (_id: string) => {
+    alert('试剂删除属 P1 后置权限，本轮未启用');
   };
 
   const f = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));

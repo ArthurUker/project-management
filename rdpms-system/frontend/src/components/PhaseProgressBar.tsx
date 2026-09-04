@@ -54,8 +54,8 @@ export default function PhaseProgressBar({ template, tasks, onPhaseClick }: Prop
       .map((p: any): PhaseInfo => {
         const phaseTasks = tasksByPhase[p.id] || [];
         const tasksTotal = phaseTasks.length;
-        const tasksDone = phaseTasks.filter(t => t.status === '已完成').length;
-        const inProgress = phaseTasks.some(t => t.status === '进行中');
+        const tasksDone = phaseTasks.filter(t => t.status === 'COMPLETED').length;
+        const inProgress = phaseTasks.some(t => t.status === 'IN_PROGRESS');
 
         let status: 'completed' | 'in_progress' | 'not_started';
         if (tasksTotal === 0) {
@@ -90,12 +90,12 @@ export default function PhaseProgressBar({ template, tasks, onPhaseClick }: Prop
     completed: {
       dot: 'bg-green-500 border-green-500',
       text: 'text-green-700',
-      label: '已完成',
+      label: 'COMPLETED',
     },
     in_progress: {
       dot: 'bg-blue-500 border-blue-500 ring-4 ring-blue-100',
       text: 'text-blue-700 font-semibold',
-      label: '进行中',
+      label: 'IN_PROGRESS',
     },
     not_started: {
       dot: 'bg-white border-gray-300',
@@ -174,12 +174,12 @@ export default function PhaseProgressBar({ template, tasks, onPhaseClick }: Prop
               {phaseTasks.map((task, tIdx) => (
                 <div key={task.id ?? `task-${phase.id}-${tIdx}`} className="flex items-center gap-2 text-xs">
                   <span className={`w-2 h-2 rounded-full shrink-0 ${
-                    task.status === '已完成' ? 'bg-green-500' :
-                    task.status === '进行中' ? 'bg-blue-500' :
+                    task.status === 'COMPLETED' ? 'bg-green-500' :
+                    task.status === 'IN_PROGRESS' ? 'bg-blue-500' :
                     task.status === '已阻塞' ? 'bg-red-500' :
                     'bg-gray-300'
                   }`} />
-                  <span className={`${task.status === '已完成' ? 'line-through text-gray-400' : 'text-gray-700'}`}>
+                  <span className={`${task.status === 'COMPLETED' ? 'line-through text-gray-400' : 'text-gray-700'}`}>
                     {task.title}
                   </span>
                   <span className="ml-auto text-gray-400">{task.status}</span>

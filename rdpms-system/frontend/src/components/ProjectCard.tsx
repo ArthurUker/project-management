@@ -33,15 +33,15 @@ interface ProjectCardProps {
 const STATUS_COLORS: Record<string, { color: string; bg: string; dot: string; border: string }> = {
   '草稿':  { color: '#92400e', bg: 'rgba(245,158,11,0.12)', dot: '#f59e0b', border: 'rgba(245,158,11,0.35)' },
   '筹备中': { color: '#64748b', bg: 'rgba(100,116,139,0.10)', dot: '#94a3b8', border: 'rgba(100,116,139,0.25)' },
-  '规划中': { color: '#64748b', bg: 'rgba(100,116,139,0.10)', dot: '#94a3b8', border: 'rgba(100,116,139,0.25)' },
-  '进行中': { color: '#2563eb', bg: 'rgba(37,99,235,0.10)',   dot: '#3b82f6', border: 'rgba(59,130,246,0.30)'  },
-  '待加工': { color: '#d97706', bg: 'rgba(217,119,6,0.10)',   dot: '#f59e0b', border: 'rgba(245,158,11,0.30)'  },
-  '待验证': { color: '#7c3aed', bg: 'rgba(124,58,237,0.10)',  dot: '#8b5cf6', border: 'rgba(139,92,246,0.30)'  },
-  '已完成': { color: '#059669', bg: 'rgba(5,150,105,0.10)',   dot: '#10b981', border: 'rgba(16,185,129,0.30)'  },
-  '已归档': { color: '#94a3b8', bg: 'rgba(148,163,184,0.10)', dot: '#cbd5e1', border: 'rgba(203,213,225,0.30)' },
+  'PLANNING': { color: '#64748b', bg: 'rgba(100,116,139,0.10)', dot: '#94a3b8', border: 'rgba(100,116,139,0.25)' },
+  'IN_PROGRESS': { color: '#2563eb', bg: 'rgba(37,99,235,0.10)',   dot: '#3b82f6', border: 'rgba(59,130,246,0.30)'  },
+  'PENDING_PROCESSING': { color: '#d97706', bg: 'rgba(217,119,6,0.10)',   dot: '#f59e0b', border: 'rgba(245,158,11,0.30)'  },
+  'PENDING_VERIFICATION': { color: '#7c3aed', bg: 'rgba(124,58,237,0.10)',  dot: '#8b5cf6', border: 'rgba(139,92,246,0.30)'  },
+  'COMPLETED': { color: '#059669', bg: 'rgba(5,150,105,0.10)',   dot: '#10b981', border: 'rgba(16,185,129,0.30)'  },
+  'ARCHIVED': { color: '#94a3b8', bg: 'rgba(148,163,184,0.10)', dot: '#cbd5e1', border: 'rgba(203,213,225,0.30)' },
 };
 
-const DEFAULT_STATUS = STATUS_COLORS['规划中'];
+const DEFAULT_STATUS = STATUS_COLORS['PLANNING'];
 
 function getStatus(status: string | undefined) {
   return STATUS_COLORS[status ?? ''] ?? DEFAULT_STATUS;

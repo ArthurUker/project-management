@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { projectTemplatesAPI } from '../api/client';
+import { projectTemplatesAPI } from '@/api';
 
 interface Role {
   id?: string;
@@ -73,7 +73,7 @@ export default function ProjectTemplateEditor({ templateId, onClose, onSave }: P
   async function handleDeleteRole(roleId: string) {
     if (!window.confirm('确认删除此角色？')) return;
     try {
-      await projectTemplatesAPI.roles.delete(templateId, roleId);
+      await projectTemplatesAPI.roles.remove(templateId, roleId);
       await loadData();
     } catch (err: any) {
       alert(err?.error || '删除失败');

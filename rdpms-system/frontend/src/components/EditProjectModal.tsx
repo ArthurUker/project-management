@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { projectAPI, userAPI, projectTemplatesAPI } from '../api/client';
+import { projectAPI, userAPI, projectTemplatesAPI } from '@/api';
 import { getAllowedTransitions } from '../constants/statusColors';
 
 // ─── 与 Prisma Schema 严格对齐的类型 ───
@@ -32,8 +32,8 @@ interface EditProjectModalProps {
 }
 
 const TYPE_OPTIONS = ['platform', '定制', '合作', '测试', '应用', '科技项目'];
-const TASK_STATUS_OPTIONS = ['待开始', '进行中', '已完成', '已暂停'];
-const MILESTONE_STATUS_OPTIONS = ['待完成', '进行中', '已完成'];
+const TASK_STATUS_OPTIONS = ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', '已暂停'];
+const MILESTONE_STATUS_OPTIONS = ['待完成', 'IN_PROGRESS', 'COMPLETED'];
 
 function getEditDraftKey(projectId: string) {
   return `rdpms_edit_project_draft_${projectId}`;
@@ -113,7 +113,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
           id: t.id || `task_${idx}`,
           title: t.title || `任务 ${idx + 1}`,
           priority: t.priority || '中',
-          status: t.status || '待开始',
+          status: t.status || 'NOT_STARTED',
           phase: t.phase || '',
           phaseId: t.phaseId || '',
           phaseOrder: t.phaseOrder ?? null,
@@ -203,7 +203,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
   const loadTemplates = useCallback(async () => {
     try {
       const res = await projectTemplatesAPI.list();
-      const list = (res as any).templates ?? (res as any).list ?? (res as any).data ?? res;
+      const list = (res as any).templates ?? (res as any).items ?? (res as any).data ?? res;
       setTemplates(Array.isArray(list) ? list : []);
     } catch {
       // ignore
@@ -221,7 +221,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
       setLoadingUsers(true);
       try {
         const res = await userAPI.list();
-        const data = res.users ?? res.list ?? res.data ?? res;
+        const data = res.items ?? [];
         setUsers(Array.isArray(data) ? data : []);
       } catch {
         // 加载失败不影响主流程
@@ -242,7 +242,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
         phase.tasks.map((t) => ({
           title: t.title,
           priority: t.priority || '中',
-          status: t.status || '待开始',
+          status: t.status || 'NOT_STARTED',
           phase: phase.name || null,
           phaseId: phase.id || null,
           phaseOrder: phase.order ?? null,
@@ -332,7 +332,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
           id: `tpl_${idx}_${Date.now()}`,
           title: t.title || `任务 ${idx + 1}`,
           priority: t.priority || '中',
-          status: t.status || '待开始',
+          status: t.status || 'NOT_STARTED',
           phase: phaseName,
           phaseId: t.phaseId || '',
           phaseOrder: t.phaseOrder ?? null,
@@ -863,7 +863,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
                                   </select>
                                   <select
                                     className="input bg-white"
-                                    value={task.status || '待开始'}
+                                    value={task.status || 'NOT_STARTED'}
                                     onChange={(e) => {
                                       setPlannedPhases(
                                         plannedPhases.map((p) =>
@@ -962,7 +962,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
                                   id: `task_${phase.id}_${Date.now()}`,
                                   title: '',
                                   priority: '中',
-                                  status: '待开始',
+                                  status: 'NOT_STARTED',
                                   phase: phase.name,
                                   phaseId: phase.id,
                                   phaseOrder: phase.order,
