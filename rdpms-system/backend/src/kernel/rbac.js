@@ -13,7 +13,26 @@ import { P0_PERMISSIONS } from './constants.js';
 import { unauthorized, forbidden } from './http.js';
 
 export const JWT_SECRET = process.env.JWT_SECRET || 'rdpms-jwt-secret';
-const ACCESS_TTL_SEC = Number.parseInt(process.env.JWT_ACCESS_TTL_SEC || '7200', 10);
+
+/**
+ * TTL 解析（W12 安全审计修复）：支持 "15m"/"1h"/"2d"/"30s" 或纯秒数。
+ * 非法配置直接 throw（fail-fast），绝不静默回退——避免 access token 以意外时长签发。
+ */
+export function parseTtlToSec(raw, label) {
+  if (raw == null || raw === '') return null;
+  const s = String(raw).trim();
+  if (/^\d+$/.test(s)) return Number.parseInt(s, 10);
+  const m = s.match(/^(\d+(?:\.\d+)?)\s*([smhd])$/i);
+  if (!m) throw new Error(`[config] ${label} 格式非法: "${raw}"（支持 900 / 15m / 1h / 2d）`);
+  const mult = { s: 1, m: 60, h: 3600, d: 86400 }[m[2].toLowerCase()];
+  return Math.round(Number.parseFloat(m[1]) * mult);
+}
+
+// access TTL 优先级：JWT_ACCESS_TTL（带单位，M-1 口径）> JWT_ACCESS_TTL_SEC（显式秒数）> 900（M-1 15 分钟）
+const ACCESS_TTL_SEC =
+  parseTtlToSec(process.env.JWT_ACCESS_TTL, 'JWT_ACCESS_TTL')
+  ?? parseTtlToSec(process.env.JWT_ACCESS_TTL_SEC, 'JWT_ACCESS_TTL_SEC')
+  ?? 900;
 
 export function signAccessToken(user) {
   return jwt.sign({ userId: user.id, systemRole: user.systemRole }, JWT_SECRET, {

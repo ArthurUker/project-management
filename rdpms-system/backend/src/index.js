@@ -126,6 +126,17 @@ app.onError((err, c) => {
 // 404 处理
 app.notFound((c) => c.json({ error: 'Not Found', code: 404 }, 404));
 
+// ── 启动期安全守卫（W12 密钥审计裁定）─────────────────────────────────────────
+// 生产环境：JWT_SECRET 缺失或命中已知泄露默认值（git 历史 blob 中存在）一律拒绝启动。
+// 开发环境：保留 fallback + console.warn，不阻断本地开发。
+if (process.env.NODE_ENV === 'production') {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret === 'rdpms-jwt-secret' || secret === 'rdpms-jwt-secret-key-change-in-production-2026') {
+    console.error('[FATAL] JWT_SECRET 未设置或使用了已知泄露的默认值，生产环境拒绝启动');
+    process.exit(1);
+  }
+}
+
 // 启动服务器
 const port = Number.parseInt(process.env.PORT || '3000', 10);
 console.log(`🚀 R&D PMS API starting on port ${port}...`);

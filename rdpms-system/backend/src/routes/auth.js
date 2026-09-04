@@ -7,6 +7,7 @@ import {
   signAccessToken,
   getAuth,
   JWT_SECRET,
+  parseTtlToSec,
 } from '../kernel/rbac.js';
 import { AUDIT_ACTIONS } from '../kernel/constants.js';
 import { writeAudit, requestCtx } from '../kernel/audit.js';
@@ -14,7 +15,8 @@ import { badRequest, unauthorized } from '../kernel/http.js';
 
 const auth = new Hono();
 
-const REFRESH_TTL_DAYS = 7;
+// 刷新令牌有效期（W12 对齐环境变量）：支持 "7d"/"12h" 等格式，缺省 7 天（M-1 口径）
+const REFRESH_TTL_SEC = parseTtlToSec(process.env.JWT_REFRESH_TTL, 'JWT_REFRESH_TTL') ?? 7 * 86400;
 
 if (!process.env.JWT_SECRET) {
   console.warn('[auth] ⚠️  JWT_SECRET 未设置，正在使用开发默认值（生产必须显式配置）');
@@ -34,7 +36,7 @@ async function issueRefreshToken(userId, c) {
       familyId: crypto.randomUUID(),
       userAgent: c.req.header('User-Agent')?.slice(0, 512) || null,
       ip: requestCtx(c).ip,
-      expiresAt: new Date(Date.now() + REFRESH_TTL_DAYS * 24 * 3600 * 1000),
+      expiresAt: new Date(Date.now() + REFRESH_TTL_SEC * 1000),
     },
   });
   return raw;
