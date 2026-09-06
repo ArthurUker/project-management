@@ -1,0 +1,23 @@
+rdpms.digifluidic.com {
+	tls renkang.guo@digifluidic.com
+	encode gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		-Server
+		X-Frame-Options "SAMEORIGIN"
+	}
+
+	# 排他 handle 分流：/api/* 直达后端，其余走 SPA（try_files 仅在 SPA 块内生效）
+	handle /api/* {
+		reverse_proxy 127.0.0.1:3000
+	}
+
+	handle {
+		root * /opt/rdpms/current/rdpms-system/frontend/dist
+		try_files {path} /index.html
+		file_server
+	}
+}
