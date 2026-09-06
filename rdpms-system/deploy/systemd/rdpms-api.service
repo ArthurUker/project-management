@@ -12,7 +12,13 @@ WorkingDirectory=/opt/rdpms/current/rdpms-system/backend
 Environment=NODE_ENV=production
 Environment=HOME=/var/lib/rdpms
 EnvironmentFile=/srv/rdpms/.env
-ExecStart=/usr/bin/node src/index.js
+# 注意：服务器上 Node 位于 /usr/local/bin/node（/usr/bin/node 不存在），写错将直接启动失败
+ExecStart=/usr/local/bin/node src/index.js
+
+# 内存护栏（与同机 foodsentinel / foodsafety-outreach 惯例一致）
+MemoryMax=1024M
+Environment=NODE_OPTIONS=--max-old-space-size=768
+Environment=TZ=Asia/Shanghai
 
 Restart=always
 RestartSec=5
@@ -25,8 +31,10 @@ KillMode=mixed
 UMask=0027
 LimitNOFILE=65535
 
-StandardOutput=journal
-StandardError=journal
+# 日志落数据盘（同机既定惯例：/mnt/datadisk0/<system>/logs/）
+# 部署侧需预建该目录并 chown rdpms:rdpms
+StandardOutput=append:/mnt/datadisk0/rdpms/logs/app.out.log
+StandardError=append:/mnt/datadisk0/rdpms/logs/app.err.log
 SyslogIdentifier=rdpms-api
 
 NoNewPrivileges=true
@@ -47,7 +55,7 @@ RemoveIPC=true
 RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
 SystemCallFilter=@system-service
 SystemCallErrorNumber=EPERM
-ReadWritePaths=/srv/rdpms/uploads /var/log/rdpms
+ReadWritePaths=/srv/rdpms/uploads /mnt/datadisk0/rdpms/logs
 
 [Install]
 WantedBy=multi-user.target
