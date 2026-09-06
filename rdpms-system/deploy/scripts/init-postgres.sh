@@ -95,6 +95,9 @@ sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" <<SQL
 GRANT CONNECT ON DATABASE ${DB_NAME} TO ${APP_ROLE};
 GRANT USAGE  ON SCHEMA public TO ${APP_ROLE};
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+-- PG14 下 public schema 属主是 postgres 超级用户；REVOKE PUBLIC 的 CREATE 后
+-- migrate 角色（DDL 执行者）必须有建表权 → 将 public schema 归属库 owner（W12 实测修复）
+ALTER SCHEMA public OWNER TO ${MIGRATE_ROLE};
 
 ALTER DEFAULT PRIVILEGES FOR ROLE ${MIGRATE_ROLE} IN SCHEMA public
   GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ${APP_ROLE};
