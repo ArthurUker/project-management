@@ -1,5 +1,10 @@
 # 任务模板一键初始化指南（立项阶段 10 任务版）
 
+> **状态说明（W12 清理）**：独立脚本 `seedTaskTemplatesOnly.js` 已随 PG 重构移除，
+> 任务模板 seed 能力已并入主 seed（`rdpms-system/backend/prisma/seed.js`，随部署执行）。
+> 本文中的 `npm run seed:templates-only`、`C:/rdpms`、`deploy.ps1` 等为 SQLite/Windows
+> 部署时代的历史记载，现行流程不再使用，仅作背景参考。
+
 ## 1. 本次更新内容
 
 已更新任务模板 seed 文件：
