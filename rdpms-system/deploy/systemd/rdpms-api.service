@@ -3,6 +3,7 @@ Description=RDPMS API (Hono + Prisma + PostgreSQL)
 Documentation=file:///opt/rdpms/.deploy-meta
 After=network-online.target postgresql.service
 Wants=network-online.target
+StartLimitIntervalSec=300
 
 [Service]
 Type=simple
@@ -22,7 +23,6 @@ Environment=TZ=Asia/Shanghai
 
 Restart=always
 RestartSec=5
-StartLimitIntervalSec=300
 StartLimitBurst=5
 TimeoutStartSec=90
 TimeoutStopSec=25

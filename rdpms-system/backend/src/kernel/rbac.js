@@ -12,7 +12,9 @@ import { prisma } from '../index.js';
 import { P0_PERMISSIONS } from './constants.js';
 import { unauthorized, forbidden } from './http.js';
 
-export const JWT_SECRET = process.env.JWT_SECRET || 'rdpms-jwt-secret';
+// W12：不再提供任何回退值——JWT_SECRET 必须显式配置（.env / systemd EnvironmentFile）。
+// 生产缺失时由 index.js 启动守卫拦截；开发缺失时 jwt.sign 将直接报错（fail-fast）。
+export const JWT_SECRET = process.env.JWT_SECRET;
 
 /**
  * TTL 解析（W12 安全审计修复）：支持 "15m"/"1h"/"2d"/"30s" 或纯秒数。

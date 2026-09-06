@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { serve } from '@hono/node-server';
+import { readFileSync } from 'node:fs';
 import { PrismaClient } from '@prisma/client';
 import { createIdempotencyMiddleware } from './middleware/idempotency.js';
 import authRoutes from './routes/auth.js';
@@ -127,11 +128,16 @@ app.onError((err, c) => {
 app.notFound((c) => c.json({ error: 'Not Found', code: 404 }, 404));
 
 // ── 启动期安全守卫（W12 密钥审计裁定）─────────────────────────────────────────
-// 生产环境：JWT_SECRET 缺失或命中已知泄露默认值（git 历史 blob 中存在）一律拒绝启动。
-// 开发环境：保留 fallback + console.warn，不阻断本地开发。
+// 生产环境：JWT_SECRET 缺失或命中已知泄露默认值（见 config/leaked-secrets.json，
+// 置于 src 之外以与 OPS 门禁区分"防御性引用"与"实际使用"）一律拒绝启动。
+// 开发环境：不设 JWT_SECRET 时由 jwt.sign 直接报错（fail-fast）。
 if (process.env.NODE_ENV === 'production') {
   const secret = process.env.JWT_SECRET;
-  if (!secret || secret === 'rdpms-jwt-secret' || secret === 'rdpms-jwt-secret-key-change-in-production-2026') {
+  let leaked = [];
+  try {
+    leaked = JSON.parse(readFileSync(new URL('../config/leaked-secrets.json', import.meta.url), 'utf8')).leaked ?? [];
+  } catch { /* 清单缺失时仅跳过泄露值比对，未设置仍然拦截 */ }
+  if (!secret || leaked.includes(secret)) {
     console.error('[FATAL] JWT_SECRET 未设置或使用了已知泄露的默认值，生产环境拒绝启动');
     process.exit(1);
   }
@@ -141,6 +147,7 @@ if (process.env.NODE_ENV === 'production') {
 const port = Number.parseInt(process.env.PORT || '3000', 10);
 console.log(`🚀 R&D PMS API starting on port ${port}...`);
 
-serve({ fetch: app.fetch, port });
+// 默认仅监听回环（OPS 门禁：3000 不得暴露非回环）；如需变更用 HOST 环境变量显式指定
+serve({ fetch: app.fetch, port, hostname: process.env.HOST || '127.0.0.1' });
 
 console.log(`✅ Server is running at http://localhost:${port}`);

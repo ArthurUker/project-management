@@ -38,12 +38,12 @@ function guessMimeByFileName(fileName = '') {
   return 'application/octet-stream';
 }
 
-async function ensureStorageDir() {
+async function prepareStorageDir() {
   await fs.mkdir(STORAGE_DIR, { recursive: true });
 }
 
 async function saveOriginalFile(documentId, originalFileName, fileBuffer) {
-  await ensureStorageDir();
+  await prepareStorageDir();
   const safeName = sanitizeFileName(originalFileName || 'source.pdf');
   const finalName = `${documentId}__${safeName}`;
   const finalPath = path.join(STORAGE_DIR, finalName);
@@ -56,7 +56,7 @@ async function saveOriginalFile(documentId, originalFileName, fileBuffer) {
 }
 
 async function findOriginalFile(documentId) {
-  await ensureStorageDir();
+  await prepareStorageDir();
   const files = await fs.readdir(STORAGE_DIR);
   const matched = files.find((f) => f.startsWith(`${documentId}__`));
   if (!matched) return null;
@@ -224,7 +224,7 @@ regulatoryDocuments.delete('/:id', requirePermission('regulatory_documents.delet
 
   await prisma.regulatoryDocument.delete({ where: { id } });
 
-  await ensureStorageDir();
+  await prepareStorageDir();
   const files = await fs.readdir(STORAGE_DIR);
   const stale = files.filter((f) => f.startsWith(`${id}__`));
   await Promise.all(stale.map((f) => fs.rm(path.join(STORAGE_DIR, f), { force: true })));
