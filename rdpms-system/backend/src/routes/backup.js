@@ -8,7 +8,7 @@ import { writeAudit } from '../kernel/audit.js';
  * /api/backup —— 数据导出（P0 data.export，仅 SUPER_ADMIN 持有）。
  *
  * M-1 变更说明：
- *   1. 旧 restore 端点依赖 SQLite PRAGMA，且属破坏性写库，已移除；
+ *   1. 旧 restore 端点依赖 SQLite 专有表命令，且属破坏性写库，已移除；
  *      PostgreSQL 环境的备份/恢复统一走 pg_dump / pg_restore（OPS 职责）。
  *   2. Reagent model 已删除，试剂域改为 reagentMaterials / reagentLots / reagentFormulas。
  */
