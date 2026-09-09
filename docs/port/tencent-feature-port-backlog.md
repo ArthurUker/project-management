@@ -61,9 +61,9 @@ enh 现状：`/api/backup/export` 保留并强化（`data.export` + 审计，`E/
 
 | # | 项 | 说明 | 方案 |
 |---|---|---|---|
-| D-1 | **缺陷**：`RegulatoryDocument.fileName` 缺列 | `E/…/routes/regulatory-documents.js:357-360` 对 enh schema（`schema.prisma:892` 起，无 fileName 列）执行 `update({ data: { fileName } })` → PrismaClientValidationError，上传法规原件必失败 | 原件改走 `FileObject`+`Attachment`（entityType=REGULATORY_ORIGINAL），fileName 由 Attachment 承载；`POST/GET /:id/original-file` 改为 multipart + files 门面（同 `E:/api/files.ts` 模式）。Tencent 的 base64 直传不照搬 |
+| D-1 | **缺陷**：`RegulatoryDocument.fileName` 缺列 | enh schema 无 fileName 列，但路由 4 处写该列（create/PUT/import/seed/original-file）→ 上传法规原件、PDF 导入必报错；且前端已按"走 /api/files 后回写 originalFileId"实现，回写传的是文档 id 而非文件 id | ✅ 已完成：统一 `FileObject`+`Attachment(entityType=REGULATORY_DOCUMENT, label='original')` 承接；PUT 支持 `originalFileId` 关联/解除；list/detail 带出 `originalFileId`+`fileName`；GET 原文=附件优先+legacy 目录回退；共享存储内核 `kernel/storage.js`；前端改用上传返回的文件 id 回写 |
 | D-2 | `Task.docRefs`（任务↔知识库文档引用 `{id,code,title,docType,version}`） | `T/…/prisma/schema.prisma` Task 模型；enh Task 无承接 | 新表 `TaskDocRef(taskId, docDocumentId, note, unique(taskId,docDocumentId))`；任务表单/详情补选择器；列表带出 |
-| D-3 | `Primer.validatedStrain`（验证菌株） | `DetectionTarget` 仅 `atccStrain` | `DetectionTarget` 增列 `validatedStrain String?`；引物表单/详情/导出补字段 |
+| D-3 | `Primer.validatedStrain`（验证菌株） | enh 曾有意删除（`primers.js` 头注释），但属真实业务字段 | ✅ 已完成：按 Tencent 语义保留在**引物级**（Primer 增列 `validated_strain`），白名单与前端类型同步；引物表单/详情 UI 随 A 批补 |
 | D-4 | `ProjectTemplate.preview` | 模板统计预览 JSON | 不加列：由 `TemplatePhase`/`TemplateTask` 聚合推导，`GET /:id/preview` 端点已存在（`E/…/projectTemplates.js:230`），前端如需展示接入即可 |
 
 ## E. enh 清理项

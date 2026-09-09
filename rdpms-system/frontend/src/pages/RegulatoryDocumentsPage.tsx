@@ -129,12 +129,12 @@ export default function RegulatoryDocumentsPage({ embedded = false }: Regulatory
       }
 
       if (id && pendingOriginalFile) {
-        await uploadFile(pendingOriginalFile, {
+        // D-1 修复：先经 /api/files 上传拿 FileObject id，再回写法规的原文附件关联
+        const uploaded = await uploadFile(pendingOriginalFile, {
           resourceType: 'regulatory-document',
           resourceId: id,
         });
-        // 回写文件元信息，便于列表展示与下载
-        await regulatoryDocumentsAPI.update(id, { originalFileId: id });
+        await regulatoryDocumentsAPI.update(id, { originalFileId: uploaded.id });
       }
 
       setShowEditor(false);
@@ -181,14 +181,13 @@ export default function RegulatoryDocumentsPage({ embedded = false }: Regulatory
         applicability: 'conditional',
         priorityLevel: 'P2',
         applicableToIvd: true,
-        fileName: file.name,
       });
       if (created?.id) {
-        await uploadFile(file, {
+        const uploaded = await uploadFile(file, {
           resourceType: 'regulatory-document',
           resourceId: created.id,
         });
-        await regulatoryDocumentsAPI.update(created.id, { originalFileId: created.id });
+        await regulatoryDocumentsAPI.update(created.id, { originalFileId: uploaded.id });
       }
       await refetch();
       alert('PDF 导入成功，可在列表中继续补充字段');

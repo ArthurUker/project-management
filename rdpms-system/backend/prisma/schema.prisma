@@ -814,6 +814,7 @@ model Task {
   prerequisites       TaskDependency[]         @relation("TaskDependencies")
   dependents          TaskDependency[]         @relation("DependentTasks")
   regulatoryDocuments TaskRegulatoryDocument[]
+  docRefs             TaskDocRef[]
 
   @@unique([projectId, code])
   @@index([projectId, status, deletedAt])
@@ -846,6 +847,22 @@ model TaskDependency {
   @@unique([taskId, prerequisiteId])
   @@index([prerequisiteId])
   @@map("task_dependencies")
+}
+
+// Tencent Task.docRefs（任务关联知识库文档 {id,code,title,docType,version}）的结构化承接
+model TaskDocRef {
+  taskId        String   @map("task_id")
+  docDocumentId String   @map("doc_document_id")
+  note          String?  @map("note")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  createdById   String?  @map("created_by_id")
+
+  task Task        @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  doc  DocDocument @relation(fields: [docDocumentId], references: [id], onDelete: Cascade)
+
+  @@id([taskId, docDocumentId])
+  @@index([docDocumentId])
+  @@map("task_doc_refs")
 }
 
 model TaskTemplate {
@@ -1099,10 +1116,11 @@ model DocDocument {
   createdById String?   @map("created_by_id")
   updatedById String?   @map("updated_by_id")
 
-  category DocCategory  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  owner    User         @relation("DocOwner", fields: [ownerId], references: [id], onDelete: Restrict)
-  reviewer User?        @relation("DocReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
-  versions DocVersion[]
+  category   DocCategory  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  owner      User         @relation("DocOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+  reviewer   User?        @relation("DocReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  versions   DocVersion[]
+  taskDocRef TaskDocRef[]
 
   @@index([categoryId, status, deletedAt])
   @@index([docType])
@@ -1290,6 +1308,7 @@ model Primer {
   projectId        String?        @map("project_id") // 旧版为文本 projectName
   targetId         String?        @map("target_id") // 旧版为文本 detectionTarget
   targetGene       String?        @map("target_gene") @db.VarChar(128)
+  validatedStrain  String?        @map("validated_strain") @db.VarChar(128) // Tencent 承接：验证菌株（引物级）
   modification5    String?        @map("modification5") @db.VarChar(128)
   modification3    String?        @map("modification3") @db.VarChar(128)
   ampliconLength   Int?           @map("amplicon_length")

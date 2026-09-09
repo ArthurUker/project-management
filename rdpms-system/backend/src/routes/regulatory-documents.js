@@ -4,6 +4,7 @@ import { authenticate as authMiddleware, requirePermission, getAuth } from '../k
 import { promises as fs } from 'fs';
 import path from 'path';
 import { SEED_REGULATORY_DOCUMENTS } from '../data/regulatoryDocumentsSeed.js';
+import { putObject, safeStoragePath } from '../kernel/storage.js';
 
 const regulatoryDocuments = new Hono();
 const STORAGE_DIR = path.resolve(process.cwd(), 'uploads', 'regulatory-documents');
@@ -42,19 +43,6 @@ async function prepareStorageDir() {
   await fs.mkdir(STORAGE_DIR, { recursive: true });
 }
 
-async function saveOriginalFile(documentId, originalFileName, fileBuffer) {
-  await prepareStorageDir();
-  const safeName = sanitizeFileName(originalFileName || 'source.pdf');
-  const finalName = `${documentId}__${safeName}`;
-  const finalPath = path.join(STORAGE_DIR, finalName);
-
-  const files = await fs.readdir(STORAGE_DIR);
-  const stale = files.filter((f) => f.startsWith(`${documentId}__`));
-  await Promise.all(stale.map((f) => fs.rm(path.join(STORAGE_DIR, f), { force: true })));
-
-  await fs.writeFile(finalPath, fileBuffer);
-}
-
 async function findOriginalFile(documentId) {
   await prepareStorageDir();
   const files = await fs.readdir(STORAGE_DIR);
@@ -65,6 +53,48 @@ async function findOriginalFile(documentId) {
   const fileBuffer = await fs.readFile(fullPath);
   const originalName = matched.replace(`${documentId}__`, '') || `${documentId}.pdf`;
   return { fileBuffer, originalName };
+}
+
+// ── 原文附件（D-1 修复）：统一 FileObject + Attachment(entityType=REGULATORY_DOCUMENT, label='original') ──
+const ORIGINAL_INCLUDE = {
+  attachments: {
+    where: { entityType: 'REGULATORY_DOCUMENT', label: 'original', deletedAt: null },
+    include: { file: { select: { id: true, originalName: true } } },
+  },
+};
+
+function mapOriginal(doc) {
+  if (!doc) return doc;
+  const { attachments, ...rest } = doc;
+  const att = attachments && attachments[0];
+  return {
+    ...rest,
+    originalFileId: att?.file?.id ?? null,
+    fileName: att?.file?.originalName ?? null,
+  };
+}
+
+async function clearOriginalAttachment(documentId) {
+  await prisma.attachment.updateMany({
+    where: { entityType: 'REGULATORY_DOCUMENT', entityId: documentId, label: 'original', deletedAt: null },
+    data: { deletedAt: new Date() },
+  });
+}
+
+async function linkOriginalFile(documentId, fileId, userId) {
+  const file = await prisma.fileObject.findFirst({ where: { id: fileId, deletedAt: null } });
+  if (!file) return null;
+  await clearOriginalAttachment(documentId);
+  await prisma.attachment.create({
+    data: {
+      fileId: file.id,
+      entityType: 'REGULATORY_DOCUMENT',
+      entityId: documentId,
+      label: 'original',
+      uploadedById: userId || null,
+    },
+  });
+  return file.id;
 }
 
 regulatoryDocuments.get('/', requirePermission('regulatory_documents.view'), async (c) => {
@@ -107,11 +137,12 @@ regulatoryDocuments.get('/', requirePermission('regulatory_documents.view'), asy
       skip: (parseInt(page) - 1) * parseInt(pageSize),
       take: parseInt(pageSize),
       orderBy: [{ priorityLevel: 'asc' }, { dispatchNo: 'asc' }],
+      include: ORIGINAL_INCLUDE,
     }),
   ]);
 
   return c.json({
-    list,
+    list: list.map(mapOriginal),
     total,
     page: parseInt(page),
     pageSize: parseInt(pageSize),
@@ -127,13 +158,14 @@ regulatoryDocuments.get('/:id', requirePermission('regulatory_documents.view'), 
   const id = c.req.param('id');
   const item = await prisma.regulatoryDocument.findUnique({
     where: { id },
+    include: ORIGINAL_INCLUDE,
   });
 
   if (!item) {
     return c.json({ error: '法规文件不存在' }, 404);
   }
 
-  return c.json(item);
+  return c.json(mapOriginal(item));
 });
 
 regulatoryDocuments.post('/', requirePermission('regulatory_documents.create'), async (c) => {
@@ -163,7 +195,6 @@ regulatoryDocuments.post('/', requirePermission('regulatory_documents.create'), 
       priorityLevel: body.priorityLevel || 'P2',
       summary: body.summary || null,
       applicabilityNote: body.applicabilityNote || null,
-      fileName: body.fileName || null,
     },
   });
 
@@ -191,6 +222,18 @@ regulatoryDocuments.put('/:id', requirePermission('regulatory_documents.update')
     }
   }
 
+  // D-1：原文文件改为 FileObject+Attachment 承接，前端在 /api/files 上传后回传 originalFileId
+  if (body.originalFileId !== undefined) {
+    if (body.originalFileId === null) {
+      await clearOriginalAttachment(id);
+    } else {
+      const linked = await linkOriginalFile(id, body.originalFileId, getAuth(c).userId);
+      if (!linked) {
+        return c.json({ error: '原文文件不存在' }, 400);
+      }
+    }
+  }
+
   const item = await prisma.regulatoryDocument.update({
     where: { id },
     data: {
@@ -203,11 +246,11 @@ regulatoryDocuments.put('/:id', requirePermission('regulatory_documents.update')
       priorityLevel: body.priorityLevel ?? existing.priorityLevel,
       summary: body.summary ?? existing.summary,
       applicabilityNote: body.applicabilityNote ?? existing.applicabilityNote,
-      fileName: body.fileName ?? existing.fileName,
     },
   });
 
-  return c.json(item);
+  const fresh = await prisma.regulatoryDocument.findUnique({ where: { id }, include: ORIGINAL_INCLUDE });
+  return c.json(mapOriginal(fresh));
 });
 
 regulatoryDocuments.delete('/:id', requirePermission('regulatory_documents.delete'), async (c) => {
@@ -223,6 +266,7 @@ regulatoryDocuments.delete('/:id', requirePermission('regulatory_documents.delet
   }
 
   await prisma.regulatoryDocument.delete({ where: { id } });
+  await clearOriginalAttachment(id);
 
   await prepareStorageDir();
   const files = await fs.readdir(STORAGE_DIR);
@@ -275,12 +319,21 @@ regulatoryDocuments.post('/import', async (c) => {
       priorityLevel: body.priorityLevel || 'P2',
       summary: body.summary || null,
       applicabilityNote: body.applicabilityNote || null,
-      fileName: sanitizeFileName(fileName),
     },
   });
 
-  await saveOriginalFile(item.id, fileName, fileBuffer);
-  return c.json(item, 201);
+  // D-1：原文统一 FileObject + Attachment 承接（旧 base64 入参保持兼容，不再落 legacy 目录）
+  const fileObject = await putObject(prisma, {
+    buffer: fileBuffer,
+    originalName: sanitizeFileName(fileName),
+    mimeType: guessMimeByFileName(fileName),
+    uploadedById: getAuth(c).userId,
+    folder: 'regulatory-documents',
+  });
+  await linkOriginalFile(item.id, fileObject.id, getAuth(c).userId);
+
+  const fresh = await prisma.regulatoryDocument.findUnique({ where: { id: item.id }, include: ORIGINAL_INCLUDE });
+  return c.json(mapOriginal(fresh), 201);
 });
 
 regulatoryDocuments.post('/seed', requirePermission('regulatory_documents.create'), async (c) => {
@@ -312,7 +365,6 @@ regulatoryDocuments.post('/seed', requirePermission('regulatory_documents.create
           priorityLevel: item.priorityLevel || 'P2',
           summary: item.summary || null,
           applicabilityNote: item.applicabilityNote || null,
-          fileName: null,
         },
       });
       created += 1;
@@ -330,6 +382,7 @@ regulatoryDocuments.post('/seed', requirePermission('regulatory_documents.create
   }
 });
 
+// 兼容入口：base64 直传原文（新前端一律走 POST /api/files + PUT originalFileId）
 regulatoryDocuments.post('/:id/original-file', async (c) => {
   const role = c.get('auth')?.systemRole;
   if (!hasPerm(c, 'regulatory_documents.update')) {
@@ -353,13 +406,18 @@ regulatoryDocuments.post('/:id/original-file', async (c) => {
     return c.json({ error: '文件内容为空' }, 400);
   }
 
-  await saveOriginalFile(id, fileName, fileBuffer);
-  const updated = await prisma.regulatoryDocument.update({
-    where: { id },
-    data: { fileName: sanitizeFileName(fileName) },
+  // D-1 修复：原先写 RegulatoryDocument.fileName（schema 无此列）必报错；现统一 FileObject + Attachment
+  const fileObject = await putObject(prisma, {
+    buffer: fileBuffer,
+    originalName: sanitizeFileName(fileName),
+    mimeType: guessMimeByFileName(fileName),
+    uploadedById: getAuth(c).userId,
+    folder: 'regulatory-documents',
   });
+  await linkOriginalFile(id, fileObject.id, getAuth(c).userId);
 
-  return c.json(updated);
+  const fresh = await prisma.regulatoryDocument.findUnique({ where: { id }, include: ORIGINAL_INCLUDE });
+  return c.json(mapOriginal(fresh));
 });
 
 regulatoryDocuments.get('/:id/original-file', async (c) => {
@@ -372,6 +430,24 @@ regulatoryDocuments.get('/:id/original-file', async (c) => {
   const item = await prisma.regulatoryDocument.findUnique({ where: { id } });
   if (!item) {
     return c.json({ error: '法规文件不存在' }, 404);
+  }
+
+  // 优先 Attachment → FileObject（新流程）；旧数据回退 legacy 目录 `${id}__*`
+  const att = await prisma.attachment.findFirst({
+    where: { entityType: 'REGULATORY_DOCUMENT', entityId: id, label: 'original', deletedAt: null },
+    include: { file: true },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  if (att?.file && !att.file.deletedAt) {
+    try {
+      const buf = await fs.readFile(safeStoragePath(att.file.storageKey));
+      c.header('Content-Type', att.file.mimeType || guessMimeByFileName(att.file.originalName));
+      c.header('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(att.file.originalName)}`);
+      return c.body(buf);
+    } catch {
+      // 文件缺失则继续走 legacy 回退
+    }
   }
 
   const found = await findOriginalFile(id);

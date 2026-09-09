@@ -6,9 +6,7 @@ import { writeAudit } from '../kernel/audit.js';
 import { HttpError } from '../kernel/http.js';
 import { notFound, forbidden, methodNotAllowed, badRequest, parsePaging, paged } from '../kernel/http.js';
 import fs from 'node:fs';
-import fsp from 'node:fs/promises';
-import path from 'node:path';
-import crypto from 'node:crypto';
+import { safeStoragePath, putObject } from '../kernel/storage.js';
 
 /**
  * 文件元数据 + 本地对象存储（M-1 §6.5）：
@@ -18,10 +16,6 @@ import crypto from 'node:crypto';
  *   DELETE /api/files/:id          files.delete（软删）
  */
 const files = new Hono();
-
-const UPLOAD_ROOT = process.env.UPLOAD_DIR
-  ? path.resolve(process.env.UPLOAD_DIR)
-  : path.resolve(process.cwd(), 'uploads');
 
 files.use('*', authenticate);
 
@@ -47,12 +41,6 @@ files.get('/', requirePermission('files.download'), async (c) => {
   return c.json({ ...paged(list, total, { page, pageSize }), list });
 });
 
-function safeStoragePath(storageKey) {
-  const full = path.resolve(UPLOAD_ROOT, storageKey);
-  if (!full.startsWith(UPLOAD_ROOT)) throw forbidden('FORBIDDEN', '非法存储路径');
-  return full;
-}
-
 // ── 上传 ─────────────────────────────────────────────────────────────────────
 files.post('/', requirePermission('files.upload'), async (c) => {
   const auth = getAuth(c);
@@ -65,25 +53,12 @@ files.post('/', requirePermission('files.upload'), async (c) => {
     throw new HttpError(413, 'PAYLOAD_TOO_LARGE', `单文件不超过 ${maxMb}MB`);
   }
 
-  await fsp.mkdir(UPLOAD_ROOT, { recursive: true });
   const buf = Buffer.from(await file.arrayBuffer());
-  const checksum = crypto.createHash('sha256').update(buf).digest('hex');
-  const storageKey = `${new Date().getFullYear()}/${crypto.randomUUID()}-${file.name.replace(/[^\w.\-一-龥]+/g, '_')}`;
-  const full = safeStoragePath(storageKey);
-  await fsp.mkdir(path.dirname(full), { recursive: true });
-  await fsp.writeFile(full, buf);
-
-  const created = await prisma.fileObject.create({
-    data: {
-      storageKey,
-      provider: 'LOCAL',
-      originalName: file.name,
-      mimeType: file.type || 'application/octet-stream',
-      sizeBytes: file.size,
-      checksum,
-      // scanStatus 默认 SKIPPED：未配置扫描时不做任何安全承诺
-      uploadedById: auth.userId,
-    },
+  const created = await putObject(prisma, {
+    buffer: buf,
+    originalName: file.name,
+    mimeType: file.type || 'application/octet-stream',
+    uploadedById: auth.userId,
   });
 
   await writeAudit(prisma, {

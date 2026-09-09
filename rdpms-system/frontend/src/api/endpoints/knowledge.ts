@@ -64,6 +64,8 @@ export interface Primer {
   projectName?: string | null;
   speciesChineseName?: string | null;
   speciesLatinName?: string | null;
+  /** Tencent 承接（D-3）：验证菌株，引物级字段 */
+  validatedStrain?: string | null;
   status?: string | null;
   createdAt?: string;
   updatedAt?: string;

@@ -12,7 +12,8 @@ import { badRequest, notFound, parsePaging, paged } from '../kernel/http.js';
  *
  * 迁移要点：
  *   projectName（文本）→ projectId（外键）；detectionTarget（文本）→ targetId（DetectionTarget 外键）；
- *   speciesLatinName 等旧样本字段与 atccStrain、validatedStrain 已删除；
+ *   speciesLatinName 等旧样本字段与 atccStrain 并入 DetectionTarget；validatedStrain（验证菌株）
+ *   按 Tencent 语义保留在引物级（批次一 D-3 承接）；
  *   code @unique 必填 → CodeSequence 原子发号（PRM-）；
  *   status 'active' → ACTIVE（DocumentStatus 枚举）；createdBy → createdById。
  */
@@ -21,7 +22,7 @@ const router = new Hono();
 router.use('*', authMiddleware);
 
 const PRIMER_FIELDS = [
-  'name', 'type', 'sequence', 'projectId', 'targetId', 'targetGene',
+  'name', 'type', 'sequence', 'projectId', 'targetId', 'targetGene', 'validatedStrain',
   'modification5', 'modification3', 'ampliconLength', 'synthesisAmount',
   'synthesisCompany', 'tubeCount', 'notes', 'status',
 ];
