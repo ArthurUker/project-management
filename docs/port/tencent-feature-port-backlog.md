@@ -24,7 +24,7 @@
 | A-6 | 草稿 localStorage 异常降级（Tencent 审查修复意图） | `T:/store/appStore.ts:124-147`（safeStorage） | enh 草稿键两侧一致存在（`CREATE_PROJECT_DRAFT_KEY` 等），但隐私模式/配额异常降级未确认 | 在 enh 侧补统一 safeStorage 工具并接入 CreateProjectModal/EditProjectModal，不抄 Tencent 补丁 |
 | A-7 | 其余审查修复意图（在 enh 对应页面重查修复） | Tencent CODE_REVIEW 批次 | 待逐项核查 | ①法规文档页卸载后请求取消（AbortController）；②配方页异步竞态/旧闭包；③流程图延迟定时器清理；④死文件清理见 §E |
 
-## B. P1 解冻项（冻结桩 → 正式启用，逐项：权限码+软删除+审计+前端按钮+测试）
+## B. P1 解冻项（✅ 批次二已完成：10 端点全部转正，软删除+审计；治理层新增 P1_UNFROZEN 8 码，SUPER_ADMIN 短路追加，permissions 表 90→98；未解冻 P1 仍冻结）
 
 | 端点 | Tencent 实现 | enh 现状（证据） | 权限码（建议） |
 |---|---|---|---|
@@ -117,3 +117,12 @@ enh 现状：`/api/backup/export` 保留并强化（`data.export` + 审计，`E/
 - ✅ A-7① useRegulatoryDocuments 重写（过期响应丢弃、refetch 走 reloadToken）；A-7③ ProcessFlowDiagram 延迟 fitView 定时器登记+清理；**A-7② 配方页异步竞态待批次后续专项核查**（涉及 FormulaEditor/PrepCalculator 数据流，需单独读代码定位）。
 - ✅ E-1/E-2 死文件删除（FlowEditor.tsx、ProjectTemplates.tsx）；E-3 Settings 失实文案修正。
 - 验收门：`tsc -b` 零错误；vite 生产构建在部署流水线执行（本地 10s 监视截断，不影响判定）。
+
+## J. 批次二进度（2026-09-09）
+
+- ✅ 治理（c3d8c87）：`kernel/constants.js` 新增 `P1_UNFROZEN`（8 码：projects.delete / tasks.delete / reports.delete / docs.delete / project_templates.copy / primers.import / primers.delete / reagent_materials.delete）；`rbac.js` SUPER_ADMIN 短路追加；seed 播种 90→98 条（孤儿清理同步豁免）；`rbac.test.mjs` T1c 断言更新；前端 `PERMS` 增加对应 8 键。未解冻 P1（projects.restore、milestones.delete、samples.delete、formulas.delete 等 22 条）仍冻结。
+- ✅ 10 端点转正（全部软删除+writeAudit）：项目删除/批量删除；任务删除（显式级联软删全部后代）；汇报删除（仅 DRAFT）；知识库文档删除；引物删除/批量导入（≤200 行，逐行校验+CodeSequence 发号+失败明细）；原料删除/批量删除；项目模板复制（roles/phases/tasks 深拷贝，副本 isMaster=false、状态 DRAFT）。
+- ✅ 前端（309ecf8）：ProjectDetail 删除项目按钮；ReagentLibrary 空壳删除确认流接通+行级删除；PrimerLibrary 删除/批量删除/导入按钮权限显示+导入失败明细展示；KnowledgeDetail 门控换 DOCS_DELETE；reagentMaterialsAPI 补 remove/bulkDelete；batchImport 类型对齐。
+- ✅ 复核发现：模板复制、汇报删除、任务删除（PhaseTaskPanel）、引物删除/导入的前端入口**早已存在**，此前被后端 403 挡住——后端解冻后自动生效，仅需权限门控补齐。
+- ⚠️ 授权提示：新解冻码默认只有 SUPER_ADMIN 持有（未自动授予任何角色）；ADMIN/MANAGER 需要时由 SUPER_ADMIN 在 Roles 页授予。
+- 验收门：`node --check` 全过、`tsc -b` 零错误；rbac 单测需 DB 环境，待部署/演练时跑（T1c 已按 98 更新）。
