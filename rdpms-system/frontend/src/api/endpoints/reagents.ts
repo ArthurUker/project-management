@@ -1,4 +1,4 @@
-import { get, post, requestPaged } from '../request';
+import { del, get, post, requestPaged } from '../request';
 
 /**
  * M-1 §7.7 /api/reagents 前端适配：
@@ -69,6 +69,9 @@ export const reagentMaterialsAPI = {
   create: (data: Partial<ReagentMaterial>) => post<ReagentMaterial>('/reagent-materials', data),
   update: (id: string, data: Partial<ReagentMaterial>) =>
     post<ReagentMaterial>(`/reagent-materials/${id}`, data),
+  /** P1 批次二解冻：reagent_materials.delete（软删除） */
+  remove: (id: string) => del<{ id: string }>(`/reagent-materials/${id}`),
+  bulkDelete: (ids: string[]) => post<{ deleted: number }>('/reagent-materials/bulk-delete', { ids }),
 };
 
 export const formulaAPI = {

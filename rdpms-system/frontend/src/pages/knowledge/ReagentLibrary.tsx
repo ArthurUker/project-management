@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { reagentMaterialsAPI } from '@/api';
+import { PERMS, useHasPerm } from '../../auth/permissions';
 import { safeStorage } from '@/utils/safeStorage';
 
 type ColumnKey =
@@ -147,6 +148,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
   const [forceDetails] = useState<any[]>([]);
   const [showColumnSettings, setShowColumnSettings] = useState(false);
   const [columnOrder, setColumnOrder] = useState<ColumnKey[]>(DEFAULT_COLUMN_ORDER);
+  const canDeleteMaterial = useHasPerm(PERMS.REAGENT_MATERIALS_DELETE);
 
   // 滚动位置保持：编辑保存后恢复原位
   const containerRef = useRef<HTMLDivElement>(null);
@@ -582,18 +584,29 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
   const confirmDelete = async () => {
     setShowConfirm(false);
     try {
-      // M-1：reagent_materials.delete 为 P1 后置权限，本轮未启用
-      alert('试剂删除属 P1 后置权限，本轮未启用');
-      setShowConfirm(false);
+      // P1 批次二解冻：reagent_materials.delete（后端软删除 + 审计）
+      await reagentMaterialsAPI.bulkDelete(confirmTargets.map((t: any) => t.id));
+      setSelectedIds([]);
+      await load();
     } catch (err: any) {
       alert(err?.error || err?.message || '删除失败');
     }
   };
 
   const forceDelete = async () => {
-    // M-1：reagent_materials.delete 为 P1 后置权限，本轮未启用
+    // 与普通删除同语义（后端软删除）；保留入口仅为兼容旧确认流程
     setShowForceConfirm(false);
-    alert('试剂删除属 P1 后置权限，本轮未启用');
+    await confirmDelete();
+  };
+
+  const handleDeleteSingle = async (row: any) => {
+    if (!window.confirm(`确定删除原料「${row.commonName || row.code || row.id}」？（软删除，可由管理员恢复）`)) return;
+    try {
+      await reagentMaterialsAPI.remove(row.id);
+      await load();
+    } catch (err: any) {
+      alert(err?.error || err?.message || '删除失败');
+    }
   };
 
   const renderChemicalFormula = (formula: string) => {
@@ -958,6 +971,14 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
                     >
                       编辑
                     </button>
+                    {canDeleteMaterial && (
+                      <button
+                        className="ml-2 inline-flex items-center rounded-md border border-red-100 bg-red-50 px-2.5 py-1 text-sm font-medium text-red-600 transition-colors hover:border-red-200 hover:bg-red-100"
+                        onClick={() => handleDeleteSingle(r)}
+                      >
+                        删除
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))

@@ -217,7 +217,7 @@ export default function KnowledgeDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const canDelete = useHasPerm(PERMS.DOCS_WRITE);
+  const canDelete = useHasPerm(PERMS.DOCS_DELETE);
 
   const [doc, setDoc] = useState<DocDocument | null>(null);
   const [loading, setLoading] = useState(true);

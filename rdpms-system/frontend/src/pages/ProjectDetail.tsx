@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { projectAPI, progressAPI, userAPI } from '@/api';
 import { useHasPerm, PERMS } from '../auth/permissions';
 import KanbanBoard from '../components/KanbanBoard';
@@ -9,9 +9,11 @@ import AddMemberModal from '../components/AddMemberModal';
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
 
   const canEdit = useHasPerm(PERMS.PROJECTS_EDIT);
   const canManageMembers = useHasPerm(PERMS.PROJECTS_MANAGE_MEMBERS);
+  const canDelete = useHasPerm(PERMS.PROJECTS_DELETE);
   const [project, setProject] = useState<any>(null);
   const [progress, setProgress] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +31,17 @@ export default function ProjectDetail() {
       loadProject();
     }
   }, [id]);
+
+  const handleDeleteProject = async () => {
+    if (!id) return;
+    if (!window.confirm('确定删除该项目？删除后列表不再展示（软删除，可由管理员恢复）。')) return;
+    try {
+      await projectAPI.remove(id);
+      navigate('/projects');
+    } catch (e: any) {
+      alert(e?.error || e?.message || '删除失败');
+    }
+  };
   
   const loadProject = async () => {
     if (!id) return;
@@ -140,6 +153,9 @@ export default function ProjectDetail() {
             )}
             {canManageMembers && (
               <button className="btn btn-primary" onClick={openMemberModal}>添加成员</button>
+            )}
+            {canDelete && (
+              <button className="btn btn-secondary" style={{ color: '#dc2626', borderColor: '#fecaca' }} onClick={handleDeleteProject}>删除项目</button>
             )}
           </div>
         </div>

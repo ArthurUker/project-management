@@ -4,6 +4,7 @@
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { primerAPI, projectAPI } from '@/api';
+import { PERMS, useHasPerm } from '../../auth/permissions';
 import { safeStorage } from '@/utils/safeStorage';
 
 const COLUMNS = [
@@ -141,6 +142,9 @@ export default function PrimerLibrary() {
     setProjectSearch('');
     setShowModal(true);
   };
+  const canDeletePrimers = useHasPerm(PERMS.PRIMERS_DELETE);
+  const canImportPrimers = useHasPerm(PERMS.PRIMERS_IMPORT);
+
   const openEdit = (row: any) => {
     setEditing(row);
     setForm({ ...EMPTY_FORM(), ...row, ampliconLength: row.ampliconLength ?? '', tubeCount: row.tubeCount ?? '' });
@@ -300,8 +304,12 @@ export default function PrimerLibrary() {
           return obj;
         }).filter(r => r.name && r.sequence);
         if (rows.length === 0) { alert('没有有效数据行（名称和序列不能为空）'); return; }
-        await primerAPI.batchImport(rows);
-        alert(`成功导入 ${rows.length} 条记录`);
+        const res = await primerAPI.batchImport(rows);
+        alert(
+          res.failed.length
+            ? `成功导入 ${res.success.length} 条，失败 ${res.failed.length} 条：${res.failed.map((f) => `第${f.index + 1}行 ${f.name ?? ''}（${f.reason}）`).join('；')}`
+            : `成功导入 ${res.success.length} 条记录`
+        );
         load();
       } catch (e: any) { alert('导入失败: ' + e.message); }
     };
@@ -368,7 +376,9 @@ export default function PrimerLibrary() {
         <button onClick={handleSearch} style={{ padding: '7px 14px', borderRadius: 8, background: '#3b82f6', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13 }}>搜索</button>
         <button onClick={openNew} style={{ padding: '7px 14px', borderRadius: 8, background: '#10b981', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>＋ 新建引物</button>
         <button onClick={handleExport} style={{ padding: '7px 14px', borderRadius: 8, background: '#0ea5e9', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13 }}>导出CSV</button>
-        <button onClick={() => fileRef.current?.click()} style={{ padding: '7px 14px', borderRadius: 8, background: '#f59e0b', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13 }}>导入CSV</button>
+        {canImportPrimers && (
+          <button onClick={() => fileRef.current?.click()} style={{ padding: '7px 14px', borderRadius: 8, background: '#f59e0b', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 13 }}>导入CSV</button>
+        )}
         <input ref={fileRef} type="file" accept=".csv" style={{ display: 'none' }} onChange={handleImportFile} />
 
         {/* 列设置按钮 */}
@@ -422,10 +432,12 @@ export default function PrimerLibrary() {
             onClick={() => { setShowBatchEdit(true); setBatchEditField(''); setBatchEditValue(''); setBatchProjectNames([]); }}
             style={{ padding: '5px 12px', borderRadius: 6, background: '#3b82f6', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
           >批量编辑</button>
-          <button
-            onClick={handleBatchDelete}
-            style={{ padding: '5px 12px', borderRadius: 6, background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 12 }}
-          >删除选中</button>
+          {canDeletePrimers && (
+            <button
+              onClick={handleBatchDelete}
+              style={{ padding: '5px 12px', borderRadius: 6, background: '#ef4444', color: '#fff', border: 'none', cursor: 'pointer', fontSize: 12 }}
+            >删除选中</button>
+          )}
           <button
             onClick={() => setSelectedIds([])}
             style={{ padding: '5px 10px', borderRadius: 6, background: 'transparent', color: '#64748b', border: '1px solid #cbd5e1', cursor: 'pointer', fontSize: 12 }}
@@ -483,7 +495,9 @@ export default function PrimerLibrary() {
                   ))}
                   <td style={{ padding: '8px', borderBottom: '1px solid #f1f5f9', textAlign: 'center', whiteSpace: 'nowrap' }}>
                     <button onClick={() => openEdit(row)} style={{ color: '#3b82f6', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, marginRight: 4 }}>编辑</button>
-                    <button onClick={() => handleDelete(row.id)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12 }}>删除</button>
+                    {canDeletePrimers && (
+                      <button onClick={() => handleDelete(row.id)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: 12 }}>删除</button>
+                    )}
                   </td>
                 </tr>
               ))

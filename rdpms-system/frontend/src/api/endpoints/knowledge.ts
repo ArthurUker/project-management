@@ -88,7 +88,11 @@ export const primerAPI = {
   create: (data: Partial<Primer>) => post<Primer>('/primers', data),
   update: (id: string, data: Partial<Primer>) => put<Primer>(`/primers/${id}`, data),
   remove: (id: string) => del<{ id: string }>(`/primers/${id}`),
-  batchImport: (rows: Partial<Primer>[]) => post<{ count: number }>('/primers/batch-import', { rows }),
+  batchImport: (rows: Partial<Primer>[]) =>
+    post<{
+      success: Array<{ id: string; code: string; name: string }>;
+      failed: Array<{ index: number; name: string | null; reason: string }>;
+    }>('/primers/batch-import', { rows }),
 };
 
 /* ── 样本库 ───────────────────────────────────────────────────────────────── */
