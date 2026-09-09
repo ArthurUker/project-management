@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { reagentMaterialsAPI } from '@/api';
+import { safeStorage } from '@/utils/safeStorage';
 
 type ColumnKey =
   | 'commonName'
@@ -435,7 +436,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
 
   useEffect(() => {
     try {
-      const raw = window.localStorage.getItem(COLUMN_ORDER_STORAGE_KEY);
+      const raw = safeStorage.get(COLUMN_ORDER_STORAGE_KEY);
       if (!raw) return;
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed)) return;
@@ -454,7 +455,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
 
   useEffect(() => {
     try {
-      window.localStorage.setItem(COLUMN_ORDER_STORAGE_KEY, JSON.stringify(columnOrder));
+      safeStorage.set(COLUMN_ORDER_STORAGE_KEY, JSON.stringify(columnOrder));
     } catch (err) {
       // ignore write failure
     }

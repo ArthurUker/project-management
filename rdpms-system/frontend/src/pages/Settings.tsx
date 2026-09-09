@@ -131,10 +131,10 @@ export default function Settings() {
           <div className="space-y-2 text-sm text-gray-600">
             <p>研发项目管理系统 (R&D PMS)</p>
             <p>版本: 1.0.0</p>
-            <p>基于 Local-First 架构设计</p>
+            <p>服务端优先架构（PostgreSQL + RBAC）</p>
             <p className="text-gray-400 mt-4">
-              数据存储于本地IndexedDB，支持离线使用。<br />
-              连接服务器后自动同步数据。
+              数据存储于服务器 PostgreSQL 数据库，权限与审计集中管理。<br />
+              离线能力将随同步 v2 单独提供。
             </p>
           </div>
         </div>

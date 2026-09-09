@@ -131,6 +131,87 @@ users.post('/', requirePermission('users.create'), async (c) => {
   return c.json(created, 201);
 });
 
+// ── 批量导入（users.create；Tencent POST /users/batch 复刻，逐条校验逐条落库）──
+users.post('/batch', requirePermission('users.create'), async (c) => {
+  const auth = getAuth(c);
+  const body = await c.req.json().catch(() => null);
+  const userList = body?.users;
+  if (!Array.isArray(userList) || userList.length === 0) {
+    throw badRequest('VALIDATION_ERROR', 'users 列表不能为空');
+  }
+  if (userList.length > 200) {
+    throw badRequest('VALIDATION_ERROR', '单批最多 200 条');
+  }
+
+  const weak = ['admin123', '123456', 'please-change', 'password', 'admin', 'changeme', 'test1234'];
+  const success = [];
+  const failed = [];
+
+  for (const [index, item] of userList.entries()) {
+    const rawUsername = typeof item?.username === 'string' ? item.username.trim().toLowerCase() : '';
+    try {
+      // Tencent 字段名 name 与 enh displayName 兼容
+      const displayName = item?.displayName ?? item?.name;
+      if (!rawUsername || !item?.password || !displayName) {
+        throw new Error('缺少必填字段 username/password/displayName');
+      }
+      if (!/^[a-z0-9_-]{2,64}$/.test(rawUsername)) {
+        throw new Error('用户名仅允许小写字母/数字/下划线/中划线，2-64 位');
+      }
+      if (typeof item.password !== 'string' || item.password.length < 12) {
+        throw new Error('初始密码长度不能少于 12 位');
+      }
+      if (weak.some((w) => item.password.toLowerCase().includes(w))) {
+        throw new Error('初始密码命中弱口令黑名单');
+      }
+      const exists = await prisma.user.findUnique({ where: { username: rawUsername }, select: { id: true } });
+      if (exists) throw new Error('用户名已存在');
+
+      const passwordHash = await bcrypt.hash(item.password, 12);
+      const created = await prisma.user.create({
+        data: {
+          username: rawUsername,
+          passwordHash,
+          displayName: String(displayName),
+          position: item.position ?? null,
+          department: item.department ?? null,
+          phone: item.phone ?? null,
+          email: item.email ?? null,
+          systemRole: 'MEMBER', // 策略与单建一致：默认 MEMBER，提升走 roles.assign_user
+          status: 'ACTIVE',
+          mustChangePassword: true,
+          createdById: auth.userId,
+        },
+        select: { id: true, username: true, displayName: true, systemRole: true, status: true },
+      });
+      const memberRole = await prisma.role.findUnique({ where: { code: 'MEMBER' }, select: { id: true } });
+      if (memberRole) {
+        await prisma.userRole.create({ data: { userId: created.id, roleId: memberRole.id, assignedById: auth.userId } });
+      }
+      success.push({ id: created.id, username: created.username, displayName: created.displayName });
+    } catch (err) {
+      failed.push({ index, username: rawUsername || item?.username || null, reason: err?.message || '创建失败' });
+    }
+  }
+
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.CREATE,
+    entityType: 'USER',
+    entityLabel: `批量导入 ${success.length}/${userList.length}`,
+    after: { total: userList.length, created: success.length, failed: failed.length },
+    metadata: {
+      permissionCode: 'users.create',
+      batch: true,
+      failedUsernames: failed.map((f) => f.username).filter(Boolean),
+    },
+  });
+  return c.json({ success, failed }, 201);
+});
+
 // ── 更新（users.update；白名单 M-1 §6.3）────────────────────────────────────
 users.put('/:id', requirePermission('users.update'), async (c) => {
   const id = c.req.param('id');

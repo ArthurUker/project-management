@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { projectAPI, userAPI, projectTemplatesAPI } from '@/api';
+import { safeStorage } from '@/utils/safeStorage';
 import { getAllowedTransitions } from '../constants/statusColors';
 
 // ─── 与 Prisma Schema 严格对齐的类型 ───
@@ -155,7 +156,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
         let nextFormTemplateId = full?.templateId || project.templateId || '';
         let nextParticipantIds = Array.from(new Set(memberIds));
 
-        const draftRaw = localStorage.getItem(getEditDraftKey(project.id));
+        const draftRaw = safeStorage.get(getEditDraftKey(project.id));
         if (draftRaw) {
           try {
             const draft = JSON.parse(draftRaw);
@@ -177,7 +178,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
             nextMilestones = Array.isArray(draft.plannedMilestones) ? draft.plannedMilestones : nextMilestones;
             setShowPlanEditor(!!draft.showPlanEditor);
           } catch {
-            localStorage.removeItem(getEditDraftKey(project.id));
+            safeStorage.remove(getEditDraftKey(project.id));
           }
         }
 
@@ -271,7 +272,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
         } : {}),
       };
       await projectAPI.update(project.id, payload);
-      localStorage.removeItem(getEditDraftKey(project.id));
+      safeStorage.remove(getEditDraftKey(project.id));
       onSaved();
       onClose();
     } catch (err: any) {
@@ -459,7 +460,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
       showPlanEditor,
       savedAt: Date.now(),
     };
-    localStorage.setItem(getEditDraftKey(project.id), JSON.stringify(draft));
+    safeStorage.set(getEditDraftKey(project.id), JSON.stringify(draft));
     alert('已暂存草稿，可稍后继续编辑');
   };
 

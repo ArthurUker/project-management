@@ -912,6 +912,8 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     y: number;
   }>({ visible: false, draggedPhaseId: '', targetPhaseId: '', x: 0, y: 0 });
   const hasInitialAutoFitRef = useRef(false);
+  // A-7③（Tencent 审查修复意图）：延迟 fitView 定时器统一登记，卸载/重建时清理
+  const fitTimerRef = useRef<number | null>(null);
 
   // helper to build edges using current onAddParallel
   const edgeOptions = buildEdgeStyle(onAddParallel ?? (() => {}));
@@ -1235,8 +1237,12 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     if (!hasInitialAutoFitRef.current && sortedPhases.length > 0) {
       hasInitialAutoFitRef.current = true;
       const cfg = layoutConfigByMode(initialLayoutMode);
-      setTimeout(() => fitView({ padding: cfg.fitPadding, duration: 400 }), 50);
+      if (fitTimerRef.current) window.clearTimeout(fitTimerRef.current);
+      fitTimerRef.current = window.setTimeout(() => fitView({ padding: cfg.fitPadding, duration: 400 }), 50);
     }
+    return () => {
+      if (fitTimerRef.current) window.clearTimeout(fitTimerRef.current);
+    };
   }, [phases, fitView, getNodes, getEdges, onAddParallel, onEdgeDelete, setEdges, setNodes, mergeEdgesWithCurrent]);
 
   // 监听外部 fitView / reLayout 事件
@@ -1286,7 +1292,8 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       setNodes(lnUpdated);
       setEdges(le);
       onNodesPositionChange?.(lnUpdated.map((n) => ({ id: n.id, x: n.position.x, y: n.position.y })));
-      setTimeout(() => fitView({ padding: cfg.fitPadding, duration: 400 }), 50);
+      if (fitTimerRef.current) window.clearTimeout(fitTimerRef.current);
+      fitTimerRef.current = window.setTimeout(() => fitView({ padding: cfg.fitPadding, duration: 400 }), 50);
     };
 
     window.addEventListener('flow:fitView', fitHandler);
@@ -1294,6 +1301,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     return () => {
       window.removeEventListener('flow:fitView', fitHandler);
       window.removeEventListener('flow:reLayout', handleReLayout);
+      if (fitTimerRef.current) window.clearTimeout(fitTimerRef.current);
     };
   }, [fitView, getNodes, getEdges, onAddParallel, onEdgeDelete, onNodesPositionChange, phases, setEdges, setNodes, mergeEdgesWithCurrent]);
 

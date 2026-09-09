@@ -13,7 +13,7 @@ import { notFound } from '../kernel/http.js';
  *   POST   /api/formulas           formulas.create
  *   PUT    /api/formulas/:id       formulas.update
  *   POST   /api/formulas/:id/duplicate  formulas.create
- *   DELETE 不提供（formulas.delete 为 P1）
+ *   DELETE /api/formulas/:id —— P1 冻结桩（formulas.delete，解冻时改软删+审计）
  *
  * 新 schema：FormulaComponent 仅含 materialId（ReagentMaterial），无 reagentId。
  */
@@ -150,6 +150,11 @@ formulas.put('/:id', requirePermission('formulas.update'), async (c) => {
     metadata: { permissionCode: 'formulas.update' },
   });
   return c.json({ success: true, formula: updated });
+});
+
+// DELETE /:id —— M-1：formulas.delete 为 P1 后置权限，冻结桩（Tencent 为硬删，解冻时改软删+审计）
+formulas.delete('/:id', async (c) => {
+  return c.json({ error: '配方删除属 P1 后置权限，本轮未启用', code: 'PERMISSION_NOT_AVAILABLE' }, 403);
 });
 
 // POST /:id/duplicate —— 复制（formulas.create）

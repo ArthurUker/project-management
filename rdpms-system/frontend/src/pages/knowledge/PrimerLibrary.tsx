@@ -4,6 +4,7 @@
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { primerAPI, projectAPI } from '@/api';
+import { safeStorage } from '@/utils/safeStorage';
 
 const COLUMNS = [
   { key: 'projectName',        label: '所属项目',              mono: false, italic: false },
@@ -211,7 +212,7 @@ export default function PrimerLibrary() {
   // 列设置：持久化到 localStorage
   const saveVisibleCols = useCallback((cols: string[]) => {
     setVisibleCols(cols);
-    localStorage.setItem('primerLibCols', JSON.stringify(cols));
+    safeStorage.set('primerLibCols', JSON.stringify(cols));
   }, []);
   const toggleColVisible = (key: string) => {
     saveVisibleCols(visibleCols.includes(key) ? visibleCols.filter(k => k !== key) : [...visibleCols, key]);

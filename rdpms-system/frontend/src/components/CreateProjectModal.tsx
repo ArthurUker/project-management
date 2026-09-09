@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { projectAPI, projectTemplatesAPI, taskTemplatesAPI, userAPI } from '@/api';
 import { useAuth } from '../auth/useAuth';
+import { safeStorage } from '@/utils/safeStorage';
 import ProcessFlowDiagram from './ProcessFlowDiagram';
 
 const PROJECT_TYPES = ['platform', '定制', '合作', '测试', '应用', '科技项目'];
@@ -227,7 +228,7 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
   useEffect(() => {
     // 新建项目时直接清除 localStorage 表单草稿，不弹窗不恢复
     // 草稿项目已保存在数据库列表中，用户可直接点击列表中的草稿项目继续编辑
-    localStorage.removeItem(CREATE_PROJECT_DRAFT_KEY);
+    safeStorage.remove(CREATE_PROJECT_DRAFT_KEY);
   }, [user?.id]);
 
   useEffect(() => {
@@ -476,7 +477,7 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
       const newProject = draftProjectId
         ? await projectAPI.update(draftProjectId, payload)
         : await projectAPI.create(payload);
-      localStorage.removeItem(CREATE_PROJECT_DRAFT_KEY);
+      safeStorage.remove(CREATE_PROJECT_DRAFT_KEY);
       navigate(`/projects/${(newProject as any).id}`);
     } catch (err: any) {
       alert(err?.error || '创建失败');
@@ -517,7 +518,7 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
       selectedPhaseId,
       savedAt: Date.now(),
     };
-    localStorage.setItem(CREATE_PROJECT_DRAFT_KEY, JSON.stringify(draft));
+    safeStorage.set(CREATE_PROJECT_DRAFT_KEY, JSON.stringify(draft));
 
     try {
       const payload: any = {

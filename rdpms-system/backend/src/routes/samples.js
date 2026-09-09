@@ -13,7 +13,7 @@ import { badRequest, notFound, parsePaging, paged } from '../kernel/http.js';
  *   GET    /api/samples/:id  samples.view
  *   POST   /api/samples      samples.create —— sampleCode 由 CodeSequence 原子发号，客户端传入即 400
  *   PUT    /api/samples/:id  samples.update —— 白名单写入
- *   DELETE 不提供（samples.delete 为 P1，不入库）
+ *   DELETE /api/samples/:id —— P1 冻结桩（samples.delete，解冻时改软删+审计）
  */
 const samples = new Hono();
 
@@ -144,6 +144,11 @@ samples.put('/:id', requirePermission('samples.update'), async (c) => {
     metadata: { permissionCode: 'samples.update' },
   });
   return c.json(updated);
+});
+
+// ── 删除（M-1：samples.delete 为 P1 后置权限，冻结桩；解冻时软删+审计）────────
+samples.delete('/:id', async (c) => {
+  return c.json({ error: '样本删除属 P1 后置权限，本轮未启用', code: 'PERMISSION_NOT_AVAILABLE' }, 403);
 });
 
 export default samples;

@@ -189,6 +189,52 @@ templates.delete('/:id', requirePermission('task_templates.delete'), async (c) =
   return c.json({ success: true });
 });
 
+// POST /bulk-delete —— 批量软删（Tencent 复刻；任一被项目引用则整批拒绝，语义与单删一致）
+templates.post('/bulk-delete', requirePermission('task_templates.delete'), async (c) => {
+  const auth = getAuth(c);
+  const body = await c.req.json().catch(() => null);
+  const ids = Array.isArray(body?.ids) ? body.ids.filter((x) => typeof x === 'string' && x) : [];
+  if (ids.length === 0) throw badRequest('VALIDATION_ERROR', 'ids 不能为空');
+  if (ids.length > 200) throw badRequest('VALIDATION_ERROR', '单批最多 200 条');
+
+  const targets = await prisma.taskTemplate.findMany({
+    where: { id: { in: ids }, deletedAt: null },
+    select: { id: true, name: true },
+  });
+  if (targets.length === 0) throw notFound('TEMPLATE_NOT_FOUND', '模板不存在或已删除');
+
+  const referenced = [];
+  for (const t of targets) {
+    // eslint-disable-next-line no-await-in-loop
+    const usage = await prisma.project.count({ where: { templateId: t.id, deletedAt: null } });
+    if (usage > 0) referenced.push({ id: t.id, name: t.name, usage });
+  }
+  if (referenced.length > 0) {
+    throw badRequest(
+      'VALIDATION_ERROR',
+      `以下模板仍被项目引用，无法删除：${referenced.map((r) => `${r.name}(${r.usage})`).join('、')}`,
+    );
+  }
+
+  await prisma.taskTemplate.updateMany({
+    where: { id: { in: targets.map((t) => t.id) } },
+    data: { deletedAt: new Date() },
+  });
+
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.DELETE,
+    entityType: 'TASK_TEMPLATE',
+    entityId: targets[0].id,
+    entityLabel: `批量删除 ${targets.length} 个模板`,
+    metadata: { permissionCode: 'task_templates.delete', batch: true, ids: targets.map((t) => t.id) },
+  });
+  return c.json({ success: true, deleted: targets.length });
+});
+
 // POST /seed —— 一键预置标准模板（task_templates.create）
 templates.post('/seed', requirePermission('task_templates.create'), async (c) => {
   const auth = getAuth(c);

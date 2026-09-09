@@ -20,7 +20,7 @@
 | A-2 | 任务模板批量删除 `POST /api/task-templates/bulk-delete` | `T/…/routes/taskTemplates.js:148` | 404 | 与既有单删同语义（在用检查），权限码 `task_templates.delete`，审计 |
 | A-3 | 配方删除 `DELETE /api/formulas/:id` | `T/…/routes/formulas.js:152` | 404（连桩都没有） | 按冻结桩模式补桩后随 B 解冻；软删除；审计 |
 | A-4 | 样本删除 `DELETE /api/samples/:id` | `T/…/routes/samples.js:90` | 404（无桩） | 同上 |
-| A-5 | 配方复制 `POST /api/formulas/:id/duplicate` | `T/…/routes/formulas.js:164` | 无 | 复用 `formulas.create` 权限码 + 审计；名称加副本后缀，重算 CodeSequence |
+| ~~A-5~~ | 配方复制 `POST /api/formulas/:id/duplicate` | `T/…/routes/formulas.js:164` | **更正：enh 已存在**（`E/…/formulas.js:155-191`，走 CodeSequence 发号）——初版探查误报 | 无需移植 |
 | A-6 | 草稿 localStorage 异常降级（Tencent 审查修复意图） | `T:/store/appStore.ts:124-147`（safeStorage） | enh 草稿键两侧一致存在（`CREATE_PROJECT_DRAFT_KEY` 等），但隐私模式/配额异常降级未确认 | 在 enh 侧补统一 safeStorage 工具并接入 CreateProjectModal/EditProjectModal，不抄 Tencent 补丁 |
 | A-7 | 其余审查修复意图（在 enh 对应页面重查修复） | Tencent CODE_REVIEW 批次 | 待逐项核查 | ①法规文档页卸载后请求取消（AbortController）；②配方页异步竞态/旧闭包；③流程图延迟定时器清理；④死文件清理见 §E |
 
@@ -106,3 +106,14 @@ enh 现状：`/api/backup/export` 保留并强化（`data.export` + 审计，`E/
 5. **批次五**：契约测试、权限矩阵核对、核心 E2E、数据迁移校验与部署回滚演练；验收后集成分支替换 enh 主干，Tencent 保留只读标签。
 
 > 附注：`.deploy-meta` 记 `commit=63f936f` 与生产 release HEAD `3392572` 不一致，属部署记录问题，与本清单无关，另行修正。
+
+## I. 批次一进度（2026-09-09）
+
+- ✅ §D 全部完成（提交 ad91118）：schema 冻结（task_doc_refs 新表、primers.validated_strain）、D-1 法规原文改走 FileObject+Attachment、共享存储内核 kernel/storage.js、迁移 20260909120000_batch1_d_model；prisma validate/generate 通过，tsc -b 零错误。
+- ✅ A-1 `POST /api/users/batch`（users.create 权限码、逐条校验、MEMBER 绑定、批量审计；兼容 Tencent `name` 字段）+ 前端 `userAPI.batchCreate` 门面。
+- ✅ A-2 `POST /api/task-templates/bulk-delete`（软删、引用整批拒绝、审计；前端门面 templates.bulkDelete 原已存在）。
+- ✅ A-3 `DELETE /api/formulas/:id` 与 A-4 `DELETE /api/samples/:id` 冻结桩（403 PERMISSION_NOT_AVAILABLE，风格对齐既有桩）。
+- ✅ A-6 safeStorage 工具（utils/safeStorage.ts）+ CreateProjectModal/EditProjectModal/PrimerLibrary/ReagentLibrary 共 8 处裸 localStorage 全部收口。
+- ✅ A-7① useRegulatoryDocuments 重写（过期响应丢弃、refetch 走 reloadToken）；A-7③ ProcessFlowDiagram 延迟 fitView 定时器登记+清理；**A-7② 配方页异步竞态待批次后续专项核查**（涉及 FormulaEditor/PrepCalculator 数据流，需单独读代码定位）。
+- ✅ E-1/E-2 死文件删除（FlowEditor.tsx、ProjectTemplates.tsx）；E-3 Settings 失实文案修正。
+- 验收门：`tsc -b` 零错误；vite 生产构建在部署流水线执行（本地 10s 监视截断，不影响判定）。

@@ -48,6 +48,24 @@ export const userAPI = {
   /** M-1 §7.3：创建不提交 systemRole（BE 固定 MEMBER） */
   create: (data: CreateUserDto) => post<CurrentUser>('/users', data),
 
+  /** 批量导入（users.create；逐条校验，返回成功/失败明细。A-1 Tencent 复刻） */
+  batchCreate: (
+    users: Array<{
+      username: string;
+      password: string;
+      displayName?: string;
+      name?: string;
+      position?: string;
+      department?: string;
+      phone?: string;
+      email?: string;
+    }>,
+  ) =>
+    post<{
+      success: Array<{ id: string; username: string; displayName: string }>;
+      failed: Array<{ index: number; username: string | null; reason: string }>;
+    }>('/users/batch', { users }),
+
   /** M-1 §6.3：仅白名单字段（displayName/position/department/phone/email） */
   update: (id: string, data: UpdateUserDto) => put<CurrentUser>(`/users/${id}`, data),
 
