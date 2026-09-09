@@ -44,6 +44,8 @@ export default function Layout() {
               return (
                 <div key={item.path} className="mb-2">
                   <div
+                    onClick={item.path ? () => navigate(item.path as string) : undefined}
+                    style={{ cursor: item.path ? 'pointer' : 'default' }}
                     className={`flex items-center justify-between px-3 py-2.5 rounded-lg mb-1 transition-colors ${
                       isParentActive ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                     }`}
@@ -56,7 +58,7 @@ export default function Layout() {
                     </div>
                     {/* link to parent page */}
                     {item.path && (
-                      <Link to={item.path} className="text-sm text-gray-400 hover:text-gray-600">查看</Link>
+                      <Link to={item.path} onClick={(e) => e.stopPropagation()} className="text-sm text-gray-400 hover:text-gray-600">查看</Link>
                     )}
                   </div>
 

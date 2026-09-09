@@ -50,6 +50,7 @@ export const MENU: MenuItem[] = [
   {
     key: 'templates',
     label: '模板库',
+    path: '/project-templates',
     perm: [PERMS.PROJECT_TEMPLATES_VIEW, PERMS.TASK_TEMPLATES_VIEW],
     children: [
       { key: 't-project', label: '项目模板', path: '/project-templates', perm: PERMS.PROJECT_TEMPLATES_VIEW },

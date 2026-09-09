@@ -105,7 +105,12 @@ export default function Docs() {
 
   useEffect(() => {
     setActiveModule(moduleParam === 'regulatory' ? 'regulatory' : 'docs');
-  }, [moduleParam]);
+    // 顶部菜单子项（引物探针库/试剂库/样本库）→ 自动切换到对应分类
+    if (moduleParam === 'primers' && primerCategoryId) setSelectedCategory(primerCategoryId);
+    else if (moduleParam === 'reagents' && reagentCategoryId) setSelectedCategory(reagentCategoryId);
+    else if (moduleParam === 'samples' && sampleCategoryId) setSelectedCategory(sampleCategoryId);
+    // 分类 id 为异步加载，就绪后本 effect 会再次执行完成定位
+  }, [moduleParam, reagentCategoryId, ampReagentCategoryId, primerCategoryId, sampleCategoryId]);
 
   useEffect(() => {
     loadCategories();
@@ -123,7 +128,7 @@ export default function Docs() {
   const loadCategories = async () => {
     try {
       const res = await docsAPI.categories.list();
-      let cats = res ?? [];
+      let cats: DocCategory[] = Array.isArray(res) ? res : ((res as any)?.list ?? []);
       const existingNames = new Set(cats.map((c: DocCategory) => c.name));
       const missingCategories = DEFAULT_CATEGORIES.filter(cat => !existingNames.has(cat.name));
       if (missingCategories.length > 0) {
@@ -131,7 +136,7 @@ export default function Docs() {
           try { await docsAPI.categories.create(cat); } catch (e: any) { if (!e.message?.includes('已存在')) console.error('创建分类失败:', e); }
         }
         const res2 = await docsAPI.categories.list();
-        cats = res2 ?? [];
+        cats = Array.isArray(res2) ? res2 : ((res2 as any)?.list ?? []);
       }
       // 去重
       const seen = new Set();

@@ -4,21 +4,32 @@ import { ApiError } from './error';
 import type { ApiResponse, ErrorResponse, Paged } from './types';
 
 /**
- * request.ts — 薄封装：把统一信封解包为业务数据
+ * request.ts — 薄封装：把响应解包为业务数据
+ *
+ * 兼容两种后端响应：
+ *   1. 统一信封：{ success: true, data: T, meta } / { success: false, error: {...} }
+ *   2. 扁平结构（后端现状）：业务字段直接在顶层，如 { accessToken, user, ... }
  *
  * 约定：endpoints 层永远返回「已解包的 T」，页面不再写 `res.data ? res.data : res` 这类二义代码。
  */
 
 export async function request<T>(config: AxiosRequestConfig): Promise<T> {
-  const res = await http.request<ApiResponse<T> | ErrorResponse>(config);
+  const res = await http.request<ApiResponse<T> | ErrorResponse | T>(config);
   const body = res.data;
 
-  // 后端用 2xx 包业务错误的兜底路径（正常不应触发）
-  if (body && typeof body === 'object' && (body as ErrorResponse).success === false) {
-    throw new ApiError(res.status, (body as ErrorResponse).error);
+  if (body && typeof body === 'object') {
+    // 失败信封（后端用 2xx 包业务错误的兜底路径，正常不应触发）
+    if ((body as ErrorResponse).success === false) {
+      throw new ApiError(res.status, (body as ErrorResponse).error);
+    }
+    // 成功信封
+    if ((body as ApiResponse<T>).success === true && 'data' in (body as Record<string, unknown>)) {
+      return (body as ApiResponse<T>).data;
+    }
   }
 
-  return (body as ApiResponse<T>).data;
+  // 扁平响应：原样返回
+  return body as T;
 }
 
 export const get = <T>(url: string, config?: AxiosRequestConfig): Promise<T> =>
@@ -49,7 +60,7 @@ export function normalizePaged<T>(raw: any, fallbackPage = 1, fallbackPageSize =
   if (Array.isArray(raw)) {
     return { items: raw as T[], total: raw.length, page: fallbackPage, pageSize: fallbackPageSize };
   }
-  const items: T[] = raw?.items ?? raw?.items ?? raw?.flat ?? [];
+  const items: T[] = raw?.items ?? raw?.list ?? raw?.flat ?? [];
   return {
     items,
     total: Number(raw?.total ?? items.length) || 0,

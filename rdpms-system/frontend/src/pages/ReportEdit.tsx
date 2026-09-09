@@ -12,6 +12,9 @@ const REPORT_TYPES = [
   { id: '月报', label: '月报', desc: '月末最后几天' },
 ];
 
+// 后端枚举（DAILY/WEEKLY/MONTHLY）→ 前端中文 id（编辑回显用）
+const REPORT_TYPE_ENUM_TO_CN: Record<string, string> = { DAILY: '日报', WEEKLY: '周报', MONTHLY: '月报' };
+
 // 日报模板类型：通用 / 试剂组综合模板
 type DailyTemplate = 'general' | 'reagent';
 
@@ -122,7 +125,8 @@ export default function ReportEdit() {
         // 解析内容
         try {
           const content = JSON.parse(reportData.content);
-          setReportType(String(reportData.reportType ?? '日报'));
+          const rtRaw = reportData.reportType as string | undefined;
+          setReportType(rtRaw ? (REPORT_TYPE_ENUM_TO_CN[rtRaw] ?? rtRaw) : '日报');
           setMonth(reportData.month);
           setProjectReports(content.projectReports || []);
           const normalizedReagentReports = (content.reagentReports || []).map((r: any) => {

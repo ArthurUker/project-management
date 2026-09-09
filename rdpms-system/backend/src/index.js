@@ -104,7 +104,7 @@ app.route('/api', systemLogsRoutes);    // 内部 '/system-logs'
 app.route('/api/settings', settingsRoutes);
 app.route('/api/dict', dictRoutes);
 app.route('/api/files', filesRoutes);
-app.route('/api', statsRoutes);
+app.route('/api/stats', statsRoutes);
 app.route('/api/backup', backupRoutes);
 
 // 错误处理

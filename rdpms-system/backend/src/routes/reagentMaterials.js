@@ -105,6 +105,12 @@ function normalizeMaterialData(raw, { forCreate }) {
   if ('defaultStockConc' in data) data.defaultStockConc = toFloatOrNull(data.defaultStockConc);
   if ('category' in data) data.category = toCategory(data.category);
   if ('status' in data) data.status = String(data.status).toUpperCase();
+  // MaterialState 枚举（SOLID/LIQUID/SOLUTION/GAS）：兼容旧客户端小写，非法值丢弃走默认
+  if ('state' in data) {
+    const st = String(data.state).toUpperCase();
+    if (['SOLID', 'LIQUID', 'SOLUTION', 'GAS'].includes(st)) data.state = st;
+    else delete data.state;
+  }
   for (const k of Object.keys(data)) if (data[k] === undefined) delete data[k];
   return data;
 }

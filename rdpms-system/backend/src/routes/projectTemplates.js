@@ -78,7 +78,8 @@ templates.get('/', requirePermission('project_templates.view'), async (c) => {
       include: {
         creator: { select: { id: true, displayName: true } },
         parent: { select: { id: true, name: true, code: true } },
-        _count: { select: { children: true, projects: true, phases: true, tasks: true } },
+        phases: { select: { _count: { select: { tasks: true } } } },
+        _count: { select: { children: true, projects: true, phases: true } },
       },
     }),
   ]);
@@ -86,7 +87,7 @@ templates.get('/', requirePermission('project_templates.view'), async (c) => {
   const listWithStats = list.map((tpl) => ({
     ...tpl,
     phaseCount: tpl._count.phases,
-    taskCount: tpl._count.tasks,
+    taskCount: (tpl.phases ?? []).reduce((sum, ph) => sum + (ph?._count?.tasks ?? 0), 0),
   }));
   return c.json({ list: listWithStats, total, page: Number.parseInt(page, 10), pageSize: Number.parseInt(pageSize, 10) });
 });

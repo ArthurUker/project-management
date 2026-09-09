@@ -20,6 +20,10 @@ import { badRequest, notFound } from '../kernel/http.js';
  */
 const reports = new Hono();
 
+// 兼容旧客户端的中文汇报类型（历史页面以 日报/周报/月报 作为值传输）
+const REPORT_TYPE_ALIASES = { '日报': 'DAILY', '周报': 'WEEKLY', '月报': 'MONTHLY' };
+const normalizeReportType = (v) => (typeof v === 'string' ? (REPORT_TYPE_ALIASES[v] ?? v) : v);
+
 reports.use('*', authMiddleware);
 
 const LEGACY_STATUS_MAP = {
@@ -48,7 +52,7 @@ reports.get('/', requirePermission('reports.view'), async (c) => {
   if (authorId || userId) where.authorId = authorId || userId;
   if (projectId) where.projectId = projectId;
   if (periodKey || month) where.periodKey = periodKey || month;
-  if (reportType) where.reportType = reportType;
+  if (reportType) where.reportType = normalizeReportType(reportType);
   if (status) where.status = normalizeStatus(status);
 
   const [total, list] = await Promise.all([
@@ -102,7 +106,7 @@ reports.post('/', requirePermission('reports.create'), async (c) => {
   await auditElevatedIfNeeded(prisma, c, access, 'reports.create');
   assertProjectCapability(access, 'write', 'reports.create');
 
-  const reportType = data.reportType || 'MONTHLY';
+  const reportType = normalizeReportType(data.reportType) || 'MONTHLY';
   const status = normalizeStatus(data.status) || 'DRAFT';
   const content = data.content === undefined
     ? {}
@@ -147,6 +151,7 @@ reports.put('/:id', requirePermission('reports.update'), async (c) => {
 
   const data = pickAllowed(body, ['content', 'periodKey', 'month', 'reportType'], { entityLabel: '更新汇报' });
   if (data.month !== undefined) { data.periodKey = data.month; delete data.month; }
+  if (data.reportType !== undefined) data.reportType = normalizeReportType(data.reportType);
   if (data.content !== undefined) {
     data.content = typeof data.content === 'string' ? JSON.parse(data.content || '{}') : data.content;
   }
@@ -300,7 +305,7 @@ reports.get('/export/month/:month', requirePermission('reports.export'), async (
   const where = { periodKey: month, deletedAt: null };
   if (authorId || userId) where.authorId = authorId || userId;
   if (projectId) where.projectId = projectId;
-  if (reportType) where.reportType = reportType;
+  if (reportType) where.reportType = normalizeReportType(reportType);
 
   const list = await prisma.report.findMany({
     where,
