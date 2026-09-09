@@ -227,9 +227,30 @@ docs.put('/documents/:id', requirePermission('docs.update'), async (c) => {
   return c.json(document);
 });
 
-// M-1：docs.delete 为 P1 后置权限（不进首版库），端点暂不提供
-docs.delete('/documents/:id', async (c) => {
-  return c.json({ error: '文档删除属 P1 后置权限，本轮未启用', code: 'PERMISSION_NOT_AVAILABLE' }, 403);
+// ── 删除文档（docs.delete，P1 批次二解冻；软删+审计）─────────────────────────
+docs.delete('/documents/:id', requirePermission('docs.delete'), async (c) => {
+  const auth = getAuth(c);
+  const { id } = c.req.param();
+  const document = await prisma.docDocument.findFirst({
+    where: { id, deletedAt: null },
+    select: { id: true, title: true, code: true },
+  });
+  if (!document) throw notFound('DOCUMENT_NOT_FOUND', '文档不存在');
+
+  await prisma.docDocument.update({ where: { id }, data: { deletedAt: new Date() } });
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.DELETE,
+    entityType: 'DOC',
+    entityId: id,
+    entityLabel: document.title,
+    before: { title: document.title, code: document.code },
+    metadata: { permissionCode: 'docs.delete', softDelete: true },
+  });
+  return c.json({ success: true, id, softDeleted: true });
 });
 
 docs.get('/documents/:id/versions', requirePermission('docs.view'), async (c) => {

@@ -448,9 +448,30 @@ projects.put('/:id', requirePermission('projects.update'), async (c) => {
   return c.json(project);
 });
 
-// M-1：projects.delete 为 P1 后置权限（不进首版库），端点暂不提供
-projects.delete('/:id', async (c) => {
-  return c.json({ error: '项目删除属 P1 后置权限，本轮未启用', code: 'PERMISSION_NOT_AVAILABLE' }, 403);
+// ── 删除（projects.delete，P1 批次二解冻；软删+审计）─────────────────────────
+projects.delete('/:id', requirePermission('projects.delete'), async (c) => {
+  const auth = getAuth(c);
+  const id = c.req.param('id');
+  const project = await prisma.project.findFirst({
+    where: { id, deletedAt: null },
+    select: { id: true, name: true, code: true },
+  });
+  if (!project) throw notFound('PROJECT_NOT_FOUND', '项目不存在');
+
+  await prisma.project.update({ where: { id }, data: { deletedAt: new Date() } });
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.DELETE,
+    entityType: 'PROJECT',
+    entityId: id,
+    entityLabel: project.name,
+    before: { name: project.name, code: project.code },
+    metadata: { permissionCode: 'projects.delete', softDelete: true },
+  });
+  return c.json({ id, softDeleted: true });
 });
 
 // ── 成员管理（projects.manage_members + ∩ manage_members）───────────────────
@@ -680,9 +701,43 @@ projects.post('/:id/apply-template', requirePermission('projects.update'), async
   return c.json({ success: true, taskCount: project, phaseCount: template.phases.length });
 });
 
-// M-1：projects.delete 为 P1 后置权限，批量删除端点暂不提供
-projects.post('/batch-delete', async (c) => {
-  return c.json({ error: '项目删除属 P1 后置权限，本轮未启用', code: 'PERMISSION_NOT_AVAILABLE' }, 403);
+// ── 批量删除（projects.delete；软删+审计，Tencent POST /projects/batch-delete 复刻）
+projects.post('/batch-delete', requirePermission('projects.delete'), async (c) => {
+  const auth = getAuth(c);
+  const body = await c.req.json().catch(() => null);
+  const ids = Array.isArray(body?.ids) ? body.ids.filter((x) => typeof x === 'string' && x) : [];
+  if (ids.length === 0) throw badRequest('VALIDATION_ERROR', 'ids 不能为空');
+  if (ids.length > 200) throw badRequest('VALIDATION_ERROR', '单批最多 200 条');
+
+  const targets = await prisma.project.findMany({
+    where: { id: { in: ids }, deletedAt: null },
+    select: { id: true, name: true },
+  });
+  if (targets.length === 0) throw notFound('PROJECT_NOT_FOUND', '项目不存在或已删除');
+
+  await prisma.project.updateMany({
+    where: { id: { in: targets.map((t) => t.id) } },
+    data: { deletedAt: new Date() },
+  });
+
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.DELETE,
+    entityType: 'PROJECT',
+    entityId: targets[0].id,
+    entityLabel: `批量删除 ${targets.length} 个项目`,
+    metadata: {
+      permissionCode: 'projects.delete',
+      softDelete: true,
+      batch: true,
+      ids: targets.map((t) => t.id),
+      names: targets.map((t) => t.name),
+    },
+  });
+  return c.json({ success: true, deleted: targets.length });
 });
 
 // 批量更新状态（逐项目 ∩ transition 校验）

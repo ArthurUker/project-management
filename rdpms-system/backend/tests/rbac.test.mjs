@@ -89,14 +89,14 @@ test('T1b RolePermission 总数 = 289', async () => {
   assert.equal(n, 289, `RolePermission 总数应为 289，实际 ${n}`);
 });
 
-test('T1c permissions 表 = 90 且无 P1/否决码入库', async () => {
+test('T1c permissions 表 = 98（P0 90 + 批次二解冻 8）且无未解冻 P1/否决码入库', async () => {
   const total = await prisma.permission.count();
-  assert.equal(total, 90, `permissions 总数应为 90，实际 ${total}`);
+  assert.equal(total, 98, `permissions 总数应为 98，实际 ${total}`);
 
   const p1OrDenied = await prisma.permission.findMany({
     where: {
       OR: [
-        { code: { in: ['projects.delete', 'tasks.delete', 'reagent_materials.export', 'files.view', 'files.restore', 'system.logs.export'] } },
+        { code: { in: ['reagent_materials.export', 'files.view', 'files.restore', 'system.logs.export'] } },
         { code: { in: ['roles.export', 'system.health', 'dict.read', 'files.metadata.view', 'settings.audit.view', 'system.logs_read', 'system.logs.read', 'audit.read', 'projects.edit', 'tasks.update_status', 'users.manage', 'regulatory.manage'] } },
         { code: { startsWith: 'detection_targets.' } },
       ],

@@ -150,14 +150,75 @@ router.put('/:id', requirePermission('primers.update'), async (c) => {
   return c.json({ success: true, data: updated });
 });
 
-// M-1：primers.delete 为 P1 后置权限，端点暂不提供
-router.delete('/:id', async (c) => {
-  return c.json({ error: '引物删除属 P1 后置权限，本轮未启用', code: 'PERMISSION_NOT_AVAILABLE' }, 403);
+// ── 删除（primers.delete，P1 批次二解冻；软删+审计）──────────────────────────
+router.delete('/:id', requirePermission('primers.delete'), async (c) => {
+  const auth = getAuth(c);
+  const id = c.req.param('id');
+  const primer = await prisma.primer.findFirst({
+    where: { id, deletedAt: null },
+    select: { id: true, code: true, name: true },
+  });
+  if (!primer) throw notFound('PRIMER_NOT_FOUND', '引物不存在');
+
+  await prisma.primer.update({ where: { id }, data: { deletedAt: new Date() } });
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.DELETE,
+    entityType: 'PRIMER',
+    entityId: id,
+    entityLabel: primer.code,
+    before: { code: primer.code, name: primer.name },
+    metadata: { permissionCode: 'primers.delete', softDelete: true },
+  });
+  return c.json({ success: true, id, softDeleted: true });
 });
 
-// M-1：primers.import 为 P1 后置权限，端点暂不提供
-router.post('/batch-import', async (c) => {
-  return c.json({ error: '引物批量导入属 P1 后置权限，本轮未启用', code: 'PERMISSION_NOT_AVAILABLE' }, 403);
+// POST /batch-import —— 批量导入（primers.import，P1 批次二解冻；Tencent 复刻：
+// 前端解析 CSV 后传 rows 数组，逐行校验、逐行 CodeSequence 发号，失败行不阻断整批）
+router.post('/batch-import', requirePermission('primers.import'), async (c) => {
+  const auth = getAuth(c);
+  const body = await c.req.json().catch(() => null);
+  const rows = Array.isArray(body?.rows) ? body.rows : [];
+  if (rows.length === 0) throw badRequest('VALIDATION_ERROR', 'rows 不能为空');
+  if (rows.length > 200) throw badRequest('VALIDATION_ERROR', '单批最多 200 条');
+
+  const year = String(new Date().getFullYear());
+  const success = [];
+  const failed = [];
+  for (const [index, row] of rows.entries()) {
+    try {
+      const data = normalizePrimerData(row);
+      if (!data.name) throw new Error('name 必填');
+      if (!data.sequence) throw new Error('sequence 必填');
+      if ('code' in data) delete data.code; // 编号一律服务端发号
+      // eslint-disable-next-line no-await-in-loop
+      const code = await nextCode(prisma, 'PRIMER', { periodKey: year, fallbackPrefix: `PRM-${year}-`, padding: 3 });
+      // eslint-disable-next-line no-await-in-loop
+      const created = await prisma.primer.create({
+        data: { ...data, code, status: data.status || 'ACTIVE', createdById: auth.userId },
+        select: { id: true, code: true, name: true },
+      });
+      success.push({ id: created.id, code: created.code, name: created.name });
+    } catch (err) {
+      failed.push({ index, name: row?.name || null, reason: err?.message || '导入失败' });
+    }
+  }
+
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.CREATE,
+    entityType: 'PRIMER',
+    entityLabel: `批量导入 ${success.length}/${rows.length}`,
+    after: { total: rows.length, created: success.length, failed: failed.length },
+    metadata: { permissionCode: 'primers.import', batch: true },
+  });
+  return c.json({ success, failed }, 201);
 });
 
 export default router;

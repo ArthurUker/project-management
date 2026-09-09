@@ -325,9 +325,29 @@ reports.get('/export/month/:month', requirePermission('reports.export'), async (
   return c.json({ month, reports: list, exportedAt: new Date().toISOString() });
 });
 
-// M-1：reports.delete 为 P1 后置权限，端点暂不提供
-reports.delete('/:id', async (c) => {
-  return c.json({ error: '汇报删除属 P1 后置权限，本轮未启用', code: 'PERMISSION_NOT_AVAILABLE' }, 403);
+// ── 删除（reports.delete，P1 批次二解冻；仅草稿，软删+审计）──────────────────
+// Tencent 语义：只能删草稿；enh 额外由 reports.delete 权限码把关
+reports.delete('/:id', requirePermission('reports.delete'), async (c) => {
+  const auth = getAuth(c);
+  const id = c.req.param('id');
+  const report = await prisma.report.findUnique({ where: { id } });
+  if (!report || report.deletedAt) throw notFound('REPORT_NOT_FOUND', '汇报不存在');
+  if (report.status !== 'DRAFT') throw badRequest('VALIDATION_ERROR', '只能删除草稿状态的汇报');
+
+  await prisma.report.update({ where: { id }, data: { deletedAt: new Date() } });
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.DELETE,
+    entityType: 'REPORT',
+    entityId: id,
+    entityLabel: report.title ?? report.periodKey ?? id,
+    before: { status: report.status },
+    metadata: { permissionCode: 'reports.delete', softDelete: true },
+  });
+  return c.json({ success: true, id, softDeleted: true });
 });
 
 // ── 撤回（作者本人；SUBMITTED → DRAFT）──────────────────────────────────────

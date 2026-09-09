@@ -4,12 +4,12 @@
  * 权限真源：
  *   1. Permission 表（permissions.code）
  *   2. 普通角色：UserRole -> RolePermission -> Permission.code
- *   3. SUPER_ADMIN 短路持有全部 P0 90 条
+ *   3. SUPER_ADMIN 短路持有全部 P0 90 条 + P1 解冻子集（P1_UNFROZEN）
  *   4. JWT 只携带 userId + systemRole（不携带权限数组，防篡改）
  */
 import jwt from 'jsonwebtoken';
 import { prisma } from '../index.js';
-import { P0_PERMISSIONS } from './constants.js';
+import { P0_PERMISSIONS, P1_UNFROZEN } from './constants.js';
 import { unauthorized, forbidden } from './http.js';
 
 // W12：不再提供任何回退值——JWT_SECRET 必须显式配置（.env / systemd EnvironmentFile）。
@@ -78,7 +78,8 @@ export async function authenticate(c, next) {
 
   let permissions;
   if (user.systemRole === 'SUPER_ADMIN') {
-    permissions = [...P0_PERMISSIONS]; // 短路：持有全部 P0
+    // 短路：全部 P0 + P1 解冻子集（未解冻 P1 仍不持有）
+    permissions = [...P0_PERMISSIONS, ...P1_UNFROZEN];
   } else {
     const bindings = await prisma.userRole.findMany({
       where: { userId: user.id },

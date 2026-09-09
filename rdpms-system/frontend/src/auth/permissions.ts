@@ -10,7 +10,8 @@ import { useAuth } from './useAuth';
  *
  * 真源：docs/rbac/M-1-RBAC-v1.0-SIGNED.md（冻结，不得改码）
  * 本文件禁止出现任何「角色 → 权限」的本地映射表；
- * 禁止出现 P1/否决清单中的任何权限码字符串。
+ * 禁止出现「未解冻 P1」/否决清单中的任何权限码字符串；
+ * 批次二（2026-09-09）解冻的 8 个 P1 码见下方 P1 解冻子集段（与后端 P1_UNFROZEN 对齐）。
  */
 
 export const PERMS = {
@@ -113,6 +114,16 @@ export const PERMS = {
   DASHBOARD_VIEW: 'dashboard.view',
   DATA_EXPORT: 'data.export',
   SYSTEM_LOGS_VIEW: 'system.logs.view',
+
+  // ── P1 解冻子集（批次二，2026-09-09；对齐后端 kernel/constants.js P1_UNFROZEN）（8）
+  PROJECTS_DELETE: 'projects.delete',
+  TASKS_DELETE: 'tasks.delete',
+  REPORTS_DELETE: 'reports.delete',
+  DOCS_DELETE: 'docs.delete',
+  PROJECT_TEMPLATES_COPY: 'project_templates.copy',
+  PRIMERS_DELETE: 'primers.delete',
+  PRIMERS_IMPORT: 'primers.import',
+  REAGENT_MATERIALS_DELETE: 'reagent_materials.delete',
 
   // ══════════════════════════════════════════════════════════════════
   // 兼容别名：旧键名 → M-1 P0 新码。仅为存量页面平滑迁移保留；

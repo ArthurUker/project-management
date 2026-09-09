@@ -169,13 +169,68 @@ materials.put('/:id', requirePermission('reagent_materials.update'), async (c) =
   return c.json({ success: true, material: updated });
 });
 
-// M-1：reagent_materials.delete 为 P1 后置权限，端点暂不提供
-materials.delete('/:id', async (c) => {
-  return c.json({ error: '试剂原料删除属 P1 后置权限，本轮未启用', code: 'PERMISSION_NOT_AVAILABLE' }, 403);
+// ── 删除（reagent_materials.delete，P1 批次二解冻；软删+审计）────────────────
+materials.delete('/:id', requirePermission('reagent_materials.delete'), async (c) => {
+  const auth = getAuth(c);
+  const id = c.req.param('id');
+  const material = await prisma.reagentMaterial.findFirst({
+    where: { id, deletedAt: null },
+    select: { id: true, code: true, commonName: true },
+  });
+  if (!material) throw notFound('MATERIAL_NOT_FOUND', '试剂原料不存在');
+
+  await prisma.reagentMaterial.update({ where: { id }, data: { deletedAt: new Date() } });
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.DELETE,
+    entityType: 'REAGENT_MATERIAL',
+    entityId: id,
+    entityLabel: material.code || material.commonName,
+    before: { code: material.code, commonName: material.commonName },
+    metadata: { permissionCode: 'reagent_materials.delete', softDelete: true },
+  });
+  return c.json({ success: true, id, softDeleted: true });
 });
 
-materials.post('/bulk-delete', async (c) => {
-  return c.json({ error: '试剂原料删除属 P1 后置权限，本轮未启用', code: 'PERMISSION_NOT_AVAILABLE' }, 403);
+// POST /bulk-delete —— 批量软删（reagent_materials.delete）
+materials.post('/bulk-delete', requirePermission('reagent_materials.delete'), async (c) => {
+  const auth = getAuth(c);
+  const body = await c.req.json().catch(() => null);
+  const ids = Array.isArray(body?.ids) ? body.ids.filter((x) => typeof x === 'string' && x) : [];
+  if (ids.length === 0) throw badRequest('VALIDATION_ERROR', 'ids 不能为空');
+  if (ids.length > 200) throw badRequest('VALIDATION_ERROR', '单批最多 200 条');
+
+  const targets = await prisma.reagentMaterial.findMany({
+    where: { id: { in: ids }, deletedAt: null },
+    select: { id: true, code: true },
+  });
+  if (targets.length === 0) throw notFound('MATERIAL_NOT_FOUND', '试剂原料不存在或已删除');
+
+  await prisma.reagentMaterial.updateMany({
+    where: { id: { in: targets.map((t) => t.id) } },
+    data: { deletedAt: new Date() },
+  });
+
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.DELETE,
+    entityType: 'REAGENT_MATERIAL',
+    entityId: targets[0].id,
+    entityLabel: `批量删除 ${targets.length} 项原料`,
+    metadata: {
+      permissionCode: 'reagent_materials.delete',
+      softDelete: true,
+      batch: true,
+      ids: targets.map((t) => t.id),
+    },
+  });
+  return c.json({ success: true, deleted: targets.length });
 });
 
 export default materials;

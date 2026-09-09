@@ -62,6 +62,24 @@ export const P1_MANIFEST = [
   'files.view', 'files.restore', 'system.logs.export',
 ];
 
+/**
+ * P1 解冻子集（批次二，2026-09-09）：自 P1_MANIFEST 摘出、转为可授予。
+ *   - 本清单内的码随 seed 写入 permissions 表（Roles UI 可授予）；
+ *   - SUPER_ADMIN 短路追加持有；
+ *   - 未列出的 P1 码仍冻结（不得授予、不入库）。
+ * 解冻演进追加于此，P0 90 条清单保持不变（M-1 契约不破坏）。
+ */
+export const P1_UNFROZEN = [
+  'projects.delete',
+  'tasks.delete',
+  'reports.delete',
+  'docs.delete',
+  'project_templates.copy',
+  'primers.import',
+  'primers.delete',
+  'reagent_materials.delete',
+];
+
 /** 8 项高危（M-1 §5） */
 export const HIGH_RISK_PERMISSIONS = [
   'users.delete',

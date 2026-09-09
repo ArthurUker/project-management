@@ -221,9 +221,97 @@ templates.delete('/:id', requirePermission('project_templates.delete'), async (c
   return c.json({ success: true });
 });
 
-// M-1：project_templates.copy 为 P1 后置权限（不进首版库），端点暂不提供
-templates.post('/:id/copy', async (c) => {
-  return c.json({ error: '模板复制能力属 P1 后置权限，本轮未启用', code: 'PERMISSION_NOT_AVAILABLE' }, 403);
+// ── 复制（project_templates.copy，P1 批次二解冻；roles/phases/tasks 深拷贝）──
+templates.post('/:id/copy', requirePermission('project_templates.copy'), async (c) => {
+  const auth = getAuth(c);
+  const id = c.req.param('id');
+  const src = await prisma.projectTemplate.findUnique({
+    where: { id },
+    include: {
+      roles: { orderBy: { sortOrder: 'asc' } },
+      phases: { orderBy: { sortOrder: 'asc' }, include: { tasks: { orderBy: { sortOrder: 'asc' } } } },
+    },
+  });
+  if (!src || src.deletedAt) throw notFound('TEMPLATE_NOT_FOUND', '模版不存在');
+
+  const code = `TPL-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+  const copy = await prisma.$transaction(async (tx) => {
+    const created = await tx.projectTemplate.create({
+      data: {
+        code,
+        name: `${src.name}（副本）`,
+        description: src.description ?? null,
+        category: src.category ?? null,
+        typeLabel: src.typeLabel ?? null,
+        parentId: src.parentId ?? null,
+        isMaster: false, // 副本永远不是母版
+        status: 'DRAFT',
+        createdById: auth.userId,
+      },
+    });
+
+    if (src.roles.length) {
+      await tx.templateRole.createMany({
+        data: src.roles.map((r) => ({
+          templateId: created.id,
+          code: r.code,
+          name: r.name,
+          description: r.description ?? null,
+          permissions: r.permissions,
+          sortOrder: r.sortOrder ?? 0,
+        })),
+      });
+    }
+
+    for (const ph of src.phases) {
+      // eslint-disable-next-line no-await-in-loop
+      const newPhase = await tx.templatePhase.create({
+        data: {
+          templateId: created.id,
+          code: ph.code,
+          name: ph.name,
+          description: ph.description ?? null,
+          sortOrder: ph.sortOrder,
+          plannedStartOffsetDays: ph.plannedStartOffsetDays ?? null,
+          plannedDurationDays: ph.plannedDurationDays ?? null,
+          isMilestone: ph.isMilestone,
+        },
+      });
+      if (ph.tasks.length) {
+        await tx.templateTask.createMany({
+          data: ph.tasks.map((t) => ({
+            templatePhaseId: newPhase.id,
+            code: t.code ?? null,
+            title: t.title,
+            description: t.description ?? null,
+            taskType: t.taskType,
+            applicability: t.applicability,
+            regulatoryPriority: t.regulatoryPriority,
+            expectedDeliverable: t.expectedDeliverable ?? null,
+            regulatoryNotes: t.regulatoryNotes ?? null,
+            estimatedHours: t.estimatedHours ?? null,
+            assigneeRoleCode: t.assigneeRoleCode ?? null,
+            sortOrder: t.sortOrder,
+          })),
+        });
+      }
+    }
+    return created;
+  });
+
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.CREATE,
+    entityType: 'PROJECT_TEMPLATE',
+    entityId: copy.id,
+    entityLabel: copy.name,
+    after: { copyOf: src.id, sourceName: src.name },
+    metadata: { permissionCode: 'project_templates.copy' },
+  });
+  return c.json({ success: true, template: copy }, 201);
 });
 
 // ── 预览 ─────────────────────────────────────────────────────────────────────

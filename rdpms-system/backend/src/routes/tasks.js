@@ -332,9 +332,47 @@ tasks.patch('/:id/status', requirePermission('tasks.change_status'), async (c) =
   return c.json(updated);
 });
 
-// M-1：tasks.delete 为 P1 后置权限（不进首版库），端点暂不提供
-tasks.delete('/:id', async (c) => {
-  return c.json({ error: '任务删除属 P1 后置权限，本轮未启用', code: 'PERMISSION_NOT_AVAILABLE' }, 403);
+// ── 删除（tasks.delete，P1 批次二解冻；软删含全部后代任务，审计）──────────────
+tasks.delete('/:id', requirePermission('tasks.delete'), async (c) => {
+  const auth = getAuth(c);
+  const id = c.req.param('id');
+  const task = await prisma.task.findFirst({
+    where: { id, deletedAt: null },
+    select: { id: true, title: true, code: true, projectId: true },
+  });
+  if (!task) throw notFound('TASK_NOT_FOUND', '任务不存在');
+
+  const access = await resolveProjectAccess(prisma, auth, task.projectId);
+  await auditElevatedIfNeeded(prisma, c, access, 'tasks.delete');
+  assertProjectCapability(access, 'write', 'tasks.delete');
+
+  // 软删必须显式级联收集后代（FK Cascade 只在硬删时生效）
+  const idsToDelete = [id];
+  let frontier = [id];
+  while (frontier.length) {
+    // eslint-disable-next-line no-await-in-loop
+    const children = await prisma.task.findMany({
+      where: { parentId: { in: frontier }, deletedAt: null },
+      select: { id: true },
+    });
+    frontier = children.map((ch) => ch.id).filter((cid) => !idsToDelete.includes(cid));
+    idsToDelete.push(...frontier);
+  }
+  await prisma.task.updateMany({ where: { id: { in: idsToDelete } }, data: { deletedAt: new Date() } });
+
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.DELETE,
+    entityType: 'TASK',
+    entityId: id,
+    entityLabel: task.code || task.title,
+    before: { title: task.title },
+    metadata: { permissionCode: 'tasks.delete', softDelete: true, cascadedCount: idsToDelete.length, ids: idsToDelete },
+  });
+  return c.json({ success: true, id, softDeleted: true, cascaded: idsToDelete.length });
 });
 
 // ── 看板（tasks.view + ∩ read；英文枚举分组）────────────────────────────────

@@ -193,6 +193,19 @@ const P1_MANIFEST = [
   'system.logs.export',
 ];
 
+// P1 解冻子集（批次二，2026-09-09）：写入 permissions 表（Roles UI 可授予），
+// SUPER_ADMIN 短路追加持有；未解冻的 P1 码仍不入库（与 kernel/constants.js P1_UNFROZEN 保持一致）。
+const P1_UNFROZEN = [
+  'projects.delete',
+  'tasks.delete',
+  'reports.delete',
+  'docs.delete',
+  'project_templates.copy',
+  'primers.import',
+  'primers.delete',
+  'reagent_materials.delete',
+];
+
 // 否决清单：以下权限码不可设立（含 detection_targets.* 通配）
 const DENIED_PATTERNS = [
   /^roles\.export$/,
@@ -872,10 +885,10 @@ async function main() {
   const root = await prisma.user.findFirst({ where: { systemRole: 'SUPER_ADMIN' }, orderBy: { createdAt: 'asc' } });
   const rootId = root?.id ?? null;
 
-  // 2. 权限表（只写 P0 90 条）
+  // 2. 权限表（P0 90 条 + P1 解冻子集）
   const permissionIdByCode = new Map();
   let sortOrder = 0;
-  for (const code of PERMISSIONS) {
+  for (const code of [...PERMISSIONS, ...P1_UNFROZEN]) {
     // eslint-disable-next-line no-await-in-loop
     const row = await prisma.permission.upsert({
       where: { code },
@@ -898,15 +911,15 @@ async function main() {
     bump('permissions.synced');
   }
 
-  // 2b. 清理历史脏数据：不在 P0 清单中的权限（含旧 PermissionCode 枚举值转换残留）
+  // 2b. 清理历史脏数据：不在 P0 + 解冻子集中的权限（含旧 PermissionCode 枚举值转换残留）
   const orphanPermissions = await prisma.permission.findMany({
-    where: { code: { notIn: PERMISSIONS } },
+    where: { code: { notIn: [...PERMISSIONS, ...P1_UNFROZEN] } },
     select: { id: true, code: true },
   });
   if (orphanPermissions.length) {
     await prisma.permission.deleteMany({ where: { id: { in: orphanPermissions.map((p) => p.id) } } });
     bump('permissions.removed', orphanPermissions.length);
-    console.warn(`⚠️  清理非 P0 权限 ${orphanPermissions.length} 条：${orphanPermissions.map((p) => p.code).join(', ')}`);
+    console.warn(`⚠️  清理非 P0/解冻权限 ${orphanPermissions.length} 条：${orphanPermissions.map((p) => p.code).join(', ')}`);
   }
 
   // 3. 角色 + 权限精确同步
