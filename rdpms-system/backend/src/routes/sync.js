@@ -101,7 +101,7 @@ const SYNC_ENTITIES = {
     tombstoneField: 'leftAt', // 软退出：leftAt 非空即视为已移除
     timestampField: 'joinedAt', // 该表无 updatedAt（实机部署发现）
     touchUpdatedBy: false,
-    fields: ['role'],
+    fields: ['role', 'userId'], // userId 为离线新增成员所需（权限由 manage_members 约束）
     serverOwned: [],
     requireCapability: 'manage_members', // 成员调整需要管理成员能力
   },
@@ -274,9 +274,12 @@ sync.post('/push', async (c) => {
       const existing = await prisma[def.model].findUnique({ where: { id: entityId } });
       const data = pickFields(raw?.data, def.fields);
 
+      // 注意：data 已被 pickFields 白名单过滤，projectId 不在 def.fields 中，
+      // 必须从原始载荷读取；否则离线**新建**（phase/task/report/milestone/monthlyProgress/member）
+      // 永远拿不到归属项目 → 被误判"无权访问该数据所属项目"（演练环境发现）
       const projectId = def.scope === 'projectSelf'
         ? (existing?.id ?? entityId)
-        : (existing?.projectId ?? data.projectId);
+        : (existing?.projectId ?? raw?.data?.projectId);
 
       if (!projectId || !accessible.has(projectId)) {
         outcome = { status: 'rejected', reason: '无权访问该数据所属项目' };
@@ -336,7 +339,13 @@ sync.post('/push', async (c) => {
         }
       }
     } catch (err) {
-      outcome = { status: 'rejected', reason: err?.message || '写入失败' };
+      // Prisma 校验失败时 err.message 是多行对象 dump；只把最后一行有效信息回给客户端
+      // （如 "Argument `code` is missing."），完整错误留在服务端日志便于排查
+      const lines = String(err?.message || '写入失败').split('\n').map((s) => s.trim()).filter(Boolean);
+      const brief = lines[lines.length - 1] || '写入失败';
+      // eslint-disable-next-line no-console
+      console.error(`[sync.push] ${entity}/${op} 失败:`, err?.message || err);
+      outcome = { status: 'rejected', reason: brief };
     }
 
     const record = { ...base, ...outcome };
