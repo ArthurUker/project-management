@@ -5,9 +5,14 @@ import type { Project } from '../components/ProjectCard';
 import EditProjectModal from '../components/EditProjectModal';
 import CreateProjectModal from '../components/CreateProjectModal';
 import { projectAPI } from '@/api';
+import { PROJECT_TYPE_OPTIONS, projectTypeLabel } from '../constants/projectType';
 
 // ── 常量 ─────────────────────────────────────────────
-const TYPE_OPTIONS   = ['platform', '定制', '合作', '测试', '应用', '科技项目'];
+// 类型筛选用枚举值比较（后端返回 p.type 为枚举），中文仅作标签
+const TYPE_FILTERS: Array<{ value: string; label: string }> = [
+  { value: '', label: '全部' },
+  ...PROJECT_TYPE_OPTIONS,
+];
 const STATUS_OPTIONS = ['草稿', 'PLANNING', 'IN_PROGRESS', 'PENDING_PROCESSING', 'PENDING_VERIFICATION', 'COMPLETED', 'ARCHIVED'];
 
 const STATUS_CONFIG: Record<string, { label: string; barColor: string; textColor: string; dotColor: string; borderColor: string }> = {
@@ -188,7 +193,7 @@ const Projects: React.FC = () => {
           <div style={{ fontSize: '11px', color: '#9ca3af', fontFamily: 'monospace' }}>{project.code}</div>
         </div>
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-          {project.type && <span style={{ fontSize: '11px', background: '#f3f4f6', color: '#4b5563', padding: '2px 7px', borderRadius: '4px', fontWeight: 500 }}>{project.type}</span>}
+          {project.type && <span style={{ fontSize: '11px', background: '#f3f4f6', color: '#4b5563', padding: '2px 7px', borderRadius: '4px', fontWeight: 500 }}>{projectTypeLabel(project.type)}</span>}
           {project.subtype && <span style={{ fontSize: '11px', background: '#f3f4f6', color: '#4b5563', padding: '2px 7px', borderRadius: '4px', fontWeight: 500 }}>{project.subtype}</span>}
         </div>
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 500, color: statusCfg.textColor, background: 'transparent' }}>
@@ -393,19 +398,19 @@ const Projects: React.FC = () => {
           {/* 类型标签筛选 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '13px', color: '#9ca3af', fontWeight: 500, whiteSpace: 'nowrap' }}>类型：</span>
-            {['', ...TYPE_OPTIONS].map(t => (
+            {TYPE_FILTERS.map(({ value, label }) => (
               <button
-                key={t || 'all'}
-                onClick={() => setFilterType(t)}
+                key={value || 'all'}
+                onClick={() => setFilterType(value)}
                 style={{
                   padding: '5px 12px', borderRadius: '7px', fontSize: '13px', fontWeight: 500,
                   cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all .15s', border: 'none',
-                  background: filterType === t ? '#eff6ff' : '#f3f4f6',
-                  color: filterType === t ? '#2563eb' : '#6b7280',
-                  outline: filterType === t ? '1.5px solid #bfdbfe' : 'none',
+                  background: filterType === value ? '#eff6ff' : '#f3f4f6',
+                  color: filterType === value ? '#2563eb' : '#6b7280',
+                  outline: filterType === value ? '1.5px solid #bfdbfe' : 'none',
                 }}
               >
-                {t || '全部'}
+                {label}
               </button>
             ))}
           </div>

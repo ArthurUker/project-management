@@ -58,6 +58,25 @@ const normalizeStatus = (v) => LEGACY_STATUS_MAP[v] ?? v;
 const LEGACY_PRIORITY_MAP = { '低': 'LOW', '中': 'MEDIUM', '高': 'HIGH', '紧急': 'URGENT' };
 const normalizePriority = (v) => LEGACY_PRIORITY_MAP[v] ?? v;
 
+// ProjectType 枚举规范化：前端「创建项目」下拉历史上提交的是中文标签（platform/定制/合作/测试/应用），
+// 直接透传会触发 Prisma enum 校验失败 → 500（线上实机发现：type='定制' 建项目必 500）。
+// 注：'科技项目' 无对应枚举值，暂归 CUSTOMIZATION（待业务确认）。
+const LEGACY_PROJECT_TYPE_MAP = {
+  platform: 'PLATFORM', '平台': 'PLATFORM',
+  '定制': 'CUSTOMIZATION', '科技项目': 'CUSTOMIZATION',
+  '合作': 'COLLABORATION',
+  '测试': 'TESTING',
+  '应用': 'APPLICATION',
+};
+const PROJECT_TYPE_VALUES = new Set(['PLATFORM', 'CUSTOMIZATION', 'COLLABORATION', 'TESTING', 'APPLICATION']);
+function normalizeProjectType(v) {
+  const raw = String(v ?? '').trim();
+  if (!raw) return null;
+  const upper = raw.toUpperCase();
+  if (PROJECT_TYPE_VALUES.has(upper)) return upper;
+  return LEGACY_PROJECT_TYPE_MAP[raw] ?? LEGACY_PROJECT_TYPE_MAP[raw.toLowerCase()] ?? null;
+}
+
 // 用户请求体共享的 select/include 片段
 const MANAGER_SELECT = { select: { id: true, displayName: true, position: true, avatarFileId: true } };
 const MEMBER_INCLUDE = {
@@ -105,7 +124,11 @@ projects.get('/', requirePermission('projects.view'), async (c) => {
   } else if (subtype) {
     where.subtype = subtype;
   }
-  if (type) where.type = type;
+  if (type) {
+    // 筛选参数同样可能来自历史客户端（中文标签），规范化后再进 Prisma，避免枚举校验 500
+    const normalizedType = normalizeProjectType(type);
+    if (normalizedType) where.type = normalizedType;
+  }
   if (status) where.status = normalizeStatus(status);
   if (managerId) where.managerId = managerId;
   if (keyword) {
@@ -193,7 +216,7 @@ projects.post('/', requirePermission('projects.create'), async (c) => {
     data: {
       ...data,
       name: data.name || `未命名草稿-${new Date().toISOString().slice(0, 10)}`,
-      type: data.type || 'CUSTOMIZATION',
+      type: normalizeProjectType(data.type) || 'CUSTOMIZATION',
       status: 'PLANNING',
       isDraft,
       code,
@@ -297,6 +320,13 @@ projects.put('/:id', requirePermission('projects.update'), async (c) => {
     'name', 'positioning', 'status', 'managerId', 'startDate', 'endDate',
     'type', 'subtype', 'isDraft', 'metadata',
   ], { entityLabel: '更新项目' });
+
+  // 类型规范化（同创建）：中文别名→枚举；非法值丢弃而非报错，避免覆盖既有类型
+  if ('type' in data) {
+    const normalizedType = normalizeProjectType(data.type);
+    if (normalizedType) data.type = normalizedType;
+    else delete data.type;
+  }
 
   if (data.status) {
     const toStatus = normalizeStatus(data.status);

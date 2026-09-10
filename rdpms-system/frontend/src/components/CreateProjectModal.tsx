@@ -4,8 +4,7 @@ import { projectAPI, projectTemplatesAPI, taskTemplatesAPI, userAPI } from '@/ap
 import { useAuth } from '../auth/useAuth';
 import { safeStorage } from '@/utils/safeStorage';
 import ProcessFlowDiagram from './ProcessFlowDiagram';
-
-const PROJECT_TYPES = ['platform', '定制', '合作', '测试', '应用', '科技项目'];
+import { PROJECT_TYPE_OPTIONS, normalizeProjectType } from '../constants/projectType';
 const CATEGORY_LABELS: Record<string, string> = {
   reagent_chip: '试剂/芯片开发',
   device: '设备开发',
@@ -195,7 +194,7 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
 
   // Step 1 form state
   const [name, setName] = useState('');
-  const [type, setType] = useState('定制');
+  const [type, setType] = useState('CUSTOMIZATION');
   const [position, setPosition] = useState('');
   const [managerId, setManagerId] = useState(user?.id || '');
   const [participantIds, setParticipantIds] = useState<string[]>([]);
@@ -241,7 +240,7 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
 
         setDraftProjectId(full.id || initialDraftProjectId);
         setName(full.name || '');
-        setType(full.type || '定制');
+        setType(normalizeProjectType(full.type));
         setPosition(full.position || '');
         setManagerId(full.managerId || user?.id || '');
         setParticipantIds((full.members || [])
@@ -863,8 +862,8 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">项目类型</label>
-                <select className="input w-full" value={type} onChange={e => setType(e.target.value)}>
-                  {PROJECT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                <select className="input w-full" value={normalizeProjectType(type)} onChange={e => setType(e.target.value)}>
+                  {PROJECT_TYPE_OPTIONS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </div>
               <div>

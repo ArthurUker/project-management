@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { projectAPI, userAPI, projectTemplatesAPI } from '@/api';
 import { safeStorage } from '@/utils/safeStorage';
 import { getAllowedTransitions } from '../constants/statusColors';
+import { PROJECT_TYPE_OPTIONS, normalizeProjectType } from '../constants/projectType';
 
 // ─── 与 Prisma Schema 严格对齐的类型 ───
 interface Project {
@@ -32,7 +33,7 @@ interface EditProjectModalProps {
   onSaved: () => void;
 }
 
-const TYPE_OPTIONS = ['platform', '定制', '合作', '测试', '应用', '科技项目'];
+const TYPE_OPTIONS = PROJECT_TYPE_OPTIONS;
 const TASK_STATUS_OPTIONS = ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', '已暂停'];
 const MILESTONE_STATUS_OPTIONS = ['待完成', 'IN_PROGRESS', 'COMPLETED'];
 
@@ -254,7 +255,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
 
       const payload = {
         name:      form.name,
-        type:      form.type      || undefined,
+        type:      form.type ? normalizeProjectType(form.type) : undefined,
         status:    form.status    || undefined,
         position:  form.position  || undefined,
         managerId: form.managerId || undefined,
@@ -538,12 +539,12 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm
                            focus:outline-none focus:ring-2 focus:ring-blue-200
                            focus:border-blue-400 bg-white transition-colors"
-                value={form.type}
+                value={normalizeProjectType(form.type)}
                 onChange={e => setForm({ ...form, type: e.target.value })}
               >
                 <option value="">- 请选择 -</option>
                 {TYPE_OPTIONS.map(t => (
-                  <option key={t} value={t}>{t}</option>
+                  <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
               </select>
             </div>
