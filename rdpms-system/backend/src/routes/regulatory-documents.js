@@ -56,21 +56,46 @@ async function findOriginalFile(documentId) {
 }
 
 // ── 原文附件（D-1 修复）：统一 FileObject + Attachment(entityType=REGULATORY_DOCUMENT, label='original') ──
-const ORIGINAL_INCLUDE = {
-  attachments: {
-    where: { entityType: 'REGULATORY_DOCUMENT', label: 'original', deletedAt: null },
-    include: { file: { select: { id: true, originalName: true } } },
-  },
-};
+// ⚠ Attachment 是**多态关联**（entityType + entityId），RegulatoryDocument 模型上并没有 `attachments` 关系，
+// 因此不能写进 Prisma `include`（会抛 PrismaClientValidationError → 500）；必须显式按 entityType/entityId 查后回填。
+const ORIGINAL_LABEL = 'original';
 
-function mapOriginal(doc) {
+async function loadOriginalFiles(documentIds) {
+  const ids = (Array.isArray(documentIds) ? documentIds : [documentIds]).filter(Boolean);
+  const map = new Map();
+  if (ids.length === 0) return map;
+
+  const rows = await prisma.attachment.findMany({
+    where: {
+      entityType: 'REGULATORY_DOCUMENT',
+      entityId: { in: ids },
+      label: ORIGINAL_LABEL,
+      deletedAt: null,
+    },
+    include: { file: { select: { id: true, originalName: true } } },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  for (const row of rows) {
+    if (map.has(row.entityId)) continue; // 历史重复附件只取最新一条
+    map.set(row.entityId, {
+      originalFileId: row.file?.id ?? null,
+      fileName: row.file?.originalName ?? null,
+    });
+  }
+  return map;
+}
+
+async function loadOriginalFile(documentId) {
+  return (await loadOriginalFiles([documentId])).get(documentId) ?? null;
+}
+
+function mapOriginal(doc, original = null) {
   if (!doc) return doc;
-  const { attachments, ...rest } = doc;
-  const att = attachments && attachments[0];
   return {
-    ...rest,
-    originalFileId: att?.file?.id ?? null,
-    fileName: att?.file?.originalName ?? null,
+    ...doc,
+    originalFileId: original?.originalFileId ?? null,
+    fileName: original?.fileName ?? null,
   };
 }
 
@@ -137,12 +162,13 @@ regulatoryDocuments.get('/', requirePermission('regulatory_documents.view'), asy
       skip: (parseInt(page) - 1) * parseInt(pageSize),
       take: parseInt(pageSize),
       orderBy: [{ priorityLevel: 'asc' }, { dispatchNo: 'asc' }],
-      include: ORIGINAL_INCLUDE,
     }),
   ]);
 
+  const originals = await loadOriginalFiles(list.map((doc) => doc.id));
+
   return c.json({
-    list: list.map(mapOriginal),
+    list: list.map((doc) => mapOriginal(doc, originals.get(doc.id) ?? null)),
     total,
     page: parseInt(page),
     pageSize: parseInt(pageSize),
@@ -156,16 +182,13 @@ regulatoryDocuments.get('/:id', requirePermission('regulatory_documents.view'), 
   }
 
   const id = c.req.param('id');
-  const item = await prisma.regulatoryDocument.findUnique({
-    where: { id },
-    include: ORIGINAL_INCLUDE,
-  });
+  const item = await prisma.regulatoryDocument.findUnique({ where: { id } });
 
   if (!item) {
     return c.json({ error: '法规文件不存在' }, 404);
   }
 
-  return c.json(mapOriginal(item));
+  return c.json(mapOriginal(item, await loadOriginalFile(id)));
 });
 
 regulatoryDocuments.post('/', requirePermission('regulatory_documents.create'), async (c) => {
@@ -249,8 +272,8 @@ regulatoryDocuments.put('/:id', requirePermission('regulatory_documents.update')
     },
   });
 
-  const fresh = await prisma.regulatoryDocument.findUnique({ where: { id }, include: ORIGINAL_INCLUDE });
-  return c.json(mapOriginal(fresh));
+  const fresh = await prisma.regulatoryDocument.findUnique({ where: { id } });
+  return c.json(mapOriginal(fresh, await loadOriginalFile(id)));
 });
 
 regulatoryDocuments.delete('/:id', requirePermission('regulatory_documents.delete'), async (c) => {
@@ -332,8 +355,8 @@ regulatoryDocuments.post('/import', async (c) => {
   });
   await linkOriginalFile(item.id, fileObject.id, getAuth(c).userId);
 
-  const fresh = await prisma.regulatoryDocument.findUnique({ where: { id: item.id }, include: ORIGINAL_INCLUDE });
-  return c.json(mapOriginal(fresh), 201);
+  const fresh = await prisma.regulatoryDocument.findUnique({ where: { id: item.id } });
+  return c.json(mapOriginal(fresh, await loadOriginalFile(item.id)), 201);
 });
 
 regulatoryDocuments.post('/seed', requirePermission('regulatory_documents.create'), async (c) => {
@@ -416,8 +439,8 @@ regulatoryDocuments.post('/:id/original-file', async (c) => {
   });
   await linkOriginalFile(id, fileObject.id, getAuth(c).userId);
 
-  const fresh = await prisma.regulatoryDocument.findUnique({ where: { id }, include: ORIGINAL_INCLUDE });
-  return c.json(mapOriginal(fresh));
+  const fresh = await prisma.regulatoryDocument.findUnique({ where: { id } });
+  return c.json(mapOriginal(fresh, await loadOriginalFile(id)));
 });
 
 regulatoryDocuments.get('/:id/original-file', async (c) => {
