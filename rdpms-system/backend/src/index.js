@@ -31,6 +31,7 @@ import systemLogsRoutes from './routes/system-logs.js';
 import settingsRoutes from './routes/settings.js';
 import dictRoutes from './routes/dict.js';
 import filesRoutes from './routes/files.js';
+import syncRoutes from './routes/sync.js';
 
 // 初始化 Prisma
 export const prisma = new PrismaClient();
@@ -106,6 +107,9 @@ app.route('/api/dict', dictRoutes);
 app.route('/api/files', filesRoutes);
 app.route('/api/stats', statsRoutes);
 app.route('/api/backup', backupRoutes);
+
+// ── 离线同步 v2（批次四）────────────────────────────────────────────────────
+app.route('/api/sync', syncRoutes);
 
 // 错误处理
 app.onError((err, c) => {

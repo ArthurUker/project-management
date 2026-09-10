@@ -453,11 +453,52 @@ model User {
   registrationProfiles RegistrationProfile[] @relation("RegistrationComplianceOwner")
   auditLogs            AuditLog[]
   systemLogs           SystemLog[]
+  syncDevices          SyncDevice[]
 
   @@index([systemRole, status])
   @@index([department])
   @@index([deletedAt])
   @@map("users")
+}
+
+// ========================== 离线同步 v2（批次四）============================
+// 设计：服务端不存业务影子表 —— 增量由业务表 updatedAt/deletedAt 派生；
+//       本组两张表只负责「设备登记」与「上行幂等键（clientMutationId）」。
+
+model SyncDevice {
+  id         String    @id @map("id") @db.VarChar(64) // 客户端生成的设备标识（uuid）
+  userId     String    @map("user_id")
+  label      String?   @map("label") @db.VarChar(128)
+  platform   String?   @map("platform") @db.VarChar(64)
+  lastSyncAt DateTime? @map("last_sync_at") @db.Timestamptz(3)
+  lastPushAt DateTime? @map("last_push_at") @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mutations SyncMutation[]
+
+  @@index([userId, lastSyncAt])
+  @@map("sync_devices")
+}
+
+model SyncMutation {
+  id               String   @id @default(uuid()) @map("id")
+  clientMutationId String   @unique @map("client_mutation_id") @db.VarChar(64)
+  deviceId         String   @map("device_id")
+  userId           String   @map("user_id")
+  entity           String   @map("entity") @db.VarChar(64)
+  entityId         String   @map("entity_id")
+  op               String   @map("op") @db.VarChar(16)
+  status           String   @map("status") @db.VarChar(24) // applied / conflict / rejected
+  result           Json?    @map("result") @db.JsonB       // 回放用：原样返回首次处理结果
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  device SyncDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId, createdAt])
+  @@index([userId, createdAt])
+  @@map("sync_mutations")
 }
 
 model RefreshToken {
