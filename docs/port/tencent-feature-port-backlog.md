@@ -157,7 +157,15 @@ enh 现状：`/api/backup/export` 保留并强化（`data.export` + 审计，`E/
 - API 门面 `api/endpoints/sync.ts` + `@/api` 导出。
 
 **⏳ 批次四未完成（下一步）**
-1. **页面接入 outbox**：任务状态变更（KanbanBoard / PhaseTaskPanel / HierarchicalTaskList）、汇报草稿保存等改为「离线时 `enqueueChange` + 本地乐观更新，在线时直连 API」；
-2. 本地镜像读取（列表页离线可读，当前仅写入镜像未消费）；
-3. 端到端演练：断网改任务状态 → 恢复网络 → 自动上行；制造 baseUpdatedAt 冲突 → 面板处置；
-4. 同步专项测试（幂等重放、ACL 回收清本地、审阅字段不可覆盖）。
+1. ~~页面接入 outbox~~ → ✅ 已完成：任务状态变更（KanbanBoard 拖拽 / Tasks 列表）与**汇报草稿保存**（ReportEdit，仅 content 上行，提交与新建在离线时显式阻止）；
+2. ~~本地镜像读取~~ → ✅ 已完成（Tasks 列表请求失败时回退 `readCachedRecords('tasks')`）；其余列表页可同法接入；
+3. 端到端演练：断网改任务状态/存草稿 → 恢复网络 → 自动上行；制造 baseUpdatedAt 冲突 → 面板处置（**需 DB 环境**）；
+4. 同步专项测试（幂等重放、ACL 回收清本地、审阅字段不可覆盖）（**需 DB 环境**）。
+
+## M. 发布脚本断言对齐（2026-09-10，提交 04b34a2）
+
+批次二/三/四改变了权限与端点契约，发布校验脚本同步更新（否则 preflight/smoke 会误报失败）：
+- `preflight.sh`：权限总数期望 **90 → 98**；P1 未解冻清单收窄为 `reagent_materials.export, files.view, files.restore`；新增「解冻子集 8 码必须在库」校验；`SUPER_ADMIN_EXPECTED` 仍 90（角色授权数未变，8 码由短路追加）。
+- `perm-matrix.sh`：`DELETE /api/projects/:id` 期望由「全 403」改为「SA 404 / 其余 403」；替换过期的 `POST /api/backup/restore=404` 为备份恢复 v2 三行（tables 200 / preview 400 / restore 400，仅 SA）；新增批次二 8 个解冻端点行 + 批次四 `/api/sync/status|init|push` 三行。
+- `smoke-test.sh`：P-08 由「restore 404」改为「ADMIN 403（端点已交付）」；P-12 指向 `/api/sync/status` 期望 200；F-20 清理说明改为「删除权限默认仅 SUPER_ADMIN，走环境重置/SA」。
+- 验收：`bash -n` 三脚本通过。**所有断言均需在有 DB 的演练环境实跑确认**。
