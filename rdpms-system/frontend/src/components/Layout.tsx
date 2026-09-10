@@ -3,6 +3,8 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import { MENU, filterMenu, type MenuItem } from '../config/menu';
 import { roleLabel } from '../types/user';
+import OfflineBanner from './OfflineBanner';
+import SyncStatusIndicator from './SyncStatusIndicator';
 
 
 export default function Layout() {
@@ -103,6 +105,11 @@ export default function Layout() {
           })}
         </nav>
         
+        {/* 同步状态（离线同步 v2） */}
+        <div className="flex justify-center px-4 pt-3">
+          <SyncStatusIndicator />
+        </div>
+
         {/* 用户信息 */}
         <div className="p-4 border-t border-gray-100">
           <div className="flex items-center space-x-3">
@@ -133,6 +140,7 @@ export default function Layout() {
       
       {/* 主内容区 */}
       <main className="flex-1 overflow-hidden flex flex-col">
+        <OfflineBanner />
         <div className="p-6 flex-1 min-h-0 overflow-hidden flex flex-col">
           <Outlet />
         </div>

@@ -29,6 +29,16 @@ export type { ProjectTemplate, TaskTemplate, TaskTemplateStep } from './endpoint
 export { backupAPI, BACKUP_MODULES } from './endpoints/backup';
 export type { BackupPayload, RestorePreviewTable, RestoreSummary, RestoreValidation } from './endpoints/backup';
 
+export { syncAPI } from './endpoints/sync';
+export type {
+  SyncChange,
+  SyncChangeStatus,
+  SyncEntityKey,
+  SyncInitResponse,
+  SyncPushResult,
+  SyncStatusResponse,
+} from './endpoints/sync';
+
 export { registrationsAPI } from './endpoints/registrations';
 export type {
   RegistrationProfile,

@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthProvider';
+import { SyncProvider } from './offline/SyncProvider';
 import { AuthGuard } from './routes/AuthGuard';
 import { RoleGuard } from './routes/RoleGuard';
 import { PERMS } from './auth/permissions';
@@ -181,7 +182,10 @@ export default function App() {
     >
       {/* AuthProvider 必须在 Router 内：跳转由它统一发起 */}
       <AuthProvider>
-        <AppRoutes />
+        {/* 离线同步 v2：登录后启动引擎（增量拉取 + outbox 上行 + 在线/离线监听） */}
+        <SyncProvider>
+          <AppRoutes />
+        </SyncProvider>
       </AuthProvider>
     </BrowserRouter>
   );

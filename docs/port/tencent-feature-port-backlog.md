@@ -43,7 +43,7 @@
 
 ## C. 重设计项（大件，后置）
 
-### C-1 离线同步 v2（替换 Tencent Local-First 整链路）
+### C-1 离线同步 v2（替换 Tencent Local-First 整链路）🔄 批次四进行中（服务端+客户端底座已完成，页面接入待补）
 Tencent 现状：Dexie 6 表镜像 + `GET /api/sync/init`（`updatedAt > lastSync` 增量）+ `POST /api/sync/push`（逐条 upsert）（`T/…/routes/sync.js:10,133`、`T:/store/appStore.ts:216-293`）；**硬删除不可同步**（仅 projectMembers 带 deleted 标记）；同步失败仅 `console.warn`，无冲突 UI。
 enh 现状：整域不存在；保留了 PUT 幂等中间件 + `ConflictError`(409) 可复用。
 设计要求：本地变更日志 + 幂等键；软删除 tombstone；基于 `updatedAt/version` 增量；项目权限变化后本地数据清除；服务端审阅字段（reviewerId/reviewedAt/reviewNote 等）不可被客户端覆盖；冲突检测 + 用户处理 UI；PostgreSQL 枚举/Decimal/JSON/日期序列化规范。
@@ -139,3 +139,25 @@ enh 现状：`/api/backup/export` 保留并强化（`data.export` + 审计，`E/
 - 权限：仅 SUPER_ADMIN（复用 data.export 门控，ADMIN 被 ADMIN_EXCLUDED 排除）；运维级整库恢复仍走 pg_dump/pg_restore。
 - 待验：无 DB 环境，`preview/apply` 的端到端行为需在演练环境实跑（含一次 replace 回滚演练）。
 - 验收门：`node --check` 全过、`tsc -b` 零错误。
+
+## L. 批次四进度（2026-09-10）：离线同步 v2
+
+**✅ 服务端协议（提交 2de512c）**
+- 新表 `sync_devices`（设备登记/最近同步）与 `sync_mutations`（clientMutationId 幂等键 + 首次结果回放），迁移 `20260910120000_batch4_sync`；**无业务影子表**——增量由业务表 `updatedAt/deletedAt/leftAt` 派生。
+- `GET /api/sync/init?since=&deviceId=`：可见项目范围（成员/负责人；SUPER_ADMIN 全量）+ 返回 `acl.projectIds / permissions / aclVersion` 供客户端清除越权本地数据；逐实体返回 `{upserts, tombstones}` 与 `cursor`。
+- `POST /api/sync/push`：`clientMutationId` 幂等回放；`baseUpdatedAt` 冲突检测（返回服务端快照）；**服务端权威字段剔除**（reports 的 status/reviewerId/reviewedAt/reviewNote/currentVersion、编号、归属等）；软删 tombstone（projectMembers 用 leftAt）；项目能力校验（SUPER_ADMIN 直通，其余需有效成员 + write/manage_members）；批量审计。
+- `POST /api/sync/device`、`GET /api/sync/status`。
+- 可同步实体（7）：projects（**仅改，禁止离线新建**——编号由 CodeSequence 发号）/ projectPhases / tasks / milestones / monthlyProgress / reports（仅本人） / projectMembers。
+
+**✅ 客户端底座（本次提交）**
+- `offline/idb.ts`：极简 IndexedDB（kv / records 镜像 / outbox 变更日志），不引入 Dexie 等依赖。
+- `offline/engine.ts`：设备号（safeStorage）、增量拉取 + 光标、outbox 上行、ACL 变化清本地、冲突/拒绝留存、在线/离线监听 + 60s 定时、`enqueueChange` 唯一写入口、登出清空。
+- `offline/SyncProvider.tsx`：状态/动作上下文（登录启动、登出清理）。
+- UI：`SyncStatusIndicator`（顶栏状态点，点击打开面板）、`SyncConflictDialog`（冲突处置：采用服务端 / 保留本地并重推；被拒清单）、`OfflineBanner`（离线横幅）；Layout/App 已接线。
+- API 门面 `api/endpoints/sync.ts` + `@/api` 导出。
+
+**⏳ 批次四未完成（下一步）**
+1. **页面接入 outbox**：任务状态变更（KanbanBoard / PhaseTaskPanel / HierarchicalTaskList）、汇报草稿保存等改为「离线时 `enqueueChange` + 本地乐观更新，在线时直连 API」；
+2. 本地镜像读取（列表页离线可读，当前仅写入镜像未消费）；
+3. 端到端演练：断网改任务状态 → 恢复网络 → 自动上行；制造 baseUpdatedAt 冲突 → 面板处置；
+4. 同步专项测试（幂等重放、ACL 回收清本地、审阅字段不可覆盖）。
