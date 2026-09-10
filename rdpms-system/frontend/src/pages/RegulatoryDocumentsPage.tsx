@@ -4,14 +4,17 @@ import { useRegulatoryDocuments } from '../hooks/useRegulatoryDocuments';
 import { downloadFile, regulatoryDocumentsAPI, toMessage, uploadFile } from '@/api';
 import type { RegulatoryDocument } from '@/api';
 import type { RegulatoryApplicability, RegulatoryPriority } from '../types/regulatory';
+import {
+  APPLICABILITY_OPTIONS,
+  PRIORITY_LEVEL_OPTIONS,
+  REGULATORY_CATEGORY_OPTIONS,
+  applicabilityLabel,
+  normalizeApplicability,
+  regulatoryCategoryLabel,
+} from '../constants/regulatoryEnums';
 
-const applicabilityLabels: Record<RegulatoryApplicability, string> = {
-  core: '核心适用',
-  conditional: '条件适用',
-  post_market: '上市后适用',
-  low_relevance: '低相关',
-  not_applicable: '不适用',
-};
+// 枚举常量与标签统一收口在 constants/regulatoryEnums.ts（提交必须发枚举值，中文仅作标签）
+
 
 const priorityClassName: Record<RegulatoryPriority, string> = {
   P0: 'text-red-700 bg-red-50 border-red-100',
@@ -42,7 +45,7 @@ const emptyForm: RegulatoryFormState = {
   title: '',
   fullTitle: '',
   category: '',
-  applicability: 'conditional',
+  applicability: 'CONDITIONAL',
   applicableToIvd: true,
   priorityLevel: 'P2',
   summary: '',
@@ -92,7 +95,7 @@ export default function RegulatoryDocumentsPage({ embedded = false }: Regulatory
       title: doc.title || '',
       fullTitle: doc.fullTitle || '',
       category: doc.category || '',
-      applicability: (doc.applicability || 'conditional') as RegulatoryApplicability,
+      applicability: normalizeApplicability(doc.applicability),
       applicableToIvd: !!doc.applicableToIvd,
       priorityLevel: (doc.priorityLevel || 'P2') as RegulatoryPriority,
       summary: doc.summary || '',
@@ -178,7 +181,7 @@ export default function RegulatoryDocumentsPage({ embedded = false }: Regulatory
         category: null,
         summary: null,
         applicabilityNote: null,
-        applicability: 'conditional',
+        applicability: 'CONDITIONAL',
         priorityLevel: 'P2',
         applicableToIvd: true,
       });
@@ -264,19 +267,15 @@ export default function RegulatoryDocumentsPage({ embedded = false }: Regulatory
           />
           <select className="input" value={applicability} onChange={(e) => setApplicability(e.target.value)}>
             <option value="all">全部适用性</option>
-            <option value="core">核心适用</option>
-            <option value="conditional">条件适用</option>
-            <option value="post_market">上市后适用</option>
-            <option value="low_relevance">低相关</option>
-            <option value="not_applicable">不适用</option>
+            {APPLICABILITY_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
           </select>
           <select className="input" value={priority} onChange={(e) => setPriority(e.target.value)}>
             <option value="all">全部优先级</option>
-            <option value="P0">P0</option>
-            <option value="P1">P1</option>
-            <option value="P2">P2</option>
-            <option value="P3">P3</option>
-            <option value="P4">P4</option>
+            {PRIORITY_LEVEL_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
           </select>
           <div className="text-sm text-gray-500 flex items-center">共 {filteredDocuments.length} 项</div>
         </div>
@@ -331,8 +330,13 @@ export default function RegulatoryDocumentsPage({ embedded = false }: Regulatory
                     {doc.priorityLevel}
                   </span>
                   <span className="text-xs border rounded-full px-2 py-1 text-gray-700 bg-gray-50 border-gray-200">
-                    {applicabilityLabels[doc.applicability]}
+                    {applicabilityLabel(doc.applicability)}
                   </span>
+                  {doc.category ? (
+                    <span className="text-xs border rounded-full px-2 py-1 text-gray-700 bg-white border-gray-200">
+                      {regulatoryCategoryLabel(doc.category)}
+                    </span>
+                  ) : null}
                   {doc.applicableToIvd ? (
                     <span className="text-xs border rounded-full px-2 py-1 text-emerald-700 bg-emerald-50 border-emerald-100">IVD相关</span>
                   ) : null}
@@ -380,7 +384,16 @@ export default function RegulatoryDocumentsPage({ embedded = false }: Regulatory
               </div>
               <div>
                 <label className="text-xs text-gray-500">分类</label>
-                <input className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg" value={form.category} onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))} placeholder="如：医疗器械/IVD" />
+                  <select
+                    className="mt-1 w-full px-3 py-2 border border-gray-200 rounded-lg"
+                    value={form.category}
+                    onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
+                  >
+                    <option value="">- 请选择分类 -</option>
+                    {REGULATORY_CATEGORY_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
+                  </select>
               </div>
               <div>
                 <label className="text-xs text-gray-500">优先级</label>

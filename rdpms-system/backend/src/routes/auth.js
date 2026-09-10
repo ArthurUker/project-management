@@ -101,7 +101,8 @@ auth.post('/login', async (c) => {
     throw badRequest('VALIDATION_ERROR', '用户名和密码不能为空');
   }
 
-  const user = await prisma.user.findUnique({ where: { username } });
+  // 纵深防御（t19）：软删用户直接按"不存在"处理——不再依赖 status 是否同步置为 DISABLED
+  const user = await prisma.user.findFirst({ where: { username, deletedAt: null } });
   const ctx = requestCtx(c);
 
   if (!user) {

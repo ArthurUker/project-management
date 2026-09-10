@@ -30,6 +30,43 @@ function decodeBase64Payload(fileDataBase64 = '') {
   return Buffer.from(raw, 'base64');
 }
 
+// ── 枚举净化（沿用「枚举列空值处理范式」）────────────────────────────────────
+// 实机缺陷：前端把自由文本/小写值直传 Prisma 枚举（category 是 27 值枚举而 UI 是自由输入框、
+// applicability 前端用小写）→ 法规文档**新建/编辑/导入必然 500**。
+// 规则：命中白名单或别名 → 返回规范化值；否则返回 undefined（交给 @default 兜底，绝不写 null）。
+const REGULATORY_CATEGORIES = new Set([
+  'CLASSIFICATION', 'CLINICAL_EVALUATION', 'CLINICAL_EVALUATION_EXEMPTION', 'CLINICAL_TRIAL',
+  'CLINICAL_TRIAL_PERMISSION', 'LABELING', 'REGISTRATION_DOSSIER', 'PRIORITY_REVIEW',
+  'CONDITIONAL_APPROVAL', 'RENEWAL', 'REGISTRATION_CHANGE', 'FILING', 'FILING_CHANGE',
+  'SPECIAL_APPROVAL', 'THIRD_PARTY_REVIEW', 'QMS', 'QMS_IVD', 'QMS_STERILE', 'QMS_IMPLANTABLE',
+  'QMS_SPECIAL', 'SOFTWARE_QMS', 'MANUFACTURING_QMS_DOC', 'CONTRACT_MANUFACTURING',
+  'MANUFACTURER_NAMING', 'MANUFACTURER_OTHER_PRODUCTS', 'DISTRIBUTION_ACCESS', 'OTHER',
+]);
+const REGULATORY_CATEGORY_ALIASES = {
+  '分类': 'CLASSIFICATION', '临床评价': 'CLINICAL_EVALUATION', '临床试验': 'CLINICAL_TRIAL',
+  '标签': 'LABELING', '说明书': 'LABELING', '注册申报': 'REGISTRATION_DOSSIER',
+  '注册资料': 'REGISTRATION_DOSSIER', '优先审评': 'PRIORITY_REVIEW', '附条件批准': 'CONDITIONAL_APPROVAL',
+  '延续注册': 'RENEWAL', '变更注册': 'REGISTRATION_CHANGE', '备案': 'FILING', '体系': 'QMS',
+  '质量体系': 'QMS', '软件': 'SOFTWARE_QMS', '生产': 'MANUFACTURING_QMS_DOC',
+  '委托生产': 'CONTRACT_MANUFACTURING', '经营': 'DISTRIBUTION_ACCESS',
+};
+const APPLICABILITY_ALIASES = {
+  core: 'CORE', conditional: 'CONDITIONAL', post_market: 'POST_MARKET',
+  low_relevance: 'LOW_RELEVANCE', not_applicable: 'NOT_APPLICABLE',
+};
+const PRIORITY_LEVELS = new Set(['P0', 'P1', 'P2', 'P3', 'P4']);
+
+function normalizeEnum(raw, allowed, aliases = {}) {
+  const v = String(raw ?? '').trim();
+  if (!v) return undefined;
+  const upper = v.toUpperCase();
+  if (allowed.has(upper)) return upper;
+  return aliases[v] ?? aliases[v.toLowerCase()] ?? undefined;
+}
+const normalizeCategory = (v) => normalizeEnum(v, REGULATORY_CATEGORIES, REGULATORY_CATEGORY_ALIASES);
+const normalizeApplicability = (v) => normalizeEnum(v, new Set(['CORE', 'CONDITIONAL', 'POST_MARKET', 'LOW_RELEVANCE', 'NOT_APPLICABLE']), APPLICABILITY_ALIASES);
+const normalizePriority = (v) => normalizeEnum(v, PRIORITY_LEVELS);
+
 function guessMimeByFileName(fileName = '') {
   const lower = fileName.toLowerCase();
   if (lower.endsWith('.pdf')) return 'application/pdf';
@@ -212,12 +249,14 @@ regulatoryDocuments.post('/', requirePermission('regulatory_documents.create'), 
       dispatchNo: body.dispatchNo,
       title: body.title,
       fullTitle: body.fullTitle || null,
-      category: body.category || null,
-      applicability: body.applicability || 'conditional',
+      // 枚举字段：非法/空值不写（交由 @default 兜底），绝不透传空串或 null
+      category: normalizeCategory(body.category),
+      applicability: normalizeApplicability(body.applicability),
       applicableToIvd: Boolean(body.applicableToIvd),
-      priorityLevel: body.priorityLevel || 'P2',
+      priorityLevel: normalizePriority(body.priorityLevel),
       summary: body.summary || null,
       applicabilityNote: body.applicabilityNote || null,
+      createdById: getAuth(c).userId,
     },
   });
 
@@ -263,12 +302,13 @@ regulatoryDocuments.put('/:id', requirePermission('regulatory_documents.update')
       dispatchNo: body.dispatchNo ?? existing.dispatchNo,
       title: body.title ?? existing.title,
       fullTitle: body.fullTitle ?? existing.fullTitle,
-      category: body.category ?? existing.category,
-      applicability: body.applicability ?? existing.applicability,
+      category: normalizeCategory(body.category) ?? existing.category,
+      applicability: normalizeApplicability(body.applicability) ?? existing.applicability,
       applicableToIvd: body.applicableToIvd == null ? existing.applicableToIvd : Boolean(body.applicableToIvd),
-      priorityLevel: body.priorityLevel ?? existing.priorityLevel,
+      priorityLevel: normalizePriority(body.priorityLevel) ?? existing.priorityLevel,
       summary: body.summary ?? existing.summary,
       applicabilityNote: body.applicabilityNote ?? existing.applicabilityNote,
+      updatedById: getAuth(c).userId,
     },
   });
 
@@ -336,12 +376,13 @@ regulatoryDocuments.post('/import', async (c) => {
       dispatchNo,
       title: body.title || baseTitle,
       fullTitle: body.fullTitle || null,
-      category: body.category || null,
-      applicability: body.applicability || 'conditional',
+      category: normalizeCategory(body.category),
+      applicability: normalizeApplicability(body.applicability),
       applicableToIvd: body.applicableToIvd == null ? true : Boolean(body.applicableToIvd),
-      priorityLevel: body.priorityLevel || 'P2',
+      priorityLevel: normalizePriority(body.priorityLevel),
       summary: body.summary || null,
       applicabilityNote: body.applicabilityNote || null,
+      createdById: getAuth(c).userId,
     },
   });
 
