@@ -22,7 +22,7 @@
 | A-4 | 样本删除 `DELETE /api/samples/:id` | `T/…/routes/samples.js:90` | 404（无桩） | 同上 |
 | ~~A-5~~ | 配方复制 `POST /api/formulas/:id/duplicate` | `T/…/routes/formulas.js:164` | **更正：enh 已存在**（`E/…/formulas.js:155-191`，走 CodeSequence 发号）——初版探查误报 | 无需移植 |
 | A-6 | 草稿 localStorage 异常降级（Tencent 审查修复意图） | `T:/store/appStore.ts:124-147`（safeStorage） | enh 草稿键两侧一致存在（`CREATE_PROJECT_DRAFT_KEY` 等），但隐私模式/配额异常降级未确认 | 在 enh 侧补统一 safeStorage 工具并接入 CreateProjectModal/EditProjectModal，不抄 Tencent 补丁 |
-| A-7 | 其余审查修复意图（在 enh 对应页面重查修复） | Tencent CODE_REVIEW 批次 | ①③✅ 已完成；② 待专项核查（见 §P） | ①法规文档页卸载后请求取消（AbortController）✅；②配方页异步竞态/旧闭包 ⏳；③流程图延迟定时器清理 ✅；④死文件清理见 §E ✅ |
+| A-7 | 其余审查修复意图（在 enh 对应页面重查修复） | Tencent CODE_REVIEW 批次 | ✅ 全部完成（2026-09-10） | ①法规文档页卸载后请求取消（AbortController）✅；②配方页异步竞态/旧闭包 ✅（提交 `7fc256f`，见 §P）；③流程图延迟定时器清理 ✅；④死文件清理见 §E ✅ |
 
 ## B. P1 解冻项（✅ 批次二已完成：10 端点全部转正，软删除+审计；治理层新增 P1_UNFROZEN 8 码，SUPER_ADMIN 短路追加，permissions 表 90→98；未解冻 P1 仍冻结）
 
@@ -105,7 +105,7 @@ enh 现状：`/api/backup/export` 保留并强化（`data.export` + 审计，`E/
 4. **批次四**：C-1 离线同步 v2（最大件，含 UI）。
 5. **批次五**：契约测试、权限矩阵核对、核心 E2E、部署回滚演练（**数据迁移已取消，见 §N**）；验收后集成分支替换 enh 主干，Tencent 保留只读标签。
 
-> 附注：`.deploy-meta` 记录不一致问题**已解决**——2026-09-10 生产部署后 `.deploy-meta` = release `20260910-1450` @ `b9e9dbd`，与 release HEAD 一致（见 §O）。
+> 附注：`.deploy-meta` 记录不一致问题**已解决**——2026-09-10 生产部署后 `.deploy-meta` = release `20260910-1450` @ `b9e9dbd`，与 release HEAD 一致；当日 15:31 热对齐至 `7fc256f` 后仍保持一致（见 §O）。
 
 ## I. 批次一进度（2026-09-09）
 
@@ -114,7 +114,7 @@ enh 现状：`/api/backup/export` 保留并强化（`data.export` + 审计，`E/
 - ✅ A-2 `POST /api/task-templates/bulk-delete`（软删、引用整批拒绝、审计；前端门面 templates.bulkDelete 原已存在）。
 - ✅ A-3 `DELETE /api/formulas/:id` 与 A-4 `DELETE /api/samples/:id` 冻结桩（403 PERMISSION_NOT_AVAILABLE，风格对齐既有桩）。
 - ✅ A-6 safeStorage 工具（utils/safeStorage.ts）+ CreateProjectModal/EditProjectModal/PrimerLibrary/ReagentLibrary 共 8 处裸 localStorage 全部收口。
-- ✅ A-7① useRegulatoryDocuments 重写（过期响应丢弃、refetch 走 reloadToken）；A-7③ ProcessFlowDiagram 延迟 fitView 定时器登记+清理；**A-7② 配方页异步竞态待批次后续专项核查**（涉及 FormulaEditor/PrepCalculator 数据流，需单独读代码定位）。
+- ✅ A-7① useRegulatoryDocuments 重写（过期响应丢弃、refetch 走 reloadToken）；A-7③ ProcessFlowDiagram 延迟 fitView 定时器登记+清理；✅ A-7② 配方页异步竞态专项修复（提交 `7fc256f`，已热对齐上线，详见 §P）。
 - ✅ E-1/E-2 死文件删除（FlowEditor.tsx、ProjectTemplates.tsx）；E-3 Settings 失实文案修正。
 - 验收门：`tsc -b` 零错误；vite 生产构建在部署流水线执行（本地 10s 监视截断，不影响判定）。
 
@@ -197,6 +197,7 @@ enh 现状：`/api/backup/export` 保留并强化（`data.export` + 审计，`E/
 ## O. 实机部署与线上事故修复（2026-09-10）
 
 **部署结果**：集成分支上线，release `20260910-1450`，`.deploy-meta` = `b9e9dbd`（与 release HEAD 一致）；服务 `rdpms-api.service` active；回滚目标 `20260906-1458` 保留。
+**后续热对齐（同日 15:31 / 22:00）**：`7fc256f`（A-7② 配方页前端修复）经 `git fetch + checkout -f FETCH_HEAD` 对齐进同一 release，前端重新构建（`index-DdA_6q3x.js`），`.deploy-meta` 同步为 `commit=7fc256f`；因仅前端产物变更，未重启 API 服务（`ActiveEnterTimestamp` 仍为部署时的 15:14）。同日 22:00 再热对齐 `93be15d`（法规文档 500 修复，**后端**变更）→ `.deploy-meta` = `commit=93be15d`，并 `systemctl restart rdpms-api` 生效；验证 `GET /api/regulatory-documents` 列表 200（26 条）与详情 200、重启后无新 `PrismaClientValidationError`。
 
 | 项 | 结果 |
 |---|---|
@@ -206,24 +207,26 @@ enh 现状：`/api/backup/export` 保留并强化（`data.export` + 审计，`E/
 | 权限库 | permissions 90 → 98（P1_UNFROZEN 8 码），role_permissions 289，六角色授权数未变 |
 | 前端/接口 | 生产构建通过；HSTS/CSP 与 HTTP→HTTPS 308 正常 |
 
-**部署暴露并修复的 3 个运行时缺陷**（均为此前从未真正运行过的新代码路径）：
+**部署暴露并修复的 4 个运行时缺陷**（均为此前从未真正运行过的新代码路径）：
 
 1. `0f6f546` — **审计 entityType 非法**：`AuditLog.entityType` 原为 `EntityType` 枚举（16 值），而路由侧用了 24 个值（`DOC`/`REAGENT_MATERIAL`/`BACKUP`/`TASK_TEMPLATE` 等）→ 相关端点**凡是写审计必然 500**。按既有范式把该列改为 `VARCHAR(64)`（`action` 早已是字符串），`Attachment.entityType` 保留枚举。迁移 `audit_entity_type_string`。
 2. `0f6f546` — **`/api/sync/init` 500**：`projectMembers` 无 `updatedAt` 列（实际用 `joinedAt`）→ 登记表接入 `timestampField`，增量拉取按实体各自时间戳字段派生。
 3. `b9e9dbd` — **`POST /api/reagent-materials` 500**：前端表单不选浓度单位时提交 `defaultStockUnit: ""`，路由直接透传给 Prisma 的 `ConcentrationUnit` 枚举列 → 校验失败。该列**非空**（`@default(M)`），空值既不能透传也不能置 null → 新增枚举白名单，空/非法值**删字段交由默认值兜底**；`primers.status` 同款隐患一并净化。
+4. `93be15d` — **法规文档页全接口 500**：`RegulatoryDocument` 上的原文附件走 `include: { attachments: ... }`（`ORIGINAL_INCLUDE`，`ad91118` 批次一 D-1 引入），但 **Attachment 是多态关联**（`entityType` + `entityId`），该模型**没有** `attachments` 关系 → 每次 `findMany`/`findUnique` 都抛 `PrismaClientValidationError: Unknown field 'attachments' for include statement on model 'RegulatoryDocument'`。受影响：`GET /api/regulatory-documents`（列表与详情）、`PUT /:id`、`POST /import`、`POST /:id/original-file`。修法：删除 `ORIGINAL_INCLUDE`，改为 `loadOriginalFiles(ids)` / `loadOriginalFile(id)` 按 `entityType + entityId` 显式查询 attachment 后回填 `originalFileId`/`fileName`（列表一次批量查，避免 N+1）。
 
 **验证证据**：用前端真实 14 字段表单载荷实测 → `201`；审计 `REAGENT_MATERIAL|create` 正常落库；删除 `200`；测试行已软删；重跑 smoke 仍 22 PASS / 0 FAIL；`reagent_materials` 当日新增 0 行（确认重试未留脏数据）。
 
 **发布门禁误报清理（`99a48e3`）**：preflight 的 PRAGMA 检测、`ensure*` 函数、权限码正则与注释字面量误报已修正，P-08 断言同步为「ADMIN 403（端点已交付）」。
 
-**遗留安全项**：生产库中存在 6 个测试账号（`test_super_admin` / `test_admin` / `test_manager` / `test_member` / `test_viewer` / `test_auditor`），而策略为"生产不创建测试账号"（现 `SEED_TEST_ACCOUNTS=false`）；账号为历史播种残留，需停用或改密（见 §P）。
+**遗留安全项（2026-09-10 二次复核：已收敛，非存活风险）**：§O 初记的 6 个测试账号（`test_super_admin` / `test_admin` / `test_manager` / `test_member` / `test_viewer` / `test_auditor`）经查**已是 `status=DISABLED` 且 `deleted_at` 非空（软删）**——登录在口令比对之前即被 `403 ACCOUNT_DISABLED` 拒绝，`POST /api/auth/refresh` 亦要求 `status=ACTIVE`，故**不构成存活风险，无需再停用/改密**。另发现 3 个同类残留 `w11-dummy-1788679842` / `w11-dummy-1788679873` / `w11-dummy-1788680336`（同为 DISABLED + 软删，批次四同步演练产物）。复核时生产库**可登录账号仅 2 个**：`superadmin`(SUPER_ADMIN)、`admin`(ADMIN)。附带纵深防御建议：`POST /api/auth/login` 的 `findUnique` 未过滤 `deletedAt`（当前仅靠 `status=DISABLED` 拦截），补 `deletedAt: null` 更稳——属代码变更，需走集成分支 + 重新部署。
 
 ## P. 当前剩余清单（2026-09-10 收口）
 
-**可立即执行（无需环境）**：
+**已完成（2026-09-10 当日）**：
 
-1. **A-7② 配方页异步竞态专项核查**：FormulaEditor / PrepCalculator 数据流（过期响应覆盖、旧闭包、并发计算），修后 `tsc -b` 验证。
-2. **生产测试账号清理**：停用 §O 遗留的 6 个账号（或轮换口令 + 仅留 SUPER_ADMIN 应急账号）。
+1. ✅ **A-7② 配方页异步竞态专项**（提交 `7fc256f`，已热对齐上线）：`FormulaEditor`（loadMaterials/loadFormula 序号守卫）、配方列表 `index.tsx`（load 单调序号 + 依赖变更/卸载递增）、`FormulaBatchEditor`（mountedRef 守卫卸载后 setState + savingRef 防同 tick 重复建配方）、`PrepCalculator`（计算序号守卫 + 参数变化即作废旧结果，防旧称量值被误存）。验证：`tsc -b && vite build` 通过，产物 `index-DdA_6q3x.js` 由 release `20260910-1450` 提供（`.deploy-meta` = `7fc256f`）。
+2. ✅ **生产测试账号清理（复核后关闭）**：6 个 `test_*` 账号**已** `DISABLED` + 软删，登录被 `403 ACCOUNT_DISABLED` 拒绝；另有 3 个 `w11-dummy-*` 同类残留。无需再停用/改密，详见 §O 复核结论。
+3. ✅ **法规文档页 500 修复（`93be15d`，已热对齐 + 重启生效）**：详见 §O 缺陷 4。**遗留同类风险**：既有代码里可能还有其他「把多态关联（`Attachment`/`entityType+entityId`）写进 Prisma `include`」的写法；本次已全局搜索确认仅此一处（`attachments:\s*\{` 0 命中），但新增此类关联查询时应继续按显式查询范式实现。
 
 **被环境阻塞（需 staging，见下）**：
 
@@ -233,3 +236,39 @@ enh 现状：`/api/backup/export` 保留并强化（`data.export` + 审计，`E/
 6. **剩余契约验证**：`PREFLIGHT_STRICT=1` 与 `RDPMS_PROXY_MODE=caddy_domain` 组合验证；P-08 ADMIN 403 分支（可用只读方式在生产验证，因测试账号现存）。
 
 **环境缺口**：当前仅生产一套（`/opt/rdpms/releases` 两个 release，无 staging 实例）；上述 3–5 需先搭 staging（独立 PG 库 + 同版本 release + `SEED_TEST_ACCOUNTS=true`）。
+
+> **2026-09-10 更新**：3–6 项已在 §Q 的 drill 环境全部完成（perm-matrix 全矩阵、同步 E2E、备份恢复演练、preflight STRICT + 代理模式）。
+
+## Q. 批次五演练结果（2026-09-10，drill 环境）
+
+**演练环境**：PG 库 `rdpms_drill`（owner `rdpms_migrate`、`LC_COLLATE=C`，用 `init-postgres.sh` 建）+ `/srv/rdpms-staging/.env` + `rdpms-api-staging.service`（**回环 127.0.0.1:3210**、`MemoryMax=512M`、不随开机自启）+ 6 个 `test_*` 账号（`must_change_password=false`）。
+
+建设要点（踩坑记录）：
+- 种子在 `NODE_ENV=production` 下**永不创建** `test_*`（`seed.js:1027`）→ 演练环境必须 `NODE_ENV=staging`；
+- 端口 3100 已被同机另一项目（`foodsafety-outreach`）占用 → 改用 3210；
+- `scripts/seed-test-files.mjs` 拒绝库名含 `staging|prod` → 库名取 `rdpms_drill`；
+- `CORS_ORIGINS`/`ALLOWED_ORIGINS` 仍指向旧 IP（http），已补 https 域名。
+
+启停：`sudo systemctl start|stop rdpms-api-staging`（按需启动，不占开机资源）。
+
+| 演练 | 结果 |
+|---|---|
+| perm-matrix 全矩阵（7 类主体，含 8 个解冻端点与同步端点） | **断言 392 / 差异 0 / 跳过 0 / BLOCKED-BY-BE 0** |
+| 同步 v2 端到端（init/push/幂等/冲突/墓碑/权威字段） | **21 项全通过** |
+| 备份恢复 v2（导出/preview/merge/校验拦截/事务回滚/replace 门禁） | **16 项全通过** |
+| preflight（`PREFLIGHT_STRICT=1` + `RDPMS_PROXY_MODE=caddy_domain`） | **72 通过 / 0 失败 / 0 告警** |
+| smoke（生产 read-only） | 22 PASS / 0 FAIL / 3 SKIP |
+
+**演练暴露并修复的缺陷（4 类，均已上线）**
+
+1. `30adc75` **项目类型枚举未校验**：前端「创建项目」提交中文标签（默认「定制」）→ Prisma `ProjectType` 校验失败，**建项目必 500**；PUT 与列表筛选同源；类型筛选因中文比较而失效；卡片直显枚举值。
+2. `7057ccf` **离线新建恒被拒**：`byProject` 实体的 `projectId` 在 `pickFields`（白名单）之后才读取 → 阶段/任务/汇报/里程碑/月报/成员的**离线新建全部失败**并误报"无权访问"；`projectMembers` 白名单缺 `userId`；拒绝原因回传整段 Prisma 对象 dump。
+3. `623a7ea` **备份恢复无法回灌自己的导出**：校验器硬要求每行 `id`，而 `role_permissions` 为复合主键（`@@id([roleId, permissionId])`）无 `id` 列 → apply 恒被 400 拦截。修法：注册表引入每表主键描述 `pk`（复合表显式声明，其余默认 `['id']`），校验按主键签名判重、写入按主键 upsert。
+4. `623a7ea` **`replace` 在非空库不可用**：清空 `users` 级联到未纳入恢复范围的 `audit_logs`，其 append-only 触发器禁止 DELETE → 事务回滚但只抛 Prisma 原始错误。改为预校验阶段拦截并给出可读原因与 merge 建议（空库仍可 replace）。
+
+**演练确认的安全性质**：幂等重放不重复写库；过期基线返回服务端快照而非覆盖；服务端权威字段（reports 审批/版本/归属、tasks 编号与时间戳）不可被客户端伪造；备份校验失败**零写入**；应用期失败**单事务整体回滚**（同批已插入行一并回滚，实测无部分写入）。
+
+**遗留（需业务决策，建议下一批处理）**
+
+- 备份范围 27 表，**未覆盖**：`projectPhases`（阶段结构，tasks.phaseId 依赖它）、`regulatoryDocuments`（法规文件）、`fileObjects`/`attachments`（文件与附件）、`userRoles`（多角色分配）、`taskDocRefs`（任务-文档引用）、`detectionTargets` 等。其中文件类需「JSON 元数据 + 二进制存储」整体方案（仅备份元数据会产出引用缺失文件的假备份）；阶段/多角色/任务-文档引用属纯结构化数据，可直接补入注册表（含依赖序与 refs）。
+- `projectMembers` 的同步新增依赖客户端提供 `userId`（已在白名单放开，权限仍由 `manage_members` 约束）。
