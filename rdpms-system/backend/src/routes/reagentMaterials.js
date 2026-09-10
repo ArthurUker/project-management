@@ -40,6 +40,15 @@ function toCategory(value) {
   return CATEGORY_ALIASES[key] ?? (MATERIAL_CATEGORIES.has(String(value ?? '').toUpperCase()) ? String(value).toUpperCase() : 'OTHER');
 }
 
+/**
+ * ConcentrationUnit 枚举（defaultStockUnit）：下拉框空值/非法值一律落 null。
+ * 实机事故（2026-09-10）：前端表单不选浓度单位时提交 ""，直接进 Prisma 触发
+ * `Invalid value for argument defaultStockUnit. Expected ConcentrationUnit` → 500。
+ */
+const CONCENTRATION_UNITS = new Set(['M', 'MM', 'UM', 'NM', 'NG_PER_UL', 'MG_PER_ML', 'PERCENT', 'X', 'OTHER']);
+/** DocumentStatus 枚举（status） */
+const DOCUMENT_STATUSES = new Set(['DRAFT', 'ACTIVE', 'DEPRECATED', 'ARCHIVED']);
+
 function toFloatOrNull(v) {
   if (v === '' || v == null) return null;
   const n = Number.parseFloat(String(v));
@@ -104,7 +113,17 @@ function normalizeMaterialData(raw, { forCreate }) {
   if ('density' in data) data.density = toFloatOrNull(data.density);
   if ('defaultStockConc' in data) data.defaultStockConc = toFloatOrNull(data.defaultStockConc);
   if ('category' in data) data.category = toCategory(data.category);
-  if ('status' in data) data.status = String(data.status).toUpperCase();
+  if ('status' in data) {
+    const s = String(data.status ?? '').trim().toUpperCase();
+    data.status = DOCUMENT_STATUSES.has(s) ? s : 'ACTIVE';
+  }
+  // 枚举列净化：defaultStockUnit 为非空列（@default(M)）——空串/非法值必须"删字段"让默认值兜底，
+  // 既不能直接透传空串（Prisma enum 校验 500），也不能置 null（非空约束 500）
+  if ('defaultStockUnit' in data) {
+    const u = String(data.defaultStockUnit ?? '').trim().toUpperCase();
+    if (CONCENTRATION_UNITS.has(u)) data.defaultStockUnit = u;
+    else delete data.defaultStockUnit;
+  }
   // MaterialState 枚举（SOLID/LIQUID/SOLUTION/GAS）：兼容旧客户端小写，非法值丢弃走默认
   if ('state' in data) {
     const st = String(data.state).toUpperCase();

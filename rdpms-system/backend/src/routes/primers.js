@@ -35,7 +35,11 @@ function normalizePrimerData(raw) {
   if ('tubeCount' in data) {
     data.tubeCount = data.tubeCount ? Number.parseInt(data.tubeCount, 10) : null;
   }
-  if ('status' in data) data.status = String(data.status).toUpperCase();
+  if ('status' in data) {
+    // 枚举净化（同 defaultStockUnit 事故族）：空串/非法值 → ACTIVE 兜底，避免 Prisma enum 500
+    const s = String(data.status ?? '').trim().toUpperCase();
+    data.status = ['DRAFT', 'ACTIVE', 'DEPRECATED', 'ARCHIVED'].includes(s) ? s : 'ACTIVE';
+  }
   for (const k of Object.keys(data)) if (data[k] === undefined) delete data[k];
   return data;
 }
