@@ -49,8 +49,16 @@ export default function FormulaBatchEditor({ initialFormulaIds, initialFormulas,
   const [showAddCol, setShowAddCol] = useState(false);
   const [colSearch, setColSearch] = useState('');
   const addColRef = useRef<HTMLDivElement>(null);
+  // A-7②：卸载后丢弃初始化响应（避免卸载后 setState）
+  const mountedRef = useRef(true);
+  // 防重复提交：双击/回车连发会生成重复配方
+  const savingRef = useRef(false);
 
-  useEffect(() => { init(); }, []);
+  useEffect(() => {
+    mountedRef.current = true;
+    init();
+    return () => { mountedRef.current = false; };
+  }, []);
 
   // 关闭添加列下拉
   useEffect(() => {
@@ -66,6 +74,7 @@ export default function FormulaBatchEditor({ initialFormulaIds, initialFormulas,
     try {
       // 1. 加载试剂原料知识库
       const matRes = await reagentMaterialsAPI.list() as any;
+      if (!mountedRef.current) return;
       const mats: any[] = matRes.items || [];
       setMaterials(mats);
 
@@ -103,6 +112,7 @@ export default function FormulaBatchEditor({ initialFormulaIds, initialFormulas,
           }
         });
       });
+      if (!mountedRef.current) return;
       setCols(Array.from(colMap.values()));
 
       // 4. 构建行数据
@@ -126,12 +136,13 @@ export default function FormulaBatchEditor({ initialFormulaIds, initialFormulas,
         };
       });
 
+      if (!mountedRef.current) return;
       setRows(bRows.length > 0 ? bRows : [emptyRow()]);
     } catch (e) {
       console.error('批量编辑器初始化失败', e);
-      setRows([emptyRow()]);
+      if (mountedRef.current) setRows([emptyRow()]);
     }
-    setLoading(false);
+    if (mountedRef.current) setLoading(false);
   };
 
   const addRow = () => setRows(r => [...r, emptyRow()]);
@@ -158,8 +169,10 @@ export default function FormulaBatchEditor({ initialFormulaIds, initialFormulas,
   }, []);
 
   const handleSave = async () => {
+    if (savingRef.current) return; // 防重复提交（saving 状态更新是异步的，同 tick 双击仍会进入）
     const dirtyRows = rows.filter(r => r.isDirty && r.code.trim());
     if (dirtyRows.length === 0) { alert('没有需要保存的修改'); return; }
+    savingRef.current = true;
     setSaving(true);
     try {
       await Promise.all(dirtyRows.map(async row => {
@@ -190,8 +203,10 @@ export default function FormulaBatchEditor({ initialFormulaIds, initialFormulas,
       onSaved();
     } catch (e: any) {
       alert(e?.message || e?.error || '保存失败，请检查配方编号是否重复');
+    } finally {
+      savingRef.current = false;
+      if (mountedRef.current) setSaving(false);
     }
-    setSaving(false);
   };
 
   const filteredMats = materials.filter(m =>

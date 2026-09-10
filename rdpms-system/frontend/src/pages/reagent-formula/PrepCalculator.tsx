@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { formulaAPI, prepAPI } from '@/api';
 
 export default function PrepCalculator(){
@@ -7,17 +7,38 @@ export default function PrepCalculator(){
   const [targetVolume, setTargetVolume] = useState<number>(100);
   const [result, setResult] = useState<any | null>(null);
 
-  useEffect(()=>{ load(); },[]);
-  const load = async ()=>{ const res = await formulaAPI.list(); setFormulas(res.items || []); };
+  // A-7②（Tencent 审查修复意图，enh 重实现）：卸载后丢弃过期响应
+  useEffect(()=>{
+    let active = true;
+    const load = async ()=>{
+      try {
+        const res = await formulaAPI.list();
+        if (active) setFormulas(res.items || []);
+      } catch (e) { if (active) console.error(e); }
+    };
+    load();
+    return () => { active = false; };
+  },[]);
 
+  // 切换配方或修改体积后，上一份计算结果必须作废——
+  // 否则表格仍显示旧配方的称量值，可能被误保存成配制记录
+  useEffect(()=>{ setResult(null); }, [selected, targetVolume]);
+
+  const calcSeqRef = useRef(0);
   const calculate = async ()=>{
     if (!selected) return alert('请选择配方');
-    const res = await prepAPI.calculate({ formulaId: selected, targetVolume });
-    if ((res as any)?.success) setResult(res as any);
+    const seq = ++calcSeqRef.current;
+    try {
+      const res = await prepAPI.calculate({ formulaId: selected, targetVolume });
+      if (seq !== calcSeqRef.current) return; // 连点/快速切换时的过期结果丢弃
+      if ((res as any)?.success) setResult(res as any);
+    } catch (e: any) {
+      if (seq === calcSeqRef.current) alert(e?.error || e?.message || '计算失败');
+    }
   }; // 后端已支持 reagentMaterial 关联，前端无需额外处理 here
 
   const saveRecord = async ()=>{
-    if (!result) return;
+    if (!result || !selected) return;
     await prepAPI.saveRecord({ formulaId: selected, targetVolume, calcResult: result, prepDate: new Date().toISOString().slice(0,10) });
     alert('已保存');
   };

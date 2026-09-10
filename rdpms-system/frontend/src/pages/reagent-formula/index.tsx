@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { formulaAPI, prepAPI, reagentAPI } from '@/api';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, FlaskConical, Pencil, TableProperties } from 'lucide-react';
@@ -30,6 +30,8 @@ export default function FormulaMatrix(): JSX.Element {
   const [calcPrepMethods, setCalcPrepMethods] = useState<Array<'powder' | 'stock'>>(['powder']);
   const [calcLoading, setCalcLoading] = useState<boolean>(false);
   const [calcResults, setCalcResults] = useState<any[]>([]);
+  // A-7②：批量配制的过期结果丢弃（快速改体积/改选后重算）
+  const calcSeqRef = useRef(0);
   const [calcError, setCalcError] = useState<string>('');
 
   const navigate = useNavigate();
@@ -45,8 +47,14 @@ export default function FormulaMatrix(): JSX.Element {
     other:      { label: '其他',     color: '#64748b', bgColor: '#f1f5f9', keys: [] },
   };
 
+  // A-7②（Tencent 审查修复意图，enh 重实现）：load() 可重入——分类切换与搜索防抖会并发，
+  // 用单调序号丢弃过期响应，避免慢的旧请求覆盖新列表/试剂矩阵，以及卸载后 setState
+  const loadSeqRef = useRef(0);
+
   // Load data
   const load = async () => {
+    const seq = ++loadSeqRef.current;
+    const isCurrent = () => seq === loadSeqRef.current;
     try {
       const res = await formulaAPI.list({ type: selectedCategory === 'all' ? '' : selectedCategory, keyword: searchText });
       const base = res.items || [];
@@ -59,15 +67,17 @@ export default function FormulaMatrix(): JSX.Element {
           } catch { return { ...f, components: f.components || [] }; }
         })
       );
+      if (!isCurrent()) return;
       setAllFormulas(detailed);
       setFormulas(detailed);
       const rres = await reagentAPI.list();
+      if (!isCurrent()) return;
       setReagents(rres.items ?? (rres as any).list ?? []);
-    } catch (e) { console.error(e); }
+    } catch (e) { if (isCurrent()) console.error(e); }
   };
 
-  useEffect(() => { load(); }, [selectedCategory]);
-  useEffect(() => { const t = setTimeout(() => load(), 300); return () => clearTimeout(t); }, [searchText]);
+  useEffect(() => { load(); return () => { loadSeqRef.current++; }; }, [selectedCategory]);
+  useEffect(() => { const t = setTimeout(() => load(), 300); return () => { clearTimeout(t); loadSeqRef.current++; }; }, [searchText]);
 
   const categories = useMemo(() => {
     const cats = Array.from(new Set(allFormulas.map(f => (f.type || f.category || '').toString()))).filter(Boolean);
@@ -196,6 +206,8 @@ export default function FormulaMatrix(): JSX.Element {
       return;
     }
 
+    const seq = ++calcSeqRef.current;
+    const isCurrent = () => seq === calcSeqRef.current;
     setCalcLoading(true);
     setCalcError('');
     try {
@@ -203,6 +215,7 @@ export default function FormulaMatrix(): JSX.Element {
       const results = await Promise.all(
         calcFormulaIds.map(fid => prepAPI.calculate({ formulaId: fid, targetVolume: normalizedTargetVolume }))
       );
+      if (!isCurrent()) return; // 过期批次结果丢弃（快速改体积/改选后重算）
       const successResults = results.filter((r: any) => r?.success);
       if (successResults.length === 0) {
         setCalcError((results[0] as any)?.error || '计算失败，请重试');
@@ -210,10 +223,11 @@ export default function FormulaMatrix(): JSX.Element {
         setCalcResults(successResults);
       }
     } catch (error: any) {
+      if (!isCurrent()) return;
       setCalcResults([]);
       setCalcError(error?.message ?? error?.error ?? '计算失败，请重试');
     } finally {
-      setCalcLoading(false);
+      if (isCurrent()) setCalcLoading(false);
     }
   };
 

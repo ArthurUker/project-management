@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { formulaAPI, reagentMaterialsAPI } from '@/api';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -39,15 +39,27 @@ export default function FormulaEditor() {
     ? (form.components || []).reduce((s: number, c: any) => s + (Number(c.concentration) || 0), 0)
     : null;
 
-  useEffect(() => { loadMaterials(); if (id) loadFormula(); }, [id]);
+  // A-7②（Tencent 审查修复意图，enh 重实现）：切换编辑对象/卸载后丢弃过期响应，
+  // 避免慢响应回填覆盖用户正在编辑的表单（原实现为旧闭包 + 无守卫竞态）
+  const loadSeqRef = useRef(0);
 
-  const loadMaterials = async () => {
-    try { const res = await reagentMaterialsAPI.list(); setMaterials(res.items || []); }
-    catch (e) { console.error(e); }
+  useEffect(() => {
+    const seq = ++loadSeqRef.current;
+    const isCurrent = () => seq === loadSeqRef.current;
+    loadMaterials(isCurrent);
+    if (id) loadFormula(isCurrent);
+    return () => { loadSeqRef.current++; };
+  }, [id]);
+
+  const loadMaterials = async (isCurrent: () => boolean = () => true) => {
+    try {
+      const res = await reagentMaterialsAPI.list();
+      if (isCurrent()) setMaterials(res.items || []);
+    } catch (e) { if (isCurrent()) console.error(e); }
   };
-  const loadFormula = async () => {
+  const loadFormula = async (isCurrent: () => boolean = () => true) => {
     const res = await formulaAPI.get(id as string);
-    if (res?.formula) setForm(res.formula);
+    if (isCurrent() && res?.formula) setForm(res.formula);
   };
 
   const onTypeChange = (newType: string) => {
