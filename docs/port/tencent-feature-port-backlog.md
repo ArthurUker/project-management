@@ -22,7 +22,7 @@
 | A-4 | 样本删除 `DELETE /api/samples/:id` | `T/…/routes/samples.js:90` | 404（无桩） | 同上 |
 | ~~A-5~~ | 配方复制 `POST /api/formulas/:id/duplicate` | `T/…/routes/formulas.js:164` | **更正：enh 已存在**（`E/…/formulas.js:155-191`，走 CodeSequence 发号）——初版探查误报 | 无需移植 |
 | A-6 | 草稿 localStorage 异常降级（Tencent 审查修复意图） | `T:/store/appStore.ts:124-147`（safeStorage） | enh 草稿键两侧一致存在（`CREATE_PROJECT_DRAFT_KEY` 等），但隐私模式/配额异常降级未确认 | 在 enh 侧补统一 safeStorage 工具并接入 CreateProjectModal/EditProjectModal，不抄 Tencent 补丁 |
-| A-7 | 其余审查修复意图（在 enh 对应页面重查修复） | Tencent CODE_REVIEW 批次 | 待逐项核查 | ①法规文档页卸载后请求取消（AbortController）；②配方页异步竞态/旧闭包；③流程图延迟定时器清理；④死文件清理见 §E |
+| A-7 | 其余审查修复意图（在 enh 对应页面重查修复） | Tencent CODE_REVIEW 批次 | ①③✅ 已完成；② 待专项核查（见 §P） | ①法规文档页卸载后请求取消（AbortController）✅；②配方页异步竞态/旧闭包 ⏳；③流程图延迟定时器清理 ✅；④死文件清理见 §E ✅ |
 
 ## B. P1 解冻项（✅ 批次二已完成：10 端点全部转正，软删除+审计；治理层新增 P1_UNFROZEN 8 码，SUPER_ADMIN 短路追加，permissions 表 90→98；未解冻 P1 仍冻结）
 
@@ -43,7 +43,7 @@
 
 ## C. 重设计项（大件，后置）
 
-### C-1 离线同步 v2（替换 Tencent Local-First 整链路）🔄 批次四进行中（服务端+客户端底座已完成，页面接入待补）
+### C-1 离线同步 v2（替换 Tencent Local-First 整链路）✅ 批次四已完成（服务端协议 + 客户端底座 + 页面接入 + 本地镜像回退；仅"需 DB 环境的端到端演练"未跑，见 §P）
 Tencent 现状：Dexie 6 表镜像 + `GET /api/sync/init`（`updatedAt > lastSync` 增量）+ `POST /api/sync/push`（逐条 upsert）（`T/…/routes/sync.js:10,133`、`T:/store/appStore.ts:216-293`）；**硬删除不可同步**（仅 projectMembers 带 deleted 标记）；同步失败仅 `console.warn`，无冲突 UI。
 enh 现状：整域不存在；保留了 PUT 幂等中间件 + `ConflictError`(409) 可复用。
 设计要求：本地变更日志 + 幂等键；软删除 tombstone；基于 `updatedAt/version` 增量；项目权限变化后本地数据清除；服务端审阅字段（reviewerId/reviewedAt/reviewNote 等）不可被客户端覆盖；冲突检测 + 用户处理 UI；PostgreSQL 枚举/Decimal/JSON/日期序列化规范。
@@ -105,7 +105,7 @@ enh 现状：`/api/backup/export` 保留并强化（`data.export` + 审计，`E/
 4. **批次四**：C-1 离线同步 v2（最大件，含 UI）。
 5. **批次五**：契约测试、权限矩阵核对、核心 E2E、部署回滚演练（**数据迁移已取消，见 §N**）；验收后集成分支替换 enh 主干，Tencent 保留只读标签。
 
-> 附注：`.deploy-meta` 记 `commit=63f936f` 与生产 release HEAD `3392572` 不一致，属部署记录问题，与本清单无关，另行修正。
+> 附注：`.deploy-meta` 记录不一致问题**已解决**——2026-09-10 生产部署后 `.deploy-meta` = release `20260910-1450` @ `b9e9dbd`，与 release HEAD 一致（见 §O）。
 
 ## I. 批次一进度（2026-09-09）
 
@@ -193,3 +193,43 @@ enh 现状：`/api/backup/export` 保留并强化（`data.export` + 审计，`E/
 
 **对批次的影响**：批次五收窄为「契约测试 + 权限矩阵 + 核心 E2E + 部署回滚演练」；
 整体工作量估算中的「保留主要业务功能并迁移生产数据 15–25 工作日」一档不再适用。
+
+## O. 实机部署与线上事故修复（2026-09-10）
+
+**部署结果**：集成分支上线，release `20260910-1450`，`.deploy-meta` = `b9e9dbd`（与 release HEAD 一致）；服务 `rdpms-api.service` active；回滚目标 `20260906-1458` 保留。
+
+| 项 | 结果 |
+|---|---|
+| 迁移 | 4 个全部应用（init_postgres / batch1_d_model / batch4_sync / audit_entity_type_string） |
+| preflight | 102 通过 / 0 失败 / 门禁告警 0（含 SQL 契约校验） |
+| smoke（read-only） | 22 PASS / 0 FAIL / 3 SKIP（P-06/P-07 按"生产不建测试账号"策略跳过） |
+| 权限库 | permissions 90 → 98（P1_UNFROZEN 8 码），role_permissions 289，六角色授权数未变 |
+| 前端/接口 | 生产构建通过；HSTS/CSP 与 HTTP→HTTPS 308 正常 |
+
+**部署暴露并修复的 3 个运行时缺陷**（均为此前从未真正运行过的新代码路径）：
+
+1. `0f6f546` — **审计 entityType 非法**：`AuditLog.entityType` 原为 `EntityType` 枚举（16 值），而路由侧用了 24 个值（`DOC`/`REAGENT_MATERIAL`/`BACKUP`/`TASK_TEMPLATE` 等）→ 相关端点**凡是写审计必然 500**。按既有范式把该列改为 `VARCHAR(64)`（`action` 早已是字符串），`Attachment.entityType` 保留枚举。迁移 `audit_entity_type_string`。
+2. `0f6f546` — **`/api/sync/init` 500**：`projectMembers` 无 `updatedAt` 列（实际用 `joinedAt`）→ 登记表接入 `timestampField`，增量拉取按实体各自时间戳字段派生。
+3. `b9e9dbd` — **`POST /api/reagent-materials` 500**：前端表单不选浓度单位时提交 `defaultStockUnit: ""`，路由直接透传给 Prisma 的 `ConcentrationUnit` 枚举列 → 校验失败。该列**非空**（`@default(M)`），空值既不能透传也不能置 null → 新增枚举白名单，空/非法值**删字段交由默认值兜底**；`primers.status` 同款隐患一并净化。
+
+**验证证据**：用前端真实 14 字段表单载荷实测 → `201`；审计 `REAGENT_MATERIAL|create` 正常落库；删除 `200`；测试行已软删；重跑 smoke 仍 22 PASS / 0 FAIL；`reagent_materials` 当日新增 0 行（确认重试未留脏数据）。
+
+**发布门禁误报清理（`99a48e3`）**：preflight 的 PRAGMA 检测、`ensure*` 函数、权限码正则与注释字面量误报已修正，P-08 断言同步为「ADMIN 403（端点已交付）」。
+
+**遗留安全项**：生产库中存在 6 个测试账号（`test_super_admin` / `test_admin` / `test_manager` / `test_member` / `test_viewer` / `test_auditor`），而策略为"生产不创建测试账号"（现 `SEED_TEST_ACCOUNTS=false`）；账号为历史播种残留，需停用或改密（见 §P）。
+
+## P. 当前剩余清单（2026-09-10 收口）
+
+**可立即执行（无需环境）**：
+
+1. **A-7② 配方页异步竞态专项核查**：FormulaEditor / PrepCalculator 数据流（过期响应覆盖、旧闭包、并发计算），修后 `tsc -b` 验证。
+2. **生产测试账号清理**：停用 §O 遗留的 6 个账号（或轮换口令 + 仅留 SUPER_ADMIN 应急账号）。
+
+**被环境阻塞（需 staging，见下）**：
+
+3. **perm-matrix 全矩阵**：脚本**明确拒绝在生产执行**（含变更类断言，若 RBAC 有洞会真实改数据），须 staging。
+4. **同步端到端演练**：断网改任务状态/存草稿 → 恢复网络自动上行；制造 `baseUpdatedAt` 冲突 → 面板处置。
+5. **备份恢复 v2 演练**：`preview` / `apply`（含一次 `replace` 回滚演练）——生产不宜实跑。
+6. **剩余契约验证**：`PREFLIGHT_STRICT=1` 与 `RDPMS_PROXY_MODE=caddy_domain` 组合验证；P-08 ADMIN 403 分支（可用只读方式在生产验证，因测试账号现存）。
+
+**环境缺口**：当前仅生产一套（`/opt/rdpms/releases` 两个 release，无 staging 实例）；上述 3–5 需先搭 staging（独立 PG 库 + 同版本 release + `SEED_TEST_ACCOUNTS=true`）。
