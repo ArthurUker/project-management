@@ -26,6 +26,9 @@ export type { ReportQuery } from './endpoints/reports';
 export { projectTemplatesAPI, taskTemplatesAPI } from './endpoints/templates';
 export type { ProjectTemplate, TaskTemplate, TaskTemplateStep } from './endpoints/templates';
 
+export { backupAPI, BACKUP_MODULES } from './endpoints/backup';
+export type { BackupPayload, RestorePreviewTable, RestoreSummary, RestoreValidation } from './endpoints/backup';
+
 export { registrationsAPI } from './endpoints/registrations';
 export type {
   RegistrationProfile,

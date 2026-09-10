@@ -49,7 +49,7 @@ enh 现状：整域不存在；保留了 PUT 幂等中间件 + `ConflictError`(4
 设计要求：本地变更日志 + 幂等键；软删除 tombstone；基于 `updatedAt/version` 增量；项目权限变化后本地数据清除；服务端审阅字段（reviewerId/reviewedAt/reviewNote 等）不可被客户端覆盖；冲突检测 + 用户处理 UI；PostgreSQL 枚举/Decimal/JSON/日期序列化规范。
 交付物：服务端 `routes/sync.js` v2（挂 `/api/sync/*`）+ 前端同步引擎（**重写**，不拷 `appStore.ts`/`sync.js`）+ 离线横幅（`T:/App.tsx:51-56` 意图）+ 顶栏同步状态（`T:/components/Layout.tsx:130-134` 意图）。
 
-### C-2 应用层备份恢复 v2（替换 `/api/backup/restore` + BackupManager 页）
+### C-2 应用层备份恢复 v2（替换 `/api/backup/restore` + BackupManager 页）✅ 批次三已完成
 Tencent 现状：事务内按依赖序 deleteMany+createMany 整库覆盖（`T/…/backup.js:116`）+ 9 模块勾选页（`T:/pages/BackupManager.tsx`）。
 enh 现状：`/api/backup/export` 保留并强化（`data.export` + 审计，`E/…/backup.js:76`）；restore 裁定移除（404，`E/…/backup.js:11-18`）。
 设计要求（PG 版）：导入到暂存 schema → 外键/枚举/必填校验 → 差异预览 → 管理员确认提交 → 失败整体回滚；全程审计；权限 `SUPER_ADMIN`；不得沿用逐表 JSON 覆盖方案。前端恢复 BackupManager 页（勾选/进度/历史），恢复入口按新流程重做。
@@ -126,3 +126,16 @@ enh 现状：`/api/backup/export` 保留并强化（`data.export` + 审计，`E/
 - ✅ 复核发现：模板复制、汇报删除、任务删除（PhaseTaskPanel）、引物删除/导入的前端入口**早已存在**，此前被后端 403 挡住——后端解冻后自动生效，仅需权限门控补齐。
 - ⚠️ 授权提示：新解冻码默认只有 SUPER_ADMIN 持有（未自动授予任何角色）；ADMIN/MANAGER 需要时由 SUPER_ADMIN 在 Roles 页授予。
 - 验收门：`node --check` 全过、`tsc -b` 零错误；rbac 单测需 DB 环境，待部署/演练时跑（T1c 已按 98 更新）。
+
+## K. 批次三进度（2026-09-10）
+
+- ✅ 后端新增 `kernel/backupRestore.js`：27 张可恢复表的**依赖序注册表**（外键 / 唯一键 / append-only 元数据）+ `validatePayload()`（只读校验：结构、主键、备份内重复、跨表外键可解析性（payload ∪ DB）、唯一键占用、replace 依赖提示）+ `applyRestore()`（单事务；merge=主键 upsert，replace=逆序清空后写入；Prisma 事务 timeout 180s；失败整体回滚）。
+- ✅ 端点（`routes/backup.js`，均仅 SUPER_ADMIN）：
+  - `GET /api/backup/restore/tables` — 可恢复表清单
+  - `POST /api/backup/restore/preview` — 只读校验 + 逐表差异（新增/覆盖/错误/警告），审计 action=read.sensitive
+  - `POST /api/backup/restore` — 应用恢复（replace 需 `confirmReplace=true`），成功审计 action=restore（含逐表统计与耗时），失败/被拦截也审计
+- ✅ 前端：`api/endpoints/backup.ts`（导出 blob / tables / preview / restore）；`pages/BackupManager.tsx`（模块勾选导出、文件解析概要、merge/replace 模式选择、replace 二次确认、逐表差异表、结果摘要）；`App.tsx` 注册 `/backup`（RoleGuard=DATA_EXPORT）；`menu.ts` 系统组新增「数据备份与恢复」。
+- 架构说明（与原始设计的偏差，需知悉）：**未建平行 staging schema**（27 表 DDL 双写易漂移），改为「只读预校验（等价暂存校验）→ 单事务应用」；若后续需要物理暂存，可升级为临时库导入演练再合并。
+- 权限：仅 SUPER_ADMIN（复用 data.export 门控，ADMIN 被 ADMIN_EXCLUDED 排除）；运维级整库恢复仍走 pg_dump/pg_restore。
+- 待验：无 DB 环境，`preview/apply` 的端到端行为需在演练环境实跑（含一次 replace 回滚演练）。
+- 验收门：`node --check` 全过、`tsc -b` 零错误。

@@ -31,6 +31,7 @@ import ChangePassword from './pages/ChangePassword';
 import AuditLogs from './pages/AuditLogs';
 import SystemLogs from './pages/SystemLogs';
 import Roles from './pages/Roles';
+import BackupManager from './pages/BackupManager';
 
 /**
  * 路由表
@@ -38,7 +39,8 @@ import Roles from './pages/Roles';
  * 约定：
  *   - /login 公开；其余全部受 AuthGuard 保护（默认拒绝，不逐个页面加守卫）
  *   - 需要权限的页面在路由层用 RoleGuard 声明，无权限 → /403（不跳登录）
- *   - 备份恢复入口已下线（应用层 restore 已移除，备份改由运维 pg_dump 负责）
+ *   - 备份恢复入口（/backup，批次三 v2）：仅 SUPER_ADMIN（data.export 门控），
+ *     恢复走「只读校验 → 单事务应用」；整库恢复仍由运维 pg_dump/pg_restore 负责
  */
 function AppRoutes() {
   return (
@@ -106,6 +108,15 @@ function AppRoutes() {
         <Route path="reagent-formula/calculator" element={<PrepCalculator />} />
 
         <Route path="tasks" element={<Tasks />} />
+
+        <Route
+          path="backup"
+          element={
+            <RoleGuard perm={PERMS.DATA_EXPORT}>
+              <BackupManager />
+            </RoleGuard>
+          }
+        />
 
         <Route
           path="users"
