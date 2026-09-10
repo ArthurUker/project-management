@@ -115,7 +115,7 @@ function pickFields(raw, allowed) {
   return out;
 }
 
-async function ensureDevice(auth, deviceId, label, platform) {
+async function upsertSyncDevice(auth, deviceId, label, platform) {
   return prisma.syncDevice.upsert({
     where: { id: deviceId },
     update: { label: label ?? undefined, platform: platform ?? undefined },
@@ -197,7 +197,7 @@ sync.get('/init', async (c) => {
 
   const serverTime = new Date().toISOString();
   if (deviceId) {
-    await ensureDevice(auth, deviceId, c.req.query('deviceLabel'), c.req.query('platform'));
+    await upsertSyncDevice(auth, deviceId, c.req.query('deviceLabel'), c.req.query('platform'));
     await prisma.syncDevice.update({ where: { id: deviceId }, data: { lastSyncAt: new Date() } });
   }
 
@@ -224,7 +224,7 @@ sync.post('/push', async (c) => {
   const changes = Array.isArray(body?.changes) ? body.changes : [];
   if (changes.length > 500) throw badRequest('VALIDATION_ERROR', '单批最多 500 条变更');
 
-  await ensureDevice(auth, deviceId, body?.deviceLabel, body?.platform);
+  await upsertSyncDevice(auth, deviceId, body?.deviceLabel, body?.platform);
 
   if (changes.length === 0) {
     await prisma.syncDevice.update({ where: { id: deviceId }, data: { lastPushAt: new Date() } });
@@ -379,7 +379,7 @@ sync.post('/device', async (c) => {
   const body = await c.req.json().catch(() => null);
   const deviceId = String(body?.deviceId || '').slice(0, 64);
   if (!deviceId) throw badRequest('VALIDATION_ERROR', 'deviceId 必填');
-  const device = await ensureDevice(auth, deviceId, body?.label, body?.platform);
+  const device = await upsertSyncDevice(auth, deviceId, body?.label, body?.platform);
   return c.json({ id: device.id, label: device.label, platform: device.platform });
 });
 

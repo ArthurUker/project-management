@@ -450,10 +450,10 @@ contract_check_sql() {
   sql_chk "reagents.export 存在（P0 唯一试剂导出出口）" \
     "SELECT count(*) FROM permissions WHERE code='reagents.export';" "1"
 
-  # ── 命名空间：Permission.code = resource.action（不得含 elevated / override）──
+  # ── 命名空间：Permission.code = resource.action（允许多段，如 docs.categories.manage / system.logs.view）──
   # M-1 v1.0：SUPER_ADMIN 项目 override 属 BE 行为，不进 permissions.code
   sql_chk "permissions.code 符合 resource.action 命名空间" \
-    "SELECT count(*) FROM permissions WHERE code !~ '^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$';" "0"
+    "SELECT count(*) FROM permissions WHERE code !~ '^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$';" "0"
   sql_chk "permissions.code 无 elevated / override（属 BE 行为）" \
     "SELECT count(*) FROM permissions WHERE code LIKE '%elevated%' OR code LIKE '%override%';" "0"
 

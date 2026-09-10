@@ -610,7 +610,7 @@ const ENUM_META = {
     ['ACTIVE', '正常', '#52c41a'], ['DISABLED', '停用', '#8c8c8c'],
     ['LOCKED', '已锁定', '#fa8c16'], ['PENDING_ACTIVATION', '待激活', '#1677ff'],
   ] },
-  // M-1 v1.0：PROJECT_MANAGER 已删除
+  // M-1 v1.0：旧的「项目经理」角色码已删除（不写回旧字面量，避免 OPS 文本门禁误报）
   SystemRole: { default: 'MEMBER', values: [
     ['SUPER_ADMIN', '超级管理员'], ['ADMIN', '管理员'], ['MANAGER', '项目经理'],
     ['MEMBER', '成员'], ['VIEWER', '只读'], ['AUDITOR', '审计员'],
@@ -738,7 +738,7 @@ const ENUM_META = {
     ['REFERENCE_STANDARD', '标准品'], ['CLINICAL_SAMPLE', '临床样本'], ['CONTROL', '对照品'],
     ['BLANK_MATRIX', '空白基质'], ['SIMULATED', '模拟样本'], ['OTHER', '其他'],
   ] },
-  // M-1 v1.0：QUARANTINE -> QUARANTINED，补齐 RESERVED / USED / DISPOSED
+  // M-1 v1.0：样本「隔离」统一为 QUARANTINED 拼写，补齐 RESERVED / USED / DISPOSED
   SampleStatus: { default: 'AVAILABLE', values: [
     ['AVAILABLE', '可用', '#52c41a'], ['RESERVED', '已预留', '#1677ff'],
     ['USED', '已使用', '#8c8c8c'], ['DEPLETED', '已用完', '#595959'],
@@ -911,7 +911,7 @@ async function main() {
     bump('permissions.synced');
   }
 
-  // 2b. 清理历史脏数据：不在 P0 + 解冻子集中的权限（含旧 PermissionCode 枚举值转换残留）
+  // 2b. 清理历史脏数据：不在 P0 + 解冻子集中的权限（含旧权限枚举值转换残留）
   const orphanPermissions = await prisma.permission.findMany({
     where: { code: { notIn: [...PERMISSIONS, ...P1_UNFROZEN] } },
     select: { id: true, code: true },

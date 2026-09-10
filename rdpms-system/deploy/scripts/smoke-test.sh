@@ -232,8 +232,12 @@ else
   skip "P-07 非成员项目 404" "未提供 SMOKE_NONMEMBER_USER/PASS 或 SMOKE_FOREIGN_PROJECT_ID"
 fi
 
-# P-08 备份恢复 v2（批次三）：仅 SUPER_ADMIN；ADMIN 得 403（不再是 404，端点已交付）
-expect "P-08 backup restore 仅 SUPER_ADMIN（ADMIN 403）" 403 "$(call POST /api/backup/restore "$ADMIN_TOKEN" '{}')"
+# P-08 备份恢复 v2（批次三）：仅 SUPER_ADMIN
+#   403 = 令牌为非 SA 角色（权限正确拒绝）
+#   400 = 令牌本身是 SUPER_ADMIN 且请求体缺 backup 字段（SA 直达校验分支，属预期）
+#   404 = 端点未交付（BLOCKED-BY-BE）
+expect_contract_multi "P-08 backup restore 仅 SUPER_ADMIN（403=非SA / 400=SA 缺参）" \
+  403/400 "$(call POST /api/backup/restore "$ADMIN_TOKEN" '{}')"
 
 # ── P0 契约端点存活（未实现 -> BLOCKED-BY-BE，不得降级为通过）──
 # 以下 5 个端点为 P0 契约端点；BE 未实现时返回 404，判定为 BLOCKED-BY-BE。

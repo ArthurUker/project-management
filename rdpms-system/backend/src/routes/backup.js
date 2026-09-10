@@ -10,7 +10,7 @@ import { validatePayload, applyRestore, RESTORE_TABLES } from '../kernel/backupR
  * /api/backup —— 数据导出 + 应用层恢复 v2（批次三）。
  *
  * 变更说明：
- *   1. 旧 restore（SQLite 逐表 deleteMany+createMany、PRAGMA foreign_keys OFF）已废弃；
+ *   1. 旧 restore（SQLite 逐表 deleteMany+createMany + 专有外键开关）已废弃；
  *   2. v2 恢复流程：POST /restore/preview（只读校验 + 逐表差异）→ POST /restore（单事务应用，
  *      失败整体回滚），仅 SUPER_ADMIN，全程审计；
  *   3. 运维级整库恢复仍以 pg_dump / pg_restore 为准，本功能面向"模块级数据回灌"。

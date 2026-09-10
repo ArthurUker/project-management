@@ -9,7 +9,7 @@ import { prisma } from '../index.js';
  *   3. 两种模式：
  *      - merge（默认）：按主键 upsert，不触碰备份未涉及的既有行；
  *      - replace：对备份覆盖的表先按逆依赖序清空再写入（append-only 表跳过删除）；
- *   4. 不做外键关闭（PG 无 PRAGMA）；顺序即依赖序，约束由数据库兜底。
+ *   4. 不做外键开关切换（PostgreSQL 由约束 + 依赖序保证）；顺序即依赖序，约束由数据库兜底。
  *
  * 已知边界：
  *   - 导出未覆盖的表（projectPhases / detectionTargets / files 等）中的外键只能校验 DB 现存行；
