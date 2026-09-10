@@ -93,6 +93,11 @@ export function getState(): SyncState {
   return { ...state };
 }
 
+/** 生成幂等键（clientMutationId）；同一变更重放不会重复写库 */
+export function newClientMutationId(): string {
+  return typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `cm-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 export function getDeviceId(): string {
   let id = safeStorage.get(DEVICE_KEY);
   if (!id) {

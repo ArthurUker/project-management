@@ -2,6 +2,8 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth } from '../auth/useAuth';
 import { useHasPerm, PERMS } from '../auth/permissions';
 import { taskAPI, projectAPI } from '@/api';
+import { useSync } from '../offline/SyncProvider';
+import { newClientMutationId } from '../offline/engine';
 import type { Project } from '../types/project';
 import DocReference from './DocReference';
 
@@ -434,6 +436,8 @@ interface KanbanBoardProps {
 export default function KanbanBoard({ projectId }: KanbanBoardProps) {
 
   const canUpdateStatus = useHasPerm(PERMS.TASKS_UPDATE_STATUS);
+  // 离线同步 v2：离线时状态变更进入本地变更日志，联网后自动上行
+  const { online, enqueueChange } = useSync();
   const canCreate = useHasPerm(PERMS.TASKS_CREATE);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -514,7 +518,19 @@ export default function KanbanBoard({ projectId }: KanbanBoardProps) {
     setTasks((list) => list.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t)));
 
     try {
-      await taskAPI.updateStatus(task.id, newStatus);
+      if (!online) {
+        // 离线路径：写入 outbox（幂等键），联网后由同步引擎上行
+        await enqueueChange({
+          clientMutationId: newClientMutationId(),
+          entity: 'tasks',
+          op: 'upsert',
+          id: task.id,
+          data: { status: newStatus },
+          baseUpdatedAt: (task as { updatedAt?: string }).updatedAt,
+        });
+      } else {
+        await taskAPI.updateStatus(task.id, newStatus);
+      }
     } catch (err) {
       setTasks(prev);
       console.error('Failed to update task:', err);

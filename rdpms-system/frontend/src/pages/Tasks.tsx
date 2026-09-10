@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useAuth } from '../auth/useAuth';
 import { useHasPerm, PERMS } from '../auth/permissions';
+import { useSync } from '../offline/SyncProvider';
+import { newClientMutationId } from '../offline/engine';
 import { taskAPI, projectAPI } from '@/api';
 import DocReference from '../components/DocReference';
 
@@ -397,6 +399,8 @@ export default function Tasks() {
   const { user } = useAuth();
   const canCreate = useHasPerm(PERMS.TASKS_CREATE);
   const canUpdateStatus = useHasPerm(PERMS.TASKS_UPDATE_STATUS);
+  // 离线同步 v2：离线时状态变更进入本地变更日志
+  const { online, enqueueChange } = useSync();
   const [projects, setProjects] = useState<any[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -477,7 +481,18 @@ export default function Tasks() {
     const prev = tasks;
     setTasks((list) => list.map((t) => (t.id === task.id ? { ...t, status } : t)));
     try {
-      await taskAPI.updateStatus(task.id, status);
+      if (!online) {
+        await enqueueChange({
+          clientMutationId: newClientMutationId(),
+          entity: 'tasks',
+          op: 'upsert',
+          id: task.id,
+          data: { status },
+          baseUpdatedAt: (task as { updatedAt?: string }).updatedAt,
+        });
+      } else {
+        await taskAPI.updateStatus(task.id, status);
+      }
     } catch {
       setTasks(prev);
       await loadTasks();
