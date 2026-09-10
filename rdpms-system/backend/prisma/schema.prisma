@@ -1472,7 +1472,9 @@ model AuditLog {
   // M-1 §4：动词/事件优先的 19 项取值（create / login.failed / status.change ...）
   // 禁止恢复 Prisma enum AuditAction；展示标签走 EnumMeta(enumName='AuditAction')。
   action        String      @map("action") @db.VarChar(64)
-  entityType    EntityType? @map("entity_type")
+  // 与 action 同策略：审计判别字段用字符串，禁止 enum 约束（否则新增实体类型需改 enum 且事务内不可用）；
+  // 展示标签走 EnumMeta(enumName='EntityType')。注意：Attachment.entityType 仍为 EntityType 枚举（值域受控）。
+  entityType    String?     @map("entity_type") @db.VarChar(64)
   entityId      String?     @map("entity_id")
   entityLabel   String?     @map("entity_label") @db.VarChar(255) // 快照，如项目名
   before        Json?       @map("before") @db.JsonB

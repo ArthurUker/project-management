@@ -99,6 +99,7 @@ const SYNC_ENTITIES = {
     scope: 'byProject',
     createAllowed: true,
     tombstoneField: 'leftAt', // 软退出：leftAt 非空即视为已移除
+    timestampField: 'joinedAt', // 该表无 updatedAt（实机部署发现）
     touchUpdatedBy: false,
     fields: ['role'],
     serverOwned: [],
@@ -176,12 +177,13 @@ sync.get('/init', async (c) => {
     const aliveFilter = def.tombstoneField === 'leftAt'
       ? { leftAt: null }
       : { deletedAt: null };
+    const tsField = def.timestampField ?? 'updatedAt';
 
     // eslint-disable-next-line no-await-in-loop
     const upserts = await prisma[def.model].findMany({
-      where: { ...scopeWhere, ...aliveFilter, updatedAt: { gt: since } },
+      where: { ...scopeWhere, ...aliveFilter, [tsField]: { gt: since } },
       ...(def.include ? { include: def.include } : {}),
-      orderBy: { updatedAt: 'asc' },
+      orderBy: { [tsField]: 'asc' },
       take: 3000,
     });
 
@@ -284,13 +286,14 @@ sync.post('/push', async (c) => {
         // eslint-disable-next-line no-await-in-loop
         await assertProjectWrite(auth, projectId, def.requireCapability ?? 'write');
 
-        // 冲突检测：客户端基线早于服务端 updatedAt
+        const tsField = def.timestampField ?? 'updatedAt';
+        // 冲突检测：客户端基线早于服务端时间戳
         if (op !== 'delete' && existing && raw?.baseUpdatedAt
-          && new Date(existing.updatedAt) > new Date(raw.baseUpdatedAt)) {
+          && new Date(existing[tsField]) > new Date(raw.baseUpdatedAt)) {
           outcome = {
             status: 'conflict',
             reason: '服务端已有更新',
-            server: { id: existing.id, updatedAt: existing.updatedAt, ...pickFields(existing, def.fields) },
+            server: { id: existing.id, updatedAt: existing[tsField], ...pickFields(existing, def.fields) },
           };
         } else if (op === 'delete') {
           const patch = def.tombstoneField === 'leftAt'
@@ -304,7 +307,7 @@ sync.post('/push', async (c) => {
               where: { id: entityId },
               data: { ...patch, ...(def.touchUpdatedBy ? { updatedById: auth.userId } : {}) },
             });
-            outcome = { status: 'applied', action: 'deleted', serverUpdatedAt: updated.updatedAt };
+            outcome = { status: 'applied', action: 'deleted', serverUpdatedAt: updated[tsField] };
           }
         } else if (!existing && !def.createAllowed) {
           outcome = { status: 'rejected', reason: `${entity} 不支持离线新建` };
@@ -319,7 +322,7 @@ sync.post('/push', async (c) => {
               where: { id: entityId },
               data: { ...data, ...(def.touchUpdatedBy ? { updatedById: auth.userId } : {}) },
             });
-            outcome = { status: 'applied', action: 'updated', serverUpdatedAt: updated.updatedAt };
+            outcome = { status: 'applied', action: 'updated', serverUpdatedAt: updated[tsField] };
           } else {
             const createData = { ...data, id: entityId };
             if (entity === 'reports') createData.authorId = auth.userId;
@@ -328,7 +331,7 @@ sync.post('/push', async (c) => {
             if (def.scope === 'byProject' && !createData.projectId) createData.projectId = projectId;
             // eslint-disable-next-line no-await-in-loop
             const created = await prisma[def.model].create({ data: createData });
-            outcome = { status: 'applied', action: 'created', serverUpdatedAt: created.updatedAt };
+            outcome = { status: 'applied', action: 'created', serverUpdatedAt: created[tsField] };
           }
         }
       }
