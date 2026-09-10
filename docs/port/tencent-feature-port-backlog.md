@@ -272,3 +272,22 @@ enh 现状：`/api/backup/export` 保留并强化（`data.export` + 审计，`E/
 
 - 备份范围 27 表，**未覆盖**：`projectPhases`（阶段结构，tasks.phaseId 依赖它）、`regulatoryDocuments`（法规文件）、`fileObjects`/`attachments`（文件与附件）、`userRoles`（多角色分配）、`taskDocRefs`（任务-文档引用）、`detectionTargets` 等。其中文件类需「JSON 元数据 + 二进制存储」整体方案（仅备份元数据会产出引用缺失文件的假备份）；阶段/多角色/任务-文档引用属纯结构化数据，可直接补入注册表（含依赖序与 refs）。
 - `projectMembers` 的同步新增依赖客户端提供 `userId`（已在白名单放开，权限仍由 `manage_members` 约束）。
+
+## R. t18/t19 收口（2026-09-10，提交 `8a5ef97`）
+
+**t18 法规文档写路径实测（生产）：9 项全通过**，过程中发现并修复一个**必现 500**：
+
+- 症状：`POST /api/regulatory-documents` 与 `POST /import` **恒 500**；前端法规文档页的新建/编辑在生产必然失败，适用性筛选也永不命中。
+- 根因（与原料/项目类型同族，均属"枚举未校验"）：
+  1. `category` 是 27 值**非空枚举**（`@default(OTHER)`），路由却传 `body.category || null` → `Argument category must not be null`；
+  2. `applicability` 路由传小写 `conditional`，而枚举为大写 `CONDITIONAL`；`priorityLevel` 同族（`P2` 合法但空值会 500）；
+  3. 前端 `category` 是**自由文本输入框**（占位"如：医疗器械/IVD"）→ 任意中文都进不了枚举；`applicability` 前端类型为小写联合。
+- 修法（沿用 `LEGACY_*_MAP + normalize` 范式）：
+  - 后端新增 `normalizeCategory / normalizeApplicability / normalizePriority`（白名单 + 常见中文别名 + 小写别名；非法或空值**不写该字段**，交由 `@default` 兜底），`create` / `PUT` / `import` 三条写路径统一接入，并补 `createdById`/`updatedById`；
+  - 前端新增 `constants/regulatoryEnums.ts`（27 分类 + 适用性 + 优先级：枚举值 + 中文标签 + 归一化函数），分类改枚举下拉、适用性筛选与展示改大写枚举值、列表展示分类标签，`types/regulatory.ts` 适用性联合类型改大写。
+- 实测覆盖：上传 → 新建 → `PUT` 关联 `originalFileId` → 详情带出 `fileName` → 原文下载 → 替换 → `originalFileId=null` 解除 → `POST /:id/original-file` base64 直传 → `POST /import` → 软删清理（全程 200/201，测试数据已清理）。
+- 附注：原文下载的正确路径是 **`GET /api/regulatory-documents/:id/original-file`**（不是 `/original`）。
+
+**t19 login 纵深防御（已上线）**：`users` 查询增加 `deletedAt: null`，软删用户按"不存在"处理（401 `BAD_CREDENTIALS` + 审计 `user_not_found`），不再依赖 `status` 是否同步置为 `DISABLED`。
+
+**验证**：t18 脚本 9/9；`tsc -b` 与生产构建通过；生产冒烟 22 PASS / 0 FAIL；release 已对齐并重建前端。
