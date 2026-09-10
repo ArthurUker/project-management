@@ -93,6 +93,12 @@ export function getState(): SyncState {
   return { ...state };
 }
 
+/** 读取本地镜像（离线只读回退：列表页在断网/请求失败时用） */
+export async function readCachedRecords(entity: string): Promise<RecordRow[]> {
+  const all = await idb.recordsAll();
+  return all.filter((r) => r.entity === entity);
+}
+
 /** 生成幂等键（clientMutationId）；同一变更重放不会重复写库 */
 export function newClientMutationId(): string {
   return typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `cm-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;

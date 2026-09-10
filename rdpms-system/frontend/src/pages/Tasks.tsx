@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useAuth } from '../auth/useAuth';
 import { useHasPerm, PERMS } from '../auth/permissions';
 import { useSync } from '../offline/SyncProvider';
-import { newClientMutationId } from '../offline/engine';
+import { newClientMutationId, readCachedRecords } from '../offline/engine';
 import { taskAPI, projectAPI } from '@/api';
 import DocReference from '../components/DocReference';
 
@@ -430,7 +430,13 @@ export default function Tasks() {
       const res = await taskAPI.list({ pageSize: 500 });
       setTasks(res.items ?? []);
     } catch {
-      setTasks([]);
+      // 离线/请求失败：回退到同步引擎维护的本地镜像，保证只读可用
+      try {
+        const cached = await readCachedRecords('tasks');
+        setTasks(cached.map((r) => r.data as unknown as Task).filter(Boolean));
+      } catch {
+        setTasks([]);
+      }
     } finally {
       setLoading(false);
     }

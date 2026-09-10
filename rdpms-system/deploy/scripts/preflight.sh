@@ -401,8 +401,9 @@ fi
 #   sudo env RUN_SQL_CONTRACT=1 DB_CONTRACT=rdpms_staging bash /usr/local/bin/rdpms-preflight.sh
 DB_CONTRACT="${DB_CONTRACT:-rdpms}"
 # ── M-1 v1.0 冻结值（OPS 只做校验，不定义；变更须走 M-1 v1.1 申请）──
-# P0 = 90 / P1 = 30；首版 seed 只入 P0，P1 不进库
-PERMISSIONS_EXPECTED="${PERMISSIONS_EXPECTED:-90}"
+# P0 = 90 / P1 = 30；批次二解冻 8 码（P1_UNFROZEN，见 kernel/constants.js）随 P0 一起入 permissions 表
+# → 期望入库总数 = 98；未解冻 P1 仍不得入库
+PERMISSIONS_EXPECTED="${PERMISSIONS_EXPECTED:-98}"
 # 角色权限数：SUPER_ADMIN 90 / ADMIN 80（90 - 10 排除项）/ AUDITOR 3 / MANAGER 66 / MEMBER 31 / VIEWER 19
 ADMIN_EXPECTED="${ADMIN_EXPECTED:-80}"
 MANAGER_EXPECTED="${MANAGER_EXPECTED:-66}"
@@ -410,8 +411,11 @@ MEMBER_EXPECTED="${MEMBER_EXPECTED:-31}"
 VIEWER_EXPECTED="${VIEWER_EXPECTED:-19}"
 ROLE_PERMISSIONS_EXPECTED="${ROLE_PERMISSIONS_EXPECTED:-289}"
 SUPER_ADMIN_EXPECTED="${SUPER_ADMIN_EXPECTED:-90}"
-# P1 后置项：首版 seed 不得入库
-P1_CODES="reagent_materials.export,projects.delete,tasks.delete,files.view,files.restore"
+# P1 未解冻项：不得入库（批次二解冻的 8 码已出列：projects.delete / tasks.delete / reports.delete /
+# docs.delete / project_templates.copy / primers.import / primers.delete / reagent_materials.delete）
+P1_CODES="reagent_materials.export,files.view,files.restore"
+# 解冻子集：必须入库（与 kernel/constants.js P1_UNFROZEN 逐字一致）
+P1_UNFROZEN_CODES="projects.delete,tasks.delete,reports.delete,docs.delete,project_templates.copy,primers.import,primers.delete,reagent_materials.delete"
 
 sql_chk() {
   local name="$1" sql="$2" want="$3" got
@@ -434,9 +438,13 @@ contract_check_sql() {
   sql_chk "permissions 总数 = ${PERMISSIONS_EXPECTED}" \
     "SELECT count(*) FROM permissions;" "${PERMISSIONS_EXPECTED}"
 
-  # ── P1 后置项不得入库 ──
-  sql_chk "P1 权限不在库（${P1_CODES}）" \
-    "SELECT count(*) FROM permissions WHERE code IN ('reagent_materials.export','projects.delete','tasks.delete','files.view','files.restore');" "0"
+  # ── P1 未解冻项不得入库 ──
+  sql_chk "P1 未解冻权限不在库（${P1_CODES}）" \
+    "SELECT count(*) FROM permissions WHERE code IN ('reagent_materials.export','files.view','files.restore');" "0"
+
+  # ── P1 解冻子集必须入库（批次二，8 码）──
+  sql_chk "P1 解冻子集在库（8 码）" \
+    "SELECT count(*) FROM permissions WHERE code IN ('projects.delete','tasks.delete','reports.delete','docs.delete','project_templates.copy','primers.import','primers.delete','reagent_materials.delete');" "8"
 
   # ── P0 必须项：reagents.export 为试剂聚合导出唯一出口（P0）──
   sql_chk "reagents.export 存在（P0 唯一试剂导出出口）" \

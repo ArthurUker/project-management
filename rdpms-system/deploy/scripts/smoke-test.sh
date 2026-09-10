@@ -232,7 +232,8 @@ else
   skip "P-07 非成员项目 404" "未提供 SMOKE_NONMEMBER_USER/PASS 或 SMOKE_FOREIGN_PROJECT_ID"
 fi
 
-expect "P-08 backup restore 404" 404 "$(call POST /api/backup/restore "$ADMIN_TOKEN" '{}')"
+# P-08 备份恢复 v2（批次三）：仅 SUPER_ADMIN；ADMIN 得 403（不再是 404，端点已交付）
+expect "P-08 backup restore 仅 SUPER_ADMIN（ADMIN 403）" 403 "$(call POST /api/backup/restore "$ADMIN_TOKEN" '{}')"
 
 # ── P0 契约端点存活（未实现 -> BLOCKED-BY-BE，不得降级为通过）──
 # 以下 5 个端点为 P0 契约端点；BE 未实现时返回 404，判定为 BLOCKED-BY-BE。
@@ -270,8 +271,8 @@ expect "P-10 dict 匿名 401" 401 "$(call GET /api/dict)"
 expect_contract_multi "P-11 backup export（data.export；ADMIN 403 属 RBAC 正确）" \
   200/403 "$(call GET /api/backup/export "$ADMIN_TOKEN")"
 
-# P-12 /api/sync：登录后可达（404/200 均不阻断；权限由 perm-matrix 校验）
-expect_contract_multi "P-12 sync 存活" 200/404 "$(call GET /api/sync "$ADMIN_TOKEN")"
+# P-12 /api/sync：批次四离线同步 v2（登录后可达；404 表示端点未交付 → BLOCKED-BY-BE）
+expect_contract "P-12 sync status 存活" 200 "$(call GET /api/sync/status "$ADMIN_TOKEN")"
 
 # P-13 只读 smoke 不得下载真实业务文件（该约束仅对 read-only profile 生效；
 #     full profile 本就会执行 F-13 下载验证，属于预期行为）
@@ -386,12 +387,12 @@ if [ "$PROFILE" = "full" ]; then
     bad "F-19b 审计日志有记录" ">0" "${AUD_TOTAL:-<empty>}"
   fi
 
-  # F-20 清理：projects.delete / tasks.delete 属 P1 后置权限（M-1），端点 403。
-  # 文件可删（files.delete），业务实体残留由测试环境定期 reset。
+  # F-20 清理：projects.delete / tasks.delete 已于批次二解冻，但默认仅 SUPER_ADMIN 持有；
+  # 本 smoke 使用 ADMIN 令牌，无权清理 → 业务数据残留走环境重置或 SA 手动清理。
   [ -n "${FID:-}" ] && call DELETE "/api/files/${FID}" "$ADMIN_TOKEN" >/dev/null || true
-  UNCOVERED+=("F-20/F-21 项目与任务测试数据残留（projects.delete/tasks.delete 为 P1，清理走环境重置）")
+  UNCOVERED+=("F-20/F-21 项目与任务测试数据残留（删除权限默认仅 SUPER_ADMIN，清理走环境重置/SA）")
   SKIP=$((SKIP+1))
-  printf '  [SKIP] F-20/F-21 业务数据清理 -- P1 删除权限未启用，需环境重置\n'
+  printf '  [SKIP] F-20/F-21 业务数据清理 -- 删除权限默认仅 SUPER_ADMIN，需环境重置或 SA 手动清理\n'
 fi
 
 # ── P-16 登出（两个 profile 共用，必须是最后一步）────────────

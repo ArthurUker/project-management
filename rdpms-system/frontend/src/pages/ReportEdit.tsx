@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { reportAPI, projectAPI } from '@/api';
 import { useAuth } from '../auth/useAuth';
+import { useSync } from '../offline/SyncProvider';
+import { newClientMutationId } from '../offline/engine';
 import ReagentDailyReport from '../components/ReagentDailyReport';
 import DocReference from '../components/DocReference';
 
@@ -185,6 +187,9 @@ export default function ReportEdit() {
     setProjectReports(updated);
   };
   
+  // 离线同步 v2：草稿可离线保存（写入本地变更日志），提交/新建需联网
+  const { online, enqueueChange } = useSync();
+
   const handleSave = async (asDraft: boolean = true) => {
     // 验证
     if (dailyTemplate === 'general' && projectReports.length === 0) {
@@ -197,6 +202,14 @@ export default function ReportEdit() {
     }
     if (!month) {
       alert('请选择月份');
+      return;
+    }
+    if (!online && !asDraft) {
+      alert('离线状态暂不支持提交审批，请先保存草稿；联网后再提交。');
+      return;
+    }
+    if (!online && (!id || id === 'new')) {
+      alert('离线状态暂不支持新建汇报，请联网后再试。');
       return;
     }
     
@@ -224,7 +237,18 @@ export default function ReportEdit() {
           reportType,
         };
         console.log('[UPDATE REPORT] id:', id, 'payload:', JSON.stringify(payload, null, 2));
-        await reportAPI.update(id as string, payload);
+        if (!online) {
+          // 离线：仅内容进变更日志；status 为服务端权威字段（提交/审阅状态不被客户端覆盖）
+          await enqueueChange({
+            clientMutationId: newClientMutationId(),
+            entity: 'reports',
+            op: 'upsert',
+            id: id as string,
+            data: { content: payload.content },
+          });
+        } else {
+          await reportAPI.update(id as string, payload);
+        }
 
       } else if (dailyTemplate === 'general') {
         // 新建模式：为每个 projectReports 分别提交（后端期望 top-level projectId）
