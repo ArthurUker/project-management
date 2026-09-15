@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { prisma } from '../index.js';
+import { prisma } from '../platform/db/client.js';
 import { authenticate, getAuth, requirePermission } from '../kernel/rbac.js';
 import { pickAllowed } from '../kernel/massAssign.js';
 import { AUDIT_ACTIONS, P0_PERMISSIONS } from '../kernel/constants.js';

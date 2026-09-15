@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { prisma } from '../index.js';
+import { prisma } from '../platform/db/client.js';
 import { authenticate, requirePermission } from '../kernel/rbac.js';
 import { parsePaging, paged } from '../kernel/http.js';
 

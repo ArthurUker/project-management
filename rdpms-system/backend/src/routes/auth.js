@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { prisma } from '../index.js';
+import { prisma } from '../platform/db/client.js';
 import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
 import {

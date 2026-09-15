@@ -1,11 +1,12 @@
 import { Hono } from 'hono';
-import { prisma } from '../index.js';
+import { prisma } from '../platform/db/client.js';
 import { authenticate as authMiddleware, requirePermission, getAuth } from '../kernel/rbac.js';
 import { pickAllowed } from '../kernel/massAssign.js';
 import { AUDIT_ACTIONS } from '../kernel/constants.js';
 import { writeAudit } from '../kernel/audit.js';
 import {
   resolveProjectAccess,
+  assertProjectCapability,
   auditElevatedIfNeeded,
   projectVisibilityFilter,
 } from '../kernel/projectAccess.js';

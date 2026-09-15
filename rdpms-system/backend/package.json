@@ -10,7 +10,18 @@
 
     "db:validate": "prisma validate",
     "db:generate": "prisma generate",
-    "test": "node --test tests/rbac.test.mjs",
+
+    "test": "npm run test:unit && npm run test:contract",
+    "test:unit": "node --test tests/unit/",
+    "test:contract": "node --test tests/contract/",
+    "test:integration": "node scripts/run-integration.mjs",
+    "test:ci": "npm run lint:undefined && npm test",
+    "test:db:check": "node scripts/test-db.mjs check",
+    "test:db:reset": "node scripts/test-db.mjs reset",
+    "test:db:drop": "node scripts/test-db.mjs drop",
+    "lint:undefined": "node scripts/check-undefined.mjs",
+    "typecheck:report": "node scripts/check-undefined.mjs --full",
+
     "db:migrate": "prisma migrate dev",
     "db:migrate:create": "prisma migrate dev --create-only",
     "db:migrate:deploy": "prisma migrate deploy",

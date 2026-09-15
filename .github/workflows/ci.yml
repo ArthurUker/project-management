@@ -1,0 +1,122 @@
+name: CI
+
+# RF01 门禁（06_重构任务与发布门禁.md）：
+#   - 后端未定义标识符检查（故意遗漏 import 必须让流水线失败）
+#   - 无数据库的单元 / 契约测试
+#   - 前端类型检查与生产构建
+# 需要数据库的 test:integration 不在本工作流内运行（无隔离库时返回 ENV_BLOCKED）。
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    name: backend（未定义标识符 + 单元 + 契约）
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rdpms-system/backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: |
+            rdpms-system/backend/package-lock.json
+            rdpms-system/frontend/package-lock.json
+
+      - name: 安装后端依赖
+        run: npm ci --no-audit --no-fund
+
+      # 未定义标识符检查依赖 TypeScript 编译器，本仓库的 tsc 位于 frontend 依赖中
+      - name: 安装前端依赖（为检查脚本提供 tsc）
+        working-directory: rdpms-system/frontend
+        run: npm ci --no-audit --no-fund
+
+      - name: 未定义标识符检查
+        run: npm run lint:undefined
+
+      - name: 单元与契约测试（不连接数据库）
+        run: npm test
+
+  integration:
+    name: backend（真实集成测试：隔离 PostgreSQL）
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rdpms-system/backend
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: rdpms-system/backend/package-lock.json
+
+      - name: 安装后端依赖
+        run: npm ci --no-audit --no-fund
+
+      - name: 创建测试角色（隔离库由脚本按守卫规则重建）
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            -c "CREATE ROLE rdpms_migrate LOGIN PASSWORD 'ci-migrate-password';"
+          psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            -c "CREATE ROLE rdpms_app LOGIN PASSWORD 'ci-app-password';"
+
+      - name: 生成隔离测试环境（仅指向 rdpms_test）
+        run: |
+          cat > ../../.env.test.local <<'EOF'
+          DATABASE_URL="postgresql://rdpms_app:ci-app-password@127.0.0.1:5432/rdpms_test?schema=public"
+          DIRECT_URL="postgresql://rdpms_migrate:ci-migrate-password@127.0.0.1:5432/rdpms_test?schema=public"
+          RDPMS_TEST_ADMIN_URL="postgresql://postgres:postgres@127.0.0.1:5432/postgres"
+          JWT_SECRET="ci-only-secret-not-for-production-use-000000"
+          SEED_SUPER_ADMIN_PASSWORD="CiSuperAdminPassword2026"
+          SEED_ADMIN_PASSWORD="CiAdminPassword2026"
+          EOF
+
+      - name: 重建隔离测试库（迁移 + 授权 + 种子）
+        run: npm run test:db:reset
+
+      - name: 真实集成测试（含 RBAC 与装配集成用例）
+        run: npm run test:integration
+
+  frontend:
+    name: frontend（类型检查 + 构建）
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rdpms-system/frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: rdpms-system/frontend/package-lock.json
+
+      - name: 安装前端依赖
+        run: npm ci --no-audit --no-fund
+
+      - name: 类型检查与生产构建
+        run: npm run build

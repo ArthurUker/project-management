@@ -8,9 +8,10 @@
  *   4. JWT 只携带 userId + systemRole（不携带权限数组，防篡改）
  */
 import jwt from 'jsonwebtoken';
-import { prisma } from '../index.js';
+import { prisma } from '../platform/db/client.js';
 import { P0_PERMISSIONS, P1_UNFROZEN } from './constants.js';
 import { unauthorized, forbidden } from './http.js';
+import { getActorResolver } from '../platform/identity/actorResolver.js';
 
 // W12：不再提供任何回退值——JWT_SECRET 必须显式配置（.env / systemd EnvironmentFile）。
 // 生产缺失时由 index.js 启动守卫拦截；开发缺失时 jwt.sign 将直接报错（fail-fast）。
@@ -46,6 +47,15 @@ export function signAccessToken(user) {
  * 认证 + 权限装载。c.set('auth', {...})。
  */
 export async function authenticate(c, next) {
+  // RF01：允许 createApp({actorResolver}) 注入可信身份（契约测试不签发 JWT、不读用户表）
+  const resolveActor = getActorResolver();
+  if (resolveActor) {
+    const actor = await resolveActor(c);
+    if (!actor) throw unauthorized('UNAUTHORIZED', '未认证');
+    c.set('auth', actor);
+    return next();
+  }
+
   const header = c.req.header('Authorization');
   if (!header || !header.startsWith('Bearer ')) {
     throw unauthorized('UNAUTHORIZED', '未认证');

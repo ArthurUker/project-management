@@ -1,4 +1,4 @@
-import { prisma } from '../index.js';
+import { prisma } from '../platform/db/client.js';
 
 /**
  * kernel/backupRestore.js —— 应用层备份恢复 v2（批次三，替换 Tencent 逐表覆盖方案）

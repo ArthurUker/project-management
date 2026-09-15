@@ -9,7 +9,7 @@ import { badRequest } from './http.js';
 
 /**
  * 取下一个业务编号。
- * @param {PrismaClient} prisma
+ * @param {import('@prisma/client').PrismaClient} prisma
  * @param {string} scope 发号器域（PROJECT / PRIMER / SAMPLE / ...）
  * @param {{ periodKey?: string, fallbackPrefix?: string, padding?: number }} opts
  * @returns {Promise<string>} 形如 SMP-2026-001

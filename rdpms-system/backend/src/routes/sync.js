@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import crypto from 'node:crypto';
-import { prisma } from '../index.js';
+import { prisma } from '../platform/db/client.js';
 import { authenticate as authMiddleware, getAuth } from '../kernel/rbac.js';
 import { AUDIT_ACTIONS, PROJECT_CAPABILITIES } from '../kernel/constants.js';
 import { writeAudit } from '../kernel/audit.js';
