@@ -267,6 +267,33 @@ test('RF04-U13 同步里的跨项目 phaseId 被拒绝', async () => {
   assert.match(String(body.results[0].reason), /phaseId/);
 });
 
+test('RF04-U15 新建日报走持久幂等：同 key 同 payload 重试不重复创建', async () => {
+  const db = createStubDb({ reports: [] });
+  const app = createApp({
+    db,
+    actorResolver: async () => createStubActor({ ...AUTHOR, permissions: ['reports.create'] }),
+  });
+  const body = {
+    projectId: 'p1',
+    reportType: 'DAILY',
+    periodKey: '2026-11-01',
+    content: { n: 1 },
+    clientMutationId: 'rf04-post-key-1',
+  };
+
+  const first = await jsonRequest(app, '/api/reports', { body });
+  assert.equal(first.status, 201);
+
+  const replay = await jsonRequest(app, '/api/reports', { body });
+  assert.equal(replay.status, 201, '重试必须回放首次结果');
+  assert.equal(replay.headers.get('idempotent-replay'), 'true');
+  assert.deepEqual(await replay.json(), await first.clone().json());
+
+  assert.equal(db.state.reports.length, 1, '不得重复创建');
+  assert.equal(db.state.mutationReceipts.length, 1);
+  assert.equal(db.state.auditLogs.length, 1, '重放不得重复写审计');
+});
+
 test('RF04-U14 被移出项目后同步更新被拒绝', async () => {
   const db = createStubDb({ tasks: [task()], membership: { role: 'MEMBER', leftAt: new Date() } });
   const app = createApp({

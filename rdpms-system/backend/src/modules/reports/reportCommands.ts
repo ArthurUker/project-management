@@ -76,3 +76,74 @@ export function buildReportDraftPatch(
 
 /** 导出 HttpError 供调用方做类型收窄（避免各处重复 import） */
 export { HttpError };
+
+/** 汇报写入所需的最小数据库接口（Prisma 客户端或事务客户端） */
+export interface ReportWriteDb {
+  report: {
+    update(args: {
+      where: { id: string };
+      data: Record<string, unknown>;
+      include?: unknown;
+    }): Promise<Record<string, unknown>>;
+  };
+  reportVersion?: {
+    findFirst(args: { where: Record<string, unknown>; orderBy?: Record<string, unknown> }): Promise<{ version: number } | null>;
+    create(args: { data: Record<string, unknown> }): Promise<unknown>;
+  };
+}
+
+/**
+ * 保存草稿（唯一写实现）：普通 API 与同步上行共用。
+ * 调用方必须已完成鉴权、资源授权与状态判定（assertReportWritable / assertReportNotLocked）。
+ */
+export async function saveReportDraft(
+  db: ReportWriteDb,
+  { actor, reportId, patch }: { actor: { userId: string }; reportId: string; patch: ReportDraftPatch },
+): Promise<Record<string, unknown>> {
+  return db.report.update({
+    where: { id: reportId },
+    data: { ...patch, updatedById: actor.userId },
+  });
+}
+
+export interface SubmitReportResult {
+  version: number;
+  submittedAt: Date;
+}
+
+/**
+ * 提交（唯一写实现）：写版本快照 + 状态。调用方负责鉴权、作者校验与幂等回执。
+ * 事务由调用方提供（HTTP 用 withIdempotency 的事务，同步不需要提交命令）。
+ */
+export async function submitReport(
+  db: ReportWriteDb,
+  { actor, report, snapshot }: {
+    actor: { userId: string };
+    report: { id: string; content: unknown; reportType?: string | null; periodKey?: string | null };
+    snapshot?: unknown;
+  },
+): Promise<SubmitReportResult> {
+  if (!db.reportVersion) {
+    throw new Error('[reportCommands] submitReport 需要提供 reportVersion 客户端');
+  }
+  const lastVersion = await db.reportVersion.findFirst({
+    where: { reportId: report.id },
+    orderBy: { version: 'desc' },
+  });
+  const version = (lastVersion?.version ?? 0) + 1;
+  const submittedAt = new Date();
+
+  await db.reportVersion.create({
+    data: {
+      reportId: report.id,
+      version,
+      content: snapshot ?? report.content,
+      createdById: actor.userId,
+    },
+  });
+  await db.report.update({
+    where: { id: report.id },
+    data: { status: 'SUBMITTED', submittedAt, updatedById: actor.userId },
+  });
+  return { version, submittedAt };
+}

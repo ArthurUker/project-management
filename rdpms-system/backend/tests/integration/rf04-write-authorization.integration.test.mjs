@@ -151,6 +151,52 @@ test('RF04-I4 跨项目 phaseId 在普通 API 与同步入口都被拒绝', asyn
   assert.equal(row.phaseId, IT.phase, '阶段归属不得被改写');
 });
 
+test('RF04-I6 新建日报的持久幂等：同 key 同 payload 重试只落一条', async () => {
+  const periodKey = '2026-11-02';
+  const app = buildApp(['reports.create']);
+  const payload = {
+    projectId: IT.project,
+    reportType: 'DAILY',
+    periodKey,
+    content: { n: 1 },
+    clientMutationId: 'it-post-idem-1',
+  };
+
+  try {
+    const first = await app.request('/api/reports', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    assert.equal(first.status, 201);
+
+    const replay = await app.request('/api/reports', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    assert.equal(replay.status, 201);
+    assert.equal(replay.headers.get('idempotent-replay'), 'true');
+    assert.deepEqual(await replay.json(), await first.clone().json());
+
+    const rows = await prisma.report.findMany({
+      where: { projectId: IT.project, authorId: AUTHOR_ID, reportType: 'DAILY', periodKey },
+    });
+    assert.equal(rows.length, 1, '重试不得重复创建');
+  } finally {
+    const rows = await prisma.report.findMany({
+      where: { projectId: IT.project, authorId: AUTHOR_ID, periodKey },
+      select: { id: true },
+    });
+    const ids = rows.map((r) => r.id);
+    if (ids.length) {
+      await prisma.reportVersion.deleteMany({ where: { reportId: { in: ids } } });
+      await prisma.mutationReceipt.deleteMany({ where: { resourceScope: { in: ids.map((id) => `report:${id}`) } } });
+      await prisma.report.deleteMany({ where: { id: { in: ids } } });
+    }
+  }
+});
+
 test('RF04-I5 同项目内的 phaseId 正常放行（回归）', async () => {
   const app = buildApp(['tasks.update']);
   const res = await app.request('/api/sync/push', {

@@ -19,7 +19,7 @@ import {
   isReportPeriodConflict,
 } from '../modules/reports/reportRules.js';
 import { assertReportWritable } from '../modules/access/writeGuards.js';
-import { buildReportDraftPatch } from '../modules/reports/reportCommands.js';
+import { buildReportDraftPatch, saveReportDraft, submitReport } from '../modules/reports/reportCommands.js';
 
 /**
  * /api/reports —— 汇报管理（W10 PG baseline 迁移 + 项目∩）。
@@ -143,32 +143,60 @@ reports.post('/', requirePermission('reports.create'), async (c) => {
     projectId, authorId: auth.userId, reportType, periodKey,
   };
 
-  // 已提交/已审阅的内容对所有入口锁定：保存接口不得覆盖（F05 / RF04 前置）
-  const existing = await prisma.report.findUnique({
-    where: { projectId_authorId_reportType_periodKey: uniqueKey },
-  });
-  if (existing && !existing.deletedAt && !['DRAFT', 'NEEDS_REVISION'].includes(existing.status)) {
-    throw new HttpError(409, 'INVALID_STATE', '该周期汇报已提交或已审阅，不能通过保存接口覆盖');
-  }
-
-  let report;
+  // RF04：新建/保存日报接入持久幂等——同一次逻辑操作重试返回首次结果，
+  // 不会因“部分保存后重试”造成覆盖或重复（回执与业务、审计同事务）。
+  const { key } = resolveIdempotencyKey(c, body);
+  let result;
   try {
-    report = await prisma.report.upsert({
-      where: { projectId_authorId_reportType_periodKey: uniqueKey },
-      // 显式重建被删除的同周期汇报（否则保存会写进不可见的墓碑行）
-      update: { content, updatedById: auth.userId, deletedAt: null },
-      create: {
-        projectId,
-        authorId: auth.userId,
-        reportType,
-        periodKey,
-        content,
-        status: 'DRAFT',
-        createdById: auth.userId,
+    result = await withIdempotency({
+      db: prisma,
+      actor: auth,
+      command: 'POST /api/reports',
+      resourceScope: `report:${projectId}:${reportType}:${periodKey}`,
+      idempotencyKey: key,
+      payload: body,
+      validate: async () => {
+        // 已提交/已审阅的内容对所有入口锁定（依赖服务端当前状态，仅新命令路径执行）
+        const current = await prisma.report.findUnique({
+          where: { projectId_authorId_reportType_periodKey: uniqueKey },
+        });
+        if (current && !current.deletedAt && !['DRAFT', 'NEEDS_REVISION'].includes(current.status)) {
+          throw new HttpError(409, 'INVALID_STATE', '该周期汇报已提交或已审阅，不能通过保存接口覆盖');
+        }
+        return current;
       },
-      include: {
-        author: { select: { id: true, displayName: true } },
-        project: { select: { id: true, name: true } },
+      execute: async (tx, current) => {
+        const report = await tx.report.upsert({
+          where: { projectId_authorId_reportType_periodKey: uniqueKey },
+          // 显式重建被删除的同周期汇报（否则保存会写进不可见的墓碑行）
+          update: { content, updatedById: auth.userId, deletedAt: null },
+          create: {
+            projectId,
+            authorId: auth.userId,
+            reportType,
+            periodKey,
+            content,
+            status: 'DRAFT',
+            createdById: auth.userId,
+          },
+          include: {
+            author: { select: { id: true, displayName: true } },
+            project: { select: { id: true, name: true } },
+          },
+        });
+        await writeAuditStrict(tx, {
+          c,
+          actorId: auth.userId,
+          actorName: auth.user.displayName,
+          actorRole: auth.systemRole,
+          action: current ? AUDIT_ACTIONS.UPDATE : AUDIT_ACTIONS.CREATE,
+          entityType: 'REPORT',
+          entityId: report.id,
+          entityLabel: `${reportType}/${periodKey}`,
+          changedFields: Object.keys(data),
+          metadata: { permissionCode: 'reports.create', projectId },
+        });
+        return { status: 201, body: report };
       },
     });
   } catch (err) {
@@ -177,7 +205,8 @@ reports.post('/', requirePermission('reports.create'), async (c) => {
     }
     throw err;
   }
-  return c.json(report, 201);
+  if (result.replayed) c.header('Idempotent-Replay', 'true');
+  return c.json(result.body, result.status);
 });
 
 // ── 更新（reports.update；仅作者可改草稿/被驳回稿）───────────────────────────
@@ -215,11 +244,12 @@ reports.put('/:id', requirePermission('reports.update'), async (c) => {
         return buildReportDraftPatch(allowed, { currentType: existing.reportType });
       },
       execute: async (tx, data) => {
-        const updated = await tx.report.update({
+        // 共用命令：草稿保存（与同步上行同一实现）
+        const saved = await saveReportDraft(tx, { actor: auth, reportId: id, patch: data });
+        const updated = await tx.report.findUnique({
           where: { id },
-          data: { ...data, updatedById: auth.userId },
           include: { author: { select: { id: true, displayName: true } }, project: { select: { id: true, name: true } } },
-        });
+        }) ?? saved;
         await writeAuditStrict(tx, {
           c,
           actorId: auth.userId,
@@ -276,22 +306,8 @@ reports.post('/:id/submit', requirePermission('reports.submit'), async (c) => {
       }
     },
     execute: async (tx) => {
-      const lastVersion = await tx.reportVersion.findFirst({
-        where: { reportId: id },
-        orderBy: { version: 'desc' },
-      });
-      await tx.reportVersion.create({
-        data: {
-          reportId: id,
-          version: (lastVersion?.version || 0) + 1,
-          content: report.content,
-          createdById: auth.userId,
-        },
-      });
-      await tx.report.update({
-        where: { id },
-        data: { status: 'SUBMITTED', submittedAt: new Date(), updatedById: auth.userId },
-      });
+      // 共用命令：版本快照 + 状态（与其余入口同一实现，见 modules/reports/reportCommands.ts）
+      await submitReport(tx, { actor: auth, report });
       await writeAuditStrict(tx, {
         c,
         actorId: auth.userId,

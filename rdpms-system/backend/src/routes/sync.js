@@ -14,7 +14,8 @@ import {
   assertPhaseBelongsToProject,
   assertReportWritable,
 } from '../modules/access/writeGuards.js';
-import { buildReportDraftPatch } from '../modules/reports/reportCommands.js';
+import { buildReportDraftPatch, saveReportDraft } from '../modules/reports/reportCommands.js';
+import { updateTaskFields, changeTaskStatus, assignTask } from '../modules/tasks/taskCommands.js';
 
 /**
  * /api/sync —— 离线同步 v2（批次四）
@@ -407,12 +408,36 @@ sync.post('/push', async (c) => {
           if (def.derive) def.derive(data);
 
           if (existing) {
-            // eslint-disable-next-line no-await-in-loop
-            const updated = await prisma[def.model].update({
-              where: { id: entityId },
-              data: { ...data, ...(def.touchUpdatedBy ? { updatedById: auth.userId } : {}) },
-            });
-            outcome = { status: 'applied', action: 'updated', serverUpdatedAt: updated[tsField] };
+            // RF04：已存在记录的更新走与普通 API 相同的应用命令（不各自复制写入逻辑）
+            let updated;
+            if (entity === 'reports') {
+              updated = await saveReportDraft(prisma, {
+                actor: auth, reportId: entityId, patch: data,
+              });
+            } else if (entity === 'tasks') {
+              const nextStatus = data.status;
+              const statusChanging = nextStatus !== undefined && nextStatus !== existing.status;
+              const assigneeChanging = data.assigneeId !== undefined && data.assigneeId !== existing.assigneeId;
+              const nextAssignee = data.assigneeId ?? null;
+              delete data.status;
+              delete data.assigneeId;
+              if (Object.keys(data).length > 0) {
+                await updateTaskFields(prisma, { actor: auth, access: syncAccess, task: existing, fields: data });
+              }
+              if (statusChanging) {
+                await changeTaskStatus(prisma, { actor: auth, access: syncAccess, task: existing, status: nextStatus });
+              }
+              if (assigneeChanging) {
+                await assignTask(prisma, { actor: auth, access: syncAccess, task: existing, assigneeId: nextAssignee });
+              }
+              updated = await prisma.task.findUnique({ where: { id: entityId } });
+            } else {
+              updated = await prisma[def.model].update({
+                where: { id: entityId },
+                data: { ...data, ...(def.touchUpdatedBy ? { updatedById: auth.userId } : {}) },
+              });
+            }
+            outcome = { status: 'applied', action: 'updated', serverUpdatedAt: updated?.[tsField] };
           } else {
             const createData = { ...data, id: entityId };
             if (entity === 'reports') createData.authorId = auth.userId;

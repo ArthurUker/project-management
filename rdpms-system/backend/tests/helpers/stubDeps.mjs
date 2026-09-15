@@ -87,15 +87,20 @@ export function createStubDb(options = {}) {
     },
     report: {
       findUnique: async ({ where }) => {
-        if (where.id) return state.reports.find((r) => r.id === where.id) ?? null;
-        const k = where.projectId_authorId_reportType_periodKey;
-        if (k) {
-          return state.reports.find((r) => r.projectId === k.projectId
-            && r.authorId === k.authorId
-            && r.reportType === k.reportType
-            && r.periodKey === k.periodKey) ?? null;
-        }
-        throw new Error(`[stubDeps] report.findUnique 未支持的 where: ${JSON.stringify(where)}`);
+        // 深拷贝：真实库每次查询返回独立对象，不与存储共享引用
+        const match = (r) => {
+          if (where.id) return r.id === where.id;
+          const k = where.projectId_authorId_reportType_periodKey;
+          if (k) {
+            return r.projectId === k.projectId
+              && r.authorId === k.authorId
+              && r.reportType === k.reportType
+              && r.periodKey === k.periodKey;
+          }
+          throw new Error(`[stubDeps] report.findUnique 未支持的 where: ${JSON.stringify(where)}`);
+        };
+        const row = state.reports.find(match);
+        return row ? structuredClone(row) : null;
       },
       findFirst: async ({ where }) => state.reports.find((r) => r.id === where.id) ?? null,
       findMany: async () => [...state.reports],
@@ -164,10 +169,12 @@ export function createStubDb(options = {}) {
     mutationReceipt: {
       findUnique: async ({ where }) => {
         const key = where.actorId_command_resourceScope_idempotencyKey;
-        return state.mutationReceipts.find((r) => r.actorId === key.actorId
+        const row = state.mutationReceipts.find((r) => r.actorId === key.actorId
           && r.command === key.command
           && r.resourceScope === key.resourceScope
-          && r.idempotencyKey === key.idempotencyKey) ?? null;
+          && r.idempotencyKey === key.idempotencyKey);
+        // 深拷贝：真实库的 responseBody 经 JSONB 序列化，不与被改写的业务行共享引用
+        return row ? structuredClone(row) : null;
       },
       create: async ({ data }) => {
         const exists = state.mutationReceipts.some((r) => r.actorId === data.actorId
@@ -186,10 +193,10 @@ export function createStubDb(options = {}) {
           responseStatus: 0,
           responseBody: {},
           createdAt: new Date('2026-09-15T00:00:00Z'),
-          ...data,
+          ...structuredClone(data),
         };
         state.mutationReceipts.push(row);
-        return row;
+        return structuredClone(row);
       },
       update: async ({ where, data }) => {
         const row = state.mutationReceipts.find((r) => r.id === where.id);

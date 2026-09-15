@@ -11,7 +11,7 @@ import {
   projectVisibilityFilter,
 } from '../kernel/projectAccess.js';
 import { badRequest, notFound } from '../kernel/http.js';
-import { assertTaskStatusChange, assertTaskAssign } from '../modules/access/writeGuards.js';
+import { updateTaskFields, changeTaskStatus, assignTask } from '../modules/tasks/taskCommands.js';
 
 /**
  * /api/tasks —— 任务管理（W10 PG baseline 迁移 + 项目∩全量接入）。
@@ -244,15 +244,14 @@ tasks.put('/:id', requirePermission('tasks.update'), async (c) => {
   await auditElevatedIfNeeded(prisma, c, access, 'tasks.update');
   assertProjectCapability(access, 'write', 'tasks.update');
 
-  // RF04/F13：字段级动作权限——通用 PUT 不得绕开专用命令。
-  // 状态流转要 tasks.change_status + transition；指派要 tasks.assign + assign。
+  // RF04/F13：状态与指派走专用命令（各自校验动作权限 + 项目能力），
+  // 其余字段走编辑命令；通用 PUT 不再有一条能绕过动作权限的 update。
   const nextStatus = 'status' in data ? normalizeStatus(data.status) : undefined;
-  if (nextStatus !== undefined && nextStatus !== task.status) {
-    assertTaskStatusChange(auth, access);
-  }
-  if ('assigneeId' in data && data.assigneeId !== task.assigneeId) {
-    assertTaskAssign(auth, access);
-  }
+  const statusChanging = nextStatus !== undefined && nextStatus !== task.status;
+  const assigneeChanging = 'assigneeId' in data && data.assigneeId !== task.assigneeId;
+  const nextAssignee = assigneeChanging ? (data.assigneeId ?? null) : undefined;
+  delete data.status;
+  delete data.assigneeId;
 
   if (data.applicabilityStatus !== undefined) {
     data.applicability = normalizeApplicability(data.applicabilityStatus);
@@ -275,20 +274,22 @@ tasks.put('/:id', requirePermission('tasks.update'), async (c) => {
     }
   }
 
-  // 状态迁移副作用
-  if (data.status === 'COMPLETED') {
-    data.completedAt = new Date();
-    if (data.progressPercent === undefined) data.progressPercent = 100;
+  // 三个命令分别执行（状态迁移副作用由 changeTaskStatus 统一处理）
+  const changedFields = [...Object.keys(data)];
+  if (statusChanging) changedFields.push('status');
+  if (assigneeChanging) changedFields.push('assigneeId');
+
+  if (Object.keys(data).length > 0) {
+    await updateTaskFields(prisma, { actor: auth, access, task, fields: data });
   }
-  if (data.status === 'IN_PROGRESS' && !task.startedAt) {
-    data.startedAt = new Date();
+  if (statusChanging) {
+    await changeTaskStatus(prisma, { actor: auth, access, task, status: nextStatus });
+  }
+  if (assigneeChanging) {
+    await assignTask(prisma, { actor: auth, access, task, assigneeId: nextAssignee });
   }
 
-  const updated = await prisma.task.update({
-    where: { id },
-    data: { ...data, updatedById: auth.userId },
-    include: TASK_INCLUDE,
-  });
+  const updated = await prisma.task.findUnique({ where: { id }, include: TASK_INCLUDE });
 
   await writeAudit(prisma, {
     c,
@@ -299,7 +300,7 @@ tasks.put('/:id', requirePermission('tasks.update'), async (c) => {
     entityType: 'TASK',
     entityId: id,
     entityLabel: task.title,
-    changedFields: Object.keys(data),
+    changedFields,
     metadata: {
       permissionCode: 'tasks.update',
       ...(access.elevated ? { elevated: true, bypass: 'project_membership' } : {}),
