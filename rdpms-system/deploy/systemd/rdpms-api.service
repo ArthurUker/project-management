@@ -18,9 +18,10 @@ EnvironmentFile=/srv/rdpms/.env
 # TypeScript 构建链（v2 ADR-02, 2026-09-15）：
 #   入口改为构建产物 dist/index.js；`deploy.sh` 必须先执行 `npm run build`，
 #   `[ -d dist ]` 断言失败即中止切流。
-#   回退注意：本单元与「release 内是否含 dist」必须成对回退——
-#   回退到 2026-09-15 之前（无 dist）的 release 时，需同时把 ExecStart 改回 src/index.js，
-#   否则服务会因找不到 dist/index.js 启动失败（systemd 会按 RestartSec 反复重启）。
+#   回退注意（release 级）：回退 = 把 /opt/rdpms/current 指回上一个**完整 release**，
+#   并使用该 release 自带的启动配置。2026-09-15 之前（无 dist）的 release 必须把 ExecStart
+#   改回 src/index.js；两侧不匹配时服务会启动失败并按 RestartSec 反复重启。
+#   数据库向后兼容：mutation_receipts 为新增表，旧版本不会读写它，回退不需要回滚迁移。
 ExecStart=/usr/local/bin/node dist/index.js
 
 # 内存护栏（与同机 foodsentinel / foodsafety-outreach 惯例一致）

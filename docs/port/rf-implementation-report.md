@@ -624,3 +624,64 @@ ok RF04-I5 同项目内的 phaseId 正常放行（回归）
 | milestone/monthlyProgress/projects 同步动作权限 | 部分 | 仍为项目能力判定 |
 | 演练环境 sync E2E（21 项） | NOT_RUN | 按约束不对 `rdpms_drill` 做测试写入 |
 | RF05 文件作用域 | 未开始 | 第一阶段最后一关 |
+
+---
+
+## 8. 第三轮补强（2026-09-15，用户调整顺序）
+
+### 8.1 RF04 补齐（提交 `22b100b`）
+
+- **同步注册表全实体动作权限**：`projects.update`、`project_phases.update/create`、`milestones.update/create`、
+  `progress.update/create`（monthlyProgress）、`projects.manage_members`（projectMembers）；
+  `assertSyncEntityActions` 改为通用判定（删除/更新用 `permission`，新建用 `createPermission`）。
+- **任务 PUT 原子性**：编辑/状态/指派三个命令在**同一事务**内执行——混合字段要么全成功、要么全不变
+  （用例 RF04-U16：缺 `tasks.assign` 时标题/状态/指派全部保持原值）。
+- **入口矩阵**：
+
+| 实体 | 普通 API | sync（编辑） | sync（新建） | 删除 | 状态转换 | 指派 |
+|---|---|---|---|---|---|---|
+| reports | `reports.update`+write | `reports.update`+write+锁定 | `reports.create` | `reports.delete`+write | `reports.submit`/`review` | — |
+| tasks | `tasks.update`+write | 同左 | `tasks.create`+write | `tasks.delete`+write | `tasks.change_status`+transition | `tasks.assign`+assign |
+| projects | `projects.update` | `projects.update` | 不支持离线新建 | `projects.delete` | — | — |
+| projectPhases | `project_phases.update` | 同左 | `project_phases.create` | `project_phases.delete` | `project_phases.change_status`+transition | — |
+| milestones | `milestones.update` | 同左 | `milestones.create` | `milestones.delete` | — | — |
+| monthlyProgress | `progress.update` | 同左 | `progress.create` | `progress.delete` | — | — |
+| projectMembers | `projects.manage_members` | 同左（+`manage_members` 能力） | 同左 | 同左（软退出） | — | — |
+
+### 8.2 并发控制（同提交 `22b100b`）
+
+- 幂等回执只解决「同一次操作重试」，**不替代**并发版本校验。
+- 任务/汇报命令新增 `cas`：基线写进 `UPDATE ... WHERE id = ? AND updated_at = ?`（`updateMany` + `count`），
+  命中 0 行即 409 `CONFLICT`；sync 通用实体路径同样改为原子 `updateMany`。
+- 同一事务内多命令时，并发基线只在**第一次写入**上校验（首次写入已改变 `updatedAt`）。
+- 汇报 PUT 支持 `expectedUpdatedAt`；旧客户端缺失时走兼容路径并在审计 `metadata.noConcurrencyBaseline` 留痕。
+- **实测**：RF04-I7 两路不同幂等键、相同基线并发写 → 仅一个 `applied`，另一个 `conflict`，后写者未覆盖；
+  RF04-I8 过期基线 409 且数据不变、正确基线放行。
+
+### 8.3 操作 key 生命周期（提交 `2d2caff`）
+
+- 幂等键绑定「一次逻辑操作」而非内容哈希：重试复用；内容变化换 key；**操作成功后再次发起（内容相同）也是新 key**。
+- 移除 `stableMutationId`（内容哈希语义会让第二次业务操作被静默重放）；多项目用 slot 区分；
+  整体成功后才 `complete()` 关闭操作，部分失败保留键位以便重试回放。
+- 前端用例 6 条（RF02-FE1..FE6）覆盖上述区别。
+
+### 8.4 回退方案修正（提交 `70fbb9d`）
+
+- **`start:src` 已移除**：迁移 TS 后 `node src/index.js` 必然 `ERR_MODULE_NOT_FOUND`，不能作为回退手段。
+- **回退 = release 级**：把 `/opt/rdpms/current` 指回上一个**完整 release**，并使用该 release 自带的启动配置；
+  2026-09-15 之前（无 `dist`）的 release 必须把 `ExecStart` 改回 `src/index.js`，两侧必须成对。
+- **数据库向后兼容**：`mutation_receipts` 为新增表，旧版本不读写，回退**不需要回滚迁移**；
+  但回退到旧版本后，`mutation_receipts` 中已写入的回执会保留（无害，可用 TTL 清理）。
+- **隔离验证（`/tmp/rel-sim`，rdpms_test，端口 3221）**：
+  ① 新 release（`dist/index.js`）→ `health=200`；
+  ② 软链切到旧 release（无 dist，`src/index.js`）→ `health=200`；
+  ③ 切回新 release → `health=200`。完整切换与回退路径均已实机跑通。
+
+### 8.5 本轮未完成（明确保留）
+
+| 项 | 状态 | 说明 |
+|---|---|---|
+| 离线被拒变更的持久草稿（F10） | **未开始** | 仍为「从队列删除 + 内存提示」，未落 IndexedDB dead-letter；刷新后无法恢复 |
+| 专用测试库 sync E2E | **未运行** | `deploy/scripts/drill/sync-e2e.py` 尚未对 rdpms_test 起服执行 |
+| RF03 浏览器交互验收 | **未运行** | 不同日期新建/编辑回填/保存后提交/重新打开/多项目部分失败恢复 |
+| RF05 文件作用域 | **未开始** | 按调整后的顺序，排在上述缺口之后 |
