@@ -295,7 +295,10 @@ ok RF02-I6 业务与审计同事务：提交后审计与版本都在同一提交
 
 ## 4. RF03 日报日期/DTO/提交
 
-**状态：DONE**
+**状态：代码与服务测试通过，交互验收待完成**
+
+> 未按「全部验收通过」记录：浏览器交互流程（不同日期新建、编辑回填、保存后提交、重新打开、
+> 多项目部分失败恢复）**尚未执行**，见 §7.4。服务端与前端纯逻辑层证据见下。
 
 ### 4.1 对应发现
 
@@ -535,3 +538,89 @@ ok RF04-I5 同项目内的 phaseId 正常放行（回归）
 计划（06）：`FileAccessPolicy`、历史归属分类、staging 机制。
 验收：甲项目成员看不到乙文件列表/metadata/下载；上传者私有暂存隔离；import-source 也检查；
 历史无归属文件不自动公开。
+
+---
+
+## 7. 复核与补强（2026-09-15 第二轮，用户授权的调整项）
+
+### 7.1 后端 TypeScript 构建链（提交 `401f6e5`，独立构建配置提交）
+
+| 项 | 落地 |
+|---|---|
+| 配置 | `backend/tsconfig.json`：`strict: true` + `allowJs`（旧 JS 逐模块迁移，暂不 `checkJs`）；`outDir: dist`、`rootDir: src` |
+| 迁入 TS | `modules/reports/reportRules.ts`、`modules/reports/reportCommands.ts`、`modules/access/writeGuards.ts`、`modules/tasks/taskCommands.ts`——strict 模式，**无 any / ts-ignore / 非阻断逃逸** |
+| 命令 | `build`（tsc → dist）、`typecheck`（--noEmit）、`start`（dist/index.js）、`start:src`（迁移期回退）、`dev`、`test:unit/contract`（先构建再跑产物）、`test:ci`（lint + typecheck + test） |
+| CI | 后端 job 增加 `typecheck` 与 `build`；移除“为检查脚本安装前端依赖”的临时步骤（后端已有 typescript） |
+| 部署 | `deploy.sh` Step 7 增加后端构建 + `dist/index.js` 断言（失败即中止切流）；systemd 模板 `ExecStart=/usr/local/bin/node dist/index.js`；`preflight.sh` 增加 dist 与 tsconfig 检查；`start.sh`/`start-dev.sh`/`stop.sh` 同步 |
+| 框架 | 不变（Hono + Prisma + PostgreSQL） |
+
+**隔离环境验证（rdpms_test，端口 3212，未触碰生产与 rdpms_drill）**
+
+| 场景 | 结果 |
+|---|---|
+| 构建产物启动 | `node dist/index.js` → `health=200 ready=200 reports_unauth=401` |
+| 旧源码入口 | `node src/index.js` → `ERR_MODULE_NOT_FOUND: src/modules/reports/reportRules.js`（预期） |
+| 回退路径 | 重新 `npm run build` 后 dist 入口恢复 `health=200`；若回退到 2026-09-15 之前（无 dist）的 release，**必须同时把 ExecStart 改回 src/index.js**（已写入 systemd 模板注释） |
+
+**类型诊断前后对比（证明新模块未引入未受控诊断）**
+
+| 时点 | JS 层（`typecheck:report`，非门禁） | TS 层（`typecheck`，门禁） |
+|---|---|---|
+| 迁入前 | 55 文件 / 485 条 / 6 类 | 无 TS 构建链 |
+| 迁入后 | 52 文件 / 480 条 / 5 类 | **0 错误**（strict） |
+
+### 7.2 RF02 幂等顺序复核（提交 `6402453`）
+
+固定执行顺序：**鉴权 → 当前资源授权 → 回执作用域与 payloadHash 检查 → 回放**；
+只有不存在回执的新命令，才在事务内执行 `validate`（状态 / revision / 引用）与 `execute`。
+
+- `withIdempotency` 新增 `validate(tx)` 回调，返回值透传给 `execute`；状态锁定与周期键校验移入其中。
+- 并发唯一键冲突：**在 catch 外层（事务已结束、连接已归还连接池）读取回执**，
+  避免在已失败的 PostgreSQL 事务中继续读取（否则报 25P02）；先到者回滚时返回 409 `IDEMPOTENCY_IN_PROGRESS` + `retryable`。
+- 前端 `shared/idempotency.ts`：由「操作类型 + 目标 + 内容」派生**稳定 key**，同一次逻辑操作重试复用同一 key；
+  内容变更自动换 key（避免与服务端已存回执的 payloadHash 冲突）。
+- 新增用例：RF02-U13/U14/U15、RF02-I7/I8、前端 key 稳定性 4 条。
+
+**幂等键策略（明确是否必需）**
+
+| 写接口 | 键来源 | 是否必需 | 说明 |
+|---|---|---|---|
+| `POST /api/reports`（新建/保存日报） | body `clientMutationId` > 头 `Idempotency-Key` | 推荐（可选） | 前端已稳定复用；无键时退化为不去重 |
+| `PUT /api/reports/:id`（保存草稿） | 同上 | 推荐（可选） | 同上 |
+| `POST /api/reports/:id/submit` | 同上 | 推荐（可选） | 重放不重复写版本 |
+| 同步 `POST /api/sync/push` | 每条变更的 `clientMutationId` | **必需** | 缺失即整条拒绝（协议既有约束） |
+| 其余写接口 | — | 尚未接入 | 属后续批次收敛范围 |
+
+### 7.3 RF04 统一授权与命令入口（提交 `6827a57`）
+
+- 新增 `modules/tasks/taskCommands.ts`：`updateTaskFields` / `changeTaskStatus` / `assignTask`；
+  `modules/reports/reportCommands.ts` 增加 `saveReportDraft` / `submitReport`。
+- **普通 API 与同步调用同一应用命令**：`routes/tasks.js` 的通用 PUT 把 `status`/`assigneeId` 摘出后分别调专用命令；
+  `routes/sync.js` 的已存在记录更新同样走这些命令。
+- `POST /api/reports` 接入持久幂等 + 事务内严格审计：同一次逻辑操作重试返回首次结果，不重复创建、不重复写审计。
+- 动作权限逐项覆盖：edit（`tasks.update`+write）、changeStatus（`tasks.change_status`+transition）、
+  assign（`tasks.assign`+assign）、submit/review/delete（各自权限 + 作者 + 项目能力 + 状态）。
+- 服务端统一执行：项目归属、作者权限、审核锁定（409 `INVALID_STATE`）、跨项目引用（`phaseId`）、
+  并发控制（HTTP 幂等回执 + 同步 `baseUpdatedAt`）。
+- **未完成**：离线队列被拒变更的持久化草稿（F10，见 §7.5）；导入入口收敛（仓库内唯一导入入口为法规文档，
+  已校验动作权限，实验导入属 RF13/RF14）。
+
+### 7.4 验证补强（提交 `5583664`）
+
+- 集成测试**自动启动隔离应用**（动态空闲端口 + 构建产物 + 隔离测试库），并先准备最小夹具；
+  启动失败按 ENV_BLOCKED 处理，不静默跳过。
+- 结果：`test:integration` **28 项全部通过、0 失败、0 跳过**（此前 T4/T5 因未起服务跳过）。
+  隔离库启用 `SEED_TEST_ACCOUNTS=true`，`test:db:reset` 创建 6 个 `test_*` 账号。
+- RF03 浏览器交互验收：**未执行**，因此 RF03 状态记为「代码与服务测试通过，交互验收待完成」。
+
+### 7.5 本轮之后仍未完成（如实列出）
+
+| 项 | 状态 | 说明 |
+|---|---|---|
+| RF03 浏览器流程 | NOT_RUN | 不同日期新建 / 编辑回填 / 保存后提交 / 重新打开 / 多项目部分失败恢复 |
+| 离线被拒变更的持久草稿（F10） | NOT_RUN | 现仍为「从队列删除 + 内存提示」，未落 IndexedDB dead-letter |
+| 导入入口 | 部分 | 实验导入（ImportSession）属 RF13/RF14；法规文档导入已校验动作权限 |
+| `platform/*` 迁移 TS | 部分 | 本轮只迁入业务模块；平台层（幂等/审计/上下文）仍为 JS + JSDoc |
+| milestone/monthlyProgress/projects 同步动作权限 | 部分 | 仍为项目能力判定 |
+| 演练环境 sync E2E（21 项） | NOT_RUN | 按约束不对 `rdpms_drill` 做测试写入 |
+| RF05 文件作用域 | 未开始 | 第一阶段最后一关 |
