@@ -74,7 +74,17 @@ export function createStubDb(options = {}) {
       findUnique: async () => (membership ? { ...membership } : null),
     },
     report: {
-      findUnique: async ({ where }) => state.reports.find((r) => r.id === where.id) ?? null,
+      findUnique: async ({ where }) => {
+        if (where.id) return state.reports.find((r) => r.id === where.id) ?? null;
+        const k = where.projectId_authorId_reportType_periodKey;
+        if (k) {
+          return state.reports.find((r) => r.projectId === k.projectId
+            && r.authorId === k.authorId
+            && r.reportType === k.reportType
+            && r.periodKey === k.periodKey) ?? null;
+        }
+        throw new Error(`[stubDeps] report.findUnique 未支持的 where: ${JSON.stringify(where)}`);
+      },
       findFirst: async ({ where }) => state.reports.find((r) => r.id === where.id) ?? null,
       findMany: async () => [...state.reports],
       count: async () => state.reports.length,

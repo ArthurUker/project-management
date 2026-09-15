@@ -99,10 +99,11 @@ export default function Reports() {
     });
   }
   
-  // 按月份分组
+  // 按周期键分组（RF03：DAILY=完整日期、WEEKLY=ISO 周、MONTHLY=月份）
   const groupedReports = reportList.reduce((acc: any, report) => {
-    if (!acc[report.month]) acc[report.month] = [];
-    acc[report.month].push(report);
+    const groupKey = report.periodKey || '-';
+    if (!acc[groupKey]) acc[groupKey] = [];
+    acc[groupKey].push(report);
     return acc;
   }, {});
   
@@ -111,7 +112,7 @@ export default function Reports() {
   };
 
   const getReportLink = (report: any) => {
-    const isOwnReport = report.userId === user?.id;
+    const isOwnReport = report.authorId === user?.id;
     if (!isOwnReport) return `/reports/${report.id}/review`;
 
     const submittedStatus = report.status === 'SUBMITTED' || report.status === 'submitted';
@@ -268,23 +269,26 @@ export default function Reports() {
                               {report.project?.name || '未知项目'}
                             </h3>
                             <p className="text-sm text-gray-500 mt-1">
-                              {report.user?.name} · {report.project?.code}
+                              {report.author?.displayName || report.user?.name} · {report.project?.code}
                               {(() => {
-                                try {
-                                  const content = JSON.parse(report.content);
-                                  if (content.projectReports?.length > 0) {
-                                    return <span className="ml-2 text-primary-500">({content.projectReports.length}个项目)</span>;
-                                  }
-                                  if (content.reagentReports?.length > 0) {
-                                    return <span className="ml-2 text-purple-500">({content.reagentReports.length}个实验记录)</span>;
-                                  }
-                                } catch {}
+                                // content 已由接口适配器归一化为对象（RF03/F04）
+                                const projectReports = report.content?.projectReports;
+                                const reagentReports = report.content?.reagentReports;
+                                if (projectReports?.length) {
+                                  return <span className="ml-2 text-primary-500">({projectReports.length}个项目)</span>;
+                                }
+                                if (reagentReports?.length) {
+                                  return <span className="ml-2 text-purple-500">({reagentReports.length}个实验记录)</span>;
+                                }
+                                if (report.contentReadError) {
+                                  return <span className="ml-2 text-red-500">(内容无法解析)</span>;
+                                }
                                 return null;
                               })()}
                             </p>
-                            {report.status === 'NEEDS_REVISION' && report.approveNote && (
+                            {report.status === 'NEEDS_REVISION' && report.reviewNote && (
                               <p className="text-xs text-orange-600 mt-1.5 bg-orange-50 border border-orange-200 rounded px-2 py-1">
-                                批示：{report.approveNote}
+                                批示：{report.reviewNote}
                               </p>
                             )}
                           </div>
@@ -293,7 +297,7 @@ export default function Reports() {
                           <span className={`px-3 py-1 rounded-full text-sm font-medium ${STATUS_COLORS[report.status]}`}>
                             {report.status}
                           </span>
-                          {(report.userId === user?.id) && (report.status === 'SUBMITTED' || report.status === 'submitted') && (
+                          {(report.authorId === user?.id) && (report.status === 'SUBMITTED' || report.status === 'submitted') && (
                             <button
                               onClick={async (e) => {
                                 e.preventDefault();
@@ -312,7 +316,7 @@ export default function Reports() {
                               撤回
                             </button>
                           )}
-                          {(report.userId === user?.id) && (report.status === 'DRAFT' || report.status === 'draft') && (
+                          {(report.authorId === user?.id) && (report.status === 'DRAFT' || report.status === 'draft') && (
                             <button
                               onClick={(e) => handleDeleteReport(e, report.id)}
                               className="text-red-500 hover:text-red-700 text-sm"

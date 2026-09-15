@@ -6,6 +6,7 @@ import { useSync } from '../offline/SyncProvider';
 import { newClientMutationId } from '../offline/engine';
 import ReagentDailyReport from '../components/ReagentDailyReport';
 import DocReference from '../components/DocReference';
+import { periodKeyFor, reportTypeEnum } from '../shared/reportPeriod';
 
 // 汇报类型配置
 const REPORT_TYPES = [
@@ -53,6 +54,12 @@ function getReportTypeByDate(date: Date): string {
   }
   
   return '日报';
+}
+
+/** 把接口错误转成可读文案（逐项目反馈用） */
+function describeError(err: unknown): string {
+  const e = err as { response?: { data?: { error?: string; code?: string } }; message?: string };
+  return e?.response?.data?.error || e?.message || '未知错误';
 }
 
 // 单个项目汇报数据
@@ -107,6 +114,9 @@ export default function ReportEdit() {
   
   // 试剂组日报数据
   const [reagentReports, setReagentReports] = useState<any[]>([]);
+
+  // 内容不可解析时的错误（RF03/F04：必须显式提示，禁止把空表当原文保存）
+  const [contentError, setContentError] = useState<string | null>(null);
   
   useEffect(() => {
     loadData();
@@ -121,35 +131,44 @@ export default function ReportEdit() {
       setProjects(projectList);
       
       if (id && id !== 'new') {
-        // 编辑现有汇报
+        // 编辑现有汇报（content 已由接口适配器归一化为对象，见 api/adapters/report.ts）
         const reportData = await reportAPI.get(id);
-        
-        // 解析内容
-        try {
-          const content = JSON.parse(reportData.content);
-          const rtRaw = reportData.reportType as string | undefined;
-          setReportType(rtRaw ? (REPORT_TYPE_ENUM_TO_CN[rtRaw] ?? rtRaw) : '日报');
-          setMonth(reportData.month);
-          setProjectReports(content.projectReports || []);
-          const normalizedReagentReports = (content.reagentReports || []).map((r: any) => {
-            if (r?.projectId) return r;
-            if (r?.projectName) {
-              const matched = projectList.find((p: any) => p.name === r.projectName);
-              if (matched) return { ...r, projectId: matched.id };
-            }
-            return { ...r, projectId: r?.projectId || '' };
-          });
-          setReagentReports(normalizedReagentReports);
-          // 根据内容类型自动识别模板
-          if (content.reagentReports) {
-            setDailyTemplate('reagent');
-            // 从内容中恢复日期
-            const firstDate = content.reagentReports?.[0]?.date;
-            if (firstDate) setDate(firstDate);
-          }
-        } catch {
-          setMonth(reportData.month);
+        const rtRaw = reportData.reportType as string | undefined;
+        setReportType(rtRaw ? (REPORT_TYPE_ENUM_TO_CN[rtRaw] ?? rtRaw) : '日报');
+
+        // 周期键：DAILY 为完整日期，用作日期回填；WEEKLY/MONTHLY 用月份回填
+        const key = reportData.periodKey || '';
+        if (/^\d{4}-\d{2}-\d{2}$/.test(key)) {
+          setDate(key);
+          setMonth(key.slice(0, 7));
+        } else if (/^\d{4}-\d{2}$/.test(key)) {
+          setMonth(key);
+        }
+
+        if (reportData.contentReadError) {
+          // 解析失败必须显式告警，且禁止把空表当成原文保存（F04）
+          setContentError(`${reportData.contentReadError}；为避免覆盖服务端原文，请勿直接保存`);
           setProjectReports([]);
+          setReagentReports([]);
+          return;
+        }
+
+        const content = reportData.content;
+        setProjectReports((content.projectReports as any[]) || []);
+        const normalizedReagentReports = ((content.reagentReports as any[]) || []).map((r: any) => {
+          if (r?.projectId) return r;
+          if (r?.projectName) {
+            const matched = projectList.find((p: any) => p.name === r.projectName);
+            if (matched) return { ...r, projectId: matched.id };
+          }
+          return { ...r, projectId: r?.projectId || '' };
+        });
+        setReagentReports(normalizedReagentReports);
+        // 根据内容类型自动识别模板
+        if (content.reagentReports) {
+          setDailyTemplate('reagent');
+          const firstDate = (content.reagentReports as any[])?.[0]?.date;
+          if (firstDate) setDate(firstDate);
         }
       }
     } catch (err) {
@@ -190,7 +209,17 @@ export default function ReportEdit() {
   // 离线同步 v2：草稿可离线保存（写入本地变更日志），提交/新建需联网
   const { online, enqueueChange } = useSync();
 
+  /**
+   * 保存 / 提交（RF03）：
+   *   - 保存草稿：只写内容与周期键，**不携带 status**；
+   *   - 提交：先保存成功，再调用服务端提交命令（写版本与状态）。
+   * 多项目时逐条保存并逐条报告结果，避免 Promise.all 部分成功却显示整体失败。
+   */
   const handleSave = async (asDraft: boolean = true) => {
+    if (contentError) {
+      alert(contentError);
+      return;
+    }
     // 验证
     if (dailyTemplate === 'general' && projectReports.length === 0) {
       alert('请至少添加一个项目');
@@ -200,8 +229,14 @@ export default function ReportEdit() {
       alert('请至少添加一个实验记录');
       return;
     }
-    if (!month) {
-      alert('请选择月份');
+    const typeEnum = reportTypeEnum(reportType);
+    if (!typeEnum) {
+      alert('汇报类型无法识别，请重新选择');
+      return;
+    }
+    const periodKey = periodKeyFor(typeEnum, { date, month });
+    if (!periodKey) {
+      alert(typeEnum === 'DAILY' ? '请选择日报日期（必须精确到某一天）' : '请选择汇报月份');
       return;
     }
     if (!online && !asDraft) {
@@ -212,104 +247,107 @@ export default function ReportEdit() {
       alert('离线状态暂不支持新建汇报，请联网后再试。');
       return;
     }
-    
+
     setSaving(true);
     try {
-      // 保证 month 只保留 YYYY-MM（后端期望）
-      let fullMonth = month ? String(month).slice(0, 7) : month;
+      const content: any = dailyTemplate === 'general' ? { projectReports } : { reagentReports };
+      const saved: { id: string; label: string }[] = [];
+      const failures: string[] = [];
 
-      // 根据模板类型构建内容
-      let content: any = {};
-      if (dailyTemplate === 'general') {
-        content = { projectReports };
-      } else {
-        content = { reagentReports };
-      }
-      
-      const commonStatus = asDraft ? 'DRAFT' : 'SUBMITTED';
-
-      // 如果正在编辑已有汇报（id）则直接更新该汇报，确保草稿回填正常
       if (id && id !== 'new') {
-        const payload: any = {
-          content: JSON.stringify(dailyTemplate === 'general' ? { projectReports } : { reagentReports }),
-          status: commonStatus,
-          month: fullMonth,
-          reportType,
-        };
-        console.log('[UPDATE REPORT] id:', id, 'payload:', JSON.stringify(payload, null, 2));
+        // 编辑已有汇报
         if (!online) {
-          // 离线：仅内容进变更日志；status 为服务端权威字段（提交/审阅状态不被客户端覆盖）
+          // 离线：仅内容进变更日志（status 为服务端权威字段）
           await enqueueChange({
             clientMutationId: newClientMutationId(),
             entity: 'reports',
             op: 'upsert',
             id: id as string,
-            data: { content: payload.content },
+            data: { content },
           });
+          saved.push({ id: id as string, label: '当前汇报' });
         } else {
-          await reportAPI.update(id as string, payload);
+          try {
+            const updated = await reportAPI.update(id as string, {
+              content,
+              reportType: typeEnum,
+              periodKey,
+              clientMutationId: newClientMutationId(),
+            });
+            saved.push({ id: updated.id, label: '当前汇报' });
+          } catch (err) {
+            failures.push(`当前汇报：${describeError(err)}`);
+          }
         }
-
-      } else if (dailyTemplate === 'general') {
-        // 新建模式：为每个 projectReports 分别提交（后端期望 top-level projectId）
-        const payloads = projectReports.map((report) => ({
-          projectId: report.projectId,
-          reportType,
-          month: fullMonth,
-          content: JSON.stringify({ projectReports: [report] }),
-          status: commonStatus,
-        }));
-
-        console.log('[SAVE REPORT] payloads:', JSON.stringify(payloads, null, 2));
-        await Promise.all(payloads.map((p) => reportAPI.save(p)));
-
-      } else if (dailyTemplate === 'reagent') {
-        // 将试验记录按 projectId 分组后分别提交，如果没有关联任何 project 则阻止提交
-        const reportsByProject: Record<string, any[]> = {};
-        for (const r of reagentReports) {
-          const pid = r.projectId || 'NO_PROJECT';
-          if (!reportsByProject[pid]) reportsByProject[pid] = [];
-          reportsByProject[pid].push(r);
-        }
-        const entries = Object.entries(reportsByProject);
-        // 如果只有未关联项目的记录，则要求用户先关联项目
-        if (entries.length === 1 && entries[0][0] === 'NO_PROJECT') {
-          alert('请为试验记录关联项目后再提交');
-          setSaving(false);
-          return;
-        }
-
-        const payloads = entries
-          .filter(([pid]) => pid !== 'NO_PROJECT')
-          .map(([pid, arr]) => ({
-            projectId: pid,
-            reportType,
-            month: fullMonth,
-            content: JSON.stringify({ reagentReports: arr }),
-            status: commonStatus,
-          }));
-
-        console.log('[SAVE REPORT] payloads:', JSON.stringify(payloads, null, 2));
-        await Promise.all(payloads.map((p) => reportAPI.save(p)));
-
       } else {
-        // 兜底：单条提交（尽量包含 projectId，如果 content 中无法拆分则按原样提交）
-        const payload: any = {
-          reportType,
-          month: fullMonth,
-          content: JSON.stringify(content),
-          status: commonStatus,
-        };
-        if (projectReports.length === 1) payload.projectId = projectReports[0].projectId;
+        // 新建：按项目逐条保存（后端以 项目+作者+类型+周期 为唯一键）
+        const items: { projectId: string; content: any; label: string }[] = [];
+        if (dailyTemplate === 'general') {
+          for (const r of projectReports) {
+            items.push({
+              projectId: r.projectId,
+              content: { projectReports: [r] },
+              label: projects.find((p) => p.id === r.projectId)?.name || r.projectId,
+            });
+          }
+        } else {
+          const reportsByProject: Record<string, any[]> = {};
+          for (const r of reagentReports) {
+            const pid = r.projectId || 'NO_PROJECT';
+            if (!reportsByProject[pid]) reportsByProject[pid] = [];
+            reportsByProject[pid].push(r);
+          }
+          const entries = Object.entries(reportsByProject);
+          if (entries.length === 1 && entries[0][0] === 'NO_PROJECT') {
+            alert('请为试验记录关联项目后再提交');
+            setSaving(false);
+            return;
+          }
+          for (const [pid, arr] of entries) {
+            if (pid === 'NO_PROJECT') continue;
+            items.push({
+              projectId: pid,
+              content: { reagentReports: arr },
+              label: projects.find((p) => p.id === pid)?.name || pid,
+            });
+          }
+        }
 
-        console.log('[SAVE REPORT] payload:', JSON.stringify(payload, null, 2));
-        await reportAPI.save(payload);
+        for (const item of items) {
+          try {
+            const created = await reportAPI.save({
+              projectId: item.projectId,
+              reportType: typeEnum,
+              periodKey,
+              content: item.content,
+              clientMutationId: newClientMutationId(),
+            });
+            saved.push({ id: created.id, label: item.label });
+          } catch (err) {
+            failures.push(`${item.label}：${describeError(err)}`);
+          }
+        }
       }
 
+      // 提交：只提交保存成功的汇报；服务端负责写版本与状态
+      if (!asDraft) {
+        for (const item of saved) {
+          try {
+            await reportAPI.submit(item.id, newClientMutationId());
+          } catch (err) {
+            failures.push(`${item.label}（提交）：${describeError(err)}`);
+          }
+        }
+      }
+
+      if (failures.length > 0) {
+        alert(`部分操作未成功：\n${failures.join('\n')}\n已成功的部分已保留，可重试。`);
+        return;
+      }
       navigate('/reports');
     } catch (err) {
       console.error('Failed to save:', err);
-      alert('保存失败');
+      alert(`保存失败：${describeError(err)}`);
     } finally {
       setSaving(false);
     }
@@ -365,6 +403,12 @@ export default function ReportEdit() {
         </div>
         
         <div className="p-6 space-y-6">
+          {contentError && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              {contentError}
+            </div>
+          )}
+
           {/* 类型选择 */}
           <div>
             <label className="label">汇报类型</label>

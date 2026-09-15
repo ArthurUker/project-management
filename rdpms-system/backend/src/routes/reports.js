@@ -10,9 +10,14 @@ import {
   auditElevatedIfNeeded,
   projectVisibilityFilter,
 } from '../kernel/projectAccess.js';
-import { badRequest, notFound } from '../kernel/http.js';
+import { HttpError, badRequest, notFound } from '../kernel/http.js';
 import { withIdempotency, resolveIdempotencyKey } from '../platform/idempotency/receipts.js';
 import { writeAuditStrict } from '../platform/audit/strictAudit.js';
+import {
+  normalizeReportType,
+  validatePeriodKey,
+  isReportPeriodConflict,
+} from '../modules/reports/reportRules.js';
 
 /**
  * /api/reports —— 汇报管理（W10 PG baseline 迁移 + 项目∩）。
@@ -23,11 +28,27 @@ import { writeAuditStrict } from '../platform/audit/strictAudit.js';
  */
 const reports = new Hono();
 
-// 兼容旧客户端的中文汇报类型（历史页面以 日报/周报/月报 作为值传输）
-const REPORT_TYPE_ALIASES = { '日报': 'DAILY', '周报': 'WEEKLY', '月报': 'MONTHLY' };
-const normalizeReportType = (v) => (typeof v === 'string' ? (REPORT_TYPE_ALIASES[v] ?? v) : v);
-
 reports.use('*', authMiddleware);
+
+/** 内容入参兼容：对象（当前前端）或 JSON 字符串（旧前端/离线队列） */
+function parseContentInput(content) {
+  if (content === undefined) return {};
+  if (typeof content !== 'string') return content;
+  try {
+    return JSON.parse(content || '{}');
+  } catch {
+    throw badRequest('VALIDATION_ERROR', 'content 不是合法 JSON', { field: 'content' });
+  }
+}
+
+/** F05：保存接口不得携带状态（提交/审阅只能走专用命令） */
+function assertNoClientStatus(body, actionLabel) {
+  if (!body || !Object.prototype.hasOwnProperty.call(body, 'status')) return;
+  const requested = normalizeStatus(body.status);
+  if (requested && requested !== 'DRAFT') {
+    throw badRequest('VALIDATION_ERROR', `${actionLabel}接口不得设置汇报状态，请使用提交接口`, { field: 'status' });
+  }
+}
 
 const LEGACY_STATUS_MAP = {
   '草稿': 'DRAFT',
@@ -95,47 +116,65 @@ reports.get('/:id', requirePermission('reports.view'), async (c) => {
 });
 
 // ── 创建/按唯一键更新（reports.create + ∩ write）────────────────────────────
+// RF03：本接口只负责「保存草稿」——周期键按类型严格校验，状态由提交命令负责。
 reports.post('/', requirePermission('reports.create'), async (c) => {
   const auth = getAuth(c);
   const body = await c.req.json().catch(() => null);
-  const data = pickAllowed(body, ['projectId', 'reportType', 'periodKey', 'month', 'content', 'status'],
+  const data = pickAllowed(body, ['projectId', 'reportType', 'periodKey', 'month', 'content'],
     { entityLabel: '创建汇报' });
+  assertNoClientStatus(body, '保存草稿');
 
   const projectId = data.projectId;
-  const periodKey = data.periodKey || data.month;
-  if (!projectId || !periodKey) throw badRequest('VALIDATION_ERROR', '项目和周期不能为空');
+  if (!projectId) throw badRequest('VALIDATION_ERROR', '项目不能为空', { field: 'projectId' });
+
+  const reportType = normalizeReportType(data.reportType) || 'MONTHLY';
+  const keyCheck = validatePeriodKey(reportType, data.periodKey ?? data.month);
+  if (!keyCheck.ok) throw badRequest('VALIDATION_ERROR', keyCheck.message, keyCheck.details);
+  const periodKey = keyCheck.value;
 
   const access = await resolveProjectAccess(prisma, auth, projectId);
   await auditElevatedIfNeeded(prisma, c, access, 'reports.create');
   assertProjectCapability(access, 'write', 'reports.create');
 
-  const reportType = normalizeReportType(data.reportType) || 'MONTHLY';
-  const status = normalizeStatus(data.status) || 'DRAFT';
-  const content = data.content === undefined
-    ? {}
-    : (typeof data.content === 'string' ? JSON.parse(data.content || '{}') : data.content);
+  const content = parseContentInput(data.content);
+  const uniqueKey = {
+    projectId, authorId: auth.userId, reportType, periodKey,
+  };
 
-  const report = await prisma.report.upsert({
-    where: {
-      projectId_authorId_reportType_periodKey: {
-        projectId, authorId: auth.userId, reportType, periodKey,
-      },
-    },
-    update: { content, status, updatedById: auth.userId },
-    create: {
-      projectId,
-      authorId: auth.userId,
-      reportType,
-      periodKey,
-      content,
-      status,
-      createdById: auth.userId,
-    },
-    include: {
-      author: { select: { id: true, displayName: true } },
-      project: { select: { id: true, name: true } },
-    },
+  // 已提交/已审阅的内容对所有入口锁定：保存接口不得覆盖（F05 / RF04 前置）
+  const existing = await prisma.report.findUnique({
+    where: { projectId_authorId_reportType_periodKey: uniqueKey },
   });
+  if (existing && !existing.deletedAt && !['DRAFT', 'NEEDS_REVISION'].includes(existing.status)) {
+    throw new HttpError(409, 'INVALID_STATE', '该周期汇报已提交或已审阅，不能通过保存接口覆盖');
+  }
+
+  let report;
+  try {
+    report = await prisma.report.upsert({
+      where: { projectId_authorId_reportType_periodKey: uniqueKey },
+      // 显式重建被删除的同周期汇报（否则保存会写进不可见的墓碑行）
+      update: { content, updatedById: auth.userId, deletedAt: null },
+      create: {
+        projectId,
+        authorId: auth.userId,
+        reportType,
+        periodKey,
+        content,
+        status: 'DRAFT',
+        createdById: auth.userId,
+      },
+      include: {
+        author: { select: { id: true, displayName: true } },
+        project: { select: { id: true, name: true } },
+      },
+    });
+  } catch (err) {
+    if (isReportPeriodConflict(err)) {
+      throw new HttpError(409, 'DUPLICATE_PERIOD_KEY', '同一项目下该类型已存在同周期的汇报');
+    }
+    throw err;
+  }
   return c.json(report, 201);
 });
 
@@ -157,43 +196,59 @@ reports.put('/:id', requirePermission('reports.update'), async (c) => {
   if (!['DRAFT', 'NEEDS_REVISION'].includes(existing.status)) {
     throw badRequest('VALIDATION_ERROR', '仅草稿或需修改状态的汇报可编辑');
   }
+  assertNoClientStatus(body, '保存草稿');
+
+  // 校验（含周期键按类型校验）在查询幂等回执之前完成：非法请求不留回执
+  const data = pickAllowed(body, ['content', 'periodKey', 'month', 'reportType'], { entityLabel: '更新汇报' });
+  if (data.month !== undefined) { data.periodKey = data.month; delete data.month; }
+  const effectiveType = data.reportType !== undefined
+    ? normalizeReportType(data.reportType)
+    : existing.reportType;
+  if (data.reportType !== undefined) data.reportType = effectiveType;
+  if (data.periodKey !== undefined) {
+    const keyCheck = validatePeriodKey(effectiveType, data.periodKey);
+    if (!keyCheck.ok) throw badRequest('VALIDATION_ERROR', keyCheck.message, keyCheck.details);
+    data.periodKey = keyCheck.value;
+  }
+  if (data.content !== undefined) data.content = parseContentInput(data.content);
 
   const { key } = resolveIdempotencyKey(c, body);
-  const result = await withIdempotency({
-    db: prisma,
-    actor: auth,
-    command: 'PUT /api/reports/:id',
-    resourceScope: `report:${id}`,
-    idempotencyKey: key,
-    payload: body,
-    execute: async (tx) => {
-      const data = pickAllowed(body, ['content', 'periodKey', 'month', 'reportType'], { entityLabel: '更新汇报' });
-      if (data.month !== undefined) { data.periodKey = data.month; delete data.month; }
-      if (data.reportType !== undefined) data.reportType = normalizeReportType(data.reportType);
-      if (data.content !== undefined) {
-        data.content = typeof data.content === 'string' ? JSON.parse(data.content || '{}') : data.content;
-      }
-
-      const updated = await tx.report.update({
-        where: { id },
-        data: { ...data, updatedById: auth.userId },
-        include: { author: { select: { id: true, displayName: true } }, project: { select: { id: true, name: true } } },
-      });
-      await writeAuditStrict(tx, {
-        c,
-        actorId: auth.userId,
-        actorName: auth.user.displayName,
-        actorRole: auth.systemRole,
-        action: AUDIT_ACTIONS.UPDATE,
-        entityType: 'REPORT',
-        entityId: id,
-        entityLabel: `${existing.reportType}/${existing.periodKey}`,
-        changedFields: Object.keys(data),
-        metadata: { permissionCode: 'reports.update' },
-      });
-      return { status: 200, body: updated };
-    },
-  });
+  let result;
+  try {
+    result = await withIdempotency({
+      db: prisma,
+      actor: auth,
+      command: 'PUT /api/reports/:id',
+      resourceScope: `report:${id}`,
+      idempotencyKey: key,
+      payload: body,
+      execute: async (tx) => {
+        const updated = await tx.report.update({
+          where: { id },
+          data: { ...data, updatedById: auth.userId },
+          include: { author: { select: { id: true, displayName: true } }, project: { select: { id: true, name: true } } },
+        });
+        await writeAuditStrict(tx, {
+          c,
+          actorId: auth.userId,
+          actorName: auth.user.displayName,
+          actorRole: auth.systemRole,
+          action: AUDIT_ACTIONS.UPDATE,
+          entityType: 'REPORT',
+          entityId: id,
+          entityLabel: `${existing.reportType}/${existing.periodKey}`,
+          changedFields: Object.keys(data),
+          metadata: { permissionCode: 'reports.update' },
+        });
+        return { status: 200, body: updated };
+      },
+    });
+  } catch (err) {
+    if (isReportPeriodConflict(err)) {
+      throw new HttpError(409, 'DUPLICATE_PERIOD_KEY', '同一项目下该类型已存在同周期的汇报');
+    }
+    throw err;
+  }
   if (result.replayed) c.header('Idempotent-Replay', 'true');
   return c.json(result.body, result.status);
 });

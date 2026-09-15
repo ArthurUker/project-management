@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { reportAPI } from '@/api';
 import { useAuth } from '../auth/useAuth';
 import { useHasPerm, PERMS } from '../auth/permissions';
+import { normalizeReportContent } from '../shared/reportContent';
 
 const STATUS_COLORS: Record<string, string> = {
   'DRAFT': 'bg-gray-100 text-gray-600',
@@ -14,13 +15,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 const submittedStatuses = ['SUBMITTED', 'submitted'];
 
-function safeParseContent(content: string) {
-  try {
-    return JSON.parse(content || '{}');
-  } catch {
-    return {};
-  }
-}
+// 内容解析统一走 shared/reportContent 适配器（对象/字符串都支持，失败不静默吞掉）
 
 function getPlanLabel(reportType?: string) {
   if (reportType === '周报') return '本周计划';
@@ -54,7 +49,7 @@ export default function ReportReview() {
   const isReviewer = useHasPerm(PERMS.REPORTS_APPROVE);
   const canApprove = useMemo(() => {
     if (!report || !isReviewer) return false;
-    return submittedStatuses.includes(report.status) && report.userId !== user?.id;
+    return submittedStatuses.includes(report.status) && report.authorId !== user?.id;
   }, [report, isReviewer, user?.id]);
 
   useEffect(() => {
@@ -67,7 +62,7 @@ export default function ReportReview() {
     try {
       const data = await reportAPI.get(reportId);
       setReport(data);
-      setReviewNote(String(data?.approveNote ?? ''));
+      setReviewNote(String(data?.reviewNote ?? ''));
     } catch (err) {
       console.error('Failed to load report:', err);
       alert('加载汇报失败');
@@ -121,7 +116,8 @@ export default function ReportReview() {
     return <div className="text-center py-12 text-gray-500">汇报不存在</div>;
   }
 
-  const content = safeParseContent(report.content);
+  // content 已由接口适配器归一化为对象；此处再兜底一次，兼容历史字符串内容（RF03/F04）
+  const content = normalizeReportContent(report.content);
   const projectReports = Array.isArray(content.projectReports) ? content.projectReports : [];
   const reagentReports = Array.isArray(content.reagentReports) ? content.reagentReports : [];
 
@@ -156,26 +152,26 @@ export default function ReportReview() {
             </div>
             <div className="bg-gray-50 rounded-lg p-3">
               <div className="text-gray-500">汇报月份</div>
-              <div className="text-gray-900 font-medium mt-1">{report.month || '-'}</div>
+              <div className="text-gray-900 font-medium mt-1">{report.periodKey || '-'}</div>
             </div>
             <div className="bg-gray-50 rounded-lg p-3">
               <div className="text-gray-500">提交时间</div>
               <div className="text-gray-900 font-medium mt-1">{report.submittedAt ? new Date(report.submittedAt).toLocaleString() : '-'}</div>
             </div>
-            {(report.status === 'REVIEWED' || report.status === 'NEEDS_REVISION') && report.approvedAt && (
+            {(report.status === 'REVIEWED' || report.status === 'NEEDS_REVISION') && report.reviewedAt && (
               <div className={`rounded-lg p-3 ${report.status === 'REVIEWED' ? 'bg-green-50' : 'bg-orange-50'}`}>
                 <div className={`text-sm font-medium ${report.status === 'REVIEWED' ? 'text-green-700' : 'text-orange-700'}`}>
                   {report.status === 'REVIEWED' ? '✓ 已阅时间' : '↩ 批示时间'}
                 </div>
-                <div className="text-gray-900 font-medium mt-1">{new Date(report.approvedAt).toLocaleString()}</div>
+                <div className="text-gray-900 font-medium mt-1">{new Date(report.reviewedAt).toLocaleString()}</div>
               </div>
             )}
-            {(report.status === 'REVIEWED' || report.status === 'NEEDS_REVISION') && report.approveNote && (
+            {(report.status === 'REVIEWED' || report.status === 'NEEDS_REVISION') && report.reviewNote && (
               <div className={`rounded-lg p-3 md:col-span-2 ${report.status === 'REVIEWED' ? 'bg-green-50' : 'bg-orange-50'}`}>
                 <div className={`text-sm font-medium ${report.status === 'REVIEWED' ? 'text-green-700' : 'text-orange-700'}`}>
                   {report.status === 'REVIEWED' ? '批示意见' : '修改意见'}
                 </div>
-                <div className="text-gray-900 mt-1 whitespace-pre-wrap">{report.approveNote}</div>
+                <div className="text-gray-900 mt-1 whitespace-pre-wrap">{report.reviewNote}</div>
               </div>
             )}
           </div>
@@ -338,8 +334,8 @@ export default function ReportReview() {
               className={`input h-24 ${!canApprove ? 'bg-gray-50 text-gray-500' : ''}`}
             />
 
-            {report.approveNote && !canApprove && (
-              <p className="text-sm text-gray-500 mt-2">当前批示：{report.approveNote}</p>
+            {report.reviewNote && !canApprove && (
+              <p className="text-sm text-gray-500 mt-2">当前批示：{report.reviewNote}</p>
             )}
 
             {canApprove && (

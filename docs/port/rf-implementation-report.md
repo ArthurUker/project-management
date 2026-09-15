@@ -293,8 +293,136 @@ ok RF02-I6 业务与审计同事务：提交后审计与版本都在同一提交
 
 ---
 
-## 4. 下一批：RF03 日报日期/DTO/提交
+## 4. RF03 日报日期/DTO/提交
 
-计划（06）：统一 `periodKey` 语义（DAILY=YYYY-MM-DD、WEEKLY=ISO 周、MONTHLY=YYYY-MM）、
-save/submit 拆分、兼容旧内容形状；验收：同人同项目两天 DAILY 产生两条、编辑回填无丢项、
-「提交」确实写版本与状态、客户端 REVIEWED 被拒绝。
+**状态：DONE**
+
+### 4.1 对应发现
+
+| F | 等级 | 内容 | 处理 |
+|---|---|---|---|
+| F03 | P0 | 前端把 period 一律 `slice(0,7)`，DAILY 也提交月份键 → 09-14 与 09-15 落到同一唯一键互相覆盖 | 前后端统一周期键规则；服务端按类型严格校验（含真实日期） |
+| F04 | P1 | 后端 content 是 JSONB 对象，前端按字符串 `JSON.parse` → 抛错后清空项目汇报数组（回填丢项/评审页空白） | 新增边界适配器（对象/字符串都支持），解析失败显式提示且禁止回写空表 |
+| F05 | P0 | POST 可直接写入 `status`；编辑页「提交」发 status 但 PUT 白名单不含 status → 既不生效也不报错 | 保存接口禁止携带状态；提交改走专用命令（写版本+状态+审计） |
+| F04 同族 | — | 列表/评审页读旧字段 `month`/`userId`/`approvedAt`/`approveNote`（后端已迁移为 `periodKey`/`authorId`/`reviewedAt`/`reviewNote`） | 全量对齐到规范 DTO |
+
+### 4.2 变更文件
+
+后端：
+
+| 文件 | 改动 |
+|---|---|
+| `src/modules/reports/reportRules.js`（新） | 周期键规则真源：`normalizeReportType` / `validatePeriodKey` / `PERIOD_KEY_FORMAT` / `isReportPeriodConflict`；纯规则，无 HTTP/Prisma 依赖 |
+| `src/routes/reports.js` | POST 改为「只保存草稿」：去掉 status 白名单、按类型校验周期键、已提交/已审阅 409 锁定、软删墓碑显式重建；PUT 增加周期键校验与类型一致性校验，唯一键冲突映射 409 `DUPLICATE_PERIOD_KEY` |
+| `tests/unit/rf03-report-period.test.mjs`（新） | 10 条路由替身用例 |
+| `tests/integration/rf03-report-period.integration.test.mjs`（新） | 4 条真实库用例 |
+| `tests/helpers/stubDeps.mjs` | 桩支持复合唯一键 `findUnique` |
+
+前端：
+
+| 文件 | 改动 |
+|---|---|
+| `src/shared/reportPeriod.ts`（新） | `periodKeyFor` / `isoWeekKey` / `reportTypeEnum` / `REPORT_TYPE_CN_TO_ENUM`；缺少输入返回 null，不猜造 |
+| `src/shared/reportContent.ts`（新） | `readReportContent`（对象/字符串/空值）与 `normalizeReportContent`；失败返回原因 |
+| `src/api/adapters/report.ts`（新） | `toReport` / `toReportList`：原始响应 → 领域模型（补 `authorId`/`periodKey`、`contentReadError`） |
+| `src/types/report.ts` | 领域模型与 DTO 重写（`RawReport` 只给适配器用；`content` 为对象） |
+| `src/api/endpoints/reports.ts` | list/get/save/update 经过适配器；`submit` 支持 `clientMutationId` |
+| `src/pages/ReportEdit.tsx` | 内容直接取对象（不再 JSON.parse）；周期键按类型计算；保存/提交拆分；多项目逐条保存并逐条报告失败；离线分支改为写对象而非字符串 |
+| `src/pages/Reports.tsx` / `ReportReview.tsx` | 统一用 `periodKey`/`authorId`/`reviewNote`/`reviewedAt`，内容走适配器 |
+| `scripts/run-unit-tests.mjs`（新） | 前端纯逻辑测试运行器（复用已有 esbuild，无新增依赖） |
+| `tests/unit/*.test.ts`（新） | 14 条前端用例（周期键 + 内容归一化） |
+
+### 4.3 数据库迁移
+
+**无**（RF03 不涉及 schema 变更；唯一键 `projectId+authorId+reportType+periodKey` 已存在，本批只是不再向它写入错误的键）。
+
+### 4.4 新旧契约映射
+
+| 项 | 旧 | 新 |
+|---|---|---|
+| DAILY 周期键 | 前端 `2026-09`（月份） | `2026-09-15`（服务端强校验，月键直接 400） |
+| WEEKLY 周期键 | 无格式约束 | `YYYY-Www`（周序 01-53） |
+| MONTHLY 周期键 | `YYYY-MM` | `YYYY-MM`（月份 01-12） |
+| 日期真实性 | 未校验 | `2026-02-30` 一律 400 |
+| content | 字符串 JSON（前端 parse） | JSONB 对象；字符串仅在边界适配器兼容 |
+| status | POST 可写入任意状态 | 保存接口禁止（客户端 REVIEWED → 400）；提交走专用命令 |
+| 已提交内容 | 保存接口可覆盖 | 所有保存入口 409 锁定 |
+| 汇报人/审阅字段 | 前端读 `userId`/`approvedAt`/`approveNote` | `authorId`/`reviewedAt`/`reviewNote` |
+| 「提交」按钮 | 只发 status（服务端忽略 → 什么都不发生） | 先保存再调用提交命令，写版本+状态+审计（幂等） |
+
+### 4.5 测试名与实际输出
+
+后端路由替身（`npm test`）：
+
+```
+ok RF03-U1  DAILY 拒绝月份键（09-14 与 09-15 不能落到同一键）
+ok RF03-U2  同人同项目两天 DAILY 产生两条
+ok RF03-U3  同一天重复保存仍然只更新同一条
+ok RF03-U4  WEEKLY / MONTHLY 键格式校验
+ok RF03-U5  不存在的日期（2026-02-30）被拒绝
+ok RF03-U6  客户端 REVIEWED 被拒绝
+ok RF03-U7  已提交/已审阅的汇报不能被保存接口覆盖
+ok RF03-U8  PUT 同样按类型校验 periodKey
+ok RF03-U9  PUT 改类型时必须与键格式一致
+ok RF03-U10 提交确实写版本与状态（并留严格审计）
+# tests 32 # pass 32 # fail 0（单元，含 RF01/RF02/RF03）
+# tests 6  # pass 6  # fail 0（契约）
+```
+
+真实集成（`npm run test:integration`，隔离库 `rdpms_test`）：
+
+```
+ok RF03-I1 同人同项目两天 DAILY 产生两条（真实唯一约束）
+ok RF03-I2 同一天重复保存仍然是同一条（upsert 语义）
+ok RF03-I3 月份键被服务端拒绝
+ok RF03-I4 已提交的汇报不能被保存接口覆盖（真实状态约束）
+# tests 20 # pass 18 # fail 0 # skipped 2
+```
+
+前端（`npm test`，esbuild + node:test）：
+
+```
+ok RF03-F1/F2/F3/F4/F5/F6/F7  周期键：DAILY 完整日期、同月两天不同键、ISO 周（含跨年）、MONTHLY、缺输入返回 null、中文→枚举
+ok RF03-F8..F13b              内容：对象直用、字符串兼容、解析失败暴露错误、空值、非对象、多项目往返无丢项
+# tests 14 # pass 14 # fail 0
+```
+
+前端类型检查与构建：`npm run build`（`tsc -b && vite build`）通过（主包 805.51 kB，F19/RF15 范围内）。
+部署形态冒烟（演练库只读，端口 3211）：`health=200 ready=200 reports_unauth=401 post_unauth=401`。
+
+### 4.6 未运行项
+
+| 项 | 状态 | 说明 |
+|---|---|---|
+| 浏览器端全流程（编辑→保存→提交→审阅） | NOT_RUN | `test:e2e` 属 RF13/RF15 范围；本批用前端纯逻辑用例 + 类型检查 + 后端集成覆盖 |
+| 旧错误月份键历史数据处置 | 未做 | 按 F03 要求「进入迁移待核实，不自动虚构日期」，本批只阻止新增，未改历史行 |
+| 逐项目 UI 状态面板与重试按钮 | 部分 | 已改为逐条保存 + 失败清单提示；完整 UI 属 RF15 |
+| 新建汇报的幂等回执 | 未接线 | POST 暂未接 `withIdempotency`（RF04 统一命令入口时接入） |
+
+### 4.7 数据风险
+
+- 无 schema 变更；未连接生产库；演练库仅只读冒烟。
+- **行为收紧（预期）**：DAILY 提交月份键现在返回 400。旧缓存前端若仍按月份保存日报会看到明确报错，
+  而不会再静默把同月多天合并到一行。
+- 软删除的同周期汇报再次保存会显式重建（`deletedAt: null`），避免写入不可见的墓碑行。
+
+### 4.8 回退方法
+
+- 代码：`git revert <RF03 提交>`。
+- 数据库：无需动作。
+- 运行：未部署、未重启任何生产服务。
+
+### 4.9 ADR 偏离
+
+| 项 | 结论 |
+|---|---|
+| 前端新增测试栈 | 未引入新依赖：复用 Vite 已安装的 esbuild 打包 TS 用例后跑 `node:test`（06 要求 `test:unit` 存在，仓库前端原本无测试栈） |
+| 后端新模块仍为 JS | 05 ADR-02 目标为「新模块全 TS」，但后端当前没有 TS 构建链（`ExecStart=node src/index.js`）。引入 TS 构建会改变部署形态，属重大技术方案变更，**先请示再动**；本批模块用 JSDoc 类型 + 静态门禁约束 |
+
+---
+
+## 5. 下一批：RF04 所有写入口授权
+
+计划（06）：普通 API、sync、导入收敛到同一命令；按字段执行动作权限。
+验收：仅有 update 无 transition 时不能改状态；被移出项目不能更新/撤回/删除；跨项目 `phaseId` 被拒绝；
+reviewed 内容所有入口均锁定。
