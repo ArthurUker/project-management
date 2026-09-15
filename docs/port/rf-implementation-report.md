@@ -178,8 +178,123 @@ ok 8  T3 AUDITOR 恰好持有 audit.view / audit.export / system.logs.view
 
 ---
 
-## 3. 下一批：RF02 幂等访问边界（实施中）
+## 3. RF02 幂等访问边界
 
-内容：撤销「鉴权前缓存命中」；持久作用域回执 + payloadHash；回执与业务数据、关键审计同事务提交。
-验收：相同 key 不同用户/路径不能回放他人内容；撤权后不能回放；重启重试只写一次；不同 payload 409；
-并发同 key 只生效一次；事务失败不留回执与半成品。
+**状态：DONE**
+
+### 3.1 对应发现
+
+| F | 等级 | 内容 | 处理 |
+|---|---|---|---|
+| F01 | P0 | 幂等缓存在鉴权之前命中，且只按 Idempotency-Key 为键 | 删除鉴权前中间件；回执改为「鉴权 → 资源授权 → 状态校验 → 查回执」 |
+| F09 | P0 | 回执不绑定用户/内容，业务写入与回执创建无共同事务 | 持久化作用域回执（actor+command+resourceScope+key+payloadHash），与业务、严格审计同事务 |
+| F15（部分） | P1 | 审计吞错、与业务不同事务 | 新增 `writeAuditStrict`：事务内写入，失败回滚业务（本批先用于被接线的两个命令） |
+
+### 3.2 变更文件
+
+| 文件 | 改动 |
+|---|---|
+| `prisma/schema.prisma` | 新增 `MutationReceiptStatus` 枚举、`MutationReceipt` 模型、User 反向关系 |
+| `prisma/migrations/20260915120000_mutation_receipts/migration.sql` | Additive 迁移（枚举 + 表 + 3 索引/唯一键 + 外键） |
+| `src/platform/idempotency/receipts.js` | `withIdempotency`：授权后查回执、payloadHash 校验、事务内占位 → 业务 → 回填 |
+| `src/platform/idempotency/payloadHash.js` | 规范化 JSON + sha256 |
+| `src/platform/audit/strictAudit.js` | 事务内严格审计（失败回滚） |
+| `src/kernel/audit.js` | 抽出 `buildAuditRow`，两种写入共用字段口径 |
+| `src/bootstrap/createApp.js` | **删除**鉴权前的 `createIdempotencyMiddleware` 全局注册 |
+| `src/middleware/idempotency.js` | **删除**（F01 根因：鉴权前内存缓存） |
+| `src/routes/reports.js` | `PUT /:id` 与 `POST /:id/submit` 接入 `withIdempotency`；两处均改为「授权 → 回执」顺序并写严格审计 |
+| `tests/unit/rf02-idempotency.test.mjs` | 12 条路由替身用例 |
+| `tests/integration/rf02-idempotency.integration.test.mjs` | 6 条真实库用例（并发/重启/撤权/失败/哈希冲突/同事务） |
+| `tests/integration/fixtures.mjs` | 集成测试最小夹具（固定 ID 合成数据） |
+| `tests/helpers/stubDeps.mjs` | 桩新增 mutationReceipt 与「失败还原」的事务语义 |
+
+### 3.3 数据库迁移
+
+迁移 `20260915120000_mutation_receipts`（**Additive，可回退**）：
+新增枚举 `MutationReceiptStatus`、表 `mutation_receipts`（含 `actor_id`/`command`/`resource_scope`/`idempotency_key`/`payload_hash`/`response_status`/`response_body`/`expires_at`），
+唯一键 `mutation_receipts_scope_key(actor_id, command, resource_scope, idempotency_key)`，索引 `expires_at`、`(actor_id, created_at)`，外键指向 `users(id)`。
+`prisma migrate diff --from-url <测试库> --to-schema-datamodel` 对 `mutation_receipts` **无漂移**（另有 `audit_logs`/`doc_documents` 的既有漂移，非本次引入）。
+未对生产库与 `rdpms_drill` 执行任何迁移。
+
+### 3.4 新旧契约映射
+
+| 项 | 旧 | 新 |
+|---|---|---|
+| 幂等命中时机 | 鉴权前（中间件，任意 PUT） | 鉴权 + 资源授权 + 状态校验**之后** |
+| 回执键 | 仅 `Idempotency-Key` | `actor + command + resourceScope + key`（另存 payloadHash） |
+| 存储 | 进程内存 Map（重启即失效） | PostgreSQL 表（重启后仍可回放） |
+| 内容校验 | 无 | 同键不同内容 → 409 `IDEMPOTENCY_PAYLOAD_MISMATCH` |
+| 原子性 | 先写业务、后写回执（无事务） | 业务 + 严格审计 + 回执同事务；失败整体回滚 |
+| 并发同键 | 无保证 | 唯一索引阻塞后到事务 → 读取已提交回执并回放（无则 409 `IDEMPOTENCY_IN_PROGRESS`） |
+| 键来源 | `Idempotency-Key` 头 | 优先请求体 `clientMutationId`，其次 `Idempotency-Key` 头（旧客户端仍可用） |
+| 前端影响 | — | 前端从未发送 `Idempotency-Key`，无行为变化 |
+
+### 3.5 测试名与实际输出
+
+路由替身（`npm test`，不连库）——RF02 部分：
+
+```
+ok RF02-U1  相同幂等键、不同用户：不得回放他人响应
+ok RF02-U2  相同幂等键、不同资源：不得跨资源回放
+ok RF02-U3  相同幂等键、不同请求内容 → 409 且不回放
+ok RF02-U4  相同幂等键、相同内容：返回存储响应且业务只执行一次
+ok RF02-U5  业务校验失败：不留下回执与半成品
+ok RF02-U6  未授权（非项目成员）：先授权后回执，不产生回执
+ok RF02-U7  撤权后不得回放：同一 key 重试返回拒绝而不是旧成功响应
+ok RF02-U8  审计写入失败：业务回滚，不留回执（关键证据与业务同生共死）
+ok RF02-U9  提交命令（POST /submit）同样走回执：重放不重复生成版本
+ok RF02-U10 无幂等键时仍执行（兼容旧客户端），但不写回执
+ok RF02-U11 未认证请求持相同 key：返回 401，不回放已缓存的成功响应（F01 回归）
+ok RF02-U12 相同 key、不同命令：不得跨命令回放
+# tests 22 # pass 22 # fail 0   （全量：22 单元 + 6 契约）
+```
+
+真实集成（`npm run test:integration`，隔离库 `rdpms_test`）：
+
+```
+ok RF02-I1 并发相同幂等键：只生效一次，其余回放同一响应（5 并发 → 1 版本 / 1 回执 / 1 审计 / 4 次回放）
+ok RF02-I2 进程重启后回执仍在：新客户端重放不重复执行
+ok RF02-I3 撤权后不得回放：同一 key 重试被拒绝（404，无回放头）
+ok RF02-I4 事务失败（状态不允许）：不留回执、不改数据
+ok RF02-I5 相同幂等键、不同请求内容 → 409 且不改数据
+ok RF02-I6 业务与审计同事务：提交后审计与版本都在同一提交中
+# tests 16 # pass 14 # fail 0 # skipped 2（T4/T5 需本地起服，与改造前一致）
+```
+
+部署形态冒烟（演练库，端口 3211）：`health=200 ready=200 reports_unauth=401`，
+并且 **`PUT` 带 `Idempotency-Key` 但未认证 → 401**（旧实现会回放历史 200，F01 已关闭）。
+
+### 3.6 未运行项
+
+| 项 | 状态 | 说明 |
+|---|---|---|
+| 仅两个命令接入回执 | 部分 | `PUT /api/reports/:id`、`POST /api/reports/:id/submit`；其余写入口在 RF04 统一收敛 |
+| 回执过期清理任务 | NOT_RUN | `expires_at` 仅落库，清理作业未实现（不影响正确性） |
+| 同步路径回执（sync push） | NOT_RUN | 属 RF07/RF09 |
+| `audit_logs` append-only 的清理 | 不适用 | 集成测试改用增量断言（DB 触发器禁止删除审计） |
+
+### 3.7 数据风险
+
+- 迁移为 Additive，未触碰既有列；生产库与 `rdpms_drill` 未执行任何迁移或写入。
+- `rdpms_test` 为一次性隔离库，可 `npm run test:db:drop` 销毁。
+- 行为变化：`PUT /api/reports/:id` 现在要求项目成员与 `write` 能力（原先只校验作者），
+  即「被移出项目者不能再改自己的汇报」——与 05 §2 一致，属预期收紧；RF04 会统一其余入口。
+
+### 3.8 回退方法
+
+- 代码：`git revert <RF02 提交>`（或丢弃分支）。删除的中间件会随 revert 恢复。
+- 数据库：`DROP TABLE "mutation_receipts"; DROP TYPE "MutationReceiptStatus";`（无其他对象依赖）。
+- 运行：未部署、未重启任何生产服务。
+
+### 3.9 ADR 偏离
+
+无。05 §2 的「持久化 MutationReceipt、先授权后回放、同 key 不同 payload 409、失败不留回执」逐条实现；
+06 要求的「不得仅把内存 Map 换成数据库表」已通过「唯一索引 + 同事务 + 严格审计」满足。
+
+---
+
+## 4. 下一批：RF03 日报日期/DTO/提交
+
+计划（06）：统一 `periodKey` 语义（DAILY=YYYY-MM-DD、WEEKLY=ISO 周、MONTHLY=YYYY-MM）、
+save/submit 拆分、兼容旧内容形状；验收：同人同项目两天 DAILY 产生两条、编辑回填无丢项、
+「提交」确实写版本与状态、客户端 REVIEWED 被拒绝。

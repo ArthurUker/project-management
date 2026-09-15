@@ -454,6 +454,7 @@ model User {
   auditLogs            AuditLog[]
   systemLogs           SystemLog[]
   syncDevices          SyncDevice[]
+  mutationReceipts     MutationReceipt[]     @relation("MutationReceiptActor")
 
   @@index([systemRole, status])
   @@index([department])
@@ -1558,4 +1559,38 @@ model SystemSetting {
   updatedById String?  @map("updated_by_id")
 
   @@map("system_settings")
+}
+
+// ============================== 幂等回执（RF02）==============================
+
+/// 幂等回执状态。仅保留成功回执：失败事务整体回滚，不留下任何回执行。
+enum MutationReceiptStatus {
+  COMPLETED
+}
+
+/// 幂等回执：绑定 actor + 命令 + 资源作用域 + 客户端幂等键，并记录请求内容哈希。
+///
+/// 规则（05 §2）：
+///   - 回执必须在「鉴权 + 资源授权之后」查询，禁止鉴权前回放；
+///   - 同幂等键不同 payloadHash → 409，不得回放旧结果；
+///   - 数据修改、关键审计与回执在同一事务提交，失败不留下成功回执。
+model MutationReceipt {
+  id             String                @id @default(uuid()) @map("id")
+  actorId        String                @map("actor_id")
+  command        String                @map("command") @db.VarChar(120)
+  resourceScope  String                @map("resource_scope") @db.VarChar(200)
+  idempotencyKey String                @map("idempotency_key") @db.VarChar(200)
+  payloadHash    String                @map("payload_hash") @db.Char(64)
+  status         MutationReceiptStatus @default(COMPLETED) @map("status")
+  responseStatus Int                   @map("response_status")
+  responseBody   Json                  @map("response_body") @db.JsonB
+  createdAt      DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt      DateTime?             @map("expires_at") @db.Timestamptz(3)
+
+  actor User @relation("MutationReceiptActor", fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@unique([actorId, command, resourceScope, idempotencyKey], map: "mutation_receipts_scope_key")
+  @@index([expiresAt])
+  @@index([actorId, createdAt])
+  @@map("mutation_receipts")
 }

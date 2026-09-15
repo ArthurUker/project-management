@@ -11,6 +11,8 @@ import {
   projectVisibilityFilter,
 } from '../kernel/projectAccess.js';
 import { badRequest, notFound } from '../kernel/http.js';
+import { withIdempotency, resolveIdempotencyKey } from '../platform/idempotency/receipts.js';
+import { writeAuditStrict } from '../platform/audit/strictAudit.js';
 
 /**
  * /api/reports —— 汇报管理（W10 PG baseline 迁移 + 项目∩）。
@@ -138,6 +140,8 @@ reports.post('/', requirePermission('reports.create'), async (c) => {
 });
 
 // ── 更新（reports.update；仅作者可改草稿/被驳回稿）───────────────────────────
+// RF02：鉴权 → 资源授权 → 状态校验 → 才允许查询幂等回执；
+//       业务写入、严格审计、回执在同一事务提交（失败不留回执）。
 reports.put('/:id', requirePermission('reports.update'), async (c) => {
   const auth = getAuth(c);
   const id = c.req.param('id');
@@ -145,69 +149,112 @@ reports.put('/:id', requirePermission('reports.update'), async (c) => {
 
   const existing = await prisma.report.findUnique({ where: { id } });
   if (!existing || existing.deletedAt) throw notFound('REPORT_NOT_FOUND', '汇报不存在');
+
+  const access = await resolveProjectAccess(prisma, auth, existing.projectId);
+  await auditElevatedIfNeeded(prisma, c, access, 'reports.update');
+  assertProjectCapability(access, 'write', 'reports.update');
   if (existing.authorId !== auth.userId) throw badRequest('FORBIDDEN', '无权修改他人的汇报');
   if (!['DRAFT', 'NEEDS_REVISION'].includes(existing.status)) {
     throw badRequest('VALIDATION_ERROR', '仅草稿或需修改状态的汇报可编辑');
   }
 
-  const data = pickAllowed(body, ['content', 'periodKey', 'month', 'reportType'], { entityLabel: '更新汇报' });
-  if (data.month !== undefined) { data.periodKey = data.month; delete data.month; }
-  if (data.reportType !== undefined) data.reportType = normalizeReportType(data.reportType);
-  if (data.content !== undefined) {
-    data.content = typeof data.content === 'string' ? JSON.parse(data.content || '{}') : data.content;
-  }
+  const { key } = resolveIdempotencyKey(c, body);
+  const result = await withIdempotency({
+    db: prisma,
+    actor: auth,
+    command: 'PUT /api/reports/:id',
+    resourceScope: `report:${id}`,
+    idempotencyKey: key,
+    payload: body,
+    execute: async (tx) => {
+      const data = pickAllowed(body, ['content', 'periodKey', 'month', 'reportType'], { entityLabel: '更新汇报' });
+      if (data.month !== undefined) { data.periodKey = data.month; delete data.month; }
+      if (data.reportType !== undefined) data.reportType = normalizeReportType(data.reportType);
+      if (data.content !== undefined) {
+        data.content = typeof data.content === 'string' ? JSON.parse(data.content || '{}') : data.content;
+      }
 
-  const updated = await prisma.report.update({
-    where: { id },
-    data: { ...data, updatedById: auth.userId },
-    include: { author: { select: { id: true, displayName: true } }, project: { select: { id: true, name: true } } },
+      const updated = await tx.report.update({
+        where: { id },
+        data: { ...data, updatedById: auth.userId },
+        include: { author: { select: { id: true, displayName: true } }, project: { select: { id: true, name: true } } },
+      });
+      await writeAuditStrict(tx, {
+        c,
+        actorId: auth.userId,
+        actorName: auth.user.displayName,
+        actorRole: auth.systemRole,
+        action: AUDIT_ACTIONS.UPDATE,
+        entityType: 'REPORT',
+        entityId: id,
+        entityLabel: `${existing.reportType}/${existing.periodKey}`,
+        changedFields: Object.keys(data),
+        metadata: { permissionCode: 'reports.update' },
+      });
+      return { status: 200, body: updated };
+    },
   });
-  return c.json(updated);
+  if (result.replayed) c.header('Idempotent-Replay', 'true');
+  return c.json(result.body, result.status);
 });
 
 // ── 提交（reports.submit + ∩ write）─────────────────────────────────────────
+// RF02：版本快照、状态、严格审计、幂等回执全部在同一事务；失败不留半成品与回执。
 reports.post('/:id/submit', requirePermission('reports.submit'), async (c) => {
   const auth = getAuth(c);
   const id = c.req.param('id');
+  const body = await c.req.json().catch(() => ({}));
+
   const report = await prisma.report.findUnique({ where: { id } });
   if (!report || report.deletedAt) throw notFound('REPORT_NOT_FOUND', '汇报不存在');
-  if (report.authorId !== auth.userId) throw badRequest('FORBIDDEN', '只能提交自己的汇报');
-  if (report.status === 'REVIEWED') throw badRequest('VALIDATION_ERROR', '已审阅的汇报不能再次提交');
 
   const access = await resolveProjectAccess(prisma, auth, report.projectId);
   await auditElevatedIfNeeded(prisma, c, access, 'reports.submit');
+  assertProjectCapability(access, 'write', 'reports.submit');
+  if (report.authorId !== auth.userId) throw badRequest('FORBIDDEN', '只能提交自己的汇报');
+  if (report.status === 'REVIEWED') throw badRequest('VALIDATION_ERROR', '已审阅的汇报不能再次提交');
 
-  await prisma.$transaction(async (tx) => {
-    const lastVersion = await tx.reportVersion.findFirst({
-      where: { reportId: id },
-      orderBy: { version: 'desc' },
-    });
-    await tx.reportVersion.create({
-      data: {
-        reportId: id,
-        version: (lastVersion?.version || 0) + 1,
-        content: report.content,
-        createdById: auth.userId,
-      },
-    });
-    await tx.report.update({
-      where: { id },
-      data: { status: 'SUBMITTED', submittedAt: new Date(), updatedById: auth.userId },
-    });
+  const { key } = resolveIdempotencyKey(c, body);
+  const result = await withIdempotency({
+    db: prisma,
+    actor: auth,
+    command: 'POST /api/reports/:id/submit',
+    resourceScope: `report:${id}`,
+    idempotencyKey: key,
+    payload: { reportId: id },
+    execute: async (tx) => {
+      const lastVersion = await tx.reportVersion.findFirst({
+        where: { reportId: id },
+        orderBy: { version: 'desc' },
+      });
+      await tx.reportVersion.create({
+        data: {
+          reportId: id,
+          version: (lastVersion?.version || 0) + 1,
+          content: report.content,
+          createdById: auth.userId,
+        },
+      });
+      await tx.report.update({
+        where: { id },
+        data: { status: 'SUBMITTED', submittedAt: new Date(), updatedById: auth.userId },
+      });
+      await writeAuditStrict(tx, {
+        c,
+        actorId: auth.userId,
+        actorName: auth.user.displayName,
+        actorRole: auth.systemRole,
+        action: AUDIT_ACTIONS.SUBMIT,
+        entityType: 'REPORT',
+        entityId: id,
+        entityLabel: `${report.reportType}/${report.periodKey}`,
+        metadata: { permissionCode: 'reports.submit' },
+      });
+      return { status: 200, body: { success: true } };
+    },
   });
-
-  await writeAudit(prisma, {
-    c,
-    actorId: auth.userId,
-    actorName: auth.user.displayName,
-    actorRole: auth.systemRole,
-    action: AUDIT_ACTIONS.SUBMIT,
-    entityType: 'REPORT',
-    entityId: id,
-    entityLabel: `${report.reportType}/${report.periodKey}`,
-    metadata: { permissionCode: 'reports.submit' },
-  });
-  return c.json({ success: true });
+  if (result.replayed) c.header('Idempotent-Replay', 'true');
+  return c.json(result.body, result.status);
 });
 
 // ── 审阅通过（reports.review + ∩ transition）────────────────────────────────

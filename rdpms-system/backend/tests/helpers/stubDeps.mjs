@@ -40,7 +40,24 @@ export function createStubDb(options = {}) {
     reports: [...(options.reports ?? [])],
     reportVersions: [],
     auditLogs: [],
+    mutationReceipts: [...(options.mutationReceipts ?? [])],
     writes: [],
+  };
+
+  /** 事务回滚用的快照/还原（桩实现：失败时把状态还原，模拟真实事务语义） */
+  const snapshot = () => structuredClone({
+    reports: state.reports,
+    reportVersions: state.reportVersions,
+    auditLogs: state.auditLogs,
+    mutationReceipts: state.mutationReceipts,
+    writes: state.writes,
+  });
+  const restore = (snap) => {
+    state.reports = snap.reports;
+    state.reportVersions = snap.reportVersions;
+    state.auditLogs = snap.auditLogs;
+    state.mutationReceipts = snap.mutationReceipts;
+    state.writes = snap.writes;
   };
 
   const db = {
@@ -112,6 +129,9 @@ export function createStubDb(options = {}) {
     },
     auditLog: {
       create: async ({ data }) => {
+        if (options.failAuditWrite) {
+          throw new Error('[stubDeps] 模拟审计写入失败');
+        }
         const row = { id: `a-${state.auditLogs.length + 1}`, ...data };
         state.auditLogs.push(row);
         return row;
@@ -119,9 +139,57 @@ export function createStubDb(options = {}) {
       findMany: async () => [...state.auditLogs],
       count: async () => state.auditLogs.length,
     },
+    mutationReceipt: {
+      findUnique: async ({ where }) => {
+        const key = where.actorId_command_resourceScope_idempotencyKey;
+        return state.mutationReceipts.find((r) => r.actorId === key.actorId
+          && r.command === key.command
+          && r.resourceScope === key.resourceScope
+          && r.idempotencyKey === key.idempotencyKey) ?? null;
+      },
+      create: async ({ data }) => {
+        const exists = state.mutationReceipts.some((r) => r.actorId === data.actorId
+          && r.command === data.command
+          && r.resourceScope === data.resourceScope
+          && r.idempotencyKey === data.idempotencyKey);
+        if (exists) {
+          const err = new Error('[stubDeps] 唯一约束冲突：mutation_receipts_scope_key');
+          err.code = 'P2002';
+          err.meta = { target: 'mutation_receipts_scope_key' };
+          throw err;
+        }
+        const row = {
+          id: `mr-${state.mutationReceipts.length + 1}`,
+          status: 'COMPLETED',
+          responseStatus: 0,
+          responseBody: {},
+          createdAt: new Date('2026-09-15T00:00:00Z'),
+          ...data,
+        };
+        state.mutationReceipts.push(row);
+        return row;
+      },
+      update: async ({ where, data }) => {
+        const row = state.mutationReceipts.find((r) => r.id === where.id);
+        if (!row) throw new Error(`[stubDeps] mutationReceipt.update 目标不存在: ${where.id}`);
+        Object.assign(row, data);
+        return { ...row };
+      },
+      count: async () => state.mutationReceipts.length,
+      findMany: async () => [...state.mutationReceipts],
+    },
     user: { findUnique: unimplemented('user.findUnique') },
     userRole: { findMany: unimplemented('userRole.findMany') },
-    $transaction: async (fn) => fn(db),
+    /** 桩事务：失败时还原状态，模拟真实事务回滚（并发语义由真实集成测试覆盖） */
+    $transaction: async (fn) => {
+      const snap = snapshot();
+      try {
+        return await fn(db);
+      } catch (err) {
+        restore(snap);
+        throw err;
+      }
+    },
     $queryRaw: unimplemented('$queryRaw'),
   };
 

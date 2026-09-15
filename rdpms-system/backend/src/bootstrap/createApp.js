@@ -9,7 +9,6 @@
  */
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { createIdempotencyMiddleware } from '../middleware/idempotency.js';
 import { runWithContext, currentContext } from '../platform/requestContext.js';
 
 import authRoutes from '../routes/auth.js';
@@ -69,8 +68,8 @@ export function createApp(deps = {}) {
     credentials: true,
   }));
 
-  // 幂等键中间件（请求级去重；RF02 将改造为「先鉴权后回放」+ 持久化作用域回执）
-  app.use('/api/*', createIdempotencyMiddleware());
+  // 幂等（RF02）：不再在鉴权前按 key 回放任何缓存。写命令在完成鉴权与资源授权后，
+  // 通过 platform/idempotency/receipts.js 的 withIdempotency 查询持久化回执并与业务同事务提交。
 
   // 根路由
   app.get('/', (c) => c.json({

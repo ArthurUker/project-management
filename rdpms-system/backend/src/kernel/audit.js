@@ -23,7 +23,34 @@ export function requestCtx(c) {
 }
 
 /**
- * 写审计日志。任何字段缺失都不阻断业务（审计失败仅告警），但 action 非法直接抛错。
+ * 构造审计行（RF02：抽出供严格审计复用，保证两种写入的字段口径一致）。
+ */
+export function buildAuditRow(entry) {
+  const action = normalizeAuditAction(entry.action);
+  if (!AUDIT_ACTION_LIST.includes(action)) {
+    throw new Error(`writeAudit: 非法审计动作 "${entry.action}"（必须使用 AUDIT_ACTIONS 常量）`);
+  }
+  return {
+    actorId: entry.actorId ?? null,
+    actorName: entry.actorName ?? null,
+    actorRole: entry.actorRole ?? null,
+    action,
+    entityType: entry.entityType ?? null,
+    entityId: entry.entityId ?? null,
+    entityLabel: entry.entityLabel ?? null,
+    before: entry.before === undefined ? undefined : entry.before,
+    after: entry.after === undefined ? undefined : entry.after,
+    changedFields: entry.changedFields ?? [],
+    metadata: entry.metadata ?? undefined,
+    ...requestCtx(entry.c ?? {}),
+  };
+}
+
+/**
+ * 写审计日志（非严格）。字段缺失不阻断业务（审计失败仅告警），action 非法直接抛错。
+ *
+ * 注意（05 §2）：本函数会吞掉写入异常，**不得**用于必须留证的业务证据。
+ * 关键命令请在事务内使用 platform/audit/strictAudit.js 的 writeAuditStrict。
  */
 export async function writeAudit(prisma, entry) {
   const action = normalizeAuditAction(entry.action);
