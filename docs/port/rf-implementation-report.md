@@ -665,7 +665,7 @@ ok RF04-I5 同项目内的 phaseId 正常放行（回归）
   整体成功后才 `complete()` 关闭操作，部分失败保留键位以便重试回放。
 - 前端用例 6 条（RF02-FE1..FE6）覆盖上述区别。
 
-### 8.4 回退方案修正（提交 `70fbb9d`）
+### 8.4 回退方案修正（提交 `c202926`）
 
 - **`start:src` 已移除**：迁移 TS 后 `node src/index.js` 必然 `ERR_MODULE_NOT_FOUND`，不能作为回退手段。
 - **回退 = release 级**：把 `/opt/rdpms/current` 指回上一个**完整 release**，并使用该 release 自带的启动配置；
