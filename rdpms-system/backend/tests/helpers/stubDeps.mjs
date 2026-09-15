@@ -41,6 +41,10 @@ export function createStubDb(options = {}) {
     reportVersions: [],
     auditLogs: [],
     mutationReceipts: [...(options.mutationReceipts ?? [])],
+    tasks: [...(options.tasks ?? [])],
+    phases: [...(options.phases ?? [])],
+    syncDevices: [],
+    syncMutations: [],
     writes: [],
   };
 
@@ -50,6 +54,10 @@ export function createStubDb(options = {}) {
     reportVersions: state.reportVersions,
     auditLogs: state.auditLogs,
     mutationReceipts: state.mutationReceipts,
+    tasks: state.tasks,
+    phases: state.phases,
+    syncDevices: state.syncDevices,
+    syncMutations: state.syncMutations,
     writes: state.writes,
   });
   const restore = (snap) => {
@@ -57,6 +65,10 @@ export function createStubDb(options = {}) {
     state.reportVersions = snap.reportVersions;
     state.auditLogs = snap.auditLogs;
     state.mutationReceipts = snap.mutationReceipts;
+    state.tasks = snap.tasks;
+    state.phases = snap.phases;
+    state.syncDevices = snap.syncDevices;
+    state.syncMutations = snap.syncMutations;
     state.writes = snap.writes;
   };
 
@@ -187,6 +199,45 @@ export function createStubDb(options = {}) {
       },
       count: async () => state.mutationReceipts.length,
       findMany: async () => [...state.mutationReceipts],
+    },
+    task: {
+      findUnique: async ({ where }) => state.tasks.find((t) => t.id === where.id) ?? null,
+      findFirst: async ({ where }) => state.tasks.find((t) => t.id === where.id
+        && (where.deletedAt === undefined || t.deletedAt === where.deletedAt)) ?? null,
+      findMany: async () => [...state.tasks],
+      update: async ({ where, data }) => {
+        const row = state.tasks.find((t) => t.id === where.id);
+        if (!row) throw new Error(`[stubDeps] task.update 目标不存在: ${where.id}`);
+        Object.assign(row, data);
+        state.writes.push({ op: 'task.update', id: where.id, data });
+        return { ...row };
+      },
+    },
+    projectPhase: {
+      findUnique: async ({ where }) => state.phases.find((p) => p.id === where.id) ?? null,
+      findFirst: async ({ where }) => state.phases.find((p) => p.id === where.id) ?? null,
+    },
+    syncDevice: {
+      upsert: async ({ where, create }) => {
+        const row = state.syncDevices.find((d) => d.id === where.id) ?? { id: where.id, ...create };
+        if (!state.syncDevices.includes(row)) state.syncDevices.push(row);
+        return row;
+      },
+      update: async ({ where, data }) => {
+        const row = state.syncDevices.find((d) => d.id === where.id);
+        if (row) Object.assign(row, data);
+        return row ?? { id: where.id };
+      },
+    },
+    syncMutation: {
+      findMany: async ({ where }) => state.syncMutations.filter(
+        (m) => where?.clientMutationId?.in?.includes(m.clientMutationId) ?? true,
+      ),
+      create: async ({ data }) => {
+        const row = { id: `sm-${state.syncMutations.length + 1}`, ...data };
+        state.syncMutations.push(row);
+        return row;
+      },
     },
     user: { findUnique: unimplemented('user.findUnique') },
     userRole: { findMany: unimplemented('userRole.findMany') },

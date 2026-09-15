@@ -5,7 +5,16 @@ import { authenticate as authMiddleware, getAuth } from '../kernel/rbac.js';
 import { AUDIT_ACTIONS, PROJECT_CAPABILITIES } from '../kernel/constants.js';
 import { writeAudit } from '../kernel/audit.js';
 import { badRequest } from '../kernel/http.js';
-import { projectVisibilityFilter } from '../kernel/projectAccess.js';
+import { projectVisibilityFilter, assertProjectCapability } from '../kernel/projectAccess.js';
+import {
+  assertActionPermission,
+  assertTaskStatusChange,
+  assertTaskAssign,
+  assertPhaseStatusChange,
+  assertPhaseBelongsToProject,
+  assertReportWritable,
+} from '../modules/access/writeGuards.js';
+import { buildReportDraftPatch } from '../modules/reports/reportCommands.js';
 
 /**
  * /api/sync —— 离线同步 v2（批次四）
@@ -47,6 +56,8 @@ const SYNC_ENTITIES = {
     touchUpdatedBy: true,
     fields: ['code', 'name', 'sortOrder', 'status', 'plannedStart', 'plannedEnd', 'actualStart', 'actualEnd', 'progressPercent', 'isMilestone', 'notes'],
     serverOwned: [],
+    // RF04/F13：阶段状态流转需 project_phases.change_status + 项目 transition
+    statusPermission: 'project_phases.change_status',
   },
   tasks: {
     model: 'task',
@@ -56,6 +67,11 @@ const SYNC_ENTITIES = {
     touchUpdatedBy: true,
     fields: ['title', 'description', 'status', 'priority', 'assigneeId', 'phaseId', 'parentId', 'taskType', 'applicability', 'regulatoryPriority', 'expectedDeliverable', 'regulatoryNotes', 'sortOrder', 'estimatedHours', 'actualHours', 'progressPercent', 'startDate', 'dueDate'],
     serverOwned: ['code', 'completedAt', 'startedAt'],
+    // RF04/F07：同步不是后门——动作权限与普通 API 同源
+    permission: 'tasks.update',
+    createPermission: 'tasks.create',
+    statusPermission: 'tasks.change_status',
+    assignPermission: 'tasks.assign',
     derive: (data) => {
       // 状态派生：完成/开始时间由服务端统一写入（客户端不可伪造）
       if (data.status === 'COMPLETED') data.completedAt = new Date();
@@ -93,6 +109,10 @@ const SYNC_ENTITIES = {
     fields: ['reportType', 'periodKey', 'periodStart', 'periodEnd', 'content'],
     // 服务端权威：审批/版本/归属——客户端上行一律忽略（审阅字段不可被覆盖）
     serverOwned: ['authorId', 'reviewerId', 'status', 'currentVersion', 'submittedAt', 'reviewedAt', 'reviewNote'],
+    // RF04/F07：汇报的锁定与动作权限与普通 API 同源
+    permission: 'reports.update',
+    createPermission: 'reports.create',
+    lockRule: 'report',
   },
   projectMembers: {
     model: 'projectMember',
@@ -124,19 +144,79 @@ async function upsertSyncDevice(auth, deviceId, label, platform) {
   });
 }
 
-/** 项目写入能力判定：SUPER_ADMIN 直通；其余需为有效成员且具备 write（或指定能力） */
-async function assertProjectWrite(auth, projectId, capability = 'write') {
-  if (auth.systemRole === 'SUPER_ADMIN') return;
+/**
+ * 解析同步写入所需的项目访问上下文（与普通 API 的 resolveProjectAccess 同源判定）。
+ * 返回 null 表示非有效成员。
+ */
+async function loadSyncAccess(auth, projectId) {
+  if (auth.systemRole === 'SUPER_ADMIN') {
+    return {
+      capabilities: ['read', 'write', 'delete', 'transition', 'assign', 'manage_members'],
+      memberRole: null,
+      isMember: true,
+      elevated: true,
+    };
+  }
   const membership = await prisma.projectMember.findUnique({
     where: { projectId_userId: { projectId, userId: auth.userId } },
     select: { role: true, leftAt: true },
   });
-  const ok = membership && membership.leftAt === null
-    && (PROJECT_CAPABILITIES[membership.role] ?? []).includes(capability);
-  if (!ok) {
-    const err = new Error(`当前项目角色不具备 ${capability} 能力`);
-    err.syncRejected = true;
-    throw err;
+  if (!membership || membership.leftAt !== null) return null;
+  return {
+    capabilities: PROJECT_CAPABILITIES[membership.role] ?? [],
+    memberRole: membership.role,
+    isMember: true,
+    elevated: false,
+  };
+}
+
+/**
+ * 实体动作级校验（RF04/F07）：同步与普通 API 调用同一组守卫，
+ * 保证「有项目 write 但无对应动作权限」的请求同样被拒绝。
+ */
+async function assertSyncEntityActions({ entity, def, existing, data, auth, access, projectId, op }) {
+  if (entity === 'reports') {
+    if (op === 'delete') {
+      assertReportWritable(existing, auth, access, 'reports.delete');
+      return;
+    }
+    // 周期键/内容形状走与普通 API 相同的构造与校验
+    const validated = buildReportDraftPatch(data, { currentType: existing?.reportType ?? 'MONTHLY' });
+    if (validated.reportType !== undefined) data.reportType = validated.reportType;
+    if (validated.periodKey !== undefined) data.periodKey = validated.periodKey;
+    if (validated.content !== undefined) data.content = validated.content;
+
+    if (existing) {
+      assertReportWritable(existing, auth, access, 'reports.update');
+    } else {
+      assertActionPermission(auth, def.createPermission ?? 'reports.create');
+    }
+    return;
+  }
+
+  if (entity === 'tasks') {
+    if (existing && data.status !== undefined && data.status !== existing.status) {
+      assertTaskStatusChange(auth, access);
+    }
+    if (existing && data.assigneeId !== undefined && data.assigneeId !== existing.assigneeId) {
+      assertTaskAssign(auth, access);
+    }
+    if (existing) assertActionPermission(auth, def.permission ?? 'tasks.update');
+    else assertActionPermission(auth, def.createPermission ?? 'tasks.create');
+    if (data.phaseId !== undefined && data.phaseId !== null) {
+      await assertPhaseBelongsToProject(prisma, data.phaseId, projectId);
+    }
+    return;
+  }
+
+  if (entity === 'milestones' && data.phaseId !== undefined && data.phaseId !== null) {
+    await assertPhaseBelongsToProject(prisma, data.phaseId, projectId);
+    return;
+  }
+
+  if (entity === 'projectPhases' && existing
+    && data.status !== undefined && data.status !== existing.status) {
+    assertPhaseStatusChange(auth, access);
   }
 }
 
@@ -286,8 +366,15 @@ sync.post('/push', async (c) => {
       } else if (def.ownOnly && existing && existing.authorId !== auth.userId) {
         outcome = { status: 'rejected', reason: '无权修改他人汇报' };
       } else {
+        // RF04/F07：同步与普通 API 同源——项目访问上下文 + 实体动作级权限
         // eslint-disable-next-line no-await-in-loop
-        await assertProjectWrite(auth, projectId, def.requireCapability ?? 'write');
+        const syncAccess = await loadSyncAccess(auth, projectId);
+        if (!syncAccess) throw new Error('无权访问该数据所属项目');
+        assertProjectCapability(syncAccess, def.requireCapability ?? 'write', def.permission ?? 'sync.write');
+        // eslint-disable-next-line no-await-in-loop
+        await assertSyncEntityActions({
+          entity, def, existing, data, auth, access: syncAccess, projectId, op,
+        });
 
         const tsField = def.timestampField ?? 'updatedAt';
         // 冲突检测：客户端基线早于服务端时间戳

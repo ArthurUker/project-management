@@ -11,6 +11,7 @@ import {
   projectVisibilityFilter,
 } from '../kernel/projectAccess.js';
 import { badRequest, notFound } from '../kernel/http.js';
+import { assertTaskStatusChange, assertTaskAssign } from '../modules/access/writeGuards.js';
 
 /**
  * /api/tasks —— 任务管理（W10 PG baseline 迁移 + 项目∩全量接入）。
@@ -242,6 +243,16 @@ tasks.put('/:id', requirePermission('tasks.update'), async (c) => {
   const access = await resolveProjectAccess(prisma, auth, task.projectId);
   await auditElevatedIfNeeded(prisma, c, access, 'tasks.update');
   assertProjectCapability(access, 'write', 'tasks.update');
+
+  // RF04/F13：字段级动作权限——通用 PUT 不得绕开专用命令。
+  // 状态流转要 tasks.change_status + transition；指派要 tasks.assign + assign。
+  const nextStatus = 'status' in data ? normalizeStatus(data.status) : undefined;
+  if (nextStatus !== undefined && nextStatus !== task.status) {
+    assertTaskStatusChange(auth, access);
+  }
+  if ('assigneeId' in data && data.assigneeId !== task.assigneeId) {
+    assertTaskAssign(auth, access);
+  }
 
   if (data.applicabilityStatus !== undefined) {
     data.applicability = normalizeApplicability(data.applicabilityStatus);

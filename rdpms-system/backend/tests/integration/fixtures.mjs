@@ -11,7 +11,11 @@ export const IT = {
   userAuthor: 'it-user-author',
   userOther: 'it-user-other',
   project: 'it-project-1',
+  project2: 'it-project-2',
   report: 'it-report-1',
+  phase: 'it-phase-1',
+  phaseOther: 'it-phase-other',
+  task: 'it-task-1',
 };
 
 export const DAILY_PERIOD = '2026-09-15';
@@ -69,6 +73,42 @@ export async function seedMinimalFixture(prisma) {
       periodKey: DAILY_PERIOD,
       content: {},
       status: 'DRAFT',
+    },
+  });
+
+  // RF04 需要：第二个项目、两个阶段（跨项目引用用例）、一个任务
+  await prisma.project.upsert({
+    where: { id: IT.project2 },
+    update: { deletedAt: null },
+    create: {
+      id: IT.project2,
+      code: 'IT-PRJ-2',
+      name: '集成测试项目二',
+      type: 'TESTING',
+      managerId: IT.userAuthor,
+    },
+  });
+
+  for (const [id, projectId, name] of [
+    [IT.phase, IT.project, '集成测试阶段'],
+    [IT.phaseOther, IT.project2, '他项目阶段'],
+  ]) {
+    await prisma.projectPhase.upsert({
+      where: { id },
+      update: { deletedAt: null },
+      create: { id, projectId, code: `PH-${id}`, name, sortOrder: 1 },
+    });
+  }
+
+  await prisma.task.upsert({
+    where: { id: IT.task },
+    update: { deletedAt: null, status: 'NOT_STARTED', assigneeId: null },
+    create: {
+      id: IT.task,
+      projectId: IT.project,
+      phaseId: IT.phase,
+      title: '集成测试任务',
+      status: 'NOT_STARTED',
     },
   });
 }

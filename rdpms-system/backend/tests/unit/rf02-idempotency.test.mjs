@@ -149,7 +149,9 @@ test('RF02-U5 业务校验失败：不留下回执与半成品', async () => {
     body: { content: { n: 1 } },
   });
 
-  assert.equal(res.status, 400);
+  // 状态错误按方案 §G 统一为 409 INVALID_STATE（RF04 起与 POST/撤回/删除口径一致）
+  assert.equal(res.status, 409);
+  assert.equal((await res.clone().json()).code, 'INVALID_STATE');
   assert.equal(db.state.mutationReceipts.length, 0, '失败不得留下回执');
   assert.equal(db.state.auditLogs.length, 0, '失败不得留下审计');
   assert.deepEqual(db.state.reports[0].content, {}, '失败不得改写业务数据');

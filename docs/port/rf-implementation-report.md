@@ -421,8 +421,117 @@ ok RF03-F8..F13b              内容：对象直用、字符串兼容、解析�
 
 ---
 
-## 5. 下一批：RF04 所有写入口授权
+## 5. RF04 所有写入口授权
 
-计划（06）：普通 API、sync、导入收敛到同一命令；按字段执行动作权限。
-验收：仅有 update 无 transition 时不能改状态；被移出项目不能更新/撤回/删除；跨项目 `phaseId` 被拒绝；
-reviewed 内容所有入口均锁定。
+**状态：DONE**
+
+### 5.1 对应发现
+
+| F | 等级 | 内容 | 处理 |
+|---|---|---|---|
+| F06 | P0 | 汇报 PUT 只校验作者不校验项目成员；DELETE 只校验「草稿 + 全局删除权限」；recall 无项目访问复核 | 三处统一「项目访问 → 能力 → 作者 → 状态」顺序，且与同步入口共用同一守卫 |
+| F07 | P0 | sync 只校验项目 write，不看实体动作权限，也不锁定已审阅汇报 | 新增 `loadSyncAccess` + `assertSyncEntityActions`：同步与普通 API 调用同一组守卫；汇报补丁走同一构造/校验函数 |
+| F13 | P1 | 通用 PUT 可改 `status`/`assigneeId`，绕开专用动作权限 | 任务 PUT 按字段判定：状态变更要 `tasks.change_status` + transition；指派要 `tasks.assign` + assign |
+
+### 5.2 变更文件
+
+| 文件 | 改动 |
+|---|---|
+| `src/modules/access/writeGuards.js`（新） | 动作级授权真源：`assertActionPermission` / `assertTaskEdit` / `assertTaskStatusChange` / `assertTaskAssign` / `assertPhaseStatusChange` / `assertPhaseBelongsToProject` / `assertReportWritable` / `REPORT_EDITABLE_STATUSES` |
+| `src/modules/reports/reportCommands.js`（新） | `parseContentInput` + `buildReportDraftPatch`：周期键按类型校验与内容归一化的**单一实现**，HTTP 与 sync 共用 |
+| `src/routes/reports.js` | PUT 改用共享守卫与补丁构造；DELETE 增加项目访问 + 作者 + 状态（409 `INVALID_STATE`）；recall 增加项目访问 + 能力 |
+| `src/routes/tasks.js` | PUT 增加字段级动作权限判定（状态变更 / 指派各自校验） |
+| `src/routes/sync.js` | 新增 `loadSyncAccess`（与 `resolveProjectAccess` 同源口径）；新增 `assertSyncEntityActions`；实体注册表补 `permission`/`createPermission`/`statusPermission`/`assignPermission` 与 `lockRule`；删除已无调用方的 `assertProjectWrite` |
+| `tests/unit/rf04-write-authorization.test.mjs`（新） | 14 条路由替身用例 |
+| `tests/integration/rf04-write-authorization.integration.test.mjs`（新） | 5 条真实库用例 |
+| `tests/integration/fixtures.mjs` | 增加第二项目 / 两个阶段 / 一个任务 |
+| `tests/helpers/stubDeps.mjs` | 桩新增 task / projectPhase / syncDevice / syncMutation 与快照字段 |
+| `tests/unit/rf02-idempotency.test.mjs` | 锁定状态错误码由 400 对齐为 **409 `INVALID_STATE`**（方案 §G：状态错误 409） |
+
+### 5.3 数据库迁移
+
+**无**。
+
+### 5.4 新旧契约映射
+
+| 项 | 旧 | 新 |
+|---|---|---|
+| 汇报删除 | 校验草稿 + 全局 `reports.delete`，无作者/项目判定 | 项目访问（非成员 404）→ `write` 能力 → 作者 → 草稿状态 |
+| 汇报撤回 | 无项目访问复核 | 同上顺序（状态要求 SUBMITTED） |
+| 汇报锁定错误码 | `400 VALIDATION_ERROR` | `409 INVALID_STATE`（与提交/删除/撤回统一，方案 §G） |
+| 任务 PUT 改状态 | 只要 `tasks.update` + `write` | 需 `tasks.change_status` + 项目 `transition` |
+| 任务 PUT 改负责人 | 只要 `tasks.update` + `write` | 需 `tasks.assign` + 项目 `assign` |
+| sync 上行 | 只看项目 write；已审阅汇报可改 | 与普通 API 同源：项目访问 + 实体动作权限 + 汇报锁定 + 周期键校验 |
+| sync 跨项目引用 | 不校验 task/milestone 的 `phaseId` | 复用 `assertPhaseBelongsToProject`，与 HTTP 同一实现 |
+
+### 5.5 测试名与实际输出
+
+路由替身（`npm test`）：
+
+```
+ok RF04-U1  被移出项目的作者不能删除自己的汇报
+ok RF04-U2  非作者即使有 reports.delete 也不能删除他人汇报
+ok RF04-U3  被移出项目的作者不能撤回自己已提交的汇报
+ok RF04-U4  成员但无 write 能力（VIEWER）不能更新自己的汇报
+ok RF04-U5  只有 tasks.update 时不能通过通用 PUT 改状态
+ok RF04-U6  有 tasks.change_status 但项目能力无 transition 时仍不能改状态
+ok RF04-U7  有 tasks.update 时不能通过通用 PUT 改负责人
+ok RF04-U8  同时具备权限与项目能力时，状态流转正常放行（回归）
+ok RF04-U9  跨项目 phaseId 被拒绝（任务更新）
+ok RF04-U10 同步不得覆盖已审阅汇报的内容（reviewed 锁定）
+ok RF04-U11 同步不得修改他人汇报
+ok RF04-U12 同步改任务状态需要 tasks.change_status（无权限则拒绝）
+ok RF04-U13 同步里的跨项目 phaseId 被拒绝
+ok RF04-U14 被移出项目后同步更新被拒绝
+# tests 46 # pass 46 # fail 0（单元，含 RF01–RF04）
+# tests 6  # pass 6  # fail 0（契约）
+```
+
+真实集成（`npm run test:integration`）：
+
+```
+ok RF04-I1 被移出项目后，作者不能更新/撤销/删除自己的汇报
+ok RF04-I2 同步不得覆盖已审阅汇报（真实状态锁定）
+ok RF04-I3 同步改任务状态需要 tasks.change_status（真实权限与项目能力）
+ok RF04-I4 跨项目 phaseId 在普通 API 与同步入口都被拒绝
+ok RF04-I5 同项目内的 phaseId 正常放行（回归）
+# tests 25 # pass 23 # fail 0 # skipped 2
+```
+
+门禁与构建：`lint:undefined` 55 文件 0 命中；`typecheck:report` 485 条诊断/6 类（非门禁）；前端 `npm test` 14/14、`tsc -b` 通过。
+部署形态冒烟（演练库只读）：`health=200 ready=200 reports_unauth=401 sync_unauth=401`。
+
+### 5.6 未运行项
+
+| 项 | 状态 | 说明 |
+|---|---|---|
+| milestone / monthlyProgress / projects 的同步动作权限 | 部分 | 本批只覆盖验收涉及的 reports / tasks / projectPhases；其余实体仍为「项目能力」判定，待后续批次按同一守卫补齐 |
+| 导入入口 | 已核查 | 仓库内唯一导入入口 `POST /api/regulatory-documents/import` 已校验 `regulatory_documents.update` 动作权限；实验导入（ImportSession）属 RF13/RF14 |
+| 任务创建携带初始状态 | 未改 | 创建时的初始状态仍随 `tasks.create` 一起判定，未要求 `change_status`（F13 只针对「更新」绕过） |
+| 演练环境 sync E2E（21 项） | NOT_RUN | 按本轮约定不对 `rdpms_drill` 执行测试写入；需在专用演练库复核 |
+| 前端权限门控 | 未改 | 已按服务端为准；前端按钮级门控属 RF15 |
+
+### 5.7 数据风险
+
+- 无 schema 变更；未连接生产库；演练库仅只读冒烟。
+- **行为收紧（预期）**：离线同步现在会按实体动作权限拒绝——仅有项目 write、缺少 `tasks.update`/`reports.update` 等权限的角色，其离线改动不再落库（客户端会显示 rejected 并保留草稿）。
+- `assertReportWritable` 的锁定错误码由 400 改为 409，前端提示文案随之变化（不影响成功路径）。
+
+### 5.8 回退方法
+
+- 代码：`git revert <RF04 提交>`。
+- 数据库：无需动作。
+- 运行：未部署、未重启任何生产服务。
+
+### 5.9 ADR 偏离
+
+无偏离。05 §2「同步是业务命令的传输适配器」在本批以「共用守卫 + 共用补丁构造」落地；
+`sync` 仍保留通用写入通道（未逐实体改写为独立命令函数），已在上表「未运行项」标注为后续批次收敛项。
+
+---
+
+## 6. 下一批：RF05 文件作用域
+
+计划（06）：`FileAccessPolicy`、历史归属分类、staging 机制。
+验收：甲项目成员看不到乙文件列表/metadata/下载；上传者私有暂存隔离；import-source 也检查；
+历史无归属文件不自动公开。

@@ -18,6 +18,8 @@ import {
   validatePeriodKey,
   isReportPeriodConflict,
 } from '../modules/reports/reportRules.js';
+import { assertReportWritable } from '../modules/access/writeGuards.js';
+import { buildReportDraftPatch } from '../modules/reports/reportCommands.js';
 
 /**
  * /api/reports —— 汇报管理（W10 PG baseline 迁移 + 项目∩）。
@@ -191,26 +193,13 @@ reports.put('/:id', requirePermission('reports.update'), async (c) => {
 
   const access = await resolveProjectAccess(prisma, auth, existing.projectId);
   await auditElevatedIfNeeded(prisma, c, access, 'reports.update');
-  assertProjectCapability(access, 'write', 'reports.update');
-  if (existing.authorId !== auth.userId) throw badRequest('FORBIDDEN', '无权修改他人的汇报');
-  if (!['DRAFT', 'NEEDS_REVISION'].includes(existing.status)) {
-    throw badRequest('VALIDATION_ERROR', '仅草稿或需修改状态的汇报可编辑');
-  }
+  // RF04/F06：项目范围 + 作者 + 状态锁定判定与同步入口同源（modules/access/writeGuards）
+  assertReportWritable(existing, auth, access);
   assertNoClientStatus(body, '保存草稿');
 
   // 校验（含周期键按类型校验）在查询幂等回执之前完成：非法请求不留回执
-  const data = pickAllowed(body, ['content', 'periodKey', 'month', 'reportType'], { entityLabel: '更新汇报' });
-  if (data.month !== undefined) { data.periodKey = data.month; delete data.month; }
-  const effectiveType = data.reportType !== undefined
-    ? normalizeReportType(data.reportType)
-    : existing.reportType;
-  if (data.reportType !== undefined) data.reportType = effectiveType;
-  if (data.periodKey !== undefined) {
-    const keyCheck = validatePeriodKey(effectiveType, data.periodKey);
-    if (!keyCheck.ok) throw badRequest('VALIDATION_ERROR', keyCheck.message, keyCheck.details);
-    data.periodKey = keyCheck.value;
-  }
-  if (data.content !== undefined) data.content = parseContentInput(data.content);
+  const allowed = pickAllowed(body, ['content', 'periodKey', 'month', 'reportType'], { entityLabel: '更新汇报' });
+  const data = buildReportDraftPatch(allowed, { currentType: existing.reportType });
 
   const { key } = resolveIdempotencyKey(c, body);
   let result;
@@ -435,7 +424,15 @@ reports.delete('/:id', requirePermission('reports.delete'), async (c) => {
   const id = c.req.param('id');
   const report = await prisma.report.findUnique({ where: { id } });
   if (!report || report.deletedAt) throw notFound('REPORT_NOT_FOUND', '汇报不存在');
-  if (report.status !== 'DRAFT') throw badRequest('VALIDATION_ERROR', '只能删除草稿状态的汇报');
+
+  // RF04/F06：先解析项目范围（非成员 404），再校验作者与状态
+  const access = await resolveProjectAccess(prisma, auth, report.projectId);
+  await auditElevatedIfNeeded(prisma, c, access, 'reports.delete');
+  assertProjectCapability(access, 'write', 'reports.delete');
+  if (report.authorId !== auth.userId) throw badRequest('FORBIDDEN', '无权删除他人的汇报');
+  if (report.status !== 'DRAFT') {
+    throw new HttpError(409, 'INVALID_STATE', '只能删除草稿状态的汇报');
+  }
 
   await prisma.report.update({ where: { id }, data: { deletedAt: new Date() } });
   await writeAudit(prisma, {
@@ -459,8 +456,15 @@ reports.patch('/:id/recall', requirePermission('reports.update'), async (c) => {
   const id = c.req.param('id');
   const report = await prisma.report.findUnique({ where: { id } });
   if (!report || report.deletedAt) throw notFound('REPORT_NOT_FOUND', '汇报不存在');
-  if (report.status !== 'SUBMITTED') throw badRequest('VALIDATION_ERROR', '只有已提交的汇报才能撤回');
+
+  // RF04/F06：撤回同样要求项目成员资格与 write 能力
+  const access = await resolveProjectAccess(prisma, auth, report.projectId);
+  await auditElevatedIfNeeded(prisma, c, access, 'reports.update');
+  assertProjectCapability(access, 'write', 'reports.update');
   if (report.authorId !== auth.userId) throw badRequest('FORBIDDEN', '无权撤回他人的汇报');
+  if (report.status !== 'SUBMITTED') {
+    throw new HttpError(409, 'INVALID_STATE', '只有已提交的汇报才能撤回');
+  }
 
   const updated = await prisma.report.update({
     where: { id },
