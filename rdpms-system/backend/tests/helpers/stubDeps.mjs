@@ -15,6 +15,19 @@ function unimplemented(path) {
   };
 }
 
+/** where 匹配（id + 标量/日期条件），用于原子 updateMany 的并发基线语义 */
+function matchesWhere(row, where) {
+  return Object.entries(where).every(([key, expected]) => {
+    if (key === 'id') return row.id === expected;
+    const actual = row[key];
+    if (expected instanceof Date) {
+      return actual instanceof Date && actual.getTime() === expected.getTime();
+    }
+    if (expected && typeof expected === 'object' && !Array.isArray(expected)) return true; // 未使用的操作符条件
+    return actual === expected;
+  });
+}
+
 /**
  * 构造一个最小可用的假 Prisma 客户端。
  * @param {object} [options]
@@ -45,6 +58,8 @@ export function createStubDb(options = {}) {
     phases: [...(options.phases ?? [])],
     syncDevices: [],
     syncMutations: [],
+    projects: [...(options.projects ?? [])],
+    milestones: [...(options.milestones ?? [])],
     writes: [],
   };
 
@@ -58,6 +73,8 @@ export function createStubDb(options = {}) {
     phases: state.phases,
     syncDevices: state.syncDevices,
     syncMutations: state.syncMutations,
+    projects: state.projects,
+    milestones: state.milestones,
     writes: state.writes,
   });
   const restore = (snap) => {
@@ -69,6 +86,8 @@ export function createStubDb(options = {}) {
     state.phases = snap.phases;
     state.syncDevices = snap.syncDevices;
     state.syncMutations = snap.syncMutations;
+    state.projects = snap.projects;
+    state.milestones = snap.milestones;
     state.writes = snap.writes;
   };
 
@@ -78,9 +97,27 @@ export function createStubDb(options = {}) {
       findUnique: async ({ where }) => {
         // 钩子点：位于请求处理链路内部，用于构造「A 挂起时 B 完成」的交错场景
         if (beforeProjectLookup) await beforeProjectLookup();
-        return where.id === projectRow.id ? { ...projectRow } : null;
+        const row = state.projects.find((r) => r.id === where.id)
+          ?? (where.id === projectRow.id ? projectRow : null);
+        return row ? structuredClone(row) : null;
       },
-      findMany: async () => [{ id: projectRow.id }],
+      findMany: async () => (state.projects.length
+        ? state.projects.map((r) => ({ id: r.id }))
+        : [{ id: projectRow.id }]),
+      update: async ({ where, data }) => {
+        const row = state.projects.find((r) => r.id === where.id);
+        if (!row) throw new Error(`[stubDeps] project.update 目标不存在: ${where.id}`);
+        Object.assign(row, data);
+        state.writes.push({ op: 'project.update', id: where.id, data });
+        return { ...row };
+      },
+      updateMany: async ({ where, data }) => {
+        const row = state.projects.find((r) => matchesWhere(r, where));
+        if (!row) return { count: 0 };
+        Object.assign(row, data);
+        state.writes.push({ op: 'project.updateMany', id: where.id, data });
+        return { count: 1 };
+      },
     },
     projectMember: {
       findUnique: async () => (membership ? { ...membership } : null),
@@ -135,6 +172,16 @@ export function createStubDb(options = {}) {
         Object.assign(row, data);
         state.writes.push({ op: 'report.update', id: where.id, data });
         return { ...row };
+      },
+      updateMany: async ({ where, data }) => {
+        const row = state.reports.find((r) => matchesWhere(r, where));
+        if (!row) {
+          state.writes.push({ op: 'report.updateMany.miss', id: where.id, data });
+          return { count: 0 };
+        }
+        Object.assign(row, data);
+        state.writes.push({ op: 'report.updateMany', id: where.id, data });
+        return { count: 1 };
       },
       create: async ({ data }) => {
         const row = { id: data.id ?? `r-${state.reports.length + 1}`, deletedAt: null, ...data };
@@ -208,7 +255,10 @@ export function createStubDb(options = {}) {
       findMany: async () => [...state.mutationReceipts],
     },
     task: {
-      findUnique: async ({ where }) => state.tasks.find((t) => t.id === where.id) ?? null,
+      findUnique: async ({ where }) => {
+        const row = state.tasks.find((t) => t.id === where.id);
+        return row ? structuredClone(row) : null;
+      },
       findFirst: async ({ where }) => state.tasks.find((t) => t.id === where.id
         && (where.deletedAt === undefined || t.deletedAt === where.deletedAt)) ?? null,
       findMany: async () => [...state.tasks],
@@ -218,6 +268,38 @@ export function createStubDb(options = {}) {
         Object.assign(row, data);
         state.writes.push({ op: 'task.update', id: where.id, data });
         return { ...row };
+      },
+      /** 原子并发基线：WHERE 条件不匹配则 count=0（模拟真实 UPDATE ... WHERE） */
+      updateMany: async ({ where, data }) => {
+        const row = state.tasks.find((t) => matchesWhere(t, where));
+        if (!row) {
+          state.writes.push({ op: 'task.updateMany.miss', id: where.id, data });
+          return { count: 0 };
+        }
+        Object.assign(row, data);
+        state.writes.push({ op: 'task.updateMany', id: where.id, data });
+        return { count: 1 };
+      },
+    },
+    milestone: {
+      findUnique: async ({ where }) => {
+        const row = state.milestones.find((r) => r.id === where.id);
+        return row ? structuredClone(row) : null;
+      },
+      findMany: async () => state.milestones.map((r) => ({ id: r.id })),
+      update: async ({ where, data }) => {
+        const row = state.milestones.find((r) => r.id === where.id);
+        if (!row) throw new Error(`[stubDeps] milestone.update 目标不存在: ${where.id}`);
+        Object.assign(row, data);
+        state.writes.push({ op: 'milestone.update', id: where.id, data });
+        return { ...row };
+      },
+      updateMany: async ({ where, data }) => {
+        const row = state.milestones.find((r) => matchesWhere(r, where));
+        if (!row) return { count: 0 };
+        Object.assign(row, data);
+        state.writes.push({ op: 'milestone.updateMany', id: where.id, data });
+        return { count: 1 };
       },
     },
     projectPhase: {

@@ -228,6 +228,17 @@ reports.put('/:id', requirePermission('reports.update'), async (c) => {
   // 状态锁定与周期键校验依赖服务端当前状态，放进 validate（仅新命令路径执行）。
   const allowed = pickAllowed(body, ['content', 'periodKey', 'month', 'reportType'], { entityLabel: '更新汇报' });
 
+  // 并发基线（可选）：新版客户端传之前读到的 updatedAt，进入原子 UPDATE 条件
+  const expectedUpdatedAt = body?.expectedUpdatedAt ? new Date(body.expectedUpdatedAt) : null;
+  if (expectedUpdatedAt && Number.isNaN(expectedUpdatedAt.getTime())) {
+    throw badRequest('VALIDATION_ERROR', 'expectedUpdatedAt 不是合法时间', { field: 'expectedUpdatedAt' });
+  }
+  if (!expectedUpdatedAt) {
+    // 旧客户端兼容：显式留痕，不静默降低保护
+    // eslint-disable-next-line no-console
+    console.warn(`[reports.update] 缺少并发基线（report=${id}，actor=${auth.userId}）→ 以旧客户端兼容路径执行`);
+  }
+
   const { key } = resolveIdempotencyKey(c, body);
   let result;
   try {
@@ -244,8 +255,12 @@ reports.put('/:id', requirePermission('reports.update'), async (c) => {
         return buildReportDraftPatch(allowed, { currentType: existing.reportType });
       },
       execute: async (tx, data) => {
-        // 共用命令：草稿保存（与同步上行同一实现）
-        const saved = await saveReportDraft(tx, { actor: auth, reportId: id, patch: data });
+        // 共用命令：草稿保存（与同步上行同一实现）。
+        // 新版客户端携带 expectedUpdatedAt → 作为原子并发基线；缺失时按旧客户端兼容路径处理，
+        // 并在审计里留痕（noConcurrencyBaseline），不静默降低保护（RF04 复核）。
+        const saved = await saveReportDraft(tx, {
+          actor: auth, reportId: id, patch: data, cas: expectedUpdatedAt ? { updatedAt: expectedUpdatedAt } : undefined,
+        });
         const updated = await tx.report.findUnique({
           where: { id },
           include: { author: { select: { id: true, displayName: true } }, project: { select: { id: true, name: true } } },
@@ -260,7 +275,10 @@ reports.put('/:id', requirePermission('reports.update'), async (c) => {
           entityId: id,
           entityLabel: `${existing.reportType}/${existing.periodKey}`,
           changedFields: Object.keys(data),
-          metadata: { permissionCode: 'reports.update' },
+          metadata: {
+            permissionCode: 'reports.update',
+            ...(expectedUpdatedAt ? { concurrencyBaseline: expectedUpdatedAt.toISOString() } : { noConcurrencyBaseline: true }),
+          },
         });
         return { status: 200, body: updated };
       },

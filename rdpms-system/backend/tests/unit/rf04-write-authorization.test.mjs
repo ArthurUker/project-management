@@ -267,6 +267,86 @@ test('RF04-U13 同步里的跨项目 phaseId 被拒绝', async () => {
   assert.match(String(body.results[0].reason), /phaseId/);
 });
 
+test('RF04-U16 任务 PUT 混合字段时必须全成功或全不变（多命令同事务）', async () => {
+  const db = createStubDb({ tasks: [task()], membership: OWNER_ACCESS });
+  const app = createApp({
+    db,
+    // 具备编辑与状态流转权限，但**没有** tasks.assign
+    actorResolver: async () => createStubActor({ ...AUTHOR, permissions: ['tasks.update', 'tasks.change_status'] }),
+  });
+
+  const res = await jsonRequest(app, '/api/tasks/t1', {
+    method: 'PUT',
+    body: { title: '改名了', status: 'IN_PROGRESS', assigneeId: 'u2' },
+  });
+  assert.equal(res.status, 403, '缺少 tasks.assign 时必须整体失败');
+
+  assert.equal(db.state.tasks[0].title, '任务一', '普通字段不得被部分提交');
+  assert.equal(db.state.tasks[0].status, 'TODO', '状态不得被部分提交');
+  assert.equal(db.state.tasks[0].assigneeId, null, '指派不得生效');
+});
+
+test('RF04-U17 同步实体补齐动作权限：projects / milestones 缺权限即拒绝', async () => {
+  // projects 更新：缺少 projects.update
+  const dbProjects = createStubDb({ membership: OWNER_ACCESS });
+  dbProjects.state.projects = [{ id: 'p1', name: '项目', deletedAt: null, updatedAt: new Date('2026-09-15T00:00:00Z') }];
+  const appProjects = createApp({
+    db: dbProjects,
+    actorResolver: async () => createStubActor({ ...AUTHOR, permissions: [] }),
+  });
+  const resProjects = await jsonRequest(appProjects, '/api/sync/push', {
+    body: pushChange('projects', 'p1', { name: '改名' }),
+  });
+  const bodyProjects = await resProjects.json();
+  assert.equal(bodyProjects.results[0].status, 'rejected', '缺少 projects.update 必须拒绝');
+  assert.match(String(bodyProjects.results[0].reason), /projects\.update/);
+
+  // milestones 更新：缺少 milestones.update
+  const dbMilestones = createStubDb({ membership: OWNER_ACCESS });
+  dbMilestones.state.milestones = [{ id: 'm1', projectId: 'p1', name: '里程碑', deletedAt: null }];
+  const appMilestones = createApp({
+    db: dbMilestones,
+    actorResolver: async () => createStubActor({ ...AUTHOR, permissions: ['tasks.update'] }),
+  });
+  const resMilestones = await jsonRequest(appMilestones, '/api/sync/push', {
+    body: pushChange('milestones', 'm1', { name: '改名' }),
+  });
+  const bodyMilestones = await resMilestones.json();
+  assert.equal(bodyMilestones.results[0].status, 'rejected', '缺少 milestones.update 必须拒绝');
+});
+
+test('RF04-U18 汇报 PUT 携带过期并发基线 → 409 冲突且不改数据', async () => {
+  const stored = { ...draftReport(), updatedAt: new Date('2026-09-15T10:00:00Z') };
+  const db = createStubDb({ reports: [stored], membership: OWNER_ACCESS });
+  const app = createApp({
+    db,
+    actorResolver: async () => createStubActor({ ...AUTHOR, permissions: ['reports.update'] }),
+  });
+
+  const res = await jsonRequest(app, '/api/reports/r1', {
+    method: 'PUT',
+    body: {
+      content: { n: 1 },
+      expectedUpdatedAt: '2026-09-15T09:00:00.000Z', // 落后于服务端
+      clientMutationId: 'rf04-baseline-miss',
+    },
+  });
+  assert.equal(res.status, 409, '基线不匹配必须冲突');
+  assert.equal(db.state.reports[0].content.n, undefined, '不得写入');
+
+  // 基线正确时放行
+  const ok = await jsonRequest(app, '/api/reports/r1', {
+    method: 'PUT',
+    body: {
+      content: { n: 2 },
+      expectedUpdatedAt: '2026-09-15T10:00:00.000Z',
+      clientMutationId: 'rf04-baseline-hit',
+    },
+  });
+  assert.equal(ok.status, 200);
+  assert.deepEqual(db.state.reports[0].content, { n: 2 });
+});
+
 test('RF04-U15 新建日报走持久幂等：同 key 同 payload 重试不重复创建', async () => {
   const db = createStubDb({ reports: [] });
   const app = createApp({

@@ -85,6 +85,11 @@ export interface ReportWriteDb {
       data: Record<string, unknown>;
       include?: unknown;
     }): Promise<Record<string, unknown>>;
+    updateMany(args: {
+      where: Record<string, unknown>;
+      data: Record<string, unknown>;
+    }): Promise<{ count: number }>;
+    findUnique(args: { where: { id: string }; include?: unknown }): Promise<Record<string, unknown> | null>;
   };
   reportVersion?: {
     findFirst(args: { where: Record<string, unknown>; orderBy?: Record<string, unknown> }): Promise<{ version: number } | null>;
@@ -98,12 +103,25 @@ export interface ReportWriteDb {
  */
 export async function saveReportDraft(
   db: ReportWriteDb,
-  { actor, reportId, patch }: { actor: { userId: string }; reportId: string; patch: ReportDraftPatch },
+  { actor, reportId, patch, cas }: {
+    actor: { userId: string };
+    reportId: string;
+    patch: ReportDraftPatch;
+    /** 并发基线（如 { updatedAt: <客户端读到的值> }）：作为原子 UPDATE 的 WHERE 条件 */
+    cas?: Record<string, unknown>;
+  },
 ): Promise<Record<string, unknown>> {
-  return db.report.update({
-    where: { id: reportId },
-    data: { ...patch, updatedById: actor.userId },
-  });
+  const data = { ...patch, updatedById: actor.userId };
+  if (!cas) {
+    return db.report.update({ where: { id: reportId }, data });
+  }
+  const result = await db.report.updateMany({ where: { id: reportId, ...cas }, data });
+  if (result.count === 0) {
+    throw new HttpError(409, 'CONFLICT', '数据已被他人修改，请基于最新版本重试');
+  }
+  const row = await db.report.findUnique({ where: { id: reportId } });
+  if (!row) throw new HttpError(404, 'REPORT_NOT_FOUND', '汇报不存在');
+  return row;
 }
 
 export interface SubmitReportResult {

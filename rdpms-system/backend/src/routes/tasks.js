@@ -279,17 +279,20 @@ tasks.put('/:id', requirePermission('tasks.update'), async (c) => {
   if (statusChanging) changedFields.push('status');
   if (assigneeChanging) changedFields.push('assigneeId');
 
-  if (Object.keys(data).length > 0) {
-    await updateTaskFields(prisma, { actor: auth, access, task, fields: data });
-  }
-  if (statusChanging) {
-    await changeTaskStatus(prisma, { actor: auth, access, task, status: nextStatus });
-  }
-  if (assigneeChanging) {
-    await assignTask(prisma, { actor: auth, access, task, assigneeId: nextAssignee });
-  }
-
-  const updated = await prisma.task.findUnique({ where: { id }, include: TASK_INCLUDE });
+  // 同一事务内执行：混合字段（普通字段 + status + assigneeId）必须全成功或全不变，
+  // 不允许多个命令各自提交造成部分成功（RF04 验收）。
+  const updated = await prisma.$transaction(async (tx) => {
+    if (Object.keys(data).length > 0) {
+      await updateTaskFields(tx, { actor: auth, access, task, fields: data });
+    }
+    if (statusChanging) {
+      await changeTaskStatus(tx, { actor: auth, access, task, status: nextStatus });
+    }
+    if (assigneeChanging) {
+      await assignTask(tx, { actor: auth, access, task, assigneeId: nextAssignee });
+    }
+    return tx.task.findUnique({ where: { id }, include: TASK_INCLUDE });
+  });
 
   await writeAudit(prisma, {
     c,

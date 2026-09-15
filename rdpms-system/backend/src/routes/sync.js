@@ -47,6 +47,8 @@ const SYNC_ENTITIES = {
     touchUpdatedBy: true,
     fields: ['name', 'description', 'status', 'type', 'position', 'managerId', 'startDate', 'endDate', 'actualEndDate'],
     serverOwned: ['code', 'templateId', 'metadata'],
+    // RF04 补齐：项目属性编辑需 projects.update（离线不支持新建，编号由服务端发号）
+    permission: 'projects.update',
     include: { manager: { select: { id: true, displayName: true } } },
   },
   projectPhases: {
@@ -57,7 +59,9 @@ const SYNC_ENTITIES = {
     touchUpdatedBy: true,
     fields: ['code', 'name', 'sortOrder', 'status', 'plannedStart', 'plannedEnd', 'actualStart', 'actualEnd', 'progressPercent', 'isMilestone', 'notes'],
     serverOwned: [],
-    // RF04/F13：阶段状态流转需 project_phases.change_status + 项目 transition
+    // RF04：阶段编辑/新建与状态流转分别校验动作权限
+    permission: 'project_phases.update',
+    createPermission: 'project_phases.create',
     statusPermission: 'project_phases.change_status',
   },
   tasks: {
@@ -87,6 +91,9 @@ const SYNC_ENTITIES = {
     touchUpdatedBy: true,
     fields: ['name', 'description', 'phaseId', 'dueDate', 'status'],
     serverOwned: ['completedAt'],
+    // RF04 补齐：里程碑编辑/新建需 milestones.update / milestones.create
+    permission: 'milestones.update',
+    createPermission: 'milestones.create',
     derive: (data) => {
       if (data.status === 'COMPLETED') data.completedAt = new Date();
     },
@@ -99,6 +106,9 @@ const SYNC_ENTITIES = {
     touchUpdatedBy: true,
     fields: ['periodKey', 'actualWork', 'completionPercent', 'nextPlan', 'risks', 'projectStatus'],
     serverOwned: ['submittedById', 'submittedAt'],
+    // RF04 补齐：月度进展编辑/新建需 progress.update / progress.create（写出需项目 manage_members）
+    permission: 'progress.update',
+    createPermission: 'progress.create',
   },
   reports: {
     model: 'report',
@@ -125,6 +135,7 @@ const SYNC_ENTITIES = {
     fields: ['role', 'userId'], // userId 为离线新增成员所需（权限由 manage_members 约束）
     serverOwned: [],
     requireCapability: 'manage_members', // 成员调整需要管理成员能力
+    permission: 'projects.manage_members', // RF04 补齐：与普通 API 的成员管理权限同源
   },
 };
 
@@ -176,6 +187,15 @@ async function loadSyncAccess(auth, projectId) {
  * 保证「有项目 write 但无对应动作权限」的请求同样被拒绝。
  */
 async function assertSyncEntityActions({ entity, def, existing, data, auth, access, projectId, op }) {
+  // 通用动作权限（所有声明了权限码的实体统一执行，不再只覆盖 reports/tasks）：
+  //   删除 → permission；更新 → permission；新建 → createPermission
+  if (def.permission) {
+    if (op === 'delete' || existing) assertActionPermission(auth, def.permission);
+    else if (def.createPermission) assertActionPermission(auth, def.createPermission);
+  } else if (op !== 'delete' && !existing && def.createPermission) {
+    assertActionPermission(auth, def.createPermission);
+  }
+
   if (entity === 'reports') {
     if (op === 'delete') {
       assertReportWritable(existing, auth, access, 'reports.delete');
@@ -378,6 +398,9 @@ sync.post('/push', async (c) => {
         });
 
         const tsField = def.timestampField ?? 'updatedAt';
+        // 并发基线：既用于「先判冲突」，也作为原子 UPDATE 的 WHERE 条件（下方 casFilter），
+        // 避免先读、比较、再无条件更新之间的竞态。
+        const casFilter = existing ? { [tsField]: existing[tsField] } : undefined;
         // 冲突检测：客户端基线早于服务端时间戳
         if (op !== 'delete' && existing && raw?.baseUpdatedAt
           && new Date(existing[tsField]) > new Date(raw.baseUpdatedAt)) {
@@ -412,7 +435,7 @@ sync.post('/push', async (c) => {
             let updated;
             if (entity === 'reports') {
               updated = await saveReportDraft(prisma, {
-                actor: auth, reportId: entityId, patch: data,
+                actor: auth, reportId: entityId, patch: data, cas: casFilter,
               });
             } else if (entity === 'tasks') {
               const nextStatus = data.status;
@@ -421,21 +444,49 @@ sync.post('/push', async (c) => {
               const nextAssignee = data.assigneeId ?? null;
               delete data.status;
               delete data.assigneeId;
-              if (Object.keys(data).length > 0) {
-                await updateTaskFields(prisma, { actor: auth, access: syncAccess, task: existing, fields: data });
-              }
-              if (statusChanging) {
-                await changeTaskStatus(prisma, { actor: auth, access: syncAccess, task: existing, status: nextStatus });
-              }
-              if (assigneeChanging) {
-                await assignTask(prisma, { actor: auth, access: syncAccess, task: existing, assigneeId: nextAssignee });
-              }
-              updated = await prisma.task.findUnique({ where: { id: entityId } });
-            } else {
-              updated = await prisma[def.model].update({
-                where: { id: entityId },
-                data: { ...data, ...(def.touchUpdatedBy ? { updatedById: auth.userId } : {}) },
+              // 并发基线只在**本事务的第一次写入**上校验：
+              // 第一次写入已把行锁住并改变了 updatedAt，后续写入再用旧基线会必然落空。
+              let casConsumed = false;
+              const nextCas = () => {
+                if (casConsumed) return undefined;
+                casConsumed = true;
+                return casFilter;
+              };
+              // 同一事务：多命令不得各自提交（全成功或全不变）
+              updated = await prisma.$transaction(async (tx) => {
+                if (Object.keys(data).length > 0) {
+                  await updateTaskFields(tx, { actor: auth, access: syncAccess, task: existing, fields: data, cas: nextCas() });
+                }
+                if (statusChanging) {
+                  await changeTaskStatus(tx, { actor: auth, access: syncAccess, task: existing, status: nextStatus, cas: nextCas() });
+                }
+                if (assigneeChanging) {
+                  await assignTask(tx, { actor: auth, access: syncAccess, task: existing, assigneeId: nextAssignee, cas: nextCas() });
+                }
+                return tx.task.findUnique({ where: { id: entityId } });
               });
+            } else {
+              const writeData = { ...data, ...(def.touchUpdatedBy ? { updatedById: auth.userId } : {}) };
+              if (casFilter) {
+                // 原子并发基线：UPDATE ... WHERE id = ? AND <ts> = <读到的值>
+                // eslint-disable-next-line no-await-in-loop
+                const cas = await prisma[def.model].updateMany({
+                  where: { id: entityId, ...casFilter },
+                  data: writeData,
+                });
+                if (cas.count === 0) {
+                  const conflictErr = new Error('并发更新冲突：数据已被他人修改');
+                  conflictErr.syncConflict = true;
+                  throw conflictErr;
+                }
+                // eslint-disable-next-line no-await-in-loop
+                updated = await prisma[def.model].findUnique({ where: { id: entityId } });
+              } else {
+                updated = await prisma[def.model].update({
+                  where: { id: entityId },
+                  data: writeData,
+                });
+              }
             }
             outcome = { status: 'applied', action: 'updated', serverUpdatedAt: updated?.[tsField] };
           } else {
@@ -457,7 +508,12 @@ sync.post('/push', async (c) => {
       const brief = lines[lines.length - 1] || '写入失败';
       // eslint-disable-next-line no-console
       console.error(`[sync.push] ${entity}/${op} 失败:`, err?.message || err);
-      outcome = { status: 'rejected', reason: brief };
+      // 并发基线不一致 → conflict（客户端据此拉取最新并重新基于新版本提交），而不是 rejected
+      // 仅并发基线冲突映射为 conflict；其他 409（如 INVALID_STATE 锁定）仍按 rejected 处理
+      const isConflict = err?.syncConflict === true || err?.code === 'CONFLICT';
+      outcome = isConflict
+        ? { status: 'conflict', reason: '服务端已有更新（并发基线不一致）' }
+        : { status: 'rejected', reason: brief };
     }
 
     const record = { ...base, ...outcome };
