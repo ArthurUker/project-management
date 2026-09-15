@@ -2,26 +2,26 @@
   "name": "rdpms-backend",
   "version": "2.0.0",
   "description": "R&D Project Management System - Backend API (PostgreSQL-only)",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon src/index.js",
-    "start": "node src/index.js",
-
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node dist/index.js",
+    "start:src": "node src/index.js",
+    "dev": "nodemon --watch src --ext ts,js --exec \"npm run build && node dist/index.js\"",
     "db:validate": "prisma validate",
     "db:generate": "prisma generate",
-
     "test": "npm run test:unit && npm run test:contract",
-    "test:unit": "node --test tests/unit/",
-    "test:contract": "node --test tests/contract/",
+    "test:unit": "npm run build && node --test tests/unit/",
+    "test:contract": "npm run build && node --test tests/contract/",
     "test:integration": "node scripts/run-integration.mjs",
-    "test:ci": "npm run lint:undefined && npm test",
+    "test:ci": "npm run lint:undefined && npm run typecheck && npm test",
     "test:db:check": "node scripts/test-db.mjs check",
     "test:db:reset": "node scripts/test-db.mjs reset",
     "test:db:drop": "node scripts/test-db.mjs drop",
     "lint:undefined": "node scripts/check-undefined.mjs",
     "typecheck:report": "node scripts/check-undefined.mjs --full",
-
     "db:migrate": "prisma migrate dev",
     "db:migrate:create": "prisma migrate dev --create-only",
     "db:migrate:deploy": "prisma migrate deploy",
@@ -29,7 +29,6 @@
     "db:migrate:reset": "prisma migrate reset",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-
     "db:push:local-only": "prisma db push"
   },
   "prisma": {
@@ -50,6 +49,7 @@
     "@types/jsonwebtoken": "^9.0.5",
     "@types/node": "^20.11.0",
     "nodemon": "^3.1.14",
-    "prisma": "^5.10.0"
+    "prisma": "^5.10.0",
+    "typescript": "^5.9.3"
   }
 }

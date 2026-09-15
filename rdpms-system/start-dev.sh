@@ -10,6 +10,7 @@ fi
 
 echo "Stopping existing vite/backend processes (if any)"
 pkill -f "vite" || true
+pkill -f "node dist/index.js" || true
 pkill -f "node src/index.js" || true
 sleep 0.4
 
@@ -27,9 +28,11 @@ if [ -f prisma/seed.js ]; then
   node prisma/seed.js || true
 fi
 
-# Start backend
-echo "-> Starting backend"
-nohup node src/index.js > backend.log 2>&1 &
+# Build (TS, ADR-02) then start backend
+echo "-> Building backend (tsc -> dist)"
+npm run build || { echo "backend build failed"; exit 1; }
+echo "-> Starting backend (dist/index.js)"
+nohup node dist/index.js > backend.log 2>&1 &
 echo $! > backend.pid
 sleep 0.6
 

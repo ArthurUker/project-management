@@ -120,7 +120,12 @@ else
   log "Step 6/10 跳过 seed（RUN_SEED=false）"
 fi
 
-# ── Step 7 前端构建 ───────────────────────────────────────
+# ── Step 7 构建产物（后端 TS + 前端）──────────────────────
+log "Step 7/10 后端构建（TypeScript → dist）"
+# v2 ADR-02：服务入口为 dist/index.js，构建失败必须中止（不得切流到缺产物的 release）
+( cd "$APP_DIR" && as_user npm run build ) || die "后端构建失败（npm run build）"
+[ -f "$APP_DIR/dist/index.js" ] || die "后端构建产物缺失：$APP_DIR/dist/index.js"
+
 log "Step 7/10 前端构建"
 sudo tee "$WEB_DIR/.env.production" >/dev/null <<EOF
 VITE_API_BASE_URL=/api

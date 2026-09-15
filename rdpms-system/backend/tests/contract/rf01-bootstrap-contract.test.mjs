@@ -8,7 +8,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createApp } from '../../src/bootstrap/createApp.js';
+import { createApp } from '../../dist/bootstrap/createApp.js';
 import { createStubActor } from '../helpers/stubDeps.mjs';
 
 test('RF01-C1 createApp 接受 05 §1 声明的依赖形参', () => {

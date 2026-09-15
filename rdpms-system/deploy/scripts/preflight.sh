@@ -145,6 +145,9 @@ chk "rdpms 可读 .env 且不可写"          bash -c 'sudo -u rdpms test -r "${
 chk "代码目录不存在 .env"               bash -c '! [ -e "${APP_DIR}/.env" ]'
 chk "应用目录存在"                      bash -c '[ -d "${APP_DIR}" ]'
 chk "index.js 存在"                     bash -c '[ -f "${APP_DIR}/src/index.js" ]'
+# v2 ADR-02：服务入口是 TS 构建产物 dist/index.js（deploy.sh Step 7 已断言构建成功）
+chk "后端构建产物 dist/index.js 存在"    bash -c '[ -f "${APP_DIR}/dist/index.js" ]'
+chk "tsconfig.json 存在（构建链就绪）"   bash -c '[ -f "${APP_DIR}/tsconfig.json" ]'
 chk "不存在 dev.db"                     bash -c '! [ -e "${APP_DIR}/prisma/dev.db" ]'
 chk "schema 非 sqlite"                  bash -c '! grep -qE "provider[[:space:]]*=[[:space:]]*\"sqlite\"" "${APP_DIR}/prisma/schema.prisma"'
 chk "无 PRAGMA 残留"                    bash -c '! grep -rq "PRAGMA" "${APP_DIR}/src"'

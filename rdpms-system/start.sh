@@ -10,6 +10,7 @@ echo ""
 # Kill any existing processes
 echo "🛑 Stopping existing services..."
 pkill -f "vite" 2>/dev/null || true
+pkill -f "node dist/index.js" 2>/dev/null || true
 pkill -f "node src/index.js" 2>/dev/null || true
 pkill -f "nodemon src/index.js" 2>/dev/null || true
 sleep 1

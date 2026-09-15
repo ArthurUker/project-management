@@ -23,6 +23,17 @@ if (problems.length > 0) {
   describeEnv({ env, dbTarget, directTarget });
 }
 
+// TS 构建链（ADR-02）：集成测试跑构建产物，先构建再执行
+const build = spawnSync('npm', ['run', '--silent', 'build'], {
+  cwd: BACKEND_ROOT,
+  env: { ...process.env, ...env },
+  stdio: 'inherit',
+});
+if (build.status !== 0) {
+  console.error('[integration] 构建失败，未运行测试');
+  process.exit(build.status ?? 1);
+}
+
 const targets = ['tests/rbac.test.mjs', 'tests/integration/'];
 const res = spawnSync(process.execPath, ['--test', ...targets], {
   cwd: BACKEND_ROOT,

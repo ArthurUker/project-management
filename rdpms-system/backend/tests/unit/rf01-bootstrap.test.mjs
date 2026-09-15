@@ -18,7 +18,7 @@ import path from 'node:path';
 const BACKEND_ROOT = path.resolve(fileURLToPath(new URL('../../', import.meta.url)));
 
 const CHILD_SCRIPT = `
-import { createApp } from './src/bootstrap/createApp.js';
+import { createApp } from './dist/bootstrap/createApp.js';
 const app = createApp({ db: {} });
 if (typeof app?.fetch !== 'function') { console.error('NO_APP_FETCH'); process.exit(2); }
 const listening = (process._getActiveHandles?.() ?? [])
@@ -61,7 +61,8 @@ test('RF01-01 导入 createApp 不连接数据库、不监听端口', () => {
 });
 
 test('RF01-02 入口拆分后 index.js 仍是可启动的服务入口（仅此文件允许 serve）', () => {
-  const indexPath = path.join(BACKEND_ROOT, 'src/index.js');
+  // TS 构建链（ADR-02）后运行时入口是构建产物 dist/index.js
+  const indexPath = path.join(BACKEND_ROOT, 'dist/index.js');
   const source = execFileSync(process.execPath, ['-e', `
     import fs from 'node:fs';
     process.stdout.write(fs.readFileSync(${JSON.stringify(indexPath)}, 'utf8'));

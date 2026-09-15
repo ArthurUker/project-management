@@ -1,5 +1,5 @@
 /**
- * modules/access/writeGuards.js —— 写入口的动作级授权守卫（RF04）
+ * modules/access/writeGuards.ts —— 写入口的动作级授权守卫（RF04，TS 迁移）
  *
  * 背景（F06/F07/F13）：同一业务动作在不同入口要求的权限不一致——
  *   - 普通路由的专用状态接口要求 tasks.change_status + 项目 transition 能力，
@@ -9,6 +9,8 @@
  *
  * 本模块把「动作 → 系统权限 + 项目能力」的对应关系收敛到一处，
  * 普通 API、同步、离线队列全部调用同一套判定（05 §2）。
+ *
+ * 迁移说明（v2 ADR-02）：由 writeGuards.js 迁入，行为不变；strict 模式，无 any / ts-ignore。
  */
 import { HttpError, forbidden, badRequest } from '../../kernel/http.js';
 import { hasPermission } from '../../kernel/rbac.js';
@@ -16,42 +18,77 @@ import { assertProjectCapability } from '../../kernel/projectAccess.js';
 
 export { assertProjectCapability };
 
+/** 认证主体（与 kernel/rbac.js 装载的形状一致） */
+export interface AuthActor {
+  userId: string;
+  permissions?: string[];
+  systemRole?: string;
+  user?: { id?: string; displayName?: string | null } | null;
+}
+
+/** 项目访问上下文（resolveProjectAccess / loadSyncAccess 的产物） */
+export interface ProjectAccess {
+  capabilities: string[];
+  memberRole?: string | null;
+  elevated?: boolean;
+}
+
+/** 可写汇报的最小形状 */
+export interface ReportLike {
+  id: string;
+  authorId: string;
+  status: string;
+}
+
 /** 系统权限断言（缺失 → 403） */
-export function assertActionPermission(auth, code, message) {
+export function assertActionPermission(auth: AuthActor, code: string, message?: string): void {
   if (!hasPermission(auth, code)) {
     throw forbidden('PERMISSION_DENIED', message ?? `缺少权限 ${code}`);
   }
 }
 
 /** 任务编辑（标题/描述/工期等字段）：tasks.update + 项目 write */
-export function assertTaskEdit(auth, access) {
+export function assertTaskEdit(auth: AuthActor, access: ProjectAccess): void {
   assertActionPermission(auth, 'tasks.update');
   assertProjectCapability(access, 'write', 'tasks.update');
 }
 
 /** 任务状态流转：tasks.change_status + 项目 transition（F13 的核心） */
-export function assertTaskStatusChange(auth, access) {
+export function assertTaskStatusChange(auth: AuthActor, access: ProjectAccess): void {
   assertActionPermission(auth, 'tasks.change_status');
   assertProjectCapability(access, 'transition', 'tasks.change_status');
 }
 
 /** 任务指派：tasks.assign + 项目 assign */
-export function assertTaskAssign(auth, access) {
+export function assertTaskAssign(auth: AuthActor, access: ProjectAccess): void {
   assertActionPermission(auth, 'tasks.assign');
   assertProjectCapability(access, 'assign', 'tasks.assign');
 }
 
 /** 阶段状态流转：project_phases.change_status + 项目 transition */
-export function assertPhaseStatusChange(auth, access) {
+export function assertPhaseStatusChange(auth: AuthActor, access: ProjectAccess): void {
   assertActionPermission(auth, 'project_phases.change_status');
   assertProjectCapability(access, 'transition', 'project_phases.change_status');
+}
+
+/** 跨项目引用校验所需的最小数据库接口 */
+export interface PhaseLookupDb {
+  projectPhase: {
+    findUnique(args: { where: { id: string }; select: { id: true; projectId: true; deletedAt: true } }): Promise<
+      { id: string; projectId: string; deletedAt: Date | null } | null
+    >;
+  };
 }
 
 /**
  * 跨项目引用校验（验收：跨项目 phaseId 被拒绝）。
  * 必须归属同一个项目，且未被软删。
  */
-export async function assertPhaseBelongsToProject(db, phaseId, projectId) {
+export async function assertPhaseBelongsToProject(
+  db: PhaseLookupDb,
+  phaseId: string,
+  projectId: string,
+): Promise<{ id: string; projectId: string; deletedAt: Date | null }> {
   const phase = await db.projectPhase.findUnique({
     where: { id: phaseId },
     select: { id: true, projectId: true, deletedAt: true },
@@ -63,19 +100,24 @@ export async function assertPhaseBelongsToProject(db, phaseId, projectId) {
 }
 
 /** 汇报允许编辑的状态（其余一律锁定） */
-export const REPORT_EDITABLE_STATUSES = Object.freeze(['DRAFT', 'NEEDS_REVISION']);
+export const REPORT_EDITABLE_STATUSES: readonly string[] = Object.freeze(['DRAFT', 'NEEDS_REVISION']);
 
-export function isReportLocked(report) {
-  return !REPORT_EDITABLE_STATUSES.includes(report?.status);
+export function isReportLocked(report: Pick<ReportLike, 'status'> | null | undefined): boolean {
+  return !REPORT_EDITABLE_STATUSES.includes(report?.status ?? '');
 }
 
 /**
  * 汇报可写判定：项目 write 能力 + 作者本人 + 状态未锁定。
  * 普通 API（PUT/DELETE/recall）与同步上行共用。
  */
-export function assertReportWritable(report, actor, access, permissionCode = 'reports.update') {
+export function assertReportWritable(
+  report: ReportLike | null | undefined,
+  actor: AuthActor,
+  access: ProjectAccess,
+  permissionCode = 'reports.update',
+): void {
   assertProjectCapability(access, 'write', permissionCode);
-  if (report.authorId !== actor.userId) {
+  if (!report || report.authorId !== actor.userId) {
     throw forbidden('FORBIDDEN', '无权修改他人的汇报');
   }
   if (isReportLocked(report)) {

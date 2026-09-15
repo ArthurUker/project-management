@@ -11,7 +11,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createApp } from '../../src/bootstrap/createApp.js';
+import { createApp } from '../../dist/bootstrap/createApp.js';
 import { createStubDb, createStubActor, jsonRequest } from '../helpers/stubDeps.mjs';
 
 const AUTHOR = { userId: 'u1', displayName: '作者' };

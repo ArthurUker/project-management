@@ -8,7 +8,7 @@
 import { test, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { PrismaClient } from '@prisma/client';
-import { createApp } from '../../src/bootstrap/createApp.js';
+import { createApp } from '../../dist/bootstrap/createApp.js';
 import { createStubActor } from '../helpers/stubDeps.mjs';
 import { IT, seedMinimalFixture, revokeAuthorMembership, restoreAuthorMembership } from './fixtures.mjs';
 

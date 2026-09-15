@@ -3,8 +3,8 @@ set -e
 echo "=== 停止 R&D PMS 服务 ==="
 
 # Stop backend by matching command line
-echo "停止后端 (匹配 node src/index.js)..."
-PIDS_BACKEND=$(ps aux | grep "node .*src/index.js" | grep -v grep | awk '{print $2}') || true
+echo "停止后端 (匹配 node dist/index.js / node src/index.js)..."
+PIDS_BACKEND=$(ps aux | grep -E "node .*(dist|src)/index.js" | grep -v grep | awk '{print $2}') || true
 if [ -n "${PIDS_BACKEND}" ]; then
   echo "Stopping backend PIDs: ${PIDS_BACKEND}"
   kill ${PIDS_BACKEND} 2>/dev/null || true
