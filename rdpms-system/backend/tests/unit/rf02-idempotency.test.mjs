@@ -280,6 +280,53 @@ test('RF02-U12 相同 key、不同命令：不得跨命令回放', async () => {
   assert.equal(db.state.reports[0].status, 'SUBMITTED');
 });
 
+test('RF02-U13 首次提交成功并改变状态后，同 key 同 payload 重试仍返回首次结果', async () => {
+  const db = createStubDb({ reports: [draftReport('r1')] });
+  const app = buildApp({ db, actor: createStubActor({ ...U1, permissions: ['reports.submit'] }) });
+
+  const body = { clientMutationId: KEY };
+  const first = await jsonRequest(app, '/api/reports/r1/submit', { body });
+  assert.equal(first.status, 200);
+  assert.equal(db.state.reports[0].status, 'SUBMITTED', '首次提交必须真正改变状态');
+  assert.equal(db.state.reportVersions.length, 1);
+
+  const retry = await jsonRequest(app, '/api/reports/r1/submit', { body });
+  assert.equal(retry.status, 200, '重试必须回放首次结果');
+  assert.equal(retry.headers.get('idempotent-replay'), 'true');
+  assert.equal(db.state.reportVersions.length, 1, '重试不得重复生成版本');
+});
+
+test('RF02-U14 首次保存成功后汇报被审阅，同 key 同 payload 重试仍回放（状态校验不阻断回放）', async () => {
+  const db = createStubDb({ reports: [draftReport('r1')] });
+  const app = buildApp({ db, actor: createStubActor({ ...U1, permissions: ['reports.update'] }) });
+
+  const payload = { content: { n: 1 }, clientMutationId: KEY };
+  const first = await jsonRequest(app, '/api/reports/r1', { method: 'PUT', body: payload });
+  assert.equal(first.status, 200);
+
+  // 首次成功后状态变为已审阅（内容锁定）：重试必须回放，而不是 409
+  db.state.reports[0].status = 'REVIEWED';
+
+  const retry = await jsonRequest(app, '/api/reports/r1', { method: 'PUT', body: payload });
+  const retryBody = await retry.json();
+
+  assert.equal(retry.status, 200, `锁定后重试应回放首次结果，实际：${JSON.stringify(retryBody)}`);
+  assert.equal(retry.headers.get('idempotent-replay'), 'true');
+  assert.deepEqual(retryBody, await first.clone().json());
+});
+
+test('RF02-U15 新命令才校验状态：换新 key 的锁定汇报仍被拒绝（不因回放机制放宽）', async () => {
+  const db = createStubDb({ reports: [{ ...draftReport('r1'), status: 'REVIEWED' }] });
+  const app = buildApp({ db, actor: createStubActor({ ...U1, permissions: ['reports.update'] }) });
+
+  const res = await jsonRequest(app, '/api/reports/r1', {
+    method: 'PUT',
+    body: { content: { n: 1 }, clientMutationId: KEY2 },
+  });
+  assert.equal(res.status, 409, '新 key 的锁定汇报仍必须拒绝');
+  assert.equal(db.state.mutationReceipts.length, 0, '被拒绝的新命令不得留下回执');
+});
+
 test('RF02-U10 无幂等键时仍执行（兼容旧客户端），但不写回执', async () => {
   const db = createStubDb({ reports: [draftReport('r1')] });
   const app = buildApp({ db, actor: createStubActor({ ...U1, permissions: ['reports.update'] }) });

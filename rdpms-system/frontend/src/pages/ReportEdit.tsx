@@ -7,6 +7,7 @@ import { newClientMutationId } from '../offline/engine';
 import ReagentDailyReport from '../components/ReagentDailyReport';
 import DocReference from '../components/DocReference';
 import { periodKeyFor, reportTypeEnum } from '../shared/reportPeriod';
+import { stableMutationId } from '../shared/idempotency';
 
 // 汇报类型配置
 const REPORT_TYPES = [
@@ -272,7 +273,10 @@ export default function ReportEdit() {
               content,
               reportType: typeEnum,
               periodKey,
-              clientMutationId: newClientMutationId(),
+              // 同一次逻辑操作复用同一 key：失败重试由服务端回放，不会重复写入（RF02）
+              clientMutationId: await stableMutationId({
+                op: 'report.update', reportId: id, reportType: typeEnum, periodKey, content,
+              }),
             });
             saved.push({ id: updated.id, label: '当前汇报' });
           } catch (err) {
@@ -320,7 +324,10 @@ export default function ReportEdit() {
               reportType: typeEnum,
               periodKey,
               content: item.content,
-              clientMutationId: newClientMutationId(),
+              // 逐项目复用一个稳定 key：部分失败后重试不会重复建/覆盖（RF02/RF04）
+              clientMutationId: await stableMutationId({
+                op: 'report.save', projectId: item.projectId, reportType: typeEnum, periodKey, content: item.content,
+              }),
             });
             saved.push({ id: created.id, label: item.label });
           } catch (err) {
@@ -333,7 +340,8 @@ export default function ReportEdit() {
       if (!asDraft) {
         for (const item of saved) {
           try {
-            await reportAPI.submit(item.id, newClientMutationId());
+            // 提交同样使用稳定 key：重试命中已提交回执，不会重复写版本
+            await reportAPI.submit(item.id, await stableMutationId({ op: 'report.submit', reportId: item.id }));
           } catch (err) {
             failures.push(`${item.label}（提交）：${describeError(err)}`);
           }

@@ -193,13 +193,11 @@ reports.put('/:id', requirePermission('reports.update'), async (c) => {
 
   const access = await resolveProjectAccess(prisma, auth, existing.projectId);
   await auditElevatedIfNeeded(prisma, c, access, 'reports.update');
-  // RF04/F06：项目范围 + 作者 + 状态锁定判定与同步入口同源（modules/access/writeGuards）
-  assertReportWritable(existing, auth, access);
   assertNoClientStatus(body, '保存草稿');
 
-  // 校验（含周期键按类型校验）在查询幂等回执之前完成：非法请求不留回执
+  // 请求形状校验（只依赖载荷，与服务器状态无关）留在回执查询之前；
+  // 状态锁定与周期键校验依赖服务端当前状态，放进 validate（仅新命令路径执行）。
   const allowed = pickAllowed(body, ['content', 'periodKey', 'month', 'reportType'], { entityLabel: '更新汇报' });
-  const data = buildReportDraftPatch(allowed, { currentType: existing.reportType });
 
   const { key } = resolveIdempotencyKey(c, body);
   let result;
@@ -211,7 +209,12 @@ reports.put('/:id', requirePermission('reports.update'), async (c) => {
       resourceScope: `report:${id}`,
       idempotencyKey: key,
       payload: body,
-      execute: async (tx) => {
+      validate: () => {
+        // RF04/F06：项目范围 + 作者 + 状态锁定判定与同步入口同源（modules/access/writeGuards）
+        assertReportWritable(existing, auth, access);
+        return buildReportDraftPatch(allowed, { currentType: existing.reportType });
+      },
+      execute: async (tx, data) => {
         const updated = await tx.report.update({
           where: { id },
           data: { ...data, updatedById: auth.userId },
@@ -256,7 +259,6 @@ reports.post('/:id/submit', requirePermission('reports.submit'), async (c) => {
   await auditElevatedIfNeeded(prisma, c, access, 'reports.submit');
   assertProjectCapability(access, 'write', 'reports.submit');
   if (report.authorId !== auth.userId) throw badRequest('FORBIDDEN', '只能提交自己的汇报');
-  if (report.status === 'REVIEWED') throw badRequest('VALIDATION_ERROR', '已审阅的汇报不能再次提交');
 
   const { key } = resolveIdempotencyKey(c, body);
   const result = await withIdempotency({
@@ -266,6 +268,13 @@ reports.post('/:id/submit', requirePermission('reports.submit'), async (c) => {
     resourceScope: `report:${id}`,
     idempotencyKey: key,
     payload: { reportId: id },
+    validate: () => {
+      // 状态校验放在“无回执的新命令”路径：首次提交成功后（或已被审阅后）重试同 key，
+      // 必须回放首次结果，而不是被状态检查拦住（RF02 复核要求）
+      if (report.status === 'REVIEWED') {
+        throw new HttpError(409, 'INVALID_STATE', '已审阅的汇报不能再次提交');
+      }
+    },
     execute: async (tx) => {
       const lastVersion = await tx.reportVersion.findFirst({
         where: { reportId: id },

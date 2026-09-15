@@ -144,7 +144,8 @@ test('RF02-I4 事务失败（状态不允许）：不留回执、不改数据', 
   await prisma.report.update({ where: { id: IT.report }, data: { status: 'REVIEWED' } });
 
   const res = await submitReport(app, 'it-key-submit-failure');
-  assert.equal(res.status, 400, '已审阅的汇报不能再次提交');
+  // 状态错误统一 409 INVALID_STATE（方案 §G；与保存/删除/撤回口径一致）
+  assert.equal(res.status, 409, '已审阅的汇报不能再次提交');
 
   const receipts = await prisma.mutationReceipt.count({
     where: { actorId: AUTHOR.userId, idempotencyKey: 'it-key-submit-failure' },
@@ -166,6 +167,45 @@ test('RF02-I5 相同幂等键、不同请求内容 → 409 且不改数据', asy
   const report = await prisma.report.findUnique({ where: { id: IT.report } });
   assert.deepEqual(report.content, { n: 1 }, '冲突请求不得改写业务数据');
   assert.equal(await prisma.mutationReceipt.count({ where: { actorId: AUTHOR.userId } }), 1);
+});
+
+test('RF02-I7 首次提交成功并改变状态后，同 key 同 payload 重试仍回放首次结果', async () => {
+  const app = buildApp();
+  const key = 'it-key-submit-state-change';
+
+  const first = await submitReport(app, key);
+  assert.equal(first.status, 200);
+  const versionsAfterFirst = await prisma.reportVersion.count({ where: { reportId: IT.report } });
+  assert.equal(versionsAfterFirst, 1);
+
+  // 首次成功之后状态被复核为已审阅（内容锁定）——重试必须回放，而不是被状态检查拦住
+  await prisma.report.update({ where: { id: IT.report }, data: { status: 'REVIEWED' } });
+
+  const retry = await submitReport(app, key);
+  const retryBody = await retry.json();
+  assert.equal(retry.status, 200, `锁定后重试应回放，实际：${JSON.stringify(retryBody)}`);
+  assert.equal(retry.headers.get('idempotent-replay'), 'true');
+  assert.deepEqual(retryBody, await first.clone().json());
+  assert.equal(
+    await prisma.reportVersion.count({ where: { reportId: IT.report } }),
+    1,
+    '回放不得重复生成版本',
+  );
+});
+
+test('RF02-I8 新 key 的锁定汇报仍被拒绝（回放机制不放宽新命令的状态校验）', async () => {
+  const app = buildApp();
+  await prisma.report.update({ where: { id: IT.report }, data: { status: 'REVIEWED' } });
+
+  const res = await submitReport(app, 'it-key-submit-new-on-reviewed');
+  assert.equal(res.status, 409, '新 key 的锁定汇报必须拒绝');
+  assert.equal(
+    await prisma.mutationReceipt.count({
+      where: { actorId: AUTHOR.userId, idempotencyKey: 'it-key-submit-new-on-reviewed' },
+    }),
+    0,
+    '被拒绝的新命令不得留下回执',
+  );
 });
 
 test('RF02-I6 业务与审计同事务：提交后审计与版本都在同一提交中', async () => {
