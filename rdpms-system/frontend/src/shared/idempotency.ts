@@ -1,39 +1,66 @@
 /**
- * shared/idempotency.ts —— 幂等键的稳定派生（RF02 复核）
+ * shared/idempotency.ts —— 幂等键的**操作生命周期**（RF02 复核第二轮）
  *
- * 要求：**同一次逻辑操作必须复用同一个 key**。否则用户在「请求已到达服务端但响应丢失」时点重试，
- * 会用新 key 再执行一遍，造成重复写入或覆盖（服务端只能靠 key 去重）。
+ * 语义修正：幂等键属于「一次逻辑操作」，**不是**内容哈希。
+ *   - 网络重试（同一操作、同一 payload）→ 复用同一 key，服务端回放首次结果；
+ *   - 用户修改内容后再提交 → 新 key（旧 key 已绑定旧 payloadHash，复用会 409）；
+ *   - 用户明确再次发起操作，即使内容一模一样 → 仍是**新 key**（新的一次业务操作）；
+ *   - 操作成功结束后，键位清空，下一次点击一定是新 key。
  *
- * 做法：对「操作类型 + 目标 + 参与写入的内容」求 SHA-256 派生 key：
- *   - 同一操作、同一内容重复提交 → 同一 key → 服务端回放首次结果；
- *   - 内容被用户修改后再提交 → 新 key → 视为新操作（避免与服务端已存回执的 payloadHash 冲突）。
- *
- * 环境不支持 WebCrypto（非安全上下文）时回退到随机 UUID——此时退化为「不去重」，
- * 但不会产生错误结果，且生产与开发（https / localhost）均在安全上下文中。
+ * 反例（已废弃）：用「内容哈希」直接当 key —— 会把两次独立的业务操作误判为同一次，
+ * 导致第二次操作被服务端当作重放而静默不生效。
  */
-function toHex(bytes: Uint8Array): string {
-  return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
-}
 
-/** 随机 key 兜底（不用 offline/engine，避免把离线栈打进纯工具模块） */
 function randomKey(): string {
   const uuid = globalThis.crypto?.randomUUID?.();
   if (uuid) return uuid;
   return `op-${Date.now().toString(16)}-${Math.random().toString(16).slice(2, 10)}`;
 }
 
-/**
- * 由逻辑操作派生稳定幂等键。
- * @param parts 参与派生的内容（应包含操作类型、目标 ID 与会写入的字段）
- */
-export async function stableMutationId(parts: unknown): Promise<string> {
-  try {
-    const subtle = globalThis.crypto?.subtle;
-    if (!subtle) return randomKey();
-    const payload = new TextEncoder().encode(JSON.stringify(parts ?? null));
-    const digest = await subtle.digest('SHA-256', payload);
-    return `op-${toHex(new Uint8Array(digest)).slice(0, 40)}`;
-  } catch {
-    return randomKey();
-  }
+export interface OperationKeyStore {
+  /**
+   * 取本次逻辑操作的 key。
+   * @param fingerprint 操作身份（操作类型 + 目标 + 会写入的内容）；相同即视为同一次操作的重试
+   * @param slot 同一操作内可有多条子写入（例如多项目分别保存），用 slot 区分
+   */
+  keyFor(fingerprint: string, slot?: string): string;
+  /** 操作成功结束：清空键位，使用户下次主动发起的相同操作获得新 key */
+  complete(): void;
+  /** 当前操作指纹（供调试/测试观察） */
+  currentFingerprint(): string | null;
+}
+
+/** 构造一个操作级 key 存储（纯内存，不跨页面刷新保留——刷新后的再次提交视为新操作） */
+export function createOperationKeyStore(generate: () => string = randomKey): OperationKeyStore {
+  let current: { fingerprint: string; keys: Map<string, string> } | null = null;
+
+  return {
+    keyFor(fingerprint, slot = 'default') {
+      if (!current || current.fingerprint !== fingerprint) {
+        current = { fingerprint, keys: new Map() };
+      }
+      const existing = current.keys.get(slot);
+      if (existing) return existing;
+      const key = generate();
+      current.keys.set(slot, key);
+      return key;
+    },
+    complete() {
+      current = null;
+    },
+    currentFingerprint() {
+      return current?.fingerprint ?? null;
+    },
+  };
+}
+
+/** 构造操作指纹：只包含「操作类型 + 目标 + 会写入的字段」，顺序稳定 */
+export function operationFingerprint(parts: Record<string, unknown>): string {
+  const normalized = Object.keys(parts)
+    .sort()
+    .reduce<Record<string, unknown>>((acc, key) => {
+      acc[key] = parts[key];
+      return acc;
+    }, {});
+  return JSON.stringify(normalized);
 }

@@ -1,39 +1,75 @@
 /**
- * RF02 复核的前端用例 —— 幂等键必须对「同一次逻辑操作」稳定复用。
+ * RF02 复核第二轮用例 —— 幂等键的操作生命周期
  *
- * 背景：若每次点保存都生成新 key，则「请求已到服务端但响应丢失」后的重试会被服务端当成新命令，
- * 造成重复写入或覆盖。稳定 key 让重试命中已提交回执、返回首次结果。
+ * 关键区别：
+ *   重试（同一操作同一 payload）→ 同 key；
+ *   改内容 / 用户再次主动发起（即使内容相同）→ 新 key。
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { stableMutationId } from '../../src/shared/idempotency';
+import { createOperationKeyStore, operationFingerprint } from '../../src/shared/idempotency';
 
-test('RF02-FE1 同一逻辑操作（相同内容）派生同一 key', async () => {
-  const parts = { op: 'report.save', projectId: 'p1', reportType: 'DAILY', periodKey: '2026-09-15', content: { n: 1 } };
-  const first = await stableMutationId(parts);
-  const retry = await stableMutationId({ ...parts });
-  assert.equal(first, retry);
-  assert.match(first, /^op-[0-9a-f]{40}$/);
+function seqGenerator() {
+  let n = 0;
+  return () => `key-${++n}`;
+}
+
+test('RF02-FE1 网络重试（同一操作、同一内容）复用同一 key', () => {
+  const store = createOperationKeyStore(seqGenerator());
+  const fp = operationFingerprint({ op: 'report.save', projectId: 'p1', content: { n: 1 } });
+
+  const first = store.keyFor(fp, 'p1');
+  const retry = store.keyFor(fp, 'p1');
+
+  assert.equal(first, retry, '重试必须复用 key，否则服务端会重复执行');
 });
 
-test('RF02-FE2 内容变化后派生新 key（避免与服务端已存回执的 payloadHash 冲突）', async () => {
-  const base = { op: 'report.save', projectId: 'p1', reportType: 'DAILY', periodKey: '2026-09-15' };
-  const a = await stableMutationId({ ...base, content: { n: 1 } });
-  const b = await stableMutationId({ ...base, content: { n: 2 } });
-  assert.notEqual(a, b);
+test('RF02-FE2 用户修改内容后是新的操作 → 新 key', () => {
+  const store = createOperationKeyStore(seqGenerator());
+  const before = operationFingerprint({ op: 'report.save', projectId: 'p1', content: { n: 1 } });
+  const after = operationFingerprint({ op: 'report.save', projectId: 'p1', content: { n: 2 } });
+
+  const k1 = store.keyFor(before, 'p1');
+  const k2 = store.keyFor(after, 'p1');
+
+  assert.notEqual(k1, k2);
 });
 
-test('RF02-FE3 不同目标的 key 相互独立', async () => {
-  const base = { op: 'report.save', reportType: 'DAILY', periodKey: '2026-09-15', content: { n: 1 } };
-  const p1 = await stableMutationId({ ...base, projectId: 'p1' });
-  const p2 = await stableMutationId({ ...base, projectId: 'p2' });
+test('RF02-FE3 操作成功后再次发起（内容完全相同）必须是新 key', () => {
+  const store = createOperationKeyStore(seqGenerator());
+  const fp = operationFingerprint({ op: 'report.save', projectId: 'p1', content: { n: 1 } });
+
+  const first = store.keyFor(fp, 'p1');
+  store.complete(); // 操作成功结束
+  const second = store.keyFor(fp, 'p1');
+
+  assert.notEqual(first, second, '内容相同不等于同一次业务操作');
+});
+
+test('RF02-FE4 多项目保存：不同 slot 的 key 相互独立', () => {
+  const store = createOperationKeyStore(seqGenerator());
+  const fp = operationFingerprint({ op: 'report.save', reportType: 'DAILY', periodKey: '2026-09-15' });
+
+  const p1 = store.keyFor(fp, 'p1');
+  const p2 = store.keyFor(fp, 'p2');
+
   assert.notEqual(p1, p2);
+  assert.equal(store.keyFor(fp, 'p1'), p1, '同一 slot 重试仍复用');
 });
 
-test('RF02-FE4 提交操作的 key 只与目标汇报有关', async () => {
-  const a = await stableMutationId({ op: 'report.submit', reportId: 'r1' });
-  const b = await stableMutationId({ op: 'report.submit', reportId: 'r1' });
-  const c = await stableMutationId({ op: 'report.submit', reportId: 'r2' });
+test('RF02-FE5 操作指纹对字段顺序不敏感（同一内容只应有一个指纹）', () => {
+  const a = operationFingerprint({ op: 'report.save', projectId: 'p1', content: { n: 1 } });
+  const b = operationFingerprint({ content: { n: 1 }, projectId: 'p1', op: 'report.save' });
   assert.equal(a, b);
-  assert.notEqual(a, c);
+
+  const store = createOperationKeyStore(seqGenerator());
+  assert.equal(store.keyFor(a, 'p1'), store.keyFor(b, 'p1'));
+});
+
+test('RF02-FE6 提交操作与保存操作互不串用 key', () => {
+  const store = createOperationKeyStore(seqGenerator());
+  const saveFp = operationFingerprint({ op: 'report.save', projectId: 'p1' });
+  const submitFp = operationFingerprint({ op: 'report.submit', reportId: 'r1' });
+
+  assert.notEqual(store.keyFor(saveFp, 'p1'), store.keyFor(submitFp, 'r1'));
 });

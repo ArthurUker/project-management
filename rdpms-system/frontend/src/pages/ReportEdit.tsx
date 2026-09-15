@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { reportAPI, projectAPI } from '@/api';
 import { useAuth } from '../auth/useAuth';
@@ -7,7 +7,7 @@ import { newClientMutationId } from '../offline/engine';
 import ReagentDailyReport from '../components/ReagentDailyReport';
 import DocReference from '../components/DocReference';
 import { periodKeyFor, reportTypeEnum } from '../shared/reportPeriod';
-import { stableMutationId } from '../shared/idempotency';
+import { createOperationKeyStore, operationFingerprint } from '../shared/idempotency';
 
 // 汇报类型配置
 const REPORT_TYPES = [
@@ -118,6 +118,12 @@ export default function ReportEdit() {
 
   // 内容不可解析时的错误（RF03/F04：必须显式提示，禁止把空表当原文保存）
   const [contentError, setContentError] = useState<string | null>(null);
+
+  // 并发基线（RF04）：编辑时读到的 updatedAt，随保存提交做原子版本校验
+  const [loadedUpdatedAt, setLoadedUpdatedAt] = useState<string | null>(null);
+
+  // 幂等键按「一次逻辑操作」生成：重试复用，内容变化或用户再次发起则换新（RF02 复核）
+  const opKeysRef = useRef(createOperationKeyStore());
   
   useEffect(() => {
     loadData();
@@ -145,6 +151,8 @@ export default function ReportEdit() {
         } else if (/^\d{4}-\d{2}$/.test(key)) {
           setMonth(key);
         }
+
+        setLoadedUpdatedAt(typeof reportData.updatedAt === 'string' ? reportData.updatedAt : null);
 
         if (reportData.contentReadError) {
           // 解析失败必须显式告警，且禁止把空表当成原文保存（F04）
@@ -250,6 +258,7 @@ export default function ReportEdit() {
     }
 
     setSaving(true);
+    const opKeys = opKeysRef.current;
     try {
       const content: any = dailyTemplate === 'general' ? { projectReports } : { reagentReports };
       const saved: { id: string; label: string }[] = [];
@@ -273,10 +282,12 @@ export default function ReportEdit() {
               content,
               reportType: typeEnum,
               periodKey,
+              ...(loadedUpdatedAt ? { expectedUpdatedAt: loadedUpdatedAt } : {}),
               // 同一次逻辑操作复用同一 key：失败重试由服务端回放，不会重复写入（RF02）
-              clientMutationId: await stableMutationId({
-                op: 'report.update', reportId: id, reportType: typeEnum, periodKey, content,
-              }),
+              clientMutationId: opKeys.keyFor(
+                operationFingerprint({ op: 'report.update', reportId: id, reportType: typeEnum, periodKey, content }),
+                String(id),
+              ),
             });
             saved.push({ id: updated.id, label: '当前汇报' });
           } catch (err) {
@@ -324,10 +335,13 @@ export default function ReportEdit() {
               reportType: typeEnum,
               periodKey,
               content: item.content,
-              // 逐项目复用一个稳定 key：部分失败后重试不会重复建/覆盖（RF02/RF04）
-              clientMutationId: await stableMutationId({
-                op: 'report.save', projectId: item.projectId, reportType: typeEnum, periodKey, content: item.content,
-              }),
+              // 逐项目一个 key（slot 区分）：部分失败后重试复用同一 key，不重复建/覆盖（RF02/RF04）
+              clientMutationId: opKeys.keyFor(
+                operationFingerprint({
+                  op: 'report.save', reportType: typeEnum, periodKey, content: item.content,
+                }),
+                item.projectId,
+              ),
             });
             saved.push({ id: created.id, label: item.label });
           } catch (err) {
@@ -340,8 +354,11 @@ export default function ReportEdit() {
       if (!asDraft) {
         for (const item of saved) {
           try {
-            // 提交同样使用稳定 key：重试命中已提交回执，不会重复写版本
-            await reportAPI.submit(item.id, await stableMutationId({ op: 'report.submit', reportId: item.id }));
+            // 提交同样按操作复用 key：重试命中已提交回执，不会重复写版本
+            await reportAPI.submit(
+              item.id,
+              opKeys.keyFor(operationFingerprint({ op: 'report.submit', reportId: item.id }), item.id),
+            );
           } catch (err) {
             failures.push(`${item.label}（提交）：${describeError(err)}`);
           }
@@ -350,8 +367,11 @@ export default function ReportEdit() {
 
       if (failures.length > 0) {
         alert(`部分操作未成功：\n${failures.join('\n')}\n已成功的部分已保留，可重试。`);
+        // 保留键位：用户重试失败项时复用同一 key，服务端回放已成功的部分
         return;
       }
+      // 操作成功结束 → 清空键位：用户再次主动发起（即使内容相同）也视为新操作
+      opKeysRef.current.complete();
       navigate('/reports');
     } catch (err) {
       console.error('Failed to save:', err);
