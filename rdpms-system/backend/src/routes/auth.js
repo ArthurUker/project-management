@@ -62,7 +62,13 @@ async function writeSystemLog(entry) {
 }
 
 async function loadPermissions(user) {
-  if (user.systemRole === 'SUPER_ADMIN') return undefined; // 由调用方短路
+  // SUPER_ADMIN 的权限 = 全部权限码（与同步入口 acl.permissions 同口径）。
+  // 修复：此前返回 undefined，调用方回落成 []，导致超管登录后前端拿不到任何权限点、
+  // 界面全面 403（后端仍放行，属「前后端口径不一致」缺陷；单元用例 RF03-U-perm 覆盖）。
+  if (user.systemRole === 'SUPER_ADMIN') {
+    const all = await prisma.permission.findMany({ select: { code: true } });
+    return all.map((p) => p.code).sort();
+  }
   const bindings = await prisma.userRole.findMany({
     where: { userId: user.id },
     select: { role: { select: { permissions: { select: { permission: { select: { code: true } } } } } } },

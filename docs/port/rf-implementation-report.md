@@ -737,9 +737,52 @@ ok RF04-I5 同项目内的 phaseId 正常放行（回归）
 （报告 `assertProjectCapability is not defined`、同步删除复用 update 权限、无并发基线等），
 因此：
 
-- 该 release **只能**作为「服务崩溃时恢复可用性」的应急手段，且必须在恢复后立即前滚修复；
-- **不得**将其作为正式回退目标，也不得在回退后保持长期运行；
+- 该 release **不得**作为回退目标：既不能作为正式回退目标，**也不得**作为「恢复在线写入」的应急选项
+  （它会把已修复的访问控制缺陷重新暴露到写入口）；此类情况只能**前滚修复**（roll forward）；
+- 候选回退目标必须先通过关键权限检查清单，未通过者一律不可回退；
 - 回退前后必须执行关键权限检查清单：① 未授权访问 `/api/reports` 返回 401；
   ② 非成员访问项目资源返回 404；③ 同步删除需要独立 delete 权限；
   ④ 已审阅汇报拒绝覆盖；⑤ 审计表有对应记录。
 - 已完成的 release 级切换验证（§8.4）只证明**切换机制可用**，不构成对旧 release 安全性的认可。
+
+---
+
+## 10. 第五轮：浏览器验收前置、运行清单与增量导出
+
+### 10.1 浏览器环境（已就绪并实测）
+
+- `playwright-core` + 缓存浏览器 `chromium_headless_shell-1234`；脚手架 `rdpms-system/frontend/tests/browser/harness.mjs`
+  （独立端口启动后端与 vite dev server、等待就绪、自动生成运行清单）与 `probe.mjs`（页面结构探针）。
+- vite 代理目标支持 `VITE_API_PROXY_TARGET` 覆盖，隔离测试不再依赖默认 3000 端口。
+
+### 10.2 本轮发现并修复的阻断缺陷（既有缺陷，非本轮引入）
+
+- **现象**：`test_super_admin` 登录后 `/reports` 全页 403，提示「当前账号未获取到任何权限点」。
+- **根因**：`/api/auth/me` 的 `loadPermissions()` 对 `SUPER_ADMIN` 返回 `undefined`，调用方回落成 `[]`；
+  而同步入口对同一账号返回 **98 条**权限 → 前后端口径不一致，超管界面完全不可用（后端仍放行）。
+- **修复**（提交 `见本轮提交`）：超管口径 = 全部权限码，与同步入口一致；回归用例
+  `tests/unit/rf03-super-admin-permissions.test.mjs`；实测 `/api/auth/me` → `permissions=98`（含 `reports.view`）。
+
+### 10.3 运行清单（每轮必录）
+
+`docs/port/evidence/round5/run-manifest.json` 记录 `commit / buildId(dist mtime+size) / srcHash / backendPort /
+frontendPort / database / browser`，并在启动前硬校验数据库必须含 `rdpms_test`——
+用于排除「旧进程/旧构建的结果被算到新代码上」。
+
+### 10.4 证据分类修正（IndexedDB）
+
+F10 的 5 条用例运行在 **fake-indexeddb**（Node 进程内实现）之上，**不是真实浏览器证据**，
+现已在 `evidence/round5/README.md` 与第四轮 `test-results.md` 中标注为「存储层语义验证」；
+真实浏览器证据以 `tests/browser` 产出为准（本轮尚未产出 RF03 断言）。
+
+### 10.5 科学数据保护改为「记录 + 规范化内容」
+
+- 判定依据只来自**服务端已有记录**：`reportType` + 规范化后的 `content`；
+  规范化含「JSON 字符串 → 对象」与「无法解析但有内容 → 从严视为实验数据」两种处理。
+- **不依赖客户端请求头**，也**不依赖本次 payload 是否包含某字段**——否则客户端只要不带该字段即可绕过保护。
+- 适用面：HTTP 汇报更新（无基线兼容路径）与同步上行（锁定/科学数据一律要求基线）。
+
+### 10.6 回退目标合规（收紧）
+
+- 含已确认严重访问控制缺陷的版本**不得**作为回退目标，**也不得**作为「恢复在线写入」的应急选项——只能前滚修复。
+- 候选回退目标必须通过关键权限检查（未授权 401 / 非成员 404 / 删除需独立权限 / 已审阅拒绝覆盖 / 审计留痕）方可回退。

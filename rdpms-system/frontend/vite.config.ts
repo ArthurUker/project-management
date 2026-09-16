@@ -27,7 +27,8 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://[::1]:3000',
+        // 目标可用环境变量覆盖（隔离浏览器测试用它指向独立端口的后端）
+        target: process.env.VITE_API_PROXY_TARGET ?? 'http://[::1]:3000',
         changeOrigin: true,
       },
     },

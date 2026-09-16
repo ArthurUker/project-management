@@ -70,9 +70,35 @@ export function isScientificReportContent(
 ): boolean {
   const type = String(reportType ?? '').toUpperCase();
   if (type === 'REAGENT' || type === 'EXPERIMENT' || type === 'SCIENTIFIC') return true;
-  if (!content || typeof content !== 'object') return false;
-  const record = content as Record<string, unknown>;
-  return Array.isArray(record.reagentReports) && record.reagentReports.length > 0;
+  // 规范化：库内 content 可能是对象，也可能是 JSON 字符串（历史数据/离线队列写入口径）
+  const normalized = normalizeStoredContent(content);
+  if (!normalized) return false;
+  if (Array.isArray(normalized.reagentReports) && normalized.reagentReports.length > 0) return true;
+  // 兼容其它实验数据形状（样品/试剂条目）
+  return Array.isArray(normalized.samples) && normalized.samples.length > 0;
+}
+
+/** 把库内 content 规范化为对象（字符串按 JSON 解析；解析失败视为「非空未知内容」→ 按科学数据从严处理） */
+export function normalizeStoredContent(content: unknown): Record<string, unknown> | null {
+  if (content === null || content === undefined) return null;
+  if (typeof content === 'object') {
+    const record = content as Record<string, unknown>;
+    return Object.keys(record).length ? record : null;
+  }
+  if (typeof content === 'string') {
+    const text = content.trim();
+    if (!text || text === '{}') return null;
+    try {
+      const parsed = JSON.parse(text);
+      return parsed && typeof parsed === 'object' && Object.keys(parsed).length
+        ? (parsed as Record<string, unknown>)
+        : null;
+    } catch {
+      // 无法解析但确实有内容 → 从严：按实验数据对待
+      return { __unparsable: true };
+    }
+  }
+  return null;
 }
 
 export interface LegacyCompatSubject {
@@ -89,6 +115,9 @@ export interface LegacyCompatSubject {
  * 不满足即拒绝——宁可让老客户端报错重试，也不能静默覆盖已定稿数据。
  */
 export function assertLegacyCompatAllowed(subject: LegacyCompatSubject): void {
+  // 注意：subject 必须来自**服务端已有记录**（含规范化后的内容），
+  // 不得来自客户端请求头、也不得由「本次 payload 是否包含某个字段」推断——
+  // 否则客户端只要不带该字段就能绕过保护。
   if (!allowLegacyCompat) {
     throw badRequest(
       'CONCURRENCY_BASELINE_REQUIRED',

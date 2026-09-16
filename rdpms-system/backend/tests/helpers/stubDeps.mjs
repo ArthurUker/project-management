@@ -328,6 +328,11 @@ export function createStubDb(options = {}) {
         return row;
       },
     },
+    permission: {
+      findMany: async () => (options.permissions ?? [
+        { code: 'reports.view' }, { code: 'reports.update' }, { code: 'tasks.update' },
+      ]).map((c) => ({ code: c.code })),
+    },
     user: { findUnique: unimplemented('user.findUnique') },
     userRole: { findMany: unimplemented('userRole.findMany') },
     /** 桩事务：失败时还原状态，模拟真实事务回滚（并发语义由真实集成测试覆盖） */
