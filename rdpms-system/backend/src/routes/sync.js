@@ -4,7 +4,7 @@ import { prisma } from '../platform/db/client.js';
 import { authenticate as authMiddleware, getAuth } from '../kernel/rbac.js';
 import { AUDIT_ACTIONS, PROJECT_CAPABILITIES } from '../kernel/constants.js';
 import { writeAudit } from '../kernel/audit.js';
-import { badRequest } from '../kernel/http.js';
+import { badRequest, HttpError } from '../kernel/http.js';
 import { projectVisibilityFilter, assertProjectCapability } from '../kernel/projectAccess.js';
 import {
   assertActionPermission,
@@ -49,6 +49,7 @@ const SYNC_ENTITIES = {
     serverOwned: ['code', 'templateId', 'metadata'],
     // RF04 补齐：项目属性编辑需 projects.update（离线不支持新建，编号由服务端发号）
     permission: 'projects.update',
+    deletePermission: 'projects.delete',
     include: { manager: { select: { id: true, displayName: true } } },
   },
   projectPhases: {
@@ -61,6 +62,7 @@ const SYNC_ENTITIES = {
     serverOwned: [],
     // RF04：阶段编辑/新建与状态流转分别校验动作权限
     permission: 'project_phases.update',
+    deletePermission: 'project_phases.delete',
     createPermission: 'project_phases.create',
     statusPermission: 'project_phases.change_status',
   },
@@ -74,6 +76,7 @@ const SYNC_ENTITIES = {
     serverOwned: ['code', 'completedAt', 'startedAt'],
     // RF04/F07：同步不是后门——动作权限与普通 API 同源
     permission: 'tasks.update',
+    deletePermission: 'tasks.delete',
     createPermission: 'tasks.create',
     statusPermission: 'tasks.change_status',
     assignPermission: 'tasks.assign',
@@ -93,6 +96,7 @@ const SYNC_ENTITIES = {
     serverOwned: ['completedAt'],
     // RF04 补齐：里程碑编辑/新建需 milestones.update / milestones.create
     permission: 'milestones.update',
+    deletePermission: 'milestones.delete',
     createPermission: 'milestones.create',
     derive: (data) => {
       if (data.status === 'COMPLETED') data.completedAt = new Date();
@@ -108,6 +112,7 @@ const SYNC_ENTITIES = {
     serverOwned: ['submittedById', 'submittedAt'],
     // RF04 补齐：月度进展编辑/新建需 progress.update / progress.create（写出需项目 manage_members）
     permission: 'progress.update',
+    deletePermission: 'progress.delete',
     createPermission: 'progress.create',
   },
   reports: {
@@ -122,6 +127,7 @@ const SYNC_ENTITIES = {
     serverOwned: ['authorId', 'reviewerId', 'status', 'currentVersion', 'submittedAt', 'reviewedAt', 'reviewNote'],
     // RF04/F07：汇报的锁定与动作权限与普通 API 同源
     permission: 'reports.update',
+    deletePermission: 'reports.delete',
     createPermission: 'reports.create',
     lockRule: 'report',
   },
@@ -187,12 +193,21 @@ async function loadSyncAccess(auth, projectId) {
  * 保证「有项目 write 但无对应动作权限」的请求同样被拒绝。
  */
 async function assertSyncEntityActions({ entity, def, existing, data, auth, access, projectId, op }) {
-  // 通用动作权限（所有声明了权限码的实体统一执行，不再只覆盖 reports/tasks）：
-  //   删除 → permission；更新 → permission；新建 → createPermission
-  if (def.permission) {
-    if (op === 'delete' || existing) assertActionPermission(auth, def.permission);
-    else if (def.createPermission) assertActionPermission(auth, def.createPermission);
-  } else if (op !== 'delete' && !existing && def.createPermission) {
+  // 通用动作权限（所有实体统一执行）：
+  //   删除 → deletePermission（**独立权限码，绝不复用 update**）；未定义 = 不支持离线删除
+  //   更新 → permission；新建 → createPermission
+  if (op === 'delete') {
+    if (!def.deletePermission) {
+      throw new HttpError(
+        403,
+        'SYNC_DELETE_NOT_SUPPORTED',
+        `${entity} 不支持离线删除（未定义独立删除权限），请在在线接口按对应权限操作`,
+      );
+    }
+    assertActionPermission(auth, def.deletePermission);
+  } else if (existing) {
+    if (def.permission) assertActionPermission(auth, def.permission);
+  } else if (def.createPermission) {
     assertActionPermission(auth, def.createPermission);
   }
 

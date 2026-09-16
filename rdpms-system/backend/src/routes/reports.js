@@ -14,6 +14,13 @@ import { HttpError, badRequest, notFound } from '../kernel/http.js';
 import { withIdempotency, resolveIdempotencyKey } from '../platform/idempotency/receipts.js';
 import { writeAuditStrict } from '../platform/audit/strictAudit.js';
 import {
+  readClientContract,
+  assertBaselineForModernClient,
+  assertLegacyCompatAllowed,
+  isScientificReportContent,
+} from '../modules/access/editPolicy.js';
+import { isReportLocked } from '../modules/access/writeGuards.js';
+import {
   normalizeReportType,
   validatePeriodKey,
   isReportPeriodConflict,
@@ -233,10 +240,13 @@ reports.put('/:id', requirePermission('reports.update'), async (c) => {
   if (expectedUpdatedAt && Number.isNaN(expectedUpdatedAt.getTime())) {
     throw badRequest('VALIDATION_ERROR', 'expectedUpdatedAt 不是合法时间', { field: 'expectedUpdatedAt' });
   }
+  // 规则 1：声明新版契约的客户端缺基线 → 直接报错，不回落旧版兼容
+  const clientContract = readClientContract(c.req.raw.headers, body);
+  assertBaselineForModernClient(clientContract, expectedUpdatedAt, 'PUT /api/reports/:id');
   if (!expectedUpdatedAt) {
-    // 旧客户端兼容：显式留痕，不静默降低保护
+    // 规则 2/3（依赖服务端状态）在 validate 中执行：只拦新命令，不拦回放（回放由回执决定）
     // eslint-disable-next-line no-console
-    console.warn(`[reports.update] 缺少并发基线（report=${id}，actor=${auth.userId}）→ 以旧客户端兼容路径执行`);
+    console.warn(`[reports.update] 旧客户端兼容路径（无基线）report=${id} actor=${auth.userId} contract=${clientContract ?? '未声明'}`);
   }
 
   const { key } = resolveIdempotencyKey(c, body);
@@ -252,6 +262,15 @@ reports.put('/:id', requirePermission('reports.update'), async (c) => {
       validate: () => {
         // RF04/F06：项目范围 + 作者 + 状态锁定判定与同步入口同源（modules/access/writeGuards）
         assertReportWritable(existing, auth, access);
+        // 规则 2/3（依赖服务端状态、只拦新命令不拦回放）：
+        // 旧客户端兼容路径只对「草稿且非实验科学数据」开放；已提交/已审核/实验科学数据必须带基线。
+        if (!expectedUpdatedAt) {
+          assertLegacyCompatAllowed({
+            locked: isReportLocked(existing),
+            scientific: isScientificReportContent(existing.reportType, existing.content),
+            label: `汇报 ${existing.reportType}/${existing.periodKey}`,
+          });
+        }
         return buildReportDraftPatch(allowed, { currentType: existing.reportType });
       },
       execute: async (tx, data) => {
