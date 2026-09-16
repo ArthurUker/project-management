@@ -1,0 +1,50 @@
+{
+  "runId": "2026-09-16T03-27-26-641Z-a5b2f8",
+  "startedAt": "2026-09-16T03:27:26.646Z",
+  "finishedAt": null,
+  "git": {
+    "head": "ee2fba7b9bf0f8a0067a15991e3e312a4f17b0ed",
+    "headShort": "ee2fba7",
+    "branch": "refactor/rdpms-guidance-v2",
+    "worktreeDirty": true
+  },
+  "sourceHash": {
+    "backendSrc": "5ad79ca0bc6395f4b294776b79439a3b",
+    "backendFiles": 56,
+    "frontendSrc": "601601f30b3a2d7ff32aa7b790c845d9",
+    "frontendFiles": 113
+  },
+  "buildArtifactHash": {
+    "dist": "a5bff9eac831f043a20b6793faadf107",
+    "distFiles": 112,
+    "buildId": "2026-09-16T03-27-26-641Z-a5b2f8"
+  },
+  "runtime": {
+    "node": "v20.20.2",
+    "browser": "/home/ubuntu/.cache/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell",
+    "browserVersion": "chrome-headless-shell (build 1234)",
+    "frontendMode": "vite dev server（源码直出，未做生产构建）",
+    "frontendSourceHash": "601601f30b3a2d7ff32aa7b790c845d9"
+  },
+  "ports": {
+    "backend": 46653,
+    "frontend": 44355
+  },
+  "testDb": {
+    "database": "rdpms_test",
+    "directDatabase": "rdpms_test",
+    "host": "127.0.0.1",
+    "port": "5432"
+  },
+  "isolatedDirs": {
+    "tmpRoot": "/tmp/rdpms-browser-2026-09-16T03-27-26-641Z-a5b2f8-2vFYbh",
+    "uploads": "/tmp/rdpms-browser-2026-09-16T03-27-26-641Z-a5b2f8-2vFYbh/uploads",
+    "profile": "/tmp/rdpms-browser-2026-09-16T03-27-26-641Z-a5b2f8-2vFYbh/chrome-profile"
+  },
+  "pids": {
+    "backend": 2740532,
+    "vite": 2740533
+  },
+  "buildId": "2026-09-16T03-27-26-641Z-a5b2f8",
+  "instanceId": "2026-09-16T03-27-26-641Z-a5b2f8"
+}

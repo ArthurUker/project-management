@@ -79,8 +79,15 @@ export function createApp(deps = {}) {
   }));
 
   // 健康检查（liveness）
-  app.get('/health', (c) => c.json({ status: 'ok' }));
-  app.get('/api/health', (c) => c.json({ status: 'ok' }));
+  // 健康检查：附加**本轮实例标识与构建标识**，供测试确认「访问的是本轮进程/本轮构建」，
+  // 避免旧进程响应被误算到新代码上（第六轮测试环境要求）。
+  const healthPayload = () => ({
+    status: 'ok',
+    ...(process.env.RDPMS_INSTANCE_ID ? { instance: process.env.RDPMS_INSTANCE_ID } : {}),
+    ...(process.env.RDPMS_BUILD_ID ? { build: process.env.RDPMS_BUILD_ID } : {}),
+  });
+  app.get('/health', (c) => c.json(healthPayload()));
+  app.get('/api/health', (c) => c.json(healthPayload()));
 
   // 就绪检查（readiness，公开，M-1 P0 契约）：DB 可达即 ready
   app.get('/api/ready', async (c) => {

@@ -1,0 +1,114 @@
+{
+  "runId": "2026-09-16T03-30-09-851Z-fd0e7f",
+  "manifest": {
+    "runId": "2026-09-16T03-30-09-851Z-fd0e7f",
+    "startedAt": "2026-09-16T03:30:09.858Z",
+    "finishedAt": null,
+    "git": {
+      "head": "ee2fba7b9bf0f8a0067a15991e3e312a4f17b0ed",
+      "headShort": "ee2fba7",
+      "branch": "refactor/rdpms-guidance-v2",
+      "worktreeDirty": true
+    },
+    "sourceHash": {
+      "backendSrc": "5ad79ca0bc6395f4b294776b79439a3b",
+      "backendFiles": 56,
+      "frontendSrc": "601601f30b3a2d7ff32aa7b790c845d9",
+      "frontendFiles": 113
+    },
+    "buildArtifactHash": {
+      "dist": "a5bff9eac831f043a20b6793faadf107",
+      "distFiles": 112,
+      "buildId": "2026-09-16T03-30-09-851Z-fd0e7f"
+    },
+    "runtime": {
+      "node": "v20.20.2",
+      "browser": "/home/ubuntu/.cache/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell",
+      "browserVersion": "chrome-headless-shell (build 1234)",
+      "frontendMode": "vite dev server（源码直出，未做生产构建）",
+      "frontendSourceHash": "601601f30b3a2d7ff32aa7b790c845d9"
+    },
+    "ports": {
+      "backend": 42475,
+      "frontend": 44985
+    },
+    "testDb": {
+      "database": "rdpms_test",
+      "directDatabase": "rdpms_test",
+      "host": "127.0.0.1",
+      "port": "5432"
+    },
+    "isolatedDirs": {
+      "tmpRoot": "/tmp/rdpms-browser-2026-09-16T03-30-09-851Z-fd0e7f-FX0a6v",
+      "uploads": "/tmp/rdpms-browser-2026-09-16T03-30-09-851Z-fd0e7f-FX0a6v/uploads",
+      "profile": "/tmp/rdpms-browser-2026-09-16T03-30-09-851Z-fd0e7f-FX0a6v/chrome-profile"
+    },
+    "pids": {
+      "backend": 2742180,
+      "vite": 2742181
+    },
+    "buildId": "2026-09-16T03-30-09-851Z-fd0e7f",
+    "instanceId": "2026-09-16T03-30-09-851Z-fd0e7f"
+  },
+  "results": [
+    {
+      "id": "B00",
+      "name": "登录后 /api/reports 可访问（超管权限出口修复生效）",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "id": "B01-a",
+      "name": "第一天 DAILY 保存成功且 periodKey 为完整日期",
+      "status": "PASS",
+      "detail": "periodKey=2026-09-01 命中 1 条"
+    },
+    {
+      "id": "B01-b",
+      "name": "第二天新建不覆盖第一天（两条独立记录）",
+      "status": "PASS",
+      "detail": "D1=2026-09-01 D2=2026-09-02 总数=2"
+    },
+    {
+      "id": "B01-c",
+      "name": "第一天内容未被第二天覆盖",
+      "status": "PASS",
+      "detail": "content 长度=129"
+    },
+    {
+      "id": "B02-a",
+      "name": "重新打开时正文回填（输入框实际值）",
+      "status": "PASS",
+      "detail": "textarea 数=3 首个长度=16 行可见=true"
+    },
+    {
+      "id": "B02-b",
+      "name": "再次保存不丢项且改动生效（含“已编辑”标记、原文前缀仍在）",
+      "status": "PASS",
+      "detail": "含原文=true 含已编辑=true 长度=129"
+    },
+    {
+      "id": "B03-a",
+      "name": "提交后服务端状态与提交版本实际改变",
+      "status": "FAIL",
+      "detail": "status SUBMITTED→SUBMITTED, currentVersion 1→1, 版本记录=1"
+    },
+    {
+      "id": "B03-b",
+      "name": "刷新后仍显示已提交状态（非仅按钮变化）",
+      "status": "FAIL",
+      "detail": "RD 研发项目管理系统 R&D PMS 仪表盘 项目管理 项目注册管理 汇报管理 法规文档 知识库 查看 引物探针库 试剂库 样本库 任务管理 模板库 查看 项目模板 任务模板 试剂配方 系统 成员管理 角色管理 审计日志 系统日志 数据备"
+    }
+  ],
+  "consoleErrors": [
+    "Warning: Each child in a list should have a unique \"key\" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s \n\nCheck the render method of `Layout`.  \n    at div\n    at Layout (http://127.0.0.1:44985/src/components/Layout.tsx:27:20)\n    at AuthGuard (http://127.0.0.1:44985/src/routes/AuthGuard.tsx:21:29)\n    at RenderedRoute (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4131:5)\n    at Routes (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4601:5)\n    at AppRoutes\n    at SyncProvider (http://127.0.0.1:44985/src/offline/SyncProvider.tsx:22:32)\n    at AuthProvider (http://127.0.0.1:44985/src/auth/AuthProvider.tsx:24:32)\n    at Router (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4544:15)\n    at BrowserRouter (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:5290:5)\n    at App\n    at ErrorBoundary (http://127.0.0.1:44985/src/components/ErrorBoundary.tsx:5:8)",
+    "Warning: Each child in a list should have a unique \"key\" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s \n\nCheck the render method of `Layout`.  \n    at div\n    at Layout (http://127.0.0.1:44985/src/components/Layout.tsx:27:20)\n    at AuthGuard (http://127.0.0.1:44985/src/routes/AuthGuard.tsx:21:29)\n    at RenderedRoute (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4131:5)\n    at Routes (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4601:5)\n    at AppRoutes\n    at SyncProvider (http://127.0.0.1:44985/src/offline/SyncProvider.tsx:22:32)\n    at AuthProvider (http://127.0.0.1:44985/src/auth/AuthProvider.tsx:24:32)\n    at Router (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4544:15)\n    at BrowserRouter (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:5290:5)\n    at App\n    at ErrorBoundary (http://127.0.0.1:44985/src/components/ErrorBoundary.tsx:5:8)",
+    "Failed to load resource: the server responded with a status of 409 (Conflict)",
+    "Warning: Each child in a list should have a unique \"key\" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s \n\nCheck the render method of `Layout`.  \n    at div\n    at Layout (http://127.0.0.1:44985/src/components/Layout.tsx:27:20)\n    at AuthGuard (http://127.0.0.1:44985/src/routes/AuthGuard.tsx:21:29)\n    at RenderedRoute (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4131:5)\n    at Routes (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4601:5)\n    at AppRoutes\n    at SyncProvider (http://127.0.0.1:44985/src/offline/SyncProvider.tsx:22:32)\n    at AuthProvider (http://127.0.0.1:44985/src/auth/AuthProvider.tsx:24:32)\n    at Router (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4544:15)\n    at BrowserRouter (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:5290:5)\n    at App\n    at ErrorBoundary (http://127.0.0.1:44985/src/components/ErrorBoundary.tsx:5:8)",
+    "Warning: Each child in a list should have a unique \"key\" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s \n\nCheck the render method of `Layout`.  \n    at div\n    at Layout (http://127.0.0.1:44985/src/components/Layout.tsx:27:20)\n    at AuthGuard (http://127.0.0.1:44985/src/routes/AuthGuard.tsx:21:29)\n    at RenderedRoute (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4131:5)\n    at Routes (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4601:5)\n    at AppRoutes\n    at SyncProvider (http://127.0.0.1:44985/src/offline/SyncProvider.tsx:22:32)\n    at AuthProvider (http://127.0.0.1:44985/src/auth/AuthProvider.tsx:24:32)\n    at Router (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4544:15)\n    at BrowserRouter (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:5290:5)\n    at App\n    at ErrorBoundary (http://127.0.0.1:44985/src/components/ErrorBoundary.tsx:5:8)",
+    "Failed to load resource: the server responded with a status of 409 (Conflict)",
+    "Warning: Each child in a list should have a unique \"key\" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s \n\nCheck the render method of `Layout`.  \n    at div\n    at Layout (http://127.0.0.1:44985/src/components/Layout.tsx:27:20)\n    at AuthGuard (http://127.0.0.1:44985/src/routes/AuthGuard.tsx:21:29)\n    at RenderedRoute (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4131:5)\n    at Routes (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4601:5)\n    at AppRoutes\n    at SyncProvider (http://127.0.0.1:44985/src/offline/SyncProvider.tsx:22:32)\n    at AuthProvider (http://127.0.0.1:44985/src/auth/AuthProvider.tsx:24:32)\n    at Router (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4544:15)\n    at BrowserRouter (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:5290:5)\n    at App\n    at ErrorBoundary (http://127.0.0.1:44985/src/components/ErrorBoundary.tsx:5:8)",
+    "Failed to load resource: the server responded with a status of 409 (Conflict)",
+    "Warning: Each child in a list should have a unique \"key\" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s \n\nCheck the render method of `Layout`.  \n    at div\n    at Layout (http://127.0.0.1:44985/src/components/Layout.tsx:27:20)\n    at AuthGuard (http://127.0.0.1:44985/src/routes/AuthGuard.tsx:21:29)\n    at RenderedRoute (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4131:5)\n    at Routes (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4601:5)\n    at AppRoutes\n    at SyncProvider (http://127.0.0.1:44985/src/offline/SyncProvider.tsx:22:32)\n    at AuthProvider (http://127.0.0.1:44985/src/auth/AuthProvider.tsx:24:32)\n    at Router (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4544:15)\n    at BrowserRouter (http://127.0.0.1:44985/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:5290:5)\n    at App\n    at ErrorBoundary (http://127.0.0.1:44985/src/components/ErrorBoundary.tsx:5:8)"
+  ]
+}

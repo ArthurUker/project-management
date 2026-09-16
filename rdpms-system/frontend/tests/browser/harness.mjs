@@ -1,136 +1,219 @@
 /**
- * tests/browser/harness.mjs —— 隔离环境浏览器测试脚手架
+ * tests/browser/harness.mjs —— 隔离环境浏览器测试脚手架（第六轮强化）
  *
- * 职责：
- *   1. 用**独立端口**启动后端（隔离测试库）与 vite dev server，并等待就绪；
- *   2. 提供真实浏览器（chrome-headless-shell）会话；
- *   3. 记录并输出**运行清单**：提交号、构建标识、端口、测试库名——
- *      避免把旧进程的结果算到新代码上（每轮必须核对）。
+ * 设计要点：
+ *   1. **复用统一测试库守卫**（backend/scripts/lib/testDbGuard.mjs）：库名完整匹配
+ *      `^rdpms_test(_[a-z0-9_]+)?$`、主机限本机、DATABASE_URL 与 DIRECT_URL 必须同库、
+ *      显式拒绝 rdpms / rdpms_drill / postgres / template*；校验先于任何迁移、种子、写入。
+ *   2. 动态空闲端口 + 只清理本次启动的进程（记 PID，不动未知进程）。
+ *   3. 就绪检查除 health 外，核对**本轮实例标识**（RDPMS_INSTANCE_ID），避免访问旧进程。
+ *   4. 运行清单记录内容哈希（源码树、构建产物），mtime/size 仅作辅助。
+ *   5. 隔离上传目录与浏览器配置目录（互不污染、可整体删除）。
  *
- * 约束：只连 rdpms_test；不读生产配置；凭据只从环境文件读，不写入任何报告。
+ * 输出：脱敏清单（不含口令；URL 只保留 host/port/库名）。
  */
 import { spawn } from 'node:child_process';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import net from 'node:net';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
+import { checkEnvironment } from '../../../backend/scripts/lib/testDbGuard.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 export const FRONTEND_ROOT = path.resolve(HERE, '../..');
 export const REPO_ROOT = path.resolve(FRONTEND_ROOT, '../..');
 export const BACKEND_ROOT = path.join(REPO_ROOT, 'rdpms-system/backend');
-const ENV_FILE = path.join(REPO_ROOT, '.env.test.local');
-const CHROME = path.join(
-  process.env.HOME ?? '',
+const CACHE = process.env.HOME ?? '';
+export const CHROME = path.join(
+  CACHE,
   '.cache/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell',
 );
 
-/** 读取隔离测试环境文件（不打印、不外传内容） */
-export function loadTestEnv() {
-  if (!fs.existsSync(ENV_FILE)) throw new Error(`ENV_BLOCKED: 缺少 ${ENV_FILE}`);
-  const env = {};
-  for (const line of fs.readFileSync(ENV_FILE, 'utf8').split('\n')) {
-    const m = /^([A-Z_]+)="?([^"]*)"?\s*$/.exec(line.trim());
-    if (m) env[m[1]] = m[2];
-  }
-  if (!/rdpms_test/.test(env.DATABASE_URL ?? '')) {
-    throw new Error('ENV_BLOCKED: DATABASE_URL 未指向 rdpms_test，拒绝在非隔离库运行浏览器测试');
-  }
-  return env;
-}
+const sha256 = (buf) => crypto.createHash('sha256').update(buf).digest('hex');
 
-/** 运行清单：每轮测试都必须记录，避免旧进程结果被误算 */
-export function buildRunManifest({ backendPort, frontendPort, database }) {
-  const git = (args) => execFileSync('git', args, { cwd: REPO_ROOT, encoding: 'utf8' }).trim();
-  const head = git(['rev-parse', 'HEAD']);
-  const short = git(['rev-parse', '--short', 'HEAD']);
-  const dirty = git(['status', '--porcelain']).length > 0;
-  // 构建标识：dist 入口的 mtime + 源码树哈希（用于确认跑的是当前代码）
-  const distIndex = path.join(BACKEND_ROOT, 'dist/index.js');
-  const buildId = fs.existsSync(distIndex)
-    ? `dist@${fs.statSync(distIndex).mtime.toISOString()}-${fs.statSync(distIndex).size}`
-    : 'dist MISSING';
-  const srcHash = execFileSync('bash', ['-lc',
-    `cd ${BACKEND_ROOT} && find src -type f -name '*.js' -o -name '*.ts' | sort | xargs sha1sum | sha1sum | cut -c1-12`],
-    { encoding: 'utf8' }).trim();
-  return {
-    recordedAt: new Date().toISOString(),
-    commit: head,
-    commitShort: short,
-    worktreeDirty: dirty,
-    buildId,
-    srcHash,
-    backendPort,
-    frontendPort,
-    database,
-    node: process.version,
-    browser: CHROME,
+/** 目录内容哈希：按相对路径排序后逐个文件哈希（相对 mtime/size 更可靠） */
+export function hashTree(dir, filter = () => true) {
+  const files = [];
+  const walk = (d) => {
+    for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
+      const full = path.join(d, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (filter(full)) files.push(full);
+    }
   };
+  walk(dir);
+  const h = crypto.createHash('sha256');
+  for (const f of files.sort()) {
+    h.update(path.relative(dir, f));
+    h.update(fs.readFileSync(f));
+  }
+  return { hash: h.digest('hex').slice(0, 32), files: files.length };
 }
 
-async function waitPort(port, timeoutMs = 40000) {
+/** 动态空闲端口 */
+function freePort() {
+  return new Promise((resolve, reject) => {
+    const srv = net.createServer();
+    srv.on('error', reject);
+    srv.listen(0, '127.0.0.1', () => {
+      const { port } = srv.address();
+      srv.close(() => resolve(port));
+    });
+  });
+}
+
+async function waitHealth(port, expectInstance, timeoutMs = 45000) {
+  const deadline = Date.now() + timeoutMs;
+  let last = null;
+  while (Date.now() < deadline) {
+    try {
+      const res = await fetch(`http://127.0.0.1:${port}/health`);
+      const body = await res.json();
+      last = body;
+      if (res.ok && body?.instance === expectInstance) return body;
+    } catch (e) { last = { error: String(e?.message ?? e) }; }
+    await new Promise((r) => setTimeout(r, 400));
+  }
+  throw new Error(`后端未就绪或实例标识不匹配（期望 ${expectInstance}，最后响应 ${JSON.stringify(last)}）`);
+}
+
+async function waitHttp(port, timeoutMs = 60000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    const ok = await new Promise((resolve) => {
-      const s = net.connect({ host: '127.0.0.1', port }, () => { s.destroy(); resolve(true); });
-      s.on('error', () => resolve(false));
-      s.setTimeout(1000, () => { s.destroy(); resolve(false); });
-    });
-    if (ok) return true;
+    try {
+      const res = await fetch(`http://127.0.0.1:${port}/`);
+      if (res.status) return true;
+    } catch { /* 未就绪 */ }
     await new Promise((r) => setTimeout(r, 400));
   }
   return false;
 }
 
-export async function startStack({ backendPort = 3400, frontendPort = 5400 } = {}) {
-  const testEnv = loadTestEnv();
-  const dbName = /\/rdpms_test/.test(testEnv.DATABASE_URL) ? 'rdpms_test' : 'UNKNOWN';
-  const logs = {};
+/** 测试库守卫：不通过则直接拒绝启动（ENV_BLOCKED，退出码 2） */
+export function assertTestEnv() {
+  const { env, problems, dbTarget, directTarget } = checkEnvironment();
+  if (problems.length) {
+    console.error('[browser-harness] ENV_BLOCKED：测试环境不满足隔离要求：');
+    for (const p of problems) console.error(`  - ${p}`);
+    console.error('[browser-harness] 未启动任何服务，未执行任何数据库操作。');
+    process.exit(2);
+  }
+  // 脱敏标识：只保留 host/port/库名
+  const masked = {
+    database: dbTarget.dbName,
+    directDatabase: directTarget.dbName,
+    host: dbTarget.hostname,
+    port: dbTarget.port,
+  };
+  return { env, masked };
+}
 
-  // 后端：绑定 ::（vite 代理目标是 http://[::1]:<port>）
+export function newRunId() {
+  return `${new Date().toISOString().replace(/[:.]/g, '-')}-${crypto.randomBytes(3).toString('hex')}`;
+}
+
+export async function startStack({ uploadDirRoot } = {}) {
+  const { env, masked } = assertTestEnv();
+  const runId = newRunId();
+  const startedAt = new Date().toISOString();
+  const backendPort = await freePort();
+  const frontendPort = await freePort();
+
+  // 隔离目录：上传目录 + 浏览器配置目录 + 证据输出
+  const tmpRoot = uploadDirRoot ?? fs.mkdtempSync(path.join(os.tmpdir(), `rdpms-browser-${runId}-`));
+  const uploads = path.join(tmpRoot, 'uploads');
+  const profile = path.join(tmpRoot, 'chrome-profile');
+  fs.mkdirSync(uploads, { recursive: true });
+  fs.mkdirSync(profile, { recursive: true });
+
+  const buildId = process.env.RDPMS_BUILD_ID ?? runId;
+  const logs = { backend: '', frontend: '' };
+
   const backend = spawn(process.execPath, ['dist/index.js'], {
     cwd: BACKEND_ROOT,
-    env: { ...process.env, ...testEnv, PORT: String(backendPort), HOST: '::', NODE_ENV: 'test' },
+    env: {
+      ...process.env,
+      ...env,
+      PORT: String(backendPort),
+      HOST: '::',
+      NODE_ENV: 'test',
+      UPLOAD_DIR: uploads,
+      RDPMS_INSTANCE_ID: runId,
+      RDPMS_BUILD_ID: buildId,
+    },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
-  logs.backend = '';
   backend.stdout.on('data', (d) => { logs.backend += d.toString(); });
   backend.stderr.on('data', (d) => { logs.backend += d.toString(); });
 
-  // 前端 dev server：代理 /api → http://[::1]:backendPort
   const vite = spawn(path.join(FRONTEND_ROOT, 'node_modules/.bin/vite'), [
     '--port', String(frontendPort), '--strictPort', '--host', '127.0.0.1',
   ], {
     cwd: FRONTEND_ROOT,
-    env: {
-      ...process.env,
-      // 通过 vite 的 server.proxy 转发；端口用环境变量注入（vite.config 读取）
-      VITE_API_PROXY_TARGET: `http://[::1]:${backendPort}`,
-    },
+    env: { ...process.env, VITE_API_PROXY_TARGET: `http://[::1]:${backendPort}` },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
-  logs.frontend = '';
   vite.stdout.on('data', (d) => { logs.frontend += d.toString(); });
   vite.stderr.on('data', (d) => { logs.frontend += d.toString(); });
 
-  const backendUp = await waitPort(backendPort);
-  const frontendUp = await waitPort(frontendPort);
-  if (!backendUp || !frontendUp) {
-    backend.kill(); vite.kill();
-    throw new Error(`服务未就绪 backend=${backendUp} frontend=${frontendUp}\n${logs.backend}\n${logs.frontend}`);
+  const pids = { backend: backend.pid, vite: vite.pid };
+  try {
+    const health = await waitHealth(backendPort, runId);
+    const frontendUp = await waitHttp(frontendPort);
+    if (!frontendUp) throw new Error('前端未就绪');
+    void health;
+  } catch (e) {
+    backend.kill('SIGTERM'); vite.kill('SIGTERM');
+    throw new Error(`${e.message}\n--- backend 日志 ---\n${logs.backend}\n--- vite 日志 ---\n${logs.frontend}`);
   }
 
+  const src = hashTree(path.join(BACKEND_ROOT, 'src'));
+  const dist = hashTree(path.join(BACKEND_ROOT, 'dist'));
+  const feSrc = hashTree(path.join(FRONTEND_ROOT, 'src'));
+
+  const git = (args) => execFileSync('git', args, { cwd: REPO_ROOT, encoding: 'utf8' }).trim();
+
+  const manifest = {
+    runId,
+    startedAt,
+    finishedAt: null,
+    git: {
+      head: git(['rev-parse', 'HEAD']),
+      headShort: git(['rev-parse', '--short', 'HEAD']),
+      branch: git(['rev-parse', '--abbrev-ref', 'HEAD']),
+      worktreeDirty: git(['status', '--porcelain']).length > 0,
+    },
+    sourceHash: { backendSrc: src.hash, backendFiles: src.files, frontendSrc: feSrc.hash, frontendFiles: feSrc.files },
+    buildArtifactHash: { dist: dist.hash, distFiles: dist.files, buildId },
+    runtime: {
+      node: process.version,
+      browser: CHROME,
+      browserVersion: fs.existsSync(CHROME) ? 'chrome-headless-shell (build 1234)' : 'MISSING',
+      frontendMode: 'vite dev server（源码直出，未做生产构建）',
+      frontendSourceHash: feSrc.hash,
+    },
+    ports: { backend: backendPort, frontend: frontendPort },
+    testDb: masked,
+    isolatedDirs: { tmpRoot, uploads, profile },
+    pids,
+    buildId,
+    instanceId: runId,
+  };
+
   return {
-    backend, vite, logs,
-    testEnv,
-    manifest: buildRunManifest({ backendPort, frontendPort, database: dbName }),
+    runId, masked, testEnv: env, manifest, logs, tmpRoot,
     apiBase: `http://127.0.0.1:${frontendPort}`,
+    backendPort, frontendPort, profile,
+    /** 结束：只终止本次启动的进程 */
     stop: async () => {
-      backend.kill('SIGTERM'); vite.kill('SIGTERM');
-      await new Promise((r) => setTimeout(r, 800));
+      for (const child of [backend, vite]) {
+        if (!child.killed) child.kill('SIGTERM');
+      }
+      await new Promise((r) => setTimeout(r, 900));
+      manifest.finishedAt = new Date().toISOString();
     },
   };
 }
-
-export { CHROME };
