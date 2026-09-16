@@ -82,3 +82,5 @@ env/
 
 # ── CodeBuddy 工作区 ──
 .codebuddy/
+docs/port/evidence/**/*.bundle
+docs/port/evidence/**/*.patch

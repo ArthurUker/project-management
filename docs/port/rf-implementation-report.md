@@ -760,7 +760,7 @@ ok RF04-I5 同项目内的 phaseId 正常放行（回归）
 - **现象**：`test_super_admin` 登录后 `/reports` 全页 403，提示「当前账号未获取到任何权限点」。
 - **根因**：`/api/auth/me` 的 `loadPermissions()` 对 `SUPER_ADMIN` 返回 `undefined`，调用方回落成 `[]`；
   而同步入口对同一账号返回 **98 条**权限 → 前后端口径不一致，超管界面完全不可用（后端仍放行）。
-- **修复**（提交 `见本轮提交`）：超管口径 = 全部权限码，与同步入口一致；回归用例
+- **修复**（提交 `d5a9c5f`）：超管口径 = 全部权限码，与同步入口一致；回归用例
   `tests/unit/rf03-super-admin-permissions.test.mjs`；实测 `/api/auth/me` → `permissions=98`（含 `reports.view`）。
 
 ### 10.3 运行清单（每轮必录）
