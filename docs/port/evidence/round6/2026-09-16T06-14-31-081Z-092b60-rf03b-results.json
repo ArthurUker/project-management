@@ -1,0 +1,66 @@
+{
+  "runId": "2026-09-16T06-14-31-081Z-092b60",
+  "manifest": {
+    "runId": "2026-09-16T06-14-31-081Z-092b60",
+    "startedAt": "2026-09-16T06:14:31.081Z",
+    "finishedAt": null,
+    "git": {
+      "head": "be49ebdf958d376f825818577b37f6cd9509ebbe",
+      "headShort": "be49ebd",
+      "branch": "refactor/rdpms-guidance-v2",
+      "worktreeDirty": true
+    },
+    "sourceHash": {
+      "backendSrc": "5ad79ca0bc6395f4b294776b79439a3b",
+      "backendFiles": 56,
+      "frontendSrc": "601601f30b3a2d7ff32aa7b790c845d9",
+      "frontendFiles": 113
+    },
+    "buildArtifactHash": {
+      "dist": "a5bff9eac831f043a20b6793faadf107",
+      "distFiles": 112,
+      "buildId": "2026-09-16T06-14-31-081Z-092b60"
+    },
+    "runtime": {
+      "node": "v20.20.2",
+      "browser": "/home/ubuntu/.cache/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell",
+      "browserVersion": "chrome-headless-shell (build 1234)",
+      "frontendMode": "vite dev server（源码直出，未做生产构建）",
+      "frontendSourceHash": "601601f30b3a2d7ff32aa7b790c845d9"
+    },
+    "ports": {
+      "backend": 43615,
+      "frontend": 44829
+    },
+    "testDb": {
+      "database": "rdpms_test",
+      "directDatabase": "rdpms_test",
+      "host": "127.0.0.1",
+      "port": "5432"
+    },
+    "isolatedDirs": {
+      "tmpRoot": "/tmp/rdpms-browser-2026-09-16T06-14-31-081Z-092b60-BN5FCI",
+      "uploads": "/tmp/rdpms-browser-2026-09-16T06-14-31-081Z-092b60-BN5FCI/uploads",
+      "profile": "/tmp/rdpms-browser-2026-09-16T06-14-31-081Z-092b60-BN5FCI/chrome-profile"
+    },
+    "pids": {
+      "backend": 2814716,
+      "vite": 2814717
+    },
+    "buildId": "2026-09-16T06-14-31-081Z-092b60",
+    "instanceId": "2026-09-16T06-14-31-081Z-092b60"
+  },
+  "results": [
+    {
+      "id": "EXC",
+      "name": "用例执行异常",
+      "status": "FAIL",
+      "detail": "按钮不可见 /提交日报|提交/ "
+    }
+  ],
+  "consoleErrors": [
+    "Warning: Each child in a list should have a unique \"key\" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s \n\nCheck the render method of `Layout`.  \n    at div\n    at Layout (http://127.0.0.1:44829/src/components/Layout.tsx:27:20)\n    at AuthGuard (http://127.0.0.1:44829/src/routes/AuthGuard.tsx:21:29)\n    at RenderedRoute (http://127.0.0.1:44829/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4131:5)\n    at Routes (http://127.0.0.1:44829/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4601:5)\n    at AppRoutes\n    at SyncProvider (http://127.0.0.1:44829/src/offline/SyncProvider.tsx:22:32)\n    at AuthProvider (http://127.0.0.1:44829/src/auth/AuthProvider.tsx:24:32)\n    at Router (http://127.0.0.1:44829/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4544:15)\n    at BrowserRouter (http://127.0.0.1:44829/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:5290:5)\n    at App\n    at ErrorBoundary (http://127.0.0.1:44829/src/components/ErrorBoundary.tsx:5:8)",
+    "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "Warning: Each child in a list should have a unique \"key\" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s \n\nCheck the render method of `Layout`.  \n    at div\n    at Layout (http://127.0.0.1:44829/src/components/Layout.tsx:27:20)\n    at AuthGuard (http://127.0.0.1:44829/src/routes/AuthGuard.tsx:21:29)\n    at RenderedRoute (http://127.0.0.1:44829/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4131:5)\n    at Routes (http://127.0.0.1:44829/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4601:5)\n    at AppRoutes\n    at SyncProvider (http://127.0.0.1:44829/src/offline/SyncProvider.tsx:22:32)\n    at AuthProvider (http://127.0.0.1:44829/src/auth/AuthProvider.tsx:24:32)\n    at Router (http://127.0.0.1:44829/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4544:15)\n    at BrowserRouter (http://127.0.0.1:44829/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:5290:5)\n    at App\n    at ErrorBoundary (http://127.0.0.1:44829/src/components/ErrorBoundary.tsx:5:8)"
+  ]
+}

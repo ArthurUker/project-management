@@ -1,0 +1,149 @@
+{
+  "runId": "2026-09-16T06-20-33-402Z-7254ca",
+  "manifest": {
+    "runId": "2026-09-16T06-20-33-402Z-7254ca",
+    "startedAt": "2026-09-16T06:20:33.402Z",
+    "finishedAt": null,
+    "git": {
+      "head": "be49ebdf958d376f825818577b37f6cd9509ebbe",
+      "headShort": "be49ebd",
+      "branch": "refactor/rdpms-guidance-v2",
+      "worktreeDirty": true
+    },
+    "sourceHash": {
+      "backendSrc": "5ad79ca0bc6395f4b294776b79439a3b",
+      "backendFiles": 56,
+      "frontendSrc": "601601f30b3a2d7ff32aa7b790c845d9",
+      "frontendFiles": 113
+    },
+    "buildArtifactHash": {
+      "dist": "a5bff9eac831f043a20b6793faadf107",
+      "distFiles": 112,
+      "buildId": "2026-09-16T06-20-33-402Z-7254ca"
+    },
+    "runtime": {
+      "node": "v20.20.2",
+      "browser": "/home/ubuntu/.cache/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell",
+      "browserVersion": "chrome-headless-shell (build 1234)",
+      "frontendMode": "vite dev server（源码直出，未做生产构建）",
+      "frontendSourceHash": "601601f30b3a2d7ff32aa7b790c845d9"
+    },
+    "ports": {
+      "backend": 44653,
+      "frontend": 33349
+    },
+    "testDb": {
+      "database": "rdpms_test",
+      "directDatabase": "rdpms_test",
+      "host": "127.0.0.1",
+      "port": "5432"
+    },
+    "isolatedDirs": {
+      "tmpRoot": "/tmp/rdpms-browser-2026-09-16T06-20-33-402Z-7254ca-eBfhbV",
+      "uploads": "/tmp/rdpms-browser-2026-09-16T06-20-33-402Z-7254ca-eBfhbV/uploads",
+      "profile": "/tmp/rdpms-browser-2026-09-16T06-20-33-402Z-7254ca-eBfhbV/chrome-profile"
+    },
+    "pids": {
+      "backend": 2818644,
+      "vite": 2818645
+    },
+    "buildId": "2026-09-16T06-20-33-402Z-7254ca",
+    "instanceId": "2026-09-16T06-20-33-402Z-7254ca"
+  },
+  "results": [
+    {
+      "id": "B04-a",
+      "name": "作者提交后服务端状态为已提交",
+      "status": "FAIL",
+      "detail": "status=undefined id=undefine"
+    },
+    {
+      "id": "B04-b",
+      "name": "复核人操作后服务端进入已审核状态",
+      "status": "FAIL",
+      "detail": "status=undefined（复核人须对项目有访问权，否则记录实际结果）"
+    },
+    {
+      "id": "B04-c",
+      "name": "作者重开内容保留",
+      "status": "FAIL",
+      "detail": "textarea 数=0"
+    },
+    {
+      "id": "B04-d",
+      "name": "界面体现不可直接编辑（保存按钮禁用且有锁定提示）",
+      "status": "FAIL",
+      "detail": "提示命中=false 保存禁用=false"
+    },
+    {
+      "id": "B04-e",
+      "name": "绕过界面直接写入被服务端拒绝",
+      "status": "FAIL",
+      "detail": "status=401 code=UNAUTHORIZED"
+    },
+    {
+      "id": "B05-a",
+      "name": "故障注入（网络失败）确实发生",
+      "status": "PASS",
+      "detail": "注入次数=1"
+    },
+    {
+      "id": "B05-b",
+      "name": "部分成功：至少一个项目已保存、另一个未保存",
+      "status": "FAIL",
+      "detail": "本日记录=0"
+    },
+    {
+      "id": "B05-c",
+      "name": "失败内容保留在界面（未丢失）",
+      "status": "PASS",
+      "detail": "textarea 数=6 含B内容=true"
+    },
+    {
+      "id": "B05-d",
+      "name": "页面给出逐项目结果提示",
+      "status": "FAIL",
+      "detail": "未找到提示文案"
+    },
+    {
+      "id": "B05-e",
+      "name": "重试后失败项目补齐，成功项目未重复写入（记录集合不新增）",
+      "status": "PASS",
+      "detail": "重试前=[] 重试后=[] 前状态=[]"
+    },
+    {
+      "id": "B06-a",
+      "name": "响应丢失确实发生在服务端已处理之后",
+      "status": "FAIL",
+      "detail": "丢弃次数=0 服务端 status=undefined"
+    },
+    {
+      "id": "B06-b",
+      "name": "重试复用同一操作 key（未因内容相同而更换）",
+      "status": "FAIL",
+      "detail": "keys=[]"
+    },
+    {
+      "id": "B06-c",
+      "name": "不重复创建日报（同一周期仅一条记录）",
+      "status": "FAIL",
+      "detail": "本日记录=0"
+    },
+    {
+      "id": "B06-d",
+      "name": "不重复写提交版本",
+      "status": "FAIL",
+      "detail": "版本记录=null"
+    }
+  ],
+  "consoleErrors": [
+    "Warning: Each child in a list should have a unique \"key\" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s \n\nCheck the render method of `Layout`.  \n    at div\n    at Layout (http://127.0.0.1:33349/src/components/Layout.tsx:27:20)\n    at AuthGuard (http://127.0.0.1:33349/src/routes/AuthGuard.tsx:21:29)\n    at RenderedRoute (http://127.0.0.1:33349/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4131:5)\n    at Routes (http://127.0.0.1:33349/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4601:5)\n    at AppRoutes\n    at SyncProvider (http://127.0.0.1:33349/src/offline/SyncProvider.tsx:22:32)\n    at AuthProvider (http://127.0.0.1:33349/src/auth/AuthProvider.tsx:24:32)\n    at Router (http://127.0.0.1:33349/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4544:15)\n    at BrowserRouter (http://127.0.0.1:33349/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:5290:5)\n    at App\n    at ErrorBoundary (http://127.0.0.1:33349/src/components/ErrorBoundary.tsx:5:8)",
+    "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "Warning: Each child in a list should have a unique \"key\" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s \n\nCheck the render method of `Layout`.  \n    at div\n    at Layout (http://127.0.0.1:33349/src/components/Layout.tsx:27:20)\n    at AuthGuard (http://127.0.0.1:33349/src/routes/AuthGuard.tsx:21:29)\n    at RenderedRoute (http://127.0.0.1:33349/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4131:5)\n    at Routes (http://127.0.0.1:33349/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4601:5)\n    at AppRoutes\n    at SyncProvider (http://127.0.0.1:33349/src/offline/SyncProvider.tsx:22:32)\n    at AuthProvider (http://127.0.0.1:33349/src/auth/AuthProvider.tsx:24:32)\n    at Router (http://127.0.0.1:33349/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4544:15)\n    at BrowserRouter (http://127.0.0.1:33349/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:5290:5)\n    at App\n    at ErrorBoundary (http://127.0.0.1:33349/src/components/ErrorBoundary.tsx:5:8)",
+    "Failed to load resource: the server responded with a status of 401 (Unauthorized)",
+    "Warning: Each child in a list should have a unique \"key\" prop.%s%s See https://reactjs.org/link/warning-keys for more information.%s \n\nCheck the render method of `Layout`.  \n    at div\n    at Layout (http://127.0.0.1:33349/src/components/Layout.tsx:27:20)\n    at AuthGuard (http://127.0.0.1:33349/src/routes/AuthGuard.tsx:21:29)\n    at RenderedRoute (http://127.0.0.1:33349/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4131:5)\n    at Routes (http://127.0.0.1:33349/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4601:5)\n    at AppRoutes\n    at SyncProvider (http://127.0.0.1:33349/src/offline/SyncProvider.tsx:22:32)\n    at AuthProvider (http://127.0.0.1:33349/src/auth/AuthProvider.tsx:24:32)\n    at Router (http://127.0.0.1:33349/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:4544:15)\n    at BrowserRouter (http://127.0.0.1:33349/node_modules/.vite/deps/react-router-dom.js?v=160cd5c1:5290:5)\n    at App\n    at ErrorBoundary (http://127.0.0.1:33349/src/components/ErrorBoundary.tsx:5:8)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load data: ApiError: 汇报不存在\n    at http://127.0.0.1:33349/src/api/http.ts:107:27\n    at async Axios.request (http://127.0.0.1:33349/node_modules/.vite/deps/axios.js?v=160cd5c1:2326:14)\n    at async request (http://127.0.0.1:33349/src/api/request.ts:4:15)\n    at async Object.get (http://127.0.0.1:33349/src/api/endpoints/reports.ts:8:31)\n    at async loadData (http://127.0.0.1:33349/src/pages/ReportEdit.tsx:94:28)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ]
+}
