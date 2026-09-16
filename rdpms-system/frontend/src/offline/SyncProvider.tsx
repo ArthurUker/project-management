@@ -24,7 +24,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   useEffect(() => engine.subscribe(setState), []);
 
   useEffect(() => {
-    if (user) engine.start();
+    if (user) void engine.start(user.id);
     else void engine.resetOnLogout();
     return () => engine.stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps

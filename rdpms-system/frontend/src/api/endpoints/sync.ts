@@ -38,6 +38,8 @@ export interface SyncPushResult {
   status: SyncChangeStatus;
   action?: string;
   reason?: string;
+  /** 拒绝原因错误码（如 PERMISSION_DENIED / CONCURRENCY_BASELINE_REQUIRED） */
+  code?: string;
   /** 冲突时的服务端快照（含 updatedAt） */
   server?: Record<string, unknown>;
   replayed?: boolean;

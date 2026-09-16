@@ -1,7 +1,13 @@
 import { syncAPI, toMessage } from '@/api';
-import type { SyncChange, SyncInitResponse, SyncPushResult } from '@/api';
+import type { SyncChange, SyncInitResponse } from '@/api';
 import { safeStorage } from '@/utils/safeStorage';
 import { idb } from './idb';
+import {
+  buildDeadLetter,
+  mergeDeadLetter,
+  deadLetterKey,
+  type DeadLetterRecord,
+} from './deadLetter';
 import type { OutboxRecord, RecordRow } from './idb';
 
 /**
@@ -52,7 +58,7 @@ export interface SyncState {
   lastError: string | null;
   pending: number;
   conflicts: ConflictRecord[];
-  rejections: SyncPushResult[];
+  rejections: DeadLetterRecord[];
 }
 
 type Listener = (s: SyncState) => void;
@@ -70,6 +76,8 @@ let state: SyncState = {
 };
 const listeners = new Set<Listener>();
 let timer: number | null = null;
+/** 当前登录账户（拒绝区按账户隔离，退出登录不清空数据但清空内存视图） */
+let currentUserId: string | null = null;
 let started = false;
 
 function emit() {
@@ -190,7 +198,7 @@ export async function syncNow(): Promise<void> {
 
     const outbox = await idb.outboxAll();
     const nextConflicts: ConflictRecord[] = [];
-    const nextRejections: SyncPushResult[] = [];
+    const nextRejections: DeadLetterRecord[] = [];
     if (outbox.length) {
       const { results } = await syncAPI.push({
         deviceId,
@@ -229,8 +237,26 @@ export async function syncNow(): Promise<void> {
             });
           }
         } else {
-          await idb.outboxDelete(r.clientMutationId);
-          nextRejections.push(r);
+          // F10：同一 IndexedDB 事务内「写入持久拒绝区 → 移出待发送队列」，
+          // 失败会整体回滚（内容留在队列里下次重试），不会只删不存。
+          const src = outbox.find((o) => o.clientMutationId === r.clientMutationId);
+          if (src && currentUserId) {
+            const record = buildDeadLetter({
+              userId: currentUserId,
+              outbox: src,
+              projectId: (src.data?.projectId as string | undefined) ?? null,
+              reason: r.reason ?? '服务端拒绝',
+              code: r.code,
+              now: new Date().toISOString(),
+            });
+            await idb.deadLetterMove(record, (existing) => mergeDeadLetter(
+              existing as DeadLetterRecord | undefined,
+              record,
+            ));
+            nextRejections.push(record);
+          } else {
+            await idb.outboxDelete(r.clientMutationId);
+          }
         }
       }
     }
@@ -244,7 +270,7 @@ export async function syncNow(): Promise<void> {
       lastSyncAt: res.serverTime,
       pending: (await idb.outboxAll()).length,
       conflicts: merged,
-      rejections: nextRejections.length ? nextRejections : state.rejections,
+      rejections: (await idb.deadLettersForUser(currentUserId ?? '')) as DeadLetterRecord[],
     });
   } catch (e) {
     set({ lastError: toMessage(e, '同步失败') });
@@ -269,7 +295,32 @@ export async function resolveConflict(clientMutationId: string, resolution: 'ser
 }
 
 export function clearRejections(): void {
+  const uid = currentUserId;
   set({ rejections: [] });
+  if (uid) void idb.deadLettersClearForUser(uid);
+}
+
+/** 从持久拒绝区恢复（进入应用/登录后调用） */
+export async function restoreDeadLetters(): Promise<void> {
+  if (!currentUserId) return;
+  const rows = (await idb.deadLettersForUser(currentUserId)) as DeadLetterRecord[];
+  set({ rejections: rows });
+}
+
+/** 取回一条被拒绝的变更内容（用户复制/另存），跨刷新可用 */
+export async function getRejectedPayload(
+  clientMutationId: string,
+): Promise<DeadLetterRecord | undefined> {
+  if (!currentUserId) return undefined;
+  const rows = (await idb.deadLettersForUser(currentUserId)) as DeadLetterRecord[];
+  return rows.find((r) => r.clientMutationId === clientMutationId);
+}
+
+/** 删除一条拒绝记录（用户明确放弃该变更） */
+export async function dropRejection(clientMutationId: string): Promise<void> {
+  if (!currentUserId) return;
+  await idb.deadLetterDelete(deadLetterKey(currentUserId, clientMutationId));
+  await restoreDeadLetters();
 }
 
 export async function hydrate(): Promise<void> {
@@ -283,10 +334,13 @@ export async function hydrate(): Promise<void> {
   });
 }
 
-export function start(): void {
+export async function start(userId?: string): Promise<void> {
+  currentUserId = userId ?? currentUserId;
   if (started) return;
   started = true;
   void hydrate();
+  // F10：恢复本账户的持久拒绝区（刷新/重新登录后内容不丢）
+  await restoreDeadLetters();
   window.addEventListener('online', onOnline);
   window.addEventListener('offline', onOffline);
   timer = window.setInterval(() => {
@@ -317,7 +371,9 @@ export function stop(): void {
 /** 退出登录：清空本地镜像与队列（共享设备安全） */
 export async function resetOnLogout(): Promise<void> {
   stop();
+  // 注意：clearAll 不清空持久拒绝区（那是用户尚未取回的内容，重新登录同一账户需恢复）
   await idb.clearAll();
+  currentUserId = null;
   state = {
     online: isOnline(),
     syncing: false,
