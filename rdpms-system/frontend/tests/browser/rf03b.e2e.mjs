@@ -13,6 +13,7 @@ import { chromium } from 'playwright-core';
 import fs from 'node:fs';
 import path from 'node:path';
 import { startStack, CHROME, REPO_ROOT } from './harness.mjs';
+import { api, readToken } from './authHelper.mjs';
 
 const OUT = path.join(REPO_ROOT, 'docs/port/evidence/round6');
 fs.mkdirSync(OUT, { recursive: true });
@@ -43,22 +44,9 @@ const snap = async (tag) => {
     textareas: await page.locator('textarea').evaluateAll((e) => e.map((x) => x.value.slice(0, 60))).catch(() => []),
   }, null, 2));
 };
-const token = async () => page.evaluate(() => {
-  for (const k of Object.keys(localStorage)) {
-    const raw = localStorage.getItem(k) ?? '';
-    const m = /"accessToken":"([^"]+)"/.exec(raw);
-    if (m) return m[1];
-  }
-  return null;
-});
-const api = async (url, init = {}) => {
-  const t = await token();
-  return page.evaluate(async ({ url, init, t }) => {
-    const r = await fetch(url, { ...init, headers: { ...(init.headers ?? {}), ...(t ? { Authorization: `Bearer ${t}` } : {}) } });
-    let b = null; try { b = await r.json(); } catch { /* 空响应 */ }
-    return { status: r.status, body: b };
-  }, { url, init, t });
-};
+// 统一鉴权读取与严格 API 断言（401/403 不再被解释为「0 条」）
+const token = () => readToken(page);
+const apiCall = (path, init) => apiCall(page, path, init);
 async function login(user) {
   // 先退出当前会话：应用会把已登录用户从 /login 重定向走，直接 goto 会找不到登录表单
   await page.goto(`${stack.apiBase}/`, { waitUntil: 'domcontentloaded' }).catch(() => {});
@@ -114,7 +102,7 @@ async function fillLast(text) {
 try {
   // ══ B04 ══ 作者（超管）建并提交 → 复核人审核 → 作者重开
   await login('test_super_admin');
-  const me = await api('/api/auth/me');
+  const me = await apiCall('/api/auth/me');
   const uid = me.body?.id;
   const D4 = `2026-09-${String(day + 2).padStart(2, '0')}`;
   const T4 = 'B04-待复核内容-原文';
@@ -122,7 +110,7 @@ try {
   await fillLast(T4);
   await clickBtn(/保存草稿/);
   await page.waitForTimeout(2000);
-  const pre4 = await api(`/api/reports?reportType=DAILY&authorId=${uid}&pageSize=100`);
+  const pre4 = await apiCall(`/api/reports?reportType=DAILY&authorId=${uid}&pageSize=100`);
   const id4 = (pre4.body?.list ?? []).filter((r) => r.periodKey === D4)
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))[0]?.id;
   await page.goto(`${stack.apiBase}/reports/${id4}`, { waitUntil: 'networkidle' });
@@ -130,7 +118,7 @@ try {
   await clickBtn(/提交日报|提交/);
   await page.waitForTimeout(2200);
 
-  let list = await api(`/api/reports?reportType=DAILY&authorId=${uid}&pageSize=100`);
+  let list = await apiCall(`/api/reports?reportType=DAILY&authorId=${uid}&pageSize=100`);
   const r4 = (list.body?.list ?? []).filter((r) => r.periodKey === D4).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))[0];
   rec('B04-a', '作者提交后服务端状态为已提交', r4?.status === 'SUBMITTED', `status=${r4?.status} id=${String(r4?.id).slice(0, 8)}`);
 
@@ -149,7 +137,7 @@ try {
     await snap('b04-no-review-button');
   }
   await login('test_super_admin');
-  const afterReview = await api(`/api/reports/${r4?.id}`);
+  const afterReview = await apiCall(`/api/reports/${r4?.id}`);
   rec('B04-b', '复核人操作后服务端进入已审核状态', afterReview.body?.status === 'REVIEWED',
     `status=${afterReview.body?.status}（复核人须对项目有访问权，否则记录实际结果）`);
 
@@ -162,7 +150,7 @@ try {
     && await page.getByRole('button', { name: /保存草稿/ }).first().isDisabled().catch(() => false);
   rec('B04-d', '界面体现不可直接编辑（保存按钮禁用且有锁定提示）', Boolean(locked),
     `提示命中=${/已提交|已审核|已阅|锁定|不可编辑/.test(body4)} 保存禁用=${await page.getByRole('button', { name: /保存草稿/ }).first().isDisabled().catch(() => 'n/a')}`);
-  const bypass = await api(`/api/reports/${r4?.id}`, {
+  const bypass = await apiCall(`/api/reports/${r4?.id}`, { allowFailure: true,
     method: 'PUT', headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ content: { n: 'B04-绕过界面写入' }, clientMutationId: `b04-bypass-${stack.runId}` }),
   });
@@ -199,7 +187,7 @@ try {
   const body5 = (await page.locator('body').innerText()).replace(/\s+/g, ' ');
   const tas5 = await page.locator('textarea').evaluateAll((e) => e.map((x) => x.value));
   rec('B05-a', '故障注入（网络失败）确实发生', injected === 1, `注入次数=${injected}`);
-  const listA = await api(`/api/reports?reportType=DAILY&authorId=${uid}&pageSize=100`);
+  const listA = await apiCall(`/api/reports?reportType=DAILY&authorId=${uid}&pageSize=100`);
   const rowsA = (listA.body?.list ?? []).filter((r) => r.periodKey === D5);
   rec('B05-b', '部分成功：至少一个项目已保存、另一个未保存', rowsA.length >= 1, `本日记录=${rowsA.length}`);
   rec('B05-c', '失败内容保留在界面（未丢失）', tas5.some((v) => v.includes(TB)) || body5.includes(TB),
@@ -209,7 +197,7 @@ try {
   const beforeRetry = JSON.stringify(rowsA.map((r) => [r.id, r.currentVersion, r.updatedAt]));
   await clickBtn(/保存草稿/);
   await page.waitForTimeout(2600);
-  const listA2 = await api(`/api/reports?reportType=DAILY&authorId=${uid}&pageSize=100`);
+  const listA2 = await apiCall(`/api/reports?reportType=DAILY&authorId=${uid}&pageSize=100`);
   const rowsA2 = (listA2.body?.list ?? []).filter((r) => r.periodKey === D5);
   const beforeIds = rowsA.map((r) => r.id).sort();
   const afterIds = rowsA2.map((r) => r.id).sort();
@@ -241,7 +229,7 @@ try {
   await fillLast('B06-提交后丢响应');
   await clickBtn(/保存草稿/);
   await page.waitForTimeout(2000);
-  const pre6 = await api(`/api/reports?reportType=DAILY&authorId=${uid}&pageSize=100`);
+  const pre6 = await apiCall(`/api/reports?reportType=DAILY&authorId=${uid}&pageSize=100`);
   const id6 = (pre6.body?.list ?? []).filter((r) => r.periodKey === D6)
     .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))[0]?.id;
   await page.goto(`${stack.apiBase}/reports/${id6}`, { waitUntil: 'networkidle' });
@@ -250,9 +238,9 @@ try {
   await page.waitForTimeout(2600);
   await clickBtn(/提交日报|提交/, { optional: true });
   await page.waitForTimeout(2600);
-  const list6 = await api(`/api/reports?reportType=DAILY&authorId=${uid}&pageSize=100`);
+  const list6 = await apiCall(`/api/reports?reportType=DAILY&authorId=${uid}&pageSize=100`);
   const r6 = (list6.body?.list ?? []).filter((r) => r.periodKey === D6).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))[0];
-  const versions6 = r6 ? await api(`/api/reports/${r6.id}/versions`) : { body: null };
+  const versions6 = r6 ? await apiCall(`/api/reports/${r6.id}/versions`) : { body: null };
   const vCount = Array.isArray(versions6.body) ? versions6.body.length : (Array.isArray(versions6.body?.list) ? versions6.body.list.length : null);
   rec('B06-a', '响应丢失确实发生在服务端已处理之后', dropped === 1 && r6?.status === 'SUBMITTED',
     `丢弃次数=${dropped} 服务端 status=${r6?.status}`);

@@ -7,7 +7,7 @@ import { newClientMutationId } from '../offline/engine';
 import ReagentDailyReport from '../components/ReagentDailyReport';
 import DocReference from '../components/DocReference';
 import { periodKeyFor, reportTypeEnum } from '../shared/reportPeriod';
-import { createOperationKeyStore, operationFingerprint } from '../shared/idempotency';
+import { createOperationKeyStore, operationSession, slotSignature } from '../shared/idempotency';
 
 // 汇报类型配置
 const REPORT_TYPES = [
@@ -259,6 +259,10 @@ export default function ReportEdit() {
 
     setSaving(true);
     const opKeys = opKeysRef.current;
+    // 一次用户操作 = 一个会话；子操作各占一个槽位（save:<projectId> / update:<id> / submit:<id>）
+    const session = id
+      ? operationSession({ op: 'report.edit', reportId: id })
+      : operationSession({ op: 'report.edit', reportType: typeEnum, periodKey });
     try {
       const content: any = dailyTemplate === 'general' ? { projectReports } : { reagentReports };
       const saved: { id: string; label: string }[] = [];
@@ -284,10 +288,7 @@ export default function ReportEdit() {
               periodKey,
               ...(loadedUpdatedAt ? { expectedUpdatedAt: loadedUpdatedAt } : {}),
               // 同一次逻辑操作复用同一 key：失败重试由服务端回放，不会重复写入（RF02）
-              clientMutationId: opKeys.keyFor(
-                operationFingerprint({ op: 'report.update', reportId: id, reportType: typeEnum, periodKey, content }),
-                String(id),
-              ),
+              clientMutationId: opKeys.keyFor(session, `update:${id}`, slotSignature(content)),
             });
             saved.push({ id: updated.id, label: '当前汇报' });
           } catch (err) {
@@ -336,12 +337,7 @@ export default function ReportEdit() {
               periodKey,
               content: item.content,
               // 逐项目一个 key（slot 区分）：部分失败后重试复用同一 key，不重复建/覆盖（RF02/RF04）
-              clientMutationId: opKeys.keyFor(
-                operationFingerprint({
-                  op: 'report.save', reportType: typeEnum, periodKey, content: item.content,
-                }),
-                item.projectId,
-              ),
+              clientMutationId: opKeys.keyFor(session, `save:${item.projectId}`, slotSignature(item.content)),
             });
             saved.push({ id: created.id, label: item.label });
           } catch (err) {
@@ -357,7 +353,7 @@ export default function ReportEdit() {
             // 提交同样按操作复用 key：重试命中已提交回执，不会重复写版本
             await reportAPI.submit(
               item.id,
-              opKeys.keyFor(operationFingerprint({ op: 'report.submit', reportId: item.id }), item.id),
+              opKeys.keyFor(session, `submit:${item.id}`, ''),
             );
           } catch (err) {
             failures.push(`${item.label}（提交）：${describeError(err)}`);

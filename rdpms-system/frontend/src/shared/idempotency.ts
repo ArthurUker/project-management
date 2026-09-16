@@ -1,14 +1,22 @@
 /**
- * shared/idempotency.ts —— 幂等键的**操作生命周期**（RF02 复核第二轮）
+ * shared/idempotency.ts —— 幂等键的**操作会话 + 子操作槽位**模型（RF02 复核第三轮重设计）
  *
- * 语义修正：幂等键属于「一次逻辑操作」，**不是**内容哈希。
- *   - 网络重试（同一操作、同一 payload）→ 复用同一 key，服务端回放首次结果；
- *   - 用户修改内容后再提交 → 新 key（旧 key 已绑定旧 payloadHash，复用会 409）；
- *   - 用户明确再次发起操作，即使内容一模一样 → 仍是**新 key**（新的一次业务操作）；
- *   - 操作成功结束后，键位清空，下一次点击一定是新 key。
+ * 背景（审查确认的产品缺陷）：旧实现只保存**一个** fingerprint，fingerprint 变化会清空整个 slot map。
+ * 而生产路径上同一用户操作包含多个不同 fingerprint 的子操作：
+ *   - 多项目保存：A/B 的 content 不同 → fingerprint 不同；
+ *   - 已有日报：update 与 submit 是不同 fingerprint。
+ * 结果：A 成功、B 失败后重试时 A/B 都换新 key（A 无法命中回执）；submit 响应丢失后重试会先生成新的
+ * update key，可能被状态锁拦住而根本走不到 submit 重放。
  *
- * 反例（已废弃）：用「内容哈希」直接当 key —— 会把两次独立的业务操作误判为同一次，
- * 导致第二次操作被服务端当作重放而静默不生效。
+ * 新模型：
+ *   - **操作会话（session）** = 一次用户操作（例如「编辑某日报」），与 payload 内容无关；
+ *   - **槽位（slot）** = 会话内的稳定子操作，如 `save:<projectId>` / `update:<reportId>` / `submit:<reportId>`；
+ *   - 每个槽位保存 `{key, signature}`：签名不变 → 重试复用同一 key；
+ *   - 任一槽位签名变化（用户真改了内容）→ 视为**新的业务操作身份**：轮换会话、全部槽位换新 key；
+ *   - 全部成功后 `complete()` 关闭会话，用户再次主动操作才是新 key。
+ *
+ * 与内容哈希语义的区别：签名只用于**同一会话内**的漂移检测，不会把「内容相同」直接当作
+ * 「永远是同一次业务操作」——会话边界由用户操作决定。
  */
 
 function randomKey(): string {
@@ -17,45 +25,63 @@ function randomKey(): string {
   return `op-${Date.now().toString(16)}-${Math.random().toString(16).slice(2, 10)}`;
 }
 
-export interface OperationKeyStore {
-  /**
-   * 取本次逻辑操作的 key。
-   * @param fingerprint 操作身份（操作类型 + 目标 + 会写入的内容）；相同即视为同一次操作的重试
-   * @param slot 同一操作内可有多条子写入（例如多项目分别保存），用 slot 区分
-   */
-  keyFor(fingerprint: string, slot?: string): string;
-  /** 操作成功结束：清空键位，使用户下次主动发起的相同操作获得新 key */
-  complete(): void;
-  /** 当前操作指纹（供调试/测试观察） */
-  currentFingerprint(): string | null;
+interface SlotState {
+  key: string;
+  signature: string;
 }
 
-/** 构造一个操作级 key 存储（纯内存，不跨页面刷新保留——刷新后的再次提交视为新操作） */
+export interface OperationKeyStore {
+  /**
+   * 取某个子操作的幂等键。
+   * @param session 操作会话标识（同一次用户操作内保持不变，不含 payload 内容）
+   * @param slot 子操作槽位（`save:<projectId>` / `update:<id>` / `submit:<id>`）
+   * @param signature 该槽位的载荷签名（无载荷用 ''）；变化即视为新的业务操作身份
+   */
+  keyFor(session: string, slot: string, signature?: string): string;
+  /** 全部子操作成功：关闭会话，下一次主动操作生成全新 key */
+  complete(): void;
+  /** 观察用：当前会话标识（测试/调试） */
+  currentSession(): string | null;
+  /** 观察用：当前会话内已分配的槽位与 key（测试/调试） */
+  snapshot(): Record<string, string>;
+}
+
 export function createOperationKeyStore(generate: () => string = randomKey): OperationKeyStore {
-  let current: { fingerprint: string; keys: Map<string, string> } | null = null;
+  let sessionId: string | null = null;
+  let slots = new Map<string, SlotState>();
 
   return {
-    keyFor(fingerprint, slot = 'default') {
-      if (!current || current.fingerprint !== fingerprint) {
-        current = { fingerprint, keys: new Map() };
+    keyFor(session, slot, signature = '') {
+      // 会话切换（用户发起了另一次操作）：全新开始
+      if (sessionId !== session) {
+        sessionId = session;
+        slots = new Map();
       }
-      const existing = current.keys.get(slot);
-      if (existing) return existing;
+      const prev = slots.get(slot);
+      if (prev && prev.signature === signature) return prev.key;
+      if (prev && prev.signature !== signature) {
+        // 该槽位载荷发生变化 → 新的业务操作身份：整会话轮换（其它槽位也不得复用旧回执）
+        slots = new Map();
+      }
       const key = generate();
-      current.keys.set(slot, key);
+      slots.set(slot, { key, signature });
       return key;
     },
     complete() {
-      current = null;
+      sessionId = null;
+      slots = new Map();
     },
-    currentFingerprint() {
-      return current?.fingerprint ?? null;
+    currentSession() {
+      return sessionId;
+    },
+    snapshot() {
+      return Object.fromEntries([...slots.entries()].map(([k, v]) => [k, v.key]));
     },
   };
 }
 
-/** 构造操作指纹：只包含「操作类型 + 目标 + 会写入的字段」，顺序稳定 */
-export function operationFingerprint(parts: Record<string, unknown>): string {
+/** 构造会话标识：只含「操作类型 + 目标」，不含 payload，保证一次操作内所有子操作共享会话 */
+export function operationSession(parts: Record<string, unknown>): string {
   const normalized = Object.keys(parts)
     .sort()
     .reduce<Record<string, unknown>>((acc, key) => {
@@ -63,4 +89,10 @@ export function operationFingerprint(parts: Record<string, unknown>): string {
       return acc;
     }, {});
   return JSON.stringify(normalized);
+}
+
+/** 构造槽位载荷签名（仅用于同会话内的漂移检测） */
+export function slotSignature(payload: unknown): string {
+  if (payload === undefined || payload === null) return '';
+  return typeof payload === 'string' ? payload : JSON.stringify(payload);
 }

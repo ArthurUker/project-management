@@ -12,6 +12,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import assert from 'node:assert/strict';
 import { startStack, CHROME, REPO_ROOT } from './harness.mjs';
+import { api, readToken } from './authHelper.mjs';
 
 const OUT = path.join(REPO_ROOT, 'docs/port/evidence/round6');
 fs.mkdirSync(OUT, { recursive: true });
@@ -60,29 +61,9 @@ async function snapshot(tag) {
   return struct;
 }
 
-/** 从页面取当前登录令牌（用于以「同一会话」核对服务端状态，避免另造凭据） */
-async function apiToken() {
-  return page.evaluate(() => {
-    for (const key of Object.keys(localStorage)) {
-      const raw = localStorage.getItem(key) ?? '';
-      const m = /"accessToken":"([^"]+)"/.exec(raw) ?? /"token":"([^"]+)"/.exec(raw);
-      if (m) return m[1];
-      if (/^ey[\w-]+\.[\w-]+\./.test(raw)) return raw;
-    }
-    return null;
-  });
-}
-
-async function apiGet(url) {
-  const token = await apiToken();
-  return page.evaluate(async ({ url, token }) => {
-    const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
-    let body = null;
-    try { body = await res.json(); } catch { body = null; }
-    return { status: res.status, body };
-  }, { url, token });
-}
-
+// 统一鉴权读取与严格 API 断言（401/403 不再被解释为「0 条」）
+const apiToken = () => readToken(page);
+const apiGet = (path) => api(page, path);
 async function login(username) {
   await page.goto(`${stack.apiBase}/login`, { waitUntil: 'networkidle' });
   await page.getByPlaceholder('请输入用户名').fill(username);
