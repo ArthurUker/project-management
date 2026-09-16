@@ -1039,7 +1039,13 @@ async function main() {
       const user = await prisma.user.upsert({
         where: { username },
         // deletedAt 重置：测试账号被软删后重跑 seed 可自动恢复（仅测试账号路径）
-        update: { systemRole: def.systemRole, status: 'ACTIVE', deletedAt: null },
+        update: {
+          systemRole: def.systemRole,
+          status: 'ACTIVE',
+          deletedAt: null,
+          // 隔离测试库重跑：仅当显式要求时重置测试账号口令（生产永不为 true）
+          ...(process.env.SEED_TEST_RESET_PASSWORD === 'true' ? { passwordHash: testHash } : {}),
+        },
         create: {
           username,
           passwordHash: testHash,

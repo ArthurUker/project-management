@@ -23,7 +23,8 @@ import uuid
 
 BASE = os.environ.get("BASE", "http://127.0.0.1:3210")
 PW = os.environ["TEST_PASSWORD"]
-PSQL = ["sudo", "-u", "postgres", "psql", "-d", "rdpms_drill", "-tAc"]
+# 目标库可覆盖：默认仍是演练库，但隔离测试必须显式指向专用库（RDPMS_E2E_DB=rdpms_test）
+PSQL = ["sudo", "-u", "postgres", "psql", "-d", os.environ.get("RDPMS_E2E_DB", "rdpms_drill"), "-tAc"]
 
 _fails = []
 
@@ -177,7 +178,7 @@ check("7c. 成员移除走 leftAt 墓碑（非 deletedAt）",
 # ── 8. 服务端权威字段剔除（reports）───────────────────────────
 report_id = str(uuid.uuid4())
 res8 = push(sa, device, mut("reports", report_id, data={
-    "reportType": "WEEKLY", "periodKey": "2026-W37", "content": "离线草稿内容",
+    "reportType": "WEEKLY", "periodKey": "2026-W37", "content": json.dumps({"offline": True, "text": "离线草稿内容"}),
     "status": "SUBMITTED", "reviewNote": "伪造审阅意见", "currentVersion": 99, "projectId": pid,
 }))
 check("8. reports 离线草稿上行 applied", res8.get("status") == "applied",

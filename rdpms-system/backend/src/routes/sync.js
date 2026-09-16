@@ -142,6 +142,9 @@ const SYNC_ENTITIES = {
     serverOwned: [],
     requireCapability: 'manage_members', // 成员调整需要管理成员能力
     permission: 'projects.manage_members', // RF04 补齐：与普通 API 的成员管理权限同源
+    // 成员移除不是删除行，而是「退出」动作（写 leftAt 墓碑），因此沿用成员管理权限；
+    // 这是**显式策略**：该实体没有、也不会用 projects.update 之类的权限代替。
+    deletePermission: 'projects.manage_members',
   },
 };
 

@@ -685,3 +685,61 @@ ok RF04-I5 同项目内的 phaseId 正常放行（回归）
 | 专用测试库 sync E2E | **未运行** | `deploy/scripts/drill/sync-e2e.py` 尚未对 rdpms_test 起服执行 |
 | RF03 浏览器交互验收 | **未运行** | 不同日期新建/编辑回填/保存后提交/重新打开/多项目部分失败恢复 |
 | RF05 文件作用域 | **未开始** | 按调整后的顺序，排在上述缺口之后 |
+
+---
+
+## 9. 第四轮（2026-09-16）：F10 持久拒绝区、隔离库 sync E2E、回退目标合规
+
+### 9.1 离线被拒变更持久化（提交 `07a2425`）
+
+- 新增 `offline/deadLetter.ts`：拒绝记录含**原始 payload、拒绝原因/错误码、userId/projectId 归属、
+  操作身份（幂等键 + 并发基线）、首次/最近拒绝时间、attempts**；重复拒绝合并时保留最早 payload。
+- `offline/idb.ts` v2 新增 `deadLetters` 存储（keyPath=key、userId 索引）；
+  `deadLetterMove` 在**同一 IndexedDB 事务**内完成「写入拒绝区 → 移出待发送队列」，失败整体回滚。
+- 引擎：拒绝分支改走上述原子迁移；`start(userId)` 恢复本账户拒绝区；退出登录**不清空**拒绝区
+  （重新登录同一账户可恢复），读取一律按 userId 过滤。
+- **验证（真实 IndexedDB，fake-indexeddb，非内存替身）**：前端 `npm test` 25/25，其中 5 条：
+  同一事务迁移、刷新恢复、重复拒绝不丢内容、跨账户隔离、退出后重新登录恢复。
+
+### 9.2 专用测试库 sync E2E（21 项全部通过）
+
+- `deploy/scripts/drill/sync-e2e.py` 新增 `RDPMS_E2E_DB`（默认仍为演练库），本次显式指向 `rdpms_test`；
+  **未对 rdpms_drill 或生产库做任何写入**。
+- 修正两处演练脚本与契约不一致的载荷/判定：报表 `content` 必须是对象或 JSON 字符串；
+  成员移除语义是「退出（leftAt）」。
+- 结果：**21/21 PASS**（含幂等重放仅 1 条 mutation、过期基线冲突、删除墓碑、成员 leftAt、
+  服务端权威字段剔除、审计与设备登记）。
+- 过程中定位并排除一处环境陷阱：**3210 端口存在残留进程**，导致请求打到旧实例而误判登录 401；
+  换用空闲端口后登录正常。该结论已记录，避免后续误诊。
+
+### 9.3 删除/动作权限独立（提交 `30febe0`）
+
+- 实体注册表新增 `deletePermission`（projects/project_phases/tasks/milestones/progress/reports 各自独立）；
+  未定义删除权限的实体直接拒绝离线删除，**不再回落 update 权限**。
+- 复核实证：修正前「只有 `milestones.update`」即可离线删除里程碑（applied）。
+- `projectMembers` 的移除是**显式策略**：写 `leftAt` 墓碑（不是删行），沿用 `projects.manage_members`，
+  不存在「用 update 授权 delete」的情况（E2E 7c 通过）。
+
+### 9.4 无并发基线的兼容路径边界（提交 `30febe0`）
+
+| 客户端 | 数据状态 | 是否允许无基线写入 | 说明 |
+|---|---|---|---|
+| 声明 `X-Client-Contract: v2` | 任意 | ❌ 400 `CONCURRENCY_BASELINE_REQUIRED` | 新版客户端缺基线必须报错，不回落兼容 |
+| 未声明契约（旧客户端） | 草稿 | ✅（过渡窗口） | 审计 `noConcurrencyBaseline=true` 留痕 |
+| 未声明契约（旧客户端） | 已提交/已审核 | ❌ 409 | 不得借兼容路径覆盖已定稿数据 |
+| 未声明契约（旧客户端） | 实验科学数据（含 `reagentReports`） | ❌ 409 | 宁可判严；schema 若增 `dataClass` 应改读字段 |
+
+退出条件：前端 v2 发布后兼容路径仅服务未升级客户端；窗口关闭时把 `allowLegacyCompat` 置 false 即彻底下线。
+
+### 9.5 回退目标的合规性（要求 6）
+
+**允许启动 ≠ 允许回退**。旧 release（`b038f21` 及更早）仍包含已确认的严重访问控制缺陷
+（报告 `assertProjectCapability is not defined`、同步删除复用 update 权限、无并发基线等），
+因此：
+
+- 该 release **只能**作为「服务崩溃时恢复可用性」的应急手段，且必须在恢复后立即前滚修复；
+- **不得**将其作为正式回退目标，也不得在回退后保持长期运行；
+- 回退前后必须执行关键权限检查清单：① 未授权访问 `/api/reports` 返回 401；
+  ② 非成员访问项目资源返回 404；③ 同步删除需要独立 delete 权限；
+  ④ 已审阅汇报拒绝覆盖；⑤ 审计表有对应记录。
+- 已完成的 release 级切换验证（§8.4）只证明**切换机制可用**，不构成对旧 release 安全性的认可。
