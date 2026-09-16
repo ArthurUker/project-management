@@ -1,0 +1,1364 @@
+diff --git a/docs/port/rf-implementation-report.md b/docs/port/rf-implementation-report.md
+index c318d95..bd5a0f3 100644
+--- a/docs/port/rf-implementation-report.md
++++ b/docs/port/rf-implementation-report.md
+@@ -685,3 +685,61 @@ ok RF04-I5 同项目内的 phaseId 正常放行（回归）
+ | 专用测试库 sync E2E | **未运行** | `deploy/scripts/drill/sync-e2e.py` 尚未对 rdpms_test 起服执行 |
+ | RF03 浏览器交互验收 | **未运行** | 不同日期新建/编辑回填/保存后提交/重新打开/多项目部分失败恢复 |
+ | RF05 文件作用域 | **未开始** | 按调整后的顺序，排在上述缺口之后 |
++
++---
++
++## 9. 第四轮（2026-09-16）：F10 持久拒绝区、隔离库 sync E2E、回退目标合规
++
++### 9.1 离线被拒变更持久化（提交 `07a2425`）
++
++- 新增 `offline/deadLetter.ts`：拒绝记录含**原始 payload、拒绝原因/错误码、userId/projectId 归属、
++  操作身份（幂等键 + 并发基线）、首次/最近拒绝时间、attempts**；重复拒绝合并时保留最早 payload。
++- `offline/idb.ts` v2 新增 `deadLetters` 存储（keyPath=key、userId 索引）；
++  `deadLetterMove` 在**同一 IndexedDB 事务**内完成「写入拒绝区 → 移出待发送队列」，失败整体回滚。
++- 引擎：拒绝分支改走上述原子迁移；`start(userId)` 恢复本账户拒绝区；退出登录**不清空**拒绝区
++  （重新登录同一账户可恢复），读取一律按 userId 过滤。
++- **验证（真实 IndexedDB，fake-indexeddb，非内存替身）**：前端 `npm test` 25/25，其中 5 条：
++  同一事务迁移、刷新恢复、重复拒绝不丢内容、跨账户隔离、退出后重新登录恢复。
++
++### 9.2 专用测试库 sync E2E（21 项全部通过）
++
++- `deploy/scripts/drill/sync-e2e.py` 新增 `RDPMS_E2E_DB`（默认仍为演练库），本次显式指向 `rdpms_test`；
++  **未对 rdpms_drill 或生产库做任何写入**。
++- 修正两处演练脚本与契约不一致的载荷/判定：报表 `content` 必须是对象或 JSON 字符串；
++  成员移除语义是「退出（leftAt）」。
++- 结果：**21/21 PASS**（含幂等重放仅 1 条 mutation、过期基线冲突、删除墓碑、成员 leftAt、
++  服务端权威字段剔除、审计与设备登记）。
++- 过程中定位并排除一处环境陷阱：**3210 端口存在残留进程**，导致请求打到旧实例而误判登录 401；
++  换用空闲端口后登录正常。该结论已记录，避免后续误诊。
++
++### 9.3 删除/动作权限独立（提交 `30febe0`）
++
++- 实体注册表新增 `deletePermission`（projects/project_phases/tasks/milestones/progress/reports 各自独立）；
++  未定义删除权限的实体直接拒绝离线删除，**不再回落 update 权限**。
++- 复核实证：修正前「只有 `milestones.update`」即可离线删除里程碑（applied）。
++- `projectMembers` 的移除是**显式策略**：写 `leftAt` 墓碑（不是删行），沿用 `projects.manage_members`，
++  不存在「用 update 授权 delete」的情况（E2E 7c 通过）。
++
++### 9.4 无并发基线的兼容路径边界（提交 `30febe0`）
++
++| 客户端 | 数据状态 | 是否允许无基线写入 | 说明 |
++|---|---|---|---|
++| 声明 `X-Client-Contract: v2` | 任意 | ❌ 400 `CONCURRENCY_BASELINE_REQUIRED` | 新版客户端缺基线必须报错，不回落兼容 |
++| 未声明契约（旧客户端） | 草稿 | ✅（过渡窗口） | 审计 `noConcurrencyBaseline=true` 留痕 |
++| 未声明契约（旧客户端） | 已提交/已审核 | ❌ 409 | 不得借兼容路径覆盖已定稿数据 |
++| 未声明契约（旧客户端） | 实验科学数据（含 `reagentReports`） | ❌ 409 | 宁可判严；schema 若增 `dataClass` 应改读字段 |
++
++退出条件：前端 v2 发布后兼容路径仅服务未升级客户端；窗口关闭时把 `allowLegacyCompat` 置 false 即彻底下线。
++
++### 9.5 回退目标的合规性（要求 6）
++
++**允许启动 ≠ 允许回退**。旧 release（`b038f21` 及更早）仍包含已确认的严重访问控制缺陷
++（报告 `assertProjectCapability is not defined`、同步删除复用 update 权限、无并发基线等），
++因此：
++
++- 该 release **只能**作为「服务崩溃时恢复可用性」的应急手段，且必须在恢复后立即前滚修复；
++- **不得**将其作为正式回退目标，也不得在回退后保持长期运行；
++- 回退前后必须执行关键权限检查清单：① 未授权访问 `/api/reports` 返回 401；
++  ② 非成员访问项目资源返回 404；③ 同步删除需要独立 delete 权限；
++  ④ 已审阅汇报拒绝覆盖；⑤ 审计表有对应记录。
++- 已完成的 release 级切换验证（§8.4）只证明**切换机制可用**，不构成对旧 release 安全性的认可。
+diff --git a/rdpms-system/backend/prisma/seed.js b/rdpms-system/backend/prisma/seed.js
+index e36babf..c111066 100644
+--- a/rdpms-system/backend/prisma/seed.js
++++ b/rdpms-system/backend/prisma/seed.js
+@@ -1039,7 +1039,13 @@ async function main() {
+       const user = await prisma.user.upsert({
+         where: { username },
+         // deletedAt 重置：测试账号被软删后重跑 seed 可自动恢复（仅测试账号路径）
+-        update: { systemRole: def.systemRole, status: 'ACTIVE', deletedAt: null },
++        update: {
++          systemRole: def.systemRole,
++          status: 'ACTIVE',
++          deletedAt: null,
++          // 隔离测试库重跑：仅当显式要求时重置测试账号口令（生产永不为 true）
++          ...(process.env.SEED_TEST_RESET_PASSWORD === 'true' ? { passwordHash: testHash } : {}),
++        },
+         create: {
+           username,
+           passwordHash: testHash,
+diff --git a/rdpms-system/backend/src/modules/access/editPolicy.ts b/rdpms-system/backend/src/modules/access/editPolicy.ts
+new file mode 100644
+index 0000000..2d8373e
+--- /dev/null
++++ b/rdpms-system/backend/src/modules/access/editPolicy.ts
+@@ -0,0 +1,112 @@
++/**
++ * modules/access/editPolicy.ts —— 编辑写入的「并发基线 / 旧客户端兼容」策略（RF04 复核第三轮）
++ *
++ * 背景：并发基线（expectedUpdatedAt / baseUpdatedAt）是防止「无知覆盖」的手段。
++ * 兼容路径（不带基线也无条件写入）只能是**临时过渡**，必须写清适用面与退出条件。
++ *
++ * 策略（三条硬规则）：
++ *   1. 声明新版契约的客户端（`X-Client-Contract: v2`）**必须**携带并发基线；
++ *      缺失一律 400 `CONCURRENCY_BASELINE_REQUIRED`，禁止自动回落到旧版兼容路径。
++ *   2. 旧版兼容路径只对「客户端未声明契约」且「目标处于可编辑草稿态」的数据开放。
++ *   3. **已提交 / 已审核 / 实验科学数据一律不得**走兼容路径无条件覆盖——
++ *      即便客户端很老，也必须带基线或走正常锁定流程。
++ *
++ * 兼容窗口退出条件：本仓库前端（声明 v2）发布后，兼容路径只服务于未升级的旧客户端；
++ * 待 05 §8 记录的客户端升级窗口关闭后，本模块的 `allowLegacyCompat` 置 false 即彻底下线。
++ */
++import { HttpError, badRequest } from '../../kernel/http.js';
++
++export const CLIENT_CONTRACT_HEADER = 'x-client-contract';
++export const CLIENT_CONTRACT_V2 = 'v2';
++
++/** 兼容路径总开关：关闭后所有写入都必须带并发基线 */
++export const allowLegacyCompat = true;
++
++export function readClientContract(headers: {
++  get?: (name: string) => string | null | undefined;
++}, body?: Record<string, unknown> | null): string | null {
++  const fromHeader = headers?.get?.(CLIENT_CONTRACT_HEADER) ?? null;
++  const fromBody = typeof body?.clientContract === 'string' ? (body.clientContract as string) : null;
++  const value = (fromHeader ?? fromBody ?? '').trim().toLowerCase();
++  return value || null;
++}
++
++/** 是否为「声明新版契约」的客户端 */
++export function isModernClient(clientContract: string | null): boolean {
++  if (!clientContract) return false;
++  return clientContract === CLIENT_CONTRACT_V2 || clientContract === '2';
++}
++
++/**
++ * 规则 1：新版客户端必须带基线。
++ * @param baseline 已解析的并发基线（无 → undefined/null）
++ */
++export function assertBaselineForModernClient(
++  clientContract: string | null,
++  baseline: unknown,
++  command: string,
++): void {
++  if (!isModernClient(clientContract)) return;
++  if (baseline === undefined || baseline === null || baseline === '') {
++    throw badRequest(
++      'CONCURRENCY_BASELINE_REQUIRED',
++      `${command}：新版客户端必须携带并发基线（expectedUpdatedAt），不能回落到旧版兼容路径`,
++      { header: CLIENT_CONTRACT_HEADER, received: clientContract },
++    );
++  }
++}
++
++/**
++ * 实验科学数据识别（规则 3 的判定依据）。
++ *
++ * 现状：本系统未给汇报打「科学数据」布尔字段，实验数据以内容形状体现——
++ * 试剂/样品实验类汇报在 content 中带 `reagentReports`（见前端 REPORT_TYPE 模板）。
++ * 因此采用**内容形状**判定，并且宁可判严（判为科学数据即拒绝无基线覆盖）。
++ * 若后续 schema 增加 `dataClass` 字段，应改为读该字段并在本节记录变更。
++ */
++export function isScientificReportContent(
++  reportType: string | null | undefined,
++  content: unknown,
++): boolean {
++  const type = String(reportType ?? '').toUpperCase();
++  if (type === 'REAGENT' || type === 'EXPERIMENT' || type === 'SCIENTIFIC') return true;
++  if (!content || typeof content !== 'object') return false;
++  const record = content as Record<string, unknown>;
++  return Array.isArray(record.reagentReports) && record.reagentReports.length > 0;
++}
++
++export interface LegacyCompatSubject {
++  /** 目标是否已锁定（已提交 / 已审核等） */
++  locked: boolean;
++  /** 目标是否属于实验科学数据 */
++  scientific?: boolean;
++  /** 幂等/日志用的对象描述 */
++  label: string;
++}
++
++/**
++ * 规则 2/3：旧客户端兼容路径的准入判定。
++ * 不满足即拒绝——宁可让老客户端报错重试，也不能静默覆盖已定稿数据。
++ */
++export function assertLegacyCompatAllowed(subject: LegacyCompatSubject): void {
++  if (!allowLegacyCompat) {
++    throw badRequest(
++      'CONCURRENCY_BASELINE_REQUIRED',
++      `${subject.label}：旧客户端兼容路径已下线，请升级客户端后重试`,
++    );
++  }
++  if (subject.locked) {
++    throw new HttpError(
++      409,
++      'CONCURRENCY_BASELINE_REQUIRED',
++      `${subject.label} 已提交或已审核，不得走旧客户端兼容路径覆盖；请携带并发基线或先撤回`,
++    );
++  }
++  if (subject.scientific) {
++    throw new HttpError(
++      409,
++      'CONCURRENCY_BASELINE_REQUIRED',
++      `${subject.label} 属于实验科学数据，禁止无基线覆盖；请携带并发基线`,
++    );
++  }
++}
+diff --git a/rdpms-system/backend/src/routes/reports.js b/rdpms-system/backend/src/routes/reports.js
+index 022244c..9f65ebc 100644
+--- a/rdpms-system/backend/src/routes/reports.js
++++ b/rdpms-system/backend/src/routes/reports.js
+@@ -13,6 +13,13 @@ import {
+ import { HttpError, badRequest, notFound } from '../kernel/http.js';
+ import { withIdempotency, resolveIdempotencyKey } from '../platform/idempotency/receipts.js';
+ import { writeAuditStrict } from '../platform/audit/strictAudit.js';
++import {
++  readClientContract,
++  assertBaselineForModernClient,
++  assertLegacyCompatAllowed,
++  isScientificReportContent,
++} from '../modules/access/editPolicy.js';
++import { isReportLocked } from '../modules/access/writeGuards.js';
+ import {
+   normalizeReportType,
+   validatePeriodKey,
+@@ -233,10 +240,13 @@ reports.put('/:id', requirePermission('reports.update'), async (c) => {
+   if (expectedUpdatedAt && Number.isNaN(expectedUpdatedAt.getTime())) {
+     throw badRequest('VALIDATION_ERROR', 'expectedUpdatedAt 不是合法时间', { field: 'expectedUpdatedAt' });
+   }
++  // 规则 1：声明新版契约的客户端缺基线 → 直接报错，不回落旧版兼容
++  const clientContract = readClientContract(c.req.raw.headers, body);
++  assertBaselineForModernClient(clientContract, expectedUpdatedAt, 'PUT /api/reports/:id');
+   if (!expectedUpdatedAt) {
+-    // 旧客户端兼容：显式留痕，不静默降低保护
++    // 规则 2/3（依赖服务端状态）在 validate 中执行：只拦新命令，不拦回放（回放由回执决定）
+     // eslint-disable-next-line no-console
+-    console.warn(`[reports.update] 缺少并发基线（report=${id}，actor=${auth.userId}）→ 以旧客户端兼容路径执行`);
++    console.warn(`[reports.update] 旧客户端兼容路径（无基线）report=${id} actor=${auth.userId} contract=${clientContract ?? '未声明'}`);
+   }
+ 
+   const { key } = resolveIdempotencyKey(c, body);
+@@ -252,6 +262,15 @@ reports.put('/:id', requirePermission('reports.update'), async (c) => {
+       validate: () => {
+         // RF04/F06：项目范围 + 作者 + 状态锁定判定与同步入口同源（modules/access/writeGuards）
+         assertReportWritable(existing, auth, access);
++        // 规则 2/3（依赖服务端状态、只拦新命令不拦回放）：
++        // 旧客户端兼容路径只对「草稿且非实验科学数据」开放；已提交/已审核/实验科学数据必须带基线。
++        if (!expectedUpdatedAt) {
++          assertLegacyCompatAllowed({
++            locked: isReportLocked(existing),
++            scientific: isScientificReportContent(existing.reportType, existing.content),
++            label: `汇报 ${existing.reportType}/${existing.periodKey}`,
++          });
++        }
+         return buildReportDraftPatch(allowed, { currentType: existing.reportType });
+       },
+       execute: async (tx, data) => {
+diff --git a/rdpms-system/backend/src/routes/sync.js b/rdpms-system/backend/src/routes/sync.js
+index 83380d4..e4347f7 100644
+--- a/rdpms-system/backend/src/routes/sync.js
++++ b/rdpms-system/backend/src/routes/sync.js
+@@ -4,7 +4,7 @@ import { prisma } from '../platform/db/client.js';
+ import { authenticate as authMiddleware, getAuth } from '../kernel/rbac.js';
+ import { AUDIT_ACTIONS, PROJECT_CAPABILITIES } from '../kernel/constants.js';
+ import { writeAudit } from '../kernel/audit.js';
+-import { badRequest } from '../kernel/http.js';
++import { badRequest, HttpError } from '../kernel/http.js';
+ import { projectVisibilityFilter, assertProjectCapability } from '../kernel/projectAccess.js';
+ import {
+   assertActionPermission,
+@@ -49,6 +49,7 @@ const SYNC_ENTITIES = {
+     serverOwned: ['code', 'templateId', 'metadata'],
+     // RF04 补齐：项目属性编辑需 projects.update（离线不支持新建，编号由服务端发号）
+     permission: 'projects.update',
++    deletePermission: 'projects.delete',
+     include: { manager: { select: { id: true, displayName: true } } },
+   },
+   projectPhases: {
+@@ -61,6 +62,7 @@ const SYNC_ENTITIES = {
+     serverOwned: [],
+     // RF04：阶段编辑/新建与状态流转分别校验动作权限
+     permission: 'project_phases.update',
++    deletePermission: 'project_phases.delete',
+     createPermission: 'project_phases.create',
+     statusPermission: 'project_phases.change_status',
+   },
+@@ -74,6 +76,7 @@ const SYNC_ENTITIES = {
+     serverOwned: ['code', 'completedAt', 'startedAt'],
+     // RF04/F07：同步不是后门——动作权限与普通 API 同源
+     permission: 'tasks.update',
++    deletePermission: 'tasks.delete',
+     createPermission: 'tasks.create',
+     statusPermission: 'tasks.change_status',
+     assignPermission: 'tasks.assign',
+@@ -93,6 +96,7 @@ const SYNC_ENTITIES = {
+     serverOwned: ['completedAt'],
+     // RF04 补齐：里程碑编辑/新建需 milestones.update / milestones.create
+     permission: 'milestones.update',
++    deletePermission: 'milestones.delete',
+     createPermission: 'milestones.create',
+     derive: (data) => {
+       if (data.status === 'COMPLETED') data.completedAt = new Date();
+@@ -108,6 +112,7 @@ const SYNC_ENTITIES = {
+     serverOwned: ['submittedById', 'submittedAt'],
+     // RF04 补齐：月度进展编辑/新建需 progress.update / progress.create（写出需项目 manage_members）
+     permission: 'progress.update',
++    deletePermission: 'progress.delete',
+     createPermission: 'progress.create',
+   },
+   reports: {
+@@ -122,6 +127,7 @@ const SYNC_ENTITIES = {
+     serverOwned: ['authorId', 'reviewerId', 'status', 'currentVersion', 'submittedAt', 'reviewedAt', 'reviewNote'],
+     // RF04/F07：汇报的锁定与动作权限与普通 API 同源
+     permission: 'reports.update',
++    deletePermission: 'reports.delete',
+     createPermission: 'reports.create',
+     lockRule: 'report',
+   },
+@@ -136,6 +142,9 @@ const SYNC_ENTITIES = {
+     serverOwned: [],
+     requireCapability: 'manage_members', // 成员调整需要管理成员能力
+     permission: 'projects.manage_members', // RF04 补齐：与普通 API 的成员管理权限同源
++    // 成员移除不是删除行，而是「退出」动作（写 leftAt 墓碑），因此沿用成员管理权限；
++    // 这是**显式策略**：该实体没有、也不会用 projects.update 之类的权限代替。
++    deletePermission: 'projects.manage_members',
+   },
+ };
+ 
+@@ -187,12 +196,21 @@ async function loadSyncAccess(auth, projectId) {
+  * 保证「有项目 write 但无对应动作权限」的请求同样被拒绝。
+  */
+ async function assertSyncEntityActions({ entity, def, existing, data, auth, access, projectId, op }) {
+-  // 通用动作权限（所有声明了权限码的实体统一执行，不再只覆盖 reports/tasks）：
+-  //   删除 → permission；更新 → permission；新建 → createPermission
+-  if (def.permission) {
+-    if (op === 'delete' || existing) assertActionPermission(auth, def.permission);
+-    else if (def.createPermission) assertActionPermission(auth, def.createPermission);
+-  } else if (op !== 'delete' && !existing && def.createPermission) {
++  // 通用动作权限（所有实体统一执行）：
++  //   删除 → deletePermission（**独立权限码，绝不复用 update**）；未定义 = 不支持离线删除
++  //   更新 → permission；新建 → createPermission
++  if (op === 'delete') {
++    if (!def.deletePermission) {
++      throw new HttpError(
++        403,
++        'SYNC_DELETE_NOT_SUPPORTED',
++        `${entity} 不支持离线删除（未定义独立删除权限），请在在线接口按对应权限操作`,
++      );
++    }
++    assertActionPermission(auth, def.deletePermission);
++  } else if (existing) {
++    if (def.permission) assertActionPermission(auth, def.permission);
++  } else if (def.createPermission) {
+     assertActionPermission(auth, def.createPermission);
+   }
+ 
+diff --git a/rdpms-system/backend/tests/unit/rf04-entry-matrix.test.mjs b/rdpms-system/backend/tests/unit/rf04-entry-matrix.test.mjs
+new file mode 100644
+index 0000000..7aca1c6
+--- /dev/null
++++ b/rdpms-system/backend/tests/unit/rf04-entry-matrix.test.mjs
+@@ -0,0 +1,228 @@
++/**
++ * RF04 复核第三轮用例 —— 入口矩阵（删除类权限独立）与「无基线兼容路径」的边界
++ *
++ * 对应用户验收要求：
++ *   2. 删除/更新/新建/状态转换/指派必须分别映射到实际授权要求，不默认用 update 授权 delete；
++ *   3. 无基线兼容路径必须写清适用客户端、数据状态与退出条件——
++ *      已提交/已审核/实验科学数据不得借兼容路径无条件覆盖；新版客户端缺基线必须报错。
++ */
++import { test } from 'node:test';
++import assert from 'node:assert/strict';
++import { createApp } from '../../dist/bootstrap/createApp.js';
++import { createStubDb, createStubActor, jsonRequest } from '../helpers/stubDeps.mjs';
++
++const AUTHOR = { userId: 'u1', displayName: '作者' };
++const OWNER_ACCESS = { role: 'OWNER', leftAt: null };
++const CLIENT_V2 = { 'x-client-contract': 'v2' };
++
++function draftReport(overrides = {}) {
++  return {
++    id: 'r1',
++    projectId: 'p1',
++    authorId: 'u1',
++    reportType: 'MONTHLY',
++    periodKey: '2026-09',
++    status: 'DRAFT',
++    content: {},
++    deletedAt: null,
++    updatedAt: new Date('2026-09-15T10:00:00Z'),
++    ...overrides,
++  };
++}
++
++function buildApp({ db, permissions, membership = OWNER_ACCESS }) {
++  void membership;
++  return createApp({
++    db,
++    actorResolver: async () => createStubActor({ ...AUTHOR, permissions }),
++  });
++}
++
++function syncPush(entity, id, data, op = 'upsert') {
++  return {
++    deviceId: 'unit-device',
++    changes: [{
++      clientMutationId: `unit-${entity}-${id}-${Date.now()}-${Math.random().toString(16).slice(2, 6)}`,
++      entity,
++      id,
++      op,
++      data,
++    }],
++  };
++}
++
++// ── 规则 1：新版客户端必须带基线 ────────────────────────────────────────────
++
++test('RF04-U19 声明新版契约却缺并发基线 → 400，不回落旧版兼容', async () => {
++  const db = createStubDb({ reports: [draftReport()] });
++  const app = buildApp({ db, permissions: ['reports.update'] });
++
++  const modern = await jsonRequest(app, '/api/reports/r1', {
++    method: 'PUT',
++    headers: CLIENT_V2,
++    body: { content: { n: 1 }, expectedUpdatedAt: undefined, clientMutationId: 'u19-v2' },
++  });
++  const body = await modern.json();
++  assert.equal(modern.status, 400, JSON.stringify(body));
++  assert.equal(body.code, 'CONCURRENCY_BASELINE_REQUIRED');
++  assert.equal(db.state.mutationReceipts.length, 0, '报错前不得留下回执');
++  assert.deepEqual(db.state.reports[0].content, {}, '不得写入');
++
++  // 对照：未声明契约的旧客户端在草稿上仍可走兼容路径
++  const legacy = await jsonRequest(app, '/api/reports/r1', {
++    method: 'PUT',
++    body: { content: { n: 1 }, clientMutationId: 'u19-legacy' },
++  });
++  assert.equal(legacy.status, 200, '旧客户端在草稿态允许无基线（过渡窗口）');
++});
++
++// ── 规则 2/3：兼容路径的数据状态边界 ────────────────────────────────────────
++
++test('RF04-U20 旧客户端对已审阅汇报无基线 → 409，且不改数据不留回执', async () => {
++  const db = createStubDb({ reports: [draftReport({ status: 'REVIEWED', content: { old: true } })] });
++  const app = buildApp({ db, permissions: ['reports.update'] });
++
++  const res = await jsonRequest(app, '/api/reports/r1', {
++    method: 'PUT',
++    body: { content: { n: 1 }, clientMutationId: 'u20' },
++  });
++  const body = await res.json();
++  assert.equal(res.status, 409, JSON.stringify(body));
++  assert.ok(
++    ['CONCURRENCY_BASELINE_REQUIRED', 'INVALID_STATE'].includes(body.code),
++    `必须是「锁定/需基线」拒绝，实际 ${body.code}`,
++  );
++  assert.deepEqual(db.state.reports[0].content, { old: true }, '已审阅内容不得被覆盖');
++  assert.equal(db.state.mutationReceipts.length, 0);
++});
++
++test('RF04-U21 旧客户端对实验科学数据无基线 → 409，实验数据不得无基线覆盖', async () => {
++  const scientific = draftReport({
++    content: { reagentReports: [{ projectId: 'p1', items: [{ name: '样品A', value: 3 }] }] },
++  });
++  const db = createStubDb({ reports: [scientific] });
++  const app = buildApp({ db, permissions: ['reports.update'] });
++
++  const res = await jsonRequest(app, '/api/reports/r1', {
++    method: 'PUT',
++    body: { content: { n: 1 }, clientMutationId: 'u21' },
++  });
++  const body = await res.json();
++  assert.equal(res.status, 409, JSON.stringify(body));
++  assert.equal(body.code, 'CONCURRENCY_BASELINE_REQUIRED');
++  assert.ok(db.state.reports[0].content.reagentReports, '实验数据必须保持原样');
++});
++
++test('RF04-U22 兼容路径放行时必须在审计中留痕（不静默降低保护）', async () => {
++  const db = createStubDb({ reports: [draftReport()] });
++  const app = buildApp({ db, permissions: ['reports.update'] });
++
++  const res = await jsonRequest(app, '/api/reports/r1', {
++    method: 'PUT',
++    body: { content: { n: 1 }, clientMutationId: 'u22' },
++  });
++  assert.equal(res.status, 200);
++  const audit = db.state.auditLogs.find((a) => a.entityType === 'REPORT');
++  assert.ok(audit, '必须写审计');
++  assert.equal(audit.metadata.noConcurrencyBaseline, true, '必须标明未携带基线');
++  assert.equal(audit.metadata.permissionCode, 'reports.update');
++});
++
++test('RF04-U22b 携带基线时审计记录基线值而非兼容标记', async () => {
++  const db = createStubDb({ reports: [draftReport()] });
++  const app = buildApp({ db, permissions: ['reports.update'] });
++
++  const res = await jsonRequest(app, '/api/reports/r1', {
++    method: 'PUT',
++    body: {
++      content: { n: 2 },
++      expectedUpdatedAt: '2026-09-15T10:00:00.000Z',
++      clientMutationId: 'u22b',
++    },
++  });
++  assert.equal(res.status, 200);
++  const audit = db.state.auditLogs.find((a) => a.entityType === 'REPORT');
++  assert.equal(audit.metadata.noConcurrencyBaseline, undefined);
++  assert.equal(audit.metadata.concurrencyBaseline, '2026-09-15T10:00:00.000Z');
++});
++
++// ── 规则 2（入口矩阵）：删除权限独立，不由 update 授权 ──────────────────────
++
++test('RF04-U23 只有 milestones.update 时不能删除里程碑（删除不复用 update 授权）', async () => {
++  const db = createStubDb({});
++  db.state.milestones = [{
++    id: 'm1', projectId: 'p1', name: '里程碑', deletedAt: null, updatedAt: new Date('2026-09-15T10:00:00Z'),
++  }];
++  const app = buildApp({ db, permissions: ['milestones.update'] });
++
++  const res = await jsonRequest(app, '/api/sync/push', {
++    body: syncPush('milestones', 'm1', {}, 'delete'),
++  });
++  const body = await res.json();
++  assert.equal(body.results[0].status, 'rejected', JSON.stringify(body.results[0]));
++  assert.match(String(body.results[0].reason), /milestones\.delete/);
++  assert.equal(db.state.milestones[0].deletedAt, null, '不得落软删');
++});
++
++test('RF04-U23b 具备 milestones.delete 时删除放行（软删）', async () => {
++  const db = createStubDb({});
++  db.state.milestones = [{
++    id: 'm1', projectId: 'p1', name: '里程碑', deletedAt: null, updatedAt: new Date('2026-09-15T10:00:00Z'),
++  }];
++  const app = buildApp({ db, permissions: ['milestones.delete'] });
++
++  const res = await jsonRequest(app, '/api/sync/push', {
++    body: syncPush('milestones', 'm1', {}, 'delete'),
++  });
++  const body = await res.json();
++  assert.equal(body.results[0].status, 'applied', JSON.stringify(body.results[0]));
++  assert.ok(db.state.milestones[0].deletedAt, '应写入软删时间');
++});
++
++test('RF04-U24 projects 删除必须 projects.delete；有 projects.update 也不放行', async () => {
++  const db = createStubDb({});
++  db.state.projects = [{ id: 'p1', name: '项目', deletedAt: null, updatedAt: new Date('2026-09-15T10:00:00Z') }];
++  const app = buildApp({ db, permissions: ['projects.update'] });
++
++  const res = await jsonRequest(app, '/api/sync/push', {
++    body: syncPush('projects', 'p1', {}, 'delete'),
++  });
++  const body = await res.json();
++  assert.equal(body.results[0].status, 'rejected');
++  assert.match(String(body.results[0].reason), /projects\.delete/);
++  assert.equal(db.state.projects[0].deletedAt, null);
++});
++
++test('RF04-U25 指派与状态转换权限独立（同步入口同样分别校验）', async () => {
++  const base = () => {
++    const db = createStubDb({});
++    db.state.tasks = [{
++      id: 't1',
++      projectId: 'p1',
++      status: 'TODO',
++      assigneeId: null,
++      deletedAt: null,
++      updatedAt: new Date('2026-09-15T10:00:00Z'),
++    }];
++    return db;
++  };
++
++  // 只有 tasks.update：不能改状态、不能指派
++  const dbStatus = base();
++  const statusRes = await jsonRequest(
++    buildApp({ db: dbStatus, permissions: ['tasks.update'] }),
++    '/api/sync/push',
++    { body: syncPush('tasks', 't1', { status: 'IN_PROGRESS' }) },
++  );
++  assert.equal((await statusRes.json()).results[0].status, 'rejected');
++  assert.equal(dbStatus.state.tasks[0].status, 'TODO');
++
++  const dbAssign = base();
++  const assignRes = await jsonRequest(
++    buildApp({ db: dbAssign, permissions: ['tasks.update'] }),
++    '/api/sync/push',
++    { body: syncPush('tasks', 't1', { assigneeId: 'u2' }) },
++  );
++  assert.equal((await assignRes.json()).results[0].status, 'rejected');
++  assert.equal(dbAssign.state.tasks[0].assigneeId, null);
++});
+diff --git a/rdpms-system/deploy/scripts/drill/sync-e2e.py b/rdpms-system/deploy/scripts/drill/sync-e2e.py
+index b407a03..f4d8eb0 100755
+--- a/rdpms-system/deploy/scripts/drill/sync-e2e.py
++++ b/rdpms-system/deploy/scripts/drill/sync-e2e.py
+@@ -23,7 +23,8 @@ import uuid
+ 
+ BASE = os.environ.get("BASE", "http://127.0.0.1:3210")
+ PW = os.environ["TEST_PASSWORD"]
+-PSQL = ["sudo", "-u", "postgres", "psql", "-d", "rdpms_drill", "-tAc"]
++# 目标库可覆盖：默认仍是演练库，但隔离测试必须显式指向专用库（RDPMS_E2E_DB=rdpms_test）
++PSQL = ["sudo", "-u", "postgres", "psql", "-d", os.environ.get("RDPMS_E2E_DB", "rdpms_drill"), "-tAc"]
+ 
+ _fails = []
+ 
+@@ -177,7 +178,7 @@ check("7c. 成员移除走 leftAt 墓碑（非 deletedAt）",
+ # ── 8. 服务端权威字段剔除（reports）───────────────────────────
+ report_id = str(uuid.uuid4())
+ res8 = push(sa, device, mut("reports", report_id, data={
+-    "reportType": "WEEKLY", "periodKey": "2026-W37", "content": "离线草稿内容",
++    "reportType": "WEEKLY", "periodKey": "2026-W37", "content": json.dumps({"offline": True, "text": "离线草稿内容"}),
+     "status": "SUBMITTED", "reviewNote": "伪造审阅意见", "currentVersion": 99, "projectId": pid,
+ }))
+ check("8. reports 离线草稿上行 applied", res8.get("status") == "applied",
+diff --git a/rdpms-system/frontend/package-lock.json b/rdpms-system/frontend/package-lock.json
+index 73a1b81..ffc7670 100644
+--- a/rdpms-system/frontend/package-lock.json
++++ b/rdpms-system/frontend/package-lock.json
+@@ -23,8 +23,6 @@
+         "axios": "^1.6.7",
+         "clsx": "^2.1.0",
+         "dayjs": "^1.11.10",
+-        "dexie": "^3.2.5",
+-        "dexie-react-hooks": "^1.1.7",
+         "html2canvas": "^1.4.1",
+         "jspdf": "^2.5.1",
+         "lucide-react": "^1.8.0",
+@@ -40,6 +38,7 @@
+         "@types/react-dom": "^18.2.19",
+         "@vitejs/plugin-react": "^4.2.1",
+         "autoprefixer": "^10.4.27",
++        "fake-indexeddb": "^6.2.5",
+         "postcss": "^8.5.9",
+         "tailwindcss": "^3.4.19",
+         "typescript": "^5.3.3",
+@@ -2249,9 +2248,6 @@
+         "arm"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2266,9 +2262,6 @@
+         "arm"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2283,9 +2276,6 @@
+         "arm64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2300,9 +2290,6 @@
+         "arm64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2317,9 +2304,6 @@
+         "loong64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2334,9 +2318,6 @@
+         "loong64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2351,9 +2332,6 @@
+         "ppc64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2368,9 +2346,6 @@
+         "ppc64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2385,9 +2360,6 @@
+         "riscv64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2402,9 +2374,6 @@
+         "riscv64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2419,9 +2388,6 @@
+         "s390x"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2436,9 +2402,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "glibc"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2453,9 +2416,6 @@
+         "x64"
+       ],
+       "dev": true,
+-      "libc": [
+-        "musl"
+-      ],
+       "license": "MIT",
+       "optional": true,
+       "os": [
+@@ -2709,6 +2669,7 @@
+       "version": "15.7.15",
+       "resolved": "https://registry.npmjs.org/@types/prop-types/-/prop-types-15.7.15.tgz",
+       "integrity": "sha512-F6bEyamV9jKGAFBEmlQnesRPGOQqS2+Uwi0Em15xenOxHaf2hv6L8YCVn3rPdPJOiJfPiCnLIRyvwVaqMY3MIw==",
++      "devOptional": true,
+       "license": "MIT"
+     },
+     "node_modules/@types/raf": {
+@@ -2722,6 +2683,7 @@
+       "version": "18.3.28",
+       "resolved": "https://registry.npmjs.org/@types/react/-/react-18.3.28.tgz",
+       "integrity": "sha512-z9VXpC7MWrhfWipitjNdgCauoMLRdIILQsAEV+ZesIzBq/oUlxk0m3ApZuMFCXdnS4U7KrI+l3WRUEGQ8K1QKw==",
++      "devOptional": true,
+       "license": "MIT",
+       "dependencies": {
+         "@types/prop-types": "*",
+@@ -3409,26 +3371,6 @@
+       "integrity": "sha512-ypdmJU/TbBby2Dxibuv7ZLW3Bs1QEmM7nHjEANfohJLvE0XVujisn1qPJcZxg+qDucsr+bP6fLD1rPS3AhJ7EQ==",
+       "license": "MIT"
+     },
+-    "node_modules/dexie": {
+-      "version": "3.2.7",
+-      "resolved": "https://registry.npmjs.org/dexie/-/dexie-3.2.7.tgz",
+-      "integrity": "sha512-2a+BXvVhY5op+smDRLxeBAivE7YcYaneXJ1la3HOkUfX9zKkE/AJ8CNgjiXbtXepFyFmJNGSbmjOwqbT749r/w==",
+-      "license": "Apache-2.0",
+-      "engines": {
+-        "node": ">=6.0"
+-      }
+-    },
+-    "node_modules/dexie-react-hooks": {
+-      "version": "1.1.7",
+-      "resolved": "https://registry.npmjs.org/dexie-react-hooks/-/dexie-react-hooks-1.1.7.tgz",
+-      "integrity": "sha512-Lwv5W0Hk+uOW3kGnsU9GZoR1er1B7WQ5DSdonoNG+focTNeJbHW6vi6nBoX534VKI3/uwHebYzSw1fwY6a7mTw==",
+-      "license": "Apache-2.0",
+-      "peerDependencies": {
+-        "@types/react": ">=16",
+-        "dexie": "^3.2 || ^4.0.1-alpha",
+-        "react": ">=16"
+-      }
+-    },
+     "node_modules/didyoumean": {
+       "version": "1.2.2",
+       "resolved": "https://registry.npmjs.org/didyoumean/-/didyoumean-1.2.2.tgz",
+@@ -3581,6 +3523,16 @@
+       "integrity": "sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==",
+       "license": "MIT"
+     },
++    "node_modules/fake-indexeddb": {
++      "version": "6.2.5",
++      "resolved": "http://mirrors.tencentyun.com/npm/fake-indexeddb/-/fake-indexeddb-6.2.5.tgz",
++      "integrity": "sha512-CGnyrvbhPlWYMngksqrSSUT1BAVP49dZocrHuK0SvtR0D5TMs5wP0o3j7jexDJW01KSadjBp1M/71o/KR3nD1w==",
++      "dev": true,
++      "license": "Apache-2.0",
++      "engines": {
++        "node": ">=18"
++      }
++    },
+     "node_modules/fast-equals": {
+       "version": "5.4.0",
+       "resolved": "https://registry.npmjs.org/fast-equals/-/fast-equals-5.4.0.tgz",
+diff --git a/rdpms-system/frontend/package.json b/rdpms-system/frontend/package.json
+index 3e680bd..5623e8e 100644
+--- a/rdpms-system/frontend/package.json
++++ b/rdpms-system/frontend/package.json
+@@ -40,6 +40,7 @@
+     "@types/react-dom": "^18.2.19",
+     "@vitejs/plugin-react": "^4.2.1",
+     "autoprefixer": "^10.4.27",
++    "fake-indexeddb": "^6.2.5",
+     "postcss": "^8.5.9",
+     "tailwindcss": "^3.4.19",
+     "typescript": "^5.3.3",
+diff --git a/rdpms-system/frontend/src/api/endpoints/sync.ts b/rdpms-system/frontend/src/api/endpoints/sync.ts
+index 71115d5..9ceac23 100644
+--- a/rdpms-system/frontend/src/api/endpoints/sync.ts
++++ b/rdpms-system/frontend/src/api/endpoints/sync.ts
+@@ -38,6 +38,8 @@ export interface SyncPushResult {
+   status: SyncChangeStatus;
+   action?: string;
+   reason?: string;
++  /** 拒绝原因错误码（如 PERMISSION_DENIED / CONCURRENCY_BASELINE_REQUIRED） */
++  code?: string;
+   /** 冲突时的服务端快照（含 updatedAt） */
+   server?: Record<string, unknown>;
+   replayed?: boolean;
+diff --git a/rdpms-system/frontend/src/offline/SyncProvider.tsx b/rdpms-system/frontend/src/offline/SyncProvider.tsx
+index 839fe91..07c3096 100644
+--- a/rdpms-system/frontend/src/offline/SyncProvider.tsx
++++ b/rdpms-system/frontend/src/offline/SyncProvider.tsx
+@@ -24,7 +24,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
+   useEffect(() => engine.subscribe(setState), []);
+ 
+   useEffect(() => {
+-    if (user) engine.start();
++    if (user) void engine.start(user.id);
+     else void engine.resetOnLogout();
+     return () => engine.stop();
+     // eslint-disable-next-line react-hooks/exhaustive-deps
+diff --git a/rdpms-system/frontend/src/offline/deadLetter.ts b/rdpms-system/frontend/src/offline/deadLetter.ts
+new file mode 100644
+index 0000000..d417d14
+--- /dev/null
++++ b/rdpms-system/frontend/src/offline/deadLetter.ts
+@@ -0,0 +1,107 @@
++/**
++ * offline/deadLetter.ts —— 被服务端拒绝的离线变更（持久拒绝区）纯逻辑（F10）
++ *
++ * 为什么必须持久化：
++ *   拒绝（rejected）与冲突（conflict）不同——冲突可以重新合并，拒绝意味着这条变更
++ *   **服务端永远不会接受**（权限不足、跨项目、锁定、校验失败等）。若只在内存里提示，
++ *   用户刷新/换设备/重新登录后，他填过的内容就永久丢失。
++ *
++ * 设计要点：
++ *   - 按账户隔离：key = `${userId}:${clientMutationId}`，读取时再按 userId 过滤（双保险）；
++ *   - 保留原始 payload、拒绝原因、用户与项目归属、操作身份（幂等键 + 基线）；
++ *   - 重复拒绝同一条变更时**不丢内容**：保留最早的 payload，累加 attempts 并更新原因。
++ */
++import type { OutboxRecord } from './idb';
++
++export interface DeadLetterRecord {
++  /** `${userId}:${clientMutationId}` */
++  key: string;
++  userId: string;
++  projectId: string | null;
++  entity: string;
++  op: 'upsert' | 'delete';
++  id: string;
++  /** 操作身份：幂等键（重试同一操作时不变） */
++  clientMutationId: string;
++  /** 原始提交内容（一字不改地保留） */
++  payload?: Record<string, unknown>;
++  baseUpdatedAt?: string;
++  /** 服务端给出的拒绝原因与错误码 */
++  reason: string;
++  code?: string;
++  /** 首次被拒绝的时间 */
++  firstRejectedAt: string;
++  /** 最近一次被拒绝的时间 */
++  lastRejectedAt: string;
++  /** 被拒绝次数（用于提示“同一条变更反复失败”） */
++  attempts: number;
++}
++
++export function deadLetterKey(userId: string, clientMutationId: string): string {
++  return `${userId}:${clientMutationId}`;
++}
++
++/** 归属读取：只有本人能看到自己的草稿（不同账户隔离） */
++export function isVisibleTo(record: Pick<DeadLetterRecord, 'userId'>, userId: string | null): boolean {
++  if (!userId) return false;
++  return record.userId === userId;
++}
++
++export function buildDeadLetter(params: {
++  userId: string;
++  outbox: Pick<OutboxRecord, 'clientMutationId' | 'entity' | 'op' | 'id' | 'data' | 'baseUpdatedAt'>;
++  projectId?: string | null;
++  reason: string;
++  code?: string;
++  now: string;
++}): DeadLetterRecord {
++  const { userId, outbox, projectId = null, reason, code, now } = params;
++  return {
++    key: deadLetterKey(userId, outbox.clientMutationId),
++    userId,
++    projectId,
++    entity: outbox.entity,
++    op: outbox.op,
++    id: outbox.id,
++    clientMutationId: outbox.clientMutationId,
++    payload: outbox.data,
++    baseUpdatedAt: outbox.baseUpdatedAt,
++    reason,
++    code,
++    firstRejectedAt: now,
++    lastRejectedAt: now,
++    attempts: 1,
++  };
++}
++
++/**
++ * 重复拒绝合并：保留最早的 payload 与首次时间，累加次数并刷新原因。
++ * 任何情况下都不得用新记录覆盖掉旧内容（旧内容可能更完整）。
++ */
++export function mergeDeadLetter(
++  prev: DeadLetterRecord | undefined,
++  next: DeadLetterRecord,
++): DeadLetterRecord {
++  if (!prev) return next;
++  return {
++    ...prev,
++    reason: next.reason,
++    code: next.code ?? prev.code,
++    lastRejectedAt: next.lastRejectedAt,
++    attempts: prev.attempts + 1,
++    payload: next.payload ?? prev.payload,
++  };
++}
++
++/** 从拒绝记录重建一条可再次入队的变更（用户“重试/复制出来”用） */
++export function toOutboxRecord(record: DeadLetterRecord, now = new Date().toISOString()): OutboxRecord {
++  return {
++    clientMutationId: record.clientMutationId,
++    entity: record.entity,
++    op: record.op,
++    id: record.id,
++    data: record.payload,
++    baseUpdatedAt: record.baseUpdatedAt,
++    createdAt: now,
++  };
++}
+diff --git a/rdpms-system/frontend/src/offline/engine.ts b/rdpms-system/frontend/src/offline/engine.ts
+index 586f836..35d7949 100644
+--- a/rdpms-system/frontend/src/offline/engine.ts
++++ b/rdpms-system/frontend/src/offline/engine.ts
+@@ -1,7 +1,13 @@
+ import { syncAPI, toMessage } from '@/api';
+-import type { SyncChange, SyncInitResponse, SyncPushResult } from '@/api';
++import type { SyncChange, SyncInitResponse } from '@/api';
+ import { safeStorage } from '@/utils/safeStorage';
+ import { idb } from './idb';
++import {
++  buildDeadLetter,
++  mergeDeadLetter,
++  deadLetterKey,
++  type DeadLetterRecord,
++} from './deadLetter';
+ import type { OutboxRecord, RecordRow } from './idb';
+ 
+ /**
+@@ -52,7 +58,7 @@ export interface SyncState {
+   lastError: string | null;
+   pending: number;
+   conflicts: ConflictRecord[];
+-  rejections: SyncPushResult[];
++  rejections: DeadLetterRecord[];
+ }
+ 
+ type Listener = (s: SyncState) => void;
+@@ -70,6 +76,8 @@ let state: SyncState = {
+ };
+ const listeners = new Set<Listener>();
+ let timer: number | null = null;
++/** 当前登录账户（拒绝区按账户隔离，退出登录不清空数据但清空内存视图） */
++let currentUserId: string | null = null;
+ let started = false;
+ 
+ function emit() {
+@@ -190,7 +198,7 @@ export async function syncNow(): Promise<void> {
+ 
+     const outbox = await idb.outboxAll();
+     const nextConflicts: ConflictRecord[] = [];
+-    const nextRejections: SyncPushResult[] = [];
++    const nextRejections: DeadLetterRecord[] = [];
+     if (outbox.length) {
+       const { results } = await syncAPI.push({
+         deviceId,
+@@ -229,8 +237,26 @@ export async function syncNow(): Promise<void> {
+             });
+           }
+         } else {
+-          await idb.outboxDelete(r.clientMutationId);
+-          nextRejections.push(r);
++          // F10：同一 IndexedDB 事务内「写入持久拒绝区 → 移出待发送队列」，
++          // 失败会整体回滚（内容留在队列里下次重试），不会只删不存。
++          const src = outbox.find((o) => o.clientMutationId === r.clientMutationId);
++          if (src && currentUserId) {
++            const record = buildDeadLetter({
++              userId: currentUserId,
++              outbox: src,
++              projectId: (src.data?.projectId as string | undefined) ?? null,
++              reason: r.reason ?? '服务端拒绝',
++              code: r.code,
++              now: new Date().toISOString(),
++            });
++            await idb.deadLetterMove(record, (existing) => mergeDeadLetter(
++              existing as DeadLetterRecord | undefined,
++              record,
++            ));
++            nextRejections.push(record);
++          } else {
++            await idb.outboxDelete(r.clientMutationId);
++          }
+         }
+       }
+     }
+@@ -244,7 +270,7 @@ export async function syncNow(): Promise<void> {
+       lastSyncAt: res.serverTime,
+       pending: (await idb.outboxAll()).length,
+       conflicts: merged,
+-      rejections: nextRejections.length ? nextRejections : state.rejections,
++      rejections: (await idb.deadLettersForUser(currentUserId ?? '')) as DeadLetterRecord[],
+     });
+   } catch (e) {
+     set({ lastError: toMessage(e, '同步失败') });
+@@ -269,7 +295,32 @@ export async function resolveConflict(clientMutationId: string, resolution: 'ser
+ }
+ 
+ export function clearRejections(): void {
++  const uid = currentUserId;
+   set({ rejections: [] });
++  if (uid) void idb.deadLettersClearForUser(uid);
++}
++
++/** 从持久拒绝区恢复（进入应用/登录后调用） */
++export async function restoreDeadLetters(): Promise<void> {
++  if (!currentUserId) return;
++  const rows = (await idb.deadLettersForUser(currentUserId)) as DeadLetterRecord[];
++  set({ rejections: rows });
++}
++
++/** 取回一条被拒绝的变更内容（用户复制/另存），跨刷新可用 */
++export async function getRejectedPayload(
++  clientMutationId: string,
++): Promise<DeadLetterRecord | undefined> {
++  if (!currentUserId) return undefined;
++  const rows = (await idb.deadLettersForUser(currentUserId)) as DeadLetterRecord[];
++  return rows.find((r) => r.clientMutationId === clientMutationId);
++}
++
++/** 删除一条拒绝记录（用户明确放弃该变更） */
++export async function dropRejection(clientMutationId: string): Promise<void> {
++  if (!currentUserId) return;
++  await idb.deadLetterDelete(deadLetterKey(currentUserId, clientMutationId));
++  await restoreDeadLetters();
+ }
+ 
+ export async function hydrate(): Promise<void> {
+@@ -283,10 +334,13 @@ export async function hydrate(): Promise<void> {
+   });
+ }
+ 
+-export function start(): void {
++export async function start(userId?: string): Promise<void> {
++  currentUserId = userId ?? currentUserId;
+   if (started) return;
+   started = true;
+   void hydrate();
++  // F10：恢复本账户的持久拒绝区（刷新/重新登录后内容不丢）
++  await restoreDeadLetters();
+   window.addEventListener('online', onOnline);
+   window.addEventListener('offline', onOffline);
+   timer = window.setInterval(() => {
+@@ -317,7 +371,9 @@ export function stop(): void {
+ /** 退出登录：清空本地镜像与队列（共享设备安全） */
+ export async function resetOnLogout(): Promise<void> {
+   stop();
++  // 注意：clearAll 不清空持久拒绝区（那是用户尚未取回的内容，重新登录同一账户需恢复）
+   await idb.clearAll();
++  currentUserId = null;
+   state = {
+     online: isOnline(),
+     syncing: false,
+diff --git a/rdpms-system/frontend/src/offline/idb.ts b/rdpms-system/frontend/src/offline/idb.ts
+index 4a9936d..56f74f4 100644
+--- a/rdpms-system/frontend/src/offline/idb.ts
++++ b/rdpms-system/frontend/src/offline/idb.ts
+@@ -7,7 +7,7 @@
+  *   outbox  ：本地变更日志（幂等键 clientMutationId 为主键）
+  */
+ const DB_NAME = 'rdpms-offline';
+-const DB_VERSION = 1;
++const DB_VERSION = 2;
+ 
+ export interface OutboxRecord {
+   clientMutationId: string;
+@@ -43,6 +43,11 @@ function openDb(): Promise<IDBDatabase> {
+         if (!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
+         if (!db.objectStoreNames.contains('records')) db.createObjectStore('records', { keyPath: 'key' });
+         if (!db.objectStoreNames.contains('outbox')) db.createObjectStore('outbox', { keyPath: 'clientMutationId' });
++        // v2：持久拒绝区（F10）—— 被服务端拒绝的离线变更必须可跨刷新/重新登录恢复
++        if (!db.objectStoreNames.contains('deadLetters')) {
++          const store = db.createObjectStore('deadLetters', { keyPath: 'key' });
++          store.createIndex('userId', 'userId', { unique: false });
++        }
+       };
+       req.onsuccess = () => resolve(req.result);
+       req.onerror = () => reject(req.error ?? new Error('IndexedDB 打开失败'));
+@@ -52,7 +57,7 @@ function openDb(): Promise<IDBDatabase> {
+ }
+ 
+ function run<T>(
+-  store: 'kv' | 'records' | 'outbox',
++  store: 'kv' | 'records' | 'outbox' | 'deadLetters',
+   mode: IDBTransactionMode,
+   fn: (s: IDBObjectStore) => IDBRequest<T>,
+ ): Promise<T> {
+@@ -105,7 +110,62 @@ export const idb = {
+   outboxDelete: (clientMutationId: string) => run('outbox', 'readwrite', (s) => s.delete(clientMutationId)),
+   outboxClear: () => run('outbox', 'readwrite', (s) => s.clear()),
+ 
+-  /** 退出登录时清空本地镜像与队列（共享设备安全） */
++  // ── deadLetters（持久拒绝区，v2）──
++  /**
++   * **同一事务**内完成「写入持久拒绝区 → 移出待发送队列」。
++   * 分两次事务会留下不一致窗口：崩在中间要么丢内容、要么重复上行。
++   */
++  deadLetterMove: async (
++    record: { key: string; clientMutationId: string; userId: string },
++    beforePut?: (
++      existing: { key: string } | undefined,
++    ) => { key: string; clientMutationId: string; userId: string } | Promise<{ key: string; clientMutationId: string; userId: string }>,
++  ) => {
++    const db = await openDb();
++    return new Promise<void>((resolve, reject) => {
++      const tx = db.transaction(['deadLetters', 'outbox'], 'readwrite');
++      const deadStore = tx.objectStore('deadLetters');
++      const outboxStore = tx.objectStore('outbox');
++      const getReq = deadStore.get(record.key);
++      getReq.onsuccess = () => {
++        const existing = getReq.result as { key: string } | undefined;
++        const finalRecord = beforePut ? beforePut(existing) : record;
++        Promise.resolve(finalRecord).then((rec) => {
++          deadStore.put(rec);
++          outboxStore.delete(record.clientMutationId);
++        }).catch(() => tx.abort());
++      };
++      tx.oncomplete = () => resolve();
++      tx.onerror = () => reject(tx.error ?? new Error('拒绝记录写入失败'));
++      tx.onabort = () => reject(tx.error ?? new Error('拒绝记录事务被中止'));
++    });
++  },
++  /** 只取当前账户的记录（不同账户隔离） */
++  deadLettersForUser: async (userId: string) => {
++    const all = await run<Array<{ key: string; userId: string }>>(
++      'deadLetters', 'readonly', (s) => s.getAll(),
++    );
++    return (all ?? []).filter((r) => r.userId === userId);
++  },
++  deadLetterDelete: (key: string) => run('deadLetters', 'readwrite', (s) => s.delete(key)),
++  deadLettersClearForUser: async (userId: string) => {
++    const rows = await idb.deadLettersForUser(userId);
++    if (!rows.length) return;
++    const db = await openDb();
++    await new Promise<void>((resolve, reject) => {
++      const tx = db.transaction('deadLetters', 'readwrite');
++      const store = tx.objectStore('deadLetters');
++      rows.forEach((r) => store.delete(r.key));
++      tx.oncomplete = () => resolve();
++      tx.onerror = () => reject(tx.error ?? new Error('拒绝记录清理失败'));
++    });
++  },
++
++  /**
++   * 退出登录时清空本地镜像与队列（共享设备安全）。
++   * 注意：**不清空**持久拒绝区——那是用户尚未取回的内容，重新登录同一账户后必须恢复；
++   * 其他账户也读不到它（按 userId 过滤）。
++   */
+   clearAll: async () => {
+     await idb.recordsClear();
+     await idb.outboxClear();
+diff --git a/rdpms-system/frontend/tests/unit/deadLetter.idb.test.ts b/rdpms-system/frontend/tests/unit/deadLetter.idb.test.ts
+new file mode 100644
+index 0000000..d2cc297
+--- /dev/null
++++ b/rdpms-system/frontend/tests/unit/deadLetter.idb.test.ts
+@@ -0,0 +1,147 @@
++/**
++ * F10 用例 —— 被拒绝的离线变更必须持久、可恢复、按账户隔离
++ *
++ * 这里跑的是**真实 IndexedDB 实现**（fake-indexeddb，浏览器外的同款 API），
++ * 走的是 src/offline/idb.ts 的生产代码路径，不是内存替身：
++ *   - 拒绝 = 同一事务内「写入持久拒绝区 → 移出待发送队列」；
++ *   - 刷新 / 重新登录后仍能恢复；
++ *   - 重复拒绝不丢内容；不同账户读不到彼此的草稿。
++ */
++import 'fake-indexeddb/auto';
++import { test } from 'node:test';
++import assert from 'node:assert/strict';
++import { idb } from '../../src/offline/idb';
++import {
++  buildDeadLetter,
++  mergeDeadLetter,
++  deadLetterKey,
++  isVisibleTo,
++  type DeadLetterRecord,
++} from '../../src/offline/deadLetter';
++
++const U_A = 'user-a';
++const U_B = 'user-b';
++
++async function cleanup(): Promise<void> {
++  await idb.outboxClear();
++  for (const uid of [U_A, U_B]) {
++    for (const row of await idb.deadLettersForUser(uid)) {
++      await idb.deadLetterDelete(row.key);
++    }
++  }
++}
++
++function outboxRow(clientMutationId: string) {
++  return {
++    clientMutationId,
++    entity: 'tasks',
++    op: 'upsert' as const,
++    id: 't1',
++    data: { title: '离线改名', projectId: 'p1' },
++    baseUpdatedAt: '2026-09-15T10:00:00.000Z',
++    createdAt: '2026-09-15T10:05:00.000Z',
++  };
++}
++
++test('F10-I1 拒绝时同一事务完成「写入拒绝区 + 移出队列」', async () => {
++  await cleanup();
++  const row = outboxRow('ml-1');
++  await idb.outboxPut(row);
++
++  const record = buildDeadLetter({
++    userId: U_A,
++    outbox: row,
++    projectId: 'p1',
++    reason: '缺少权限 tasks.assign',
++    code: 'PERMISSION_DENIED',
++    now: '2026-09-15T10:06:00.000Z',
++  });
++  await idb.deadLetterMove(record, (existing) => mergeDeadLetter(
++    existing as DeadLetterRecord | undefined,
++    record,
++  ));
++
++  const stored = await idb.deadLettersForUser(U_A);
++  assert.equal(stored.length, 1);
++  assert.deepEqual(stored[0].payload, { title: '离线改名', projectId: 'p1' }, '原始 payload 必须原样保留');
++  assert.equal(stored[0].reason, '缺少权限 tasks.assign');
++  assert.equal(stored[0].projectId, 'p1', '项目归属必须保留');
++  assert.equal(stored[0].clientMutationId, 'ml-1', '操作身份必须保留');
++  assert.equal((await idb.outboxAll()).length, 0, '必须同时移出待发送队列');
++});
++
++test('F10-I2 刷新后仍能恢复（数据在 IndexedDB，不在内存）', async () => {
++  await cleanup();
++  const row = outboxRow('ml-2');
++  const record = buildDeadLetter({
++    userId: U_A, outbox: row, reason: '跨项目 phaseId', now: '2026-09-15T10:06:00.000Z',
++  });
++  await idb.outboxPut(row);
++  await idb.deadLetterMove(record, () => record);
++
++  // 模拟页面刷新：只从存储重新读取
++  const afterReload = await idb.deadLettersForUser(U_A);
++  assert.equal(afterReload.length, 1);
++  assert.deepEqual(afterReload[0].payload, row.data, '刷新后内容必须还在');
++});
++
++test('F10-I3 重复拒绝不丢内容：保留最早 payload，累加次数', async () => {
++  await cleanup();
++  const first = buildDeadLetter({
++    userId: U_A,
++    outbox: outboxRow('ml-3'),
++    reason: '第一次：权限不足',
++    now: '2026-09-15T10:06:00.000Z',
++  });
++  await idb.deadLetterMove(first, () => first);
++
++  // 第二次拒绝：这次没有 payload（例如已从队列取不到内容）
++  const second = buildDeadLetter({
++    userId: U_A,
++    outbox: { clientMutationId: 'ml-3', entity: 'tasks', op: 'upsert', id: 't1' },
++    reason: '第二次：仍然权限不足',
++    now: '2026-09-15T10:09:00.000Z',
++  });
++  await idb.deadLetterMove(second, (existing) => mergeDeadLetter(
++    existing as DeadLetterRecord | undefined,
++    second,
++  ));
++
++  const stored = await idb.deadLettersForUser(U_A);
++  assert.equal(stored.length, 1, '同一条变更只应有一条记录');
++  assert.equal(stored[0].attempts, 2);
++  assert.deepEqual(stored[0].payload, { title: '离线改名', projectId: 'p1' }, '第二次缺 payload 时不得清空');
++  assert.equal(stored[0].firstRejectedAt, '2026-09-15T10:06:00.000Z');
++  assert.equal(stored[0].reason, '第二次：仍然权限不足', '原因刷新为最新');
++});
++
++test('F10-I4 不同账户隔离：B 读不到 A 的草稿', async () => {
++  await cleanup();
++  const recordA = buildDeadLetter({
++    userId: U_A, outbox: outboxRow('ml-4'), reason: '权限不足', now: '2026-09-15T10:06:00.000Z',
++  });
++  await idb.deadLetterMove(recordA, () => recordA);
++
++  assert.equal((await idb.deadLettersForUser(U_B)).length, 0, 'B 不得读到 A 的记录');
++  assert.equal(isVisibleTo(recordA, U_B), false);
++  assert.equal(isVisibleTo(recordA, U_A), true);
++  assert.equal(isVisibleTo(recordA, null), false, '未登录不得读取任何草稿');
++  assert.equal(recordA.key, deadLetterKey(U_A, 'ml-4'));
++});
++
++test('F10-I5 退出登录不清空持久拒绝区（重新登录同一账户可恢复）', async () => {
++  await cleanup();
++  const record = buildDeadLetter({
++    userId: U_A, outbox: outboxRow('ml-5'), reason: '权限不足', now: '2026-09-15T10:06:00.000Z',
++  });
++  await idb.deadLetterMove(record, () => record);
++
++  await idb.clearAll(); // 退出登录路径
++
++  const afterRelogin = await idb.deadLettersForUser(U_A);
++  assert.equal(afterRelogin.length, 1, '重新登录后必须恢复');
++  assert.deepEqual(afterRelogin[0].payload, { title: '离线改名', projectId: 'p1' });
++
++  await idb.deadLettersClearForUser(U_A);
++  assert.equal((await idb.deadLettersForUser(U_A)).length, 0, '用户明确清除后才消失');
++});
