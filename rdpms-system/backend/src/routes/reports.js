@@ -146,6 +146,16 @@ reports.post('/', requirePermission('reports.create'), async (c) => {
   assertProjectCapability(access, 'write', 'reports.create');
 
   const content = parseContentInput(data.content);
+
+  // A02：POST 命中已有草稿时**不得**绕过更新权限与并发基线。
+  // 与 PUT 同口径解析基线与客户端契约，规则在下方 validate 中执行（仅新命令路径）。
+  const clientContract = readClientContract(c.req.raw.headers, body);
+  const expectedUpdatedAt = body?.expectedUpdatedAt ? new Date(body.expectedUpdatedAt) : null;
+  if (expectedUpdatedAt && Number.isNaN(expectedUpdatedAt.getTime())) {
+    throw badRequest('VALIDATION_ERROR', 'expectedUpdatedAt 不是合法时间', { field: 'expectedUpdatedAt' });
+  }
+  assertBaselineForModernClient(clientContract, expectedUpdatedAt, 'POST /api/reports');
+
   const uniqueKey = {
     projectId, authorId: auth.userId, reportType, periodKey,
   };
@@ -170,9 +180,64 @@ reports.post('/', requirePermission('reports.create'), async (c) => {
         if (current && !current.deletedAt && !['DRAFT', 'NEEDS_REVISION'].includes(current.status)) {
           throw new HttpError(409, 'INVALID_STATE', '该周期汇报已提交或已审阅，不能通过保存接口覆盖');
         }
+        if (current && !current.deletedAt) {
+          // A02-①：覆盖已有汇报必须持有 reports.update（route 级只保证 reports.create）
+          const perms = auth.permissions ?? [];
+          if (!perms.includes('reports.update') && auth.systemRole !== 'SUPER_ADMIN') {
+            throw new HttpError(403, 'PERMISSION_DENIED', '修改已有汇报需要 reports.update 权限，请使用显式更新接口');
+          }
+          // A02-②：项目 write 能力 + 作者归属（与 PUT 同源判定）
+          assertReportAuthority(current, auth, access, 'reports.update');
+          // A02-③：无基线兼容路径只对草稿且非实验科学数据开放（与 PUT 同规则）
+          if (!expectedUpdatedAt) {
+            assertLegacyCompatAllowed({
+              locked: isReportLocked(current),
+              scientific: isScientificReportContent(current.reportType, current.content),
+              label: `汇报 ${current.reportType}/${current.periodKey}`,
+            });
+          }
+        }
         return current;
       },
       execute: async (tx, current) => {
+        // A02-④：已有且未删除 → 原子的「基线比较并写入」，避免两个客户端同基线覆盖
+        if (current && !current.deletedAt) {
+          // 谓词取**客户端基线**（有则用客户端声明的版本，过期即冲突）；
+          // 旧客户端无基线时退化为「validate 读到的版本」，仍能拦住并发写入。
+          const cas = await tx.report.updateMany({
+            where: { id: current.id, updatedAt: expectedUpdatedAt ?? current.updatedAt },
+            data: { content, updatedById: auth.userId },
+          });
+          if (cas.count === 0) {
+            throw new HttpError(409, 'CONFLICT', '该汇报已被他人修改，请基于最新版本重试');
+          }
+          const updated = await tx.report.findUnique({
+            where: { id: current.id },
+            include: {
+              author: { select: { id: true, displayName: true } },
+              project: { select: { id: true, name: true } },
+            },
+          });
+          await writeAuditStrict(tx, {
+            c,
+            actorId: auth.userId,
+            actorName: auth.user.displayName,
+            actorRole: auth.systemRole,
+            action: AUDIT_ACTIONS.UPDATE,
+            entityType: 'REPORT',
+            entityId: updated.id,
+            entityLabel: `${reportType}/${periodKey}`,
+            changedFields: Object.keys(data),
+            metadata: {
+              permissionCode: 'reports.update',
+              projectId,
+              ...(expectedUpdatedAt
+                ? { concurrencyBaseline: expectedUpdatedAt.toISOString() }
+                : { noConcurrencyBaseline: true }),
+            },
+          });
+          return { status: 201, body: updated };
+        }
         const report = await tx.report.upsert({
           where: { projectId_authorId_reportType_periodKey: uniqueKey },
           // 显式重建被删除的同周期汇报（否则保存会写进不可见的墓碑行）
