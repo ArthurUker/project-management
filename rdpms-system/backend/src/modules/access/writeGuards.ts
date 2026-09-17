@@ -110,7 +110,15 @@ export function isReportLocked(report: Pick<ReportLike, 'status'> | null | undef
  * 汇报可写判定：项目 write 能力 + 作者本人 + 状态未锁定。
  * 普通 API（PUT/DELETE/recall）与同步上行共用。
  */
-export function assertReportWritable(
+/**
+ * 汇报的**当前资源授权**判定：项目 write capability + 作者归属。
+ *
+ * 与 assertReportWritable 的区别（RF04 复核）：**不含状态锁**。
+ * 理由：幂等回执不是永久授权凭证——当前授权必须在 receipt lookup 之前重新校验；
+ * 而状态锁（SUBMITTED/REVIEWED）会因第一次成功而自然变化，同 key 的合法 replay 必须能绕过它，
+ * 因此状态锁只能留在 validate()（仅新命令路径执行）。
+ */
+export function assertReportAuthority(
   report: ReportLike | null | undefined,
   actor: AuthActor,
   access: ProjectAccess,
@@ -120,6 +128,16 @@ export function assertReportWritable(
   if (!report || report.authorId !== actor.userId) {
     throw forbidden('FORBIDDEN', '无权修改他人的汇报');
   }
+}
+
+/** 汇报可写判定（授权 + 状态锁）：仅用于新命令路径（validate），不得前移到 receipt lookup 之前 */
+export function assertReportWritable(
+  report: ReportLike | null | undefined,
+  actor: AuthActor,
+  access: ProjectAccess,
+  permissionCode = 'reports.update',
+): void {
+  assertReportAuthority(report, actor, access, permissionCode);
   if (isReportLocked(report)) {
     throw new HttpError(409, 'INVALID_STATE', '汇报已提交或已审阅，内容已锁定');
   }

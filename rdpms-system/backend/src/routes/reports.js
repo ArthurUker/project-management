@@ -19,7 +19,7 @@ import {
   assertLegacyCompatAllowed,
   isScientificReportContent,
 } from '../modules/access/editPolicy.js';
-import { isReportLocked } from '../modules/access/writeGuards.js';
+import { isReportLocked, assertReportAuthority } from '../modules/access/writeGuards.js';
 import {
   normalizeReportType,
   validatePeriodKey,
@@ -248,6 +248,10 @@ reports.put('/:id', requirePermission('reports.update'), async (c) => {
     // eslint-disable-next-line no-console
     console.warn(`[reports.update] 旧客户端兼容路径（无基线）report=${id} actor=${auth.userId} contract=${clientContract ?? '未声明'}`);
   }
+
+  // RF04：**当前资源授权（capability + 作者归属）必须前置于 receipt lookup**，
+  // 否则撤权后仍可用旧 key 领取历史成功回执。状态锁/CAS 仍留在 validate（合法 replay 需能绕过）。
+  assertReportAuthority(existing, auth, access, 'reports.update');
 
   const { key } = resolveIdempotencyKey(c, body);
   let result;
