@@ -78,6 +78,8 @@ const listeners = new Set<Listener>();
 let timer: number | null = null;
 /** 当前登录账户（拒绝区按账户隔离，退出登录不清空数据但清空内存视图） */
 let currentUserId: string | null = null;
+/** A03：会话代次——账号切换/登出即自增，使在途同步（含已发出的请求）整体作废 */
+let sessionGen = 0;
 let started = false;
 
 function emit() {
@@ -187,6 +189,11 @@ export async function syncNow(): Promise<void> {
   if (state.syncing || !state.online) return;
   set({ syncing: true, lastError: null });
   const deviceId = getDeviceId();
+  // A03：本轮同步绑定「发起时的主体 + 会话代次」。之后任何异步回包、落盘、状态写入
+  // 都必须校验代次未变——账号切换后到达的旧响应不得写入新账号命名空间（原 Q7 缺陷）。
+  const myGen = sessionGen;
+  const myUserId = currentUserId;
+  const isStale = () => myGen !== sessionGen;
   try {
     const since = await idb.kvGet<string>(CURSOR_KEY);
     const res = await syncAPI.init({
@@ -194,6 +201,7 @@ export async function syncNow(): Promise<void> {
       deviceId,
       ...deviceMeta(),
     });
+    if (isStale()) return; // 旧会话的拉取结果不得落盘
     await applyPull(res);
 
     const outbox = await idb.outboxAll();
@@ -240,9 +248,9 @@ export async function syncNow(): Promise<void> {
           // F10：同一 IndexedDB 事务内「写入持久拒绝区 → 移出待发送队列」，
           // 失败会整体回滚（内容留在队列里下次重试），不会只删不存。
           const src = outbox.find((o) => o.clientMutationId === r.clientMutationId);
-          if (src && currentUserId) {
+          if (src && myUserId) {
             const record = buildDeadLetter({
-              userId: currentUserId,
+              userId: myUserId,
               outbox: src,
               projectId: (src.data?.projectId as string | undefined) ?? null,
               reason: r.reason ?? '服务端拒绝',
@@ -265,6 +273,7 @@ export async function syncNow(): Promise<void> {
       ...state.conflicts.filter((c) => !nextConflicts.some((n) => n.clientMutationId === c.clientMutationId)),
       ...nextConflicts,
     ];
+    if (isStale()) return; // 旧会话不得写入冲突记录与状态
     await idb.kvSet(CONFLICT_KEY, merged);
     set({
       lastSyncAt: res.serverTime,
@@ -273,6 +282,7 @@ export async function syncNow(): Promise<void> {
       rejections: (await idb.deadLettersForUser(currentUserId ?? '')) as DeadLetterRecord[],
     });
   } catch (e) {
+    if (isStale()) return; // A03：旧会话的失败不得污染当前账号状态
     set({ lastError: toMessage(e, '同步失败') });
   } finally {
     set({ syncing: false });
@@ -336,6 +346,7 @@ export async function hydrate(): Promise<void> {
 
 export async function start(userId?: string): Promise<void> {
   currentUserId = userId ?? currentUserId;
+  sessionGen += 1; // 新会话：使上一账号的在途同步作废
   if (started) return;
   started = true;
   void hydrate();
@@ -374,6 +385,7 @@ export async function resetOnLogout(): Promise<void> {
   // 注意：clearAll 不清空持久拒绝区（那是用户尚未取回的内容，重新登录同一账户需恢复）
   await idb.clearAll();
   currentUserId = null;
+  sessionGen += 1; // A03：登出使在途请求与回包全部作废
   state = {
     online: isOnline(),
     syncing: false,
