@@ -145,3 +145,23 @@ test('F10-I5 退出登录不清空持久拒绝区（重新登录同一账户可�
   await idb.deadLettersClearForUser(U_A);
   assert.equal((await idb.deadLettersForUser(U_A)).length, 0, '用户明确清除后才消失');
 });
+
+test('A06 clearAll 清理真实键名（cursor/acl/conflicts），且不清空持久拒绝区', async () => {
+  await cleanup();
+  // 模拟 engine 真实使用的键
+  await idb.kvSet('rdpms.sync.cursor', '2026-09-16T00:00:00.000Z');
+  await idb.kvSet('rdpms.sync.acl', { version: 'acl-1', projectIds: ['p1'] });
+  await idb.kvSet('rdpms.sync.conflicts', [{ clientMutationId: 'x' }]);
+  const rec = buildDeadLetter({
+    userId: U_A, outbox: outboxRow('a06-1'), reason: '权限不足', now: '2026-09-17T00:00:00.000Z',
+  });
+  await idb.deadLetterMove(rec, () => rec);
+
+  await idb.clearAll(); // 退出登录路径
+
+  assert.equal(await idb.kvGet('rdpms.sync.cursor'), undefined, '游标必须清理');
+  assert.equal(await idb.kvGet('rdpms.sync.acl'), undefined, 'ACL 必须清理');
+  assert.equal(await idb.kvGet('rdpms.sync.conflicts'), undefined, '冲突记录必须清理（此前从未清理）');
+  assert.equal((await idb.deadLettersForUser(U_A)).length, 1, '持久拒绝区按既定策略保留');
+  await idb.deadLettersClearForUser(U_A);
+});

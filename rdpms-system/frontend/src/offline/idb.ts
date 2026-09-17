@@ -169,7 +169,10 @@ export const idb = {
   clearAll: async () => {
     await idb.recordsClear();
     await idb.outboxClear();
-    await idb.kvDelete('cursor');
-    await idb.kvDelete('acl');
+    // A06：键名必须与 engine.ts 的真实定义一致（此前删的是 'cursor'/'acl'，真实键带 rdpms.sync. 前缀，
+    // 且 conflicts 从未被清理 → 新会话 hydrate 会读到上一账号的冲突记录）
+    await idb.kvDelete('rdpms.sync.cursor');
+    await idb.kvDelete('rdpms.sync.acl');
+    await idb.kvDelete('rdpms.sync.conflicts');
   },
 };
