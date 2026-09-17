@@ -446,7 +446,14 @@ reports.post('/:id/reject', requirePermission('reports.review'), async (c) => {
 
 // 历史版本
 reports.get('/:id/versions', requirePermission('reports.view'), async (c) => {
+  const auth = getAuth(c);
   const id = c.req.param('id');
+  // A01：历史版本必须与正文详情同权——先按**日报所属项目**解析访问（非成员按既定隐藏策略处理），
+  // 再检查项目 read 能力。版本 ID / 日报 ID 都不得成为绕过入口。
+  const report = await prisma.report.findUnique({ where: { id } });
+  if (!report || report.deletedAt) throw notFound('REPORT_NOT_FOUND', '汇报不存在');
+  const access = await resolveProjectAccess(prisma, auth, report.projectId);
+  assertProjectCapability(access, 'read', 'reports.view');
   const versions = await prisma.reportVersion.findMany({
     where: { reportId: id },
     orderBy: { version: 'desc' },
