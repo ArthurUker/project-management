@@ -66,7 +66,12 @@ function run<T>(
       new Promise<T>((resolve, reject) => {
         const tx = db.transaction(store, mode);
         const req = fn(tx.objectStore(store));
-        req.onsuccess = () => resolve(req.result);
+        req.onsuccess = () => {
+          // 写事务必须等到**事务提交**才算完成：否则调用方紧接着读会看不到刚写入的值
+          // （IndexedDB 的请求成功 ≠ 事务已提交）
+          if (mode === 'readwrite') tx.oncomplete = () => resolve(req.result);
+          else resolve(req.result);
+        };
         req.onerror = () => reject(req.error ?? new Error('IndexedDB 操作失败'));
       }),
   );
@@ -166,7 +171,7 @@ export const idb = {
    * 注意：**不清空**持久拒绝区——那是用户尚未取回的内容，重新登录同一账户后必须恢复；
    * 其他账户也读不到它（按 userId 过滤）。
    */
-  clearAll: async () => {
+  clearAll: async (userId?: string | null) => {
     await idb.recordsClear();
     await idb.outboxClear();
     // A06：键名必须与 engine.ts 的真实定义一致（此前删的是 'cursor'/'acl'，真实键带 rdpms.sync. 前缀，
@@ -174,5 +179,11 @@ export const idb = {
     await idb.kvDelete('rdpms.sync.cursor');
     await idb.kvDelete('rdpms.sync.acl');
     await idb.kvDelete('rdpms.sync.conflicts');
+    // A03：同时清理该主体的分片键（只清自己，不动其他账号的数据）
+    if (userId) {
+      await idb.kvDelete(`rdpms.sync.cursor:${userId}`);
+      await idb.kvDelete(`rdpms.sync.acl:${userId}`);
+      await idb.kvDelete(`rdpms.sync.conflicts:${userId}`);
+    }
   },
 };

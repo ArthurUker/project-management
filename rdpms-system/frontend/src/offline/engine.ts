@@ -26,6 +26,14 @@ const DEVICE_KEY = 'rdpms.sync.deviceId';
 const CURSOR_KEY = 'rdpms.sync.cursor';
 const ACL_KEY = 'rdpms.sync.acl';
 const CONFLICT_KEY = 'rdpms.sync.conflicts';
+
+/** A03：本地缓存键按主体分片——不同账号不得共享游标 / ACL 快照 / 冲突记录 */
+function scopedKey(base: string, userId: string | null): string {
+  return `${base}:${userId ?? 'anonymous'}`;
+}
+const cursorKey = () => scopedKey(CURSOR_KEY, currentUserId);
+const aclKey = () => scopedKey(ACL_KEY, currentUserId);
+const conflictKey = () => scopedKey(CONFLICT_KEY, currentUserId);
 const SYNC_INTERVAL_MS = 60_000;
 
 /** 实体 → 项目归属字段（用于 ACL 变化时清除本地越权数据） */
@@ -163,7 +171,7 @@ async function applyPull(res: SyncInitResponse): Promise<void> {
   await idb.recordsDeleteMany(tombstoneKeys);
 
   // ACL 变化：清除不再可见项目的本地数据（权限回收后本地不可残留）
-  const prevAcl = await idb.kvGet<{ aclVersion: string }>(ACL_KEY);
+  const prevAcl = await idb.kvGet<{ aclVersion: string }>(aclKey());
   if (!prevAcl || prevAcl.aclVersion !== res.acl.aclVersion) {
     const visible = new Set(res.acl.projectIds);
     const all = await idb.recordsAll();
@@ -176,13 +184,13 @@ async function applyPull(res: SyncInitResponse): Promise<void> {
       })
       .map((r) => r.key);
     await idb.recordsDeleteMany(purge);
-    await idb.kvSet(ACL_KEY, {
+    await idb.kvSet(aclKey(), {
       aclVersion: res.acl.aclVersion,
       projectIds: res.acl.projectIds,
       permissions: res.acl.permissions,
     });
   }
-  await idb.kvSet(CURSOR_KEY, res.cursor);
+  await idb.kvSet(cursorKey(), res.cursor);
 }
 
 export async function syncNow(): Promise<void> {
@@ -195,7 +203,7 @@ export async function syncNow(): Promise<void> {
   const myUserId = currentUserId;
   const isStale = () => myGen !== sessionGen;
   try {
-    const since = await idb.kvGet<string>(CURSOR_KEY);
+    const since = await idb.kvGet<string>(cursorKey());
     const res = await syncAPI.init({
       since: since || undefined,
       deviceId,
@@ -274,7 +282,7 @@ export async function syncNow(): Promise<void> {
       ...nextConflicts,
     ];
     if (isStale()) return; // 旧会话不得写入冲突记录与状态
-    await idb.kvSet(CONFLICT_KEY, merged);
+    await idb.kvSet(conflictKey(), merged);
     set({
       lastSyncAt: res.serverTime,
       pending: (await idb.outboxAll()).length,
@@ -299,7 +307,7 @@ export async function resolveConflict(clientMutationId: string, resolution: 'ser
     await enqueueChange({ ...target.change, clientMutationId: newId, baseUpdatedAt: base });
   }
   const rest = state.conflicts.filter((c) => c.clientMutationId !== clientMutationId);
-  await idb.kvSet(CONFLICT_KEY, rest);
+  await idb.kvSet(conflictKey(), rest);
   set({ conflicts: rest });
   if (resolution === 'local' && state.online) void syncNow();
 }
@@ -334,8 +342,8 @@ export async function dropRejection(clientMutationId: string): Promise<void> {
 }
 
 export async function hydrate(): Promise<void> {
-  const conflicts = (await idb.kvGet<ConflictRecord[]>(CONFLICT_KEY)) ?? [];
-  const cursor = await idb.kvGet<string>(CURSOR_KEY);
+  const conflicts = (await idb.kvGet<ConflictRecord[]>(conflictKey())) ?? [];
+  const cursor = await idb.kvGet<string>(cursorKey());
   set({
     conflicts,
     pending: (await idb.outboxAll()).length,
@@ -383,7 +391,8 @@ export function stop(): void {
 export async function resetOnLogout(): Promise<void> {
   stop();
   // 注意：clearAll 不清空持久拒绝区（那是用户尚未取回的内容，重新登录同一账户需恢复）
-  await idb.clearAll();
+  const uidAtLogout = currentUserId;
+  await idb.clearAll(uidAtLogout); // A03：只清理当前主体的分片键
   currentUserId = null;
   sessionGen += 1; // A03：登出使在途请求与回包全部作废
   state = {
