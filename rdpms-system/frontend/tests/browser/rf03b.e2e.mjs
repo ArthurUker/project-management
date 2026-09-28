@@ -218,10 +218,17 @@ try {
     Boolean(sa.id && authorId && reviewerId) && Boolean(projA.id && projB.id) && authorIsMember,
     `author=${authorId.slice(0, 8)} reviewer=${reviewerId.slice(0, 8)} projA=${projA.id.slice(0, 8)} projB=${projB.id.slice(0, 8)} member=${authorIsMember}`);
 
-  const day = 10 + (Number.parseInt(stack.runId.slice(-6), 16) % 10);
-  const D4 = `2026-09-${String(day + 2).padStart(2, '0')}`;
-  const D5 = `2026-09-${String(day + 3).padStart(2, '0')}`;
-  const D6 = `2026-09-${String(day + 4).padStart(2, '0')}`;
+  // 用例日期：取「该执行人在目标项目下当月还没有 DAILY 记录的日期」（避免撞上已提交记录）
+  const mine = await listReports(`reportType=DAILY&authorId=${authorId}&projectId=${projA.id}`);
+  const used = new Set((mine.list ?? []).map((r) => r.periodKey));
+  const free = [];
+  for (let d = 1; d <= 28 && free.length < 3; d += 1) {
+    const key = `2026-09-${String(d).padStart(2, '0')}`;
+    if (!used.has(key)) free.push(key);
+  }
+  if (free.length < 3) throw new Error('找不到三个空闲日报日期（该账号当月在该项目下记录过多）');
+  const [D4, D5, D6] = free;
+  console.log(`[rf03b] 用例日期 ${D4} / ${D5} / ${D6}`);
 
   // ══ B04 ══ 提交 → 复核人审核 → 作者重开（只读 + 服务端拒绝绕界面写入）
   {

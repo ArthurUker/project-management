@@ -32,7 +32,8 @@ const stack = await startStack();
 const manifestPath = path.join(OUT, `${stack.runId}-manifest.json`);
 fs.writeFileSync(manifestPath, `${JSON.stringify(stack.manifest, null, 2)}\n`);
 console.log(`[rf03] runId=${stack.runId} 端口 backend=${stack.backendPort} frontend=${stack.frontendPort} db=${stack.masked.database}`);
-assert.equal(stack.manifest.git.worktreeDirty, true, '本轮存在未提交改动，清单需标注（不影响断言）');
+// 脏工作区只作为清单事实记录，**不是**断言：干净提交上运行同样有效（旧版把 dirty=true 当必要条件，会把干净运行直接打断）
+console.log(`[rf03] HEAD=${stack.manifest.git.headShort} worktreeDirty=${stack.manifest.git.worktreeDirty} 测试代码哈希=${stack.manifest.testCodeHash?.browserTests}`);
 
 const context = await chromium.launchPersistentContext(stack.profile, {
   executablePath: CHROME,
@@ -135,9 +136,18 @@ try {
   record('B00', '登录后 /api/reports 可访问（超管权限出口修复生效）',
     reportsBefore.status === 200 && Boolean(myUserId), `status=${reportsBefore.status} me.permissions=${(me.body?.permissions ?? []).length}`);
 
-  const day = 10 + (Number.parseInt(stack.runId.slice(-6), 16) % 10);
-  const D1 = `2026-09-${String(day).padStart(2, '0')}`;
-  const D2 = `2026-09-${String(day + 1).padStart(2, '0')}`;
+  // 用例日期：取「本账号当月还没有 DAILY 记录的日期」——
+  // 旧实现用 runId 取模只有 10 种取值，重复运行会撞上已提交的日报（随后编辑页只读，用例假失败）
+  const mine = await apiGet(`/api/reports?reportType=DAILY&pageSize=100&authorId=${myUserId}`);
+  const used = new Set((mine.body?.list ?? []).map((r) => r.periodKey));
+  const free = [];
+  for (let d = 1; d <= 28 && free.length < 2; d += 1) {
+    const key = `2026-09-${String(d).padStart(2, '0')}`;
+    if (!used.has(key)) free.push(key);
+  }
+  if (free.length < 2) throw new Error('找不到两个空闲日报日期（本账号当月已有 27 天以上记录）');
+  const [D1, D2] = free;
+  console.log(`[rf03] 用例日期 ${D1} / ${D2}`);
   const TEXT1 = 'B01-第一天内容-首日';
   const TEXT2 = 'B01-第二天内容-次日';
 
