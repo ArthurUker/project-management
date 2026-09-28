@@ -28,9 +28,8 @@ function envBlocked(reason) {
   console.log(`ENV_BLOCKED  ${reason}`);
 }
 
-const stack = await startStack();
-const manifestPath = path.join(OUT, `${stack.runId}-manifest.json`);
-fs.writeFileSync(manifestPath, `${JSON.stringify(stack.manifest, null, 2)}\n`);
+const stack = await startStack({ suite: 'rf03 (B01/B02/B03)' });
+stack.saveManifest(OUT, { finished: false });
 console.log(`[rf03] runId=${stack.runId} 端口 backend=${stack.backendPort} frontend=${stack.frontendPort} db=${stack.masked.database}`);
 // 脏工作区只作为清单事实记录，**不是**断言：干净提交上运行同样有效（旧版把 dirty=true 当必要条件，会把干净运行直接打断）
 console.log(`[rf03] HEAD=${stack.manifest.git.headShort} worktreeDirty=${stack.manifest.git.worktreeDirty} 测试代码哈希=${stack.manifest.testCodeHash?.browserTests}`);
@@ -237,9 +236,16 @@ try {
   record('EXC', '用例执行异常', false, String(e?.message ?? e).slice(0, 400));
   await snapshot('exception');
 } finally {
+  const summary = {
+    total: results.length,
+    pass: results.filter((r) => r.status === 'PASS').length,
+    fail: results.filter((r) => r.status !== 'PASS').length,
+  };
   fs.writeFileSync(path.join(OUT, `${stack.runId}-rf03-results.json`), `${JSON.stringify({
-    runId: stack.runId, manifest: stack.manifest, results, consoleErrors: consoleErrors.slice(0, 10),
+    runId: stack.runId, suite: 'rf03', summary, results, consoleErrors: consoleErrors.slice(0, 10),
   }, null, 2)}\n`);
+  // A10：结束时回写清单（finishedAt + 运行后再算一次内容哈希 + 结果摘要）
+  stack.saveManifest(OUT, { fields: { resultSummary: summary } });
   console.log('\n[rf03] 控制台错误数:', consoleErrors.length);
   await context.close().catch(() => {});
   await stack.stop();
