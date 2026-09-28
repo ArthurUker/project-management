@@ -73,10 +73,15 @@ async function login(username) {
   await page.waitForLoadState('networkidle');
 }
 
-/** 打开「填写日报」并把日期设为指定日期 */
+/**
+ * 打开「新建日报」并把日期设为指定日期。
+ * 注意：不要依赖列表页按钮文案——它是「填写日报/周报/月报」中随当天日期变化的那一个
+ * （月末跑 CI 时会变成「填写月报」，从而与用例语义不符）。
+ */
 async function openNewDaily(dateISO) {
   await page.goto(`${stack.apiBase}/reports`, { waitUntil: 'networkidle' });
-  await page.getByRole('button', { name: /填写日报/ }).first().click();
+  await page.waitForTimeout(500);
+  await page.goto(`${stack.apiBase}/reports/new?type=${encodeURIComponent('日报')}`, { waitUntil: 'networkidle' });
   await page.waitForURL(/\/reports\/new/, { timeout: 15000 });
   await page.waitForLoadState('networkidle');
   const dateInput = page.locator('input[type=date]').first();

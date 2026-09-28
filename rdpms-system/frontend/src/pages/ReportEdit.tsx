@@ -230,6 +230,13 @@ export default function ReportEdit() {
         const pending = await loadPendingDraft(user.id);
         if (pending?.records?.length) {
           setDailyTemplate('reagent');
+          // 留存时记录了周期键：恢复时必须同时恢复日期，否则用户补关联后保存会落到「今天」而不是原周期
+          if (/^\d{4}-\d{2}-\d{2}$/.test(pending.periodKey)) {
+            setDate(pending.periodKey);
+            setMonth(pending.periodKey.slice(0, 7));
+          } else if (/^\d{4}-\d{2}$/.test(pending.periodKey)) {
+            setMonth(pending.periodKey);
+          }
           setReagentReports((prev) => mergePendingRecords(prev as PendingDraftRecord[], pending.records) as any[]);
           setPendingNotice(
             `已恢复 ${pending.records.length} 条上次未关联项目的实验记录（尚未提交到服务端）：请关联项目后重新保存`,
