@@ -1,0 +1,46 @@
+{
+  "runId": "2026-09-28T02-08-11-877Z-bfd48b",
+  "suite": "f10",
+  "fixtures": {
+    "author": {
+      "username": "test_member",
+      "userId": "e1e42344-34b4-415d-9a5b-ae1284aac770"
+    },
+    "project": {
+      "id": "4d58e540-f9cb-49c2-a7f4-f73863db8775",
+      "name": "F10-Z-bfd48b"
+    },
+    "reportId": "b5140058-1d1e-4a93-9857-a50dcbe3d265"
+  },
+  "summary": {
+    "total": 3,
+    "pass": 2,
+    "fail": 1
+  },
+  "results": [
+    {
+      "id": "F10-a",
+      "name": "夹具就绪：作者为项目成员，且草稿的作者就是执行人本人",
+      "status": "PASS",
+      "detail": "project=4d58e540 report=b5140058 status=DRAFT author 匹配=true"
+    },
+    {
+      "id": "F10-b",
+      "name": "离线保存：变更进入本地队列且未发起服务端写入",
+      "status": "PASS",
+      "detail": "outbox=1 服务端写请求=0 内容={\"projectReports\":[{\"plan\":\"F10-离线草稿-未提交\",\"docRefs\":[],\"next"
+    },
+    {
+      "id": "EXC",
+      "name": "用例执行中断",
+      "status": "FAIL",
+      "detail": "等待拒绝区出现记录超时"
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load reports: ApiError: 网络异常，请检查连接\n    at http://127.0.0.1:39701/src/api/http.ts:83:9\n    at async Axios.request (http://127.0.0.1:39701/node_modules/.vite/deps/axios.js?v=160cd5c1:2326:14)\n    at async request (http://127.0.0.1:39701/src/api/request.ts:4:15)\n    at async requestPaged (http://127.0.0.1:39701/src/api/request.ts:37:15)\n    at async Object.list (http://127.0.0.1:39701/src/api/endpoints/reports.ts:5:19)\n    at async loadReports (http://127.0.0.1:39701/src/pages/Reports.tsx:70:19)",
+    "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+    "Failed to load reports: ApiError: 网络异常，请检查连接\n    at http://127.0.0.1:39701/src/api/http.ts:83:9\n    at async Axios.request (http://127.0.0.1:39701/node_modules/.vite/deps/axios.js?v=160cd5c1:2326:14)\n    at async request (http://127.0.0.1:39701/src/api/request.ts:4:15)\n    at async requestPaged (http://127.0.0.1:39701/src/api/request.ts:37:15)\n    at async Object.list (http://127.0.0.1:39701/src/api/endpoints/reports.ts:5:19)\n    at async loadReports (http://127.0.0.1:39701/src/pages/Reports.tsx:70:19)",
+    "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+  ]
+}

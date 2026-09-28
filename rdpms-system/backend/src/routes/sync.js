@@ -383,8 +383,14 @@ sync.post('/push', async (c) => {
 
     const hit = replayMap.get(clientMutationId);
     if (hit) {
-      results.push({ ...(hit.result ?? base), status: hit.status, replayed: true });
-      continue;
+      // 只回放**已成功写库**的结果（applied）：回执的意义是「不要重复写」。
+      // rejected / conflict 表示服务端什么都没写——若连失败结果也永久回放，
+      // 用户「修好原因后重试同一条变更」将永远得到旧的拒绝（F10 恢复闭环实测的阻断点）。
+      // 因此失败结果一律重新判定，并把新结果覆盖写回同一条回执记录。
+      if (hit.status === 'applied') {
+        results.push({ ...(hit.result ?? base), status: hit.status, replayed: true });
+        continue;
+      }
     }
 
     let outcome;
@@ -535,9 +541,20 @@ sync.post('/push', async (c) => {
     }
 
     const record = { ...base, ...outcome };
+    // upsert：失败结果重新判定后要覆盖旧回执（否则表里永远留着第一次的 rejected）
     // eslint-disable-next-line no-await-in-loop
-    await prisma.syncMutation.create({
-      data: {
+    await prisma.syncMutation.upsert({
+      where: { clientMutationId },
+      update: {
+        deviceId,
+        userId: auth.userId,
+        entity,
+        entityId,
+        op,
+        status: outcome.status,
+        result: record,
+      },
+      create: {
         clientMutationId,
         deviceId,
         userId: auth.userId,

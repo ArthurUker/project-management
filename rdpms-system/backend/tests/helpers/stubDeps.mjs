@@ -327,6 +327,18 @@ export function createStubDb(options = {}) {
         state.syncMutations.push(row);
         return row;
       },
+      /** 失败结果重新判定后覆盖旧回执（与生产代码的 upsert 语义一致） */
+      upsert: async ({ where, update, create }) => {
+        const key = where?.clientMutationId;
+        const idx = state.syncMutations.findIndex((m) => m.clientMutationId === key);
+        if (idx >= 0) {
+          state.syncMutations[idx] = { ...state.syncMutations[idx], ...update };
+          return state.syncMutations[idx];
+        }
+        const row = { id: `sm-${state.syncMutations.length + 1}`, ...create };
+        state.syncMutations.push(row);
+        return row;
+      },
     },
     permission: {
       findMany: async () => (options.permissions ?? [

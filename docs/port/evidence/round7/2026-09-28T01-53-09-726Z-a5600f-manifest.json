@@ -1,0 +1,123 @@
+{
+  "runId": "2026-09-28T01-53-09-726Z-a5600f",
+  "suite": "rf03b (B04/B05/B06)",
+  "startedAt": "2026-09-28T01:53:09.726Z",
+  "finishedAt": "2026-09-28T01:53:50.904Z",
+  "git": {
+    "head": "5462512012933b49f9d2ca9ffb6bace0b24b720a",
+    "headShort": "5462512",
+    "branch": "refactor/rdpms-guidance-v2",
+    "worktreeDirty": true,
+    "worktreeStatus": [
+      "M rdpms-system/frontend/index.html",
+      " M rdpms-system/frontend/src/components/ErrorBoundary.tsx",
+      " M rdpms-system/frontend/src/components/FullPageSpinner.tsx",
+      " M rdpms-system/frontend/src/components/Layout.tsx",
+      " M rdpms-system/frontend/src/components/OfflineBanner.tsx",
+      " M rdpms-system/frontend/src/components/SyncStatusIndicator.tsx",
+      " M rdpms-system/frontend/src/config/menu.ts",
+      " M rdpms-system/frontend/src/index.css",
+      " M rdpms-system/frontend/src/pages/AuditLogs.tsx",
+      " M rdpms-system/frontend/src/pages/BackupManager.tsx",
+      " M rdpms-system/frontend/src/pages/Dashboard.tsx",
+      " M rdpms-system/frontend/src/pages/Forbidden.tsx",
+      " M rdpms-system/frontend/src/pages/Login.tsx",
+      " M rdpms-system/frontend/src/pages/NotFound.tsx",
+      " M rdpms-system/frontend/src/pages/Roles.tsx",
+      " M rdpms-system/frontend/src/pages/SystemLogs.tsx",
+      " M rdpms-system/frontend/src/pages/knowledge/ReagentLibrary.tsx",
+      " M rdpms-system/frontend/src/pages/knowledge/SampleLibrary.tsx",
+      " M rdpms-system/frontend/tailwind.config.js",
+      " M rdpms-system/frontend/tests/browser/authHelper.mjs",
+      " M rdpms-system/frontend/tests/browser/harness.mjs",
+      " M rdpms-system/frontend/tests/browser/rf03b.e2e.mjs",
+      "?? docs/port/evidence/ui-glass-after/",
+      "?? docs/port/evidence/ui-glass-before/",
+      "?? docs/port/evidence/ui-glass/",
+      "?? rdpms-system/frontend/tests/browser/glass-shots.mjs"
+    ]
+  },
+  "sourceHash": {
+    "backendSrc": "a673e4861883347eef3e5e945e02fd93",
+    "backendFiles": 56,
+    "frontendSrc": "74f15f7eef9fa8f03ca33e842dfd5be4",
+    "frontendFiles": 114
+  },
+  "testCodeHash": {
+    "browserTests": "468c5414910437c899c7f865d9bfb46a",
+    "browserTestFiles": 6
+  },
+  "configHash": {
+    "hash": "6ebb8e7b283a8094c6ea046fe6d4396c",
+    "files": [
+      "vite.config.ts",
+      "tsconfig.app.json",
+      "package.json",
+      "package.json"
+    ]
+  },
+  "buildArtifactHash": {
+    "dist": "f69e475b4eb7d7ababcfe1e74f915ce5",
+    "distFiles": 112,
+    "buildId": "2026-09-28T01-53-09-726Z-a5600f"
+  },
+  "runtime": {
+    "node": "v20.20.2",
+    "browser": "/home/ubuntu/.cache/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell",
+    "browserVersion": "chrome-headless-shell (build 1234)",
+    "frontendMode": "vite dev server（源码直出，未做生产构建）",
+    "frontendSourceHash": "74f15f7eef9fa8f03ca33e842dfd5be4"
+  },
+  "ports": {
+    "backend": 39423,
+    "frontend": 39143
+  },
+  "testDb": {
+    "database": "rdpms_test",
+    "directDatabase": "rdpms_test",
+    "host": "127.0.0.1",
+    "port": "5432"
+  },
+  "isolatedDirs": {
+    "tmpRoot": "/tmp/rdpms-browser-2026-09-28T01-53-09-726Z-a5600f-7PByCh",
+    "uploads": "/tmp/rdpms-browser-2026-09-28T01-53-09-726Z-a5600f-7PByCh/uploads",
+    "profile": "/tmp/rdpms-browser-2026-09-28T01-53-09-726Z-a5600f-7PByCh/chrome-profile"
+  },
+  "pids": {
+    "backend": 1468667,
+    "vite": 1468668
+  },
+  "buildId": "2026-09-28T01-53-09-726Z-a5600f",
+  "instanceId": "2026-09-28T01-53-09-726Z-a5600f",
+  "fixtures": {
+    "author": {
+      "username": "test_member",
+      "userId": "e1e42344-34b4-415d-9a5b-ae1284aac770"
+    },
+    "reviewer": {
+      "username": "test_manager",
+      "userId": "f9e7f2c7-f6f7-4976-8bcc-7d115184cd34"
+    },
+    "projects": {
+      "A": {
+        "id": "699d1855-d590-4307-9410-d294cc620f76",
+        "name": "RF03B-A-Z-a5600f"
+      },
+      "B": {
+        "id": "0bf33b93-eb61-4451-a191-9e9b32fc4ddb",
+        "name": "RF03B-B-Z-a5600f"
+      }
+    }
+  },
+  "resultSummary": {
+    "total": 2,
+    "pass": 1,
+    "fail": 1
+  },
+  "postRunHash": {
+    "backendSrc": "a673e4861883347eef3e5e945e02fd93",
+    "frontendSrc": "74f15f7eef9fa8f03ca33e842dfd5be4",
+    "dist": "f69e475b4eb7d7ababcfe1e74f915ce5",
+    "browserTests": "468c5414910437c899c7f865d9bfb46a"
+  }
+}

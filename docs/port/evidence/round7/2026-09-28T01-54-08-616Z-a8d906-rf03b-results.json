@@ -1,0 +1,44 @@
+{
+  "runId": "2026-09-28T01-54-08-616Z-a8d906",
+  "suite": "rf03b",
+  "fixtures": {
+    "author": {
+      "username": "test_member",
+      "userId": "e1e42344-34b4-415d-9a5b-ae1284aac770"
+    },
+    "reviewer": {
+      "username": "test_manager",
+      "userId": "f9e7f2c7-f6f7-4976-8bcc-7d115184cd34"
+    },
+    "projects": {
+      "A": {
+        "id": "90e48d1d-4436-44c4-a32e-cc5aceb8f8db",
+        "name": "RF03B-A-Z-a8d906"
+      },
+      "B": {
+        "id": "f6db92bc-4aa4-4138-86d3-b69e609d604e",
+        "name": "RF03B-B-Z-a8d906"
+      }
+    }
+  },
+  "summary": {
+    "total": 2,
+    "pass": 1,
+    "fail": 1
+  },
+  "results": [
+    {
+      "id": "B00",
+      "name": "夹具就绪：普通执行人为项目成员、复核人为项目经理，且服务端可核验",
+      "status": "PASS",
+      "detail": "author=e1e42344 reviewer=f9e7f2c7 projA=90e48d1d projB=f6db92bc member=true"
+    },
+    {
+      "id": "EXC",
+      "name": "用例执行中断",
+      "status": "FAIL",
+      "detail": "locator.fill: Timeout 8000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByPlaceholder('请输入用户名')\u001b[22m\n"
+    }
+  ],
+  "consoleErrors": []
+}

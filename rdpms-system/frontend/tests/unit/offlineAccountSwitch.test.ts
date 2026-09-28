@@ -158,6 +158,69 @@ test('A03-E2 A 的上行拒绝响应在切换账号后释放：B 拒绝区为空
   engine.__setSyncTransport();
 });
 
+test('A03-E4 登出与登录交叠：新主体不被登出尾段覆盖，上一账号的未同步内容按原主体留存', async () => {
+  await resetAll();
+  const pushed: Array<Record<string, unknown>> = [];
+  engine.__setSyncTransport({
+    init: async () => initResponse({ changes: {} }),
+    push: async (payload) => {
+      pushed.push(...(payload.changes as unknown as Array<Record<string, unknown>>));
+      return {
+        serverTime: '2026-09-28T00:00:00.000Z',
+        conflictCount: payload.changes.length,
+        // 全部拒绝：用于检验「被拒变更是否按发起时主体留存」而不是被丢弃
+        results: payload.changes.map((c) => ({
+          clientMutationId: c.clientMutationId, entity: c.entity, id: c.id, op: c.op, status: 'rejected' as const, reason: '合成拒绝',
+        })),
+      };
+    },
+  });
+
+  // A 已登录，且队列里有一条属于 A 的未同步变更
+  await engine.start(UID_A);
+  await idb.outboxPut({
+    clientMutationId: 'A-pending', entity: 'reports', op: 'upsert', id: 'A-report',
+    data: { content: 'A 的未同步内容' }, createdAt: '2026-09-27T00:00:00.000Z', userId: UID_A,
+  });
+
+  // 「登出 → 立刻登录」：登出的异步清理尾段与 B 的登录交叠（React 实际发生的时序）
+  const logoutPromise = engine.resetOnLogout();
+  await engine.start(UID_B);
+  await logoutPromise;
+
+  // B 自己的变更被拒绝时必须落在 B 名下（证明 B 的主体没有被登出尾段清空）
+  engine.__setSyncTransport({
+    init: async () => initResponse({ changes: {} }),
+    push: async (payload) => ({
+      serverTime: '2026-09-28T00:00:00.000Z',
+      conflictCount: payload.changes.length,
+      results: payload.changes.map((c) => ({
+        clientMutationId: c.clientMutationId, entity: c.entity, id: c.id, op: c.op, status: 'rejected' as const, reason: '合成拒绝',
+      })),
+    }),
+  });
+  await engine.enqueueChange({
+    clientMutationId: 'B-change', entity: 'reports', op: 'upsert', id: 'B-report', data: { content: 'B 的内容' },
+  });
+  await waitSyncIdle();
+
+  const bRows = await idb.deadLettersForUser(UID_B);
+  assert.equal(bRows.length, 1, 'B 的拒绝内容必须归属 B（主体被清空时会退化成直接丢弃）');
+  assert.equal(bRows[0].clientMutationId, 'B-change');
+  assert.equal(
+    pushed.some((c) => c.clientMutationId === 'A-pending'),
+    false,
+    'B 不得代发 A 的变更',
+  );
+  const aRows = await idb.deadLettersForUser(UID_A);
+  assert.equal(aRows.length, 1, 'A 的未同步内容必须按其主体留存');
+  assert.equal(aRows[0].clientMutationId, 'A-pending');
+  assert.equal(aRows[0].payload?.content, 'A 的未同步内容');
+
+  engine.stop();
+  engine.__setSyncTransport();
+});
+
 test('A03-E3 拒绝记录可按原 key + 原 payload + 原基线重试，成功后移出拒绝区', async () => {
   await resetAll();
   const pushed: Array<Record<string, unknown>> = [];

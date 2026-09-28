@@ -240,6 +240,9 @@ async function applyPull(res: SyncInitResponse, session: SyncSession): Promise<v
 
 export async function syncNow(): Promise<void> {
   if (state.syncing || !state.online) return;
+  // A03：没有绑定主体时**不得同步**——否则服务端拒绝的回包会被当成「无主变更」直接丢弃，
+  // 用户未提交的内容就被静默销毁了（F10 浏览器验收实测到的路径）
+  if (!currentUserId) return;
   set({ syncing: true, lastError: null });
   const deviceId = getDeviceId();
   // A03：本轮同步绑定「发起时的主体 + 会话代次」。之后任何异步回包、落盘、状态写入
@@ -317,6 +320,10 @@ export async function syncNow(): Promise<void> {
               record,
             ));
             nextRejections.push(record);
+          } else if (src) {
+            // 没有主体归属时**不得删除**待发送队列：宁可留待下轮同步，也不能静默销毁用户内容
+            // （正常情况下 syncNow 已在无主体时提前返回，这里是兜底）
+            set({ pending: (await idb.outboxAll()).length });
           } else {
             await idb.outboxDelete(r.clientMutationId);
           }
@@ -428,13 +435,18 @@ export async function start(userId?: string): Promise<void> {
   // A03：账号切换（即使未经过登出）同样必须作废在途同步，并解除上一会话遗留的「同步中」标志
   const switched = nextUserId !== currentUserId;
   currentUserId = nextUserId;
-  sessionGen += 1; // 新会话：使上一账号的在途同步整体作废
+  const myGen = ++sessionGen; // 新会话：使上一账号的在途同步整体作废
   if (started && !switched) return; // 同一账号重复调用：幂等，不重复挂监听
   if (started) set({ syncing: false });
   started = true;
   void hydrate();
   // F10：恢复本账户的持久拒绝区（刷新/重新登录后内容不丢）
   await restoreDeadLetters();
+  // A03：期间若又发生切换（或登出），本次启动的尾段不得再挂监听/触发同步
+  if (sessionGen !== myGen) return;
+  // A03：把上一账号残留在队列里的变更按原主体留存，绝不由本账号代发
+  await isolateForeignOutbox(nextUserId);
+  if (sessionGen !== myGen) return;
   if (!listenersAttached) {
     listenersAttached = true;
     window.addEventListener('online', onOnline);
@@ -501,13 +513,13 @@ export function stop(): void {
  * 该账户的持久拒绝区（重新登录后仍可恢复/重试），然后才清空队列。
  */
 export async function resetOnLogout(): Promise<void> {
-  stop();
+  // A03（浏览器验收实测的竞态）：状态切换必须在**任何 await 之前**同步完成。
+  // 否则「退出 → 立刻登录」时，登出的异步尾段会把新账号刚设好的主体覆盖成 null，
+  // 后续同步就成了无主同步 —— 服务端拒绝的回包会被当成无主变更丢弃（用户内容静默消失）。
   const uidAtLogout = currentUserId;
-  await preservePendingForUser(uidAtLogout);
-  // 注意：clearAll 不清空持久拒绝区（那是用户尚未取回的内容，重新登录同一账户需恢复）
-  await idb.clearAll(uidAtLogout); // A03：只清理当前主体的分片键
+  const genAtLogout = ++sessionGen; // A03：登出使在途请求与回包全部作废
+  stop();
   currentUserId = null;
-  sessionGen += 1; // A03：登出使在途请求与回包全部作废
   state = {
     online: isOnline(),
     syncing: false,
@@ -518,4 +530,36 @@ export async function resetOnLogout(): Promise<void> {
     rejections: [],
   };
   emit();
+
+  // 存储清理按**登出时的主体**执行，且只在会话未被新账号接管时进行
+  // （新会话已开始写入时，清空会误删它刚写入的数据）
+  if (sessionGen !== genAtLogout) return;
+  await preservePendingForUser(uidAtLogout);
+  if (sessionGen !== genAtLogout) return;
+  // 注意：clearAll 不清空持久拒绝区（那是用户尚未取回的内容，重新登录同一账户需恢复）
+  await idb.clearAll(uidAtLogout); // A03：只清理当前主体的分片键
+}
+
+/**
+ * A03：新会话开始时隔离队列中的**他人**变更——
+ * 「退出 → 立刻登录」可能让上一个账号的清理来不及执行，此时它的未同步行仍留在队列里。
+ * 这些行绝不能由新账号代发（会被当成新账号的变更），必须按**原主体**转入其持久拒绝区。
+ */
+async function isolateForeignOutbox(userId: string | null): Promise<void> {
+  const rows = await idb.outboxAll();
+  const foreign = rows.filter((r) => r.userId && r.userId !== userId);
+  for (const row of foreign) {
+    const record = buildDeadLetter({
+      userId: String(row.userId),
+      outbox: row,
+      projectId: (row.data?.projectId as string | undefined) ?? null,
+      reason: '账号切换时仍未同步（已按原主体留存，重新登录后可重试）',
+      code: 'ACCOUNT_SWITCHED',
+      now: new Date().toISOString(),
+    });
+    await idb.deadLetterMove(record, (existing) => mergeDeadLetter(
+      existing as DeadLetterRecord | undefined,
+      record,
+    ));
+  }
 }

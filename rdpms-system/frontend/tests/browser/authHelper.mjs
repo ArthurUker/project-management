@@ -156,6 +156,26 @@ export async function apiAs(page, path, token, { method = 'GET', body, allowFail
   return res;
 }
 
+/**
+ * 从 **Node 进程**直接调接口（不经过浏览器上下文）。
+ * 用途：浏览器正处于 `ctx.setOffline(true)` 时，仍需在后台改夹具（例如撤销成员资格），
+ * 否则页面内 fetch 会以 `Failed to fetch` 失败，把「离线场景」变成不可执行的测试。
+ */
+export async function apiFromNode(stack, path, token, { method = 'GET', body } = {}) {
+  const res = await fetch(`${stack.apiBase}${path}`, {
+    method,
+    headers: { Authorization: `Bearer ${token}`, ...(body ? { 'content-type': 'application/json' } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const text = await res.text().catch(() => '');
+  let parsed = null;
+  try { parsed = text ? JSON.parse(text) : null; } catch { parsed = { raw: text.slice(0, 200) }; }
+  if (res.status < 200 || res.status >= 300) {
+    throw new Error(`TEST-API-FAILED(node): ${method} ${path} → ${res.status} ${JSON.stringify(parsed)?.slice(0, 200)}`);
+  }
+  return { status: res.status, body: parsed };
+}
+
 /** 通过用户名解析用户 id（需要 users.view 权限的账号执行） */
 export async function findUserId(page, username) {
   const body = await apiOk(page, `/api/users?keyword=${encodeURIComponent(username)}&pageSize=50`);

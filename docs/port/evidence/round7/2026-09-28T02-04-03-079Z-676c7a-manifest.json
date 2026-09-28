@@ -1,0 +1,114 @@
+{
+  "runId": "2026-09-28T02-04-03-079Z-676c7a",
+  "suite": "f10 (真实浏览器离线拒绝区)",
+  "startedAt": "2026-09-28T02:04:03.079Z",
+  "finishedAt": "2026-09-28T02:04:49.828Z",
+  "git": {
+    "head": "7002e0e7f367bb548b4149ca25811a3547d713d3",
+    "headShort": "7002e0e",
+    "branch": "refactor/rdpms-guidance-v2",
+    "worktreeDirty": true,
+    "worktreeStatus": [
+      "M rdpms-system/frontend/index.html",
+      " M rdpms-system/frontend/src/components/ErrorBoundary.tsx",
+      " M rdpms-system/frontend/src/components/FullPageSpinner.tsx",
+      " M rdpms-system/frontend/src/components/Layout.tsx",
+      " M rdpms-system/frontend/src/components/OfflineBanner.tsx",
+      " M rdpms-system/frontend/src/components/SyncStatusIndicator.tsx",
+      " M rdpms-system/frontend/src/config/menu.ts",
+      " M rdpms-system/frontend/src/index.css",
+      " M rdpms-system/frontend/src/pages/AuditLogs.tsx",
+      " M rdpms-system/frontend/src/pages/BackupManager.tsx",
+      " M rdpms-system/frontend/src/pages/Dashboard.tsx",
+      " M rdpms-system/frontend/src/pages/Forbidden.tsx",
+      " M rdpms-system/frontend/src/pages/Login.tsx",
+      " M rdpms-system/frontend/src/pages/NotFound.tsx",
+      " M rdpms-system/frontend/src/pages/Roles.tsx",
+      " M rdpms-system/frontend/src/pages/SystemLogs.tsx",
+      " M rdpms-system/frontend/src/pages/knowledge/ReagentLibrary.tsx",
+      " M rdpms-system/frontend/src/pages/knowledge/SampleLibrary.tsx",
+      " M rdpms-system/frontend/tailwind.config.js",
+      "?? docs/port/evidence/round7/",
+      "?? docs/port/evidence/ui-glass-after/",
+      "?? docs/port/evidence/ui-glass-before/",
+      "?? docs/port/evidence/ui-glass/",
+      "?? rdpms-system/frontend/tests/browser/f10.e2e.mjs",
+      "?? rdpms-system/frontend/tests/browser/glass-shots.mjs",
+      "?? rdpms-system/frontend/tests/browser/menu-shots.mjs"
+    ]
+  },
+  "sourceHash": {
+    "backendSrc": "a673e4861883347eef3e5e945e02fd93",
+    "backendFiles": 56,
+    "frontendSrc": "cab8bdb570564f3935f190897fd09fa8",
+    "frontendFiles": 114
+  },
+  "testCodeHash": {
+    "browserTests": "91a8b82cb068705d69c45ca234e80f48",
+    "browserTestFiles": 8
+  },
+  "configHash": {
+    "hash": "6ebb8e7b283a8094c6ea046fe6d4396c",
+    "files": [
+      "vite.config.ts",
+      "tsconfig.app.json",
+      "package.json",
+      "package.json"
+    ]
+  },
+  "buildArtifactHash": {
+    "dist": "f69e475b4eb7d7ababcfe1e74f915ce5",
+    "distFiles": 112,
+    "buildId": "2026-09-28T02-04-03-079Z-676c7a"
+  },
+  "runtime": {
+    "node": "v20.20.2",
+    "browser": "/home/ubuntu/.cache/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell",
+    "browserVersion": "chrome-headless-shell (build 1234)",
+    "frontendMode": "vite dev server（源码直出，未做生产构建）",
+    "frontendSourceHash": "cab8bdb570564f3935f190897fd09fa8"
+  },
+  "ports": {
+    "backend": 38035,
+    "frontend": 43793
+  },
+  "testDb": {
+    "database": "rdpms_test",
+    "directDatabase": "rdpms_test",
+    "host": "127.0.0.1",
+    "port": "5432"
+  },
+  "isolatedDirs": {
+    "tmpRoot": "/tmp/rdpms-browser-2026-09-28T02-04-03-079Z-676c7a-3MKsVS",
+    "uploads": "/tmp/rdpms-browser-2026-09-28T02-04-03-079Z-676c7a-3MKsVS/uploads",
+    "profile": "/tmp/rdpms-browser-2026-09-28T02-04-03-079Z-676c7a-3MKsVS/chrome-profile"
+  },
+  "pids": {
+    "backend": 1475339,
+    "vite": 1475340
+  },
+  "buildId": "2026-09-28T02-04-03-079Z-676c7a",
+  "instanceId": "2026-09-28T02-04-03-079Z-676c7a",
+  "fixtures": {
+    "author": {
+      "username": "test_member",
+      "userId": "e1e42344-34b4-415d-9a5b-ae1284aac770"
+    },
+    "project": {
+      "id": "57358655-a17b-4e0a-8ffc-c64df9dfb54f",
+      "name": "F10-Z-676c7a"
+    },
+    "reportId": "5e9478c1-595f-4597-9f5b-76bace6bb304"
+  },
+  "resultSummary": {
+    "total": 2,
+    "pass": 1,
+    "fail": 1
+  },
+  "postRunHash": {
+    "backendSrc": "a673e4861883347eef3e5e945e02fd93",
+    "frontendSrc": "cab8bdb570564f3935f190897fd09fa8",
+    "dist": "f69e475b4eb7d7ababcfe1e74f915ce5",
+    "browserTests": "91a8b82cb068705d69c45ca234e80f48"
+  }
+}

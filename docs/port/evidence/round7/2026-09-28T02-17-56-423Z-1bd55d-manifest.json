@@ -1,0 +1,96 @@
+{
+  "runId": "2026-09-28T02-17-56-423Z-1bd55d",
+  "suite": "f10 (真实浏览器离线拒绝区)",
+  "startedAt": "2026-09-28T02:17:56.423Z",
+  "finishedAt": "2026-09-28T02:18:17.439Z",
+  "git": {
+    "head": "75372bf2c1cf106cb4643deb9c2c819b99bc5eae",
+    "headShort": "75372bf",
+    "branch": "refactor/rdpms-guidance-v2",
+    "worktreeDirty": true,
+    "worktreeStatus": [
+      "M rdpms-system/frontend/src/offline/engine.ts",
+      " M rdpms-system/frontend/tests/browser/authHelper.mjs",
+      " M rdpms-system/frontend/tests/unit/offlineAccountSwitch.test.ts",
+      "?? docs/port/evidence/round7/",
+      "?? docs/port/evidence/ui-glass-after/",
+      "?? docs/port/evidence/ui-glass-before/",
+      "?? docs/port/evidence/ui-glass/",
+      "?? rdpms-system/frontend/tests/browser/f10.e2e.mjs"
+    ]
+  },
+  "sourceHash": {
+    "backendSrc": "a673e4861883347eef3e5e945e02fd93",
+    "backendFiles": 56,
+    "frontendSrc": "04f78e9c2419f4a5609d68dd6533c3fa",
+    "frontendFiles": 114
+  },
+  "testCodeHash": {
+    "browserTests": "43a8d4da198abe59ed5e93400b438ee6",
+    "browserTestFiles": 8
+  },
+  "configHash": {
+    "hash": "6ebb8e7b283a8094c6ea046fe6d4396c",
+    "files": [
+      "vite.config.ts",
+      "tsconfig.app.json",
+      "package.json",
+      "package.json"
+    ]
+  },
+  "buildArtifactHash": {
+    "dist": "f69e475b4eb7d7ababcfe1e74f915ce5",
+    "distFiles": 112,
+    "buildId": "2026-09-28T02-17-56-423Z-1bd55d"
+  },
+  "runtime": {
+    "node": "v20.20.2",
+    "browser": "/home/ubuntu/.cache/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell",
+    "browserVersion": "chrome-headless-shell (build 1234)",
+    "frontendMode": "vite dev server（源码直出，未做生产构建）",
+    "frontendSourceHash": "04f78e9c2419f4a5609d68dd6533c3fa"
+  },
+  "ports": {
+    "backend": 35785,
+    "frontend": 37983
+  },
+  "testDb": {
+    "database": "rdpms_test",
+    "directDatabase": "rdpms_test",
+    "host": "127.0.0.1",
+    "port": "5432"
+  },
+  "isolatedDirs": {
+    "tmpRoot": "/tmp/rdpms-browser-2026-09-28T02-17-56-423Z-1bd55d-FiKfM5",
+    "uploads": "/tmp/rdpms-browser-2026-09-28T02-17-56-423Z-1bd55d-FiKfM5/uploads",
+    "profile": "/tmp/rdpms-browser-2026-09-28T02-17-56-423Z-1bd55d-FiKfM5/chrome-profile"
+  },
+  "pids": {
+    "backend": 1484993,
+    "vite": 1484999
+  },
+  "buildId": "2026-09-28T02-17-56-423Z-1bd55d",
+  "instanceId": "2026-09-28T02-17-56-423Z-1bd55d",
+  "fixtures": {
+    "author": {
+      "username": "test_member",
+      "userId": "e1e42344-34b4-415d-9a5b-ae1284aac770"
+    },
+    "project": {
+      "id": "0207b9f2-1801-4c90-9de5-9ad4b11b5883",
+      "name": "F10-Z-1bd55d"
+    },
+    "reportId": "44fa2e79-ed2c-430d-81ba-ef9b92033ab5"
+  },
+  "resultSummary": {
+    "total": 8,
+    "pass": 7,
+    "fail": 1
+  },
+  "postRunHash": {
+    "backendSrc": "a673e4861883347eef3e5e945e02fd93",
+    "frontendSrc": "04f78e9c2419f4a5609d68dd6533c3fa",
+    "dist": "f69e475b4eb7d7ababcfe1e74f915ce5",
+    "browserTests": "43a8d4da198abe59ed5e93400b438ee6"
+  }
+}
