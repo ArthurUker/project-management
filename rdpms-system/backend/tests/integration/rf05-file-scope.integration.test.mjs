@@ -278,3 +278,24 @@ test('RF05-I7 人工分类（超管）：未分类历史文件可被明确归类
   });
   assert.equal(forbiddenPatch.status, 403, '非超管不得调整作用域');
 });
+
+test('RF05-I8 软删可恢复（证据附件不得不可恢复）：仅超管可恢复，且恢复后仍按作用域授权', async () => {
+  const staged = await makeFile({ owner: AUTHOR, accessScope: 'PRIVATE_STAGING' });
+  const authorApp = buildApp(AUTHOR);
+  const superApp = buildApp(SUPER, [...FILES_PERMS], 'SUPER_ADMIN');
+
+  assert.equal((await authorApp.request(`/api/files/${staged.id}`, { method: 'DELETE' })).status, 200);
+  const gone = await prisma.fileObject.findUnique({ where: { id: staged.id } });
+  assert.ok(gone.deletedAt, '软删只写 deletedAt（字节与行都保留，便于恢复）');
+  assert.equal((await jsonGet(authorApp, `/api/files/${staged.id}/metadata`)).status, 404, '已删除文件不可见');
+
+  const nonSuperRestore = await authorApp.request(`/api/files/${staged.id}/restore`, { method: 'POST' });
+  assert.equal(nonSuperRestore.status, 403, '恢复是管理动作，非超管不得执行');
+
+  const restored = await superApp.request(`/api/files/${staged.id}/restore`, { method: 'POST' });
+  assert.equal(restored.status, 200, `超管恢复应成功，实际 ${restored.status}`);
+  const back = await prisma.fileObject.findUnique({ where: { id: staged.id } });
+  assert.equal(back.deletedAt, null);
+  assert.equal(back.accessScope, 'PRIVATE_STAGING', '恢复后作用域不变（仍只对上传人可见）');
+  assert.equal((await jsonGet(authorApp, `/api/files/${staged.id}/metadata`)).status, 200);
+});

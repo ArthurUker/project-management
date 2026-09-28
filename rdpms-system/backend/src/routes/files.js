@@ -310,6 +310,34 @@ files.delete('/:id', requirePermission('files.delete'), async (c) => {
   return c.json({ id: row.id });
 });
 
+// ── 恢复（撤回软删）：证据附件必须可恢复（05 §6）──────────────────────────────
+// 前端 fileAPI.restore 一直在调用本端点；此前后端未实现（404）。恢复本身是管理动作：
+// 仅超管且持 files.delete 可执行，且必须留审计（软删只隐藏，不物理删除）。
+files.post('/:id/restore', requirePermission('files.delete'), async (c) => {
+  const auth = getAuth(c);
+  if (auth.systemRole !== 'SUPER_ADMIN') {
+    throw forbidden('FILE_RESTORE_FORBIDDEN', '仅超级管理员可恢复已删除文件');
+  }
+  const id = c.req.param('id');
+  const row = await prisma.fileObject.findUnique({ where: { id } });
+  if (!row) throw notFound('FILE_NOT_FOUND', '文件不存在');
+  if (!row.deletedAt) return c.json(row);
+
+  const restored = await prisma.fileObject.update({ where: { id }, data: { deletedAt: null } });
+  await writeAudit(prisma, {
+    c,
+    actorId: auth.userId,
+    actorName: auth.user.displayName,
+    actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.RESTORE,
+    entityType: 'FILE',
+    entityId: id,
+    entityLabel: row.originalName,
+    metadata: decisionMeta(restored, { permissionCode: 'files.delete', restored: true, elevated: true }),
+  });
+  return c.json(restored);
+});
+
 // 聚合路由不支持批量写
 files.all('/', () => { throw methodNotAllowed(); });
 

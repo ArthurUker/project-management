@@ -1,0 +1,82 @@
+{
+  "runId": "2026-09-28T06-55-25-332Z-87ae38",
+  "suite": "rf05",
+  "summary": {
+    "total": 11,
+    "pass": 11,
+    "fail": 0
+  },
+  "results": [
+    {
+      "id": "RF05-B1",
+      "name": "上传成功且返回明确作用域（PRIVATE_STAGING）",
+      "status": "PASS",
+      "detail": "status=201 scope=PRIVATE_STAGING"
+    },
+    {
+      "id": "RF05-B2",
+      "name": "上传者本人可读元数据",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "id": "RF05-B3",
+      "name": "上传者本人可经前端使用的 /api/files/:id 下载",
+      "status": "PASS",
+      "detail": "status=200"
+    },
+    {
+      "id": "RF05-B4",
+      "name": "上传者列表包含自己的暂存文件",
+      "status": "PASS",
+      "detail": "列表条数=1"
+    },
+    {
+      "id": "RF05-B5",
+      "name": "他人读取元数据被拒（404 隐藏存在性，不是 403）",
+      "status": "PASS",
+      "detail": "status=404 code=FILE_NOT_FOUND"
+    },
+    {
+      "id": "RF05-B6",
+      "name": "他人下载被拒（前端实际路径同权）",
+      "status": "PASS",
+      "detail": "status=404"
+    },
+    {
+      "id": "RF05-B7",
+      "name": "他人列表中不含该文件",
+      "status": "PASS",
+      "detail": "列表条数=0"
+    },
+    {
+      "id": "RF05-B8",
+      "name": "法规文档列表可读（元数据回填走策略，不因附件被拒）",
+      "status": "PASS",
+      "detail": "status=200 rows=5"
+    },
+    {
+      "id": "RF05-B9",
+      "name": "原文读取状态符合策略（有原文 200 / 无原文 404，均不是 500）",
+      "status": "PASS",
+      "detail": "status=404"
+    },
+    {
+      "id": "RF05-B10",
+      "name": "法规文档页面正常渲染（策略未破坏既有限制）",
+      "status": "PASS",
+      "detail": "RD 研发项目管理系统超级管理员 R&D Project Management System 已同步 测试-超级管理员 超级管理员 登出 RD 超管控制台 研发项目管理系统 仪表盘 项目管理 项目注册管理 汇报管理 法规文档 知识库 任务管"
+    },
+    {
+      "id": "RF05-B11",
+      "name": "控制台错误（仅供排查，不参与判定）",
+      "status": "PASS",
+      "detail": "consoleErrors=3"
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "runId": "2026-09-28T06-59-39-482Z-62bba8",
+  "suite": "a03",
+  "fixtures": {
+    "authorId": "e1e42344-34b4-415d-9a5b-ae1284aac770",
+    "otherId": "f9e7f2c7-f6f7-4976-8bcc-7d115184cd34",
+    "projectId": "af952210-cc4d-4056-9b45-a95d179572ad"
+  },
+  "summary": {
+    "total": 7,
+    "pass": 7,
+    "fail": 0
+  },
+  "results": [
+    {
+      "id": "A03-B1",
+      "name": "A 登录后本地分片键按主体写入（游标/ACL 属于 A）",
+      "status": "PASS",
+      "detail": "A 键=3 个"
+    },
+    {
+      "id": "A03-B2",
+      "name": "A 登出后其分片键被清理（共享设备安全）",
+      "status": "PASS",
+      "detail": "剩余键=[\"rdpms.sync.acl:516505dd-e8ce-4cc5-8e94-39dfd7e1b66d\",\"rdpms.sync.conflicts:516505dd-e8ce-4cc5-8e94-39dfd7e1b66d\",\"rdpms.sync.cursor:516505dd-e8ce-4cc5-8e94-39"
+    },
+    {
+      "id": "A03-B3",
+      "name": "B 的键独立写入，且不含 A 的键",
+      "status": "PASS",
+      "detail": "B 键=3 个，A 残留=0 个"
+    },
+    {
+      "id": "A03-B4",
+      "name": "B 的持久拒绝区为空（没有继承 A 的草稿）",
+      "status": "PASS",
+      "detail": "拒绝区总条数=0"
+    },
+    {
+      "id": "A03-B5",
+      "name": "B 的本地镜像不含 A 项目的记录",
+      "status": "PASS",
+      "detail": "A 项目残留镜像=0 条"
+    },
+    {
+      "id": "A03-B6",
+      "name": "B 的同步面板无冲突/被拒记录",
+      "status": "PASS",
+      "detail": "已同步"
+    },
+    {
+      "id": "A03-B7",
+      "name": "验证过程未改动服务端成员关系（隔离靠本地分片而非撤销权限）",
+      "status": "PASS",
+      "detail": "author 仍为成员=true"
+    }
+  ]
+}

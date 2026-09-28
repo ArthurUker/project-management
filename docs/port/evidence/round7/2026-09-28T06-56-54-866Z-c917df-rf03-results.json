@@ -1,0 +1,60 @@
+{
+  "runId": "2026-09-28T06-56-54-866Z-c917df",
+  "suite": "rf03",
+  "summary": {
+    "total": 8,
+    "pass": 8,
+    "fail": 0
+  },
+  "results": [
+    {
+      "id": "B00",
+      "name": "登录后 /api/reports 可访问（超管权限出口修复生效）",
+      "status": "PASS",
+      "detail": "status=200 me.permissions=98"
+    },
+    {
+      "id": "B01-a",
+      "name": "第一天 DAILY 保存成功且 periodKey 为完整日期",
+      "status": "PASS",
+      "detail": "periodKey=2026-09-09 本账号命中 1 条（同日多项目属正常）"
+    },
+    {
+      "id": "B01-b",
+      "name": "第二天新建不覆盖第一天（两条独立记录）",
+      "status": "PASS",
+      "detail": "D1(id=bb86e727) D2(id=e055e30a) 本账号当日记录=2"
+    },
+    {
+      "id": "B01-c",
+      "name": "第一天内容未被第二天覆盖",
+      "status": "PASS",
+      "detail": "content 长度=113"
+    },
+    {
+      "id": "B02-a",
+      "name": "重新打开时正文回填（输入框实际值）",
+      "status": "PASS",
+      "detail": "textarea 数=3 首个长度=0 行可见=true"
+    },
+    {
+      "id": "B02-b",
+      "name": "再次保存不丢项且改动生效（含“已编辑”标记、原文前缀仍在）",
+      "status": "PASS",
+      "detail": "含原文=true 含已编辑=true 长度=129"
+    },
+    {
+      "id": "B03-a",
+      "name": "提交后服务端状态与提交版本实际改变",
+      "status": "PASS",
+      "detail": "status DRAFT→SUBMITTED, currentVersion 1→1, 版本记录=1"
+    },
+    {
+      "id": "B03-b",
+      "name": "刷新后仍显示已提交状态（非仅按钮变化）",
+      "status": "PASS",
+      "detail": "RD 研发项目管理系统超级管理员 R&D Project Management System 已同步 测试-超级管理员 超级管理员 登出 RD 超管控制台 研发项目管理系统 仪表盘 项目管理 项目注册管理 汇报管理 法规文档 知识库 任务管"
+    }
+  ],
+  "consoleErrors": []
+}

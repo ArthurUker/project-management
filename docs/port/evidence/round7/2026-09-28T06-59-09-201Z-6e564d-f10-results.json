@@ -1,0 +1,82 @@
+{
+  "runId": "2026-09-28T06-59-09-201Z-6e564d",
+  "suite": "f10",
+  "fixtures": {
+    "author": {
+      "username": "test_member",
+      "userId": "e1e42344-34b4-415d-9a5b-ae1284aac770"
+    },
+    "project": {
+      "id": "06be5e5c-6417-444e-ba71-5f2b95d5c15e",
+      "name": "F10-Z-6e564d"
+    },
+    "reportId": "18cd4d24-bf35-4343-a029-affdaba68421"
+  },
+  "summary": {
+    "total": 9,
+    "pass": 9,
+    "fail": 0
+  },
+  "results": [
+    {
+      "id": "F10-a",
+      "name": "夹具就绪：作者为项目成员，且草稿的作者就是执行人本人",
+      "status": "PASS",
+      "detail": "project=06be5e5c report=18cd4d24 status=DRAFT author 匹配=true"
+    },
+    {
+      "id": "F10-b",
+      "name": "离线保存：变更进入本地队列且未发起服务端写入",
+      "status": "PASS",
+      "detail": "outbox=1 服务端写请求=0 内容={\"projectReports\":[{\"plan\":\"F10-离线草稿-未提交\",\"docRefs\":[],\"next"
+    },
+    {
+      "id": "F10-c",
+      "name": "上行被服务端拒绝后：原文进入持久拒绝区，且同一事务已移出队列",
+      "status": "PASS",
+      "detail": "deadLetters=1 outbox=0 key=e1e42344-34b4-415d-9a5b-ae1284aac770:16d"
+    },
+    {
+      "id": "F10-d",
+      "name": "拒绝记录保留原始 payload / 主体归属 / 操作身份",
+      "status": "PASS",
+      "detail": "userId 匹配=true key 匹配=true 含原文=true"
+    },
+    {
+      "id": "F10-e",
+      "name": "服务端内容未被修改（拒绝 = 真的没写进去）",
+      "status": "PASS",
+      "detail": "服务端含离线原文=false"
+    },
+    {
+      "id": "F10-f",
+      "name": "同步面板列出被拒绝的变更（不再只有一行原因就「清除」）",
+      "status": "PASS",
+      "detail": "被拒绝（1） 清除 这些变更服务端没有接受，你的原文已保留（仅本人可见，刷新/重新登录后仍在）。可以查看、复制、重试或显式放弃。 汇"
+    },
+    {
+      "id": "F10-g",
+      "name": "展开后能看到**原文 JSON**（可在界面复制/修复）",
+      "status": "PASS",
+      "detail": "pre 含原文=true"
+    },
+    {
+      "id": "F10-h",
+      "name": "恢复权限后重试：变更真正落库，拒绝区与队列清空",
+      "status": "PASS",
+      "detail": "服务端含离线原文=true 拒绝区=0 队列=0"
+    },
+    {
+      "id": "F10-i",
+      "name": "控制台错误（仅供排查，不参与判定）",
+      "status": "PASS",
+      "detail": "consoleErrors=4"
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load reports: ApiError: 网络异常，请检查连接\n    at http://127.0.0.1:42583/src/api/http.ts:83:9\n    at async Axios.request (http://127.0.0.1:42583/node_modules/.vite/deps/axios.js?v=160cd5c1:2326:14)\n    at async request (http://127.0.0.1:42583/src/api/request.ts:4:15)\n    at async requestPaged (http://127.0.0.1:42583/src/api/request.ts:37:15)\n    at async Object.list (http://127.0.0.1:42583/src/api/endpoints/reports.ts:5:19)\n    at async loadReports (http://127.0.0.1:42583/src/pages/Reports.tsx:70:19)",
+    "Failed to load resource: net::ERR_INTERNET_DISCONNECTED",
+    "Failed to load reports: ApiError: 网络异常，请检查连接\n    at http://127.0.0.1:42583/src/api/http.ts:83:9\n    at async Axios.request (http://127.0.0.1:42583/node_modules/.vite/deps/axios.js?v=160cd5c1:2326:14)\n    at async request (http://127.0.0.1:42583/src/api/request.ts:4:15)\n    at async requestPaged (http://127.0.0.1:42583/src/api/request.ts:37:15)\n    at async Object.list (http://127.0.0.1:42583/src/api/endpoints/reports.ts:5:19)\n    at async loadReports (http://127.0.0.1:42583/src/pages/Reports.tsx:70:19)",
+    "Failed to load resource: net::ERR_INTERNET_DISCONNECTED"
+  ]
+}

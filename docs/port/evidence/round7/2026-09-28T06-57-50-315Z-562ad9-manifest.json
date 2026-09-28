@@ -1,0 +1,100 @@
+{
+  "runId": "2026-09-28T06-57-50-315Z-562ad9",
+  "suite": "rf03b (B04/B05/B06)",
+  "startedAt": "2026-09-28T06:57:50.316Z",
+  "finishedAt": "2026-09-28T06:59:06.568Z",
+  "git": {
+    "head": "830d3cf6b7280e2d9be036a4e04099e38ffe1ec5",
+    "headShort": "830d3cf",
+    "branch": "refactor/rdpms-guidance-v2",
+    "worktreeDirty": true,
+    "worktreeStatus": [
+      "M rdpms-system/backend/src/routes/files.js",
+      " M rdpms-system/backend/tests/integration/rf05-file-scope.integration.test.mjs",
+      "?? rdpms-system/frontend/tests/browser/rf05.e2e.mjs"
+    ]
+  },
+  "sourceHash": {
+    "backendSrc": "d90e5625b7a92ad452790af0c366d6cd",
+    "backendFiles": 58,
+    "frontendSrc": "dd2703e933a80a87e019b6be11099247",
+    "frontendFiles": 114
+  },
+  "testCodeHash": {
+    "browserTests": "2bcd00c9dd9c2964fc2816c3658a437c",
+    "browserTestFiles": 11
+  },
+  "configHash": {
+    "hash": "6ebb8e7b283a8094c6ea046fe6d4396c",
+    "files": [
+      "vite.config.ts",
+      "tsconfig.app.json",
+      "package.json",
+      "package.json"
+    ]
+  },
+  "buildArtifactHash": {
+    "dist": "9e0d0d8da84f6cef80afdfb443bccd03",
+    "distFiles": 116,
+    "buildId": "2026-09-28T06-57-50-315Z-562ad9"
+  },
+  "runtime": {
+    "node": "v20.20.2",
+    "browser": "/home/ubuntu/.cache/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell",
+    "browserVersion": "chrome-headless-shell (build 1234)",
+    "frontendMode": "vite dev server（源码直出，未做生产构建）",
+    "frontendSourceHash": "dd2703e933a80a87e019b6be11099247"
+  },
+  "ports": {
+    "backend": 44583,
+    "frontend": 38863
+  },
+  "testDb": {
+    "database": "rdpms_test",
+    "directDatabase": "rdpms_test",
+    "host": "127.0.0.1",
+    "port": "5432"
+  },
+  "isolatedDirs": {
+    "tmpRoot": "/tmp/rdpms-browser-2026-09-28T06-57-50-315Z-562ad9-O5HPqs",
+    "uploads": "/tmp/rdpms-browser-2026-09-28T06-57-50-315Z-562ad9-O5HPqs/uploads",
+    "profile": "/tmp/rdpms-browser-2026-09-28T06-57-50-315Z-562ad9-O5HPqs/chrome-profile"
+  },
+  "pids": {
+    "backend": 1614554,
+    "vite": 1614555
+  },
+  "buildId": "2026-09-28T06-57-50-315Z-562ad9",
+  "instanceId": "2026-09-28T06-57-50-315Z-562ad9",
+  "fixtures": {
+    "author": {
+      "username": "test_member",
+      "userId": "e1e42344-34b4-415d-9a5b-ae1284aac770"
+    },
+    "reviewer": {
+      "username": "test_manager",
+      "userId": "f9e7f2c7-f6f7-4976-8bcc-7d115184cd34"
+    },
+    "projects": {
+      "A": {
+        "id": "5c92c862-afe0-462b-b46b-407c21f964b5",
+        "name": "RF03B-A-Z-562ad9"
+      },
+      "B": {
+        "id": "8bdd5a2f-6754-4376-b615-ca3c1c47fea8",
+        "name": "RF03B-B-Z-562ad9"
+      }
+    }
+  },
+  "resultSummary": {
+    "total": 23,
+    "pass": 23,
+    "fail": 0
+  },
+  "postRunHash": {
+    "backendSrc": "d90e5625b7a92ad452790af0c366d6cd",
+    "frontendSrc": "dd2703e933a80a87e019b6be11099247",
+    "dist": "9e0d0d8da84f6cef80afdfb443bccd03",
+    "browserTests": "2bcd00c9dd9c2964fc2816c3658a437c"
+  }
+}

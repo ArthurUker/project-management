@@ -533,11 +533,16 @@ ok RF04-I5 同项目内的 phaseId 正常放行（回归）
 
 ---
 
-## 6. 下一批：RF05 文件作用域
+## 6. 下一批：RF05 文件作用域（**已完成**，见 `docs/port/rf05-delivery.md`）
 
 计划（06）：`FileAccessPolicy`、历史归属分类、staging 机制。
 验收：甲项目成员看不到乙文件列表/metadata/下载；上传者私有暂存隔离；import-source 也检查；
 历史无归属文件不自动公开。
+
+**完成情况（2026-09-28）**：`src/modules/files/fileAccessPolicy.ts`（纯规则）+ `fileCommands.ts`（绑定/分类/删除守卫）
++ 迁移 `20260928120000_file_access_scope`（expand + 可逆回填）+ `scripts/backfill-file-scope.mjs`（只读盘点/幂等落库）
++ 路由全入口接入（含前端实际使用的 `GET /api/files/:id`、超管分类 `PATCH /:id/scope`、软删恢复 `POST /:id/restore`）。
+证据：单元 11/11、真实隔离库 8/8、真实浏览器（真实登录会话）11/11。
 
 ---
 
@@ -623,7 +628,7 @@ ok RF04-I5 同项目内的 phaseId 正常放行（回归）
 | `platform/*` 迁移 TS | 部分 | 本轮只迁入业务模块；平台层（幂等/审计/上下文）仍为 JS + JSDoc |
 | milestone/monthlyProgress/projects 同步动作权限 | 部分 | 仍为项目能力判定 |
 | 演练环境 sync E2E（21 项） | NOT_RUN | 按约束不对 `rdpms_drill` 做测试写入 |
-| RF05 文件作用域 | 未开始 | 第一阶段最后一关 |
+| RF05 文件作用域 | **DONE（2026-09-28）** | `docs/port/rf05-delivery.md`：策略+迁移+staging+历史分类；单元 11/11、集成 8/8、浏览器 11/11 |
 
 ---
 
@@ -684,7 +689,7 @@ ok RF04-I5 同项目内的 phaseId 正常放行（回归）
 | 离线被拒变更的持久草稿（F10） | **未开始** | 仍为「从队列删除 + 内存提示」，未落 IndexedDB dead-letter；刷新后无法恢复 |
 | 专用测试库 sync E2E | **未运行** | `deploy/scripts/drill/sync-e2e.py` 尚未对 rdpms_test 起服执行 |
 | RF03 浏览器交互验收 | **未运行** | 不同日期新建/编辑回填/保存后提交/重新打开/多项目部分失败恢复 |
-| RF05 文件作用域 | **未开始** | 按调整后的顺序，排在上述缺口之后 |
+| RF05 文件作用域 | **DONE（2026-09-28）** | 见 §6 与 `docs/port/rf05-delivery.md`（本行保留历史状态，最新状态以 §6 为准） |
 
 ---
 
