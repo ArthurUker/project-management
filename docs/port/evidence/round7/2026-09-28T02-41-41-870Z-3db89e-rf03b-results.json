@@ -1,0 +1,174 @@
+{
+  "runId": "2026-09-28T02-41-41-870Z-3db89e",
+  "suite": "rf03b",
+  "fixtures": {
+    "author": {
+      "username": "test_member",
+      "userId": "e1e42344-34b4-415d-9a5b-ae1284aac770"
+    },
+    "reviewer": {
+      "username": "test_manager",
+      "userId": "f9e7f2c7-f6f7-4976-8bcc-7d115184cd34"
+    },
+    "projects": {
+      "A": {
+        "id": "d8b2bd65-a0ea-41cf-967c-f98145447751",
+        "name": "RF03B-A-Z-3db89e"
+      },
+      "B": {
+        "id": "c99a693b-c17a-4a8c-8245-f93d993ae8e1",
+        "name": "RF03B-B-Z-3db89e"
+      }
+    }
+  },
+  "summary": {
+    "total": 23,
+    "pass": 23,
+    "fail": 0
+  },
+  "results": [
+    {
+      "id": "B00",
+      "name": "夹具就绪：普通执行人为项目成员、复核人为项目经理，且服务端可核验",
+      "status": "PASS",
+      "detail": "author=e1e42344 reviewer=f9e7f2c7 projA=d8b2bd65 projB=c99a693b member=true"
+    },
+    {
+      "id": "B04-a",
+      "name": "作者保存日报：用保存响应里的记录 ID 与服务端核对（不靠列表推断）",
+      "status": "PASS",
+      "detail": "projectId=d8b2bd65 status=201 id=c679e0e0 key=0c738cf1"
+    },
+    {
+      "id": "B04-b",
+      "name": "同一 (项目,作者,类型,周期) 仅一条草稿，且内容为本次填写",
+      "status": "PASS",
+      "detail": "记录数=1 status=DRAFT 含原文=true"
+    },
+    {
+      "id": "B04-c",
+      "name": "作者提交后服务端状态为已提交（版本快照已写）",
+      "status": "PASS",
+      "detail": "status=SUBMITTED"
+    },
+    {
+      "id": "B04-d",
+      "name": "复核人（有目标项目权限）审核后服务端进入已审阅",
+      "status": "PASS",
+      "detail": "status=REVIEWED reviewer=f9e7f2c7 dialogs=[\"已标记为已阅\"]"
+    },
+    {
+      "id": "B04-e",
+      "name": "作者重开内容保留（输入框实际值）",
+      "status": "PASS",
+      "detail": "textarea 数=3"
+    },
+    {
+      "id": "B04-f",
+      "name": "已审阅状态在界面上只读（保存草稿不可用 + 状态提示）",
+      "status": "PASS",
+      "detail": "保存草稿不可用=true 提示命中=true"
+    },
+    {
+      "id": "B04-g",
+      "name": "绕过界面直接写入被服务端拒绝（提示不等于授权）",
+      "status": "PASS",
+      "detail": "status=409 code=INVALID_STATE"
+    },
+    {
+      "id": "B05-a",
+      "name": "故障注入确实发生（按 projectId 命中，而不是「第二个请求」）",
+      "status": "PASS",
+      "detail": "注入次数=1 目标项目=c99a693b"
+    },
+    {
+      "id": "B05-b",
+      "name": "部分成功：A 项目已落库（1 条）、B 项目未落库（0 条）",
+      "status": "PASS",
+      "detail": "A=1 B=0（旧套件用「>=1 条」掩盖了这一点）"
+    },
+    {
+      "id": "B05-c",
+      "name": "失败项目的正文仍保留在界面（未丢失）",
+      "status": "PASS",
+      "detail": "textarea 数=6"
+    },
+    {
+      "id": "B05-d",
+      "name": "原生提示明确告知「未全部成功」（捕获 dialog，不在 body 文本里搜）",
+      "status": "PASS",
+      "detail": "[\"部分操作未成功：\\nRF03B-B-Z-3db89e：网络异常，请检查连接\\n已成功的部分已保留，可重试。\"]"
+    },
+    {
+      "id": "B05-e",
+      "name": "重试后两个项目各落库一条（缺一不可，且集合恰好为 2）",
+      "status": "PASS",
+      "detail": "A=1(id=eff6e01f) B=1(id=028ecd2f)"
+    },
+    {
+      "id": "B05-f",
+      "name": "A 项目未被重复写入（同一记录 ID + updatedAt 未变）",
+      "status": "PASS",
+      "detail": "id 相同=true updatedAt 相同=true"
+    },
+    {
+      "id": "B05-g",
+      "name": "B 项目内容正确落库（含重试时提交的正文）",
+      "status": "PASS",
+      "detail": "含 TB=true"
+    },
+    {
+      "id": "B05-h",
+      "name": "重试复用各自的幂等键（A 回执重放、B 原 key 重发）",
+      "status": "PASS",
+      "detail": "A key ed73178a→ed73178a B key d0d0fba4→d0d0fba4"
+    },
+    {
+      "id": "B05-i",
+      "name": "A 项目没有产生重复业务审计（回执重放而非再次写入）",
+      "status": "PASS",
+      "detail": "该记录业务审计 1→1"
+    },
+    {
+      "id": "B06-a",
+      "name": "响应丢失发生在服务端已处理之后（服务端已是已提交）",
+      "status": "PASS",
+      "detail": "丢弃=1 status=SUBMITTED dialog=[\"部分操作未成功：\\n当前汇报（提交）：网络异常，请检查连接\\n已成功的部分已保留，可重试。\"]"
+    },
+    {
+      "id": "B06-b",
+      "name": "重试后服务端状态仍为已提交，且**版本数恰好 1**（不是 0 也不是 2）",
+      "status": "PASS",
+      "detail": "status=SUBMITTED versions=1（旧断言 <=1 连 0 版本也接受）"
+    },
+    {
+      "id": "B06-c",
+      "name": "提交重试复用同一幂等键（两次请求 key 相同；第一次响应被丢弃仍可从请求侧核对）",
+      "status": "PASS",
+      "detail": "keys=[\"c6cc0329\",\"c6cc0329\"] 服务端响应=1 次"
+    },
+    {
+      "id": "B06-d",
+      "name": "未重复创建同日记录",
+      "status": "PASS",
+      "detail": "记录数=1"
+    },
+    {
+      "id": "B06-e",
+      "name": "创建/更新/提交各只产生一次业务审计，重试未新增任何审计（回执重放）",
+      "status": "PASS",
+      "detail": "create=1 update=1 submit=1 总审计 3→3"
+    },
+    {
+      "id": "B99",
+      "name": "控制台错误（仅供排查，不参与判定）",
+      "status": "PASS",
+      "detail": "consoleErrors=3"
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 409 (Conflict)",
+    "Failed to load resource: net::ERR_CONNECTION_FAILED",
+    "Failed to load resource: net::ERR_FAILED"
+  ]
+}

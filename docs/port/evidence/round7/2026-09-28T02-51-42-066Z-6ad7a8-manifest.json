@@ -1,0 +1,81 @@
+{
+  "runId": "2026-09-28T02-51-42-066Z-6ad7a8",
+  "suite": "a03 (账号切换本地数据隔离)",
+  "startedAt": "2026-09-28T02:51:42.066Z",
+  "finishedAt": "2026-09-28T02:52:00.338Z",
+  "git": {
+    "head": "e628b9311dcf99ad0f4910c90297c0c30e60584b",
+    "headShort": "e628b93",
+    "branch": "refactor/rdpms-guidance-v2",
+    "worktreeDirty": false,
+    "worktreeStatus": []
+  },
+  "sourceHash": {
+    "backendSrc": "6dafd57042c33ac066ba56bdebe8e944",
+    "backendFiles": 56,
+    "frontendSrc": "dd2703e933a80a87e019b6be11099247",
+    "frontendFiles": 114
+  },
+  "testCodeHash": {
+    "browserTests": "3b1b0102dc4b90b1ac1f2ba2a75e9967",
+    "browserTestFiles": 10
+  },
+  "configHash": {
+    "hash": "6ebb8e7b283a8094c6ea046fe6d4396c",
+    "files": [
+      "vite.config.ts",
+      "tsconfig.app.json",
+      "package.json",
+      "package.json"
+    ]
+  },
+  "buildArtifactHash": {
+    "dist": "336a95f4a8f454b639ef0fe29b09b9fc",
+    "distFiles": 112,
+    "buildId": "2026-09-28T02-51-42-066Z-6ad7a8"
+  },
+  "runtime": {
+    "node": "v20.20.2",
+    "browser": "/home/ubuntu/.cache/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell",
+    "browserVersion": "chrome-headless-shell (build 1234)",
+    "frontendMode": "vite dev server（源码直出，未做生产构建）",
+    "frontendSourceHash": "dd2703e933a80a87e019b6be11099247"
+  },
+  "ports": {
+    "backend": 38753,
+    "frontend": 35261
+  },
+  "testDb": {
+    "database": "rdpms_test",
+    "directDatabase": "rdpms_test",
+    "host": "127.0.0.1",
+    "port": "5432"
+  },
+  "isolatedDirs": {
+    "tmpRoot": "/tmp/rdpms-browser-2026-09-28T02-51-42-066Z-6ad7a8-SdXkZs",
+    "uploads": "/tmp/rdpms-browser-2026-09-28T02-51-42-066Z-6ad7a8-SdXkZs/uploads",
+    "profile": "/tmp/rdpms-browser-2026-09-28T02-51-42-066Z-6ad7a8-SdXkZs/chrome-profile"
+  },
+  "pids": {
+    "backend": 1506354,
+    "vite": 1506360
+  },
+  "buildId": "2026-09-28T02-51-42-066Z-6ad7a8",
+  "instanceId": "2026-09-28T02-51-42-066Z-6ad7a8",
+  "fixtures": {
+    "authorId": "e1e42344-34b4-415d-9a5b-ae1284aac770",
+    "otherId": "f9e7f2c7-f6f7-4976-8bcc-7d115184cd34",
+    "projectId": "4e877c3e-955a-4210-bb6d-70b4ac737116"
+  },
+  "resultSummary": {
+    "total": 7,
+    "pass": 7,
+    "fail": 0
+  },
+  "postRunHash": {
+    "backendSrc": "6dafd57042c33ac066ba56bdebe8e944",
+    "frontendSrc": "dd2703e933a80a87e019b6be11099247",
+    "dist": "336a95f4a8f454b639ef0fe29b09b9fc",
+    "browserTests": "3b1b0102dc4b90b1ac1f2ba2a75e9967"
+  }
+}

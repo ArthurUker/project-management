@@ -1,0 +1,135 @@
+{
+  "runId": "2026-09-28T02-38-14-694Z-0d3444",
+  "manifest": {
+    "runId": "2026-09-28T02-38-14-694Z-0d3444",
+    "suite": "unknown",
+    "startedAt": "2026-09-28T02:38:14.699Z",
+    "finishedAt": null,
+    "git": {
+      "head": "81a9c422eb72fd6343b8e43ba11e8d840596b538",
+      "headShort": "81a9c42",
+      "branch": "refactor/rdpms-guidance-v2",
+      "worktreeDirty": true,
+      "worktreeStatus": [
+        "M rdpms-system/frontend/tests/browser/rf03.e2e.mjs",
+        "?? docs/port/evidence/round7/2026-09-28T02-37-03-237Z-18b510-01-project-picker.json",
+        "?? docs/port/evidence/round7/2026-09-28T02-37-03-237Z-18b510-01-project-picker.png",
+        "?? docs/port/evidence/round7/2026-09-28T02-37-03-237Z-18b510-02-b01-d1-filled.json",
+        "?? docs/port/evidence/round7/2026-09-28T02-37-03-237Z-18b510-02-b01-d1-filled.png",
+        "?? docs/port/evidence/round7/2026-09-28T02-37-03-237Z-18b510-03-project-picker.json",
+        "?? docs/port/evidence/round7/2026-09-28T02-37-03-237Z-18b510-03-project-picker.png",
+        "?? docs/port/evidence/round7/2026-09-28T02-37-03-237Z-18b510-manifest.json",
+        "?? docs/port/evidence/round7/2026-09-28T02-37-03-237Z-18b510-rf03-results.json",
+        "?? docs/port/evidence/ui-glass-after/",
+        "?? docs/port/evidence/ui-glass-before/",
+        "?? docs/port/evidence/ui-glass/"
+      ]
+    },
+    "sourceHash": {
+      "backendSrc": "6dafd57042c33ac066ba56bdebe8e944",
+      "backendFiles": 56,
+      "frontendSrc": "dd2703e933a80a87e019b6be11099247",
+      "frontendFiles": 114
+    },
+    "testCodeHash": {
+      "browserTests": "94b677cf53b26a1212e3e3b75447e1e4",
+      "browserTestFiles": 10
+    },
+    "configHash": {
+      "hash": "6ebb8e7b283a8094c6ea046fe6d4396c",
+      "files": [
+        "vite.config.ts",
+        "tsconfig.app.json",
+        "package.json",
+        "package.json"
+      ]
+    },
+    "buildArtifactHash": {
+      "dist": "336a95f4a8f454b639ef0fe29b09b9fc",
+      "distFiles": 112,
+      "buildId": "2026-09-28T02-38-14-694Z-0d3444"
+    },
+    "runtime": {
+      "node": "v20.20.2",
+      "browser": "/home/ubuntu/.cache/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell",
+      "browserVersion": "chrome-headless-shell (build 1234)",
+      "frontendMode": "vite dev server（源码直出，未做生产构建）",
+      "frontendSourceHash": "dd2703e933a80a87e019b6be11099247"
+    },
+    "ports": {
+      "backend": 42487,
+      "frontend": 37695
+    },
+    "testDb": {
+      "database": "rdpms_test",
+      "directDatabase": "rdpms_test",
+      "host": "127.0.0.1",
+      "port": "5432"
+    },
+    "isolatedDirs": {
+      "tmpRoot": "/tmp/rdpms-browser-2026-09-28T02-38-14-694Z-0d3444-YSazPY",
+      "uploads": "/tmp/rdpms-browser-2026-09-28T02-38-14-694Z-0d3444-YSazPY/uploads",
+      "profile": "/tmp/rdpms-browser-2026-09-28T02-38-14-694Z-0d3444-YSazPY/chrome-profile"
+    },
+    "pids": {
+      "backend": 1497591,
+      "vite": 1497597
+    },
+    "buildId": "2026-09-28T02-38-14-694Z-0d3444",
+    "instanceId": "2026-09-28T02-38-14-694Z-0d3444",
+    "fixtures": null,
+    "resultSummary": null,
+    "postRunHash": null
+  },
+  "results": [
+    {
+      "id": "B00",
+      "name": "登录后 /api/reports 可访问（超管权限出口修复生效）",
+      "status": "PASS",
+      "detail": "status=200 me.permissions=98"
+    },
+    {
+      "id": "B01-a",
+      "name": "第一天 DAILY 保存成功且 periodKey 为完整日期",
+      "status": "PASS",
+      "detail": "periodKey=2026-09-18 本账号命中 2 条（同日多项目属正常）"
+    },
+    {
+      "id": "B01-b",
+      "name": "第二天新建不覆盖第一天（两条独立记录）",
+      "status": "PASS",
+      "detail": "D1(id=ae682720) D2(id=c50c00d6) 本账号当日记录=5"
+    },
+    {
+      "id": "B01-c",
+      "name": "第一天内容未被第二天覆盖",
+      "status": "PASS",
+      "detail": "content 长度=113"
+    },
+    {
+      "id": "B02-a",
+      "name": "重新打开时正文回填（输入框实际值）",
+      "status": "PASS",
+      "detail": "textarea 数=3 首个长度=0 行可见=true"
+    },
+    {
+      "id": "B02-b",
+      "name": "再次保存不丢项且改动生效（含“已编辑”标记、原文前缀仍在）",
+      "status": "PASS",
+      "detail": "含原文=true 含已编辑=true 长度=129"
+    },
+    {
+      "id": "B03-a",
+      "name": "提交后服务端状态与提交版本实际改变",
+      "status": "PASS",
+      "detail": "status DRAFT→SUBMITTED, currentVersion 1→1, 版本记录=1"
+    },
+    {
+      "id": "B03-b",
+      "name": "刷新后仍显示已提交状态（非仅按钮变化）",
+      "status": "PASS",
+      "detail": "RD 研发项目管理系统超级管理员 R&D Project Management System 已同步 测试-超级管理员 超级管理员 登出 RD 超管控制台 研发项目管理系统 仪表盘 项目管理 项目注册管理 汇报管理 法规文档 知识库 任务管"
+    }
+  ],
+  "consoleErrors": []
+}
