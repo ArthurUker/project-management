@@ -115,7 +115,7 @@ export function newRunId() {
   return `${new Date().toISOString().replace(/[:.]/g, '-')}-${crypto.randomBytes(3).toString('hex')}`;
 }
 
-export async function startStack({ uploadDirRoot } = {}) {
+export async function startStack({ uploadDirRoot, suite = 'unknown' } = {}) {
   const { env, masked } = assertTestEnv();
   const runId = newRunId();
   const startedAt = new Date().toISOString();
@@ -173,20 +173,40 @@ export async function startStack({ uploadDirRoot } = {}) {
   const src = hashTree(path.join(BACKEND_ROOT, 'src'));
   const dist = hashTree(path.join(BACKEND_ROOT, 'dist'));
   const feSrc = hashTree(path.join(FRONTEND_ROOT, 'src'));
+  // A10：清单必须同时记录**测试代码与配置**的内容哈希——
+  // 只记录业务源码时，无法证明「当次运行用的就是这份测试脚本」
+  const testsBrowser = hashTree(path.join(FRONTEND_ROOT, 'tests/browser'));
+  const configFiles = [
+    path.join(FRONTEND_ROOT, 'vite.config.ts'),
+    path.join(FRONTEND_ROOT, 'tsconfig.app.json'),
+    path.join(FRONTEND_ROOT, 'package.json'),
+    path.join(BACKEND_ROOT, 'package.json'),
+  ].filter((f) => fs.existsSync(f));
+  const configHash = crypto.createHash('sha256');
+  for (const f of configFiles) {
+    configHash.update(path.basename(f));
+    configHash.update(fs.readFileSync(f));
+  }
 
   const git = (args) => execFileSync('git', args, { cwd: REPO_ROOT, encoding: 'utf8' }).trim();
+  const gitStatus = git(['status', '--porcelain']);
 
   const manifest = {
     runId,
+    suite,
     startedAt,
     finishedAt: null,
     git: {
       head: git(['rev-parse', 'HEAD']),
       headShort: git(['rev-parse', '--short', 'HEAD']),
       branch: git(['rev-parse', '--abbrev-ref', 'HEAD']),
-      worktreeDirty: git(['status', '--porcelain']).length > 0,
+      worktreeDirty: gitStatus.length > 0,
+      // A10：脏工作区必须留痕——未提交改动会改变实际被执行的代码内容
+      worktreeStatus: gitStatus ? gitStatus.split('\n').slice(0, 40) : [],
     },
     sourceHash: { backendSrc: src.hash, backendFiles: src.files, frontendSrc: feSrc.hash, frontendFiles: feSrc.files },
+    testCodeHash: { browserTests: testsBrowser.hash, browserTestFiles: testsBrowser.files },
+    configHash: { hash: configHash.digest('hex').slice(0, 32), files: configFiles.map((f) => path.basename(f)) },
     buildArtifactHash: { dist: dist.hash, distFiles: dist.files, buildId },
     runtime: {
       node: process.version,
@@ -201,19 +221,44 @@ export async function startStack({ uploadDirRoot } = {}) {
     pids,
     buildId,
     instanceId: runId,
+    /** A10：本轮使用的合成夹具（账号 / 项目）与结果摘要，由 suite 写入 */
+    fixtures: null,
+    resultSummary: null,
+    postRunHash: null,
   };
 
   return {
     runId, masked, testEnv: env, manifest, logs, tmpRoot,
     apiBase: `http://127.0.0.1:${frontendPort}`,
     backendPort, frontendPort, profile,
+    /**
+     * 写出/改写运行清单。开始与结束各写一次：
+     * 结束那次必须带 finishedAt、postRunHash（运行后重新计算的内容哈希）与结果摘要，
+     * 并且**若运行前后源码哈希不同，本次运行不得作为正式证据**（由调用方断言）。
+     */
+    saveManifest: (outDir, extra = {}) => {
+      fs.mkdirSync(outDir, { recursive: true });
+      if (extra.finished !== false) {
+        manifest.finishedAt = new Date().toISOString();
+        manifest.postRunHash = {
+          backendSrc: hashTree(path.join(BACKEND_ROOT, 'src')).hash,
+          frontendSrc: hashTree(path.join(FRONTEND_ROOT, 'src')).hash,
+          dist: hashTree(path.join(BACKEND_ROOT, 'dist')).hash,
+          browserTests: hashTree(path.join(FRONTEND_ROOT, 'tests/browser')).hash,
+        };
+      }
+      Object.assign(manifest, extra.fields ?? {});
+      const target = path.join(outDir, `${runId}-manifest.json`);
+      fs.writeFileSync(target, `${JSON.stringify(manifest, null, 2)}\n`);
+      return target;
+    },
     /** 结束：只终止本次启动的进程 */
     stop: async () => {
       for (const child of [backend, vite]) {
         if (!child.killed) child.kill('SIGTERM');
       }
       await new Promise((r) => setTimeout(r, 900));
-      manifest.finishedAt = new Date().toISOString();
+      manifest.finishedAt = manifest.finishedAt ?? new Date().toISOString();
     },
   };
 }
