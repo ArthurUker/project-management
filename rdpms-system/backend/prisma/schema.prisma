@@ -1428,6 +1428,19 @@ model FileObject {
   uploadedById String?             @map("uploaded_by_id")
   metadata     Json?               @map("metadata") @db.JsonB // 图片宽高、PDF 页数等
 
+  // ── RF05 / F11：资源归属与作用域（唯一授权依据，见 modules/files/fileAccessPolicy.ts）──
+  /// 默认 PRIVATE_STAGING：上传后仅上传人可见，绑定到业务实体后才按项目/共享库授权
+  accessScope          FileAccessScope @default(PRIVATE_STAGING) @map("access_scope")
+  /// 个人暂存归属人（默认 = 上传者；历史记录可为空 → 未分类，需人工分类）
+  ownerUserId          String?         @map("owner_user_id")
+  /// PROJECT 作用域的项目归属（为空的历史 PROJECT 记录按私有处理）
+  ownerProjectId       String?         @map("owner_project_id")
+  /// SHARED_LIBRARY 的读权限码（如 regulatory_documents.view）；为空 = 未声明共享规则（不共享）
+  sharedReadPermission String?         @map("shared_read_permission") @db.VarChar(64)
+  /// 作用域被显式判定（回填或人工分类）的时间；为空表示尚未分类
+  classifiedAt         DateTime?       @map("classified_at") @db.Timestamptz(3)
+  classifiedById       String?         @map("classified_by_id")
+
   deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3) // 逻辑删除，物理清理由独立任务处理
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
@@ -1439,7 +1452,17 @@ model FileObject {
   @@index([uploadedById])
   @@index([checksum])
   @@index([scanStatus])
+  @@index([accessScope, ownerProjectId])
+  @@index([accessScope, ownerUserId])
   @@map("file_objects")
+}
+
+/// RF05：文件访问作用域（唯一授权依据；不能因存在任意附件关系而自动授权）
+enum FileAccessScope {
+  PRIVATE_STAGING
+  PROJECT
+  SHARED_LIBRARY
+  PUBLIC
 }
 
 model Attachment {

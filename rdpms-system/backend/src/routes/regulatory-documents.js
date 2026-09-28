@@ -5,6 +5,9 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { SEED_REGULATORY_DOCUMENTS } from '../data/regulatoryDocumentsSeed.js';
 import { putObject, safeStoragePath } from '../kernel/storage.js';
+import { forbidden, notFound } from '../kernel/http.js';
+import { decideFileAccess, FILE_ACTION, FILE_SCOPE } from '../modules/files/fileAccessPolicy.js';
+import { applyBindToFile, resolveBindTarget } from '../modules/files/fileCommands.js';
 
 const regulatoryDocuments = new Hono();
 const STORAGE_DIR = path.resolve(process.cwd(), 'uploads', 'regulatory-documents');
@@ -97,7 +100,22 @@ async function findOriginalFile(documentId) {
 // 因此不能写进 Prisma `include`（会抛 PrismaClientValidationError → 500）；必须显式按 entityType/entityId 查后回填。
 const ORIGINAL_LABEL = 'original';
 
-async function loadOriginalFiles(documentIds) {
+/** RF05：策略层需要的调用方主体（权限 + 角色） */
+function actorFrom(c) {
+  const auth = c.get('auth') ?? {};
+  return {
+    userId: auth.userId,
+    systemRole: auth.systemRole,
+    permissions: auth.permissions ?? [],
+  };
+}
+
+/**
+ * 原文附件元数据（list/detail 回填）。
+ * RF05：附件元数据同样走 FileAccessPolicy —— 拿不到读权限的附件按「无原文」呈现，
+ * 不因为「有一条附件关系」就把文件名/ID 暴露出去。
+ */
+async function loadOriginalFiles(documentIds, actor = null) {
   const ids = (Array.isArray(documentIds) ? documentIds : [documentIds]).filter(Boolean);
   const map = new Map();
   if (ids.length === 0) return map;
@@ -109,12 +127,16 @@ async function loadOriginalFiles(documentIds) {
       label: ORIGINAL_LABEL,
       deletedAt: null,
     },
-    include: { file: { select: { id: true, originalName: true } } },
+    include: { file: { select: { id: true, originalName: true, accessScope: true, ownerUserId: true, ownerProjectId: true, sharedReadPermission: true, uploadedById: true, classifiedAt: true, deletedAt: true } } },
     orderBy: { createdAt: 'desc' },
   });
 
   for (const row of rows) {
     if (map.has(row.entityId)) continue; // 历史重复附件只取最新一条
+    if (actor && row.file) {
+      const decision = decideFileAccess(FILE_ACTION.METADATA, actor, row.file, {});
+      if (!decision.allow) continue; // 无权读取 → 视为无原文（不泄露文件名）
+    }
     map.set(row.entityId, {
       originalFileId: row.file?.id ?? null,
       fileName: row.file?.originalName ?? null,
@@ -123,8 +145,8 @@ async function loadOriginalFiles(documentIds) {
   return map;
 }
 
-async function loadOriginalFile(documentId) {
-  return (await loadOriginalFiles([documentId])).get(documentId) ?? null;
+async function loadOriginalFile(documentId, actor = null) {
+  return (await loadOriginalFiles([documentId], actor)).get(documentId) ?? null;
 }
 
 function mapOriginal(doc, original = null) {
@@ -143,9 +165,20 @@ async function clearOriginalAttachment(documentId) {
   });
 }
 
-async function linkOriginalFile(documentId, fileId, userId) {
+/**
+ * 绑定原文（RF05「暂存 → 共享库」的显式命令）：
+ *   1. 文件必须存在且未删除；
+ *   2. 仅**上传人**（或超管）可以把自己的暂存文件绑定到法规原文；
+ *   3. 绑定成功后写入明确归属：SHARED_LIBRARY + regulatory_documents.view。
+ */
+async function linkOriginalFile(documentId, fileId, userId, actor = null) {
   const file = await prisma.fileObject.findFirst({ where: { id: fileId, deletedAt: null } });
   if (!file) return null;
+  const bindingActor = actor ?? { userId, systemRole: 'MEMBER', permissions: [] };
+  const decision = decideFileAccess(FILE_ACTION.BIND, bindingActor, file, {});
+  if (!decision.allow) {
+    throw forbidden('FILE_BIND_FORBIDDEN', decision.reason);
+  }
   await clearOriginalAttachment(documentId);
   await prisma.attachment.create({
     data: {
@@ -156,6 +189,8 @@ async function linkOriginalFile(documentId, fileId, userId) {
       uploadedById: userId || null,
     },
   });
+  const resolution = await resolveBindTarget(prisma, 'REGULATORY_DOCUMENT', documentId);
+  await applyBindToFile(prisma, file.id, resolution, userId || null);
   return file.id;
 }
 
@@ -202,7 +237,7 @@ regulatoryDocuments.get('/', requirePermission('regulatory_documents.view'), asy
     }),
   ]);
 
-  const originals = await loadOriginalFiles(list.map((doc) => doc.id));
+  const originals = await loadOriginalFiles(list.map((doc) => doc.id), actorFrom(c));
 
   return c.json({
     list: list.map((doc) => mapOriginal(doc, originals.get(doc.id) ?? null)),
@@ -225,7 +260,7 @@ regulatoryDocuments.get('/:id', requirePermission('regulatory_documents.view'), 
     return c.json({ error: '法规文件不存在' }, 404);
   }
 
-  return c.json(mapOriginal(item, await loadOriginalFile(id)));
+  return c.json(mapOriginal(item, await loadOriginalFile(id, actorFrom(c))));
 });
 
 regulatoryDocuments.post('/', requirePermission('regulatory_documents.create'), async (c) => {
@@ -289,7 +324,7 @@ regulatoryDocuments.put('/:id', requirePermission('regulatory_documents.update')
     if (body.originalFileId === null) {
       await clearOriginalAttachment(id);
     } else {
-      const linked = await linkOriginalFile(id, body.originalFileId, getAuth(c).userId);
+      const linked = await linkOriginalFile(id, body.originalFileId, getAuth(c).userId, actorFrom(c));
       if (!linked) {
         return c.json({ error: '原文文件不存在' }, 400);
       }
@@ -313,7 +348,7 @@ regulatoryDocuments.put('/:id', requirePermission('regulatory_documents.update')
   });
 
   const fresh = await prisma.regulatoryDocument.findUnique({ where: { id } });
-  return c.json(mapOriginal(fresh, await loadOriginalFile(id)));
+  return c.json(mapOriginal(fresh, await loadOriginalFile(id, actorFrom(c))));
 });
 
 regulatoryDocuments.delete('/:id', requirePermission('regulatory_documents.delete'), async (c) => {
@@ -394,10 +429,10 @@ regulatoryDocuments.post('/import', async (c) => {
     uploadedById: getAuth(c).userId,
     folder: 'regulatory-documents',
   });
-  await linkOriginalFile(item.id, fileObject.id, getAuth(c).userId);
+  await linkOriginalFile(item.id, fileObject.id, getAuth(c).userId, actorFrom(c));
 
   const fresh = await prisma.regulatoryDocument.findUnique({ where: { id: item.id } });
-  return c.json(mapOriginal(fresh, await loadOriginalFile(item.id)), 201);
+  return c.json(mapOriginal(fresh, await loadOriginalFile(item.id, actorFrom(c))), 201);
 });
 
 regulatoryDocuments.post('/seed', requirePermission('regulatory_documents.create'), async (c) => {
@@ -478,10 +513,10 @@ regulatoryDocuments.post('/:id/original-file', async (c) => {
     uploadedById: getAuth(c).userId,
     folder: 'regulatory-documents',
   });
-  await linkOriginalFile(id, fileObject.id, getAuth(c).userId);
+  await linkOriginalFile(id, fileObject.id, getAuth(c).userId, actorFrom(c));
 
   const fresh = await prisma.regulatoryDocument.findUnique({ where: { id } });
-  return c.json(mapOriginal(fresh, await loadOriginalFile(id)));
+  return c.json(mapOriginal(fresh, await loadOriginalFile(id, actorFrom(c))));
 });
 
 regulatoryDocuments.get('/:id/original-file', async (c) => {
@@ -504,6 +539,12 @@ regulatoryDocuments.get('/:id/original-file', async (c) => {
   });
 
   if (att?.file && !att.file.deletedAt) {
+    // RF05「import-source 也检查」：来源文件读取与其它入口同权（共享库读权限不足 → 403，未声明规则 → 404）
+    const decision = decideFileAccess(FILE_ACTION.IMPORT_SOURCE, actorFrom(c), att.file, {});
+    if (!decision.allow) {
+      if (decision.code === 'FILE_NOT_FOUND') throw notFound('FILE_NOT_FOUND', '文件不存在');
+      throw forbidden('FILE_FORBIDDEN', decision.reason);
+    }
     try {
       const buf = await fs.readFile(safeStoragePath(att.file.storageKey));
       c.header('Content-Type', att.file.mimeType || guessMimeByFileName(att.file.originalName));
@@ -514,6 +555,9 @@ regulatoryDocuments.get('/:id/original-file', async (c) => {
     }
   }
 
+  // legacy 回退：早期直接落磁盘、没有 FileObject 归属的原文（仍有 regulatory_documents.view 把关）。
+  // 这些文件无法推导项目归属，属于「历史无归属」——只允许持法规查看权限的用户经本路由读取，
+  // 待其被重新导入并绑定后即转入正常作用域流程。
   const found = await findOriginalFile(id);
   if (!found) {
     return c.json({ error: '未找到原始文件' }, 404);

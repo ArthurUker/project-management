@@ -34,16 +34,25 @@ export async function putObject(prisma, { buffer, originalName, mimeType, upload
   await fsp.mkdir(path.dirname(full), { recursive: true });
   await fsp.writeFile(full, buffer);
 
-  return prisma.fileObject.create({
-    data: {
-      storageKey,
-      provider: 'LOCAL',
-      originalName,
-      mimeType: mimeType || 'application/octet-stream',
-      sizeBytes: buffer.length,
-      checksum,
-      // scanStatus 默认 SKIPPED：未配置扫描时不做任何安全承诺
-      uploadedById: uploadedById || null,
-    },
-  });
+  try {
+    return await prisma.fileObject.create({
+      data: {
+        storageKey,
+        provider: 'LOCAL',
+        originalName,
+        mimeType: mimeType || 'application/octet-stream',
+        sizeBytes: buffer.length,
+        checksum,
+        // scanStatus 默认 SKIPPED：未配置扫描时不做任何安全承诺
+        uploadedById: uploadedById || null,
+        // RF05：写入即私有暂存（仅上传人可见），绑定业务实体后才按项目/共享库授权
+        accessScope: 'PRIVATE_STAGING',
+        ownerUserId: uploadedById || null,
+      },
+    });
+  } catch (err) {
+    // 元数据落库失败：清理刚写入的孤儿文件（05 §6「失败清理孤儿」）
+    await fsp.rm(full, { force: true }).catch(() => {});
+    throw err;
+  }
 }
