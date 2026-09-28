@@ -50,6 +50,8 @@ for (const file of files) {
     '--tsconfig=tsconfig.app.json',
     // vite 注入的 import.meta.env 在 node 下不存在；置空以让 config/env.ts 走默认值
     '--define:import.meta.env={}',
+    // 用例可能间接引入 CJS 依赖（如 axios→form-data 的动态 require）；ESM 产物需要 require 垫片
+    '--banner:js=import { createRequire as __esbuildCreateRequire } from "node:module"; const require = __esbuildCreateRequire(import.meta.url);',
     `--outfile=${out}`,
     '--log-level=warning',
   ], { cwd: ROOT, stdio: 'inherit' });

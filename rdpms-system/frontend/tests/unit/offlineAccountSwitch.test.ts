@@ -25,7 +25,7 @@ import { idb } from '../../src/offline/idb';
   clearInterval() {},
   clearTimeout() {},
 };
-(globalThis as unknown as { navigator: unknown }).navigator = { onLine: true };
+(globalThis as unknown as { navigator: unknown }).navigator = { onLine: true, userAgent: 'node-test', platform: 'node' };
 
 const engine = await import('../../src/offline/engine');
 
@@ -100,7 +100,8 @@ test('A03-E1 A 的拉取响应在切换账号后释放：B 的镜像/游标/ACL/
   const records = await idb.recordsAll();
   assert.equal(records.filter((r) => r.id === 'A-report').length, 0, 'A 的镜像数据不得写入共享镜像');
   assert.equal(records.filter((r) => r.id === 'B-report').length, 1, 'B 自己的数据必须正常镜像');
-  assert.equal(await idb.kvGet('rdpms.sync.conflicts:user-B'), undefined, 'B 不得继承冲突记录');
+  const conflictsB = await idb.kvGet<unknown[]>('rdpms.sync.conflicts:user-B');
+  assert.ok(!conflictsB || conflictsB.length === 0, 'B 不得继承 A 的冲突记录');
 
   engine.stop();
   engine.__setSyncTransport();

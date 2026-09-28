@@ -113,6 +113,8 @@ let currentUserId: string | null = null;
 /** A03：会话代次——账号切换/登出即自增，使在途同步（含已发出的请求）整体作废 */
 let sessionGen = 0;
 let started = false;
+/** 事件监听与定时器是否已挂载（账号切换时不重复挂载） */
+let listenersAttached = false;
 
 function emit() {
   const snapshot = { ...state };
@@ -157,7 +159,8 @@ export function getDeviceId(): string {
 
 function deviceMeta() {
   if (typeof navigator === 'undefined') return { deviceLabel: undefined, platform: undefined };
-  return { deviceLabel: navigator.userAgent.slice(0, 120), platform: navigator.platform };
+  const ua = typeof navigator.userAgent === 'string' ? navigator.userAgent : '';
+  return { deviceLabel: ua ? ua.slice(0, 120) : undefined, platform: navigator.platform };
 }
 
 async function refreshPending() {
@@ -422,21 +425,24 @@ export async function hydrate(): Promise<void> {
 
 export async function start(userId?: string): Promise<void> {
   const nextUserId = userId ?? currentUserId;
-  // A03：账号切换（未经过登出）同样必须作废在途同步，并解除上一会话遗留的「同步中」标志
+  // A03：账号切换（即使未经过登出）同样必须作废在途同步，并解除上一会话遗留的「同步中」标志
   const switched = nextUserId !== currentUserId;
   currentUserId = nextUserId;
-  sessionGen += 1; // 新会话：使上一账号的在途同步作废
-  if (started && switched) set({ syncing: false });
-  if (started) return;
+  sessionGen += 1; // 新会话：使上一账号的在途同步整体作废
+  if (started && !switched) return; // 同一账号重复调用：幂等，不重复挂监听
+  if (started) set({ syncing: false });
   started = true;
   void hydrate();
   // F10：恢复本账户的持久拒绝区（刷新/重新登录后内容不丢）
   await restoreDeadLetters();
-  window.addEventListener('online', onOnline);
-  window.addEventListener('offline', onOffline);
-  timer = window.setInterval(() => {
-    if (state.online) void syncNow();
-  }, SYNC_INTERVAL_MS);
+  if (!listenersAttached) {
+    listenersAttached = true;
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+    timer = window.setInterval(() => {
+      if (state.online) void syncNow();
+    }, SYNC_INTERVAL_MS);
+  }
   if (state.online) void syncNow();
 }
 
@@ -477,8 +483,11 @@ async function preservePendingForUser(userId: string | null): Promise<number> {
 export function stop(): void {
   if (!started) return;
   started = false;
-  window.removeEventListener('online', onOnline);
-  window.removeEventListener('offline', onOffline);
+  if (listenersAttached) {
+    listenersAttached = false;
+    window.removeEventListener('online', onOnline);
+    window.removeEventListener('offline', onOffline);
+  }
   if (timer) {
     window.clearInterval(timer);
     timer = null;
