@@ -146,6 +146,37 @@ test('F10-I5 退出登录不清空持久拒绝区（重新登录同一账户可�
   assert.equal((await idb.deadLettersForUser(U_A)).length, 0, '用户明确清除后才消失');
 });
 
+test('A09-I6 同 key 出现不同内容：保留最早 payload，另存冲突内容（不得静默替换）', async () => {
+  await cleanup();
+  const first = buildDeadLetter({
+    userId: U_A, outbox: outboxRow('a09-1'), reason: '第一次：权限不足', now: '2026-09-17T00:00:00.000Z',
+  });
+  await idb.deadLetterMove(first, () => first);
+
+  const second = buildDeadLetter({
+    userId: U_A,
+    outbox: { ...outboxRow('a09-1'), data: { title: '第二次内容（新）', projectId: 'p1' } },
+    reason: '第二次：仍然权限不足',
+    now: '2026-09-17T01:00:00.000Z',
+  });
+  await idb.deadLetterMove(second, (existing) => mergeDeadLetter(
+    existing as DeadLetterRecord | undefined,
+    second,
+  ));
+
+  const stored = (await idb.deadLettersForUser(U_A))[0];
+  assert.deepEqual(stored.payload, { title: '离线改名', projectId: 'p1' }, '必须保留最早提交的 payload');
+  assert.deepEqual(
+    stored.payloadConflict?.payload,
+    { title: '第二次内容（新）', projectId: 'p1' },
+    '不同内容必须显式记录，供用户查看/合并',
+  );
+  assert.equal(stored.attempts, 2);
+  assert.equal(stored.firstRejectedAt, '2026-09-17T00:00:00.000Z', '首次拒绝时间必须保留');
+  assert.equal(stored.lastRejectedAt, '2026-09-17T01:00:00.000Z');
+  await idb.deadLettersClearForUser(U_A);
+});
+
 test('A06 clearAll 清理真实键名（cursor/acl/conflicts），且不清空持久拒绝区', async () => {
   await cleanup();
   // 模拟 engine 真实使用的键

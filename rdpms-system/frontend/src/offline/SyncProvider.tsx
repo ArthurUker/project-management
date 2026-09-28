@@ -13,6 +13,10 @@ interface SyncContextValue extends SyncState {
   resolveConflict: (clientMutationId: string, resolution: 'server' | 'local') => void;
   enqueueChange: typeof engine.enqueueChange;
   clearRejections: () => void;
+  /** A09：拒绝草稿的查看 / 重试 / 放弃（用户可发现、可操作） */
+  getRejectedPayload: typeof engine.getRejectedPayload;
+  retryRejection: typeof engine.retryRejection;
+  dropRejection: typeof engine.dropRejection;
 }
 
 const SyncContext = createContext<SyncContextValue | null>(null);
@@ -37,6 +41,9 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     resolveConflict: (id, resolution) => void engine.resolveConflict(id, resolution),
     enqueueChange: engine.enqueueChange,
     clearRejections: engine.clearRejections,
+    getRejectedPayload: engine.getRejectedPayload,
+    retryRejection: engine.retryRejection,
+    dropRejection: engine.dropRejection,
   };
 
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>;

@@ -2,12 +2,36 @@ import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { reportAPI, projectAPI } from '@/api';
 import { useAuth } from '../auth/useAuth';
+import { useHasPerm, PERMS } from '../auth/permissions';
 import { useSync } from '../offline/SyncProvider';
 import { newClientMutationId } from '../offline/engine';
+import {
+  clearPendingDraft,
+  loadPendingDraft,
+  mergePendingRecords,
+  partitionByProject,
+  savePendingDraft,
+  type PendingDraftRecord,
+} from '../offline/pendingDraft';
 import ReagentDailyReport from '../components/ReagentDailyReport';
 import DocReference from '../components/DocReference';
 import { periodKeyFor, reportTypeEnum } from '../shared/reportPeriod';
 import { createOperationKeyStore, operationSession, slotSignature } from '../shared/idempotency';
+
+/** A08：可编辑状态真源与后端 modules/access/writeGuards.ts 的 REPORT_EDITABLE_STATUSES 一致 */
+const EDITABLE_STATUSES = ['DRAFT', 'NEEDS_REVISION'];
+const STATUS_LABEL: Record<string, string> = {
+  DRAFT: '草稿',
+  SUBMITTED: '已提交（待审阅）',
+  REVIEWED: '已审阅',
+  NEEDS_REVISION: '需修改',
+};
+const STATUS_BANNER: Record<string, string> = {
+  DRAFT: 'border-gray-200 bg-gray-50 text-gray-700',
+  SUBMITTED: 'border-yellow-200 bg-yellow-50 text-yellow-800',
+  REVIEWED: 'border-green-200 bg-green-50 text-green-800',
+  NEEDS_REVISION: 'border-orange-200 bg-orange-50 text-orange-800',
+};
 
 // 汇报类型配置
 const REPORT_TYPES = [
@@ -86,6 +110,7 @@ export default function ReportEdit() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const canReviewPerm = useHasPerm(PERMS.REPORTS_REVIEW);
   
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -122,8 +147,25 @@ export default function ReportEdit() {
   // 并发基线（RF04）：编辑时读到的 updatedAt，随保存提交做原子版本校验
   const [loadedUpdatedAt, setLoadedUpdatedAt] = useState<string | null>(null);
 
-  // 幂等键按「一次逻辑操作」生成：重试复用，内容变化或用户再次发起则换新（RF02 复核）
+  // A08：服务端权威状态与归属（只读/编辑/撤回/审阅动作由它决定，不再依赖本地猜测）
+  const [serverStatus, setServerStatus] = useState<string | null>(null); // null = 新建
+  const [reportAuthorId, setReportAuthorId] = useState<string | null>(null);
+  const [reviewNote, setReviewNote] = useState<string | null>(null);
+
+  // A05：缺项目记录的本地留存提示（未提交内容必须显式告知，不能假装全部成功）
+  const [pendingNotice, setPendingNotice] = useState<string | null>(null);
+
+  // 幂等键按「一次逻辑操作」生成：重试复用，同资源内容变化只轮换该资源（RF02/A04 复核）
   const opKeysRef = useRef(createOperationKeyStore());
+
+  const isNew = !id || id === 'new';
+  const effectiveStatus = isNew ? 'DRAFT' : (serverStatus ?? '');
+  const isAuthor = !reportAuthorId || reportAuthorId === user?.id;
+  /** 可编辑 = 服务端状态可写 + 本人是作者；服务端仍会独立校验（提示不等于授权） */
+  const editable = isNew ? true : (EDITABLE_STATUSES.includes(effectiveStatus) && isAuthor);
+  const canRecall = !isNew && isAuthor && effectiveStatus === 'SUBMITTED';
+  const canOpenReview = !isNew && !isAuthor && effectiveStatus === 'SUBMITTED' && canReviewPerm;
+  const hasContentToSubmit = dailyTemplate === 'general' ? projectReports.length > 0 : reagentReports.length > 0;
   
   useEffect(() => {
     loadData();
@@ -153,6 +195,10 @@ export default function ReportEdit() {
         }
 
         setLoadedUpdatedAt(typeof reportData.updatedAt === 'string' ? reportData.updatedAt : null);
+        // A08：记录服务端权威状态 / 作者 / 批示，供只读与动作呈现使用
+        setServerStatus(typeof reportData.status === 'string' ? reportData.status : null);
+        setReportAuthorId(typeof reportData.authorId === 'string' ? reportData.authorId : null);
+        setReviewNote(typeof reportData.reviewNote === 'string' ? reportData.reviewNote : null);
 
         if (reportData.contentReadError) {
           // 解析失败必须显式告警，且禁止把空表当成原文保存（F04）
@@ -178,6 +224,16 @@ export default function ReportEdit() {
           setDailyTemplate('reagent');
           const firstDate = (content.reagentReports as any[])?.[0]?.date;
           if (firstDate) setDate(firstDate);
+        }
+      } else if (user?.id) {
+        // A05：恢复上次因「未关联项目」而未提交的记录——刷新/重开页面后正文仍可找回
+        const pending = await loadPendingDraft(user.id);
+        if (pending?.records?.length) {
+          setDailyTemplate('reagent');
+          setReagentReports((prev) => mergePendingRecords(prev as PendingDraftRecord[], pending.records) as any[]);
+          setPendingNotice(
+            `已恢复 ${pending.records.length} 条上次未关联项目的实验记录（尚未提交到服务端）：请关联项目后重新保存`,
+          );
         }
       }
     } catch (err) {
@@ -256,6 +312,17 @@ export default function ReportEdit() {
       alert('离线状态暂不支持新建汇报，请联网后再试。');
       return;
     }
+    // A08：服务端状态锁（提交/审阅后只读）——本地提示之外，服务端仍会独立拒绝越权写入
+    if (!editable) {
+      alert(
+        effectiveStatus === 'REVIEWED'
+          ? '该汇报已审阅，内容已锁定，不能再次保存。'
+          : effectiveStatus === 'SUBMITTED'
+            ? '该汇报已提交，内容已锁定；如需修改请先撤回。'
+            : '你不是该汇报的作者，不能编辑或提交。',
+      );
+      return;
+    }
 
     setSaving(true);
     const opKeys = opKeysRef.current;
@@ -267,6 +334,15 @@ export default function ReportEdit() {
       const content: any = dailyTemplate === 'general' ? { projectReports } : { reagentReports };
       const saved: { id: string; label: string }[] = [];
       const failures: string[] = [];
+
+      // A05：缺项目的记录在保存前显式列出并本地留存，绝不 `continue` 静默丢弃
+      const unbound = dailyTemplate === 'reagent'
+        ? partitionByProject(reagentReports as PendingDraftRecord[]).unbound
+        : [];
+      if (user?.id) await savePendingDraft(user.id, periodKey, unbound);
+      setPendingNotice(unbound.length
+        ? `以下 ${unbound.length} 条实验记录未关联项目，本次未提交（正文已本地留存，关联项目后可重新保存）`
+        : null);
 
       if (id && id !== 'new') {
         // 编辑已有汇报
@@ -282,14 +358,24 @@ export default function ReportEdit() {
           saved.push({ id: id as string, label: '当前汇报' });
         } else {
           try {
+            // 幂等身份 = 资源（该日报）+ 载荷（内容 + 周期 + 基线）：基线变化必须换新 key，
+            // 否则服务端会因 payloadHash 不一致而拒绝（RF02/A04）
+            const slot = `update:${id}`;
+            const key = opKeys.keyFor(
+              session,
+              slot,
+              slotSignature({ content, periodKey, reportType: typeEnum, expectedUpdatedAt: loadedUpdatedAt ?? null }),
+              `report:${id}`,
+            );
             const updated = await reportAPI.update(id as string, {
               content,
               reportType: typeEnum,
               periodKey,
               ...(loadedUpdatedAt ? { expectedUpdatedAt: loadedUpdatedAt } : {}),
-              // 同一次逻辑操作复用同一 key：失败重试由服务端回放，不会重复写入（RF02）
-              clientMutationId: opKeys.keyFor(session, `update:${id}`, slotSignature(content)),
+              clientMutationId: key,
             });
+            // 成功子步骤保留原 key：重试走服务端回执重放，不产生新写入
+            opKeys.markSucceeded(session, slot, key);
             saved.push({ id: updated.id, label: '当前汇报' });
           } catch (err) {
             failures.push(`当前汇报：${describeError(err)}`);
@@ -307,20 +393,19 @@ export default function ReportEdit() {
             });
           }
         } else {
-          const reportsByProject: Record<string, any[]> = {};
-          for (const r of reagentReports) {
-            const pid = r.projectId || 'NO_PROJECT';
-            if (!reportsByProject[pid]) reportsByProject[pid] = [];
-            reportsByProject[pid].push(r);
-          }
-          const entries = Object.entries(reportsByProject);
-          if (entries.length === 1 && entries[0][0] === 'NO_PROJECT') {
+          const { bound } = partitionByProject(reagentReports as PendingDraftRecord[]);
+          if (bound.length === 0) {
             alert('请为试验记录关联项目后再提交');
             setSaving(false);
             return;
           }
-          for (const [pid, arr] of entries) {
-            if (pid === 'NO_PROJECT') continue;
+          const reportsByProject: Record<string, any[]> = {};
+          for (const r of bound) {
+            const pid = String(r.projectId);
+            if (!reportsByProject[pid]) reportsByProject[pid] = [];
+            reportsByProject[pid].push(r);
+          }
+          for (const [pid, arr] of Object.entries(reportsByProject)) {
             items.push({
               projectId: pid,
               content: { reagentReports: arr },
@@ -331,14 +416,18 @@ export default function ReportEdit() {
 
         for (const item of items) {
           try {
+            // 逐项目一个槽位 + 资源作用域：部分失败后重试复用同一 key（服务端回放），
+            // 且其它项目内容变化不会轮换本项目的 key（A04）
+            const slot = `save:${item.projectId}`;
+            const key = opKeys.keyFor(session, slot, slotSignature(item.content), `project:${item.projectId}`);
             const created = await reportAPI.save({
               projectId: item.projectId,
               reportType: typeEnum,
               periodKey,
               content: item.content,
-              // 逐项目一个 key（slot 区分）：部分失败后重试复用同一 key，不重复建/覆盖（RF02/RF04）
-              clientMutationId: opKeys.keyFor(session, `save:${item.projectId}`, slotSignature(item.content)),
+              clientMutationId: key,
             });
+            opKeys.markSucceeded(session, slot, key);
             saved.push({ id: created.id, label: item.label });
           } catch (err) {
             failures.push(`${item.label}：${describeError(err)}`);
@@ -346,15 +435,21 @@ export default function ReportEdit() {
         }
       }
 
+      // A05：未关联项目的记录必须出现在失败项里（不得显示“全部成功”后丢失）
+      if (unbound.length) {
+        failures.push(`${unbound.length} 条实验记录未关联项目，未提交（正文已本地留存，关联项目后可重新保存）`);
+      }
+
       // 提交：只提交保存成功的汇报；服务端负责写版本与状态
       if (!asDraft) {
         for (const item of saved) {
           try {
-            // 提交同样按操作复用 key：重试命中已提交回执，不会重复写版本
-            await reportAPI.submit(
-              item.id,
-              opKeys.keyFor(session, `submit:${item.id}`, ''),
-            );
+            // 提交与更新共享资源作用域 report:<id>：内容变化时二者一起轮换；
+            // 未变化时重试命中已提交回执（B06：响应丢失后重试不重复写版本）
+            const slot = `submit:${item.id}`;
+            const key = opKeys.keyFor(session, slot, '', `report:${item.id}`);
+            await reportAPI.submit(item.id, key);
+            opKeys.markSucceeded(session, slot, key);
           } catch (err) {
             failures.push(`${item.label}（提交）：${describeError(err)}`);
           }
@@ -364,14 +459,32 @@ export default function ReportEdit() {
       if (failures.length > 0) {
         alert(`部分操作未成功：\n${failures.join('\n')}\n已成功的部分已保留，可重试。`);
         // 保留键位：用户重试失败项时复用同一 key，服务端回放已成功的部分
+        setSaving(false);
         return;
       }
-      // 操作成功结束 → 清空键位：用户再次主动发起（即使内容相同）也视为新操作
+      // 操作成功结束 → 清空键位与本地留存：用户再次主动发起（即使内容相同）也视为新操作
+      if (user?.id) await clearPendingDraft(user.id);
       opKeysRef.current.complete();
       navigate('/reports');
     } catch (err) {
       console.error('Failed to save:', err);
       alert(`保存失败：${describeError(err)}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /** A08：撤回提交（作者本人、SUBMITTED → DRAFT），成功后按服务端状态重新渲染 */
+  const handleRecall = async () => {
+    if (!id || id === 'new') return;
+    if (!window.confirm('确认撤回该汇报？撤回后可继续编辑并重新提交。')) return;
+    setSaving(true);
+    try {
+      await reportAPI.recall(id);
+      await loadData();
+      alert('已撤回，可继续编辑');
+    } catch (err) {
+      alert(`撤回失败：${describeError(err)}`);
     } finally {
       setSaving(false);
     }
@@ -427,11 +540,45 @@ export default function ReportEdit() {
         </div>
         
         <div className="p-6 space-y-6">
+          {/* A08：服务端状态横幅（这是界面提示，不是授权——服务端仍独立校验状态与权限） */}
+          {!isNew && (
+            <div className={`rounded-lg border p-4 text-sm ${STATUS_BANNER[effectiveStatus] ?? 'border-gray-200 bg-gray-50 text-gray-700'}`}>
+              <div className="font-medium">{STATUS_LABEL[effectiveStatus] ?? effectiveStatus}</div>
+              <div className="mt-1">
+                {isAuthor
+                  ? effectiveStatus === 'SUBMITTED'
+                    ? '已提交，等待审阅；如需修改请先「撤回提交」。'
+                    : effectiveStatus === 'REVIEWED'
+                      ? '已审阅通过，内容已锁定，不能再次编辑。'
+                      : effectiveStatus === 'NEEDS_REVISION'
+                        ? `已批示需修改${reviewNote ? `：${reviewNote}` : ''}`
+                        : serverStatus
+                          ? '草稿状态，可继续编辑。'
+                          : '正在读取服务端状态…'
+                  : effectiveStatus === 'SUBMITTED'
+                    ? '这是待你审阅的汇报：请前往审阅页处理。'
+                    : '当前为只读查看（非作者）。'}
+              </div>
+              {!editable && (
+                <div className="mt-1 text-xs opacity-80">页面已按服务端状态切换为只读。</div>
+              )}
+            </div>
+          )}
+
+          {pendingNotice && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+              {pendingNotice}
+            </div>
+          )}
+
           {contentError && (
             <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
               {contentError}
             </div>
           )}
+
+          {/* 只读时整体禁用表单控件（服务端仍是最终边界） */}
+          <fieldset disabled={!editable} className="m-0 min-w-0 border-0 p-0 space-y-6">
 
           {/* 类型选择 */}
           <div>
@@ -702,6 +849,7 @@ export default function ReportEdit() {
               </button>
             )
           ) : null}
+          </fieldset>
         </div>
         
         {/* 操作按钮 */}
@@ -712,7 +860,7 @@ export default function ReportEdit() {
           >
             取消
           </button>
-          {id && id !== 'new' && (
+          {!isNew && isAuthor && EDITABLE_STATUSES.includes(effectiveStatus) && (
             <button
               onClick={async () => {
                 if (!window.confirm('确认删除该草稿？')) return;
@@ -729,21 +877,40 @@ export default function ReportEdit() {
               删除草稿
             </button>
           )}
-          <button
-            onClick={() => handleSave(true)}
-            className="btn btn-secondary"
-            disabled={saving}
-          >
-            保存草稿
-          </button>
-          <button
-            onClick={() => handleSave(false)}
-            className={`btn ${reportType === '日报' ? 'btn-primary' : reportType === '周报' ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-purple-500 hover:bg-purple-600 text-white'}`}
-            disabled={saving || 
-              (dailyTemplate === 'general' ? projectReports.length === 0 : reagentReports.length === 0)}
-          >
-            {saving ? '提交中...' : `提交${reportType}`}
-          </button>
+          {/* A08：撤回（作者 + 已提交）——状态动作由服务端当前状态决定 */}
+          {canRecall && (
+            <button
+              onClick={handleRecall}
+              className="btn btn-secondary"
+              disabled={saving}
+            >
+              撤回提交
+            </button>
+          )}
+          {/* A08：复核人入口（非作者 + 已提交 + reports.review） */}
+          {canOpenReview && (
+            <Link to={`/reports/${id}/review`} className="btn btn-secondary">
+              前往审阅
+            </Link>
+          )}
+          {editable && (
+            <>
+              <button
+                onClick={() => handleSave(true)}
+                className="btn btn-secondary"
+                disabled={saving}
+              >
+                保存草稿
+              </button>
+              <button
+                onClick={() => handleSave(false)}
+                className={`btn ${reportType === '日报' ? 'btn-primary' : reportType === '周报' ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-purple-500 hover:bg-purple-600 text-white'}`}
+                disabled={saving || !hasContentToSubmit}
+              >
+                {saving ? '提交中...' : `提交${reportType}`}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

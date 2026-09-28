@@ -17,6 +17,8 @@ export interface OutboxRecord {
   data?: Record<string, unknown>;
   baseUpdatedAt?: string;
   createdAt: string;
+  /** A03：入队主体（账号切换时用于判定归属，避免把 A 的未同步内容并入 B） */
+  userId?: string;
 }
 
 export interface RecordRow {

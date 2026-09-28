@@ -109,3 +109,49 @@ test('RF02-K8 切换到另一次操作（不同会话）时槽位不复用', () 
   assert.notEqual(k1, k2);
   assert.equal(store.currentSession(), EDIT_SESSION);
 });
+
+// ── A04 复核：资源作用域内的轮换 + 成功子步骤保留 ----------------------------------
+
+test('A04-K9 A 成功、B 失败后用户改了 B 的内容再重试：A 的 key 不被牵连轮换', () => {
+  const store = createOperationKeyStore(seq());
+  const sigA = slotSignature({ text: 'A' });
+  const kA = store.keyFor(SAVE_SESSION, 'save:p1', sigA, 'project:p1');
+  const kB1 = store.keyFor(SAVE_SESSION, 'save:p2', slotSignature({ text: 'B-第一版' }), 'project:p2');
+
+  store.markSucceeded(SAVE_SESSION, 'save:p1', kA); // A 已保存成功
+  const kB2 = store.keyFor(SAVE_SESSION, 'save:p2', slotSignature({ text: 'B-第二版' }), 'project:p2');
+
+  assert.notEqual(kB1, kB2, '被改动的项目必须换新 key（新内容 = 新写入）');
+  assert.equal(
+    store.keyFor(SAVE_SESSION, 'save:p1', sigA, 'project:p1'),
+    kA,
+    '已成功的 A 必须保留原 key（服务端回执重放，不重复写入）',
+  );
+  assert.equal(store.hasSucceeded(SAVE_SESSION, 'save:p1'), true);
+  assert.equal(store.hasSucceeded(SAVE_SESSION, 'save:p2'), false);
+});
+
+test('A04-K10 update/submit 共享资源作用域：内容不变都复用；内容变化一起轮换', () => {
+  const store = createOperationKeyStore(seq());
+  const sig1 = slotSignature({ content: 'v1', expectedUpdatedAt: null });
+  const kUpd1 = store.keyFor(EDIT_SESSION, 'update:r1', sig1, 'report:r1');
+  const kSub1 = store.keyFor(EDIT_SESSION, 'submit:r1', '', 'report:r1');
+
+  // 保存 → 提交（响应丢失）→ 再次点击：两个子步骤都必须复用原 key（B06 的键位契约）
+  assert.equal(store.keyFor(EDIT_SESSION, 'update:r1', sig1, 'report:r1'), kUpd1);
+  assert.equal(store.keyFor(EDIT_SESSION, 'submit:r1', '', 'report:r1'), kSub1);
+
+  // 用户真的改了内容 → 同一资源的两个命令一起换新（不得用旧提交回执掩盖新内容）
+  const sig2 = slotSignature({ content: 'v2', expectedUpdatedAt: null });
+  const kUpd2 = store.keyFor(EDIT_SESSION, 'update:r1', sig2, 'report:r1');
+  assert.notEqual(kUpd2, kUpd1);
+  assert.notEqual(store.keyFor(EDIT_SESSION, 'submit:r1', '', 'report:r1'), kSub1);
+});
+
+test('A04-K11 并发基线变化必须换新 key（否则服务端 payloadHash 校验会判为不一致）', () => {
+  const store = createOperationKeyStore(seq());
+  const withBaseline = (b: string) => slotSignature({ content: 'x', expectedUpdatedAt: b });
+  const k1 = store.keyFor(EDIT_SESSION, 'update:r1', withBaseline('2026-09-01T00:00:00.000Z'), 'report:r1');
+  const k2 = store.keyFor(EDIT_SESSION, 'update:r1', withBaseline('2026-09-02T00:00:00.000Z'), 'report:r1');
+  assert.notEqual(k1, k2);
+});

@@ -46,6 +46,10 @@ for (const file of files) {
     '--format=esm',
     '--platform=node',
     '--target=node20',
+    // 路径别名 @/* 定义在 tsconfig.app.json（根 tsconfig.json 只有 project references）
+    '--tsconfig=tsconfig.app.json',
+    // vite 注入的 import.meta.env 在 node 下不存在；置空以让 config/env.ts 走默认值
+    '--define:import.meta.env={}',
     `--outfile=${out}`,
     '--log-level=warning',
   ], { cwd: ROOT, stdio: 'inherit' });

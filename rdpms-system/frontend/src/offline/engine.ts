@@ -1,11 +1,12 @@
 import { syncAPI, toMessage } from '@/api';
-import type { SyncChange, SyncInitResponse } from '@/api';
+import type { SyncChange, SyncInitResponse, SyncPushResult } from '@/api';
 import { safeStorage } from '@/utils/safeStorage';
 import { idb } from './idb';
 import {
   buildDeadLetter,
   mergeDeadLetter,
   deadLetterKey,
+  toOutboxRecord,
   type DeadLetterRecord,
 } from './deadLetter';
 import type { OutboxRecord, RecordRow } from './idb';
@@ -27,14 +28,37 @@ const CURSOR_KEY = 'rdpms.sync.cursor';
 const ACL_KEY = 'rdpms.sync.acl';
 const CONFLICT_KEY = 'rdpms.sync.conflicts';
 
-/** A03：本地缓存键按主体分片——不同账号不得共享游标 / ACL 快照 / 冲突记录 */
+/**
+ * A03：本地缓存键按主体分片——不同账号不得共享游标 / ACL 快照 / 冲突记录。
+ * 键必须由**发起该轮同步时捕获的 userId** 计算，而不是读取可变的 `currentUserId`：
+ * 否则账号切换后到达的旧响应会被写进新账号的命名空间（复核 Q7 的同类路径）。
+ */
 function scopedKey(base: string, userId: string | null): string {
   return `${base}:${userId ?? 'anonymous'}`;
 }
-const cursorKey = () => scopedKey(CURSOR_KEY, currentUserId);
-const aclKey = () => scopedKey(ACL_KEY, currentUserId);
-const conflictKey = () => scopedKey(CONFLICT_KEY, currentUserId);
+const cursorKey = (userId: string | null) => scopedKey(CURSOR_KEY, userId);
+const aclKey = (userId: string | null) => scopedKey(ACL_KEY, userId);
+const conflictKey = (userId: string | null) => scopedKey(CONFLICT_KEY, userId);
 const SYNC_INTERVAL_MS = 60_000;
+
+/**
+ * 传输层注入点（默认 = 真实 syncAPI）。
+ * 仅用于测试注入**确定性替身**（例如「请求已发出 → 暂停 → 切换账号 → 再释放响应」），
+ * 生产代码不调用；默认行为与直接调用 syncAPI 完全一致。
+ */
+export interface SyncTransport {
+  init: (params: { since?: string; deviceId: string; deviceLabel?: string; platform?: string }) => Promise<SyncInitResponse>;
+  push: (payload: {
+    deviceId: string;
+    deviceLabel?: string;
+    platform?: string;
+    changes: SyncChange[];
+  }) => Promise<{ serverTime: string; results: SyncPushResult[]; conflictCount: number }>;
+}
+let transport: SyncTransport = syncAPI;
+export function __setSyncTransport(next?: SyncTransport): void {
+  transport = next ?? syncAPI;
+}
 
 /** 实体 → 项目归属字段（用于 ACL 变化时清除本地越权数据） */
 const PROJECT_SCOPED: Record<string, 'projectId' | 'self'> = {
@@ -142,13 +166,24 @@ async function refreshPending() {
 
 /** 本地变更入队（离线写入唯一入口）；在线时立即触发同步 */
 export async function enqueueChange(change: SyncChange): Promise<void> {
-  const row: OutboxRecord = { ...change, createdAt: new Date().toISOString() };
+  // A03：入队时标记主体归属——登出切换账号时不得把 A 的未同步内容并入 B
+  const row: OutboxRecord = {
+    ...change,
+    createdAt: new Date().toISOString(),
+    userId: currentUserId ?? undefined,
+  };
   await idb.outboxPut(row);
   await refreshPending();
   if (state.online) void syncNow();
 }
 
-async function applyPull(res: SyncInitResponse): Promise<void> {
+/** 一轮同步的会话快照：主体与代次在**发起时**固定，回包一律按它校验 */
+interface SyncSession {
+  userId: string | null;
+  isStale: () => boolean;
+}
+
+async function applyPull(res: SyncInitResponse, session: SyncSession): Promise<void> {
   const upserts: RecordRow[] = [];
   const tombstoneKeys: string[] = [];
   for (const [entity, bucket] of Object.entries(res.changes)) {
@@ -168,13 +203,18 @@ async function applyPull(res: SyncInitResponse): Promise<void> {
     for (const id of bucket.tombstones) tombstoneKeys.push(`${entity}:${id}`);
   }
   await idb.recordsPutMany(upserts);
+  if (session.isStale()) return;
   await idb.recordsDeleteMany(tombstoneKeys);
+  if (session.isStale()) return;
 
   // ACL 变化：清除不再可见项目的本地数据（权限回收后本地不可残留）
-  const prevAcl = await idb.kvGet<{ aclVersion: string }>(aclKey());
+  const aclKeyForSession = aclKey(session.userId);
+  const prevAcl = await idb.kvGet<{ aclVersion: string }>(aclKeyForSession);
+  if (session.isStale()) return;
   if (!prevAcl || prevAcl.aclVersion !== res.acl.aclVersion) {
     const visible = new Set(res.acl.projectIds);
     const all = await idb.recordsAll();
+    if (session.isStale()) return;
     const purge = all
       .filter((r) => {
         const scope = PROJECT_SCOPED[r.entity];
@@ -184,13 +224,15 @@ async function applyPull(res: SyncInitResponse): Promise<void> {
       })
       .map((r) => r.key);
     await idb.recordsDeleteMany(purge);
-    await idb.kvSet(aclKey(), {
+    if (session.isStale()) return;
+    await idb.kvSet(aclKeyForSession, {
       aclVersion: res.acl.aclVersion,
       projectIds: res.acl.projectIds,
       permissions: res.acl.permissions,
     });
   }
-  await idb.kvSet(cursorKey(), res.cursor);
+  if (session.isStale()) return;
+  await idb.kvSet(cursorKey(session.userId), res.cursor);
 }
 
 export async function syncNow(): Promise<void> {
@@ -202,21 +244,22 @@ export async function syncNow(): Promise<void> {
   const myGen = sessionGen;
   const myUserId = currentUserId;
   const isStale = () => myGen !== sessionGen;
+  const session: SyncSession = { userId: myUserId, isStale };
   try {
-    const since = await idb.kvGet<string>(cursorKey());
-    const res = await syncAPI.init({
+    const since = await idb.kvGet<string>(cursorKey(myUserId));
+    const res = await transport.init({
       since: since || undefined,
       deviceId,
       ...deviceMeta(),
     });
     if (isStale()) return; // 旧会话的拉取结果不得落盘
-    await applyPull(res);
+    await applyPull(res, session);
 
     const outbox = await idb.outboxAll();
     const nextConflicts: ConflictRecord[] = [];
     const nextRejections: DeadLetterRecord[] = [];
     if (outbox.length) {
-      const { results } = await syncAPI.push({
+      const { results } = await transport.push({
         deviceId,
         ...deviceMeta(),
         changes: outbox.map((r) => ({
@@ -229,6 +272,7 @@ export async function syncNow(): Promise<void> {
         })),
       });
       for (const r of results) {
+        if (isStale()) return; // A03：账号已切换，本轮上行结果一律不落盘
         if (r.status === 'applied') {
           await idb.outboxDelete(r.clientMutationId);
         } else if (r.status === 'conflict') {
@@ -282,18 +326,23 @@ export async function syncNow(): Promise<void> {
       ...nextConflicts,
     ];
     if (isStale()) return; // 旧会话不得写入冲突记录与状态
-    await idb.kvSet(conflictKey(), merged);
+    await idb.kvSet(conflictKey(myUserId), merged);
+    if (isStale()) return;
     set({
       lastSyncAt: res.serverTime,
       pending: (await idb.outboxAll()).length,
       conflicts: merged,
-      rejections: (await idb.deadLettersForUser(currentUserId ?? '')) as DeadLetterRecord[],
+      // 拒绝区读取也必须按**发起时主体**，不能读当前账号（否则会把 A 的内容显示给 B）
+      rejections: myUserId
+        ? (await idb.deadLettersForUser(myUserId)) as DeadLetterRecord[]
+        : [],
     });
   } catch (e) {
     if (isStale()) return; // A03：旧会话的失败不得污染当前账号状态
     set({ lastError: toMessage(e, '同步失败') });
   } finally {
-    set({ syncing: false });
+    // A03：旧会话不得改写新会话的「同步中」标志（否则会把当前账号的同步卡住或提前放行）
+    if (!isStale()) set({ syncing: false });
   }
 }
 
@@ -307,9 +356,28 @@ export async function resolveConflict(clientMutationId: string, resolution: 'ser
     await enqueueChange({ ...target.change, clientMutationId: newId, baseUpdatedAt: base });
   }
   const rest = state.conflicts.filter((c) => c.clientMutationId !== clientMutationId);
-  await idb.kvSet(conflictKey(), rest);
+  await idb.kvSet(conflictKey(currentUserId), rest);
   set({ conflicts: rest });
   if (resolution === 'local' && state.online) void syncNow();
+}
+
+/**
+ * A09：把一条被拒绝的变更重新入队（用户点击「重试」）。
+ * - 复用**原 clientMutationId 与原 payload/基线**（不是新操作，服务端可回执去重）；
+ * - 是否真的允许写入由服务端在本次上行中按**当前权限与基线**重新判定；
+ * - 只有成功移出拒绝区后才从本地删除该记录。
+ */
+export async function retryRejection(clientMutationId: string): Promise<boolean> {
+  const uid = currentUserId;
+  if (!uid) return false;
+  const record = await getRejectedPayload(clientMutationId);
+  if (!record) return false;
+  await idb.outboxPut({ ...toOutboxRecord(record), userId: uid });
+  await idb.deadLetterDelete(deadLetterKey(uid, clientMutationId));
+  await restoreDeadLetters();
+  await refreshPending();
+  if (state.online) void syncNow();
+  return true;
 }
 
 export function clearRejections(): void {
@@ -342,8 +410,8 @@ export async function dropRejection(clientMutationId: string): Promise<void> {
 }
 
 export async function hydrate(): Promise<void> {
-  const conflicts = (await idb.kvGet<ConflictRecord[]>(conflictKey())) ?? [];
-  const cursor = await idb.kvGet<string>(cursorKey());
+  const conflicts = (await idb.kvGet<ConflictRecord[]>(conflictKey(currentUserId))) ?? [];
+  const cursor = await idb.kvGet<string>(cursorKey(currentUserId));
   set({
     conflicts,
     pending: (await idb.outboxAll()).length,
@@ -353,8 +421,12 @@ export async function hydrate(): Promise<void> {
 }
 
 export async function start(userId?: string): Promise<void> {
-  currentUserId = userId ?? currentUserId;
+  const nextUserId = userId ?? currentUserId;
+  // A03：账号切换（未经过登出）同样必须作废在途同步，并解除上一会话遗留的「同步中」标志
+  const switched = nextUserId !== currentUserId;
+  currentUserId = nextUserId;
   sessionGen += 1; // 新会话：使上一账号的在途同步作废
+  if (started && switched) set({ syncing: false });
   if (started) return;
   started = true;
   void hydrate();
@@ -376,6 +448,32 @@ function onOffline() {
   set({ online: false });
 }
 
+/**
+ * 退出登录前：把该主体的未同步变更转入持久拒绝区（同一 IndexedDB 事务内「写入 → 出队」）。
+ * 未标记主体的历史行视为当前登出账户所有（本设备只有其在用），一并保留。
+ */
+async function preservePendingForUser(userId: string | null): Promise<number> {
+  const rows = await idb.outboxAll();
+  if (!rows.length) return 0;
+  const mine = rows.filter((r) => !r.userId || r.userId === userId);
+  const owner = userId ?? 'anonymous';
+  for (const row of mine) {
+    const record = buildDeadLetter({
+      userId: owner,
+      outbox: row,
+      projectId: (row.data?.projectId as string | undefined) ?? null,
+      reason: '退出登录时仍未同步（内容已保留，重新登录后可重试）',
+      code: 'LOGOUT_UNSYNCED',
+      now: new Date().toISOString(),
+    });
+    await idb.deadLetterMove(record, (existing) => mergeDeadLetter(
+      existing as DeadLetterRecord | undefined,
+      record,
+    ));
+  }
+  return mine.length;
+}
+
 export function stop(): void {
   if (!started) return;
   started = false;
@@ -387,11 +485,17 @@ export function stop(): void {
   }
 }
 
-/** 退出登录：清空本地镜像与队列（共享设备安全） */
+/**
+ * 退出登录：清空本地镜像与分片键（共享设备安全）。
+ *
+ * A03：**不得静默销毁用户未提交的内容**——outbox 里还没同步出去的变更必须先转入
+ * 该账户的持久拒绝区（重新登录后仍可恢复/重试），然后才清空队列。
+ */
 export async function resetOnLogout(): Promise<void> {
   stop();
-  // 注意：clearAll 不清空持久拒绝区（那是用户尚未取回的内容，重新登录同一账户需恢复）
   const uidAtLogout = currentUserId;
+  await preservePendingForUser(uidAtLogout);
+  // 注意：clearAll 不清空持久拒绝区（那是用户尚未取回的内容，重新登录同一账户需恢复）
   await idb.clearAll(uidAtLogout); // A03：只清理当前主体的分片键
   currentUserId = null;
   sessionGen += 1; // A03：登出使在途请求与回包全部作废

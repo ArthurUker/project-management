@@ -25,6 +25,11 @@ export interface DeadLetterRecord {
   clientMutationId: string;
   /** 原始提交内容（一字不改地保留） */
   payload?: Record<string, unknown>;
+  /**
+   * A09：同 key 但服务端拒绝了**不同内容**时的显式记录。
+   * 此时 payload 仍保留最早版本，冲突内容只能通过该字段查看，绝不静默覆盖。
+   */
+  payloadConflict?: { at: string; payload?: Record<string, unknown> };
   baseUpdatedAt?: string;
   /** 服务端给出的拒绝原因与错误码 */
   reason: string;
@@ -83,13 +88,19 @@ export function mergeDeadLetter(
   next: DeadLetterRecord,
 ): DeadLetterRecord {
   if (!prev) return next;
+  const samePayload = JSON.stringify(prev.payload ?? null) === JSON.stringify(next.payload ?? null);
   return {
     ...prev,
     reason: next.reason,
     code: next.code ?? prev.code,
     lastRejectedAt: next.lastRejectedAt,
     attempts: prev.attempts + 1,
-    payload: next.payload ?? prev.payload,
+    // A09：**保留首次 payload**（最早提交的内容可能更完整），新内容绝不覆盖旧内容；
+    // 同 key 出现不同内容时显式记录 payloadConflict，由 UI 提示用户，而不是静默替换。
+    payload: prev.payload ?? next.payload,
+    ...(next.payload && !samePayload
+      ? { payloadConflict: { at: next.lastRejectedAt, payload: next.payload } }
+      : {}),
   };
 }
 
