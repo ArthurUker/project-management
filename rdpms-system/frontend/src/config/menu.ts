@@ -1,3 +1,16 @@
+import type { LucideIcon } from 'lucide-react';
+import {
+  BookOpen,
+  ClipboardList,
+  FileText,
+  FlaskConical,
+  FolderKanban,
+  LayoutDashboard,
+  LayoutTemplate,
+  ListChecks,
+  Scale,
+  Settings,
+} from 'lucide-react';
 import { PERMS, hasPerm, type MaybePerm } from '../auth/permissions';
 
 /**
@@ -8,6 +21,8 @@ import { PERMS, hasPerm, type MaybePerm } from '../auth/permissions';
  *   2. 无权限的项直接隐藏；子项全被隐藏时父级一并隐藏
  *   3. 这里只影响「看不看得见」，不影响「能不能访问」（真实拦截在后端）
  *   4. AUDITOR 只会出现：审计日志 / 系统日志（+右上角修改密码）
+ *
+ * icon 为 lucide-react 图标组件（与参考仓库「每项带图标」的侧栏规范对齐）。
  */
 
 export interface MenuItem {
@@ -15,52 +30,63 @@ export interface MenuItem {
   label: string;
   path?: string;
   perm?: MaybePerm | MaybePerm[];
-  icon?: string;
+  icon?: LucideIcon;
   children?: MenuItem[];
 }
 
 export const MENU: MenuItem[] = [
-  { key: 'dashboard', label: '仪表盘', path: '/', perm: PERMS.DASHBOARD_VIEW },
-  { key: 'projects', label: '项目管理', path: '/projects', perm: PERMS.PROJECTS_VIEW },
+  { key: 'dashboard', label: '仪表盘', path: '/', perm: PERMS.DASHBOARD_VIEW, icon: LayoutDashboard },
+  { key: 'projects', label: '项目管理', path: '/projects', perm: PERMS.PROJECTS_VIEW, icon: FolderKanban },
   {
     key: 'registrations',
     label: '项目注册管理',
     path: '/registrations',
     perm: PERMS.REGISTRATIONS_VIEW,
+    icon: ClipboardList,
   },
-  { key: 'reports', label: '汇报管理', path: '/reports', perm: PERMS.REPORTS_VIEW },
+  { key: 'reports', label: '汇报管理', path: '/reports', perm: PERMS.REPORTS_VIEW, icon: FileText },
   {
     key: 'regulatory',
     label: '法规文档',
     path: '/regulatory-documents',
     perm: PERMS.REGULATORY_DOCUMENTS_VIEW,
+    icon: Scale,
   },
   {
     key: 'knowledge',
     label: '知识库',
     path: '/knowledge',
     perm: PERMS.DOCS_VIEW,
+    icon: BookOpen,
     children: [
       { key: 'k-primers', label: '引物探针库', path: '/knowledge?module=primers', perm: PERMS.PRIMERS_VIEW },
       { key: 'k-reagents', label: '试剂库', path: '/knowledge?module=reagents', perm: PERMS.REAGENTS_VIEW },
       { key: 'k-samples', label: '样本库', path: '/knowledge?module=samples', perm: PERMS.SAMPLES_VIEW },
     ],
   },
-  { key: 'tasks', label: '任务管理', path: '/tasks', perm: PERMS.TASKS_VIEW },
+  { key: 'tasks', label: '任务管理', path: '/tasks', perm: PERMS.TASKS_VIEW, icon: ListChecks },
   {
     key: 'templates',
     label: '模板库',
     path: '/project-templates',
     perm: [PERMS.PROJECT_TEMPLATES_VIEW, PERMS.TASK_TEMPLATES_VIEW],
+    icon: LayoutTemplate,
     children: [
       { key: 't-project', label: '项目模板', path: '/project-templates', perm: PERMS.PROJECT_TEMPLATES_VIEW },
       { key: 't-task', label: '任务模板', path: '/task-templates', perm: PERMS.TASK_TEMPLATES_VIEW },
     ],
   },
-  { key: 'reagent-formula', label: '试剂配方', path: '/reagent-formula', perm: PERMS.REAGENTS_VIEW },
+  {
+    key: 'reagent-formula',
+    label: '试剂配方',
+    path: '/reagent-formula',
+    perm: PERMS.REAGENTS_VIEW,
+    icon: FlaskConical,
+  },
   {
     key: 'system',
     label: '系统',
+    icon: Settings,
     perm: [
       PERMS.USERS_VIEW,
       PERMS.AUDIT_VIEW,

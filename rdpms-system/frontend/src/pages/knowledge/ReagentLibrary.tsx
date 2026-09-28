@@ -896,9 +896,9 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-slate-200/90 bg-white shadow-sm">
-        <table className="min-w-[1580px] w-full table-auto border-separate border-spacing-0">
-          <thead className="sticky top-0 z-10 bg-slate-50/95 backdrop-blur">
+      <div className="glass overflow-x-auto">
+        <table className="glass-table min-w-[1580px] w-full table-auto">
+          <thead>
             <tr>
               <th className="w-[52px] px-3 py-3 text-center border-b border-slate-200">
                 <input
@@ -929,7 +929,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
               <th className="w-[84px] min-w-[84px] px-4 py-3 text-center text-xs font-semibold text-slate-600 whitespace-nowrap border-b border-slate-200">操作</th>
             </tr>
           </thead>
-          <tbody className="bg-white">
+          <tbody>
             {loading ? (
               <tr>
                 <td colSpan={orderedColumns.length + 2} className="px-4 py-10 text-center text-slate-400 border-b border-slate-100">

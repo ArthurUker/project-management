@@ -4,122 +4,610 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 其他样式 */
+/* ============================================================
+   设计系统：液态玻璃（Liquid Glass）
+   视觉规范对齐参考仓库 Tianjiabing_foodtestlab @ Product_tencent_CVM：
+     极光壁纸（body::before）+ 三层玻璃（.glass / .glass-dark / .glass-panel）
+     + 玻璃表格（.glass-table）+ 无障碍与「不支持 backdrop-filter」兜底。
+   注意：.glass* 使用 backdrop-filter: url(#lg-refraction)，该 SVG 滤镜在
+   index.html 中常驻（零侵入），缺失时仅退化为普通模糊，不影响可用性。
+   ============================================================ */
 
 :root {
-  --primary: #0A84FF;
-  --primary-hover: #0070e0;
-  --accent: #FF9500;
-  --success: #30D158;
-  --warning: #FFD60A;
-  --danger: #FF453A;
-  --bg-dark: #1C1C1E;
-  --bg-light: #F2F2F7;
-  --text-primary: #1D1D1F;
-  --text-secondary: #636366;
+  /* 极光壁纸四角颜色 */
+  --aurora-1: #a9c8ff;
+  --aurora-2: #ffc2dd;
+  --aurora-3: #a9ecd9;
+  --aurora-4: #d9c6ff;
+  /* 底层线性渐变（洗染层）与底色 */
+  --aurora-w1: #bcd4ff;
+  --aurora-w2: #ffd9b0;
+  --aurora-w3: #c9b6ff;
+  --aurora-w4: #a9ecd9;
+  --aurora-base: #eef2f8;
+  /* 深色玻璃（导航/侧栏）着色 */
+  --glass-dark-bg: rgba(20, 28, 48, 0.42);
+  --glass-dark-solid: rgb(20, 28, 48);
+  /* 强调色（按钮/激活态） */
+  --accent: #1a73e8;
+  --accent-strong: #1d4ed8;
+  /* 玻璃尺度 */
+  --glass-radius: 1.7rem;
+  --glass-panel-radius: 1rem;
+  --glass-blur: blur(14px) saturate(180%);
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@layer base {
+  html {
+    min-height: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    font-family: 'Source Sans 3', 'DM Sans', system-ui, -apple-system, 'Segoe UI',
+      'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    color: #1d1d1f;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--aurora-base);
+  }
+
+  /* 极光壁纸层：玻璃要「折射」的对象，必须有高频多色结构 */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: -20%;
+    z-index: -2;
+    background:
+      linear-gradient(135deg, var(--aurora-1) 0%, transparent 32%),
+      linear-gradient(225deg, var(--aurora-2) 0%, transparent 34%),
+      linear-gradient(315deg, var(--aurora-3) 0%, transparent 36%),
+      linear-gradient(45deg, var(--aurora-4) 0%, transparent 34%),
+      linear-gradient(135deg, var(--aurora-w1), var(--aurora-w2), var(--aurora-w3), var(--aurora-w4));
+    background-color: var(--aurora-base);
+    filter: blur(22px) saturate(165%);
+    animation: aurora 40s ease-in-out infinite alternate;
+    will-change: transform;
+    pointer-events: none;
+  }
+
+  /* 根容器必须透明，否则极光壁纸被遮住 */
+  #root {
+    min-height: 100vh;
+    background: transparent !important;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'DM Sans', 'Source Sans 3', system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  }
+
+  code,
+  pre,
+  kbd,
+  samp {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
 }
 
-html, body {
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  font-family: 'Source Sans 3', 'DM Sans', system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  /* 全局渐变背景，覆盖整个视口 */
-  background: linear-gradient(135deg, #dde8ff 0%, #eef3ff 35%, #f0f5ff 60%, #ede8ff 100%);
-  background-attachment: fixed;
+@keyframes aurora {
+  0% {
+    transform: scale(1.12) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.18) translate3d(-2%, 1.5%, 0);
+  }
+  100% {
+    transform: scale(1.12) translate3d(0, 0, 0);
+  }
 }
 
-/* 清除可能覆盖背景的根容器颜色 */
-#root {
-  background: transparent !important;
-  min-height: 100vh;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'DM Sans', sans-serif;
-}
-
-code, pre {
-  font-family: 'JetBrains Mono', monospace;
-}
-
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
-}
-
-/* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;
 }
 
-/* Card styles */
-.card {
-  @apply bg-white rounded-lg shadow-sm border border-gray-100;
+.animate-fadeInUp {
+  animation: fadeInUp 0.35s ease-out;
 }
 
-.card-hover {
-  @apply transition-shadow hover:shadow-md;
+/* ============================================================
+   玻璃基础类（.glass / .glass-dark / .glass-panel）
+   ============================================================ */
+@layer components {
+  /* 主玻璃卡：页面级大容器 */
+  .glass {
+    position: relative;
+    background: rgba(255, 255, 255, 0.56);
+    border: 1px solid rgba(255, 255, 255, 0.78);
+    border-radius: var(--glass-radius);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: url(#lg-refraction) var(--glass-blur);
+    box-shadow:
+      0 16px 46px rgba(40, 60, 100, 0.2),
+      inset 0 2px 0 rgba(255, 255, 255, 0.95),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.55),
+      inset 0 0 34px rgba(255, 255, 255, 0.3);
+  }
+
+  /* 深色玻璃：导航栏 / 侧边栏 / 强调容器 */
+  .glass-dark {
+    position: relative;
+    background: var(--glass-dark-bg);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: var(--glass-radius);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    backdrop-filter: url(#lg-refraction) blur(14px) saturate(160%);
+    box-shadow:
+      0 16px 46px rgba(10, 20, 40, 0.3),
+      inset 0 2px 0 rgba(255, 255, 255, 0.18),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  }
+
+  /* 内层半透明面板：卡片内部的分区，不嵌套 backdrop-filter（避免滤镜相乘） */
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.66);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: var(--glass-panel-radius);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.7),
+      0 4px 14px rgba(40, 60, 100, 0.08);
+  }
+
+  /* ---------------- 玻璃表格 ---------------- */
+  .glass-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.875rem;
+  }
+
+  .glass-table thead th {
+    background: rgba(255, 255, 255, 0.72);
+    border-bottom: 1.5px solid rgba(59, 130, 246, 0.25);
+    color: #1e3a5f;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .glass-table thead th:first-child {
+    border-radius: 0.75rem 0 0 0;
+  }
+
+  .glass-table thead th:last-child {
+    border-radius: 0 0.75rem 0 0;
+  }
+
+  .glass-table tbody tr {
+    transition: background-color 0.15s ease;
+  }
+
+  .glass-table tbody tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.28);
+  }
+
+  .glass-table tbody tr:nth-child(odd) {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .glass-table tbody tr:hover {
+    background: rgba(219, 234, 254, 0.45);
+  }
+
+  .glass-table td,
+  .glass-table th {
+    padding: 0.625rem 0.875rem !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18) !important;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .glass-table td:not(:last-child),
+  .glass-table th:not(:last-child) {
+    border-right: 1px solid rgba(148, 163, 184, 0.12) !important;
+  }
+
+  .glass-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .glass-table tbody tr:last-child td:first-child {
+    border-radius: 0 0 0 0.75rem;
+  }
+
+  .glass-table tbody tr:last-child td:last-child {
+    border-radius: 0 0 0.75rem 0;
+  }
+
+  /* 表格结果标签（对齐参考仓库 .result-badge 三态） */
+  .glass-table .result-badge {
+    display: inline-block;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .glass-table .result-pass {
+    background: rgba(34, 197, 94, 0.14);
+    color: #15803d;
+  }
+
+  .glass-table .result-warn {
+    background: rgba(245, 158, 11, 0.14);
+    color: #b45309;
+  }
+
+  .glass-table .result-fail {
+    background: rgba(239, 68, 68, 0.14);
+    color: #b91c1c;
+  }
+
+  .glass-table .action-cell {
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  /* 表格横向滚动容器（手机端） */
+  .glass-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ---------------- 卡片 / 按钮 / 表单 ---------------- */
+  .card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.78);
+    border-radius: 1.25rem;
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: url(#lg-refraction) var(--glass-blur);
+    box-shadow:
+      0 14px 40px rgba(40, 60, 100, 0.18),
+      inset 0 2px 0 rgba(255, 255, 255, 0.92),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  }
+
+  .card-hover {
+    transition: box-shadow 0.25s ease, transform 0.25s ease;
+  }
+
+  .card-hover:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      0 22px 56px rgba(40, 60, 100, 0.26),
+      inset 0 2px 0 rgba(255, 255, 255, 0.95),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.85rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease,
+      color 0.2s ease, transform 0.2s ease;
+  }
+
+  .btn:focus-visible {
+    outline: 2px solid rgba(26, 115, 232, 0.55);
+    outline-offset: 2px;
+  }
+
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background-image: linear-gradient(135deg, #1a73e8 0%, #1d4ed8 100%);
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(26, 115, 232, 0.28);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background-image: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+    box-shadow: 0 10px 26px rgba(26, 115, 232, 0.34);
+  }
+
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.7);
+    border-color: rgba(255, 255, 255, 0.85);
+    color: #334155;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.88);
+  }
+
+  .btn-danger {
+    background-image: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.24);
+  }
+
+  .btn-danger:hover:not(:disabled) {
+    background-image: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  }
+
+  .input {
+    width: 100%;
+    padding: 0.6rem 0.875rem;
+    border-radius: 0.85rem;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    color: #1f2937;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .input::placeholder {
+    color: #94a3b8;
+  }
+
+  .input:focus {
+    outline: none;
+    border-color: rgba(26, 115, 232, 0.65);
+    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.16);
+  }
+
+  .label {
+    display: block;
+    margin-bottom: 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #3f4a5a;
+  }
 }
 
-/* Button styles */
-.btn {
-  @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+/* ============================================================
+   玻璃化适配层
+   放在 @tailwind utilities 之后：以同特异度、更靠后的顺序覆盖既有页面里
+   的浅色实底与描边，使全站（含尚未逐个改写的页面）统一到玻璃语言，
+   避免改写 2.6 万行 TSX 的类名。新页面可直接用 .glass / .glass-panel。
+   ============================================================ */
+
+/* 1. 白底 → 磨砂半透明白（半径/描边/阴影保留各页原有语义） */
+[class~='bg-white'] {
+  background-color: rgba(255, 255, 255, 0.66);
 }
 
-.btn-primary {
-  @apply bg-primary-500 text-white hover:bg-primary-600 focus:ring-primary-500;
+/* 浮层（弹窗/抽屉）需更强的可读性，白度更高 */
+[class~='bg-white'][class*='shadow-2xl'],
+[class~='bg-white'][class*='shadow-xl'] {
+  background-color: rgba(255, 255, 255, 0.86);
 }
 
-.btn-secondary {
-  @apply bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-400;
+/* 2. 面板级元素补磨砂（仅大圆角/带阴影的容器，避免给每一行表格加滤镜） */
+[class~='bg-white'][class*='rounded-xl'],
+[class~='bg-white'][class*='rounded-2xl'],
+[class~='bg-white'][class*='rounded-3xl'],
+[class~='bg-white'][class*='shadow'] {
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: url(#lg-refraction) var(--glass-blur);
 }
 
-.btn-danger {
-  @apply bg-danger-500 text-white hover:bg-red-600 focus:ring-danger-500;
+/* 3. 浅灰实底 → 玻璃内层（骨架屏仍保留可辨识的灰度层次） */
+[class~='bg-gray-50'] {
+  background-color: rgba(255, 255, 255, 0.42);
 }
 
-/* Form styles */
-.input {
-  @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
+[class~='bg-gray-100'] {
+  background-color: rgba(255, 255, 255, 0.55);
 }
 
-.label {
-  @apply block text-sm font-medium text-gray-700 mb-1;
+[class~='bg-gray-200'] {
+  background-color: rgba(255, 255, 255, 0.62);
 }
 
+/* 4. 浅灰描边 → 白色描边（玻璃边界由高光勾边，而非灰线） */
+[class~='border-gray-100'],
+[class~='border-gray-200'] {
+  border-color: rgba(255, 255, 255, 0.72);
+}
+
+[class~='border-gray-300'] {
+  border-color: rgba(255, 255, 255, 0.85);
+}
+
+/* 5. 原生表单控件统一玻璃质感（不覆盖显式 bg-* / border-none 的特例） */
+input[type='text']:not([class*='border-none']):not([class*='bg-transparent']),
+input[type='password']:not([class*='border-none']):not([class*='bg-transparent']),
+input[type='email']:not([class*='border-none']):not([class*='bg-transparent']),
+input[type='number']:not([class*='border-none']):not([class*='bg-transparent']),
+input[type='search']:not([class*='border-none']):not([class*='bg-transparent']),
+input[type='tel']:not([class*='border-none']):not([class*='bg-transparent']),
+input[type='url']:not([class*='border-none']):not([class*='bg-transparent']),
+input[type='date']:not([class*='border-none']):not([class*='bg-transparent']),
+input[type='datetime-local']:not([class*='border-none']):not([class*='bg-transparent']),
+input[type='time']:not([class*='border-none']):not([class*='bg-transparent']),
+input[type='month']:not([class*='border-none']):not([class*='bg-transparent']),
+select:not([class*='border-none']):not([class*='bg-transparent']),
+textarea:not([class*='border-none']):not([class*='bg-transparent']) {
+  background-color: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 0.7rem;
+  color: #1f2937;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+input[type='text']:focus,
+input[type='password']:focus,
+input[type='email']:focus,
+input[type='number']:focus,
+input[type='search']:focus,
+input[type='tel']:focus,
+input[type='url']:focus,
+input[type='date']:focus,
+input[type='datetime-local']:focus,
+input[type='time']:focus,
+input[type='month']:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: rgba(26, 115, 232, 0.65);
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.16);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* 错误态描边必须仍然醒目（覆盖上面的白描边） */
+input[class*='border-red'],
+textarea[class*='border-red'],
+select[class*='border-red'] {
+  border-color: rgba(239, 68, 68, 0.6) !important;
+}
+
+/* 6. 滚动条：细、半透明，避免破坏玻璃观感 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(120, 140, 180, 0.35);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 140, 180, 0.55);
+}
+
+/* ============================================================
+   无障碍降级 + 特性探测兜底（对齐参考仓库）
+   ============================================================ */
+@media (prefers-reduced-transparency: reduce) {
+  .glass,
+  .glass-dark,
+  .card {
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+    backdrop-filter: blur(14px) saturate(150%);
+  }
+
+  .glass,
+  .card {
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .glass-dark {
+    background: color-mix(in srgb, var(--glass-dark-solid) 88%, transparent);
+  }
+}
+
+@media (prefers-contrast: more) {
+  .glass,
+  .card {
+    border-color: rgba(255, 255, 255, 0.96);
+  }
+
+  .glass-dark {
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+  }
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass,
+  .card {
+    background: rgba(255, 255, 255, 0.94);
+  }
+
+  .glass-dark {
+    background: color-mix(in srgb, var(--glass-dark-solid) 94%, transparent);
+  }
+}
+
+/* ============================================================
+   导出/打印兜底：玻璃必须「实质化」为白底，保证 PDF 可读
+   ============================================================ */
+.pdf-capture-mode,
+.pdf-capture-mode .glass,
+.pdf-capture-mode .glass-dark,
+.pdf-capture-mode .glass-panel,
+.pdf-capture-mode .card {
+  background: #ffffff !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+@media print {
+  body::before {
+    display: none !important;
+  }
+
+  .glass,
+  .glass-dark,
+  .glass-panel,
+  .card {
+    background: #ffffff !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  nav,
+  aside {
+    display: none !important;
+  }
+}
+
+/* ============================================================
+   业务遗留样式（保留：知识库分类树 / 流程图 / 滚动区）
+   ============================================================ */
 /* 分类树样式 */
 .categories-tree {
   max-height: 500px;
@@ -131,19 +619,19 @@ code, pre {
   align-items: center;
   width: 100%;
   padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: 0.6rem;
   text-align: left;
   transition: background-color 0.2s;
-  color: #4b5563;
+  color: #475569;
 }
 
 .category-button:hover {
-  background-color: #f3f4f6;
+  background-color: rgba(255, 255, 255, 0.55);
 }
 
 .category-button.active {
-  background-color: #eff6ff;
-  color: #1d4ed8;
+  background-color: rgba(219, 234, 254, 0.75);
+  color: var(--accent-strong);
   font-weight: 500;
 }
 
@@ -161,8 +649,8 @@ code, pre {
 
 .category-count {
   font-size: 12px;
-  color: #9ca3af;
-  background-color: #f3f4f6;
+  color: #64748b;
+  background-color: rgba(255, 255, 255, 0.6);
   padding: 1px 6px;
   border-radius: 10px;
 }
@@ -175,16 +663,19 @@ code, pre {
 .react-flow__node {
   font-family: inherit;
 }
+
 .react-flow__controls {
   bottom: 16px;
   left: 16px;
 }
+
 .react-flow__minimap {
   bottom: 16px;
   right: 16px;
   border-radius: 8px;
   overflow: hidden;
 }
+
 .react-flow__edge-path {
   stroke-linecap: round;
 }
@@ -193,18 +684,21 @@ code, pre {
 .project-scroll-area::-webkit-scrollbar {
   width: 6px;
 }
+
 .project-scroll-area::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .project-scroll-area::-webkit-scrollbar-thumb {
   background: rgba(150, 170, 255, 0.35);
   border-radius: 3px;
 }
+
 .project-scroll-area::-webkit-scrollbar-thumb:hover {
-  background: rgba(150, 170, 255, 0.60);
+  background: rgba(150, 170, 255, 0.6);
 }
 
-/* Ensure top-level layout containers are transparent */
+/* 顶层布局容器保持透明，露出极光壁纸 */
 .layout-container,
 .main-content,
 .sidebar-layout {

@@ -27,13 +27,13 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
     if (!error) return this.props.children;
 
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <div className="max-w-lg text-center">
+      <div className="flex min-h-screen items-center justify-center p-6">
+        <div className="glass max-w-lg p-8 text-center">
           <h1 className="text-xl font-semibold text-gray-900">页面出错了</h1>
           <p className="mt-2 text-sm text-gray-500">
             请刷新页面重试；若持续出现，请截图下方信息联系管理员。
           </p>
-          <pre className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded text-left text-xs text-gray-600 overflow-auto max-h-40">
+          <pre className="glass-panel mt-4 max-h-40 overflow-auto p-3 text-left text-xs text-gray-600">
             {error.message}
           </pre>
           <button

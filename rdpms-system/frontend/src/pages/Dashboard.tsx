@@ -84,7 +84,7 @@ export default function Dashboard() {
       </div>
       
       {/* 统计卡片 */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
         <div className="card p-5">
           <div className="flex items-center justify-between">
             <div>
@@ -143,7 +143,7 @@ export default function Dashboard() {
       </div>
       
       {/* 内容区 */}
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* 项目列表 */}
         <div className="card">
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">

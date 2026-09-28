@@ -45,21 +45,21 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 animate-fadeIn">
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <div className="glass animate-fadeInUp w-full max-w-md p-8">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-2xl">RD</span>
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/60 bg-gradient-to-br from-primary-500 to-primary-700 shadow-lg">
+            <span className="text-2xl font-bold text-white">RD</span>
           </div>
-          <h1 className="text-2xl font-display font-bold text-gray-900">研发项目管理系统</h1>
-          <p className="text-gray-500 mt-2">R&D Project Management System</p>
+          <h1 className="font-display text-2xl font-bold text-gray-900">研发项目管理系统</h1>
+          <p className="mt-2 text-gray-500">R&amp;D Project Management System</p>
         </div>
 
         {/* 登录表单 */}
         <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+            <div className="rounded-xl border border-red-200 bg-red-50/85 px-4 py-3 text-sm text-red-600">
               {error}
             </div>
           )}
@@ -112,7 +112,7 @@ export default function Login() {
           </button>
         </form>
 
-        <p className="text-center text-gray-400 text-sm mt-6">研发项目管理系统 v1.0</p>
+        <p className="mt-6 text-center text-sm text-gray-500">研发项目管理系统 v1.0</p>
       </div>
     </div>
   );

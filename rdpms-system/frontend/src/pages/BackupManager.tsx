@@ -168,9 +168,9 @@ export default function BackupManager() {
         </div>
 
         {payload && payloadStats.length > 0 && (
-          <div className="rounded-lg border border-gray-200 overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-gray-600">
+          <div className="glass-panel overflow-hidden">
+            <table className="glass-table">
+              <thead>
                 <tr>
                   <th className="px-3 py-2 text-left">数据表</th>
                   <th className="px-3 py-2 text-right">行数</th>
@@ -249,9 +249,9 @@ export default function BackupManager() {
             </div>
           )}
 
-          <div className="rounded-lg border border-gray-200 overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-gray-600">
+          <div className="glass-panel overflow-hidden">
+            <table className="glass-table">
+              <thead>
                 <tr>
                   <th className="px-3 py-2 text-left">数据表</th>
                   <th className="px-3 py-2 text-right">备份行数</th>

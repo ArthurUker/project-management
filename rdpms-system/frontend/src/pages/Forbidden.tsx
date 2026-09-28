@@ -6,8 +6,8 @@ export default function Forbidden() {
   const { user, permissions } = useAuth();
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center">
-      <div className="text-center max-w-lg">
+    <div className="flex min-h-[70vh] items-center justify-center">
+      <div className="glass max-w-lg p-10 text-center">
         <div className="text-6xl font-bold text-gray-300">403</div>
         <h1 className="mt-4 text-xl font-semibold text-gray-900">没有访问权限</h1>
         <p className="mt-2 text-sm text-gray-500">

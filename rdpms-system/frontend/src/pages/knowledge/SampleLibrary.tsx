@@ -166,9 +166,9 @@ export default function SampleLibrary({ openKey, hideTopButton }: { openKey?: nu
       </div>
 
       {/* 表格 */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-xs text-gray-600">
+      <div className="glass-panel overflow-x-auto">
+        <table className="glass-table">
+          <thead>
             <tr>
               <th className="px-3 py-2 w-8">
                 <input type="checkbox"
@@ -188,7 +188,7 @@ export default function SampleLibrary({ openKey, hideTopButton }: { openKey?: nu
               <th className="px-3 py-2 text-left">操作</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {loading ? (
               <tr><td colSpan={11} className="text-center py-8 text-gray-400">加载中...</td></tr>
             ) : list.length === 0 ? (

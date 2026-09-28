@@ -209,9 +209,9 @@ export default function AuditLogs() {
         </div>
       )}
 
-      <div className="flex-1 min-h-0 overflow-auto border border-gray-200 rounded-lg">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-50 sticky top-0">
+      <div className="glass-panel flex-1 min-h-0 overflow-auto">
+        <table className="glass-table">
+          <thead>
             <tr className="text-left text-gray-600">
               <th className="px-3 py-2 font-medium">时间</th>
               <th className="px-3 py-2 font-medium">操作人</th>
@@ -230,7 +230,7 @@ export default function AuditLogs() {
                 typeof log.metadata === 'object' &&
                 (log.metadata as Record<string, unknown>).elevated === true;
               return (
-                <tr key={log.id} className="border-t border-gray-100 hover:bg-gray-50">
+                <tr key={log.id} className="hover:bg-blue-50/40">
                   <td className="px-3 py-2 whitespace-nowrap text-gray-700">
                     {new Date(log.createdAt).toLocaleString('zh-CN')}
                   </td>

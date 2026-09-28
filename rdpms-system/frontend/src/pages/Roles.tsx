@@ -110,9 +110,9 @@ export default function Roles() {
         </div>
       )}
 
-      <div className="flex-1 min-h-0 overflow-auto border border-gray-200 rounded-lg">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-50 sticky top-0">
+      <div className="glass-panel flex-1 min-h-0 overflow-auto">
+        <table className="glass-table">
+          <thead>
             <tr className="text-left text-gray-600">
               <th className="px-4 py-2 font-medium">角色</th>
               <th className="px-4 py-2 font-medium">编码</th>
@@ -126,7 +126,7 @@ export default function Roles() {
             {roles.map((role) => {
               const style = ROLE_STYLE[role.code] ?? { color: '#374151', bg: '#f3f4f6' };
               return (
-                <tr key={role.id} className="border-t border-gray-100 hover:bg-gray-50">
+                <tr key={role.id} className="hover:bg-blue-50/40">
                   <td className="px-4 py-2">
                     <span
                       className="px-2 py-0.5 rounded text-xs font-semibold"

@@ -42,7 +42,7 @@ export default function SyncStatusIndicator() {
         type="button"
         title={title}
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-gray-600 hover:bg-gray-100"
+        className="inline-flex items-center gap-1.5 rounded-xl border border-white/20 bg-white/10 px-2.5 py-1 text-xs text-white/85 transition-colors hover:bg-white/20"
       >
         <span className={`h-2 w-2 rounded-full ${dot}`} />
         {label}
