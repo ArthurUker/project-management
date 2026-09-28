@@ -84,3 +84,8 @@ env/
 .codebuddy/
 docs/port/evidence/**/*.bundle
 docs/port/evidence/**/*.patch
+
+# ── 视觉取证截图不入库（体积控制；取证脚本与 JSON 证据保留）──
+docs/port/evidence/ui-glass/
+docs/port/evidence/ui-glass-before/
+docs/port/evidence/ui-glass-after/
