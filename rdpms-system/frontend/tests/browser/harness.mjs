@@ -189,7 +189,9 @@ export async function startStack({ uploadDirRoot, suite = 'unknown' } = {}) {
   }
 
   const git = (args) => execFileSync('git', args, { cwd: REPO_ROOT, encoding: 'utf8' }).trim();
-  const gitStatus = git(['status', '--porcelain']);
+  // 只在**代码目录**内判定脏工作区：证据输出（截图/清单）本身就是本套件生成的运行产物，
+  // 把它们算进来会让每一次运行都必然「脏」，反而失去该字段的意义
+  const gitStatus = git(['status', '--porcelain', '--', 'rdpms-system']);
 
   const manifest = {
     runId,
