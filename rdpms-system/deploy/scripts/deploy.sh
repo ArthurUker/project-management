@@ -25,6 +25,16 @@ if [ ! -r "$ENV_FILE" ]; then
   printf '[deploy] FATAL: 无法读取 %s\n' "$ENV_FILE" >&2
   exit 1
 fi
+
+# 发布参数快照：显式传入者优先于 .env。
+# 背景（2026-09-29 实测）：.env 里的 SMOKE_ENV=staging 会把命令行传入的
+# SMOKE_ENV=production 覆盖掉，导致 step 9 用错口径；同理 .env 没有 BASE 时
+# smoke 默认打 http://127.0.0.1（80 端口被代理 308 走），Step 9 必然失败。
+_SMOKE_ENV_ARG="${SMOKE_ENV:-}"
+_SMOKE_BASE_ARG="${SMOKE_BASE_URL:-}"
+_SMOKE_ADMIN_USER_ARG="${SMOKE_ADMIN_USER:-}"
+_SMOKE_ADMIN_PASS_ARG="${SMOKE_ADMIN_PASS:-}"
+
 set -a
 # shellcheck disable=SC1090
 source "$ENV_FILE"
@@ -38,7 +48,12 @@ RELEASE_DIR="${RELEASE_ROOT}/rdpms-system"
 APP_DIR="${RELEASE_DIR}/backend"
 WEB_DIR="${RELEASE_DIR}/frontend"
 PROFILE="${PROFILE:-read-only}"      # read-only(生产) | full(local/staging)
-SMOKE_ENV="${SMOKE_ENV:-production}" # local | staging | production
+SMOKE_ENV="${_SMOKE_ENV_ARG:-${SMOKE_ENV:-production}}" # local | staging | production
+# smoke 目标地址与账号：未显式提供时按本机端口 + SEED 超管账号推导
+# （否则 step 9 会打 http://127.0.0.1 或 "缺少 SMOKE_ADMIN_USER/PASS" 而必然失败）
+SMOKE_BASE_URL="${_SMOKE_BASE_ARG:-${SMOKE_BASE_URL:-http://127.0.0.1:${PORT:-3000}}}"
+SMOKE_ADMIN_USER="${_SMOKE_ADMIN_USER_ARG:-${SMOKE_ADMIN_USER:-${SEED_SUPER_ADMIN_USERNAME:-${SEED_ADMIN_USERNAME:-}}}}"
+SMOKE_ADMIN_PASS="${_SMOKE_ADMIN_PASS_ARG:-${SMOKE_ADMIN_PASS:-${SEED_SUPER_ADMIN_PASSWORD:-${SEED_ADMIN_PASSWORD:-}}}}"
 RUN_SEED="${RUN_SEED:-false}"
 KEEP_RELEASES="${KEEP_RELEASES:-3}"
 RUN_USER="${RUN_USER:-rdpms}"
@@ -146,9 +161,9 @@ sudo systemctl restart rdpms-api          # 必须 restart：symlink 路径需�
 reload_proxy
 
 # ── Step 9 Smoke ─────────────────────────────────────────
-log "Step 9/10 smoke（profile=${PROFILE}, env=${SMOKE_ENV}）"
+log "Step 9/10 smoke（profile=${PROFILE}, env=${SMOKE_ENV}, base=${SMOKE_BASE_URL}）"
 # 说明：sudo 默认会剥离环境变量，故通过 `sudo env VAR=...` 显式传递
-if ! sudo env SMOKE_ENV="$SMOKE_ENV" \
+if ! sudo env SMOKE_ENV="$SMOKE_ENV" BASE="$SMOKE_BASE_URL" \
      SMOKE_ADMIN_USER="${SMOKE_ADMIN_USER:-}" SMOKE_ADMIN_PASS="${SMOKE_ADMIN_PASS:-}" \
      SMOKE_LOW_USER="${SMOKE_LOW_USER:-}"     SMOKE_LOW_PASS="${SMOKE_LOW_PASS:-}" \
      SMOKE_NONMEMBER_USER="${SMOKE_NONMEMBER_USER:-}" \
