@@ -1,11 +1,12 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { tokenStore } from '../auth/tokenStore';
 import { useAuth } from '../auth/useAuth';
 import * as engine from './engine';
 import type { ConflictRecord, SyncState } from './engine';
 
 /**
  * SyncProvider —— 同步状态与动作的 React 上下文（批次四）
- * 登录后自动启动引擎（增量拉取 + outbox 上行 + 在线/离线监听），登出清空本地数据。
+ * 认证完成后启动当前 owner；身份恢复仅暂停，退出保留所有未确认草稿。
  */
 interface SyncContextValue extends SyncState {
   deviceId: string;
@@ -22,22 +23,28 @@ interface SyncContextValue extends SyncState {
 const SyncContext = createContext<SyncContextValue | null>(null);
 
 export function SyncProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, status, permissions } = useAuth();
+  const [generation, setGeneration] = useState(tokenStore.generation());
   const [state, setState] = useState<SyncState>(engine.getState());
 
   useEffect(() => engine.subscribe(setState), []);
+  useEffect(() => tokenStore.onSessionChanged(() => setGeneration(tokenStore.generation())), []);
 
   useEffect(() => {
-    if (user) void engine.start(user.id);
+    const owner = tokenStore.snapshot();
+    if (status === 'authenticated' && user) void engine.start(user.id, permissions).catch(() => {
+      if (owner && tokenStore.sameLogin(owner)) engine.pauseForBootstrap();
+    });
+    else if (status === 'bootstrapping') engine.pauseForBootstrap();
     else void engine.resetOnLogout();
     return () => engine.stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]);
+  }, [user?.id, status, generation, permissions]);
 
   const value: SyncContextValue = {
     ...state,
     deviceId: engine.getDeviceId(),
-    syncNow: () => void engine.syncNow(),
+    syncNow: () => void engine.syncNow(true),
     resolveConflict: (id, resolution) => void engine.resolveConflict(id, resolution),
     enqueueChange: engine.enqueueChange,
     clearRejections: engine.clearRejections,

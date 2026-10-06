@@ -4,6 +4,7 @@
  * 允许发生：构造 Prisma 客户端、启动期安全守卫、监听端口。
  * 业务模块与测试不得导入本文件。
  */
+import { loadConfig } from '../platform/config/configSchema.js';
 import { serve } from '@hono/node-server';
 import { readFileSync } from 'node:fs';
 import { createApp } from './createApp.js';
@@ -33,6 +34,7 @@ export function assertProductionSecrets() {
  * @param {{ port?: number, hostname?: string }} [options]
  */
 export function startServer(options = {}) {
+  loadConfig(process.env);
   assertProductionSecrets();
 
   const port = options.port ?? Number.parseInt(process.env.PORT || '3000', 10);

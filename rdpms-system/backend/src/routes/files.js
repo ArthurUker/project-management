@@ -3,6 +3,7 @@ import { prisma } from '../platform/db/client.js';
 import { authenticate, getAuth, requirePermission } from '../kernel/rbac.js';
 import { AUDIT_ACTIONS } from '../kernel/constants.js';
 import { writeAudit } from '../kernel/audit.js';
+import { writeAuditStrict } from '../platform/audit/strictAudit.js';
 import { HttpError } from '../kernel/http.js';
 import { notFound, forbidden, methodNotAllowed, badRequest, parsePaging, paged } from '../kernel/http.js';
 import { resolveProjectAccess, projectVisibilityFilter } from '../kernel/projectAccess.js';
@@ -15,6 +16,7 @@ import {
   FILE_SCOPE,
 } from '../modules/files/fileAccessPolicy.js';
 import { fileDeleteGuard, applyBindToFile, resolveBindTarget } from '../modules/files/fileCommands.js';
+import { decideFileRead } from '../modules/files/fileReadService.js';
 
 /**
  * 文件元数据 + 本地对象存储（M-1 §6.5）+ 资源归属授权（RF05 / F11）
@@ -54,19 +56,32 @@ async function projectContextFor(auth, row) {
   if (!row || row.accessScope !== FILE_SCOPE.PROJECT || !row.ownerProjectId) return {};
   try {
     const access = await resolveProjectAccess(prisma, auth, row.ownerProjectId);
-    return { projectAccess: { isMember: access.isMember, capabilities: access.capabilities } };
+    return { projectAccess: access };
   } catch {
     return { projectAccess: { isMember: false, capabilities: [] } };
   }
 }
 
 /** 载入文件并按策略判定；不通过时抛 404（隐藏存在性）或 403 */
-async function loadFileOrThrow(auth, id, action) {
+async function loadFileOrThrow(c, id, action) {
+  const auth = getAuth(c);
   const row = await prisma.fileObject.findFirst({ where: { id, deletedAt: null } });
-  const decision = decideFileAccess(action, actorOf(auth), row, await projectContextFor(auth, row));
+  const context = await projectContextFor(auth, row);
+  const decision = decideFileAccess(action, actorOf(auth), row, context);
   if (!decision.allow) {
     if (decision.code === 'FILE_NOT_FOUND') throw notFound('FILE_NOT_FOUND', '文件不存在');
     throw forbidden('FILE_FORBIDDEN', decision.reason);
+  }
+  if (context.projectAccess?.elevated) {
+    await writeAuditStrict(prisma, {
+      c, actorId: auth.userId, actorRole: auth.systemRole,
+      action: AUDIT_ACTIONS.READ_SENSITIVE, entityType: 'FILE', entityId: row.id,
+      metadata: {
+        permissionCode: action === FILE_ACTION.DELETE ? 'files.delete' : 'files.download',
+        elevated: true, bypass: 'project_membership', operation: action,
+        ownerProjectId: row.ownerProjectId,
+      },
+    });
   }
   return row;
 }
@@ -173,7 +188,7 @@ files.post('/', requirePermission('files.upload'), async (c) => {
 // ── 元数据 ───────────────────────────────────────────────────────────────────
 files.get('/:id/metadata', requirePermission('files.download'), async (c) => {
   const auth = getAuth(c);
-  const row = await loadFileOrThrow(auth, c.req.param('id'), FILE_ACTION.METADATA);
+  const row = await loadFileOrThrow(c, c.req.param('id'), FILE_ACTION.METADATA);
   const { storageKey: _s, ...meta } = row;
   return c.json(meta);
 });
@@ -181,20 +196,24 @@ files.get('/:id/metadata', requirePermission('files.download'), async (c) => {
 // ── 下载（前端 downloadFile 使用的正是 /api/files/:id，与 /download 同权）─────
 async function downloadFile(c) {
   const auth = getAuth(c);
-  const row = await loadFileOrThrow(auth, c.req.param('id'), FILE_ACTION.DOWNLOAD);
+  const row = await loadFileOrThrow(c, c.req.param('id'), FILE_ACTION.DOWNLOAD);
 
-  if (row.scanStatus === 'INFECTED') {
-    await writeAudit(prisma, {
+  const scanDecision = decideFileRead(row.scanStatus);
+  if (!scanDecision.allow) {
+    await writeAuditStrict(prisma, {
       c,
       actorId: auth.userId,
       actorRole: auth.systemRole,
       action: AUDIT_ACTIONS.DOWNLOAD,
       entityType: 'FILE',
       entityId: row.id,
-      entityLabel: row.originalName,
-      metadata: decisionMeta(row, { permissionCode: 'files.download', denied: 'INFECTED' }),
+      metadata: decisionMeta(row, {
+        permissionCode: 'files.download', denied: scanDecision.code,
+        scanStatus: ['CLEAN', 'INFECTED', 'FAILED', 'SKIPPED', 'PENDING'].includes(row.scanStatus)
+          ? row.scanStatus : 'UNKNOWN',
+      }),
     });
-    throw forbidden('FILE_INFECTED', '文件已感染，禁止下载');
+    throw forbidden(scanDecision.code, scanDecision.reason);
   }
 
   const full = safeStoragePath(row.storageKey);
@@ -284,7 +303,7 @@ files.patch('/:id/scope', requirePermission('files.delete'), async (c) => {
 // ── 软删除（被已发布证据引用时只允许解绑，不允许整体删除）────────────────────
 files.delete('/:id', requirePermission('files.delete'), async (c) => {
   const auth = getAuth(c);
-  const row = await loadFileOrThrow(auth, c.req.param('id'), FILE_ACTION.DELETE);
+  const row = await loadFileOrThrow(c, c.req.param('id'), FILE_ACTION.DELETE);
 
   const refs = await prisma.attachment.findMany({
     where: { fileId: row.id, deletedAt: null },

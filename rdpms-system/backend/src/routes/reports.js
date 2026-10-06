@@ -204,20 +204,21 @@ reports.post('/', requirePermission('reports.create'), async (c) => {
         if (current && !current.deletedAt) {
           // 谓词取**客户端基线**（有则用客户端声明的版本，过期即冲突）；
           // 旧客户端无基线时退化为「validate 读到的版本」，仍能拦住并发写入。
-          const cas = await tx.report.updateMany({
-            where: { id: current.id, updatedAt: expectedUpdatedAt ?? current.updatedAt },
-            data: { content, updatedById: auth.userId },
+          // RP10-T02：与 PUT / 同步上行共用同一保存命令——可编辑状态与基线同处一个原子谓词，
+          // 「校验通过后提交先完成」的迟到保存在锁释放后按已提交状态被拒，不覆盖 SUBMITTED 正文。
+          const saved = await saveReportDraft(tx, {
+            actor: auth,
+            reportId: current.id,
+            patch: { content },
+            cas: { updatedAt: expectedUpdatedAt ?? current.updatedAt },
           });
-          if (cas.count === 0) {
-            throw new HttpError(409, 'CONFLICT', '该汇报已被他人修改，请基于最新版本重试');
-          }
           const updated = await tx.report.findUnique({
             where: { id: current.id },
             include: {
               author: { select: { id: true, displayName: true } },
               project: { select: { id: true, name: true } },
             },
-          });
+          }) ?? saved;
           await writeAuditStrict(tx, {
             c,
             actorId: auth.userId,
@@ -238,11 +239,43 @@ reports.post('/', requirePermission('reports.create'), async (c) => {
           });
           return { status: 201, body: updated };
         }
-        const report = await tx.report.upsert({
-          where: { projectId_authorId_reportType_periodKey: uniqueKey },
-          // 显式重建被删除的同周期汇报（否则保存会写进不可见的墓碑行）
-          update: { content, updatedById: auth.userId, deletedAt: null },
-          create: {
+        // RP10-T02 / LR3-01：原实现对「初次读取无行」走无条件 upsert，
+        // 一旦竞争请求在窗口内创建（甚至提交）同一业务唯一键，upsert 会退化为
+        // update 并直接覆盖已提交正文，还会把墓碑行复活。此处按分支受控处理：
+        //   1) 墓碑恢复：只在「该行此刻仍是墓碑」时重建（条件 UPDATE），否则受控 409；
+        //   2) 真正新建：只做 create；唯一键被竞争请求占用 → P2002 → 既有 409 映射，事务整体回滚。
+        if (current) {
+          const restored = await tx.report.updateMany({
+            where: { id: current.id, deletedAt: { not: null } },
+            data: { content, updatedById: auth.userId, deletedAt: null },
+          });
+          if (restored.count === 0) {
+            throw new HttpError(409, 'CONFLICT', '该周期汇报在本次保存期间已被恢复或修改，请重新读取后重试');
+          }
+          const restoredRow = await tx.report.findUnique({
+            where: { id: current.id },
+            include: {
+              author: { select: { id: true, displayName: true } },
+              project: { select: { id: true, name: true } },
+            },
+          });
+          if (!restoredRow) throw notFound('REPORT_NOT_FOUND', '汇报不存在');
+          await writeAuditStrict(tx, {
+            c,
+            actorId: auth.userId,
+            actorName: auth.user.displayName,
+            actorRole: auth.systemRole,
+            action: AUDIT_ACTIONS.UPDATE,
+            entityType: 'REPORT',
+            entityId: restoredRow.id,
+            entityLabel: `${reportType}/${periodKey}`,
+            changedFields: Object.keys(data),
+            metadata: { permissionCode: 'reports.create', projectId, restoredFromTombstone: true },
+          });
+          return { status: 201, body: restoredRow };
+        }
+        const report = await tx.report.create({
+          data: {
             projectId,
             authorId: auth.userId,
             reportType,
@@ -261,7 +294,7 @@ reports.post('/', requirePermission('reports.create'), async (c) => {
           actorId: auth.userId,
           actorName: auth.user.displayName,
           actorRole: auth.systemRole,
-          action: current ? AUDIT_ACTIONS.UPDATE : AUDIT_ACTIONS.CREATE,
+          action: AUDIT_ACTIONS.CREATE,
           entityType: 'REPORT',
           entityId: report.id,
           entityLabel: `${reportType}/${periodKey}`,
@@ -404,16 +437,18 @@ reports.post('/:id/submit', requirePermission('reports.submit'), async (c) => {
     resourceScope: `report:${id}`,
     idempotencyKey: key,
     payload: { reportId: id },
-    validate: () => {
-      // 状态校验放在“无回执的新命令”路径：首次提交成功后（或已被审阅后）重试同 key，
-      // 必须回放首次结果，而不是被状态检查拦住（RF02 复核要求）
-      if (report.status === 'REVIEWED') {
-        throw new HttpError(409, 'INVALID_STATE', '已审阅的汇报不能再次提交');
-      }
-    },
     execute: async (tx) => {
-      // 共用命令：版本快照 + 状态（与其余入口同一实现，见 modules/reports/reportCommands.ts）
-      await submitReport(tx, { actor: auth, report });
+      // Serialize submissions with draft writes, then snapshot the exact row revision
+      // observed under this transaction's lock. The preflight row above is only for
+      // authorization; it must never supply the version content.
+      await tx.$queryRaw`SELECT id FROM reports WHERE id = ${id} FOR UPDATE`;
+      const source = await tx.report.findUnique({ where: { id } });
+      if (!source || source.deletedAt) throw notFound('REPORT_NOT_FOUND', '汇报不存在');
+      if (!['DRAFT', 'NEEDS_REVISION'].includes(source.status)) {
+        throw new HttpError(409, 'INVALID_STATE', '仅草稿或需修改的汇报可以提交');
+      }
+      // 共用命令：同一锁定修订的版本快照 + 状态（见 modules/reports/reportCommands.ts）。
+      await submitReport(tx, { actor: auth, report: source, snapshot: source.content });
       await writeAuditStrict(tx, {
         c,
         actorId: auth.userId,
@@ -422,7 +457,7 @@ reports.post('/:id/submit', requirePermission('reports.submit'), async (c) => {
         action: AUDIT_ACTIONS.SUBMIT,
         entityType: 'REPORT',
         entityId: id,
-        entityLabel: `${report.reportType}/${report.periodKey}`,
+        entityLabel: `${source.reportType}/${source.periodKey}`,
         metadata: { permissionCode: 'reports.submit' },
       });
       return { status: 200, body: { success: true } };
@@ -431,6 +466,39 @@ reports.post('/:id/submit', requirePermission('reports.submit'), async (c) => {
   if (result.replayed) c.header('Idempotent-Replay', 'true');
   return c.json(result.body, result.status);
 });
+
+/**
+ * Review must apply to the SUBMITTED version seen by this request. The report
+ * row lock is shared with submit: a delayed review cannot approve/reject a
+ * newer version after another review + resubmit completes. Audit is in the
+ * same transaction; an audit failure rolls back the transition.
+ */
+async function reviewReport(c, existing, status, note, action) {
+  const auth = getAuth(c);
+  return prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM reports WHERE id = ${existing.id} FOR UPDATE`;
+    const source = await tx.report.findUnique({ where: { id: existing.id } });
+    if (!source || source.deletedAt) throw notFound('REPORT_NOT_FOUND', '汇报不存在');
+    if (source.authorId === auth.userId) throw badRequest('VALIDATION_ERROR', '不能审阅自己的汇报');
+    if (source.status !== 'SUBMITTED' || source.currentVersion !== existing.currentVersion) {
+      throw new HttpError(409, 'CONFLICT', '汇报状态或版本已变化，请刷新后审阅');
+    }
+    const access = await resolveProjectAccess(tx, auth, source.projectId);
+    assertProjectCapability(access, 'transition', 'reports.review');
+    const result = await tx.report.updateMany({
+      where: { id: source.id, status: 'SUBMITTED', currentVersion: source.currentVersion, deletedAt: null },
+      data: { status, reviewerId: auth.userId, reviewedAt: new Date(),
+        reviewNote: note, updatedById: auth.userId },
+    });
+    if (result.count !== 1) throw new HttpError(409, 'CONFLICT', '汇报状态或版本已变化，请刷新后审阅');
+    await writeAuditStrict(tx, {
+      c, actorId: auth.userId, actorName: auth.user.displayName, actorRole: auth.systemRole,
+      action, entityType: 'REPORT', entityId: source.id,
+      metadata: { permissionCode: 'reports.review', version: source.currentVersion },
+    });
+    return tx.report.findUnique({ where: { id: source.id } });
+  });
+}
 
 // ── 审阅通过（reports.review + ∩ transition）────────────────────────────────
 reports.post('/:id/approve', requirePermission('reports.review'), async (c) => {
@@ -447,26 +515,7 @@ reports.post('/:id/approve', requirePermission('reports.review'), async (c) => {
   await auditElevatedIfNeeded(prisma, c, access, 'reports.review');
   assertProjectCapability(access, 'transition', 'reports.review');
 
-  const report = await prisma.report.update({
-    where: { id },
-    data: {
-      status: 'REVIEWED',
-      reviewerId: auth.userId,
-      reviewedAt: new Date(),
-      reviewNote: body?.note || null,
-      updatedById: auth.userId,
-    },
-  });
-  await writeAudit(prisma, {
-    c,
-    actorId: auth.userId,
-    actorName: auth.user.displayName,
-    actorRole: auth.systemRole,
-    action: AUDIT_ACTIONS.APPROVE,
-    entityType: 'REPORT',
-    entityId: id,
-    metadata: { permissionCode: 'reports.review' },
-  });
+  const report = await reviewReport(c, existing, 'REVIEWED', body?.note || null, AUDIT_ACTIONS.APPROVE);
   return c.json(report);
 });
 
@@ -486,26 +535,7 @@ reports.post('/:id/reject', requirePermission('reports.review'), async (c) => {
   await auditElevatedIfNeeded(prisma, c, access, 'reports.review');
   assertProjectCapability(access, 'transition', 'reports.review');
 
-  const report = await prisma.report.update({
-    where: { id },
-    data: {
-      status: 'NEEDS_REVISION',
-      reviewerId: auth.userId,
-      reviewedAt: new Date(),
-      reviewNote: body.note,
-      updatedById: auth.userId,
-    },
-  });
-  await writeAudit(prisma, {
-    c,
-    actorId: auth.userId,
-    actorName: auth.user.displayName,
-    actorRole: auth.systemRole,
-    action: AUDIT_ACTIONS.REJECT,
-    entityType: 'REPORT',
-    entityId: id,
-    metadata: { permissionCode: 'reports.review', note: body.note },
-  });
+  const report = await reviewReport(c, existing, 'NEEDS_REVISION', body.note, AUDIT_ACTIONS.REJECT);
   return c.json(report);
 });
 

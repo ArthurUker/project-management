@@ -4,7 +4,7 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from 'axios';
 import { API_BASE_URL } from '../config/env';
-import { tokenStore } from '../auth/tokenStore';
+import { tokenStore, type SessionSnapshot } from '../auth/tokenStore';
 import { ApiError, ERR } from './error';
 import type { ErrorBody } from './types';
 
@@ -13,8 +13,8 @@ import type { ErrorBody } from './types';
  *
  * 职责：
  *   1. 注入 access token（来自 tokenStore，禁止他处读 localStorage）
- *   2. 401 + 会话过期时静默 refresh 一次并重放原请求（并发单飞）
- *   3. refresh 也失败 → 清 token + 广播会话失效（由 AuthProvider 统一跳登录）
+ *   2. 同一登录代际内，401 + 会话过期时有界 refresh 一次并重放原请求
+ *   3. 明确无效的当前 refresh 条件清理；迟到/不确定结果不清后来的会话
  *   4. 所有非 2xx 统一转成 ApiError
  *   5. 403 只抛错，绝不跳转（由 RoleGuard / 页面决定呈现）
  */
@@ -25,16 +25,27 @@ export const http = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
+export type AuthRequestConfig = AxiosRequestConfig & { _authPublic?: boolean };
+type RetriableConfig = InternalAxiosRequestConfig & {
+  _retry?: boolean;
+  _authPublic?: boolean;
+  _session?: SessionSnapshot;
+};
+
+function changed(): ApiError {
+  return new ApiError(0, { code: 'SESSION_CHANGED', message: '登录身份已变更，请重新发起操作' });
+}
 
 // ── 请求拦截器 ───────────────────────────────────────────────────────────────
 http.interceptors.request.use((config) => {
-  const token = tokenStore.getAccessToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  const request = config as RetriableConfig;
+  if (request._authPublic) return config;
+  if (!request._session) request._session = tokenStore.snapshot() ?? undefined;
+  if (request._session && !tokenStore.sameLogin(request._session)) throw changed();
+  if (request._session) config.headers.Authorization = `Bearer ${request._session.accessToken}`;
+  else delete config.headers.Authorization;
   return config;
-});
+}, (error) => { throw error; }, { synchronous: true });
 
 /**
  * 兼容多种后端错误体，归一化为 ErrorBody：
@@ -77,43 +88,71 @@ function isSessionExpiredCode(code: string | undefined): boolean {
 
 // ── refresh 单飞 ─────────────────────────────────────────────────────────────
 // 并发请求同时 401 时，只发一次 /auth/refresh，其余排队复用同一个 Promise。
-let inflight: Promise<string> | null = null;
+const inflight = new Map<string, Promise<SessionSnapshot>>();
 
-function refreshAccessToken(): Promise<string> {
-  if (inflight) return inflight;
-
-  inflight = (async () => {
-    const refreshToken = tokenStore.getRefreshToken();
-    if (!refreshToken) {
-      throw new ApiError(401, { code: ERR.AUTH_REQUIRED, message: '未登录' });
-    }
+function refreshAccessToken(origin: SessionSnapshot): Promise<SessionSnapshot> {
+  const key = `${origin.loginGeneration}:${origin.tokenRevision}`;
+  const existing = inflight.get(key);
+  if (existing) return existing;
+  const pending = tokenStore.withRefreshLock(origin, async () => {
+    if (!tokenStore.sameLogin(origin)) throw changed();
+    const current = tokenStore.snapshot()!;
+    if (!tokenStore.owns(origin)) return current;
+    if (current.refreshBlocked) throw new ApiError(0, { code: 'REFRESH_OUTCOME_UNKNOWN', message: '刷新结果不确定，请重新登录' });
     try {
       // 用裸 axios，避免走 http 实例再次进入响应拦截器造成递归
-      const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken });
+      const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken: origin.refreshToken }, { timeout: 30_000 });
       // 兼容信封 { data: {...} } 与扁平 { accessToken, refreshToken } 两种响应
       const payload = (data as { data?: Record<string, unknown> })?.data ?? (data as Record<string, unknown>);
       const accessToken = typeof payload?.accessToken === 'string' ? payload.accessToken : null;
       const newRefreshToken = typeof payload?.refreshToken === 'string' ? payload.refreshToken : null;
       if (!accessToken || !newRefreshToken) {
-        throw new Error('refresh 响应缺少 token 字段');
+        await tokenStore.blockRefreshIfOwned(origin);
+        throw new ApiError(0, { code: 'REFRESH_OUTCOME_UNKNOWN', message: '刷新结果不确定，请重新登录；本地内容已保留' });
       }
-      tokenStore.setTokens(accessToken, newRefreshToken);
-      return accessToken;
-    } finally {
-      inflight = null;
+      const saved = await tokenStore.rotate(origin, accessToken, newRefreshToken);
+      if (saved) return saved;
+      if (tokenStore.sameLogin(origin)) return tokenStore.snapshot()!;
+      throw changed();
+    } catch (error) {
+      if (!tokenStore.sameLogin(origin)) throw changed();
+      if (error instanceof ApiError) throw error;
+      if (axios.isAxiosError(error) && error.response) {
+        const body = normalizeErrorBody(error.response.data);
+        if (body.code === 'REFRESH_TOKEN_REPLAYED') {
+          if (!tokenStore.owns(origin)) return tokenStore.snapshot()!;
+          await tokenStore.blockRefreshIfOwned(origin);
+          throw new ApiError(401, { code: body.code, message: '刷新令牌已使用，请重新登录；本地内容已保留' });
+        }
+        if (error.response.status === 401 && body.code === 'INVALID_REFRESH_TOKEN') {
+          await tokenStore.expireIfOwned(origin);
+          throw new ApiError(401, body);
+        }
+        await tokenStore.blockRefreshIfOwned(origin);
+        throw new ApiError(error.response.status, body);
+      }
+      await tokenStore.blockRefreshIfOwned(origin);
+      throw new ApiError(0, { code: 'REFRESH_OUTCOME_UNKNOWN', message: '刷新结果不确定，请重新登录；本地内容已保留' });
     }
-  })();
-
-  return inflight;
+  }).finally(() => { if (inflight.get(key) === pending) inflight.delete(key); });
+  inflight.set(key, pending);
+  return pending;
 }
 
 // ── 响应拦截器 ───────────────────────────────────────────────────────────────
 http.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const config = response.config as RetriableConfig;
+    if (!config._authPublic && config._session && !tokenStore.sameLogin(config._session)) throw changed();
+    return response;
+  },
   async (error: AxiosError) => {
+    if (error instanceof ApiError) return Promise.reject(error);
     const status = error.response?.status ?? 0;
     const body = normalizeErrorBody(error.response?.data);
     const original = error.config as RetriableConfig | undefined;
+    const origin = original?._session;
+    if (!original?._authPublic && origin && !tokenStore.sameLogin(origin)) return Promise.reject(changed());
 
     // 无响应：网络层失败 / 超时 / 主动取消
     if (!error.response) {
@@ -126,28 +165,26 @@ http.interceptors.response.use(
     }
 
     // access 过期：静默 refresh 一次并原样重放
-    if (status === 401 && isSessionExpiredCode(body.code) && original && !original._retry) {
+    if (!original?._authPublic && status === 401 && isSessionExpiredCode(body.code) && original && origin && !original._retry) {
       original._retry = true;
+      if (!tokenStore.canRefresh()) return Promise.reject(new ApiError(401,
+        { code: origin.refreshBlocked ? 'REFRESH_OUTCOME_UNKNOWN' : 'SESSION_COORDINATION_UNAVAILABLE',
+          message: '无法安全刷新当前会话，请重新登录；本地内容已保留' }));
       try {
-        const newToken = await refreshAccessToken();
-        original.headers.Authorization = `Bearer ${newToken}`;
+        const successor = await refreshAccessToken(origin);
+        if (!tokenStore.sameLogin(origin)) throw changed();
+        original._session = successor;
+        original.headers.Authorization = `Bearer ${successor.accessToken}`;
         return http.request(original);
-      } catch {
-        tokenStore.clear();
-        tokenStore.emitSessionExpired();
-        return Promise.reject(
-          new ApiError(401, {
-            code: body.code || ERR.AUTH_REQUIRED,
-            message: body.message || '登录已失效，请重新登录',
-          }),
-        );
+      } catch (failure) {
+        return Promise.reject(failure instanceof ApiError ? failure : new ApiError(0,
+          { code: 'REFRESH_OUTCOME_UNKNOWN', message: '刷新结果不确定，请重新登录；本地内容已保留' }));
       }
     }
 
     // 其他 401：会话不可用，交给 AuthProvider 跳转
-    if (status === 401) {
-      tokenStore.clear();
-      tokenStore.emitSessionExpired();
+    if (status === 401 && !original?._authPublic && origin) {
+      await tokenStore.expireIfOwned(origin);
     }
 
     // 403 / 4xx / 5xx：只抛 ApiError，不做任何跳转

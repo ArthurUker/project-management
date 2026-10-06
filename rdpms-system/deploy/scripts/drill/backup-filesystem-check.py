@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+"""Create only new self-owned fixtures under explicitly provided disposable parent.
+This is a filesystem proof, NOT permission to operate existing snapshots or run restore.
+"""
+import argparse,hashlib,json,os,pathlib,platform,shutil,stat,sys,tempfile,uuid
+parser=argparse.ArgumentParser();parser.add_argument('--parent',required=True);parser.add_argument('--require-linux',action='store_true');parser.add_argument('--output',required=True);args=parser.parse_args()
+parent=pathlib.Path(args.parent).resolve(strict=True)
+if not parent.is_dir():raise SystemExit('Disposable parent must exist')
+out=pathlib.Path(args.output).absolute()
+if out.exists():raise SystemExit('Output exists; use new owned result path')
+result={'kind':'REAL_OWNED_FS_RUN','platform':platform.platform(),'targetLinux':platform.system()=='Linux','commands':[{'command':sys.argv,'exitCode':None}],'cases':[],'cleanup':{},'limits':['New synthetic files only; no database/common restore point','xattr/ACL/access policy/target capacity/restore remain separately unverified'],'criticalFailures':[]}
+root=pathlib.Path(tempfile.mkdtemp(prefix='rdpms-fs-proof-',dir=parent));result['owner']={'root':str(root),'runId':uuid.uuid4().hex,'createdByThisInvocation':True,'parentDevice':parent.stat().st_dev}
+def digest(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+def case(name,fn):
+ try:fn();result['cases'].append({'name':name,'result':'PASS'})
+ except Exception as e:result['cases'].append({'name':name,'result':'FAIL','error':type(e).__name__+':'+str(e)});result['criticalFailures'].append(name)
+try:
+ source=root/'source';first=root/'first';second=root/'second';source.mkdir();(source/'same').write_text('same');(source/'change').write_text('first');(source/'gone').write_text('gone');shutil.copytree(source,first);before={p.name:(digest(p),stat.S_IMODE(p.stat().st_mode),p.stat().st_mtime_ns) for p in first.iterdir()}
+ def real_directory():assert not first.is_symlink() and first.stat().st_dev==root.stat().st_dev
+ case('REAL_DIRECTORY_SAME_FS',real_directory)
+ (source/'change').write_text('second');(source/'gone').unlink();(source/'new').write_text('new');shutil.copytree(source,second)
+ def two_rounds():
+  assert {p.name:(digest(p),stat.S_IMODE(p.stat().st_mode),p.stat().st_mtime_ns) for p in first.iterdir()}==before
+  assert (second/'change').read_text()=='second' and not (second/'gone').exists() and (second/'new').read_text()=='new'
+ case('TWO_ROUND_ADD_CHANGE_DELETE_IMMUTABLE',two_rounds)
+ def hardlink():
+  copied=second/'same';copied.unlink();os.link(first/'same',copied);assert copied.stat().st_ino==(first/'same').stat().st_ino
+  separate=root/'metadata-change';shutil.copy2(copied,separate);separate.chmod(0o640);assert (first/'same').stat().st_mode&0o777==before['same'][1];assert separate.stat().st_ino!=copied.stat().st_ino
+ case('INODE_AND_METADATA_COPY_ISOLATION',hardlink)
+ def pointer():
+  latest=root/'latest';latest.symlink_to('first');old=latest.resolve();tmp=root/'.latest-next';tmp.symlink_to('second');os.replace(tmp,latest);assert latest.resolve()==second
+  tmp=root/'.latest-failed';tmp.symlink_to('first')
+  try:os.replace(tmp,root/'missing-parent/latest')
+  except FileNotFoundError:pass
+  else:raise AssertionError('Expected genuine failed OS rename')
+  assert latest.resolve()==second and old==first
+ case('ATOMIC_POINTER_AND_REAL_RENAME_FAILURE',pointer)
+ def exclusive():
+  try:first.mkdir()
+  except FileExistsError:pass
+  else:raise AssertionError('Would overwrite publication')
+  assert (first/'change').read_text()=='first'
+ case('EXISTING_PUBLICATION_COLLISION_REJECTED',exclusive)
+ result['filesystem']={'device':root.stat().st_dev,'blockSize':os.statvfs(root).f_bsize,'availableBytes':os.statvfs(root).f_bavail*os.statvfs(root).f_frsize,'inodeEvidence':{p.name:p.stat().st_ino for p in first.iterdir()}}
+finally:
+ shutil.rmtree(root);result['cleanup']['ownedRootRemoved']=not root.exists()
+code=1 if result['criticalFailures'] else 2 if args.require_linux and not result['targetLinux'] else 0
+result['result']='FAIL' if code==1 else 'ENV_BLOCKED' if code==2 else 'PASS';result['targetValidation']='LOCAL_DISPOSABLE_LINUX_ONLY' if result['targetLinux'] else 'ENV_BLOCKED';result['commands'][0]['exitCode']=code;out.parent.mkdir(parents=True,exist_ok=True);out.write_text(json.dumps(result,indent=2)+'\n');print(result['result'],str(out));sys.exit(code)

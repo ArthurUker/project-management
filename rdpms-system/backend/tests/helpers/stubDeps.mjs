@@ -23,7 +23,12 @@ function matchesWhere(row, where) {
     if (expected instanceof Date) {
       return actual instanceof Date && actual.getTime() === expected.getTime();
     }
-    if (expected && typeof expected === 'object' && !Array.isArray(expected)) return true; // 未使用的操作符条件
+    if (expected && typeof expected === 'object' && !Array.isArray(expected)) {
+      // RP10-T02：状态白名单 `{ in: [...] }` 必须真实参与匹配，
+      // 否则桩会把「仅限可编辑状态」的原子谓词当成恒成立，掩盖迟到保存缺陷。
+      if (Array.isArray(expected.in)) return expected.in.includes(actual);
+      return true; // 未使用的操作符条件
+    }
     return actual === expected;
   });
 }
@@ -61,6 +66,7 @@ export function createStubDb(options = {}) {
     projects: [...(options.projects ?? [])],
     milestones: [...(options.milestones ?? [])],
     writes: [],
+    rawQueries: [],
   };
 
   /** 事务回滚用的快照/还原（桩实现：失败时把状态还原，模拟真实事务语义） */
@@ -76,6 +82,7 @@ export function createStubDb(options = {}) {
     projects: state.projects,
     milestones: state.milestones,
     writes: state.writes,
+    rawQueries: state.rawQueries,
   });
   const restore = (snap) => {
     state.reports = snap.reports;
@@ -89,10 +96,12 @@ export function createStubDb(options = {}) {
     state.projects = snap.projects;
     state.milestones = snap.milestones;
     state.writes = snap.writes;
+    state.rawQueries = snap.rawQueries;
   };
 
   const db = {
     state,
+    dataRecoveryState: {findUniqueOrThrow: async()=>({id:1,status:'READY',epoch:'00000000-0000-4000-8000-000000000001'}),findUnique:async()=>({id:1,status:'READY',epoch:'00000000-0000-4000-8000-000000000001'})},
     project: {
       findUnique: async ({ where }) => {
         // 钩子点：位于请求处理链路内部，用于构造「A 挂起时 B 完成」的交错场景
@@ -357,7 +366,15 @@ export function createStubDb(options = {}) {
         throw err;
       }
     },
-    $queryRaw: unimplemented('$queryRaw'),
+    /**
+     * 行锁语句（`SELECT id FROM reports WHERE id = $1 FOR UPDATE`）只做记录：
+     * 桩不模拟锁竞争（并发语义由真实 PostgreSQL 集成测试覆盖），
+     * 但必须真实返回查询结果，否则提交命令在契约测试里会 500。
+     */
+    $queryRaw: async (strings, ...values) => {
+      state.rawQueries.push({ sql: Array.isArray(strings) ? strings.join('?') : String(strings ?? '') });
+      return [];
+    },
   };
 
   return db;

@@ -19,6 +19,8 @@ export type SyncEntityKey =
 export type SyncOp = 'upsert' | 'delete';
 
 export interface SyncChange {
+  /** Local provenance only; server validates its own epoch/device, not this client tag. */
+  datasetEpoch?: string;
   clientMutationId: string;
   entity: SyncEntityKey | string;
   op: SyncOp;
@@ -26,9 +28,14 @@ export interface SyncChange {
   data?: Record<string, unknown>;
   /** 客户端最后一次看到的服务端 updatedAt（ISO）；用于服务端冲突检测 */
   baseUpdatedAt?: string;
+  projectId?: string;
+  /** Explicit local causal prerequisites, not server authorization. */
+  dependsOn?: string[];
+  receiptHandle?: string;
+  payloadHash?: string;
 }
 
-export type SyncChangeStatus = 'applied' | 'conflict' | 'rejected';
+export type SyncChangeStatus = 'applied' | 'conflict' | 'rejected' | 'pending' | 'unknown' | 'expired';
 
 export interface SyncPushResult {
   clientMutationId: string;
@@ -43,15 +50,26 @@ export interface SyncPushResult {
   /** 冲突时的服务端快照（含 updatedAt） */
   server?: Record<string, unknown>;
   replayed?: boolean;
+  receiptHandle?: string;
+  payloadHash?: string;
+  expiresAt?: string;
+  result?: SyncPushResult | null;
+  httpStatus?: number;
 }
 
 export interface SyncInitResponse {
+  pullProtocol?: 2;
+  datasetEpoch?: string;
   serverTime: string;
   cursor: string;
   full: boolean;
-  acl: { projectIds: string[]; permissions: string[]; aclVersion: string };
+  acl: { datasetEpoch?: string; projectIds: string[]; permissions: string[]; aclVersion: string;
+    projectionVersion?: number; projects?: Array<{ id: string; role: string | null; capabilities: string[] }>;
+    writePolicy?: Record<string, { read: string; update: string; create: string | null; delete: string; status: string | null; assign: string | null; capability: string }>;
+  };
   entities: string[];
-  changes: Record<string, { upserts: Array<Record<string, unknown>>; tombstones: string[] }>;
+  changes: Record<string, { upserts: Array<Record<string, unknown>>; tombstones: string[]; tombstoneRevisions?: Record<string,string>; authorizationTombstones?: string[] }>;
+  pagination?: { hasMore: boolean; nextPageToken: string | null };
 }
 
 export interface SyncStatusResponse {
@@ -69,11 +87,16 @@ export interface SyncStatusResponse {
 }
 
 export const syncAPI = {
-  init: (params: { since?: string; deviceId: string; deviceLabel?: string; platform?: string }) =>
+  init: (params: { pullProtocol?: 2; since?: string; aclVersion?: string; datasetEpoch?: string; deviceId: string; deviceLabel?: string; platform?: string; paginationVersion?: 1; pageToken?: string }) =>
     get<SyncInitResponse>('/sync/init', { params } as never),
 
   push: (payload: { deviceId: string; deviceLabel?: string; platform?: string; changes: SyncChange[] }) =>
-    post<{ serverTime: string; results: SyncPushResult[]; conflictCount: number }>('/sync/push', payload),
+    post<{ serverTime: string; results: SyncPushResult[]; conflictCount: number }>('/sync/push', { protocolVersion: 1, ...payload }),
+
+  reserve: (payload: { protocolVersion: 1; deviceId: string; changes: SyncChange[] }) =>
+    post<{ protocolVersion: 1; results: SyncPushResult[] }>('/sync/receipts/reserve', payload),
+  query: (payload: { protocolVersion: 1; deviceId: string; changes: SyncChange[] }) =>
+    post<{ protocolVersion: 1; results: SyncPushResult[] }>('/sync/receipts/query', payload),
 
   registerDevice: (payload: { deviceId: string; label?: string; platform?: string }) =>
     post<{ id: string }>('/sync/device', payload),

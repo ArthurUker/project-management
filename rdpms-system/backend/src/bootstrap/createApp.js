@@ -9,6 +9,7 @@
  */
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { loadConfig } from '../platform/config/configSchema.js';
 import { runWithContext, currentContext } from '../platform/requestContext.js';
 
 import authRoutes from '../routes/auth.js';
@@ -62,10 +63,11 @@ export function createApp(deps = {}) {
     return runWithContext({ db: db ?? null, actorResolver: actorResolver ?? null }, next);
   });
 
-  // CORS
+  const config = loadConfig(process.env);
+  // CORS uses the same documented schema as compiled candidate CLI.
   app.use('*', cors({
-    origin: (process.env.CORS_ORIGINS || '*').split(',').map((s) => s.trim()),
-    credentials: true,
+    origin: config.origins,
+    credentials: config.credentials,
   }));
 
   // 幂等（RF02）：不再在鉴权前按 key 回放任何缓存。写命令在完成鉴权与资源授权后，
@@ -81,10 +83,11 @@ export function createApp(deps = {}) {
   // 健康检查（liveness）
   // 健康检查：附加**本轮实例标识与构建标识**，供测试确认「访问的是本轮进程/本轮构建」，
   // 避免旧进程响应被误算到新代码上（第六轮测试环境要求）。
+  const buildId=process.env.RDPMS_BUILD_ID, instanceId=process.env.RDPMS_INSTANCE_ID;
   const healthPayload = () => ({
     status: 'ok',
-    ...(process.env.RDPMS_INSTANCE_ID ? { instance: process.env.RDPMS_INSTANCE_ID } : {}),
-    ...(process.env.RDPMS_BUILD_ID ? { build: process.env.RDPMS_BUILD_ID } : {}),
+    ...(instanceId ? { instance: instanceId } : {}),
+    ...(buildId ? { build: buildId } : {}),
   });
   app.get('/health', (c) => c.json(healthPayload()));
   app.get('/api/health', (c) => c.json(healthPayload()));
@@ -95,9 +98,11 @@ export function createApp(deps = {}) {
       const client = currentContext()?.db ?? db;
       if (!client) throw new Error('数据库未注入');
       await client.$queryRaw`SELECT 1`;
-      return c.json({ ready: true, db: 'up' });
+      const dataset=await client.dataRecoveryState.findUnique({where:{id:1},select:{status:true,epoch:true}});
+      if(!dataset || dataset.status!=='READY') throw new Error('DATASET_NOT_READY');
+      return c.json({ ready: true, db: 'up', ...healthPayload() });
     } catch (err) {
-      return c.json({ ready: false, db: 'down', error: err?.message || 'db unavailable' }, 503);
+      return c.json({ ready: false, db: 'down', error: 'db unavailable' }, 503);
     }
   });
 

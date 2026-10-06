@@ -76,3 +76,10 @@ export function resolveDb() {
 export function resetFallbackDb() {
   fallbackDb = null;
 }
+
+/** HTTP correlation only; restore callbacks have their own durable gate/authority. */
+export function setRequestDatasetEpoch(epoch, recoveryOperation = false) {
+  const ctx = storage.getStore();
+  if (!ctx) throw new Error('REQUEST_EPOCH_CONTEXT_REQUIRED');
+  ctx.datasetEpoch = epoch; ctx.recoveryOperation = recoveryOperation;
+}

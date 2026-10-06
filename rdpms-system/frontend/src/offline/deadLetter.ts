@@ -40,6 +40,8 @@ export interface DeadLetterRecord {
   lastRejectedAt: string;
   /** 被拒绝次数（用于提示“同一条变更反复失败”） */
   attempts: number;
+  /** Exact queued binding/stage retained for safe same-command receipt recovery. */
+  original?: OutboxRecord;
 }
 
 export function deadLetterKey(userId: string, clientMutationId: string): string {
@@ -54,7 +56,7 @@ export function isVisibleTo(record: Pick<DeadLetterRecord, 'userId'>, userId: st
 
 export function buildDeadLetter(params: {
   userId: string;
-  outbox: Pick<OutboxRecord, 'clientMutationId' | 'entity' | 'op' | 'id' | 'data' | 'baseUpdatedAt'>;
+  outbox: Pick<OutboxRecord, 'clientMutationId' | 'entity' | 'op' | 'id' | 'data' | 'baseUpdatedAt'> & Partial<OutboxRecord>;
   projectId?: string | null;
   reason: string;
   code?: string;
@@ -70,6 +72,7 @@ export function buildDeadLetter(params: {
     id: outbox.id,
     clientMutationId: outbox.clientMutationId,
     payload: outbox.data,
+    ...(outbox.createdAt ? { original: structuredClone(outbox) as OutboxRecord } : {}),
     baseUpdatedAt: outbox.baseUpdatedAt,
     reason,
     code,
@@ -106,7 +109,11 @@ export function mergeDeadLetter(
 
 /** 从拒绝记录重建一条可再次入队的变更（用户“重试/复制出来”用） */
 export function toOutboxRecord(record: DeadLetterRecord, now = new Date().toISOString()): OutboxRecord {
+  if (record.original) return structuredClone(record.original);
   return {
+    origin: 'legacy-unverified',
+    userId: record.userId,
+    projectId: record.projectId ?? undefined,
     clientMutationId: record.clientMutationId,
     entity: record.entity,
     op: record.op,

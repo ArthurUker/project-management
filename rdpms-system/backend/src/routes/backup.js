@@ -4,7 +4,8 @@ import { authenticate as authMiddleware, requirePermission, getAuth } from '../k
 import { AUDIT_ACTIONS } from '../kernel/constants.js';
 import { writeAudit } from '../kernel/audit.js';
 import { forbidden, badRequest } from '../kernel/http.js';
-import { validatePayload, applyRestore, RESTORE_TABLES } from '../kernel/backupRestore.js';
+import { restoreScopeMetadata } from '../kernel/restoreSchemaRegistry.js';
+import { validatePayload, applyRestore, reconcileRestore, RESTORE_TABLES } from '../kernel/backupRestore.js';
 
 /**
  * /api/backup —— 数据导出 + 应用层恢复 v2（批次三）。
@@ -126,7 +127,7 @@ backup.get('/export', requirePermission('data.export'), async (c) => {
 // ─── 可恢复表清单（供前端展示模块与表映射）──────────────────────────────────
 backup.get('/restore/tables', async (c) => {
   assertSuperAdmin(c);
-  return c.json({ tables: RESTORE_TABLES.map((t) => ({ key: t.key, appendOnly: t.appendOnly })) });
+  return c.json({ scope: restoreScopeMetadata(RESTORE_TABLES), tables: RESTORE_TABLES.map((t) => ({ key: t.key, appendOnly: t.appendOnly, pk: t.pk, uniqueConstraints: t.uniques, foreignKeys: t.foreignKeys })) });
 });
 
 // ─── POST /api/backup/restore/preview —— 只读校验 + 差异统计 ─────────────────
@@ -171,8 +172,9 @@ backup.post('/restore', async (c) => {
 
   let summary;
   try {
-    summary = await applyRestore(body.backup, { mode });
+    summary = await applyRestore(body.backup, { mode, actor: auth, c });
   } catch (err) {
+    if (err?.committed) return c.json({ success: false, code: err.code, committed: err.committed, rolledBack: false, runId: err.runId }, 503);
     if (err?.validation) {
       await writeAudit(prisma, {
         c,
@@ -206,26 +208,15 @@ backup.post('/restore', async (c) => {
     return c.json({ error: `恢复失败，事务已回滚：${err?.message || String(err)}`, rolledBack: true }, 500);
   }
 
-  await writeAudit(prisma, {
-    c,
-    actorId: auth.userId,
-    actorName: auth.user.displayName,
-    actorRole: auth.systemRole,
-    action: AUDIT_ACTIONS.RESTORE,
-    entityType: 'BACKUP',
-    entityLabel: `数据恢复（${mode}）`,
-    after: {
-      mode: summary.mode,
-      created: summary.created,
-      updated: summary.updated,
-      deleted: summary.deleted,
-      durationMs: summary.durationMs,
-      tables: summary.tables,
-    },
-    metadata: { operation: 'backup.restore', mode },
-  });
-
   return c.json({ success: true, summary });
+});
+
+backup.get('/restore/status', async(c)=>{assertSuperAdmin(c);return c.json(await prisma.dataRecoveryState.findUniqueOrThrow({where:{id:1}}));});
+backup.post('/restore/reconcile', async(c)=>{
+  const actor=assertSuperAdmin(c), body=await c.req.json().catch(()=>null);
+  if(typeof body?.runId!=='string'||! /^[0-9a-f-]{36}$/i.test(body.runId))throw badRequest('VALIDATION_ERROR','Exact restore runId required');
+  try{return c.json(await reconcileRestore({actor,c,runId:body.runId}));}
+  catch{return c.json({code:'RESTORE_NEEDS_RECONCILIATION',committed:true,rolledBack:false,runId:body.runId},503);}
 });
 
 export default backup;

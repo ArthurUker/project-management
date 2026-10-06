@@ -16,6 +16,41 @@ import { badRequest, notFound } from '../kernel/http.js';
  */
 const roles = new Hono();
 
+// Role creation owns these fields; callers must use the dedicated permission
+// assignment endpoint for relationships and cannot set server-managed state.
+const ROLE_CREATE_SERVER_FIELDS = Object.freeze([
+  'isSystem',
+  'sortOrder',
+  'permissionIds',
+  'permissionCodes',
+  'rolePermissions',
+]);
+
+function pickRoleCreate(body) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return pickAllowed(body, ['name', 'description'], { entityLabel: '创建角色', allowEmpty: true });
+  }
+
+  const suppliedServerFields = ROLE_CREATE_SERVER_FIELDS
+    .filter((field) => Object.prototype.hasOwnProperty.call(body, field));
+  if (suppliedServerFields.length > 0) {
+    throw badRequest(
+      'VALIDATION_ERROR',
+      `创建角色: 包含禁止提交的字段 ${suppliedServerFields.join(', ')}`,
+      { forbiddenFields: suppliedServerFields },
+    );
+  }
+
+  // `code` remains globally forbidden in pickAllowed. Exclude it only from the
+  // object passed to that generic guard, then add it to this command's DTO.
+  const { code, ...attributes } = body;
+  const data = pickAllowed(attributes, ['name', 'description'], {
+    entityLabel: '创建角色',
+    allowEmpty: true,
+  });
+  return { ...data, code };
+}
+
 roles.use('*', authenticate);
 
 // GET /permission-catalog —— P0 权限目录（roles.view；权限分配弹窗数据源）
@@ -63,8 +98,16 @@ roles.get('/', requirePermission('roles.view'), async (c) => {
 roles.post('/', requirePermission('roles.create'), async (c) => {
   const auth = getAuth(c);
   const body = await c.req.json().catch(() => null);
-  const data = pickAllowed(body, ['code', 'name', 'description'], { entityLabel: '创建角色' });
-  if (!data.code || !data.name) throw badRequest('VALIDATION_ERROR', 'code 与 name 必填');
+  const data = pickRoleCreate(body);
+  if (typeof data.code !== 'string' || typeof data.name !== 'string') {
+    throw badRequest('VALIDATION_ERROR', 'code 与 name 必须是字符串');
+  }
+  if (!data.name.trim() || data.name.length > 128) {
+    throw badRequest('VALIDATION_ERROR', '角色 name 不能为空且不能超过128个字符');
+  }
+  if (data.description !== undefined && data.description !== null && typeof data.description !== 'string') {
+    throw badRequest('VALIDATION_ERROR', '角色 description 必须是字符串或null');
+  }
   if (!/^[A-Z][A-Z0-9_]{1,63}$/.test(data.code)) {
     throw badRequest('VALIDATION_ERROR', '角色 code 仅允许大写字母/数字/下划线');
   }

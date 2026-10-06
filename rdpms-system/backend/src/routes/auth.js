@@ -1,4 +1,6 @@
 import { Hono } from 'hono';
+import { setRequestDatasetEpoch } from '../platform/requestContext.js';
+import { assertRecoveryAvailable } from '../platform/recovery/dataEpoch.js';
 import { prisma } from '../platform/db/client.js';
 import bcrypt from 'bcryptjs';
 import crypto from 'node:crypto';
@@ -8,9 +10,11 @@ import {
   getAuth,
   JWT_SECRET,
   parseTtlToSec,
+  accessTokenExpiresInSeconds,
 } from '../kernel/rbac.js';
 import { AUDIT_ACTIONS } from '../kernel/constants.js';
 import { writeAudit, requestCtx } from '../kernel/audit.js';
+import { writeAuditStrict } from '../platform/audit/strictAudit.js';
 import { badRequest, unauthorized } from '../kernel/http.js';
 
 const auth = new Hono();
@@ -27,13 +31,13 @@ function sha256(value) {
   return crypto.createHash('sha256').update(value).digest('hex');
 }
 
-async function issueRefreshToken(userId, c) {
+async function issueRefreshToken(userId, c, db = prisma, familyId = crypto.randomUUID()) {
   const raw = crypto.randomBytes(48).toString('hex');
-  await prisma.refreshToken.create({
+  await db.refreshToken.create({
     data: {
       userId,
       tokenHash: sha256(raw),
-      familyId: crypto.randomUUID(),
+      familyId,
       userAgent: c.req.header('User-Agent')?.slice(0, 512) || null,
       ip: requestCtx(c).ip,
       expiresAt: new Date(Date.now() + REFRESH_TTL_SEC * 1000),
@@ -100,6 +104,9 @@ async function currentUserPayload(user) {
 
 // ── 登录 ─────────────────────────────────────────────────────────────────────
 auth.post('/login', async (c) => {
+  const dataset = await prisma.dataRecoveryState.findUniqueOrThrow({ where: { id: 1 } });
+  await assertRecoveryAvailable(prisma, c.req.method, c.req.path);
+  setRequestDatasetEpoch(dataset.epoch);
   const body = await c.req.json().catch(() => null);
   const username = typeof body?.username === 'string' ? body.username.trim().toLowerCase() : '';
   const password = typeof body?.password === 'string' ? body.password : '';
@@ -125,22 +132,76 @@ auth.post('/login', async (c) => {
   if (user.status === 'DISABLED') {
     return c.json({ error: '账号已停用，请联系管理员', code: 'ACCOUNT_DISABLED' }, 403);
   }
-  if (user.status === 'LOCKED' || (user.lockedUntil && user.lockedUntil > new Date())) {
+  const loginCheckedAt = new Date();
+  // LOCKED without an expiry represents a non-temporary/manual hold. A timed lock
+  // is enforced only while its deadline is in the future and may recover on login.
+  if ((user.status === 'LOCKED' && (!user.lockedUntil || user.lockedUntil > loginCheckedAt))
+    || (user.lockedUntil && user.lockedUntil > loginCheckedAt)) {
     return c.json({ error: '账号已锁定，请稍后再试', code: 'ACCOUNT_LOCKED' }, 403);
   }
 
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) {
-    const attempts = user.failedLoginAttempts + 1;
     const maxAttempts = 5;
-    await prisma.user.update({
-      where: { id: user.id },
-      data: {
-        failedLoginAttempts: attempts,
-        lockedUntil: attempts >= maxAttempts ? new Date(Date.now() + 15 * 60 * 1000) : null,
-        status: attempts >= maxAttempts ? 'LOCKED' : user.status,
-      },
+    const failed = await prisma.$transaction(async (tx) => {
+      // Atomic increment under a row update lock: simultaneous failures cannot
+      // overwrite one another with the same stale absolute count.
+      const changed = await tx.user.updateMany({
+        where: {
+          id: user.id,
+          OR: [
+            { status: 'ACTIVE', OR: [{ lockedUntil: null }, { lockedUntil: { lte: loginCheckedAt } }] },
+            { status: 'LOCKED', lockedUntil: { lte: loginCheckedAt } },
+            // Preserve existing PENDING_ACTIVATION credential behavior; it is
+            // not converted to ACTIVE by a login success or failure update.
+            {
+              status: 'PENDING_ACTIVATION',
+              OR: [{ lockedUntil: null }, { lockedUntil: { lte: loginCheckedAt } }],
+            },
+          ],
+        },
+        data: { failedLoginAttempts: { increment: 1 } },
+      });
+      if (changed.count !== 1) return null;
+      const latest = await tx.user.findUnique({
+        where: { id: user.id },
+        select: { failedLoginAttempts: true },
+      });
+      if (!latest) return null;
+      const attempts = latest.failedLoginAttempts;
+      const locked = attempts >= maxAttempts;
+      if (locked) {
+        const lockedUntil = new Date(Date.now() + 15 * 60 * 1000);
+        await tx.user.updateMany({
+          where: { id: user.id, status: { in: ['ACTIVE', 'LOCKED'] } },
+          data: { status: 'LOCKED', lockedUntil },
+        });
+        // Pending activation remains pending. The shared lockedUntil check at
+        // login entry enforces the same temporary lock without activating it.
+        await tx.user.updateMany({
+          where: {
+            id: user.id,
+            status: 'PENDING_ACTIVATION',
+            failedLoginAttempts: { gte: maxAttempts },
+            OR: [{ lockedUntil: null }, { lockedUntil: { lte: loginCheckedAt } }],
+          },
+          data: { lockedUntil },
+        });
+      }
+      return { attempts, locked };
     });
+    const current = failed ? null : await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { status: true, failedLoginAttempts: true, lockedUntil: true },
+    });
+    if (current?.status === 'DISABLED') {
+      return c.json({ error: '账号已停用，请联系管理员', code: 'ACCOUNT_DISABLED' }, 403);
+    }
+    if (current && ((current.status === 'LOCKED' && (!current.lockedUntil || current.lockedUntil > new Date()))
+      || (current.lockedUntil && current.lockedUntil > new Date()))) {
+      return c.json({ error: '账号已锁定，请稍后再试', code: 'ACCOUNT_LOCKED' }, 403);
+    }
+    const attempts = failed?.attempts ?? current?.failedLoginAttempts ?? user.failedLoginAttempts;
     await writeAudit(prisma, {
       c,
       actorId: user.id,
@@ -150,23 +211,55 @@ auth.post('/login', async (c) => {
       entityType: 'USER',
       entityId: user.id,
       entityLabel: user.username,
-      metadata: { attempts },
+      metadata: { attempts, locked: Boolean(failed?.locked) },
     });
     return c.json({ error: '用户名或密码错误', code: 'BAD_CREDENTIALS' }, 401);
   }
 
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      failedLoginAttempts: 0,
-      lockedUntil: null,
-      lastLoginAt: new Date(),
-      lastLoginIp: ctx.ip,
-    },
-  });
+  const loginSucceededAt = new Date();
+  const resetLoginState = {
+    failedLoginAttempts: 0,
+    lockedUntil: null,
+    lastLoginAt: loginSucceededAt,
+    lastLoginIp: ctx.ip,
+  };
+  // Expired LOCKED rows are the legacy representation of a timed login lock.
+  // Recover them only after correct credentials; never turn DISABLED back on.
+  const reset = user.status === 'LOCKED'
+    ? await prisma.user.updateMany({
+      where: { id: user.id, passwordHash: user.passwordHash, securityVersion: user.securityVersion, status: 'LOCKED', lockedUntil: { lte: loginSucceededAt } },
+      data: { ...resetLoginState, status: 'ACTIVE' },
+    })
+    : await prisma.user.updateMany({
+      where: {
+        id: user.id,
+        status: user.status,
+        passwordHash: user.passwordHash,
+        securityVersion: user.securityVersion,
+        OR: [{ lockedUntil: null }, { lockedUntil: { lte: loginSucceededAt } }],
+      },
+      data: resetLoginState,
+    });
+  if (reset.count !== 1) {
+    const current = await prisma.user.findUnique({ where: { id: user.id }, select: { status: true, securityVersion: true, passwordHash: true } });
+    if (!current || current.status === 'DISABLED') {
+      return c.json({ error: '账号已停用，请联系管理员', code: 'ACCOUNT_DISABLED' }, 403);
+    }
+    if (current.securityVersion !== user.securityVersion || current.passwordHash !== user.passwordHash) return c.json({ error: '凭据已改变，请重新登录', code: 'LOGIN_STATE_CHANGED' }, 401);
+    return c.json({ error: '账号已锁定，请稍后再试', code: 'ACCOUNT_LOCKED' }, 403);
+  }
 
-  const accessToken = signAccessToken(user);
-  const refreshToken = await issueRefreshToken(user.id, c);
+  // The conditional update may have restored an expired timed-lock row.
+  // Build the response from the committed state instead of the pre-update
+  // login lookup, so clients observe the same status as the database.
+  const { authenticatedUser, accessToken, refreshToken } = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM users WHERE id = ${user.id} FOR UPDATE`;
+    const current = await tx.user.findUnique({ where: { id: user.id } });
+    if (!current || current.deletedAt || current.status === 'DISABLED') throw unauthorized('ACCOUNT_DISABLED', '账号已停用');
+    if (current.passwordHash !== user.passwordHash || current.securityVersion !== user.securityVersion) throw unauthorized('LOGIN_STATE_CHANGED', '凭据已改变，请重新登录');
+    if (current.status === 'LOCKED' || current.lockedUntil && current.lockedUntil > new Date()) throw unauthorized('ACCOUNT_LOCKED', '账号已锁定');
+    return { authenticatedUser: current, accessToken: signAccessToken({ ...current, datasetEpoch: dataset.epoch }), refreshToken: await issueRefreshToken(current.id, c, tx) };
+  });
 
   await writeAudit(prisma, {
     c,
@@ -180,14 +273,14 @@ auth.post('/login', async (c) => {
   });
   await writeSystemLog({ ...ctx, action: 'login', userId: user.id, message: `${user.username} 登录成功` });
 
-  const permissions = await loadPermissions(user);
+  const permissions = await loadPermissions(authenticatedUser);
   return c.json({
     accessToken,
     refreshToken,
-    expiresIn: 7200,
+    expiresIn: accessTokenExpiresInSeconds(accessToken),
     token: accessToken, // 兼容旧客户端字段
     user: {
-      ...(await currentUserPayload(user)),
+      ...(await currentUserPayload(authenticatedUser)),
       permissions: permissions ?? [],
     },
   });
@@ -195,25 +288,55 @@ auth.post('/login', async (c) => {
 
 // ── 刷新 ─────────────────────────────────────────────────────────────────────
 auth.post('/refresh', async (c) => {
-  const { refreshToken } = await c.req.json().catch(() => ({}));
-  if (!refreshToken) throw badRequest('VALIDATION_ERROR', '缺少 refreshToken');
-  const row = await prisma.refreshToken.findUnique({ where: { tokenHash: sha256(refreshToken) }, include: { user: true } });
-  if (!row || row.revokedAt || row.expiresAt < new Date() || !row.user || row.user.status !== 'ACTIVE') {
-    throw unauthorized('INVALID_REFRESH_TOKEN', '刷新令牌无效或已过期');
+  const dataset = await prisma.dataRecoveryState.findUniqueOrThrow({ where: { id: 1 } });
+  await assertRecoveryAvailable(prisma, c.req.method, c.req.path);
+  setRequestDatasetEpoch(dataset.epoch);
+  const body = await c.req.json().catch(() => null);
+  const refreshToken = body?.refreshToken;
+  if (typeof refreshToken !== 'string' || !refreshToken.trim()) {
+    throw badRequest('VALIDATION_ERROR', 'refreshToken 必须是非空字符串');
   }
-  // 轮换：旧令牌立即吊销
-  await prisma.refreshToken.update({ where: { id: row.id }, data: { revokedAt: new Date() } });
-  const accessToken = signAccessToken(row.user);
-  const newRefresh = await issueRefreshToken(row.user.id, c);
-  await writeAudit(prisma, {
-    c,
-    actorId: row.user.id,
-    actorRole: row.user.systemRole,
-    action: AUDIT_ACTIONS.TOKEN_REFRESH,
-    entityType: 'USER',
-    entityId: row.user.id,
+  const row = await prisma.refreshToken.findUnique({ where: { tokenHash: sha256(refreshToken) } });
+  if (!row || row.datasetEpoch !== dataset.epoch) throw unauthorized('INVALID_REFRESH_TOKEN', '刷新令牌无效或已过期');
+
+  const result = await prisma.$transaction(async (tx) => {
+    // Consistent lock order: current actor first, then conditional token consume.
+    // A committed disable/soft-delete before this boundary cannot issue a token;
+    // a concurrent actor update waits until this short transaction finishes.
+    await tx.$queryRaw`SELECT id FROM users WHERE id = ${row.userId} FOR UPDATE`;
+    const user = await tx.user.findUnique({ where: { id: row.userId } });
+    if (!user || user.deletedAt || user.status !== 'ACTIVE') {
+      throw unauthorized('INVALID_REFRESH_TOKEN', '刷新令牌无效或已过期');
+    }
+    const consumedAt = new Date();
+    const consumed = await tx.refreshToken.updateMany({
+      where: { id: row.id, revokedAt: null, expiresAt: { gt: consumedAt } },
+      data: { revokedAt: consumedAt },
+    });
+    if (consumed.count !== 1) {
+      const current = await tx.refreshToken.findUnique({ where: { id: row.id } });
+      if (current?.revokedAt) {
+        // A normal race is not proof of theft. Keep the winning family alive.
+        throw unauthorized('REFRESH_TOKEN_REPLAYED', '刷新令牌已被消费，请确认当前会话或重新登录');
+      }
+      throw unauthorized('INVALID_REFRESH_TOKEN', '刷新令牌无效或已过期');
+    }
+    const accessToken = signAccessToken({ ...user, datasetEpoch: dataset.epoch });
+    const newRefresh = await issueRefreshToken(user.id, c, tx, row.familyId);
+    await writeAuditStrict(tx, {
+      c,
+      actorId: user.id,
+      actorRole: user.systemRole,
+      action: AUDIT_ACTIONS.TOKEN_REFRESH,
+      entityType: 'USER',
+      entityId: user.id,
+    });
+    return { accessToken, refreshToken: newRefresh };
   });
-  return c.json({ accessToken, refreshToken: newRefresh, expiresIn: 7200 });
+  return c.json({
+    ...result,
+    expiresIn: accessTokenExpiresInSeconds(result.accessToken),
+  });
 });
 
 // ── 登出 ─────────────────────────────────────────────────────────────────────
@@ -266,35 +389,20 @@ async function applyPasswordChange(c, user, newPassword, { force = false } = {})
   if (weak.some((w) => newPassword.toLowerCase().includes(w))) {
     throw badRequest('WEAK_PASSWORD', '新密码命中弱口令黑名单');
   }
-  if (!force) {
-    const valid = await bcrypt.compare(c.get('plainOldPassword') ?? '', user.passwordHash);
-    if (!valid) throw badRequest('WRONG_OLD_PASSWORD', '旧密码错误');
-  }
   const passwordHash = await bcrypt.hash(newPassword, 12);
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      passwordHash,
-      mustChangePassword: false,
-      passwordChangedAt: new Date(),
-      failedLoginAttempts: 0,
-      lockedUntil: null,
-    },
-  });
-  // 改密后吊销全部刷新令牌
-  await prisma.refreshToken.updateMany({
-    where: { userId: user.id, revokedAt: null },
-    data: { revokedAt: new Date() },
-  });
-  await writeAudit(prisma, {
-    c,
-    actorId: user.id,
-    actorName: user.displayName,
-    actorRole: user.systemRole,
-    action: AUDIT_ACTIONS.PASSWORD_CHANGE,
-    entityType: 'USER',
-    entityId: user.id,
-    entityLabel: user.username,
+  await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM users WHERE id = ${user.id} FOR UPDATE`;
+    const current = await tx.user.findUnique({ where: { id: user.id } });
+    if (!current || current.deletedAt || current.status !== 'ACTIVE') throw unauthorized('SESSION_INVALID', '账号已失效');
+    if (current.securityVersion !== getAuth(c).user.securityVersion) throw unauthorized('SESSION_REVOKED', '会话已撤销');
+    if (force && !current.mustChangePassword) throw badRequest('FORBIDDEN', '当前账号不处于强制改密状态');
+    if (!force && !await bcrypt.compare(c.get('plainOldPassword') ?? '', current.passwordHash)) throw badRequest('WRONG_OLD_PASSWORD', '旧密码错误');
+    const changedAt = new Date();
+    await tx.user.update({ where: { id: user.id }, data: { passwordHash, securityVersion: { increment: 1 }, mustChangePassword: false,
+      passwordChangedAt: changedAt, failedLoginAttempts: 0, lockedUntil: null } });
+    await tx.refreshToken.updateMany({ where: { userId: user.id, revokedAt: null }, data: { revokedAt: changedAt } });
+    await writeAuditStrict(tx, { c, actorId: current.id, actorName: current.displayName, actorRole: current.systemRole,
+      action: AUDIT_ACTIONS.PASSWORD_CHANGE, entityType: 'USER', entityId: current.id, entityLabel: current.username });
   });
 }
 

@@ -54,6 +54,8 @@ async function makeFile({ owner, accessScope = 'PRIVATE_STAGING', ownerProjectId
   return prisma.fileObject.update({
     where: { id: row.id },
     data: {
+      // Explicit successful scan fixture; uploaded SKIPPED is now correctly unreadable.
+      scanStatus: 'CLEAN',
       accessScope,
       ownerUserId: owner,
       ownerProjectId,

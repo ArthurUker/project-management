@@ -1,10 +1,14 @@
+import { transferProjectManager, managerTransferId } from '../modules/projects/projectCommands.js';
 import { Hono } from 'hono';
 import { prisma } from '../platform/db/client.js';
 import { authenticate as authMiddleware, requirePermission, getAuth } from '../kernel/rbac.js';
 import { AUDIT_ACTIONS } from '../kernel/constants.js';
-import { writeAudit } from '../kernel/audit.js';
 import { nextCode } from '../kernel/sequence.js';
 import { badRequest, notFound } from '../kernel/http.js';
+import { resolveProjectAccess, assertProjectCapability } from '../kernel/projectAccess.js';
+import { assertActionPermission } from '../modules/access/writeGuards.js';
+import { registrationActor, registrationScopeWhere, registrationLinks } from '../modules/projects/registrationAccess.js';
+import { writeAuditStrict } from '../platform/audit/strictAudit.js';
 
 /**
  * /api/registrations —— 注册项目管理（W10 PG baseline 迁移）。
@@ -37,6 +41,43 @@ const REGISTRATION_STAGES = Object.keys(STAGE_TRANSITIONS);
 
 registrations.use('*', authMiddleware);
 
+/** Recheck authority in the same snapshot/transaction as projection or mutation. */
+async function registrationRun(c, permission, capability, work, id = null, write = false) {
+  const authenticated = getAuth(c);
+  return prisma.$transaction(async (tx) => {
+    if (write) {
+      const input = await c.req.json().catch(() => ({}));
+      const targetId = input?.managerId === undefined ? authenticated.userId : managerTransferId(input.managerId);
+      await tx.$queryRaw`SELECT id FROM users WHERE id IN (${authenticated.userId}, ${targetId}) ORDER BY id FOR UPDATE`;
+      if (id) {
+        await tx.$queryRaw`SELECT id FROM projects WHERE id = ${id} FOR UPDATE`;
+        await tx.$queryRaw`SELECT id FROM project_members WHERE project_id = ${id} AND user_id = ${authenticated.userId} FOR UPDATE`;
+      }
+    }
+    const auth = await registrationActor(tx, authenticated);
+    assertActionPermission(auth, permission);
+    let access = null;
+    if (id) {
+      const project = await tx.project.findFirst({ where: registrationProjectWhere({ id }), select: { id: true } });
+      if (!project) throw notFound('REGISTRATION_NOT_FOUND', '注册项目不存在');
+      access = await resolveProjectAccess(tx, auth, id);
+      assertProjectCapability(access, capability, permission);
+    }
+    if (auth.systemRole === 'SUPER_ADMIN' && (!access || access.elevated)) {
+      await writeAuditStrict(tx, { c, actorId: auth.userId, actorName: auth.user.displayName, actorRole: auth.systemRole,
+        action: AUDIT_ACTIONS.READ_SENSITIVE, entityType: 'PROJECT', entityId: id, entityLabel: 'registration scope',
+        metadata: { elevated: true, permissionCode: permission, scope: id ? 'nonmember-project' : 'registration-list' } });
+    }
+    return work(tx, auth, access);
+  }, { isolationLevel: write ? 'ReadCommitted' : 'RepeatableRead', maxWait: 10000, timeout: 15000 });
+}
+async function registrationAudit(tx, c, auth, id, permission, changedFields, extra = {}) {
+  return writeAuditStrict(tx, { c, actorId: auth.userId, actorName: auth.user.displayName, actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.UPDATE, entityType: 'REGISTRATION', entityId: id, changedFields,
+    metadata: { permissionCode: permission, ...extra } });
+}
+
+
 function getAllowedStageTransitions(stage) {
   return STAGE_TRANSITIONS[stage] || [];
 }
@@ -55,9 +96,9 @@ function registrationProjectWhere(extra = {}) {
  * 从模板结构化行（TemplatePhase/TemplateTask）生成项目阶段、任务与法规关联。
  * 旧 createTasksAndMilestonesFromTemplate（template.content JSON 解析）已废弃。
  */
-async function scaffoldFromTemplate(projectId, templateId, managerId) {
+async function scaffoldFromTemplate(db, projectId, templateId, managerId) {
   if (!templateId) return { phaseCount: 0, taskCount: 0 };
-  const template = await prisma.projectTemplate.findUnique({
+  const template = await db.projectTemplate.findUnique({
     where: { id: templateId },
     include: { phases: { orderBy: { sortOrder: 'asc' }, include: { tasks: { orderBy: { sortOrder: 'asc' } } } } },
   });
@@ -67,7 +108,7 @@ async function scaffoldFromTemplate(projectId, templateId, managerId) {
   const taskTitles = [];
   for (const [pIdx, phase] of template.phases.entries()) {
     // eslint-disable-next-line no-await-in-loop
-    const phaseRow = await prisma.projectPhase.create({
+    const phaseRow = await db.projectPhase.create({
       data: {
         projectId,
         templatePhaseId: phase.id,
@@ -98,7 +139,7 @@ async function scaffoldFromTemplate(projectId, templateId, managerId) {
     }
     if (taskRows.length > 0) {
       // eslint-disable-next-line no-await-in-loop
-      await prisma.task.createMany({ data: taskRows });
+      await db.task.createMany({ data: taskRows });
       taskCount += taskRows.length;
     }
   }
@@ -107,12 +148,12 @@ async function scaffoldFromTemplate(projectId, templateId, managerId) {
   if (taskCount > 0) {
     const dispatchNos = [...new Set(taskTitles.flatMap((t) => TASK_REGULATORY_MAP[t] || []))];
     if (dispatchNos.length > 0) {
-      const docs = await prisma.regulatoryDocument.findMany({
+      const docs = await db.regulatoryDocument.findMany({
         where: { dispatchNo: { in: dispatchNos } },
         select: { id: true, dispatchNo: true },
       });
       const docMap = Object.fromEntries(docs.map((d) => [d.dispatchNo, d.id]));
-      const tasks = await prisma.task.findMany({ where: { projectId }, select: { id: true, title: true } });
+      const tasks = await db.task.findMany({ where: { projectId }, select: { id: true, title: true } });
       const relations = [];
       for (const t of tasks) {
         for (const dispatchNo of TASK_REGULATORY_MAP[t.title] || []) {
@@ -123,7 +164,7 @@ async function scaffoldFromTemplate(projectId, templateId, managerId) {
         }
       }
       if (relations.length > 0) {
-        await prisma.taskRegulatoryDocument.createMany({ data: relations });
+        await db.taskRegulatoryDocument.createMany({ data: relations });
       }
     }
   }
@@ -135,77 +176,82 @@ import { TASK_REGULATORY_MAP } from '../data/reg66TaskRegulatoryMap.js';
 
 // ── 注册项目列表（registrations.view）───────────────────────────────────────
 registrations.get('/', requirePermission('registrations.view'), async (c) => {
-  const {
-    page = 1, pageSize = 50, keyword, currentStage, registrationType, riskLevel, managerId,
-  } = c.req.query();
+  return registrationRun(c, 'registrations.view', null, async (tx, auth, access) => {
+    const {
+      page = 1, pageSize = 50, keyword, currentStage, registrationType, riskLevel, managerId,
+    } = c.req.query();
 
-  const where = registrationProjectWhere();
-  if (managerId) where.managerId = managerId;
-  if (keyword) {
-    where.OR = [
-      { name: { contains: keyword } },
-      { code: { contains: keyword } },
-      { positioning: { contains: keyword } },
-    ];
-  }
-  const profileWhere = {};
-  if (currentStage) profileWhere.currentStage = currentStage;
-  if (registrationType) profileWhere.registrationType = registrationType;
-  if (riskLevel) profileWhere.riskLevel = riskLevel;
-  if (Object.keys(profileWhere).length > 0) {
-    where.registrationProfile = { is: profileWhere };
-  }
+    const where = registrationScopeWhere(auth);
+    const links = registrationLinks(auth);
+    if (managerId) where.managerId = managerId;
+    if (keyword) {
+      where.OR = [
+        { name: { contains: keyword } },
+        { code: { contains: keyword } },
+        { positioning: { contains: keyword } },
+      ];
+    }
+    const profileWhere = {};
+    if (currentStage) profileWhere.currentStage = currentStage;
+    if (registrationType) profileWhere.registrationType = registrationType;
+    if (riskLevel) profileWhere.riskLevel = riskLevel;
+    if (Object.keys(profileWhere).length > 0) {
+      where.registrationProfile = { is: profileWhere };
+    }
 
-  const [total, list] = await Promise.all([
-    prisma.project.count({ where }),
-    prisma.project.findMany({
-      where,
-      skip: (Number.parseInt(page, 10) - 1) * Number.parseInt(pageSize, 10),
-      take: Number.parseInt(pageSize, 10),
-      orderBy: { createdAt: 'desc' },
-      include: {
-        manager: { select: { id: true, displayName: true, position: true } },
-        registrationProfile: {
-          include: { complianceOwner: { select: { id: true, displayName: true, position: true } } },
+    const [total, list] = await Promise.all([
+      tx.project.count({ where }),
+      tx.project.findMany({
+        where,
+        skip: (Number.parseInt(page, 10) - 1) * Number.parseInt(pageSize, 10),
+        take: Number.parseInt(pageSize, 10),
+        orderBy: { createdAt: 'desc' },
+        include: {
+          manager: { select: { id: true, displayName: true, position: true } },
+          registrationProfile: {
+            include: { complianceOwner: { select: { id: true, displayName: true, position: true } } },
+          },
+          _count: links.tasks || links.members ? { select: { ...(links.tasks ? { tasks: { where: { deletedAt: null } } } : {}), ...(links.members ? { members: { where: { leftAt: null } } } : {}) } } : false,
         },
-        _count: { select: { tasks: { where: { deletedAt: null } }, members: { where: { leftAt: null } } } },
-      },
-    }),
-  ]);
+      }),
+    ]);
 
-  const enhanced = list.map((item) => {
-    const daysLeft = calcDaysLeft(item.registrationProfile?.expectedApprovalDate);
-    const alertLevel = daysLeft == null ? 'none'
-      : daysLeft < 0 ? 'overdue'
-        : daysLeft <= 7 ? 'critical'
-          : daysLeft <= 30 ? 'warning' : 'normal';
-    return { ...item, due: { daysLeft, alertLevel } };
-  });
+    const enhanced = list.map((item) => {
+      const daysLeft = calcDaysLeft(item.registrationProfile?.expectedApprovalDate);
+      const alertLevel = daysLeft == null ? 'none'
+        : daysLeft < 0 ? 'overdue'
+          : daysLeft <= 7 ? 'critical'
+            : daysLeft <= 30 ? 'warning' : 'normal';
+      return { ...item, due: { daysLeft, alertLevel } };
+    });
 
-  return c.json({ list: enhanced, total, page: Number.parseInt(page, 10), pageSize: Number.parseInt(pageSize, 10) });
+    return c.json({ list: enhanced, total, page: Number.parseInt(page, 10), pageSize: Number.parseInt(pageSize, 10) });
+  }, null, false);
 });
 
 // 统计
 registrations.get('/stats', requirePermission('registrations.view'), async (c) => {
-  const projects = await prisma.project.findMany({
-    where: registrationProjectWhere(),
-    include: { registrationProfile: true },
-  });
+  return registrationRun(c, 'registrations.view', null, async (tx, auth, access) => {
+    const projects = await tx.project.findMany({
+      where: registrationScopeWhere(auth),
+      include: { registrationProfile: true },
+    });
 
-  const byStage = {};
-  const byRisk = {};
-  let overdueCount = 0;
-  let dueSoonCount = 0;
-  for (const p of projects) {
-    const stage = p.registrationProfile?.currentStage || 'DOSSIER_PREPARATION';
-    const risk = p.registrationProfile?.riskLevel || 'MEDIUM';
-    byStage[stage] = (byStage[stage] || 0) + 1;
-    byRisk[risk] = (byRisk[risk] || 0) + 1;
-    const daysLeft = calcDaysLeft(p.registrationProfile?.expectedApprovalDate);
-    if (daysLeft != null && daysLeft < 0) overdueCount += 1;
-    if (daysLeft != null && daysLeft >= 0 && daysLeft <= 30) dueSoonCount += 1;
-  }
-  return c.json({ total: projects.length, byStage, byRisk, overdueCount, dueSoonCount });
+    const byStage = {};
+    const byRisk = {};
+    let overdueCount = 0;
+    let dueSoonCount = 0;
+    for (const p of projects) {
+      const stage = p.registrationProfile?.currentStage || 'DOSSIER_PREPARATION';
+      const risk = p.registrationProfile?.riskLevel || 'MEDIUM';
+      byStage[stage] = (byStage[stage] || 0) + 1;
+      byRisk[risk] = (byRisk[risk] || 0) + 1;
+      const daysLeft = calcDaysLeft(p.registrationProfile?.expectedApprovalDate);
+      if (daysLeft != null && daysLeft < 0) overdueCount += 1;
+      if (daysLeft != null && daysLeft >= 0 && daysLeft <= 30) dueSoonCount += 1;
+    }
+    return c.json({ total: projects.length, byStage, byRisk, overdueCount, dueSoonCount });
+  }, null, false);
 });
 
 // 可用模板（project_templates.view 亦可，保持 registrations.view 以兼容原页面）
@@ -221,267 +267,279 @@ registrations.get('/templates', requirePermission('registrations.view'), async (
 // ── 详情（registrations.view）───────────────────────────────────────────────
 registrations.get('/:id', requirePermission('registrations.view'), async (c) => {
   const id = c.req.param('id');
-  const item = await prisma.project.findFirst({
-    where: registrationProjectWhere({ id }),
-    include: {
-      manager: { select: { id: true, displayName: true, position: true, avatarFileId: true } },
-      template: { select: { id: true, name: true, code: true, category: true } },
-      members: {
-        include: { user: { select: { id: true, displayName: true, position: true, avatarFileId: true } } },
-      },
-      tasks: {
-        where: { deletedAt: null },
-        orderBy: [{ phase: { sortOrder: 'asc' } }, { sortOrder: 'asc' }, { createdAt: 'asc' }],
-        include: {
-          assignee: { select: { id: true, displayName: true } },
-          regulatoryDocuments: {
-            include: {
-              regulatoryDocument: { select: { id: true, dispatchNo: true, title: true, priorityLevel: true } },
-            },
+  return registrationRun(c, 'registrations.view', 'read', async (tx, auth, access) => {
+    const links = registrationLinks(auth);
+    const item = await tx.project.findFirst({
+      where: registrationProjectWhere({ id }),
+      include: {
+        manager: { select: { id: true, displayName: true, position: true, avatarFileId: true } },
+        template: { select: { id: true, name: true, code: true, category: true } },
+        members: links.members ? {
+          where: { leftAt: null },
+          include: { user: { select: { id: true, displayName: true, position: true, avatarFileId: true } } },
+        } : false,
+        tasks: links.tasks ? {
+          where: { deletedAt: null },
+          orderBy: [{ phase: { sortOrder: 'asc' } }, { sortOrder: 'asc' }, { createdAt: 'asc' }],
+          include: {
+            assignee: { select: { id: true, displayName: true } },
+            regulatoryDocuments: links.regulatory ? {
+              include: {
+                regulatoryDocument: { select: { id: true, dispatchNo: true, title: true, priorityLevel: true } },
+              },
+            } : false,
           },
+        } : false,
+        milestones: links.milestones ? { where: { deletedAt: null }, orderBy: { dueDate: 'asc' } } : false,
+        phases: links.phases ? { where: { deletedAt: null }, orderBy: { sortOrder: 'asc' } } : false,
+        registrationProfile: {
+          include: { complianceOwner: { select: { id: true, displayName: true, position: true } } },
         },
       },
-      milestones: { where: { deletedAt: null }, orderBy: { dueDate: 'asc' } },
-      phases: { orderBy: { sortOrder: 'asc' } },
-      registrationProfile: {
-        include: { complianceOwner: { select: { id: true, displayName: true, position: true } } },
-      },
-    },
-  });
-  if (!item) throw notFound('REGISTRATION_NOT_FOUND', '注册项目不存在');
+    });
+    if (!item) throw notFound('REGISTRATION_NOT_FOUND', '注册项目不存在');
 
-  const currentStage = item.registrationProfile?.currentStage || 'DOSSIER_PREPARATION';
-  return c.json({
-    ...item,
-    stageOptions: REGISTRATION_STAGES,
-    allowedStageTransitions: getAllowedStageTransitions(currentStage),
-    due: { daysLeft: calcDaysLeft(item.registrationProfile?.expectedApprovalDate) },
-  });
+    const currentStage = item.registrationProfile?.currentStage || 'DOSSIER_PREPARATION';
+    return c.json({
+      ...item,
+      stageOptions: REGISTRATION_STAGES,
+      allowedStageTransitions: getAllowedStageTransitions(currentStage),
+      due: { daysLeft: calcDaysLeft(item.registrationProfile?.expectedApprovalDate) },
+    });
+  }, id, false);
 });
 
 // ── 创建（registrations.create；编号走 CodeSequence）────────────────────────
 registrations.post('/', requirePermission('registrations.create'), async (c) => {
-  const auth = getAuth(c);
-  const body = await c.req.json().catch(() => null);
-  if (!body?.name) throw badRequest('VALIDATION_ERROR', '项目名称不能为空');
+  return registrationRun(c, 'registrations.create', null, async (tx, auth, access) => {
+    const body = await c.req.json().catch(() => null);
+    if (!body?.name) throw badRequest('VALIDATION_ERROR', '项目名称不能为空');
 
-  const managerId = body.managerId || auth.userId;
-  const year = new Date().getFullYear();
-  const code = await nextCode(prisma, 'PROJECT', { periodKey: String(year), fallbackPrefix: `PRJ-${year}-`, padding: 3 });
+    const managerId = body.managerId === undefined ? auth.userId : managerTransferId(body.managerId);
+    const target = await tx.user.findUnique({ where: { id: managerId } });
+    if (!target || target.deletedAt || target.status !== 'ACTIVE') throw badRequest('MANAGER_NOT_ACTIVE', '负责人必须为当前有效账号');
+    const year = new Date().getFullYear();
+    const code = await nextCode(tx, 'PROJECT', { periodKey: String(year), fallbackPrefix: `PRJ-${year}-`, padding: 3 });
 
-  const created = await prisma.project.create({
-    data: {
-      code,
-      name: body.name,
-      type: 'CUSTOMIZATION',
-      subtype: REGISTRATION_SUBTYPE,
-      status: 'PLANNING',
-      positioning: body.positioning || body.notes || null,
-      managerId,
-      templateId: body.templateId || null,
-      startDate: body.startDate ? new Date(body.startDate) : null,
-      endDate: body.endDate ? new Date(body.endDate) : null,
-      createdById: auth.userId,
-      members: { create: { userId: managerId, role: 'MANAGER', createdById: auth.userId } },
-      registrationProfile: {
-        create: {
-          registrationType: body.registrationType || 'IVD',
-          region: body.region || 'MACAO_ISAF',
-          authority: body.authority || null,
-          submissionNo: body.submissionNo || null,
-          certificateNo: body.certificateNo || null,
-          currentStage: body.currentStage || 'DOSSIER_PREPARATION',
-          plannedSubmissionDate: body.plannedSubmissionDate ? new Date(body.plannedSubmissionDate) : null,
-          expectedApprovalDate: body.expectedApprovalDate ? new Date(body.expectedApprovalDate) : null,
-          complianceOwnerId: body.complianceOwnerId || null,
-          riskLevel: body.riskLevel || 'MEDIUM',
-          notes: body.notes || null,
+    const created = await tx.project.create({
+      data: {
+        code,
+        name: body.name,
+        type: 'CUSTOMIZATION',
+        subtype: REGISTRATION_SUBTYPE,
+        status: 'PLANNING',
+        positioning: body.positioning || body.notes || null,
+        managerId,
+        templateId: body.templateId || null,
+        startDate: body.startDate ? new Date(body.startDate) : null,
+        endDate: body.endDate ? new Date(body.endDate) : null,
+        createdById: auth.userId,
+        members: { create: [{ userId: auth.userId, role: 'OWNER', createdById: auth.userId }, ...(managerId === auth.userId ? [] : [{ userId: managerId, role: 'MANAGER', createdById: auth.userId }])] },
+        registrationProfile: {
+          create: {
+            registrationType: body.registrationType || 'IVD',
+            region: body.region || 'MACAO_ISAF',
+            authority: body.authority || null,
+            submissionNo: body.submissionNo || null,
+            certificateNo: body.certificateNo || null,
+            currentStage: body.currentStage || 'DOSSIER_PREPARATION',
+            plannedSubmissionDate: body.plannedSubmissionDate ? new Date(body.plannedSubmissionDate) : null,
+            expectedApprovalDate: body.expectedApprovalDate ? new Date(body.expectedApprovalDate) : null,
+            complianceOwnerId: body.complianceOwnerId || null,
+            riskLevel: body.riskLevel || 'MEDIUM',
+            notes: body.notes || null,
+          },
         },
       },
-    },
-    include: {
-      manager: { select: { id: true, displayName: true, position: true } },
-      registrationProfile: true,
-    },
-  });
+      include: {
+        manager: { select: { id: true, displayName: true, position: true } },
+        registrationProfile: true,
+      },
+    });
 
-  await scaffoldFromTemplate(created.id, body.templateId, managerId);
+    await scaffoldFromTemplate(tx, created.id, body.templateId, managerId);
 
-  await writeAudit(prisma, {
-    c,
-    actorId: auth.userId,
-    actorName: auth.user.displayName,
-    actorRole: auth.systemRole,
-    action: AUDIT_ACTIONS.CREATE,
-    entityType: 'PROJECT',
-    entityId: created.id,
-    entityLabel: created.name,
-    metadata: { permissionCode: 'registrations.create', subtype: REGISTRATION_SUBTYPE },
-  });
-  return c.json(created, 201);
+    await writeAuditStrict(tx, {
+      c,
+      actorId: auth.userId,
+      actorName: auth.user.displayName,
+      actorRole: auth.systemRole,
+      action: AUDIT_ACTIONS.CREATE,
+      entityType: 'PROJECT',
+      entityId: created.id,
+      entityLabel: created.name,
+      metadata: { permissionCode: 'registrations.create', subtype: REGISTRATION_SUBTYPE },
+    });
+    return c.json(created, 201);
+  }, null, true);
 });
 
 // ── 更新（registrations.update）─────────────────────────────────────────────
 registrations.put('/:id', requirePermission('registrations.update'), async (c) => {
-  const auth = getAuth(c);
   const id = c.req.param('id');
-  const body = await c.req.json().catch(() => ({}));
+  return registrationRun(c, 'registrations.update', 'write', async (tx, auth, access) => {
+    const body = await c.req.json().catch(() => ({}));
 
-  const existing = await prisma.project.findFirst({
-    where: registrationProjectWhere({ id }),
-    select: { id: true },
-  });
-  if (!existing) throw notFound('REGISTRATION_NOT_FOUND', '注册项目不存在');
+    const existing = await tx.project.findFirst({
+      where: registrationProjectWhere({ id }),
+      select: { id: true, managerId: true },
+    });
+    if (!existing) throw notFound('REGISTRATION_NOT_FOUND', '注册项目不存在');
 
-  const projectData = {};
-  if (body.name !== undefined) projectData.name = body.name;
-  if (body.positioning !== undefined || body.position !== undefined) {
-    projectData.positioning = body.positioning ?? body.position;
-  }
-  if (body.subtype !== undefined && body.subtype !== REGISTRATION_SUBTYPE) projectData.subtype = REGISTRATION_SUBTYPE;
-  if (body.managerId !== undefined) projectData.managerId = body.managerId;
-  if (body.startDate !== undefined) projectData.startDate = body.startDate ? new Date(body.startDate) : null;
-  if (body.endDate !== undefined) projectData.endDate = body.endDate ? new Date(body.endDate) : null;
-  if (Object.keys(projectData).length > 0) {
-    projectData.updatedById = auth.userId;
-  }
-
-  await prisma.$transaction(async (tx) => {
+    const projectData = {};
+    if (body.name !== undefined) projectData.name = body.name;
+    if (body.positioning !== undefined || body.position !== undefined) {
+      projectData.positioning = body.positioning ?? body.position;
+    }
+    if (body.subtype !== undefined && body.subtype !== REGISTRATION_SUBTYPE) projectData.subtype = REGISTRATION_SUBTYPE;
+    const requestedManagerId = body.managerId !== undefined ? managerTransferId(body.managerId) : undefined;
+    if (body.startDate !== undefined) projectData.startDate = body.startDate ? new Date(body.startDate) : null;
+    if (body.endDate !== undefined) projectData.endDate = body.endDate ? new Date(body.endDate) : null;
     if (Object.keys(projectData).length > 0) {
-      await tx.project.update({ where: { id }, data: projectData });
+      projectData.updatedById = auth.userId;
     }
 
-    const profilePayload = {};
-    for (const k of ['registrationType', 'region', 'authority', 'submissionNo', 'certificateNo', 'currentStage', 'complianceOwnerId', 'riskLevel', 'notes']) {
-      if (body[k] !== undefined) profilePayload[k] = body[k];
-    }
-    for (const k of ['plannedSubmissionDate', 'expectedApprovalDate', 'actualSubmissionDate', 'approvalDate']) {
-      if (body[k] !== undefined) profilePayload[k] = body[k] ? new Date(body[k]) : null;
-    }
-    if (Object.keys(profilePayload).length > 0) {
-      // 阶段流转必须走 PATCH /:id/stage；此处拒绝直接改 currentStage
-      if (profilePayload.currentStage !== undefined) {
-        throw badRequest('VALIDATION_ERROR', '阶段变更必须使用 PATCH /api/registrations/:id/stage');
-      }
-      const current = await tx.registrationProfile.findUnique({ where: { projectId: id } });
-      if (current) {
-        await tx.registrationProfile.update({ where: { projectId: id }, data: profilePayload });
-      } else {
-        await tx.registrationProfile.create({
-          data: {
-            projectId: id,
-            registrationType: profilePayload.registrationType || 'IVD',
-            region: profilePayload.region || 'MACAO_ISAF',
-            riskLevel: profilePayload.riskLevel || 'MEDIUM',
-            currentStage: 'DOSSIER_PREPARATION',
-            ...profilePayload,
-          },
-        });
-      }
-    }
-  });
+    {
+      if (requestedManagerId && requestedManagerId !== existing.managerId) {
+        await transferProjectManager(tx, { actor: auth, projectId: id, managerId: requestedManagerId, expectedUpdatedAt: body.baseUpdatedAt, entryPermission: 'registrations.update', fields: projectData, c });
+      } else if (Object.keys(projectData).length > 0) await tx.project.update({ where: { id }, data: projectData });
 
-  const updated = await prisma.project.findUnique({
-    where: { id },
-    include: {
-      manager: { select: { id: true, displayName: true, position: true } },
-      registrationProfile: {
-        include: { complianceOwner: { select: { id: true, displayName: true, position: true } } },
+      const profilePayload = {};
+      for (const k of ['registrationType', 'region', 'authority', 'submissionNo', 'certificateNo', 'currentStage', 'complianceOwnerId', 'riskLevel', 'notes']) {
+        if (body[k] !== undefined) profilePayload[k] = body[k];
+      }
+      for (const k of ['plannedSubmissionDate', 'expectedApprovalDate', 'actualSubmissionDate', 'approvalDate']) {
+        if (body[k] !== undefined) profilePayload[k] = body[k] ? new Date(body[k]) : null;
+      }
+      if (Object.keys(profilePayload).length > 0) {
+        // 阶段流转必须走 PATCH /:id/stage；此处拒绝直接改 currentStage
+        if (profilePayload.currentStage !== undefined) {
+          throw badRequest('VALIDATION_ERROR', '阶段变更必须使用 PATCH /api/registrations/:id/stage');
+        }
+        const current = await tx.registrationProfile.findUnique({ where: { projectId: id } });
+        if (current) {
+          await tx.registrationProfile.update({ where: { projectId: id }, data: profilePayload });
+        } else {
+          await tx.registrationProfile.create({
+            data: {
+              projectId: id,
+              registrationType: profilePayload.registrationType || 'IVD',
+              region: profilePayload.region || 'MACAO_ISAF',
+              riskLevel: profilePayload.riskLevel || 'MEDIUM',
+              currentStage: 'DOSSIER_PREPARATION',
+              ...profilePayload,
+            },
+          });
+        }
+      }
+    }
+
+    await registrationAudit(tx, c, auth, id, 'registrations.update', Object.keys(body), { elevated: Boolean(access.elevated) });
+    const updated = await tx.project.findUnique({
+      where: { id },
+      include: {
+        manager: { select: { id: true, displayName: true, position: true } },
+        registrationProfile: {
+          include: { complianceOwner: { select: { id: true, displayName: true, position: true } } },
+        },
       },
-    },
-  });
-  return c.json(updated);
+    });
+    return c.json(updated);
+  }, id, true);
 });
 
 // ── 阶段推进（registrations.change_stage；严格状态机）────────────────────────
 registrations.patch('/:id/stage', requirePermission('registrations.change_stage'), async (c) => {
-  const auth = getAuth(c);
   const id = c.req.param('id');
-  const body = await c.req.json().catch(() => ({}));
-  const toStage = body?.toStage;
-  if (!toStage) throw badRequest('VALIDATION_ERROR', '目标阶段不能为空');
-  if (!REGISTRATION_STAGES.includes(toStage)) {
-    throw badRequest('VALIDATION_ERROR', `目标阶段非法，允许值：${REGISTRATION_STAGES.join('/')}`);
-  }
+  return registrationRun(c, 'registrations.change_stage', 'transition', async (tx, auth, access) => {
+    const body = await c.req.json().catch(() => ({}));
+    const toStage = body?.toStage;
+    if (!toStage) throw badRequest('VALIDATION_ERROR', '目标阶段不能为空');
+    if (!REGISTRATION_STAGES.includes(toStage)) {
+      throw badRequest('VALIDATION_ERROR', `目标阶段非法，允许值：${REGISTRATION_STAGES.join('/')}`);
+    }
 
-  const existing = await prisma.project.findFirst({
-    where: registrationProjectWhere({ id }),
-    include: { registrationProfile: true },
-  });
-  if (!existing) throw notFound('REGISTRATION_NOT_FOUND', '注册项目不存在');
-
-  const fromStage = existing.registrationProfile?.currentStage || 'DOSSIER_PREPARATION';
-  if (!getAllowedStageTransitions(fromStage).includes(toStage)) {
-    throw badRequest('INVALID_STAGE_TRANSITION', '非法阶段流转', {
-      fromStage, toStage, allowedTransitions: getAllowedStageTransitions(fromStage),
+    const existing = await tx.project.findFirst({
+      where: registrationProjectWhere({ id }),
+      include: { registrationProfile: true },
     });
-  }
+    if (!existing) throw notFound('REGISTRATION_NOT_FOUND', '注册项目不存在');
 
-  const profile = await prisma.registrationProfile.upsert({
-    where: { projectId: id },
-    update: { currentStage: toStage },
-    create: {
-      projectId: id,
-      registrationType: 'IVD',
-      region: 'MACAO_ISAF',
-      currentStage: toStage,
-      riskLevel: 'MEDIUM',
-    },
-  });
+    const fromStage = existing.registrationProfile?.currentStage || 'DOSSIER_PREPARATION';
+    if (!getAllowedStageTransitions(fromStage).includes(toStage)) {
+      throw badRequest('INVALID_STAGE_TRANSITION', '非法阶段流转', {
+        fromStage, toStage, allowedTransitions: getAllowedStageTransitions(fromStage),
+      });
+    }
 
-  await writeAudit(prisma, {
-    c,
-    actorId: auth.userId,
-    actorName: auth.user.displayName,
-    actorRole: auth.systemRole,
-    action: AUDIT_ACTIONS.STATUS_CHANGE,
-    entityType: 'REGISTRATION',
-    entityId: id,
-    entityLabel: existing.name,
-    before: { stage: fromStage },
-    after: { stage: toStage },
-    metadata: { permissionCode: 'registrations.change_stage' },
-  });
-  return c.json({ success: true, fromStage, toStage, profile });
+    const profile = await tx.registrationProfile.upsert({
+      where: { projectId: id },
+      update: { currentStage: toStage },
+      create: {
+        projectId: id,
+        registrationType: 'IVD',
+        region: 'MACAO_ISAF',
+        currentStage: toStage,
+        riskLevel: 'MEDIUM',
+      },
+    });
+
+    await writeAuditStrict(tx, {
+      c,
+      actorId: auth.userId,
+      actorName: auth.user.displayName,
+      actorRole: auth.systemRole,
+      action: AUDIT_ACTIONS.STATUS_CHANGE,
+      entityType: 'REGISTRATION',
+      entityId: id,
+      entityLabel: existing.name,
+      before: { stage: fromStage },
+      after: { stage: toStage },
+      metadata: { permissionCode: 'registrations.change_stage', elevated: Boolean(access.elevated) },
+    });
+    return c.json({ success: true, fromStage, toStage, profile });
+  }, id, true);
 });
 
 // 单独更新档案（不含阶段）
 registrations.patch('/:id/profile', requirePermission('registrations.update'), async (c) => {
-  const auth = getAuth(c);
   const id = c.req.param('id');
-  const body = await c.req.json().catch(() => ({}));
+  return registrationRun(c, 'registrations.update', 'write', async (tx, auth, access) => {
+    const body = await c.req.json().catch(() => ({}));
 
-  const existing = await prisma.project.findFirst({
-    where: registrationProjectWhere({ id }),
-    select: { id: true },
-  });
-  if (!existing) throw notFound('REGISTRATION_NOT_FOUND', '注册项目不存在');
-  if (body.currentStage !== undefined && body.currentStage !== null) {
-    throw badRequest('VALIDATION_ERROR', '阶段变更必须使用 PATCH /api/registrations/:id/stage');
-  }
+    const existing = await tx.project.findFirst({
+      where: registrationProjectWhere({ id }),
+      select: { id: true },
+    });
+    if (!existing) throw notFound('REGISTRATION_NOT_FOUND', '注册项目不存在');
+    if (body.currentStage !== undefined && body.currentStage !== null) {
+      throw badRequest('VALIDATION_ERROR', '阶段变更必须使用 PATCH /api/registrations/:id/stage');
+    }
 
-  const payload = {};
-  for (const k of ['registrationType', 'region', 'authority', 'submissionNo', 'certificateNo', 'complianceOwnerId', 'riskLevel', 'notes']) {
-    if (body[k] !== undefined) payload[k] = body[k];
-  }
-  for (const k of ['plannedSubmissionDate', 'expectedApprovalDate', 'actualSubmissionDate', 'approvalDate']) {
-    if (body[k] !== undefined) payload[k] = body[k] ? new Date(body[k]) : null;
-  }
+    const payload = {};
+    for (const k of ['registrationType', 'region', 'authority', 'submissionNo', 'certificateNo', 'complianceOwnerId', 'riskLevel', 'notes']) {
+      if (body[k] !== undefined) payload[k] = body[k];
+    }
+    for (const k of ['plannedSubmissionDate', 'expectedApprovalDate', 'actualSubmissionDate', 'approvalDate']) {
+      if (body[k] !== undefined) payload[k] = body[k] ? new Date(body[k]) : null;
+    }
 
-  const profile = await prisma.registrationProfile.upsert({
-    where: { projectId: id },
-    update: payload,
-    create: {
-      projectId: id,
-      registrationType: payload.registrationType || 'IVD',
-      region: payload.region || 'MACAO_ISAF',
-      currentStage: 'DOSSIER_PREPARATION',
-      riskLevel: payload.riskLevel || 'MEDIUM',
-      ...payload,
-    },
-    include: { complianceOwner: { select: { id: true, displayName: true, position: true } } },
-  });
-  return c.json(profile);
+    const profile = await tx.registrationProfile.upsert({
+      where: { projectId: id },
+      update: payload,
+      create: {
+        projectId: id,
+        registrationType: payload.registrationType || 'IVD',
+        region: payload.region || 'MACAO_ISAF',
+        currentStage: 'DOSSIER_PREPARATION',
+        riskLevel: payload.riskLevel || 'MEDIUM',
+        ...payload,
+      },
+      include: { complianceOwner: { select: { id: true, displayName: true, position: true } } },
+    });
+    await registrationAudit(tx, c, auth, id, 'registrations.update', Object.keys(payload), { elevated: Boolean(access.elevated) });
+    return c.json(profile);
+  }, id, true);
 });
 
 export default registrations;

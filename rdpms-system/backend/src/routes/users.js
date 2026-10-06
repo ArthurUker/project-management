@@ -1,6 +1,8 @@
 import { Hono } from 'hono';
 import { prisma } from '../platform/db/client.js';
 import bcrypt from 'bcryptjs';
+import { withAccountCommand, assertGrantedRoles, ACCOUNT_RANK } from '../modules/auth/accountPolicy.js';
+import { writeAuditStrict } from '../platform/audit/strictAudit.js';
 import { authenticate, getAuth, requirePermission } from '../kernel/rbac.js';
 import { pickAllowed } from '../kernel/massAssign.js';
 import { AUDIT_ACTIONS, USER_UPDATE_FIELDS, SYSTEM_ROLES } from '../kernel/constants.js';
@@ -257,43 +259,15 @@ users.patch('/:id/status', async (c) => {
   const auth = getAuth(c);
   const body = await c.req.json().catch(() => ({}));
   const nextStatus = body?.status;
-
-  if (nextStatus === 'ACTIVE') {
-    if (!auth.permissions.includes('users.enable')) {
-      throw badRequest('PERMISSION_DENIED', '缺少权限 users.enable');
-    }
-  } else if (nextStatus === 'DISABLED') {
-    if (!auth.permissions.includes('users.disable')) {
-      throw badRequest('PERMISSION_DENIED', '缺少权限 users.disable');
-    }
-  } else {
-    throw badRequest('VALIDATION_ERROR', 'status 仅允许 ACTIVE / DISABLED');
-  }
-  if (id === auth.userId && nextStatus === 'DISABLED') {
-    throw badRequest('VALIDATION_ERROR', '不能停用自己');
-  }
-
-  const before = await prisma.user.findUnique({ where: { id }, select: { id: true, username: true, status: true } });
-  if (!before) throw notFound('USER_NOT_FOUND', '用户不存在');
-
-  await prisma.user.update({
-    where: { id },
-    data: { status: nextStatus, failedLoginAttempts: 0, lockedUntil: null },
-  });
-
-  await writeAudit(prisma, {
-    c,
-    actorId: auth.userId,
-    actorName: auth.user.displayName,
-    actorRole: auth.systemRole,
-    action: AUDIT_ACTIONS.STATUS_CHANGE,
-    entityType: 'USER',
-    entityId: id,
-    entityLabel: before.username,
-    before: { status: before.status },
-    after: { status: nextStatus },
-    metadata: { permissionCode: nextStatus === 'ACTIVE' ? 'users.enable' : 'users.disable' },
-  });
+  if (!['ACTIVE', 'DISABLED'].includes(nextStatus)) throw badRequest('VALIDATION_ERROR', 'status 仅允许 ACTIVE / DISABLED');
+  const permission = nextStatus === 'ACTIVE' ? 'users.enable' : 'users.disable';
+  await withAccountCommand(prisma, auth.userId, id, permission, async (tx, actor, target) => {
+    await tx.user.update({ where: { id }, data: { status: nextStatus, securityVersion: { increment: 1 }, failedLoginAttempts: 0, lockedUntil: null } });
+    await tx.refreshToken.updateMany({ where: { userId: id, revokedAt: null }, data: { revokedAt: new Date() } });
+    await writeAuditStrict(tx, { c, actorId: actor.id, actorName: actor.displayName, actorRole: actor.systemRole,
+      action: AUDIT_ACTIONS.STATUS_CHANGE, entityType: 'USER', entityId: id, entityLabel: target.username,
+      before: { status: target.status }, after: { status: nextStatus }, metadata: { permissionCode: permission } });
+  }, auth.user.securityVersion);
   return c.json({ id, status: nextStatus });
 });
 
@@ -303,43 +277,21 @@ users.put('/:id/roles', requirePermission('roles.assign_user'), async (c) => {
   const auth = getAuth(c);
   const body = await c.req.json().catch(() => ({}));
   const roleCodes = body?.roleCodes ?? (body?.roleCode ? [body.roleCode] : null);
-  if (!Array.isArray(roleCodes) || roleCodes.length === 0) {
-    throw badRequest('VALIDATION_ERROR', 'roleCodes 不能为空');
-  }
-  const invalid = roleCodes.filter((rc) => !SYSTEM_ROLES.includes(rc));
-  if (invalid.length) throw badRequest('VALIDATION_ERROR', `非法角色: ${invalid.join(', ')}`);
-
-  const target = await prisma.user.findUnique({ where: { id }, select: { id: true, username: true, systemRole: true } });
-  if (!target) throw notFound('USER_NOT_FOUND', '用户不存在');
-
-  const roles = await prisma.role.findMany({ where: { code: { in: roleCodes } } });
-  if (roles.length !== roleCodes.length) throw badRequest('VALIDATION_ERROR', '存在未知的角色编码');
-
-  await prisma.$transaction([
-    prisma.userRole.deleteMany({ where: { userId: id } }),
-    prisma.userRole.createMany({
-      data: roles.map((r) => ({ userId: id, roleId: r.id, assignedById: auth.userId })),
-    }),
-    // systemRole 与 UserRole 绑定保持一致（取排序最高角色）
-    prisma.user.update({
-      where: { id },
-      data: { systemRole: roleCodes.includes(target.systemRole) ? target.systemRole : roleCodes[0] },
-    }),
-  ]);
-
-  await writeAudit(prisma, {
-    c,
-    actorId: auth.userId,
-    actorName: auth.user.displayName,
-    actorRole: auth.systemRole,
-    action: AUDIT_ACTIONS.PERMISSION_CHANGE,
-    entityType: 'USER',
-    entityId: id,
-    entityLabel: target.username,
-    before: { systemRole: target.systemRole },
-    after: { roleCodes },
-    metadata: { permissionCode: 'roles.assign_user' },
-  });
+  if (!Array.isArray(roleCodes) || !roleCodes.length || roleCodes.some(rc => typeof rc !== 'string' || !SYSTEM_ROLES.includes(rc))
+    || new Set(roleCodes).size !== roleCodes.length) throw badRequest('VALIDATION_ERROR', 'roleCodes 必须是不重复的系统角色编码');
+  await withAccountCommand(prisma, auth.userId, id, 'roles.assign_user', async (tx, actor, target) => {
+    assertGrantedRoles(actor, roleCodes);
+    const roles = await tx.role.findMany({ where: { code: { in: roleCodes } } });
+    if (roles.length !== roleCodes.length) throw badRequest('VALIDATION_ERROR', '未知的角色编码');
+    const systemRole = [...roleCodes].sort((a, b) => ACCOUNT_RANK[b] - ACCOUNT_RANK[a])[0];
+    await tx.userRole.deleteMany({ where: { userId: id } });
+    await tx.userRole.createMany({ data: roles.map(r => ({ userId: id, roleId: r.id, assignedById: actor.id })) });
+    await tx.user.update({ where: { id }, data: { systemRole, securityVersion: { increment: 1 } } });
+    await tx.refreshToken.updateMany({ where: { userId: id, revokedAt: null }, data: { revokedAt: new Date() } });
+    await writeAuditStrict(tx, { c, actorId: actor.id, actorName: actor.displayName, actorRole: actor.systemRole,
+      action: AUDIT_ACTIONS.PERMISSION_CHANGE, entityType: 'USER', entityId: id, entityLabel: target.username,
+      before: { systemRole: target.systemRole }, after: { systemRole, roleCodes }, metadata: { permissionCode: 'roles.assign_user' } });
+  }, auth.user.securityVersion);
   return c.json({ id, roleCodes });
 });
 
@@ -356,32 +308,16 @@ users.put('/:id/reset-password', requirePermission('users.reset_password'), asyn
   if (weak.some((w) => newPassword.toLowerCase().includes(w))) {
     throw badRequest('WEAK_PASSWORD', '新密码命中弱口令黑名单');
   }
-  const target = await prisma.user.findUnique({ where: { id }, select: { id: true, username: true } });
-  if (!target) throw notFound('USER_NOT_FOUND', '用户不存在');
-
-  await prisma.user.update({
-    where: { id },
-    data: {
-      passwordHash: await bcrypt.hash(newPassword, 12),
-      mustChangePassword: true,
-      passwordChangedAt: new Date(),
-      failedLoginAttempts: 0,
-      lockedUntil: null,
-    },
-  });
-  await prisma.refreshToken.updateMany({ where: { userId: id, revokedAt: null }, data: { revokedAt: new Date() } });
-
-  await writeAudit(prisma, {
-    c,
-    actorId: auth.userId,
-    actorName: auth.user.displayName,
-    actorRole: auth.systemRole,
-    action: AUDIT_ACTIONS.PASSWORD_CHANGE,
-    entityType: 'USER',
-    entityId: id,
-    entityLabel: target.username,
-    metadata: { permissionCode: 'users.reset_password', targetUser: target.username },
-  });
+  const passwordHash = await bcrypt.hash(newPassword, 12);
+  await withAccountCommand(prisma, auth.userId, id, 'users.reset_password', async (tx, actor, target) => {
+    const changedAt = new Date();
+    await tx.user.update({ where: { id }, data: { passwordHash, securityVersion: { increment: 1 }, mustChangePassword: true,
+      passwordChangedAt: changedAt, failedLoginAttempts: 0, lockedUntil: null } });
+    await tx.refreshToken.updateMany({ where: { userId: id, revokedAt: null }, data: { revokedAt: changedAt } });
+    await writeAuditStrict(tx, { c, actorId: actor.id, actorName: actor.displayName, actorRole: actor.systemRole,
+      action: AUDIT_ACTIONS.PASSWORD_CHANGE, entityType: 'USER', entityId: id, entityLabel: target.username,
+      metadata: { permissionCode: 'users.reset_password' } });
+  }, auth.user.securityVersion);
   return c.json({ success: true });
 });
 
@@ -389,42 +325,15 @@ users.put('/:id/reset-password', requirePermission('users.reset_password'), asyn
 users.delete('/:id', requirePermission('users.delete'), async (c) => {
   const id = c.req.param('id');
   const auth = getAuth(c);
-  if (id === auth.userId) throw badRequest('VALIDATION_ERROR', '不能删除自己');
-
-  const target = await prisma.user.findUnique({
-    where: { id },
-    select: { id: true, username: true, deletedAt: true },
-  });
-  if (!target) throw notFound('USER_NOT_FOUND', '用户不存在');
-  if (target.deletedAt) return c.json({ id, alreadyDeleted: true });
-
-  // ⚠️ 合规约束：audit_logs 为 append-only（DB 触发器禁止 UPDATE/DELETE），
-  //    而 AuditLog.actor 关系为 onDelete: SetNull —— 硬删用户会触发对审计行的 UPDATE，
-  //    被触发器拒绝并导致 500。因此删除一律走软删（deletedAt + DISABLED），
-  //    既保留审计链条完整性，又不触碰 append-only 约束。
-  await prisma.$transaction(async (tx) => {
-    await tx.user.update({
-      where: { id },
-      data: { deletedAt: new Date(), status: 'DISABLED' },
-    });
-    await tx.refreshToken.updateMany({
-      where: { userId: id, revokedAt: null },
-      data: { revokedAt: new Date() },
-    });
+  await withAccountCommand(prisma, auth.userId, id, 'users.delete', async (tx, actor, target) => {
+    const changedAt = new Date();
+    await tx.user.update({ where: { id }, data: { deletedAt: changedAt, status: 'DISABLED', securityVersion: { increment: 1 } } });
+    await tx.refreshToken.updateMany({ where: { userId: id, revokedAt: null }, data: { revokedAt: changedAt } });
     await tx.userRole.deleteMany({ where: { userId: id } });
-  });
-
-  await writeAudit(prisma, {
-    c,
-    actorId: auth.userId,
-    actorName: auth.user.displayName,
-    actorRole: auth.systemRole,
-    action: AUDIT_ACTIONS.DELETE,
-    entityType: 'USER',
-    entityId: id,
-    entityLabel: target.username,
-    metadata: { permissionCode: 'users.delete', softDelete: true },
-  });
+    await writeAuditStrict(tx, { c, actorId: actor.id, actorName: actor.displayName, actorRole: actor.systemRole,
+      action: AUDIT_ACTIONS.DELETE, entityType: 'USER', entityId: id, entityLabel: target.username,
+      metadata: { permissionCode: 'users.delete', softDelete: true } });
+  }, auth.user.securityVersion);
   return c.json({ id, softDeleted: true });
 });
 

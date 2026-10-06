@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useAuth } from '../auth/useAuth';
+import { tokenStore } from '../auth/tokenStore';
+import { isApiError } from '../api/error';
 import { useHasPerm, PERMS } from '../auth/permissions';
 import { useSync } from '../offline/SyncProvider';
-import { newClientMutationId, readCachedRecords } from '../offline/engine';
+import { newClientMutationId, readCachedRecords, invalidateCacheAuthorization } from '../offline/engine';
 import { taskAPI, projectAPI } from '@/api';
 import DocReference from '../components/DocReference';
 
@@ -418,31 +420,39 @@ export default function Tasks() {
   const [defaultStatus, setDefaultStatus] = useState('NOT_STARTED');
   const [defaultPriority, setDefaultPriority] = useState('中');
 
+  const requestGeneration = tokenStore.snapshot()?.loginGeneration;
   useEffect(() => {
-    projectAPI.list({ pageSize: 999 }).then((res) => {
-      setProjects(res.items ?? []);
+    const owner = tokenStore.snapshot(); let disposed = false;
+    setProjects([]);
+    if (user && owner?.actorId === user.id) projectAPI.list({ pageSize: 999 }).then((res) => {
+      if (!disposed && tokenStore.sameLogin(owner)) setProjects(res.items ?? []);
     }).catch(() => {});
-  }, []);
+    return () => { disposed = true; };
+  }, [user?.id, requestGeneration]);
 
   const loadTasks = useCallback(async () => {
+    const owner = tokenStore.snapshot();
+    if (!user || owner?.actorId !== user.id) { setTasks([]); setLoading(false); return; }
     setLoading(true);
     try {
       const res = await taskAPI.list({ pageSize: 500 });
-      setTasks(res.items ?? []);
-    } catch {
-      // 离线/请求失败：回退到同步引擎维护的本地镜像，保证只读可用
+      if (tokenStore.sameLogin(owner)) setTasks(res.items ?? []);
+    } catch (error) {
+      if (!tokenStore.sameLogin(owner)) return;
+      // Definitive auth/resource denial is never replaced by a cached success.
+      if (isApiError(error) && [401, 403, 404].includes(error.status)) {
+        setTasks([]);
+        await invalidateCacheAuthorization(user.id, owner.loginGeneration).catch(() => undefined);
+        return;
+      }
       try {
         const cached = await readCachedRecords('tasks');
-        setTasks(cached.map((r) => r.data as unknown as Task).filter(Boolean));
-      } catch {
-        setTasks([]);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+        if (tokenStore.sameLogin(owner)) setTasks(cached.map((r) => r.data as unknown as Task).filter(Boolean));
+      } catch { if (tokenStore.sameLogin(owner)) setTasks([]); }
+    } finally { if (tokenStore.sameLogin(owner)) setLoading(false); }
+  }, [user?.id, requestGeneration]);
 
-  useEffect(() => { loadTasks(); }, [loadTasks]);
+  useEffect(() => { setTasks([]); setProjects([]); setShowModal(false); setEditingTask(null); void loadTasks(); }, [loadTasks]);
 
   // Stats
   const stats = useMemo(() => {
@@ -680,4 +690,3 @@ export default function Tasks() {
     </div>
   );
 }
-

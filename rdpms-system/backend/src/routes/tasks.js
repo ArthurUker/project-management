@@ -1,3 +1,6 @@
+import { assertActionPermission } from '../modules/access/writeGuards.js';
+import { assertLiveTaskReferences, tombstoneTasks } from '../modules/projects/projectChildren.js';
+import { registrationActor as currentProjectActor } from '../modules/projects/registrationAccess.js';
 import { Hono } from 'hono';
 import { prisma } from '../platform/db/client.js';
 import { authenticate as authMiddleware, requirePermission, getAuth } from '../kernel/rbac.js';
@@ -52,6 +55,20 @@ async function loadTaskOr404(id) {
   const task = await prisma.task.findUnique({ where: { id } });
   if (!task || task.deletedAt) throw notFound('TASK_NOT_FOUND', '任务不存在');
   return task;
+}
+
+async function assertTaskParentInProject(parentId, projectId, taskId = null) {
+  if (parentId === undefined || parentId === null) return;
+  if (typeof parentId !== 'string' || !parentId.trim()) {
+    throw badRequest('INVALID_REFERENCE', 'parentId 无效', { field: 'parentId', projectId });
+  }
+  if (taskId && parentId === taskId) {
+    throw badRequest('INVALID_REFERENCE', '任务不能以自身为父任务', { field: 'parentId', projectId });
+  }
+  const parent = await prisma.task.findUnique({ where: { id: parentId }, select: { id: true, projectId: true } });
+  if (!parent || parent.projectId !== projectId) {
+    throw badRequest('INVALID_REFERENCE', 'parentId 不属于该项目', { field: 'parentId', projectId });
+  }
 }
 
 // ── 列表（tasks.view；按可见项目过滤）────────────────────────────────────────
@@ -111,10 +128,24 @@ tasks.post('/:id/prerequisites', requirePermission('tasks.update'), async (c) =>
   });
   if (circular) throw badRequest('VALIDATION_ERROR', '检测到循环依赖，无法添加');
 
-  const dep = await prisma.taskDependency.upsert({
-    where: { taskId_prerequisiteId: { taskId: id, prerequisiteId } },
-    update: { dependencyType },
-    create: { taskId: id, prerequisiteId, dependencyType },
+  const dep = await prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM users WHERE id = ${auth.userId} FOR UPDATE`;
+    const currentAuth = await currentProjectActor(tx, auth);
+    assertActionPermission(currentAuth, 'tasks.update');
+    const currentAccess = await resolveProjectAccess(tx, currentAuth, task.projectId);
+    assertProjectCapability(currentAccess, 'write', 'tasks.update');
+    await tx.$queryRaw`SELECT id FROM tasks WHERE id = ${id} FOR SHARE`;
+    const current = await tx.task.findUnique({ where: { id } });
+    if (!current || current.deletedAt || current.projectId !== task.projectId) throw notFound('TASK_NOT_FOUND', '任务不存在');
+    await assertLiveTaskReferences(tx, task.projectId, { parentId: prerequisiteId }, id);
+    if (!['FS','SS','FF','SF'].includes(dependencyType)) throw badRequest('VALIDATION_ERROR', '依赖类型无效');
+    // Existing reciprocal-edge check retained; this does not activate general DAG enforcement.
+    const reciprocal = await tx.taskDependency.findFirst({ where: { taskId: prerequisiteId, prerequisiteId: id } });
+    if (reciprocal) throw badRequest('VALIDATION_ERROR', '检测到循环依赖，无法添加');
+    return tx.taskDependency.upsert({
+      where: { taskId_prerequisiteId: { taskId: id, prerequisiteId } },
+      update: { dependencyType }, create: { taskId: id, prerequisiteId, dependencyType },
+    });
   });
   return c.json({ success: true, data: dep });
 });
@@ -172,7 +203,7 @@ tasks.post('/', requirePermission('tasks.create'), async (c) => {
   const data = pickAllowed(body, [
     'projectId', 'title', 'description', 'assigneeId', 'status', 'priority',
     'taskType', 'applicability', 'applicabilityStatus', 'regulatoryPriority',
-    'expectedDeliverable', 'regulatoryNotes', 'phaseId', 'dueDate', 'startDate',
+    'expectedDeliverable', 'regulatoryNotes', 'phaseId', 'parentId', 'dueDate', 'startDate',
     'estimatedHours', 'sortOrder', 'templateTaskId',
   ], { entityLabel: '创建任务' });
 
@@ -188,8 +219,11 @@ tasks.post('/', requirePermission('tasks.create'), async (c) => {
       throw badRequest('VALIDATION_ERROR', 'phaseId 不属于该项目');
     }
   }
+  await assertTaskParentInProject(data.parentId, data.projectId);
 
-  const created = await prisma.task.create({
+  const created = await prisma.$transaction(async (tx) => {
+    await assertLiveTaskReferences(tx, data.projectId, data);
+    return tx.task.create({
     data: {
       projectId: data.projectId,
       title: data.title,
@@ -203,6 +237,7 @@ tasks.post('/', requirePermission('tasks.create'), async (c) => {
       expectedDeliverable: data.expectedDeliverable || null,
       regulatoryNotes: data.regulatoryNotes || null,
       phaseId: data.phaseId || null,
+      parentId: data.parentId || null,
       dueDate: data.dueDate ? new Date(data.dueDate) : null,
       startDate: data.startDate ? new Date(data.startDate) : null,
       estimatedHours: data.estimatedHours != null ? Number.parseFloat(data.estimatedHours) : null,
@@ -211,6 +246,7 @@ tasks.post('/', requirePermission('tasks.create'), async (c) => {
       createdById: auth.userId,
     },
     include: TASK_INCLUDE,
+    });
   });
 
   await writeAudit(prisma, {
@@ -236,7 +272,7 @@ tasks.put('/:id', requirePermission('tasks.update'), async (c) => {
     'title', 'description', 'assigneeId', 'status', 'priority', 'taskType',
     'applicability', 'applicabilityStatus', 'regulatoryPriority', 'expectedDeliverable',
     'regulatoryNotes', 'sortOrder', 'estimatedHours', 'actualHours', 'progressPercent',
-    'startDate', 'dueDate', 'phaseId', 'templateTaskId',
+    'startDate', 'dueDate', 'phaseId', 'parentId', 'templateTaskId',
   ], { entityLabel: '更新任务' });
 
   const task = await loadTaskOr404(id);
@@ -273,6 +309,7 @@ tasks.put('/:id', requirePermission('tasks.update'), async (c) => {
       throw badRequest('VALIDATION_ERROR', 'phaseId 不属于该项目');
     }
   }
+  if (data.parentId !== undefined) await assertTaskParentInProject(data.parentId, task.projectId, id);
 
   // 三个命令分别执行（状态迁移副作用由 changeTaskStatus 统一处理）
   const changedFields = [...Object.keys(data)];
@@ -282,6 +319,7 @@ tasks.put('/:id', requirePermission('tasks.update'), async (c) => {
   // 同一事务内执行：混合字段（普通字段 + status + assigneeId）必须全成功或全不变，
   // 不允许多个命令各自提交造成部分成功（RF04 验收）。
   const updated = await prisma.$transaction(async (tx) => {
+    await assertLiveTaskReferences(tx, task.projectId, data, id);
     if (Object.keys(data).length > 0) {
       await updateTaskFields(tx, { actor: auth, access, task, fields: data });
     }
@@ -349,45 +387,16 @@ tasks.patch('/:id/status', requirePermission('tasks.change_status'), async (c) =
 
 // ── 删除（tasks.delete，P1 批次二解冻；软删含全部后代任务，审计）──────────────
 tasks.delete('/:id', requirePermission('tasks.delete'), async (c) => {
-  const auth = getAuth(c);
-  const id = c.req.param('id');
-  const task = await prisma.task.findFirst({
-    where: { id, deletedAt: null },
-    select: { id: true, title: true, code: true, projectId: true },
+  const authenticated = getAuth(c), id = c.req.param('id');
+  return prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT id FROM users WHERE id = ${authenticated.userId} FOR UPDATE`;
+    const auth = await currentProjectActor(tx, authenticated);
+    const task = await tx.task.findUnique({ where: { id } });
+    if (!task) throw notFound('TASK_NOT_FOUND', '任务不存在');
+    const access = await resolveProjectAccess(tx, auth, task.projectId);
+    const changed = await tombstoneTasks(tx, { actor: auth, access, projectId: task.projectId, ids: [id], c });
+    return c.json({ success: true, id, softDeleted: true, cascaded: changed.count, noop: changed.count === 0 });
   });
-  if (!task) throw notFound('TASK_NOT_FOUND', '任务不存在');
-
-  const access = await resolveProjectAccess(prisma, auth, task.projectId);
-  await auditElevatedIfNeeded(prisma, c, access, 'tasks.delete');
-  assertProjectCapability(access, 'write', 'tasks.delete');
-
-  // 软删必须显式级联收集后代（FK Cascade 只在硬删时生效）
-  const idsToDelete = [id];
-  let frontier = [id];
-  while (frontier.length) {
-    // eslint-disable-next-line no-await-in-loop
-    const children = await prisma.task.findMany({
-      where: { parentId: { in: frontier }, deletedAt: null },
-      select: { id: true },
-    });
-    frontier = children.map((ch) => ch.id).filter((cid) => !idsToDelete.includes(cid));
-    idsToDelete.push(...frontier);
-  }
-  await prisma.task.updateMany({ where: { id: { in: idsToDelete } }, data: { deletedAt: new Date() } });
-
-  await writeAudit(prisma, {
-    c,
-    actorId: auth.userId,
-    actorName: auth.user.displayName,
-    actorRole: auth.systemRole,
-    action: AUDIT_ACTIONS.DELETE,
-    entityType: 'TASK',
-    entityId: id,
-    entityLabel: task.code || task.title,
-    before: { title: task.title },
-    metadata: { permissionCode: 'tasks.delete', softDelete: true, cascadedCount: idsToDelete.length, ids: idsToDelete },
-  });
-  return c.json({ success: true, id, softDeleted: true, cascaded: idsToDelete.length });
 });
 
 // ── 看板（tasks.view + ∩ read；英文枚举分组）────────────────────────────────

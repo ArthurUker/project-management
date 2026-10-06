@@ -1,3 +1,7 @@
+import { publishCommittedChanges, pullPublishedChanges } from '../modules/sync/changePublisher.js';
+import { assertLiveTaskReferences, tombstoneTasks } from '../modules/projects/projectChildren.js';
+import { readAclSnapshot } from '../modules/sync/syncReadPolicy.js';
+import { getActorResolver } from '../platform/identity/actorResolver.js';
 import { Hono } from 'hono';
 import crypto from 'node:crypto';
 import { prisma } from '../platform/db/client.js';
@@ -6,6 +10,7 @@ import { AUDIT_ACTIONS, PROJECT_CAPABILITIES } from '../kernel/constants.js';
 import { writeAudit } from '../kernel/audit.js';
 import { badRequest, HttpError } from '../kernel/http.js';
 import { projectVisibilityFilter, assertProjectCapability } from '../kernel/projectAccess.js';
+import { assertProjectStatusTransition, normalizeProjectStatus, transferProjectManager, managerTransferId } from '../modules/projects/projectCommands.js';
 import {
   assertActionPermission,
   assertTaskStatusChange,
@@ -13,9 +18,11 @@ import {
   assertPhaseStatusChange,
   assertPhaseBelongsToProject,
   assertReportWritable,
+  assertReportAuthority,
 } from '../modules/access/writeGuards.js';
 import { buildReportDraftPatch, saveReportDraft } from '../modules/reports/reportCommands.js';
 import { updateTaskFields, changeTaskStatus, assignTask } from '../modules/tasks/taskCommands.js';
+import { createSyncMutationCommands, parseSyncCommand, parseSyncEnvelope } from '../modules/sync/syncMutationCommands.js';
 
 /**
  * /api/sync —— 离线同步 v2（批次四）
@@ -45,9 +52,11 @@ const SYNC_ENTITIES = {
     createAllowed: false, // Project.code 由 CodeSequence 服务端发号，不做离线新建
     tombstoneField: 'deletedAt',
     touchUpdatedBy: true,
-    fields: ['name', 'description', 'status', 'type', 'position', 'managerId', 'startDate', 'endDate', 'actualEndDate'],
-    serverOwned: ['code', 'templateId', 'metadata'],
+    fields: ['name', 'description', 'type', 'position', 'startDate', 'endDate', 'actualEndDate'],
+    serverOwned: ['code', 'templateId', 'metadata', 'managerId'],
     // RF04 补齐：项目属性编辑需 projects.update（离线不支持新建，编号由服务端发号）
+    readPermission: 'projects.view',
+    readFields: ['id', 'code', 'name', 'type', 'subtype', 'status', 'isDraft', 'positioning', 'managerId', 'templateId', 'startDate', 'endDate', 'actualEndDate', 'createdAt', 'updatedAt', 'manager'],
     permission: 'projects.update',
     deletePermission: 'projects.delete',
     include: { manager: { select: { id: true, displayName: true } } },
@@ -61,6 +70,8 @@ const SYNC_ENTITIES = {
     fields: ['code', 'name', 'sortOrder', 'status', 'plannedStart', 'plannedEnd', 'actualStart', 'actualEnd', 'progressPercent', 'isMilestone', 'notes'],
     serverOwned: [],
     // RF04：阶段编辑/新建与状态流转分别校验动作权限
+    readPermission: 'project_phases.view',
+    readFields: ['id', 'projectId', 'templatePhaseId', 'code', 'name', 'sortOrder', 'status', 'plannedStart', 'plannedEnd', 'actualStart', 'actualEnd', 'progressPercent', 'isMilestone', 'notes', 'createdAt', 'updatedAt'],
     permission: 'project_phases.update',
     deletePermission: 'project_phases.delete',
     createPermission: 'project_phases.create',
@@ -75,6 +86,8 @@ const SYNC_ENTITIES = {
     fields: ['title', 'description', 'status', 'priority', 'assigneeId', 'phaseId', 'parentId', 'taskType', 'applicability', 'regulatoryPriority', 'expectedDeliverable', 'regulatoryNotes', 'sortOrder', 'estimatedHours', 'actualHours', 'progressPercent', 'startDate', 'dueDate'],
     serverOwned: ['code', 'completedAt', 'startedAt'],
     // RF04/F07：同步不是后门——动作权限与普通 API 同源
+    readPermission: 'tasks.view',
+    readFields: ['id', 'projectId', 'phaseId', 'parentId', 'templateTaskId', 'code', 'title', 'description', 'assigneeId', 'status', 'priority', 'taskType', 'applicability', 'regulatoryPriority', 'expectedDeliverable', 'regulatoryNotes', 'sortOrder', 'estimatedHours', 'actualHours', 'progressPercent', 'startDate', 'dueDate', 'startedAt', 'completedAt', 'createdAt', 'updatedAt'],
     permission: 'tasks.update',
     deletePermission: 'tasks.delete',
     createPermission: 'tasks.create',
@@ -95,6 +108,8 @@ const SYNC_ENTITIES = {
     fields: ['name', 'description', 'phaseId', 'dueDate', 'status'],
     serverOwned: ['completedAt'],
     // RF04 补齐：里程碑编辑/新建需 milestones.update / milestones.create
+    readPermission: 'milestones.view',
+    readFields: ['id', 'projectId', 'phaseId', 'name', 'description', 'dueDate', 'status', 'completedAt', 'createdAt', 'updatedAt'],
     permission: 'milestones.update',
     deletePermission: 'milestones.delete',
     createPermission: 'milestones.create',
@@ -111,6 +126,8 @@ const SYNC_ENTITIES = {
     fields: ['periodKey', 'actualWork', 'completionPercent', 'nextPlan', 'risks', 'projectStatus'],
     serverOwned: ['submittedById', 'submittedAt'],
     // RF04 补齐：月度进展编辑/新建需 progress.update / progress.create（写出需项目 manage_members）
+    readPermission: 'progress.view',
+    readFields: ['id', 'projectId', 'periodKey', 'actualWork', 'completionPercent', 'nextPlan', 'risks', 'projectStatus', 'submittedById', 'submittedAt', 'createdAt', 'updatedAt'],
     permission: 'progress.update',
     deletePermission: 'progress.delete',
     createPermission: 'progress.create',
@@ -126,6 +143,8 @@ const SYNC_ENTITIES = {
     // 服务端权威：审批/版本/归属——客户端上行一律忽略（审阅字段不可被覆盖）
     serverOwned: ['authorId', 'reviewerId', 'status', 'currentVersion', 'submittedAt', 'reviewedAt', 'reviewNote'],
     // RF04/F07：汇报的锁定与动作权限与普通 API 同源
+    readPermission: 'reports.view',
+    readFields: ['id', 'projectId', 'authorId', 'reportType', 'periodKey', 'periodStart', 'periodEnd', 'content', 'status', 'currentVersion', 'submittedAt', 'reviewedAt', 'reviewNote', 'createdAt', 'updatedAt'],
     permission: 'reports.update',
     deletePermission: 'reports.delete',
     createPermission: 'reports.create',
@@ -141,6 +160,8 @@ const SYNC_ENTITIES = {
     fields: ['role', 'userId'], // userId 为离线新增成员所需（权限由 manage_members 约束）
     serverOwned: [],
     requireCapability: 'manage_members', // 成员调整需要管理成员能力
+    readPermission: 'projects.view',
+    readFields: ['id', 'projectId', 'userId', 'role', 'joinedAt'],
     permission: 'projects.manage_members', // RF04 补齐：与普通 API 的成员管理权限同源
     // 成员移除不是删除行，而是「退出」动作（写 leftAt 墓碑），因此沿用成员管理权限；
     // 这是**显式策略**：该实体没有、也不会用 projects.update 之类的权限代替。
@@ -157,19 +178,28 @@ function pickFields(raw, allowed) {
   return out;
 }
 
-async function upsertSyncDevice(auth, deviceId, label, platform) {
-  return prisma.syncDevice.upsert({
-    where: { id: deviceId },
-    update: { label: label ?? undefined, platform: platform ?? undefined },
-    create: { id: deviceId, userId: auth.userId, label: label ?? null, platform: platform ?? null },
-  });
+async function upsertSyncDevice(auth, deviceId, label, platform, db = prisma) {
+  const dataset = await db.dataRecoveryState.findUniqueOrThrow({where:{id:1}});
+  const original = await db.syncDevice.findUnique({where:{id:deviceId}});
+  if(original && original.userId===auth.userId && original.datasetEpoch!==dataset.epoch) throw new HttpError(409,'DATASET_EPOCH_CHANGED','Old dataset device retained; use a fresh dataset device for new commands only');
+  try {
+    return await db.syncDevice.upsert({
+      where: { id: deviceId, userId: auth.userId },
+      update: { label: label ?? undefined, platform: platform ?? undefined },
+      create: { id: deviceId, userId: auth.userId, label: label ?? null, platform: platform ?? null },
+    });
+  } catch (error) {
+    // Unique-key collision with a foreign owner is not permission to relabel it.
+    if (['P2002', 'P2025'].includes(error?.code)) throw new HttpError(404, 'DEVICE_NOT_FOUND', '设备不可用');
+    throw error;
+  }
 }
 
 /**
  * 解析同步写入所需的项目访问上下文（与普通 API 的 resolveProjectAccess 同源判定）。
  * 返回 null 表示非有效成员。
  */
-async function loadSyncAccess(auth, projectId) {
+async function loadSyncAccess(auth, projectId, db = prisma) {
   if (auth.systemRole === 'SUPER_ADMIN') {
     return {
       capabilities: ['read', 'write', 'delete', 'transition', 'assign', 'manage_members'],
@@ -178,7 +208,7 @@ async function loadSyncAccess(auth, projectId) {
       elevated: true,
     };
   }
-  const membership = await prisma.projectMember.findUnique({
+  const membership = await db.projectMember.findUnique({
     where: { projectId_userId: { projectId, userId: auth.userId } },
     select: { role: true, leftAt: true },
   });
@@ -195,7 +225,7 @@ async function loadSyncAccess(auth, projectId) {
  * 实体动作级校验（RF04/F07）：同步与普通 API 调用同一组守卫，
  * 保证「有项目 write 但无对应动作权限」的请求同样被拒绝。
  */
-async function assertSyncEntityActions({ entity, def, existing, data, auth, access, projectId, op }) {
+async function assertSyncEntityActions({ entity, def, existing, data, auth, access, projectId, op, rawData, db = prisma }) {
   // 通用动作权限（所有实体统一执行）：
   //   删除 → deletePermission（**独立权限码，绝不复用 update**）；未定义 = 不支持离线删除
   //   更新 → permission；新建 → createPermission
@@ -212,6 +242,27 @@ async function assertSyncEntityActions({ entity, def, existing, data, auth, acce
     if (def.permission) assertActionPermission(auth, def.permission);
   } else if (def.createPermission) {
     assertActionPermission(auth, def.createPermission);
+  }
+
+  if (entity === 'projects') {
+    if (op !== 'delete' && Object.prototype.hasOwnProperty.call(rawData, 'managerId')) {
+      managerTransferId(rawData.managerId);
+      if (!existing) throw badRequest('INVALID_REFERENCE', '负责人转移需要已存在的项目');
+      if (rawData.managerId !== existing.managerId) {
+        assertActionPermission(auth, 'projects.manage_members');
+        assertProjectCapability(access, 'manage_members', 'projects.manage_members');
+      }
+    }
+    if (op !== 'delete' && Object.prototype.hasOwnProperty.call(rawData, 'status')) {
+      if (!existing) throw badRequest('INVALID_REFERENCE', '离线项目状态命令需要已存在的项目');
+      data.status = assertProjectStatusTransition({
+        actor: auth,
+        access,
+        currentStatus: existing.status,
+        nextStatus: rawData.status,
+      });
+    }
+    return;
   }
 
   if (entity === 'reports') {
@@ -234,6 +285,8 @@ async function assertSyncEntityActions({ entity, def, existing, data, auth, acce
   }
 
   if (entity === 'tasks') {
+    if (op === 'delete') { assertProjectCapability(access, 'delete', 'tasks.delete'); return; }
+    await assertLiveTaskReferences(db, projectId, data, existing?.id);
     if (existing && data.status !== undefined && data.status !== existing.status) {
       assertTaskStatusChange(auth, access);
     }
@@ -243,13 +296,22 @@ async function assertSyncEntityActions({ entity, def, existing, data, auth, acce
     if (existing) assertActionPermission(auth, def.permission ?? 'tasks.update');
     else assertActionPermission(auth, def.createPermission ?? 'tasks.create');
     if (data.phaseId !== undefined && data.phaseId !== null) {
-      await assertPhaseBelongsToProject(prisma, data.phaseId, projectId);
+      await assertPhaseBelongsToProject(db, data.phaseId, projectId);
+    }
+    if (op !== 'delete' && data.parentId !== undefined && data.parentId !== null) {
+      if (typeof data.parentId !== 'string' || !data.parentId.trim() || data.parentId === existing?.id) {
+        throw badRequest('INVALID_REFERENCE', 'parentId 无效', { field: 'parentId', projectId });
+      }
+      const parent = await db.task.findUnique({ where: { id: data.parentId }, select: { id: true, projectId: true } });
+      if (!parent || parent.projectId !== projectId) {
+        throw badRequest('INVALID_REFERENCE', 'parentId 不属于该项目', { field: 'parentId', projectId });
+      }
     }
     return;
   }
 
   if (entity === 'milestones' && data.phaseId !== undefined && data.phaseId !== null) {
-    await assertPhaseBelongsToProject(prisma, data.phaseId, projectId);
+    await assertPhaseBelongsToProject(db, data.phaseId, projectId);
     return;
   }
 
@@ -259,35 +321,137 @@ async function assertSyncEntityActions({ entity, def, existing, data, auth, acce
   }
 }
 
-function aclVersionOf(projectIds, permissions) {
-  return crypto
-    .createHash('sha1')
-    .update(`${[...projectIds].sort().join(',')}|${[...permissions].sort().join(',')}`)
-    .digest('hex')
-    .slice(0, 16);
+const SYNC_UPSERT_PAGE_SIZE = 3000;
+const SYNC_TOMBSTONE_PAGE_SIZE = 5000;
+// Production binds page tokens to the configured auth secret. The process-local
+// fallback is only useful in development; a restart invalidates in-flight pages
+// safely because the client has not advanced its durable cursor yet.
+const SYNC_PAGE_TOKEN_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
+
+function signPageState(state) {
+  const payload = Buffer.from(JSON.stringify(state)).toString('base64url');
+  const signature = crypto.createHmac('sha256', SYNC_PAGE_TOKEN_SECRET).update(payload).digest('base64url');
+  return `${payload}.${signature}`;
+}
+
+function readPageState(token, auth, deviceId) {
+  if (token.length > 8192) throw badRequest('SYNC_PAGE_TOKEN_INVALID', '分页令牌无效');
+  const [payload, signature, extra] = token.split('.');
+  if (!payload || !signature || extra !== undefined) throw badRequest('SYNC_PAGE_TOKEN_INVALID', '分页令牌无效');
+  const expected = crypto.createHmac('sha256', SYNC_PAGE_TOKEN_SECRET).update(payload).digest();
+  let actual;
+  try { actual = Buffer.from(signature, 'base64url'); } catch { actual = Buffer.alloc(0); }
+  if (actual.length !== expected.length || !crypto.timingSafeEqual(actual, expected)) {
+    throw badRequest('SYNC_PAGE_TOKEN_INVALID', '分页令牌无效');
+  }
+  let state;
+  try { state = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')); } catch {
+    throw badRequest('SYNC_PAGE_TOKEN_INVALID', '分页令牌无效');
+  }
+  if (state?.version !== 1 || state.actorId !== auth.userId || state.deviceId !== deviceId
+    || !Array.isArray(state.cursors ? Object.keys(state.cursors) : null)) {
+    throw badRequest('SYNC_PAGE_TOKEN_INVALID', '分页令牌与当前用户或设备不匹配');
+  }
+  const since = new Date(state.since);
+  const upperBound = new Date(state.upperBound);
+  if (Number.isNaN(since.getTime()) || Number.isNaN(upperBound.getTime()) || upperBound < since) {
+    throw badRequest('SYNC_PAGE_TOKEN_INVALID', '分页令牌时间范围无效');
+  }
+  return { ...state, since, upperBound };
+}
+
+function streamPageWhere(scopeWhere, aliveFilter, timestampField, since, upperBound, last) {
+  const and = [
+    scopeWhere,
+    aliveFilter,
+    { [timestampField]: { gt: since, lte: upperBound } },
+  ];
+  if (last) {
+    const timestamp = new Date(last.timestamp);
+    if (!last.id || Number.isNaN(timestamp.getTime()) || timestamp < since || timestamp > upperBound) {
+      throw badRequest('SYNC_PAGE_TOKEN_INVALID', '分页位置无效');
+    }
+    and.push({ OR: [
+      { [timestampField]: { gt: timestamp } },
+      { [timestampField]: timestamp, id: { gt: last.id } },
+    ] });
+  }
+  return { AND: and };
 }
 
 // ── 增量拉取 ─────────────────────────────────────────────────────────────────
 sync.get('/init', async (c) => {
-  const auth = getAuth(c);
-  const sinceRaw = c.req.query('since');
-  let since = new Date(0);
-  if (sinceRaw) {
-    since = new Date(sinceRaw);
-    if (Number.isNaN(since.getTime())) throw badRequest('VALIDATION_ERROR', 'since 非法（需 ISO 时间）');
+  if(c.req.query('pullProtocol')==='2'){
+    await publishCommittedChanges(prisma);
+    return prisma.$transaction(async(db)=>{
+      const {auth,acl}=await readAclSnapshot(db,getAuth(c),Boolean(getActorResolver()));
+      acl.writePolicy=Object.fromEntries(ENTITY_KEYS.map(entity=>{const def=SYNC_ENTITIES[entity];return [entity,{read:def.readPermission,update:def.permission,create:def.createPermission??null,delete:def.deletePermission,status:def.statusPermission??(entity==='projects'?'projects.change_status':null),assign:def.assignPermission??null,capability:def.requireCapability??(entity==='monthlyProgress'?'manage_members':'write')}]}));
+      const deviceId=String(c.req.query('deviceId')||'').slice(0,64);
+      if(deviceId)await upsertSyncDevice(auth,deviceId,c.req.query('deviceLabel'),c.req.query('platform'),db);
+      return c.json(await pullPublishedChanges(db,SYNC_ENTITIES,auth,acl,{deviceId,since:c.req.query('since'),pageToken:c.req.query('pageToken')}));
+    },{isolationLevel:'RepeatableRead',timeout:30000});
   }
+  return prisma.$transaction(async (db) => {
+  const { auth, acl } = await readAclSnapshot(db, getAuth(c), Boolean(getActorResolver()));
+  const sinceRaw = c.req.query('since');
   const deviceId = String(c.req.query('deviceId') || '').slice(0, 64);
-
-  const aclFilter = projectVisibilityFilter(auth);
-  const visibleProjects = await prisma.project.findMany({
-    where: { ...(aclFilter ?? {}), deletedAt: null },
-    select: { id: true },
-  });
-  const projectIds = visibleProjects.map((p) => p.id);
+  const pageToken = c.req.query('pageToken');
+  let pageState;
+  if (pageToken) {
+    pageState = readPageState(pageToken, auth, deviceId);
+    if (sinceRaw) {
+      const requestedSince = new Date(sinceRaw);
+      if (Number.isNaN(requestedSince.getTime()) || requestedSince.toISOString() !== pageState.since.toISOString()) {
+        throw badRequest('SYNC_PAGE_TOKEN_INVALID', '分页令牌与 since 不匹配');
+      }
+    }
+  } else {
+    let since = new Date(0);
+    if (sinceRaw) {
+      since = new Date(sinceRaw);
+      if (Number.isNaN(since.getTime())) throw badRequest('VALIDATION_ERROR', 'since 非法（需 ISO 时间）');
+    }
+    const upperBound = new Date();
+    pageState = {
+      version: 1,
+      actorId: auth.userId,
+      deviceId,
+      since: since.toISOString(),
+      checkpoint: since.toISOString(),
+      upperBound: upperBound.toISOString(),
+      full: !sinceRaw,
+      cursors: {},
+    };
+    pageState.since = since;
+    pageState.upperBound = upperBound;
+  }
+  if(pageToken && pageState.datasetEpoch !== acl.datasetEpoch) throw new HttpError(409,'DATASET_EPOCH_CHANGED','Old dataset page cursor cannot be reused');
+  if (pageToken && pageState.aclVersion !== acl.aclVersion) {
+    throw new HttpError(409, 'SYNC_ACL_CHANGED', '当前授权已变化，请保全待提交原文并重新获取快照');
+  }
+  if (!pageToken && sinceRaw) {
+    pageState.since = new Date(0); pageState.full = true;
+  }
+  acl.writePolicy = Object.fromEntries(ENTITY_KEYS.map((entity) => {
+    const def = SYNC_ENTITIES[entity];
+    return [entity, { read: def.readPermission, update: def.permission, create: def.createPermission ?? null,
+      delete: def.deletePermission, status: def.statusPermission ?? (entity === 'projects' ? 'projects.change_status' : null),
+      assign: def.assignPermission ?? null, capability: def.requireCapability ?? (entity === 'monthlyProgress' ? 'manage_members' : 'write') }];
+  }));
+  pageState.aclVersion = acl.aclVersion;
+  pageState.datasetEpoch = acl.datasetEpoch;
+  const { since, upperBound } = pageState;
+  const projectIds = acl.projectIds;
   const projectIdSet = new Set(projectIds);
 
   const changes = {};
+  const nextCursors = { ...(pageState.cursors ?? {}) };
+  let hasMore = false;
   for (const [entity, def] of Object.entries(SYNC_ENTITIES)) {
+    if (!auth.permissions.includes(def.readPermission)) {
+      changes[entity] = { upserts: [], tombstones: [] };
+      continue;
+    }
     const scopeWhere = {};
     if (def.scope === 'byProject') scopeWhere.projectId = { in: projectIds };
     if (def.scope === 'projectSelf') scopeWhere.id = { in: projectIds };
@@ -299,301 +463,228 @@ sync.get('/init', async (c) => {
     const tsField = def.timestampField ?? 'updatedAt';
 
     // eslint-disable-next-line no-await-in-loop
-    const upserts = await prisma[def.model].findMany({
-      where: { ...scopeWhere, ...aliveFilter, [tsField]: { gt: since } },
+    const entityCursors = nextCursors[entity] ?? {};
+    const upsertRows = await db[def.model].findMany({
+      where: streamPageWhere(scopeWhere, aliveFilter, tsField, since, upperBound, entityCursors.upsert),
       ...(def.include ? { include: def.include } : {}),
-      orderBy: { [tsField]: 'asc' },
-      take: 3000,
+      orderBy: [{ [tsField]: 'asc' }, { id: 'asc' }],
+      take: SYNC_UPSERT_PAGE_SIZE + 1,
     });
+    const upsertHasMore = upsertRows.length > SYNC_UPSERT_PAGE_SIZE;
+    const upserts = upsertRows.slice(0, SYNC_UPSERT_PAGE_SIZE).map((row) => pickFields(row, def.readFields));
+    if (upserts.length > 0) {
+      const last = upserts.at(-1);
+      entityCursors.upsert = { timestamp: last[tsField].toISOString(), id: last.id };
+    }
+    if (upsertHasMore) {
+      hasMore = true;
+    }
 
     // eslint-disable-next-line no-await-in-loop
-    const removed = await prisma[def.model].findMany({
-      where: { ...scopeWhere, [def.tombstoneField]: { gt: since } },
-      select: { id: true },
-      take: 5000,
+    const removedRows = await db[def.model].findMany({
+      where: streamPageWhere(scopeWhere, { [def.tombstoneField]: { not: null } }, def.tombstoneField, since, upperBound, entityCursors.tombstone),
+      select: { id: true, [def.tombstoneField]: true },
+      orderBy: [{ [def.tombstoneField]: 'asc' }, { id: 'asc' }],
+      take: SYNC_TOMBSTONE_PAGE_SIZE + 1,
     });
+    const tombstoneHasMore = removedRows.length > SYNC_TOMBSTONE_PAGE_SIZE;
+    const removed = removedRows.slice(0, SYNC_TOMBSTONE_PAGE_SIZE);
+    if (removed.length > 0) {
+      const last = removed.at(-1);
+      entityCursors.tombstone = { timestamp: last[def.tombstoneField].toISOString(), id: last.id };
+    }
+    if (tombstoneHasMore) {
+      hasMore = true;
+    }
+    nextCursors[entity] = entityCursors;
 
     changes[entity] = { upserts, tombstones: removed.map((r) => r.id) };
   }
 
-  const serverTime = new Date().toISOString();
-  if (deviceId) {
-    await upsertSyncDevice(auth, deviceId, c.req.query('deviceLabel'), c.req.query('platform'));
-    await prisma.syncDevice.update({ where: { id: deviceId }, data: { lastSyncAt: new Date() } });
+  const serverTime = upperBound.toISOString();
+  if (deviceId && !hasMore) {
+    await upsertSyncDevice(auth, deviceId, c.req.query('deviceLabel'), c.req.query('platform'), db);
+    await db.syncDevice.update({ where: { id: deviceId, userId: auth.userId }, data: { lastSyncAt: new Date() } });
+  }
+
+  const nextPageToken = hasMore ? signPageState({ ...pageState, cursors: nextCursors }) : null;
+  if (hasMore && !pageToken && c.req.query('paginationVersion') !== '1') {
+    throw new HttpError(409, 'SYNC_PAGINATION_REQUIRED', '同步结果超过单页上限，请升级支持 keyset pagination 的客户端后重试');
   }
 
   return c.json({
+    datasetEpoch: acl.datasetEpoch,
     serverTime,
-    cursor: serverTime, // 客户端下次带 since=cursor
-    full: !sinceRaw,
-    acl: {
-      projectIds, // 客户端据此清除不再可见项目的本地数据
-      permissions: auth.permissions,
-      aclVersion: aclVersionOf(projectIds, auth.permissions),
-    },
+    // Before the last page, old clients retain their prior checkpoint and safely replay page one.
+    cursor: hasMore ? (pageState.checkpoint ?? since.toISOString()) : upperBound.toISOString(),
+    full: pageState.full,
+    pagination: { hasMore, nextPageToken },
+    acl,
     entities: ENTITY_KEYS,
     changes,
   });
+  }, { isolationLevel: 'RepeatableRead' });
 });
 
-// ── 上行变更 ─────────────────────────────────────────────────────────────────
-sync.post('/push', async (c) => {
-  const auth = getAuth(c);
-  const body = await c.req.json().catch(() => null);
-  const deviceId = String(body?.deviceId || '').slice(0, 64);
-  if (!deviceId) throw badRequest('VALIDATION_ERROR', 'deviceId 必填');
-  const changes = Array.isArray(body?.changes) ? body.changes : [];
-  if (changes.length > 500) throw badRequest('VALIDATION_ERROR', '单批最多 500 条变更');
-
-  await upsertSyncDevice(auth, deviceId, body?.deviceLabel, body?.platform);
-
-  if (changes.length === 0) {
-    await prisma.syncDevice.update({ where: { id: deviceId }, data: { lastPushAt: new Date() } });
-    return c.json({ serverTime: new Date().toISOString(), results: [], conflictCount: 0 });
+// ── 预约回执协议 v1（旧无预约写入安全拒绝；不修改拉取协议） ──
+async function authorizeSyncCommand(tx, actor, command) {
+  const def = SYNC_ENTITIES[command.entity];
+  const existing = await tx[def.model].findUnique({ where: { id: command.id } });
+  const projectId = def.scope === 'projectSelf' ? command.id : existing?.projectId ?? command.projectId;
+  if (projectId !== command.projectId) throw new HttpError(404, 'RECEIPT_UNAVAILABLE', '回执不可用');
+  const project = await tx.project.findUnique({ where: { id: projectId }, select: { id: true, deletedAt: true } });
+  if (!project || project.deletedAt) throw new HttpError(404, 'RECEIPT_UNAVAILABLE', '回执不可用');
+  const access = await loadSyncAccess(actor, projectId, tx);
+  if (!access) throw new HttpError(404, 'RECEIPT_UNAVAILABLE', '回执不可用');
+  assertProjectCapability(access, def.requireCapability ?? 'write', def.permission ?? 'sync.write');
+  if (def.ownOnly && existing) assertReportAuthority(existing, actor, access, def.permission);
+  if (def.ownOnly && !existing && command.op === 'delete') throw new HttpError(404, 'RECEIPT_UNAVAILABLE', '回执不可用');
+  if (command.entity === 'projects' && Object.hasOwn(command.data, 'managerId')) managerTransferId(command.data.managerId);
+  const data = pickFields(command.data, def.fields);
+  const requiredPermissions = [];
+  const requiredCapabilities = [def.requireCapability ?? 'write'];
+  if (command.op === 'delete') {
+    if (!def.deletePermission) throw new HttpError(403, 'SYNC_DELETE_NOT_SUPPORTED', '不支持此实体离线删除');
+    assertActionPermission(actor, def.deletePermission);
+    requiredPermissions.push(def.deletePermission);
+    if (command.entity === 'tasks') { assertProjectCapability(access, 'delete', 'tasks.delete'); requiredCapabilities.push('delete'); }
+  } else {
+    // Before scoped lookup require some current write authority. After lookup,
+    // the stored original action's exact permissions/capabilities are checked.
+    const alternatives = [def.permission, def.createPermission].filter(Boolean);
+    if (!alternatives.some((p) => actor.permissions.includes(p))) throw new HttpError(403, 'PERMISSION_DENIED', '缺少实体写权限');
+    requiredPermissions.push(existing ? def.permission : def.createPermission ?? def.permission);
+    if (command.entity === 'tasks') {
+      if (existing && data.status !== undefined && data.status !== existing.status) {
+        requiredPermissions.push('tasks.change_status'); requiredCapabilities.push('transition');
+      }
+      if (existing && data.assigneeId !== undefined && data.assigneeId !== existing.assigneeId) {
+        requiredPermissions.push('tasks.assign'); requiredCapabilities.push('assign');
+      }
+    }
+    if (command.entity === 'projectPhases' && existing && data.status !== undefined && data.status !== existing.status) {
+      requiredPermissions.push('project_phases.change_status'); requiredCapabilities.push('transition');
+    }
+    if (command.entity === 'projects' && Object.hasOwn(command.data, 'managerId') && command.data.managerId !== existing?.managerId) {
+      assertActionPermission(actor, 'projects.manage_members'); assertProjectCapability(access, 'manage_members', 'projects.manage_members');
+      requiredPermissions.push('projects.manage_members'); requiredCapabilities.push('manage_members');
+      if (typeof command.baseUpdatedAt !== 'string') throw new HttpError(409, 'MANAGER_BASELINE_REQUIRED', '负责人转移需要当前项目时间基线');
+    }
+    if (command.entity === 'projects' && Object.hasOwn(command.data, 'status') && normalizeProjectStatus(command.data.status) !== existing?.status) {
+      requiredCapabilities.push('transition');
+      if (normalizeProjectStatus(command.data.status) === 'ARCHIVED') requiredPermissions.push('projects.archive');
+    }
   }
+  return { existing, data, access, requiredPermissions, requiredCapabilities };
+}
 
-  const aclFilter = projectVisibilityFilter(auth);
-  const visible = await prisma.project.findMany({
-    where: { ...(aclFilter ?? {}), deletedAt: null },
-    select: { id: true },
-  });
-  const accessible = new Set(visible.map((p) => p.id));
+async function executeSyncCommand(tx, actor, command, context, c) {
+  const { entity, id, op, projectId } = command;
+  const def = SYNC_ENTITIES[entity];
+  const { existing, data, access } = context;
+  await assertSyncEntityActions({ entity, def, existing, data, auth: actor, access, projectId, op, rawData: command.data, db: tx });
+  const tsField = def.timestampField ?? 'updatedAt';
+  const casFilter = existing ? { [tsField]: existing[tsField] } : undefined;
+  if (op !== 'delete' && existing && command.baseUpdatedAt && new Date(existing[tsField]) > new Date(command.baseUpdatedAt)) {
+    return { status: 'conflict', reason: '服务端已有更新', server: { id, updatedAt: existing[tsField], ...pickFields(existing, def.fields) } };
+  }
+  if (op === 'delete') {
+    if (!existing || existing[def.tombstoneField]) return { status: 'applied', action: 'noop', serverUpdatedAt: existing?.[tsField] ?? null };
+    if (entity === 'tasks') {
+      await tombstoneTasks(tx, { actor, access, projectId, ids: [id], c, audit: false });
+      const row = await tx.task.findUnique({ where: { id } });
+      return { status: 'applied', action: 'deleted', serverUpdatedAt: row.updatedAt };
+    }
+    const deleted = await tx[def.model].updateMany({ where: { id, [def.tombstoneField]: null },
+      data: { [def.tombstoneField]: new Date(), ...(def.touchUpdatedBy ? { updatedById: actor.userId } : {}) } });
+    if (deleted.count !== 1) throw new HttpError(409, 'CONFLICT', '删除状态已变化');
+    const row = await tx[def.model].findUnique({ where: { id } });
+    return { status: 'applied', action: 'deleted', serverUpdatedAt: row[tsField] };
+  }
+  if (!existing && !def.createAllowed) throw badRequest('VALIDATION_ERROR', '不支持离线新建');
+  for (const owned of def.serverOwned) delete data[owned];
+  if (def.derive) def.derive(data);
+  let row;
+  if (existing && entity === 'reports') {
+    row = await saveReportDraft(tx, { actor, reportId: id, patch: data, cas: casFilter });
+  } else if (existing && entity === 'tasks') {
+    const nextStatus = data.status; const statusChanging = nextStatus !== undefined && nextStatus !== existing.status;
+    const assigneeChanging = data.assigneeId !== undefined && data.assigneeId !== existing.assigneeId;
+    const nextAssignee = data.assigneeId ?? null;
+    delete data.status; delete data.assigneeId;
+    let casConsumed = false;
+    const nextCas = () => { if (casConsumed) return undefined; casConsumed = true; return casFilter; };
+    if (Object.keys(data).length) await updateTaskFields(tx, { actor, access, task: existing, fields: data, cas: nextCas() });
+    if (statusChanging) await changeTaskStatus(tx, { actor, access, task: existing, status: nextStatus, cas: nextCas() });
+    if (assigneeChanging) await assignTask(tx, { actor, access, task: existing, assigneeId: nextAssignee, cas: nextCas() });
+    row = await tx.task.findUnique({ where: { id } });
+  } else if (existing && entity === 'projects' && Object.hasOwn(command.data, 'managerId') && command.data.managerId !== existing.managerId) {
+    row = await transferProjectManager(tx, { actor: { ...actor, user: { ...actor.user, securityVersion: getAuth(c).user?.securityVersion } }, projectId: id, managerId: command.data.managerId, expectedUpdatedAt: command.baseUpdatedAt, entryPermission: 'projects.update', fields: data, c });
+  } else if (existing) {
+    const changed = await tx[def.model].updateMany({ where: { id, ...casFilter }, data: { ...data, ...(def.touchUpdatedBy ? { updatedById: actor.userId } : {}) } });
+    if (changed.count !== 1) throw new HttpError(409, 'CONFLICT', '并发基线已变化');
+    row = await tx[def.model].findUnique({ where: { id } });
+  } else {
+    const createData = { ...data, id, ...(def.scope === 'byProject' ? { projectId } : {}) };
+    if (entity === 'reports') createData.authorId = actor.userId;
+    if (entity === 'monthlyProgress') createData.submittedById = actor.userId;
+    if (def.touchUpdatedBy) createData.createdById = actor.userId;
+    row = await tx[def.model].create({ data: createData });
+  }
+  return { status: 'applied', action: existing ? 'updated' : 'created', serverUpdatedAt: row?.[tsField] };
+}
 
-  // 幂等命中预取：同一 clientMutationId 重复上行直接回放首次结果
-  const mutationIds = changes.map((ch) => String(ch?.clientMutationId || '')).filter(Boolean);
-  const replayed = mutationIds.length
-    ? await prisma.syncMutation.findMany({ where: { clientMutationId: { in: mutationIds } } })
-    : [];
-  const replayMap = new Map(replayed.map((m) => [m.clientMutationId, m]));
+function syncCommands(c) {
+  return createSyncMutationCommands(prisma, { authorize: authorizeSyncCommand, execute: (tx, actor, command, context) => executeSyncCommand(tx, actor, command, context, c) });
+}
 
+sync.post('/receipts/reserve', async (c) => {
+  if (process.env.RDPMS_SYNC_WRITE_DISABLED === 'true') throw new HttpError(503, 'SYNC_WRITES_DISABLED', '同步写入已安全停用；保留原副本并查询既有回执');
+  const { deviceId, changes } = parseSyncEnvelope(await c.req.json().catch(() => null));
+  const commands = changes.map((raw) => parseSyncCommand(raw, SYNC_ENTITIES));
   const results = [];
-  for (const raw of changes) {
-    const clientMutationId = String(raw?.clientMutationId || '').slice(0, 64);
-    const entity = String(raw?.entity || '');
-    const entityId = String(raw?.id || '');
-    const op = raw?.op === 'delete' ? 'delete' : 'upsert';
-    const def = SYNC_ENTITIES[entity];
+  for (const command of commands) results.push(await syncCommands(c).reserve(getAuth(c).userId, deviceId, command));
+  return c.json({ protocolVersion: 1, results });
+});
 
-    const base = { clientMutationId, entity, id: entityId, op };
+sync.post('/receipts/query', async (c) => {
+  const { deviceId, changes } = parseSyncEnvelope(await c.req.json().catch(() => null));
+  const commands = changes.map((raw) => parseSyncCommand(raw, SYNC_ENTITIES));
+  const results = [];
+  for (const command of commands) results.push(await syncCommands(c).query(getAuth(c).userId, deviceId, command));
+  return c.json({ protocolVersion: 1, results });
+});
 
-    if (!clientMutationId || !def || !entityId) {
-      results.push({ ...base, status: 'rejected', reason: '缺少 clientMutationId / 未知实体 / 缺少 id' });
-      continue;
+sync.post('/push', async (c) => {
+  if (process.env.RDPMS_SYNC_WRITE_DISABLED === 'true') throw new HttpError(503, 'SYNC_WRITES_DISABLED', '同步写入已安全停用；保留原副本并查询既有回执');
+  const { deviceId, changes } = parseSyncEnvelope(await c.req.json().catch(() => null));
+  const commands = changes.map((raw) => parseSyncCommand(raw, SYNC_ENTITIES));
+  const results = [];
+  for (const command of commands) {
+    try { results.push(await syncCommands(c).push(getAuth(c).userId, deviceId, command, c)); }
+    catch (error) {
+      // Validation/authorization failures leave reservation unchanged. Unexpected
+      // audit/receipt/SQL faults escape, preserving prior committed batch items.
+      if (!(error instanceof HttpError)) throw error;
+      results.push({ clientMutationId: command.clientMutationId, entity: command.entity, id: command.id,
+        op: command.op, status: error.code === 'CONFLICT' ? 'conflict' : 'rejected', code: error.code, httpStatus: error.status });
     }
-
-    const hit = replayMap.get(clientMutationId);
-    if (hit) {
-      // 只回放**已成功写库**的结果（applied）：回执的意义是「不要重复写」。
-      // rejected / conflict 表示服务端什么都没写——若连失败结果也永久回放，
-      // 用户「修好原因后重试同一条变更」将永远得到旧的拒绝（F10 恢复闭环实测的阻断点）。
-      // 因此失败结果一律重新判定，并把新结果覆盖写回同一条回执记录。
-      if (hit.status === 'applied') {
-        results.push({ ...(hit.result ?? base), status: hit.status, replayed: true });
-        continue;
-      }
-    }
-
-    let outcome;
-    try {
-      // eslint-disable-next-line no-await-in-loop
-      const existing = await prisma[def.model].findUnique({ where: { id: entityId } });
-      const data = pickFields(raw?.data, def.fields);
-
-      // 注意：data 已被 pickFields 白名单过滤，projectId 不在 def.fields 中，
-      // 必须从原始载荷读取；否则离线**新建**（phase/task/report/milestone/monthlyProgress/member）
-      // 永远拿不到归属项目 → 被误判"无权访问该数据所属项目"（演练环境发现）
-      const projectId = def.scope === 'projectSelf'
-        ? (existing?.id ?? entityId)
-        : (existing?.projectId ?? raw?.data?.projectId);
-
-      if (!projectId || !accessible.has(projectId)) {
-        outcome = { status: 'rejected', reason: '无权访问该数据所属项目' };
-      } else if (def.ownOnly && existing && existing.authorId !== auth.userId) {
-        outcome = { status: 'rejected', reason: '无权修改他人汇报' };
-      } else {
-        // RF04/F07：同步与普通 API 同源——项目访问上下文 + 实体动作级权限
-        // eslint-disable-next-line no-await-in-loop
-        const syncAccess = await loadSyncAccess(auth, projectId);
-        if (!syncAccess) throw new Error('无权访问该数据所属项目');
-        assertProjectCapability(syncAccess, def.requireCapability ?? 'write', def.permission ?? 'sync.write');
-        // eslint-disable-next-line no-await-in-loop
-        await assertSyncEntityActions({
-          entity, def, existing, data, auth, access: syncAccess, projectId, op,
-        });
-
-        const tsField = def.timestampField ?? 'updatedAt';
-        // 并发基线：既用于「先判冲突」，也作为原子 UPDATE 的 WHERE 条件（下方 casFilter），
-        // 避免先读、比较、再无条件更新之间的竞态。
-        const casFilter = existing ? { [tsField]: existing[tsField] } : undefined;
-        // 冲突检测：客户端基线早于服务端时间戳
-        if (op !== 'delete' && existing && raw?.baseUpdatedAt
-          && new Date(existing[tsField]) > new Date(raw.baseUpdatedAt)) {
-          outcome = {
-            status: 'conflict',
-            reason: '服务端已有更新',
-            server: { id: existing.id, updatedAt: existing[tsField], ...pickFields(existing, def.fields) },
-          };
-        } else if (op === 'delete') {
-          const patch = def.tombstoneField === 'leftAt'
-            ? { leftAt: new Date() }
-            : { deletedAt: new Date() };
-          if (!existing) {
-            outcome = { status: 'applied', action: 'noop', reason: '记录不存在，无需删除' };
-          } else {
-            // eslint-disable-next-line no-await-in-loop
-            const updated = await prisma[def.model].update({
-              where: { id: entityId },
-              data: { ...patch, ...(def.touchUpdatedBy ? { updatedById: auth.userId } : {}) },
-            });
-            outcome = { status: 'applied', action: 'deleted', serverUpdatedAt: updated[tsField] };
-          }
-        } else if (!existing && !def.createAllowed) {
-          outcome = { status: 'rejected', reason: `${entity} 不支持离线新建` };
-        } else {
-          // 服务端权威字段一律剔除；补充归属
-          for (const owned of def.serverOwned) delete data[owned];
-          if (def.derive) def.derive(data);
-
-          if (existing) {
-            // RF04：已存在记录的更新走与普通 API 相同的应用命令（不各自复制写入逻辑）
-            let updated;
-            if (entity === 'reports') {
-              updated = await saveReportDraft(prisma, {
-                actor: auth, reportId: entityId, patch: data, cas: casFilter,
-              });
-            } else if (entity === 'tasks') {
-              const nextStatus = data.status;
-              const statusChanging = nextStatus !== undefined && nextStatus !== existing.status;
-              const assigneeChanging = data.assigneeId !== undefined && data.assigneeId !== existing.assigneeId;
-              const nextAssignee = data.assigneeId ?? null;
-              delete data.status;
-              delete data.assigneeId;
-              // 并发基线只在**本事务的第一次写入**上校验：
-              // 第一次写入已把行锁住并改变了 updatedAt，后续写入再用旧基线会必然落空。
-              let casConsumed = false;
-              const nextCas = () => {
-                if (casConsumed) return undefined;
-                casConsumed = true;
-                return casFilter;
-              };
-              // 同一事务：多命令不得各自提交（全成功或全不变）
-              updated = await prisma.$transaction(async (tx) => {
-                if (Object.keys(data).length > 0) {
-                  await updateTaskFields(tx, { actor: auth, access: syncAccess, task: existing, fields: data, cas: nextCas() });
-                }
-                if (statusChanging) {
-                  await changeTaskStatus(tx, { actor: auth, access: syncAccess, task: existing, status: nextStatus, cas: nextCas() });
-                }
-                if (assigneeChanging) {
-                  await assignTask(tx, { actor: auth, access: syncAccess, task: existing, assigneeId: nextAssignee, cas: nextCas() });
-                }
-                return tx.task.findUnique({ where: { id: entityId } });
-              });
-            } else {
-              const writeData = { ...data, ...(def.touchUpdatedBy ? { updatedById: auth.userId } : {}) };
-              if (casFilter) {
-                // 原子并发基线：UPDATE ... WHERE id = ? AND <ts> = <读到的值>
-                // eslint-disable-next-line no-await-in-loop
-                const cas = await prisma[def.model].updateMany({
-                  where: { id: entityId, ...casFilter },
-                  data: writeData,
-                });
-                if (cas.count === 0) {
-                  const conflictErr = new Error('并发更新冲突：数据已被他人修改');
-                  conflictErr.syncConflict = true;
-                  throw conflictErr;
-                }
-                // eslint-disable-next-line no-await-in-loop
-                updated = await prisma[def.model].findUnique({ where: { id: entityId } });
-              } else {
-                updated = await prisma[def.model].update({
-                  where: { id: entityId },
-                  data: writeData,
-                });
-              }
-            }
-            outcome = { status: 'applied', action: 'updated', serverUpdatedAt: updated?.[tsField] };
-          } else {
-            const createData = { ...data, id: entityId };
-            if (entity === 'reports') createData.authorId = auth.userId;
-            if (entity === 'monthlyProgress') createData.submittedById = auth.userId;
-            if (def.touchUpdatedBy) createData.createdById = auth.userId;
-            if (def.scope === 'byProject' && !createData.projectId) createData.projectId = projectId;
-            // eslint-disable-next-line no-await-in-loop
-            const created = await prisma[def.model].create({ data: createData });
-            outcome = { status: 'applied', action: 'created', serverUpdatedAt: created[tsField] };
-          }
-        }
-      }
-    } catch (err) {
-      // Prisma 校验失败时 err.message 是多行对象 dump；只把最后一行有效信息回给客户端
-      // （如 "Argument `code` is missing."），完整错误留在服务端日志便于排查
-      const lines = String(err?.message || '写入失败').split('\n').map((s) => s.trim()).filter(Boolean);
-      const brief = lines[lines.length - 1] || '写入失败';
-      // eslint-disable-next-line no-console
-      console.error(`[sync.push] ${entity}/${op} 失败:`, err?.message || err);
-      // 并发基线不一致 → conflict（客户端据此拉取最新并重新基于新版本提交），而不是 rejected
-      // 仅并发基线冲突映射为 conflict；其他 409（如 INVALID_STATE 锁定）仍按 rejected 处理
-      const isConflict = err?.syncConflict === true || err?.code === 'CONFLICT';
-      outcome = isConflict
-        ? { status: 'conflict', reason: '服务端已有更新（并发基线不一致）' }
-        : { status: 'rejected', reason: brief };
-    }
-
-    const record = { ...base, ...outcome };
-    // upsert：失败结果重新判定后要覆盖旧回执（否则表里永远留着第一次的 rejected）
-    // eslint-disable-next-line no-await-in-loop
-    await prisma.syncMutation.upsert({
-      where: { clientMutationId },
-      update: {
-        deviceId,
-        userId: auth.userId,
-        entity,
-        entityId,
-        op,
-        status: outcome.status,
-        result: record,
-      },
-      create: {
-        clientMutationId,
-        deviceId,
-        userId: auth.userId,
-        entity,
-        entityId,
-        op,
-        status: outcome.status,
-        result: record,
-      },
-    });
-    results.push(record);
   }
-
-  await prisma.syncDevice.update({ where: { id: deviceId }, data: { lastPushAt: new Date() } });
-
-  const applied = results.filter((r) => r.status === 'applied').length;
-  const conflicts = results.filter((r) => r.status === 'conflict').length;
-  const rejected = results.filter((r) => r.status === 'rejected').length;
-
-  await writeAudit(prisma, {
-    c,
-    actorId: auth.userId,
-    actorName: auth.user.displayName,
-    actorRole: auth.systemRole,
-    action: AUDIT_ACTIONS.UPDATE,
-    entityType: null,
-    entityLabel: `离线同步上行 ${changes.length} 条`,
-    metadata: { deviceId, applied, conflicts, rejected, entities: [...new Set(results.map((r) => r.entity))] },
-  });
-
-  return c.json({ serverTime: new Date().toISOString(), results, conflictCount: conflicts });
+  // Metadata is not part of the per-item business commit. A failure here may be
+  // a 500 after committed items; exact receipt queries reconstruct those items.
+  if (commands.length) { const epoch = (await prisma.dataRecoveryState.findUniqueOrThrow({where:{id:1}})).epoch; await prisma.syncDevice.updateMany({ where: { id: deviceId, userId: getAuth(c).userId, datasetEpoch: epoch }, data: { lastPushAt: new Date() } }); }
+  const status = results.length === 1 && results[0].httpStatus ? results[0].httpStatus : 200;
+  return c.json({ protocolVersion: 1, serverTime: new Date().toISOString(), results,
+    conflictCount: results.filter((r) => r.status === 'conflict').length }, status);
 });
 
 // ── 设备登记 ─────────────────────────────────────────────────────────────────
 sync.post('/device', async (c) => {
   const auth = getAuth(c);
   const body = await c.req.json().catch(() => null);
-  const deviceId = String(body?.deviceId || '').slice(0, 64);
-  if (!deviceId) throw badRequest('VALIDATION_ERROR', 'deviceId 必填');
+  const deviceId = body?.deviceId;
+  if (typeof deviceId !== 'string' || !deviceId.trim() || deviceId.length > 64) throw badRequest('VALIDATION_ERROR', 'deviceId 必须是最多64字符的非空字符串');
+  if ([body?.label, body?.platform].some((value) => value !== undefined && value !== null && typeof value !== 'string')) throw badRequest('VALIDATION_ERROR', '设备元数据必须是字符串');
   const device = await upsertSyncDevice(auth, deviceId, body?.label, body?.platform);
   return c.json({ id: device.id, label: device.label, platform: device.platform });
 });

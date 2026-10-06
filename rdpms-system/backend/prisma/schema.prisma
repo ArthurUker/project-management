@@ -403,6 +403,7 @@ model User {
   email              String?    @unique @map("email") @db.VarChar(255)
   passwordHash       String     @map("password_hash") @db.VarChar(255)
   mustChangePassword Boolean    @default(false) @map("must_change_password")
+  securityVersion    Int        @default(0) @map("security_version")
   passwordChangedAt  DateTime?  @map("password_changed_at") @db.Timestamptz(3)
   displayName        String     @map("display_name") @db.VarChar(128)
   position           String?    @map("position") @db.VarChar(128)
@@ -467,6 +468,7 @@ model User {
 //       本组两张表只负责「设备登记」与「上行幂等键（clientMutationId）」。
 
 model SyncDevice {
+  datasetEpoch String @default(dbgenerated("rdpms_current_dataset_epoch()")) @map("dataset_epoch") @db.Uuid
   id         String    @id @map("id") @db.VarChar(64) // 客户端生成的设备标识（uuid）
   userId     String    @map("user_id")
   label      String?   @map("label") @db.VarChar(128)
@@ -493,6 +495,10 @@ model SyncMutation {
   op               String   @map("op") @db.VarChar(16)
   status           String   @map("status") @db.VarChar(24) // applied / conflict / rejected
   result           Json?    @map("result") @db.JsonB       // 回放用：原样返回首次处理结果
+  receiptVersion   Int?      @map("receipt_version")
+  resourceScope    String?   @map("resource_scope") @db.VarChar(200)
+  payloadHash      String?   @map("payload_hash") @db.Char(64)
+  expiresAt        DateTime? @map("expires_at") @db.Timestamptz(3)
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
 
   device SyncDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
@@ -503,6 +509,7 @@ model SyncMutation {
 }
 
 model RefreshToken {
+  datasetEpoch String @default(dbgenerated("rdpms_current_dataset_epoch()")) @map("dataset_epoch") @db.Uuid
   id        String    @id @default(uuid()) @map("id")
   userId    String    @map("user_id")
   tokenHash String    @unique @map("token_hash") @db.VarChar(128)
@@ -1598,6 +1605,7 @@ enum MutationReceiptStatus {
 ///   - 同幂等键不同 payloadHash → 409，不得回放旧结果；
 ///   - 数据修改、关键审计与回执在同一事务提交，失败不留下成功回执。
 model MutationReceipt {
+  datasetEpoch String @default(dbgenerated("rdpms_current_dataset_epoch()")) @map("dataset_epoch") @db.Uuid
   id             String                @id @default(uuid()) @map("id")
   actorId        String                @map("actor_id")
   command        String                @map("command") @db.VarChar(120)
@@ -1616,4 +1624,56 @@ model MutationReceipt {
   @@index([expiresAt])
   @@index([actorId, createdAt])
   @@map("mutation_receipts")
+}
+
+/// Local candidate restore containment; deliberately excluded from application JSON exports.
+model DataRecoveryState {
+  previousEpoch String? @map("previous_epoch") @db.Uuid
+  initiatorId String? @map("initiator_id")
+  initiatorVersion Int? @map("initiator_version")
+  id             Int      @id
+  epoch          String   @default(uuid()) @db.Uuid
+  status         String   @default("READY") @db.VarChar(40)
+  activeRunId    String?  @map("active_run_id") @db.Uuid
+  payloadHash    String?  @map("payload_hash") @db.Char(64)
+  manifest       Json?    @db.JsonB
+  summary        Json?    @db.JsonB
+  failureCode    String?  @map("failure_code") @db.VarChar(100)
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("data_recovery_state")
+}
+
+// Commit-visible synchronization journal: payload/revision are immutable.
+model SyncPublicationState {
+  epoch String @id @db.Uuid
+  head BigInt @default(0)
+  floor BigInt @default(0)
+  initialized Boolean @default(false)
+  @@map("sync_publication_state")
+}
+model SyncSourceRevision {
+  epoch String @db.Uuid
+  entity String
+  entityId String @map("entity_id")
+  revision BigInt
+  @@id([epoch,entity,entityId])
+  @@map("sync_source_revisions")
+}
+model SyncChangeEvent {
+  id String @id @default(uuid()) @db.Uuid
+  epoch String @db.Uuid
+  entity String
+  entityId String @map("entity_id")
+  projectId String @map("project_id")
+  authorId String? @map("author_id")
+  revision BigInt
+  action String
+  payload Json
+  publishedSequence BigInt? @map("published_sequence")
+  createdAt DateTime @default(now()) @map("created_at")
+  @@unique([epoch,publishedSequence])
+  @@unique([epoch,entity,entityId,revision])
+  @@index([epoch,entity,entityId,revision])
+  @@map("sync_change_events")
 }

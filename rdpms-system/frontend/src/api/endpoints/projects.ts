@@ -16,7 +16,7 @@ export const projectAPI = {
 
   create: (data: CreateProjectDto) => post<Project>('/projects', data),
 
-  update: (id: string, data: UpdateProjectDto) => put<Project>(`/projects/${id}`, data),
+  update: (id: string, data: UpdateProjectDto & { baseUpdatedAt?: string; deletedTaskIds?: string[]; deletedMilestoneIds?: string[] }) => put<Project>(`/projects/${id}`, data),
 
   remove: (id: string) => del<{ id: string }>(`/projects/${id}`),
 

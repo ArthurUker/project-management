@@ -107,6 +107,45 @@ test('A03-E1 A 的拉取响应在切换账号后释放：B 的镜像/游标/ACL/
   engine.__setSyncTransport();
 });
 
+test('RP13-T01 拉取中间页落镜像但不提交cursor，全部页面完成后才提交最终checkpoint', async () => {
+  await resetAll();
+  await idb.kvSet('rdpms.sync.cursor:user-A', 'cursor-before');
+  const secondPageStarted = deferred<void>();
+  const releaseSecondPage = deferred<never>();
+  let calls = 0;
+  engine.__setSyncTransport({
+    init: (params) => {
+      calls += 1;
+      if (calls === 1) return Promise.resolve(initResponse({
+        cursor: 'cursor-before',
+        pagination: { hasMore: true, nextPageToken: 'signed-page-2' },
+        changes: { reports: { upserts: [{ id: 'page-1-report', content: 'page 1' }], tombstones: [] } },
+      }));
+      assert.equal(params.pageToken, 'signed-page-2');
+      secondPageStarted.resolve();
+      return releaseSecondPage.promise;
+    },
+    push: async () => ({ serverTime: '2026-09-28T00:00:00.000Z', results: [], conflictCount: 0 }),
+  });
+
+  await engine.start(UID_A);
+  await secondPageStarted.promise;
+  assert.equal(await idb.kvGet('rdpms.sync.cursor:user-A'), 'cursor-before');
+  assert.ok((await idb.recordsAll()).some((row) => row.id === 'page-1-report'));
+
+  releaseSecondPage.resolve(initResponse({
+    cursor: 'cursor-final',
+    pagination: { hasMore: false, nextPageToken: null },
+    changes: { reports: { upserts: [{ id: 'page-2-report', content: 'page 2' }], tombstones: [] } },
+  }) as never);
+  await waitSyncIdle();
+  assert.equal(await idb.kvGet('rdpms.sync.cursor:user-A'), 'cursor-final');
+  assert.ok((await idb.recordsAll()).some((row) => row.id === 'page-2-report'));
+
+  engine.stop();
+  engine.__setSyncTransport();
+});
+
 test('A03-E2 A 的上行拒绝响应在切换账号后释放：B 拒绝区为空，A 的未同步内容不被销毁', async () => {
   await resetAll();
   const initGate = deferred<void>();

@@ -9,6 +9,7 @@ import { test, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { PrismaClient } from '@prisma/client';
 import { createApp } from '../../dist/bootstrap/createApp.js';
+import { syncV1Request, readSyncResult, setRealSyncPermissions } from '../helpers/syncV1Fixture.mjs';
 import { createStubActor } from '../helpers/stubDeps.mjs';
 import { IT, seedMinimalFixture, revokeAuthorMembership, restoreAuthorMembership } from './fixtures.mjs';
 
@@ -20,7 +21,15 @@ function actorWith(permissions) {
 }
 
 function buildApp(permissions) {
-  return createApp({ db: prisma, actorResolver: async () => actorWith(permissions) });
+  const app = createApp({ db: prisma, actorResolver: async () => actorWith(permissions) });
+  let ready;
+  const request = app.request.bind(app);
+  return { request: async (url, options) => {
+    if (url !== '/api/sync/push') return request(url, options);
+    ready ??= setRealSyncPermissions(prisma, AUTHOR_ID, permissions);
+    await ready;
+    return syncV1Request({ request }, url, options, IT.project);
+  } };
 }
 
 function pushBody(entity, id, data, op = 'upsert') {
@@ -92,7 +101,7 @@ test('RF04-I2 同步不得覆盖已审阅汇报（真实状态锁定）', async 
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(pushBody('reports', IT.report, { content: { hacked: true } })),
   });
-  const body = await res.json();
+  const body = await readSyncResult(res);
 
   assert.equal(body.results[0].status, 'rejected', `已审阅汇报必须拒绝：${JSON.stringify(body.results[0])}`);
 
@@ -109,7 +118,7 @@ test('RF04-I3 同步改任务状态需要 tasks.change_status（真实权限与�
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(pushBody('tasks', IT.task, { status: 'IN_PROGRESS' })),
   });
-  const rejectedBody = await rejected.json();
+  const rejectedBody = await readSyncResult(rejected);
   assert.equal(rejectedBody.results[0].status, 'rejected', '无 change_status 权限必须拒绝');
 
   let row = await prisma.task.findUnique({ where: { id: IT.task } });
@@ -122,7 +131,7 @@ test('RF04-I3 同步改任务状态需要 tasks.change_status（真实权限与�
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(pushBody('tasks', IT.task, { status: 'IN_PROGRESS' })),
   });
-  const appliedBody = await applied.json();
+  const appliedBody = await readSyncResult(applied);
   assert.equal(appliedBody.results[0].status, 'applied', `具备权限时应放行：${JSON.stringify(appliedBody.results[0])}`);
 
   row = await prisma.task.findUnique({ where: { id: IT.task } });
@@ -143,9 +152,9 @@ test('RF04-I4 跨项目 phaseId 在普通 API 与同步入口都被拒绝', asyn
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(pushBody('tasks', IT.task, { phaseId: IT.phaseOther })),
   });
-  const syncBody = await syncRes.json();
+  const syncBody = await readSyncResult(syncRes);
   assert.equal(syncBody.results[0].status, 'rejected', '同步入口必须拒绝跨项目阶段');
-  assert.match(String(syncBody.results[0].reason), /phaseId/);
+  assert.equal(syncBody.results[0].code, 'INVALID_REFERENCE', 'cross-project phase reference is rejected');
 
   const row = await prisma.task.findUnique({ where: { id: IT.task } });
   assert.equal(row.phaseId, IT.phase, '阶段归属不得被改写');
@@ -178,7 +187,7 @@ test('RF04-I7 相同基线版本的并发更新：仅一个成功，另一个冲
     push(`it-conc-a-${runId}`, '并发改名A'),
     push(`it-conc-b-${runId}`, '并发改名B'),
   ]);
-  const [b1, b2] = await Promise.all([r1.json(), r2.json()]);
+  const [b1, b2] = await Promise.all([readSyncResult(r1), readSyncResult(r2)]);
   const statuses = [b1.results[0].status, b2.results[0].status].sort();
 
   assert.deepEqual(
@@ -239,9 +248,9 @@ test('RF04-I9 同步缺少动作权限时不落库（projects 实体补齐权限
       }],
     }),
   });
-  const body = await res.json();
+  const body = await readSyncResult(res);
   assert.equal(body.results[0].status, 'rejected', JSON.stringify(body.results[0]));
-  assert.match(String(body.results[0].reason), /projects\.update/);
+  assert.equal(body.results[0].code, 'PERMISSION_DENIED');
 
   const row = await prisma.project.findUnique({ where: { id: IT.project } });
   assert.equal(row.name, '集成测试项目', '名称不得被改写');
@@ -300,7 +309,7 @@ test('RF04-I5 同项目内的 phaseId 正常放行（回归）', async () => {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(pushBody('tasks', IT.task, { phaseId: IT.phase, title: '改名后的任务' })),
   });
-  const body = await res.json();
+  const body = await readSyncResult(res);
   assert.equal(body.results[0].status, 'applied', JSON.stringify(body.results[0]));
 
   const row = await prisma.task.findUnique({ where: { id: IT.task } });

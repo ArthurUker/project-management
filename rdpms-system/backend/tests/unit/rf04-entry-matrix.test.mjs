@@ -8,8 +8,8 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createApp } from '../../dist/bootstrap/createApp.js';
-import { createStubDb, createStubActor, jsonRequest } from '../helpers/stubDeps.mjs';
+import { createSyncUnitApp as createApp, syncV1JsonRequest as jsonRequest, readSyncResult } from '../helpers/syncV1Fixture.mjs';
+import { createStubDb, createStubActor } from '../helpers/stubDeps.mjs';
 
 const AUTHOR = { userId: 'u1', displayName: '作者' };
 const OWNER_ACCESS = { role: 'OWNER', leftAt: null };
@@ -158,7 +158,7 @@ test('RF04-U23 只有 milestones.update 时不能删除里程碑（删除不复�
   const res = await jsonRequest(app, '/api/sync/push', {
     body: syncPush('milestones', 'm1', {}, 'delete'),
   });
-  const body = await res.json();
+  const body = await readSyncResult(res);
   assert.equal(body.results[0].status, 'rejected', JSON.stringify(body.results[0]));
   assert.match(String(body.results[0].reason), /milestones\.delete/);
   assert.equal(db.state.milestones[0].deletedAt, null, '不得落软删');
@@ -174,7 +174,7 @@ test('RF04-U23b 具备 milestones.delete 时删除放行（软删）', async () 
   const res = await jsonRequest(app, '/api/sync/push', {
     body: syncPush('milestones', 'm1', {}, 'delete'),
   });
-  const body = await res.json();
+  const body = await readSyncResult(res);
   assert.equal(body.results[0].status, 'applied', JSON.stringify(body.results[0]));
   assert.ok(db.state.milestones[0].deletedAt, '应写入软删时间');
 });
@@ -187,7 +187,7 @@ test('RF04-U24 projects 删除必须 projects.delete；有 projects.update 也�
   const res = await jsonRequest(app, '/api/sync/push', {
     body: syncPush('projects', 'p1', {}, 'delete'),
   });
-  const body = await res.json();
+  const body = await readSyncResult(res);
   assert.equal(body.results[0].status, 'rejected');
   assert.match(String(body.results[0].reason), /projects\.delete/);
   assert.equal(db.state.projects[0].deletedAt, null);
@@ -214,7 +214,7 @@ test('RF04-U25 指派与状态转换权限独立（同步入口同样分别校�
     '/api/sync/push',
     { body: syncPush('tasks', 't1', { status: 'IN_PROGRESS' }) },
   );
-  assert.equal((await statusRes.json()).results[0].status, 'rejected');
+  assert.equal((await readSyncResult(statusRes)).results[0].status, 'rejected');
   assert.equal(dbStatus.state.tasks[0].status, 'TODO');
 
   const dbAssign = base();
@@ -223,6 +223,6 @@ test('RF04-U25 指派与状态转换权限独立（同步入口同样分别校�
     '/api/sync/push',
     { body: syncPush('tasks', 't1', { assigneeId: 'u2' }) },
   );
-  assert.equal((await assignRes.json()).results[0].status, 'rejected');
+  assert.equal((await readSyncResult(assignRes)).results[0].status, 'rejected');
   assert.equal(dbAssign.state.tasks[0].assigneeId, null);
 });

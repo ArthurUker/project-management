@@ -15,6 +15,7 @@ import { test, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { PrismaClient } from '@prisma/client';
 import { createApp } from '../../dist/bootstrap/createApp.js';
+import { syncV1Request, readSyncResult, setRealSyncPermissions } from '../helpers/syncV1Fixture.mjs';
 import { createStubActor } from '../helpers/stubDeps.mjs';
 import { IT, seedMinimalFixture, restoreAuthorMembership } from './fixtures.mjs';
 
@@ -28,15 +29,16 @@ function buildApp(permissions) {
   });
 }
 
-function push(app, clientMutationId, data) {
-  return app.request('/api/sync/push', {
+async function push(app, clientMutationId, data) {
+  await setRealSyncPermissions(prisma, AUTHOR_ID, ['reports.update', 'reports.create']);
+  return syncV1Request(app, '/api/sync/push', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({
       deviceId: 'it-device-retry',
       changes: [{ clientMutationId, entity: 'reports', id: IT.report, op: 'upsert', data }],
     }),
-  });
+  }, IT.project);
 }
 
 before(async () => {
@@ -63,14 +65,14 @@ test('RF02-I4 被拒绝的同步变更：修好原因后用同一 key 重试必�
 
   // 1) 已审阅 → 拒绝
   await prisma.report.update({ where: { id: IT.report }, data: { status: 'REVIEWED' } });
-  const first = await (await push(app, mutationId, { content: { round: 1 } })).json();
+  const first = await readSyncResult(await push(app, mutationId, { content: { round: 2 } }));
   assert.equal(first.results[0].status, 'rejected', `锁定状态必须拒绝：${JSON.stringify(first.results[0])}`);
   let row = await prisma.report.findUnique({ where: { id: IT.report } });
   assert.deepEqual(row.content, {}, '被拒时不得写库');
 
   // 2) 修好原因（退回草稿）→ 同一 key 重试
   await prisma.report.update({ where: { id: IT.report }, data: { status: 'DRAFT' } });
-  const second = await (await push(app, mutationId, { content: { round: 2 } })).json();
+  const second = await readSyncResult(await push(app, mutationId, { content: { round: 2 } }));
   assert.equal(
     second.results[0].status,
     'applied',
@@ -84,9 +86,13 @@ test('RF02-I4 被拒绝的同步变更：修好原因后用同一 key 重试必�
   assert.equal(receipt.status, 'applied');
 
   // 4) 成功之后再推同一 key：回放首次结果，不重复写库（幂等语义不被削弱）
-  const third = await (await push(app, mutationId, { content: { round: 3 } })).json();
+  const third = await readSyncResult(await push(app, mutationId, { content: { round: 2 } }));
   assert.equal(third.results[0].status, 'applied');
   assert.equal(third.results[0].replayed, true, '已成功的变更必须标记为回放');
   row = await prisma.report.findUnique({ where: { id: IT.report } });
   assert.deepEqual(row.content, { round: 2 }, '回放不得再次写入（内容保持首次成功的结果）');
+  const changed = await push(app, mutationId, { content: { round: 3 } });
+  assert.equal(changed.status, 409, 'same key with changed payload must not replay');
+  assert.equal((await changed.json()).code, 'IDEMPOTENCY_PAYLOAD_MISMATCH');
+  assert.deepEqual((await prisma.report.findUnique({ where: { id: IT.report } })).content, { round: 2 });
 });

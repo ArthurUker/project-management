@@ -14,6 +14,12 @@
  * 关联项目并成功保存后才清除（不静默销毁，也不假装成功）。
  */
 import { idb } from './idb';
+import { tokenStore } from '../auth/tokenStore';
+function storageFor(userId: string) {
+  const owner = tokenStore.snapshot();
+  if (!owner || owner.actorId !== userId) throw new Error('OFFLINE_OWNER_MISMATCH');
+  return idb.forOwner({ userId, loginGeneration: owner.loginGeneration });
+}
 
 export interface PendingDraftRecord {
   [key: string]: unknown;
@@ -26,12 +32,14 @@ export interface PendingDraftRecord {
 export interface PendingDraftState {
   userId: string;
   periodKey: string;
+  datasetEpoch?: string;
   savedAt: string;
   records: PendingDraftRecord[];
 }
 
 export function pendingDraftKey(userId: string): string {
-  return `rdpms.pendingDraft:${userId}`;
+  const epoch = tokenStore.datasetEpoch();
+  return `rdpms.pendingDraft:${userId}${epoch ? ':' + epoch : ''}`;
 }
 
 /** 记录身份：优先 id，其次 experimentNo，最后退化为内容哈希（保证同一记录可去重） */
@@ -77,7 +85,8 @@ export function mergePendingRecords<T extends PendingDraftRecord>(
 
 export async function loadPendingDraft(userId: string): Promise<PendingDraftState | null> {
   if (!userId) return null;
-  const state = await idb.kvGet<PendingDraftState>(pendingDraftKey(userId));
+  const state = await storageFor(userId).kvGet<PendingDraftState>(pendingDraftKey(userId));
+  if (tokenStore.datasetEpoch() && state?.datasetEpoch !== tokenStore.datasetEpoch()) return null;
   if (!state || !Array.isArray(state.records) || state.records.length === 0) return null;
   return state;
 }
@@ -94,14 +103,14 @@ export async function savePendingDraft(
 ): Promise<void> {
   if (!userId) return;
   if (!records.length) {
-    await idb.kvDelete(pendingDraftKey(userId));
+    await storageFor(userId).kvDelete(pendingDraftKey(userId));
     return;
   }
-  const state: PendingDraftState = { userId, periodKey, savedAt: now, records };
-  await idb.kvSet(pendingDraftKey(userId), state);
+  const state: PendingDraftState = { userId, periodKey, datasetEpoch: tokenStore.datasetEpoch(), savedAt: now, records };
+  await storageFor(userId).kvSet(pendingDraftKey(userId), state);
 }
 
 export async function clearPendingDraft(userId: string): Promise<void> {
   if (!userId) return;
-  await idb.kvDelete(pendingDraftKey(userId));
+  await storageFor(userId).kvDelete(pendingDraftKey(userId));
 }

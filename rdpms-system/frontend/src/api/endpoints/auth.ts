@@ -1,6 +1,9 @@
 import { del, get, patch, post, put, requestPaged } from '../request';
 import type { Paged } from '../types';
 import type { CreateUserDto, CurrentUser, LoginResult, RefreshResult, UpdateUserDto } from '../../types/user';
+import type { AuthRequestConfig } from '../http';
+
+const publicAuth: AuthRequestConfig = { _authPublic: true };
 
 export interface LoginPayload {
   username: string;
@@ -8,11 +11,12 @@ export interface LoginPayload {
 }
 
 export const authAPI = {
-  login: (payload: LoginPayload) => post<LoginResult>('/auth/login', payload),
+  login: (payload: LoginPayload) => post<LoginResult>('/auth/login', payload, publicAuth),
 
-  refresh: (refreshToken: string) => post<RefreshResult>('/auth/refresh', { refreshToken }),
+  refresh: (refreshToken: string) => post<RefreshResult>('/auth/refresh', { refreshToken }, publicAuth),
 
-  logout: (refreshToken?: string | null) => post<{ success: true }>('/auth/logout', { refreshToken }),
+  logout: (refreshToken?: string | null, accessToken?: string) => post<{ success: true }>('/auth/logout',
+    { refreshToken }, { ...publicAuth, headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {} }),
 
   /** 权限唯一来源：每次刷新页面引导会话时调用 */
   me: () => get<CurrentUser>('/auth/me'),

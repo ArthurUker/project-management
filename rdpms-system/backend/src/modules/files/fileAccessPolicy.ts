@@ -62,6 +62,8 @@ export interface FileActor {
 export interface ProjectAccessLike {
   isMember: boolean;
   capabilities?: string[];
+  /** Only the server's current project resolver may grant this context. */
+  elevated?: boolean;
 }
 
 export interface FileAccessContext {
@@ -145,7 +147,9 @@ export function decideFileAccess(
     }
 
     case FILE_SCOPE.PROJECT: {
-      if (!projectAccess?.isMember) return hidden('非项目成员不可见该项目文件');
+      if (!projectAccess?.isMember && !(isSuper(actor) && projectAccess?.elevated)) {
+        return hidden('非项目成员不可见该项目文件');
+      }
       const capabilities = projectAccess.capabilities ?? [];
       if (action === FILE_ACTION.DELETE) {
         if (!canDelete) return deny('缺少 files.delete 权限');

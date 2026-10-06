@@ -1,53 +1,53 @@
-/**
- * platform/db/client.js —— 数据库客户端解析入口（RF01 收尾：实例级注入）
- *
- * 目标（05_目标架构与重构契约 §1）：
- *   createApp({db}) 注入的依赖只对该应用实例生效；导入应用模块不连接数据库。
- *
- * 现状迁移策略：
- *   旧路由以 `import { prisma } from '../index.js'` 静态引用单例。RF01 起统一改为从本模块引用；
- *   `prisma` 是「按当前请求作用域解析」的代理：
- *     - 请求作用域内 → 解析到该应用实例注入的 db（实例级隔离）
- *     - 作用域外     → 解析到惰性 fallback 客户端（worker/脚本应改为显式传参）
- *   因此多个并存的应用实例不会串用依赖，也不存在进程级可变单例。
- *
- * 约束：
- *   - 导入本模块不创建客户端、不建立连接。
- *   - 只有 bootstrap/server.js 允许用 createPrismaClient() 构造真实客户端。
- */
+/** Instance-scoped public Prisma facade. Authenticated requests retain their epoch. */
 import { PrismaClient } from '@prisma/client';
-import { resolveDb, setFallbackDbFactory, resetFallbackDb } from '../requestContext.js';
-
-/** 构造真实客户端（仅启动入口使用） */
-export function createPrismaClient(options) {
-  return new PrismaClient(options);
-}
-
-// fallback 工厂：仅当代码脱离应用实例作用域时才会被调用
+import { resolveDb, setFallbackDbFactory, resetFallbackDb, currentContext } from '../requestContext.js';
+import { HttpError } from '../../kernel/http.js';
+export function createPrismaClient(options) { return new PrismaClient(options); }
 setFallbackDbFactory(() => createPrismaClient());
 
-/**
- * 兼容旧路由的解析代理：属性访问与调用都转发到「当前作用域解析出的客户端」。
- * 这样既保证实例级隔离，又不必一次改写全部旧路由（命令层落地后应改为显式传参）。
- */
-export const prisma = new Proxy(
-  {},
-  {
-    get(_target, prop) {
-      const client = resolveDb();
-      const value = client[prop];
-      return typeof value === 'function' ? value.bind(client) : value;
-    },
-    has(_target, prop) {
-      return prop in resolveDb();
-    },
-  },
-);
-
-/** 显式解析当前作用域客户端（新代码优先使用，替代对 prisma 代理的隐式依赖） */
-export function getScopedDb() {
-  return resolveDb();
+const DESCRIPTOR = Symbol('rdpms.publicQueryDescriptor');
+function fence() {
+  const ctx = currentContext();
+  return ctx?.datasetEpoch && !ctx.recoveryOperation ? ctx.datasetEpoch : null;
 }
-
-/** 仅供测试：清空 fallback */
+async function protectedTransaction(client, epoch, callback, options) {
+  return client.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT set_config('rdpms.dataset_epoch', ${epoch}, true)`;
+    const rows = await tx.$queryRaw`SELECT epoch, status FROM data_recovery_state WHERE id = 1 FOR SHARE`;
+    if (rows.length !== 1 || rows[0].status !== 'READY') throw new HttpError(503, 'RESTORE_NEEDS_RECONCILIATION', 'Dataset is not ready');
+    if (rows[0].epoch !== epoch) throw new HttpError(409, 'DATASET_EPOCH_CHANGED', 'Dataset changed; preserve original commands and reauthenticate');
+    return callback(tx);
+  }, options);
+}
+function descriptor(client, epoch, model, method, args) {
+  const execute = (target) => model === null ? target[method](...args) : target[model][method](...args);
+  let started;
+  const start = () => started ??= protectedTransaction(client, epoch, execute);
+  // Own public thenable, not a private Prisma engine object. Batch calls replay descriptors on one tx.
+  return { [DESCRIPTOR]: { client, epoch, execute, alreadyStarted: () => Boolean(started) },
+    then: (resolve, reject) => start().then(resolve, reject),
+    catch: (reject) => start().catch(reject), finally: (callback) => start().finally(callback),
+    [Symbol.toStringTag]: 'RdpmsEpochQuery' };
+}
+export const prisma = new Proxy({}, {
+  get(_target, prop) {
+    const client = resolveDb(), value = client[prop], epoch = fence();
+    if (!epoch) return typeof value === 'function' ? value.bind(client) : value;
+    if (prop === '$transaction') return (queries, options) => {
+      if (typeof queries === 'function') return protectedTransaction(client, epoch, queries, options);
+      if (!Array.isArray(queries)) throw new Error('INVALID_PUBLIC_TRANSACTION');
+      const list = queries.map((q) => q?.[DESCRIPTOR]);
+      if (list.some((q) => !q || q.client !== client || q.epoch !== epoch || q.alreadyStarted())) throw new Error('MIXED_OR_STARTED_TRANSACTION_BATCH');
+      return protectedTransaction(client, epoch, async(tx) => { const results=[]; for (const q of list) results.push(await q.execute(tx)); return results; }, options);
+    };
+    if (['$queryRaw','$executeRaw','$queryRawUnsafe','$executeRawUnsafe'].includes(prop)) return (...args) => descriptor(client,epoch,null,prop,args);
+    if (value && typeof value === 'object' && typeof value.findMany === 'function') return new Proxy(value, { get(model, method) {
+      const operation = model[method]; return typeof operation === 'function' ? (...args) => descriptor(client,epoch,prop,method,args) : operation;
+    } });
+    return typeof value === 'function' ? value.bind(client) : value;
+  },
+  has(_target, prop) { return prop in resolveDb(); },
+});
+/** @returns {any} Public scoped facade also applies when typed commands take an explicit db. */
+export function getScopedDb() { return prisma; }
 export { resetFallbackDb };

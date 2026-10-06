@@ -47,7 +47,8 @@ function isReceiptScopeConflict(err) {
     || (flat.includes('actor_id') && flat.includes('command') && flat.includes('idempotency_key'));
 }
 
-function replayReceipt(receipt, payloadHash) {
+function replayReceipt(receipt, payloadHash, datasetEpoch) {
+  if (receipt.datasetEpoch !== datasetEpoch) throw new HttpError(409, 'DATASET_EPOCH_CHANGED', 'Old dataset receipt retained; no replay or implicit new key');
   if (receipt.payloadHash !== payloadHash) {
     throw new HttpError(
       409,
@@ -96,12 +97,13 @@ export async function withIdempotency({
   }
 
   const payloadHash = hashPayload(payload);
+  const datasetEpoch = (await db.dataRecoveryState.findUniqueOrThrow({where:{id:1}})).epoch;
 
   // 1) 回执查询：命中的回执直接回放——不进入事务、不重新校验状态
   const existing = await db.mutationReceipt.findUnique({
     where: scopeWhere(actor.userId, command, resourceScope, idempotencyKey),
   });
-  if (existing) return replayReceipt(existing, payloadHash);
+  if (existing) return replayReceipt(existing, payloadHash, datasetEpoch);
 
   // 2) 新命令：事务内 validate → execute → 回填回执
   try {
@@ -113,6 +115,7 @@ export async function withIdempotency({
           resourceScope,
           idempotencyKey,
           payloadHash,
+          datasetEpoch,
           responseStatus: 0,
           responseBody: {},
           expiresAt: new Date(Date.now() + RECEIPT_TTL_MS),
@@ -134,7 +137,7 @@ export async function withIdempotency({
       const committed = await db.mutationReceipt.findUnique({
         where: scopeWhere(actor.userId, command, resourceScope, idempotencyKey),
       });
-      if (committed) return replayReceipt(committed, payloadHash);
+      if (committed) return replayReceipt(committed, payloadHash, datasetEpoch);
       // 先到者回滚（未留下回执）→ 本次请求未生效，可安全重试
       throw new HttpError(409, 'IDEMPOTENCY_IN_PROGRESS', '相同幂等键的请求正在处理中，请稍后重试', {
         retryable: true,

@@ -8,6 +8,8 @@
  *   4. JWT 只携带 userId + systemRole（不携带权限数组，防篡改）
  */
 import jwt from 'jsonwebtoken';
+import { setRequestDatasetEpoch } from '../platform/requestContext.js';
+import { assertRecoveryAvailable } from '../platform/recovery/dataEpoch.js';
 import { prisma } from '../platform/db/client.js';
 import { P0_PERMISSIONS, P1_UNFROZEN } from './constants.js';
 import { unauthorized, forbidden } from './http.js';
@@ -38,9 +40,18 @@ const ACCESS_TTL_SEC =
   ?? 900;
 
 export function signAccessToken(user) {
-  return jwt.sign({ userId: user.id, systemRole: user.systemRole }, JWT_SECRET, {
+  if (!Number.isSafeInteger(user.securityVersion) || user.securityVersion < 0) throw new Error('Current securityVersion required for token issuance');
+  if (typeof user.datasetEpoch !== 'string' || ! /^[0-9a-f-]{36}$/i.test(user.datasetEpoch)) throw new Error('Current datasetEpoch required for token issuance');
+  return jwt.sign({ userId: user.id, systemRole: user.systemRole, securityVersion: user.securityVersion, datasetEpoch: user.datasetEpoch }, JWT_SECRET, {
     expiresIn: ACCESS_TTL_SEC,
   });
+}
+
+/** Return the remaining lifetime represented by a signed access token. */
+export function accessTokenExpiresInSeconds(token, nowMs = Date.now()) {
+  const decoded = jwt.decode(token);
+  if (!decoded || typeof decoded !== 'object' || typeof decoded.exp !== 'number') return 0;
+  return Math.max(0, decoded.exp - Math.floor(nowMs / 1000));
 }
 
 /**
@@ -52,6 +63,7 @@ export async function authenticate(c, next) {
   if (resolveActor) {
     const actor = await resolveActor(c);
     if (!actor) throw unauthorized('UNAUTHORIZED', '未认证');
+    enforceForcedPassword(c, actor.user);
     c.set('auth', actor);
     return next();
   }
@@ -66,6 +78,10 @@ export async function authenticate(c, next) {
   } catch {
     throw unauthorized('INVALID_TOKEN', '会话无效或已过期');
   }
+  if (!decoded || typeof decoded !== 'object' || typeof decoded.userId !== 'string'
+    || !Number.isSafeInteger(decoded.securityVersion) || decoded.securityVersion < 0) {
+    throw unauthorized('SESSION_VERSION_REQUIRED', '旧会话需重新登录');
+  }
   const user = await prisma.user.findUnique({
     where: { id: decoded.userId },
     select: {
@@ -78,14 +94,31 @@ export async function authenticate(c, next) {
       phone: true,
       systemRole: true,
       status: true,
+      deletedAt: true,
+      securityVersion: true,
       mustChangePassword: true,
       avatarFileId: true,
     },
   });
-  if (!user || user.status !== 'ACTIVE') {
+  if (!user || user.deletedAt || user.status !== 'ACTIVE') {
     throw unauthorized('SESSION_INVALID', '账号不存在或已停用');
   }
 
+  const dataset = await prisma.dataRecoveryState.findUniqueOrThrow({ where: { id: 1 } });
+  const recoveryPath = c.req.method === 'GET' && c.req.path === '/api/backup/restore/status'
+    || c.req.method === 'POST' && c.req.path === '/api/backup/restore/reconcile';
+  const recoveryOnly = recoveryPath && dataset.status === 'RESTORE_NEEDS_RECONCILIATION'
+    && user.systemRole === 'SUPER_ADMIN' && !user.mustChangePassword
+    && dataset.initiatorId === user.id && dataset.initiatorVersion === decoded.securityVersion
+    && dataset.previousEpoch === decoded.datasetEpoch;
+  if (typeof decoded.datasetEpoch !== 'string') throw unauthorized('DATASET_EPOCH_REQUIRED', '请重新登录当前数据代际');
+  if (!recoveryOnly && decoded.datasetEpoch !== dataset.epoch) throw unauthorized('DATASET_EPOCH_CHANGED', '数据已恢复，请重新登录；原草稿必须保留');
+  if (!recoveryOnly && decoded.securityVersion !== user.securityVersion) throw unauthorized('SESSION_REVOKED', '会话已撤销，请重新登录');
+  user.datasetEpoch = dataset.epoch;
+  const operation = recoveryPath || c.req.method === 'POST' && c.req.path === '/api/backup/restore';
+  setRequestDatasetEpoch(dataset.epoch, operation);
+  enforceForcedPassword(c, user);
+  await assertRecoveryAvailable(prisma, c.req.method, c.req.path);
   let permissions;
   if (user.systemRole === 'SUPER_ADMIN') {
     // 短路：全部 P0 + P1 解冻子集（未解冻 P1 仍不持有）
@@ -102,6 +135,8 @@ export async function authenticate(c, next) {
     userId: user.id,
     user,
     systemRole: user.systemRole,
+    datasetEpoch: dataset.epoch,
+    recoveryOnly,
     permissions,
   });
   await next();
@@ -129,4 +164,12 @@ export function requirePermission(code) {
 /** 便捷判定（路由内联使用） */
 export function hasPermission(auth, code) {
   return Boolean(auth?.permissions?.includes(code));
+}
+
+/** Restricted first-login session: method + exact path, no broad prefix bypass. */
+function enforceForcedPassword(c, user) {
+  if (!user?.mustChangePassword) return;
+  const allowed = { GET: ['/api/auth/me', '/api/auth/profile'],
+    PUT: ['/api/auth/password', '/api/auth/password/force'], POST: ['/api/auth/logout', '/api/auth/verify'] };
+  if (!allowed[c.req.method]?.includes(c.req.path)) throw forbidden('PASSWORD_CHANGE_REQUIRED', '请先修改密码');
 }

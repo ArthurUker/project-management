@@ -1,0 +1,1344 @@
+import { test, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
+import { PrismaClient } from '@prisma/client';
+import { syncV1Request, setRealSyncPermissions } from '../helpers/syncV1Fixture.mjs';
+import { createApp } from '../../dist/bootstrap/createApp.js';
+
+const prisma = new PrismaClient();
+const suffix = crypto.randomUUID();
+let actor;
+let project;
+let report;
+let app;
+
+before(async () => {
+  await prisma.$queryRaw`SELECT 1`;
+  actor = await prisma.user.create({ data: {
+    id: `rp10-actor-${suffix}`, username: `rp10-actor-${suffix}`,
+    displayName: 'RP10 synthetic author', passwordHash: 'synthetic-only', systemRole: 'ADMIN', status: 'ACTIVE',
+  } });
+  await setRealSyncPermissions(prisma, actor.id, ['reports.create','reports.update','reports.submit']);
+  project = await prisma.project.create({ data: {
+    code: `RP10-${suffix}`, name: 'RP10 synthetic project', type: 'TESTING', status: 'PLANNING',
+    managerId: actor.id, createdById: actor.id,
+    members: { create: [{ userId: actor.id, role: 'MEMBER', createdById: actor.id }] },
+  } });
+  report = await prisma.report.create({ data: {
+    id: `rp10-report-${suffix}`, projectId: project.id, authorId: actor.id,
+    reportType: 'MONTHLY', periodKey: '2026-10', content: { revision: 'before-lock' },
+  } });
+  app = createApp({ db: prisma, actorResolver: async () => ({
+    userId: actor.id, user: actor, systemRole: 'ADMIN', permissions: ['reports.submit'],
+  }) });
+});
+
+after(async () => {
+  // Keep the synthetic actor and append-only audit row intact until the runner
+  // drops this entire task-owned database.
+  await prisma.$disconnect();
+});
+
+test('submit snapshots the latest committed source revision after waiting for a concurrent draft writer', async () => {
+  let releaseWriter;
+  let writerReady;
+  const ready = new Promise((resolve) => { writerReady = resolve; });
+  const release = new Promise((resolve) => { releaseWriter = resolve; });
+  const writer = prisma.$transaction(async (tx) => {
+    await tx.report.update({ where: { id: report.id }, data: { content: { revision: 'committed-under-lock' } } });
+    writerReady();
+    await release;
+  });
+  await ready;
+
+  const responsePromise = app.request(`/api/reports/${report.id}/submit`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ clientMutationId: `rp10-submit-${suffix}` }),
+  });
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  releaseWriter();
+  await writer;
+  const response = await responsePromise;
+  const body = await response.json();
+  assert.equal(response.status, 200, JSON.stringify(body));
+
+  const persisted = await prisma.report.findUnique({ where: { id: report.id } });
+  const versions = await prisma.reportVersion.findMany({ where: { reportId: report.id }, orderBy: { version: 'asc' } });
+  assert.equal(persisted.status, 'SUBMITTED');
+  assert.equal(persisted.currentVersion, 1);
+  assert.equal(versions.length, 1);
+  assert.deepEqual(versions[0].content, persisted.content);
+  assert.deepEqual(versions[0].content, { revision: 'committed-under-lock' });
+});
+
+// ══ 本文件局部受控的报告写入屏障工具（LR5-01：相关并发用例统一到这里）══════════════
+//
+// 设计约束（与旧单原语 gatedClient/gateOnReportMethod 的区别）：
+//   * 同时支持 create / upsert / update / updateMany 四种写入原语；写入原语被替换时，
+//     屏障仍然停在同一个真实业务写入窗口，不会因为“只盯一种方法”而超时；
+//   * 匹配条件为「报告 id」或「业务唯一键 projectId+authorId+reportType+periodKey」，
+//     并要求命中唯一 payload 标记（content.revision）；不能只登记 methods 数组或只看
+//     单一 periodKey 字段；
+//   * 参数按原语的真实形状取值：create 取 data；upsert 取 where/create/update；
+//     update / updateMany 取 where/data。恢复墓碑的写入没有 data.periodKey，
+//     通过 where.id 仍然命中；
+//   * 只拦第一次匹配的调用；竞争赢家与 submit 不受影响；$transaction 的 options 原样透传；
+//   * 放行后仍执行真实 Prisma / 真实 SQL，不使用内存行或 mock。
+
+const REPORT_WRITE_METHODS = ['create', 'upsert', 'update', 'updateMany'];
+
+/** 按原语真实参数形状提取匹配候选 */
+function writeTargetOf(method, args) {
+  if (method === 'create') return { data: args?.data, where: null, create: null, update: null };
+  if (method === 'upsert') {
+    return { data: null, where: args?.where, create: args?.create, update: args?.update };
+  }
+  return { data: args?.data, where: args?.where, create: null, update: null };
+}
+
+/** 唯一 payload 标记（content.revision），用于把迟到请求与赢家请求区分开 */
+function contentMarkerOf(value) {
+  return value && typeof value === 'object' && typeof value.revision === 'string' ? value.revision : null;
+}
+
+const FULL_BUSINESS_KEY_FIELDS = ['projectId', 'authorId', 'reportType', 'periodKey'];
+
+/** 从**同一个**目标写入的参数里取身份候选（不跨原语拼接） */
+function candidateIdentityOf(method, { data, where, create }) {
+  const compound = where?.projectId_authorId_reportType_periodKey;
+  if (method === 'create') return data ?? null;
+  if (method === 'upsert') return compound ?? create ?? null;
+  return compound ?? where ?? null;
+}
+
+/** 从**同一个**目标写入的参数里取 payload 标记候选（upsert 的 create/update 都算） */
+function candidatePayloadsOf(method, { data, create, update }) {
+  if (method === 'create') return [data?.content];
+  if (method === 'upsert') return [create?.content, update?.content];
+  return [data?.content];
+}
+
+/**
+ * 统一匹配器（LR6-01 收紧）。
+ * selector: { reportId?, projectId?, authorId?, reportType?, periodKey?, marker }
+ * 规则：
+ *   * marker 必填；未给出 marker 一律不命中（不能 marker 缺省后放宽）；
+ *   * 身份必须命中「目标 reportId」或**完整**业务唯一键 projectId+authorId+reportType+periodKey；
+ *     只给 periodKey 之类的部分键不命中；
+ *   * 身份与标记取自同一个目标写入的参数（create/data；upsert where/create/update；update(Many) where/data）。
+ */
+function matchReportWrite(selector) {
+  const hasFullKey = FULL_BUSINESS_KEY_FIELDS.every((field) => selector[field] !== undefined);
+  return ({ method, data, where, create, update }) => {
+    if (selector.marker === undefined) return false;
+    const identity = candidateIdentityOf(method, { data, where, create });
+    const idHit = selector.reportId !== undefined
+      && (where?.id === selector.reportId || identity?.id === selector.reportId);
+    const fullKeyHit = hasFullKey && identity !== null
+      && FULL_BUSINESS_KEY_FIELDS.every((field) => identity[field] === selector[field]);
+    if (!idHit && !fullKeyHit) return false;
+    return candidatePayloadsOf(method, { data, create, update })
+      .some((content) => contentMarkerOf(content) === selector.marker);
+  };
+}
+
+function gateReportWrite(base, methods, match, options = {}) {
+  const { emulateUpsert = false } = options;
+  const methodSet = new Set(Array.isArray(methods) ? methods : [methods]);
+  let ready;
+  let release;
+  const reached = new Promise((resolve) => { ready = resolve; });
+  const released = new Promise((resolve) => { release = resolve; });
+  let fired = false;
+  let firedMethod = null;
+  const wrapReport = (report) => new Proxy(report, {
+    get(model, key) {
+      if (methodSet.has(key)) {
+        return (args) => {
+          if (!fired) {
+            const target = writeTargetOf(key, args);
+            if (match({ method: key, args, ...target })) {
+              fired = true;
+              firedMethod = key;
+              ready({ method: key, args });
+              return released.then(() => {
+                // 语义负对照专用：把匹配的迟到 create 转成真实无条件 upsert。
+                // 这只发生在测试 DB 适配层；业务源码、其他请求与 submit 完全不变。
+                if (emulateUpsert && key === 'create') {
+                  const d = args.data;
+                  return model.upsert({
+                    where: { projectId_authorId_reportType_periodKey: {
+                      projectId: d.projectId, authorId: d.authorId,
+                      reportType: d.reportType, periodKey: d.periodKey,
+                    } },
+                    create: d,
+                    update: { content: d.content, updatedById: d.authorId, deletedAt: null },
+                    include: args.include,
+                  });
+                }
+                return model[key](args);
+              });
+            }
+          }
+          return model[key](args);
+        };
+      }
+      const value = model[key];
+      return typeof value === 'function' ? value.bind(model) : value;
+    },
+  });
+  const client = new Proxy(base, {
+    get(target, prop) {
+      if (prop === 'report') return wrapReport(target.report);
+      if (prop === '$transaction') {
+        return (callback, options) => target.$transaction((tx) => callback(new Proxy(tx, {
+          get(inner, key) {
+            if (key === 'report') return wrapReport(inner.report);
+            const value = inner[key];
+            return typeof value === 'function' ? value.bind(inner) : value;
+          },
+        })), options);
+      }
+      const value = target[prop];
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
+  return {
+    client,
+    reached,
+    release: () => release(),
+    fired: () => fired,
+    firedMethod: () => firedMethod,
+  };
+}
+
+/**
+ * 屏障释放与请求收束：无论断言成功还是失败，都释放屏障并等待挂起的请求/事务结束，
+ * 不留悬挂请求。不引入 sleep 或延长 timeout 来掩盖屏障未命中。
+ */
+async function settleGate(gate, pending) {
+  gate.release();
+  if (pending) await pending.then(() => undefined, () => undefined);
+}
+
+function makeBarrier() {
+  let ready;
+  let release;
+  const reached = new Promise((resolve) => { ready = resolve; });
+  const released = new Promise((resolve) => { release = resolve; });
+  return { reached, release, ready, released };
+}
+
+/**
+ * 屏障式保存：命中 reportId + 该请求唯一 payload 标记的第一次真实写入暂停在写入前。
+ * 复用统一匹配器，因此 upsert 的 create/update payload（data 为 null）同样能命中；
+ * 不能只把 upsert 加进 methods 却仍只检查 data.content。
+ */
+function draftWriteBarrier(reportId, marker) {
+  return gateReportWrite(prisma, ['updateMany', 'update', 'upsert'],
+    matchReportWrite({ reportId, marker }));
+}
+
+function makeApp(client, permissions) {
+  return createApp({ db: client, actorResolver: async () => ({
+    userId: actor.id, user: actor, systemRole: 'ADMIN', permissions,
+  }) });
+}
+
+async function makeReport(id, periodKey, content) {
+  return prisma.report.create({ data: {
+    id, projectId: project.id, authorId: actor.id,
+    reportType: 'MONTHLY', periodKey, content,
+  } });
+}
+
+const WRITE_PERMS = ['reports.update', 'reports.submit', 'reports.view'];
+
+test('save completes first: submit snapshots the successfully saved revision', async () => {
+  const target = await makeReport(`rp10-save-first-${suffix}`, '2026-12', { revision: 'draft-source' });
+  const app = makeApp(prisma, WRITE_PERMS);
+  const saved = await app.request(`/api/reports/${target.id}`, {
+    method: 'PUT', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ content: { revision: 'saved-before-submit' }, clientMutationId: `rp10-save-first-save-${suffix}` }),
+  });
+  assert.equal(saved.status, 200, JSON.stringify(await saved.json()));
+
+  const submitted = await app.request(`/api/reports/${target.id}/submit`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ clientMutationId: `rp10-save-first-submit-${suffix}` }),
+  });
+  assert.equal(submitted.status, 200, JSON.stringify(await submitted.json()));
+
+  const persisted = await prisma.report.findUnique({ where: { id: target.id } });
+  const versions = await prisma.reportVersion.findMany({ where: { reportId: target.id }, orderBy: { version: 'asc' } });
+  assert.equal(persisted.status, 'SUBMITTED');
+  assert.equal(persisted.currentVersion, 1);
+  assert.deepEqual(persisted.content, { revision: 'saved-before-submit' });
+  assert.equal(versions.length, 1);
+  assert.deepEqual(versions[0].content, { revision: 'saved-before-submit' });
+});
+
+test('submit commits first: legacy draft save already past validation is rejected and leaves no business/audit/receipt change', async () => {
+  const target = await makeReport(`rp10-legacy-late-${suffix}`, '2026-13', { revision: 'submit-source' });
+  const gate = draftWriteBarrier(target.id, 'late-draft-write');
+  const app = makeApp(gate.client, WRITE_PERMS);
+
+  let lateSave;
+  try {
+    lateSave = app.request(`/api/reports/${target.id}`, {
+      method: 'PUT', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ content: { revision: 'late-draft-write' }, clientMutationId: `rp10-legacy-late-${suffix}` }),
+    });
+    await reachBarrier(gate, 'legacy draft race');
+    assert.equal(gate.fired(), true, 'late save must reach the real ORM write before submit commits');
+    assert.equal(gate.firedMethod(), 'updateMany', 'the legacy draft save must be intercepted as updateMany');
+
+    const submitted = await app.request(`/api/reports/${target.id}/submit`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ clientMutationId: `rp10-legacy-late-submit-${suffix}` }),
+    });
+    assert.equal(submitted.status, 200, JSON.stringify(await submitted.json()));
+  } finally {
+    await settleGate(gate, lateSave);
+  }
+
+  const response = await lateSave;
+  const body = await response.json();
+  assert.equal(response.status, 409, JSON.stringify(body));
+  assert.equal(body.code, 'INVALID_STATE');
+
+  const persisted = await prisma.report.findUnique({ where: { id: target.id } });
+  const versions = await prisma.reportVersion.findMany({ where: { reportId: target.id }, orderBy: { version: 'asc' } });
+  assert.equal(persisted.status, 'SUBMITTED', 'late save must not revert status');
+  assert.equal(persisted.currentVersion, 1);
+  assert.deepEqual(persisted.content, { revision: 'submit-source' }, 'late save must not overwrite SUBMITTED body');
+  assert.deepEqual(versions[0].content, { revision: 'submit-source' });
+  assert.equal(await prisma.mutationReceipt.count({
+    where: { command: 'PUT /api/reports/:id', resourceScope: `report:${target.id}` },
+  }), 0, 'failed save must not leave a success receipt');
+  assert.equal(await prisma.auditLog.count({
+    where: { entityId: target.id, action: 'update' },
+  }), 0, 'failed save must not write a business audit row');
+});
+
+test('submit commits first: modern CAS draft save with a stale baseline is rejected with INVALID_STATE', async () => {
+  const target = await makeReport(`rp10-modern-late-${suffix}`, '2026-14', { revision: 'submit-source' });
+  const baseline = target.updatedAt.toISOString();
+  const gate = draftWriteBarrier(target.id, 'late-modern-write');
+  const app = makeApp(gate.client, WRITE_PERMS);
+
+  let lateSave;
+  try {
+    lateSave = app.request(`/api/reports/${target.id}`, {
+      method: 'PUT', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        content: { revision: 'late-modern-write' },
+        expectedUpdatedAt: baseline,
+        clientContract: 'modern',
+        clientMutationId: `rp10-modern-late-${suffix}`,
+      }),
+    });
+    await reachBarrier(gate, 'modern draft race');
+    assert.equal(gate.fired(), true);
+
+    const submitted = await app.request(`/api/reports/${target.id}/submit`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ clientMutationId: `rp10-modern-late-submit-${suffix}` }),
+    });
+    assert.equal(submitted.status, 200, JSON.stringify(await submitted.json()));
+  } finally {
+    await settleGate(gate, lateSave);
+  }
+
+  const response = await lateSave;
+  const body = await response.json();
+  assert.equal(response.status, 409, JSON.stringify(body));
+  assert.equal(body.code, 'INVALID_STATE');
+
+  const persisted = await prisma.report.findUnique({ where: { id: target.id } });
+  assert.equal(persisted.status, 'SUBMITTED');
+  assert.deepEqual(persisted.content, { revision: 'submit-source' });
+});
+
+test('sync push shares the same write boundary: late offline report save after submit is rejected', async () => {
+  const target = await makeReport(`rp10-sync-late-${suffix}`, '2026-15', { revision: 'submit-source' });
+  const gate = draftWriteBarrier(target.id, 'late-sync-write');
+  const app = makeApp(gate.client, WRITE_PERMS);
+  const deviceId = `rp10-device-${suffix}`;
+
+  let push;
+  try {
+    push = syncV1Request(app, '/api/sync/push', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        deviceId,
+        changes: [{
+          clientMutationId: `rp10-sync-late-${suffix}`,
+          entity: 'reports',
+          id: target.id,
+          op: 'upsert',
+          baseUpdatedAt: target.updatedAt.toISOString(),
+          data: { content: { revision: 'late-sync-write' } },
+        }],
+      }),
+    }, project.id);
+    await reachBarrier(gate, 'sync draft race');
+    assert.equal(gate.fired(), true);
+
+    const submitted = await app.request(`/api/reports/${target.id}/submit`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ clientMutationId: `rp10-sync-late-submit-${suffix}` }),
+    });
+    assert.equal(submitted.status, 200, JSON.stringify(await submitted.json()));
+  } finally {
+    await settleGate(gate, push);
+  }
+
+  const response = await push;
+  const body = await response.json();
+  assert.equal(response.status, 409, JSON.stringify(body));
+  const result = body.results[0];
+  assert.equal(result.status, 'rejected', JSON.stringify(result));
+  assert.notEqual(result.status, 'applied');
+
+  const persisted = await prisma.report.findUnique({ where: { id: target.id } });
+  assert.equal(persisted.status, 'SUBMITTED');
+  assert.deepEqual(persisted.content, { revision: 'submit-source' });
+  const mutation = await prisma.syncMutation.findUnique({ where: { clientMutationId: `rp10-sync-late-${suffix}` } });
+  assert.equal(mutation.status, 'pending', 'execution refusal rolls back, reservation retained');
+});
+
+test('legal same-key replay survives the post-submit state change, while a new key cannot impersonate it', async () => {
+  const target = await makeReport(`rp10-replay-${suffix}`, '2026-16', { revision: 'replay-source' });
+  const app = makeApp(prisma, WRITE_PERMS);
+  const payload = { content: { revision: 'replay-saved' }, clientMutationId: `rp10-replay-key-${suffix}` };
+
+  const first = await app.request(`/api/reports/${target.id}`, {
+    method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload),
+  });
+  assert.equal(first.status, 200, JSON.stringify(await first.json()));
+
+  const submitted = await app.request(`/api/reports/${target.id}/submit`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ clientMutationId: `rp10-replay-submit-${suffix}` }),
+  });
+  assert.equal(submitted.status, 200, JSON.stringify(await submitted.json()));
+
+  const replay = await app.request(`/api/reports/${target.id}`, {
+    method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload),
+  });
+  const replayed = await replay.json();
+  assert.equal(replay.status, 200, JSON.stringify(replayed), 'legal same-key replay must not be rejected by the new state');
+  assert.equal(replay.headers.get('Idempotent-Replay'), 'true');
+  assert.deepEqual(replayed.content, { revision: 'replay-saved' });
+
+  const newKey = await app.request(`/api/reports/${target.id}`, {
+    method: 'PUT', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ content: { revision: 'new-key-write' }, clientMutationId: `rp10-replay-new-key-${suffix}` }),
+  });
+  const newKeyBody = await newKey.json();
+  assert.equal(newKey.status, 409, JSON.stringify(newKeyBody));
+  assert.equal(newKeyBody.code, 'INVALID_STATE');
+  const persisted = await prisma.report.findUnique({ where: { id: target.id } });
+  assert.deepEqual(persisted.content, { revision: 'replay-saved' });
+});
+
+test('stale concurrency baseline without submit is still rejected as CONFLICT and does not overwrite', async () => {
+  const target = await makeReport(`rp10-stale-baseline-${suffix}`, '2027-01', { revision: 'baseline-source' });
+  const baseline = target.updatedAt.toISOString();
+  const app = makeApp(prisma, WRITE_PERMS);
+
+  const winner = await app.request(`/api/reports/${target.id}`, {
+    method: 'PUT', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ content: { revision: 'other-writer' }, clientMutationId: `rp10-stale-winner-${suffix}` }),
+  });
+  assert.equal(winner.status, 200, JSON.stringify(await winner.json()));
+
+  const stale = await app.request(`/api/reports/${target.id}`, {
+    method: 'PUT', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      content: { revision: 'stale-baseline-write' },
+      expectedUpdatedAt: baseline,
+      clientContract: 'modern',
+      clientMutationId: `rp10-stale-loser-${suffix}`,
+    }),
+  });
+  const staleBody = await stale.json();
+  assert.equal(stale.status, 409, JSON.stringify(staleBody));
+  assert.equal(staleBody.code, 'CONFLICT');
+  const persisted = await prisma.report.findUnique({ where: { id: target.id } });
+  assert.deepEqual(persisted.content, { revision: 'other-writer' });
+});
+
+test('concurrent distinct submit keys have one winner and reject new-key resubmission under approved D-S01-07', async () => {
+  const concurrentReport = await prisma.report.create({ data: {
+    id: `rp10-report-concurrent-${suffix}`, projectId: project.id, authorId: actor.id,
+    reportType: 'MONTHLY', periodKey: '2026-11', content: { revision: 'concurrent-source' },
+  } });
+  const responses = await Promise.all(Array.from({ length: 5 }, (_, index) => app.request(
+    `/api/reports/${concurrentReport.id}/submit`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ clientMutationId: `rp10-concurrent-${suffix}-${index}` }),
+    },
+  )));
+  assert.deepEqual(responses.map((response) => response.status).sort(), [200, 409, 409, 409, 409]);
+  const persisted = await prisma.report.findUnique({ where: { id: concurrentReport.id } });
+  const versions = await prisma.reportVersion.findMany({ where: { reportId: concurrentReport.id }, orderBy: { version: 'asc' } });
+  assert.equal(versions.length, 1);
+  assert.deepEqual(versions.map((row) => row.version), [1]);
+  assert.equal(persisted.currentVersion, 1);
+  assert.equal(await prisma.mutationReceipt.count({ where: { resourceScope: `report:${concurrentReport.id}` } }), 1);
+  assert.equal(await prisma.auditLog.count({ where: { entityId: concurrentReport.id, action: 'submit' } }), 1);
+  assert.ok(versions.every((row) => JSON.stringify(row.content) === JSON.stringify(persisted.content)));
+});
+
+// ══ RP10-T02 / LR3-01 返工回归（A01–A06；A07 由本文件既有用例覆盖）══════════════
+//
+// 写报告正文的全部分支清点：
+//   1) POST /api/reports 既有活跃草稿 → 共享 saveReportDraft（状态+CAS 原子谓词）
+//   2) POST /api/reports 墓碑恢复      → 条件 UPDATE（仅当该行此刻仍是墓碑）
+//   3) POST /api/reports 真正新建      → create（唯一键竞争 → P2002 → 409）
+//   4) PUT  /api/reports/:id legacy    → saveReportDraft（无 cas，仍带状态谓词）
+//   5) PUT  /api/reports/:id modern    → saveReportDraft（updatedAt 基线）
+//   6) sync push reports upsert        → saveReportDraft（updatedAt 基线）
+//   7) sync push reports 离线新建      → create（唯一键冲突 → sync 记 rejected）
+//   8) submit / recall / approve / reject → 只改状态与版本，不改正文
+// 确定性屏障一律停在真实 ORM 调用执行之前；路由、事务与 SQL 照常执行；不使用 sleep。
+
+const POST_PERMS = [...WRITE_PERMS, 'reports.create', 'reports.delete'];
+
+// 旧的单原语 gateOnReportMethod 已迁移到本文件顶部的 gateReportWrite + matchReportWrite：
+// 屏障现在按「报告 id / 业务唯一键 + payload 标记」匹配，并覆盖 create/upsert/update/updateMany 四种原语。
+
+async function reachBarrier(gate, label) {
+  let timer;
+  try {
+    await Promise.race([gate.reached, new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`${label}: barrier not reached`)), 10000);
+    })]);
+  } finally {
+    clearTimeout(timer);
+  }
+  assert.equal(gate.fired(), true, `${label}: barrier must fire on the real ORM call`);
+}
+
+function postReport(targetApp, body) {
+  return targetApp.request('/api/reports', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body),
+  });
+}
+
+function submitReport(targetApp, id, key) {
+  return targetApp.request(`/api/reports/${id}/submit`, {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ clientMutationId: key }),
+  });
+}
+
+const PERIOD = (n) => `2027-${String(n).padStart(2, '0')}`;
+
+test('RP10 LR3-01 A01 authorized POST creates exactly one DRAFT row with author, project, period and content', async () => {
+  const app = makeApp(prisma, POST_PERMS);
+  const key = `rp10-a01-${suffix}`;
+  const response = await postReport(app, {
+    projectId: project.id, reportType: 'MONTHLY', periodKey: PERIOD(11),
+    content: { revision: 'a01-created' }, clientMutationId: key,
+  });
+  const body = await response.json();
+  assert.equal(response.status, 201, JSON.stringify(body));
+  const row = await prisma.report.findUnique({ where: { id: body.id } });
+  assert.equal(row.authorId, actor.id);
+  assert.equal(row.projectId, project.id);
+  assert.equal(row.reportType, 'MONTHLY');
+  assert.equal(row.periodKey, PERIOD(11));
+  assert.deepEqual(row.content, { revision: 'a01-created' });
+  assert.equal(row.status, 'DRAFT');
+  assert.equal(row.deletedAt, null);
+  // schema 默认值：Report.currentVersion Int @default(1)（尚无版本快照时也是 1）
+  assert.equal(row.currentVersion, 1);
+  assert.equal(await prisma.reportVersion.count({ where: { reportId: row.id } }), 0);
+  assert.equal(await prisma.report.count({
+    where: { projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: PERIOD(11) },
+  }), 1);
+  assert.equal(await prisma.auditLog.count({ where: { entityId: row.id, action: 'create' } }), 1);
+  assert.equal(await prisma.mutationReceipt.count({
+    where: { command: 'POST /api/reports', idempotencyKey: key },
+  }), 1);
+});
+
+test('RP10 LR3-01 A02 absent-row POST loses the race to a competing create+submit and is rejected without side effects', async () => {
+  const plain = makeApp(prisma, POST_PERMS);
+  const gate = gateReportWrite(prisma, ['create', 'upsert'],
+    matchReportWrite({ projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: PERIOD(2), marker: 'late-new-POST' }));
+  const gated = makeApp(gate.client, POST_PERMS);
+  const firstKey = `rp10-a02-first-${suffix}`;
+  const winnerKey = `rp10-a02-winner-${suffix}`;
+  let pending;
+  let winnerBody;
+  try {
+    pending = postReport(gated, {
+      projectId: project.id, reportType: 'MONTHLY', periodKey: PERIOD(2),
+      content: { revision: 'late-new-POST' }, clientMutationId: firstKey,
+    });
+    await reachBarrier(gate, 'A02');
+    const winner = await postReport(plain, {
+      projectId: project.id, reportType: 'MONTHLY', periodKey: PERIOD(2),
+      content: { revision: 'winner-created' }, clientMutationId: winnerKey,
+    });
+    winnerBody = await winner.json();
+    assert.equal(winner.status, 201, JSON.stringify(winnerBody));
+    const submitted = await submitReport(plain, winnerBody.id, `rp10-a02-submit-${suffix}`);
+    assert.equal(submitted.status, 200, JSON.stringify(await submitted.json()));
+  } finally {
+    await settleGate(gate, pending);
+  }
+  const late = await pending;
+  const lateBody = await late.json();
+  assert.equal(late.status, 409, `late POST must be a controlled rejection: ${JSON.stringify(lateBody)}`);
+  assert.notEqual(late.status, 500);
+  const row = await prisma.report.findUnique({ where: { id: winnerBody.id } });
+  const versions = await prisma.reportVersion.findMany({ where: { reportId: winnerBody.id }, orderBy: { version: 'asc' } });
+  assert.equal(row.status, 'SUBMITTED');
+  assert.equal(row.currentVersion, 1);
+  assert.deepEqual(row.content, { revision: 'winner-created' }, 'late POST must not overwrite SUBMITTED content');
+  assert.equal(versions.length, 1);
+  assert.deepEqual(versions[0].content, { revision: 'winner-created' });
+  assert.equal(await prisma.report.count({
+    where: { projectId: project.id, authorId: actor.id, periodKey: PERIOD(2) },
+  }), 1, 'no duplicate report row');
+  assert.equal(await prisma.auditLog.count({ where: { entityId: winnerBody.id, action: 'create' } }), 1,
+    'rejected late POST must not add a second create audit');
+  assert.equal(await prisma.auditLog.count({ where: { entityId: winnerBody.id, action: 'submit' } }), 1);
+  assert.equal(await prisma.mutationReceipt.count({
+    where: { command: 'POST /api/reports', idempotencyKey: firstKey },
+  }), 0, 'rejected late POST must not leave a success receipt');
+  assert.equal(await prisma.mutationReceipt.count({
+    where: { command: 'POST /api/reports', idempotencyKey: winnerKey },
+  }), 1);
+});
+
+test('RP10 LR3-01 A03 two different keys racing the same business key: one succeeds, the loser is a 409 conflict', async () => {
+  const plain = makeApp(prisma, POST_PERMS);
+  const gate = gateReportWrite(prisma, ['create', 'upsert'],
+    matchReportWrite({ projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: PERIOD(3), marker: 'first-writer' }));
+  const gated = makeApp(gate.client, POST_PERMS);
+  const firstKey = `rp10-a03-first-${suffix}`;
+  const secondKey = `rp10-a03-second-${suffix}`;
+  let pending;
+  try {
+    pending = postReport(gated, {
+      projectId: project.id, reportType: 'MONTHLY', periodKey: PERIOD(3),
+      content: { revision: 'first-writer' }, clientMutationId: firstKey,
+    });
+    await reachBarrier(gate, 'A03');
+    const winner = await postReport(plain, {
+      projectId: project.id, reportType: 'MONTHLY', periodKey: PERIOD(3),
+      content: { revision: 'second-writer' }, clientMutationId: secondKey,
+    });
+    const winnerBody = await winner.json();
+    assert.equal(winner.status, 201, JSON.stringify(winnerBody));
+  } finally {
+    await settleGate(gate, pending);
+  }
+  const loser = await pending;
+  const loserBody = await loser.json();
+  assert.equal(loser.status, 409, JSON.stringify(loserBody));
+  assert.notEqual(loser.status, 500);
+  assert.equal(loserBody.code, 'DUPLICATE_PERIOD_KEY');
+  const rows = await prisma.report.findMany({ where: { projectId: project.id, periodKey: PERIOD(3) } });
+  assert.equal(rows.length, 1, 'the losing request must not create or duplicate a report row');
+  assert.deepEqual(rows[0].content, { revision: 'second-writer' });
+  assert.equal(await prisma.auditLog.count({ where: { entityId: rows[0].id, action: 'create' } }), 1);
+  assert.equal(await prisma.mutationReceipt.count({
+    where: { command: 'POST /api/reports', idempotencyKey: firstKey },
+  }), 0);
+  assert.equal(await prisma.mutationReceipt.count({
+    where: { command: 'POST /api/reports', idempotencyKey: secondKey },
+  }), 1);
+});
+
+test('RP10 LR3-01 A03b an actor holding only reports.create cannot overwrite a draft that appears during the window', async () => {
+  const plain = makeApp(prisma, POST_PERMS);
+  const gate = gateReportWrite(prisma, ['create', 'upsert'],
+    matchReportWrite({ projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: PERIOD(4), marker: 'create-only-late' }));
+  const createOnly = makeApp(gate.client, ['reports.create', 'reports.submit']);
+  const createOnlyKey = `rp10-a03b-first-${suffix}`;
+  const winnerKey = `rp10-a03b-winner-${suffix}`;
+  let pending;
+  let winnerBody;
+  try {
+    pending = postReport(createOnly, {
+      projectId: project.id, reportType: 'MONTHLY', periodKey: PERIOD(4),
+      content: { revision: 'create-only-late' }, clientMutationId: createOnlyKey,
+    });
+    await reachBarrier(gate, 'A03b');
+    const winner = await postReport(plain, {
+      projectId: project.id, reportType: 'MONTHLY', periodKey: PERIOD(4),
+      content: { revision: 'full-permission-winner' }, clientMutationId: winnerKey,
+    });
+    winnerBody = await winner.json();
+    assert.equal(winner.status, 201, JSON.stringify(winnerBody));
+  } finally {
+    await settleGate(gate, pending);
+  }
+  const late = await pending;
+  const lateBody = await late.json();
+  assert.equal(late.status, 409, JSON.stringify(lateBody));
+  const row = await prisma.report.findUnique({ where: { id: winnerBody.id } });
+  assert.deepEqual(row.content, { revision: 'full-permission-winner' },
+    'absence at validation time must not become a licence to overwrite the competing draft');
+  assert.equal(await prisma.mutationReceipt.count({
+    where: { command: 'POST /api/reports', idempotencyKey: createOnlyKey },
+  }), 0);
+});
+
+test('RP10 LR3-01 A04 existing editable draft: authorized save succeeds, reports.update is required, stale baseline conflicts cleanly', async () => {
+  const target = await makeReport(`rp10-a04-${suffix}`, PERIOD(5), { revision: 'draft-source' });
+  const baseline = target.updatedAt.toISOString();
+  const app = makeApp(prisma, POST_PERMS);
+  const saved = await app.request(`/api/reports/${target.id}`, {
+    method: 'PUT', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ content: { revision: 'saved-by-owner' }, clientMutationId: `rp10-a04-save-${suffix}` }),
+  });
+  assert.equal(saved.status, 200, JSON.stringify(await saved.json()));
+
+  const createOnly = makeApp(prisma, ['reports.create', 'reports.submit']);
+  const deniedKey = `rp10-a04-denied-${suffix}`;
+  const denied = await createOnly.request(`/api/reports/${target.id}`, {
+    method: 'PUT', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ content: { revision: 'no-permission' }, clientMutationId: deniedKey }),
+  });
+  assert.equal(denied.status, 403, JSON.stringify(await denied.json()));
+
+  const staleKey = `rp10-a04-stale-${suffix}`;
+  const stale = await app.request(`/api/reports/${target.id}`, {
+    method: 'PUT', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      content: { revision: 'stale-baseline' },
+      expectedUpdatedAt: baseline,
+      clientContract: 'modern',
+      clientMutationId: staleKey,
+    }),
+  });
+  const staleBody = await stale.json();
+  assert.equal(stale.status, 409, JSON.stringify(staleBody));
+  assert.equal(staleBody.code, 'CONFLICT');
+  const row = await prisma.report.findUnique({ where: { id: target.id } });
+  assert.deepEqual(row.content, { revision: 'saved-by-owner' });
+  assert.equal(await prisma.auditLog.count({ where: { entityId: target.id, action: 'update' } }), 1,
+    'only the successful save may write an audit row');
+  assert.equal(await prisma.mutationReceipt.count({
+    where: { command: 'PUT /api/reports/:id', idempotencyKey: staleKey },
+  }), 0);
+  assert.equal(await prisma.mutationReceipt.count({
+    where: { command: 'PUT /api/reports/:id', idempotencyKey: deniedKey },
+  }), 0);
+});
+
+test('RP10 LR3-01 A04b a POST already validated on an editable draft is rejected when submit commits first', async () => {
+  const target = await makeReport(`rp10-a04b-${suffix}`, PERIOD(6), { revision: 'submit-source' });
+  const gate = gateReportWrite(prisma, ['updateMany', 'update', 'upsert'],
+    matchReportWrite({ reportId: target.id, marker: 'late-post-existing' }));
+  const gated = makeApp(gate.client, POST_PERMS);
+  const lateKey = `rp10-a04b-late-${suffix}`;
+  let pending;
+  try {
+    pending = postReport(gated, {
+      projectId: project.id, reportType: 'MONTHLY', periodKey: PERIOD(6),
+      content: { revision: 'late-post-existing' }, clientMutationId: lateKey,
+    });
+    await reachBarrier(gate, 'A04b');
+    const submitted = await submitReport(gated, target.id, `rp10-a04b-submit-${suffix}`);
+    assert.equal(submitted.status, 200, JSON.stringify(await submitted.json()));
+  } finally {
+    await settleGate(gate, pending);
+  }
+  const late = await pending;
+  const lateBody = await late.json();
+  assert.equal(late.status, 409, JSON.stringify(lateBody));
+  assert.equal(lateBody.code, 'INVALID_STATE');
+  const row = await prisma.report.findUnique({ where: { id: target.id } });
+  const versions = await prisma.reportVersion.findMany({ where: { reportId: target.id } });
+  assert.equal(row.status, 'SUBMITTED');
+  assert.deepEqual(row.content, { revision: 'submit-source' });
+  assert.deepEqual(versions[0].content, { revision: 'submit-source' });
+  assert.equal(await prisma.mutationReceipt.count({
+    where: { command: 'POST /api/reports', idempotencyKey: lateKey },
+  }), 0);
+});
+
+test('RP10 LR3-01 A05 same-key replay after submit returns the original success; a new key cannot impersonate it', async () => {
+  const app = makeApp(prisma, POST_PERMS);
+  const key = `rp10-a05-${suffix}`;
+  const payload = {
+    projectId: project.id, reportType: 'MONTHLY', periodKey: PERIOD(7),
+    content: { revision: 'a05-saved' }, clientMutationId: key,
+  };
+  const first = await postReport(app, payload);
+  const firstBody = await first.json();
+  assert.equal(first.status, 201, JSON.stringify(firstBody));
+  const submitted = await submitReport(app, firstBody.id, `rp10-a05-submit-${suffix}`);
+  assert.equal(submitted.status, 200, JSON.stringify(await submitted.json()));
+
+  const replay = await postReport(app, payload);
+  const replayBody = await replay.json();
+  assert.equal(replay.status, first.status, 'replay must return the original success status');
+  assert.equal(replay.headers.get('Idempotent-Replay'), 'true');
+  assert.equal(replayBody.id, firstBody.id);
+  assert.equal(await prisma.auditLog.count({ where: { entityId: firstBody.id, action: 'create' } }), 1,
+    'replay must not duplicate the business audit');
+  assert.equal(await prisma.mutationReceipt.count({
+    where: { command: 'POST /api/reports', idempotencyKey: key },
+  }), 1);
+
+  const newKey = `rp10-a05-new-${suffix}`;
+  const impostor = await postReport(app, { ...payload, content: { revision: 'a05-new-key' }, clientMutationId: newKey });
+  const impostorBody = await impostor.json();
+  assert.equal(impostor.status, 409, JSON.stringify(impostorBody));
+  assert.equal(impostorBody.code, 'INVALID_STATE');
+  const row = await prisma.report.findUnique({ where: { id: firstBody.id } });
+  assert.deepEqual(row.content, { revision: 'a05-saved' });
+  assert.equal(await prisma.mutationReceipt.count({
+    where: { command: 'POST /api/reports', idempotencyKey: newKey },
+  }), 0);
+});
+
+test('RP10 LR3-01 A06 tombstone restore keeps the existing contract (draft only, no status or version reset)', async () => {
+  const target = await makeReport(`rp10-a06-${suffix}`, PERIOD(8), { revision: 'a06-source' });
+  const app = makeApp(prisma, POST_PERMS);
+  const removed = await app.request(`/api/reports/${target.id}`, { method: 'DELETE' });
+  assert.equal(removed.status, 200, JSON.stringify(await removed.json()));
+  const tombstone = await prisma.report.findUnique({ where: { id: target.id } });
+  assert.ok(tombstone.deletedAt instanceof Date, 'delete must be a soft delete');
+  const beforeRestore = { status: tombstone.status, currentVersion: tombstone.currentVersion };
+
+  const restored = await postReport(app, {
+    projectId: project.id, reportType: 'MONTHLY', periodKey: PERIOD(8),
+    content: { revision: 'a06-restored' }, clientMutationId: `rp10-a06-restore-${suffix}`,
+  });
+  const restoredBody = await restored.json();
+  assert.equal(restored.status, 201, JSON.stringify(restoredBody));
+  assert.equal(restoredBody.id, target.id, 'restore must reuse the same business row');
+  const row = await prisma.report.findUnique({ where: { id: target.id } });
+  assert.equal(row.deletedAt, null);
+  assert.equal(row.status, beforeRestore.status, 'restore must not invent a new source-state policy');
+  assert.equal(row.currentVersion, beforeRestore.currentVersion, 'restore must not reset the version pointer');
+  assert.deepEqual(row.content, { revision: 'a06-restored' });
+  assert.equal(await prisma.auditLog.count({
+    where: { entityId: target.id, action: 'update', metadata: { path: ['restoredFromTombstone'], equals: true } },
+  }), 1);
+  assert.equal(await prisma.reportVersion.count({ where: { reportId: target.id } }), 0);
+});
+
+test('RP10 LR3-01 A06b a tombstone that becomes active during the request is a controlled conflict, not an overwrite', async () => {
+  const target = await makeReport(`rp10-a06b-${suffix}`, PERIOD(9), { revision: 'a06b-source' });
+  const plain = makeApp(prisma, POST_PERMS);
+  const removed = await plain.request(`/api/reports/${target.id}`, { method: 'DELETE' });
+  assert.equal(removed.status, 200, JSON.stringify(await removed.json()));
+  const gate = gateReportWrite(prisma, ['updateMany', 'update', 'upsert'],
+    matchReportWrite({ reportId: target.id, marker: 'late-restore' }));
+  const gated = makeApp(gate.client, POST_PERMS);
+  const lateKey = `rp10-a06b-late-${suffix}`;
+  let pending;
+  try {
+    pending = postReport(gated, {
+      projectId: project.id, reportType: 'MONTHLY', periodKey: PERIOD(9),
+      content: { revision: 'late-restore' }, clientMutationId: lateKey,
+    });
+    await reachBarrier(gate, 'A06b');
+    const winner = await postReport(plain, {
+      projectId: project.id, reportType: 'MONTHLY', periodKey: PERIOD(9),
+      content: { revision: 'competitor-restored' }, clientMutationId: `rp10-a06b-winner-${suffix}`,
+    });
+    assert.equal(winner.status, 201, JSON.stringify(await winner.json()));
+  } finally {
+    await settleGate(gate, pending);
+  }
+  const late = await pending;
+  const lateBody = await late.json();
+  assert.equal(late.status, 409, JSON.stringify(lateBody));
+  assert.notEqual(late.status, 500);
+  const row = await prisma.report.findUnique({ where: { id: target.id } });
+  assert.deepEqual(row.content, { revision: 'competitor-restored' },
+    'a tombstone restored by someone else must not be overwritten unconditionally');
+  assert.equal(await prisma.mutationReceipt.count({
+    where: { command: 'POST /api/reports', idempotencyKey: lateKey },
+  }), 0);
+});
+
+// ══ SUP-01 / LR4-03 测试补强（TEST_ONLY，业务源码零改动）════════════════════════════
+//
+// 目标：让并发写入屏障兼容 create/upsert/updateMany/update 多种写入原语（原语替换不应
+// 使屏障错过真实写入窗口），并固化一个仅在**测试 DB 适配层**把指定迟到新建转成真实
+// 无条件 upsert 的语义负对照——业务源码保持原样，其他请求与 submit 不变。负对照只证明
+// 测试能识别坏结果：控制运行 exit 0 仅表示"已确认预期坏结果"，不是修复或发布 PASS。
+
+// 旧的 gateOnReportMethods 已并入文件顶部的 gateReportWrite（同一受控工具），
+// 语义负对照继续只通过 options.emulateUpsert 在测试 DB 适配层转换，业务源码不变。
+
+test('RP10 LR4-03 SUP-01-01 generalized barrier reaches the real write boundary across write primitives', async () => {
+  // 业务源码当前对"新建"使用 report.create；通用屏障同时覆盖 create/upsert/updateMany/update，
+  // 证明屏障不因原语替换而错过真实写入窗口（命中真实 ORM 调用，而非 sleep 猜测顺序）。
+  const plain = makeApp(prisma, POST_PERMS);
+  const period = PERIOD(10);
+  const gate = gateReportWrite(prisma, REPORT_WRITE_METHODS,
+    matchReportWrite({ projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: period, marker: 'late-new-POST' }));
+  const gated = makeApp(gate.client, POST_PERMS);
+  const firstKey = `rp10-s01-first-${suffix}`;
+  let pending;
+  let winnerBody;
+  try {
+    pending = postReport(gated, {
+      projectId: project.id, reportType: 'MONTHLY', periodKey: period,
+      content: { revision: 'late-new-POST' }, clientMutationId: firstKey,
+    });
+    await reachBarrier(gate, 'SUP-01-01');
+    assert.equal(gate.fired(), true, 'barrier must fire on the real report create');
+    assert.equal(gate.firedMethod(), 'create',
+      'the current business path writes new rows with report.create; the gate must still hit it');
+
+    const winnerKey = `rp10-s01-winner-${suffix}`;
+    const winner = await postReport(plain, {
+      projectId: project.id, reportType: 'MONTHLY', periodKey: period,
+      content: { revision: 'winner-created' }, clientMutationId: winnerKey,
+    });
+    winnerBody = await winner.json();
+    assert.equal(winner.status, 201, JSON.stringify(winnerBody));
+    const submitted = await submitReport(plain, winnerBody.id, `rp10-s01-submit-${suffix}`);
+    assert.equal(submitted.status, 200, JSON.stringify(await submitted.json()));
+  } finally {
+    await settleGate(gate, pending);
+  }
+
+  const late = await pending;
+  const lateBody = await late.json();
+  // 屏障命中真实写入窗口后，迟到请求应被既有唯一键控制为 409，不覆盖已提交正文。
+  assert.equal(late.status, 409, `late POST must be a controlled rejection: ${JSON.stringify(lateBody)}`);
+  assert.equal(lateBody.code, 'DUPLICATE_PERIOD_KEY');
+  const row = await prisma.report.findUnique({ where: { id: winnerBody.id } });
+  assert.equal(row.status, 'SUBMITTED');
+  assert.deepEqual(row.content, { revision: 'winner-created' }, 'late POST must not overwrite SUBMITTED content');
+  const versions = await prisma.reportVersion.findMany({ where: { reportId: winnerBody.id } });
+  assert.equal(versions.length, 1);
+  assert.deepEqual(versions[0].content, { revision: 'winner-created' });
+  assert.equal(await prisma.mutationReceipt.count({
+    where: { command: 'POST /api/reports', idempotencyKey: firstKey },
+  }), 0, 'rejected late POST must not leave a success receipt');
+  assert.equal(await prisma.auditLog.count({ where: { entityId: winnerBody.id, action: 'create' } }), 1);
+});
+
+test('RP10 LR4-03 SUP-01-03 SEMANTIC_NEGATIVE_CONTROL: a delayed create adapted to unconditional upsert reproduces the lost-overwrite invariant', async () => {
+  // 语义负对照（明确标记）：仅把匹配的迟到新建在测试 DB 适配层转成真实无条件 upsert。
+  // 业务源码、其他请求与 submit 不变。目的是证明测试**识别到了坏结果**：
+  //   - 竞争者创建+提交后，迟到请求 201（而非受控 409）；
+  //   - 已 SUBMITTED 行正文被迟到写入覆盖（≠ ReportVersion 版本快照）；
+  //   - 多出一份成功回执与一条 create 审计。
+  // 这些断言成立 ≡ 确认了"迟到覆盖"不变量被破坏。控制运行 exit 0 不是修复/发布 PASS。
+  const plain = makeApp(prisma, POST_PERMS);
+  const period = PERIOD(12);
+  const lateKey = `rp10-neg-ctrl-${suffix}`;
+  const gate = gateReportWrite(prisma, ['create', 'upsert'],
+    matchReportWrite({ projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: period, marker: 'control-late' }), { emulateUpsert: true });
+  const gated = makeApp(gate.client, POST_PERMS);
+
+  let pending;
+  let winnerBody;
+  try {
+    pending = postReport(gated, {
+      projectId: project.id, reportType: 'MONTHLY', periodKey: period,
+      content: { revision: 'control-late' }, clientMutationId: lateKey,
+    });
+    await reachBarrier(gate, 'SEMANTIC_NEGATIVE_CONTROL');
+    assert.equal(gate.fired(), true, 'negative-control barrier must reach the real report write before emulation');
+
+    // 竞争者先创建并提交成功，证明窗口内存在已提交活跃行。
+    const winnerKey = `rp10-neg-ctrl-winner-${suffix}`;
+    const winner = await postReport(plain, {
+      projectId: project.id, reportType: 'MONTHLY', periodKey: period,
+      content: { revision: 'winner-source' }, clientMutationId: winnerKey,
+    });
+    winnerBody = await winner.json();
+    assert.equal(winner.status, 201, JSON.stringify(winnerBody));
+    const submitted = await submitReport(plain, winnerBody.id, `rp10-neg-ctrl-submit-${suffix}`);
+    assert.equal(submitted.status, 200, JSON.stringify(await submitted.json()));
+  } finally {
+    await settleGate(gate, pending);
+  }
+
+  const late = await pending;
+  const lateBody = await late.json();
+  // 负对照必须到达坏结果：若仍返回干净 409，说明控制未命中（应记 BARRIER_NOT_REACHED，而非缺陷复现）。
+  assert.equal(late.status, 201, `negative control must reproduce the overwrite path, not a clean rejection: ${JSON.stringify(lateBody)}`);
+
+  const row = await prisma.report.findUnique({ where: { id: winnerBody.id } });
+  const versions = await prisma.reportVersion.findMany({ where: { reportId: winnerBody.id }, orderBy: { version: 'asc' } });
+  assert.equal(row.status, 'SUBMITTED');
+  assert.deepEqual(row.content, { revision: 'control-late' },
+    'late delayed create overwrote the submitted body (bad invariant confirmed)');
+  assert.equal(versions.length, 1);
+  assert.deepEqual(versions[0].content, { revision: 'winner-source' },
+    'version snapshot kept the winner source while live content diverged');
+  assert.equal(await prisma.mutationReceipt.count({
+    where: { command: 'POST /api/reports', idempotencyKey: lateKey },
+  }), 1, 'control produced an extra success receipt');
+  assert.equal(await prisma.auditLog.count({ where: { entityId: winnerBody.id, action: 'create' } }), 2,
+    'control produced a second create audit');
+});
+
+// ══ SUP-01-01b / SUP-01-02 / SUP-01-04：LR5-01 缺失覆盖 ══════════════════════════
+//
+// SUP-01-01b：四种写入原语的**实际命中轨迹**。每个原语各自使用独立的合成报告行与
+// 独立参数形状，真实调用 gate 后的 Prisma 方法，记录 method / 目标 / 命中 / 释放 /
+// 持久结果。这里验证的是测试屏障工具的兼容性，不是四个 HTTP 业务反例验收，
+// 也不代表业务源码改用了这些原语。
+// SUP-01-02：墓碑恢复后 submit 的正式竞争用例（旧 A06b 只恢复到活跃草稿，没有 submit）。
+// SUP-01-04：屏障之后中途失败时，仍然释放屏障并等待挂起请求收束（不留悬挂请求/事务）。
+
+const PRIMITIVE_MATRIX = [
+  { primitive: 'create', period: '2028-01', marker: 'matrix-create' },
+  { primitive: 'upsert', period: '2028-02', marker: 'matrix-upsert' },
+  { primitive: 'updateMany', period: '2028-03', marker: 'matrix-update-many' },
+  { primitive: 'update', period: '2028-04', marker: 'matrix-update' },
+];
+
+test('RP10 LR5-01 SUP-01-01b barrier compatibility matrix: create/upsert/update/updateMany each really hit', async () => {
+  const traces = [];
+  for (const { primitive, period, marker } of PRIMITIVE_MATRIX) {
+    let seed = null;
+    if (primitive !== 'create') {
+      seed = await prisma.report.create({ data: {
+        id: `rp10-matrix-${primitive}-${suffix}`, projectId: project.id, authorId: actor.id,
+        reportType: 'MONTHLY', periodKey: period, content: { revision: 'matrix-source' },
+        status: 'DRAFT', createdById: actor.id,
+      } });
+    }
+    const gate = gateReportWrite(prisma, [primitive],
+      matchReportWrite({ reportId: seed?.id, projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: period, marker }));
+    const model = gate.client.report;
+    let call;
+    try {
+      if (primitive === 'create') {
+        call = model.create({ data: {
+          projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: period,
+          content: { revision: marker }, status: 'DRAFT', createdById: actor.id,
+        } });
+      } else if (primitive === 'upsert') {
+        // upsert 的另一种参数形状：where 用业务唯一键，命中来自 update 分支的 payload 标记
+        call = model.upsert({
+          where: { projectId_authorId_reportType_periodKey: {
+            projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: period,
+          } },
+          create: {
+            projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: period,
+            content: { revision: marker }, status: 'DRAFT', createdById: actor.id,
+          },
+          update: { content: { revision: marker } },
+        });
+      } else if (primitive === 'updateMany') {
+        call = model.updateMany({ where: { id: seed.id }, data: { content: { revision: marker } } });
+      } else {
+        call = model.update({ where: { id: seed.id }, data: { content: { revision: marker } } });
+      }
+      await reachBarrier(gate, `SUP-01-01b:${primitive}`);
+      assert.equal(gate.fired(), true, `${primitive} barrier must fire on the real ORM call`);
+      assert.equal(gate.firedMethod(), primitive,
+        `${primitive} must be intercepted as ${primitive}, not as another primitive`);
+    } finally {
+      await settleGate(gate, call);
+    }
+    const result = await call;
+    const rowId = primitive === 'create' ? result.id : seed.id;
+    const row = await prisma.report.findUnique({ where: { id: rowId } });
+    assert.deepEqual(row.content, { revision: marker },
+      `${primitive} must persist the barrier-released write`);
+    if (primitive === 'updateMany') {
+      assert.equal(result.count, 1, 'updateMany must report exactly one affected row');
+    }
+    traces.push({
+      primitive,
+      target: { reportId: rowId, periodKey: period, businessKey: {
+        projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: period,
+      } },
+      marker,
+      hit: gate.fired(),
+      firedMethod: gate.firedMethod(),
+      released: true,
+      persisted: { content: row.content, updateCount: primitive === 'updateMany' ? result.count : null },
+    });
+  }
+  console.log(`SUP01_PRIMITIVE_TRACE ${JSON.stringify(traces)}`);
+  assert.equal(traces.length, 4);
+  assert.deepEqual(traces.map((row) => row.primitive), ['create', 'upsert', 'updateMany', 'update']);
+  assert.ok(traces.every((row) => row.hit === true && row.firedMethod === row.primitive),
+    'every write primitive must be hit independently: ' + JSON.stringify(traces));
+});
+
+test('RP10 LR5-01 SUP-01-02 tombstone late restore loses to a competing restore+submit and is rejected', async () => {
+  const period = '2028-05';
+  const target = await makeReport(`rp10-s01-02-${suffix}`, period, { revision: 'restore-source' });
+  const plain = makeApp(prisma, POST_PERMS);
+  const removed = await plain.request(`/api/reports/${target.id}`, { method: 'DELETE' });
+  assert.equal(removed.status, 200, JSON.stringify(await removed.json()));
+  const tombstone = await prisma.report.findUnique({ where: { id: target.id } });
+  assert.ok(tombstone.deletedAt instanceof Date, 'precondition: the target row must be a real tombstone');
+
+  const gate = gateReportWrite(prisma, ['updateMany', 'update', 'upsert'],
+    matchReportWrite({ reportId: target.id, marker: 'late-restore-submit' }));
+  const gated = makeApp(gate.client, POST_PERMS);
+  const lateKey = `rp10-s01-02-late-${suffix}`;
+  let pending;
+  try {
+    pending = postReport(gated, {
+      projectId: project.id, reportType: 'MONTHLY', periodKey: period,
+      content: { revision: 'late-restore-submit' }, clientMutationId: lateKey,
+    });
+    await reachBarrier(gate, 'SUP-01-02');
+    assert.equal(gate.firedMethod(), 'updateMany',
+      'the tombstone restore write must be intercepted at the real conditional UPDATE');
+
+    const winner = await postReport(plain, {
+      projectId: project.id, reportType: 'MONTHLY', periodKey: period,
+      content: { revision: 'winner-restored' }, clientMutationId: `rp10-s01-02-winner-${suffix}`,
+    });
+    const winnerBody = await winner.json();
+    assert.equal(winner.status, 201, JSON.stringify(winnerBody));
+    assert.equal(winnerBody.id, target.id, 'the competing request must restore the same business row');
+    const submitted = await submitReport(plain, target.id, `rp10-s01-02-submit-${suffix}`);
+    assert.equal(submitted.status, 200, JSON.stringify(await submitted.json()));
+  } finally {
+    await settleGate(gate, pending);
+  }
+
+  const late = await pending;
+  const lateBody = await late.json();
+  assert.equal(late.status, 409, `late restore must be a controlled rejection: ${JSON.stringify(lateBody)}`);
+  assert.equal(lateBody.code, 'CONFLICT');
+
+  const row = await prisma.report.findUnique({ where: { id: target.id } });
+  const versions = await prisma.reportVersion.findMany({ where: { reportId: target.id }, orderBy: { version: 'asc' } });
+  assert.equal(row.deletedAt, null, 'the late restore must not resurrect or re-delete the row');
+  assert.equal(row.status, 'SUBMITTED', 'the winner submit must survive the late restore');
+  assert.deepEqual(row.content, { revision: 'winner-restored' }, 'late restore must not overwrite the winner body');
+  assert.equal(row.currentVersion, 1);
+  assert.equal(versions.length, 1);
+  assert.deepEqual(versions[0].content, { revision: 'winner-restored' });
+  assert.equal(await prisma.mutationReceipt.count({
+    where: { command: 'POST /api/reports', idempotencyKey: lateKey },
+  }), 0, 'rejected late restore must not leave a success receipt');
+  assert.equal(await prisma.auditLog.count({
+    where: { entityId: target.id, action: 'update', metadata: { path: ['restoredFromTombstone'], equals: true } },
+  }), 1, 'exactly one successful restore audit');
+  console.log(`SUP01_RESTORE_SUBMIT_TRACE ${JSON.stringify({
+    case: 'SUP-01-02', reportId: target.id, periodKey: period,
+    interceptedPrimitive: 'updateMany', lateStatus: late.status, lateCode: lateBody.code,
+    rowStatus: row.status, deletedAt: row.deletedAt, currentVersion: row.currentVersion,
+    versionCount: versions.length, restoreAuditCount: 1,
+  })}`);
+});
+
+test('RP10 LR5-01 SUP-01-04 barrier release/settle control: a mid-race failure still releases and settles', async () => {
+  const period = '2028-06';
+  const gate = gateReportWrite(prisma, REPORT_WRITE_METHODS,
+    matchReportWrite({ projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: period, marker: 'settle-control' }));
+  const gated = makeApp(gate.client, POST_PERMS);
+  const key = `rp10-s01-04-${suffix}`;
+  let pending;
+  let settled = false;
+  let caught = null;
+  try {
+    pending = postReport(gated, {
+      projectId: project.id, reportType: 'MONTHLY', periodKey: period,
+      content: { revision: 'settle-control' }, clientMutationId: key,
+    });
+    await reachBarrier(gate, 'SUP-01-04');
+    assert.equal(gate.fired(), true, 'the control barrier must fire before the simulated failure');
+    throw new Error('SUP-01-04: simulated assertion failure after the barrier');
+  } catch (error) {
+    caught = error;
+  } finally {
+    gate.release();
+    await pending.then(() => { settled = true; }, () => { settled = true; });
+  }
+  assert.ok(caught, 'the simulated mid-race failure must be observable by the control');
+  assert.equal(settled, true, 'the pending request/transaction must be settled in finally');
+  // 已收束：再次 await 立即返回，不留下悬挂请求
+  const late = await pending;
+  const lateBody = await late.json();
+  assert.equal(late.status, 201, `no competitor exists, so the released request completes: ${JSON.stringify(lateBody)}`);
+  const row = await prisma.report.findUnique({ where: { id: lateBody.id } });
+  assert.deepEqual(row.content, { revision: 'settle-control' });
+  console.log(`SUP01_SETTLE_TRACE ${JSON.stringify({
+    case: 'SUP-01-04', simulatedFailure: caught.message, settled, lateStatus: late.status,
+    reportId: lateBody.id, settledContent: row.content,
+  })}`);
+});
+
+// ══ CLOSE-01 / LR6-01：屏障匹配完整性与草稿竞争收束补正 ═══════════════════════════
+//
+// 层次声明：SUP-01-05 是**纯 helper 控制**（内存参数对象，不访问数据库）；
+// SUP-01-06/07 是真实自有库中的真实 Prisma/HTTP 调用，但仍属测试工具级验证，
+// 不是产品安全验收、不是新的业务修复通过。
+
+test('RP10 LR6-01 SUP-01-05 report write matcher requires the full business identity or target id plus a mandatory marker', async () => {
+  const fullKey = { projectId: 'p-1', authorId: 'a-1', reportType: 'MONTHLY', periodKey: '2028-01' };
+  const marker = 'm-1';
+  const asWrite = (method, args) => ({ method, args, ...writeTargetOf(method, args) });
+  const createArgs = (overrides = {}, content = { revision: marker }) => ({
+    data: { ...fullKey, ...overrides, content },
+  });
+  const cases = [
+    { label: 'full key + marker (create)', selector: { ...fullKey, marker }, method: 'create', args: createArgs(), expected: true },
+    { label: 'wrong projectId', selector: { ...fullKey, marker }, method: 'create', args: createArgs({ projectId: 'p-2' }), expected: false },
+    { label: 'wrong authorId', selector: { ...fullKey, marker }, method: 'create', args: createArgs({ authorId: 'a-2' }), expected: false },
+    { label: 'wrong reportType', selector: { ...fullKey, marker }, method: 'create', args: createArgs({ reportType: 'ANNUAL' }), expected: false },
+    { label: 'wrong periodKey', selector: { ...fullKey, marker }, method: 'create', args: createArgs({ periodKey: '2028-02' }), expected: false },
+    { label: 'wrong marker', selector: { ...fullKey, marker }, method: 'create', args: createArgs({}, { revision: 'other' }), expected: false },
+    { label: 'missing authorId in write', selector: { ...fullKey, marker }, method: 'create', args: { data: { projectId: 'p-1', reportType: 'MONTHLY', periodKey: '2028-01', content: { revision: marker } } }, expected: false },
+    { label: 'missing periodKey in write', selector: { ...fullKey, marker }, method: 'create', args: { data: { projectId: 'p-1', authorId: 'a-1', reportType: 'MONTHLY', content: { revision: marker } } }, expected: false },
+    { label: 'partial selector (periodKey only) must not fire', selector: { periodKey: '2028-01', marker }, method: 'create', args: createArgs(), expected: false },
+    { label: 'selector without marker must not fire', selector: { ...fullKey }, method: 'create', args: createArgs(), expected: false },
+    { label: 'target id + marker (updateMany where.id)', selector: { reportId: 'r-1', marker }, method: 'updateMany', args: { where: { id: 'r-1' }, data: { content: { revision: marker } } }, expected: true },
+    { label: 'target id + wrong marker', selector: { reportId: 'r-1', marker }, method: 'updateMany', args: { where: { id: 'r-1' }, data: { content: { revision: 'other' } } }, expected: false },
+    { label: 'different id + same marker', selector: { reportId: 'r-1', marker }, method: 'updateMany', args: { where: { id: 'r-2' }, data: { content: { revision: marker } } }, expected: false },
+    { label: 'upsert compound key + update payload marker', selector: { ...fullKey, marker }, method: 'upsert', args: { where: { projectId_authorId_reportType_periodKey: { ...fullKey } }, create: { ...fullKey, content: { revision: marker } }, update: { content: { revision: marker } } }, expected: true },
+    { label: 'upsert compound key with wrong authorId', selector: { ...fullKey, marker }, method: 'upsert', args: { where: { projectId_authorId_reportType_periodKey: { ...fullKey, authorId: 'a-9' } }, create: { ...fullKey, content: { revision: marker } }, update: { content: { revision: marker } } }, expected: false },
+    { label: 'upsert where.id + update payload marker', selector: { reportId: 'r-1', marker }, method: 'upsert', args: { where: { id: 'r-1' }, create: { ...fullKey, content: { revision: marker } }, update: { content: { revision: marker } } }, expected: true },
+  ];
+  const observed = [];
+  for (const item of cases) {
+    const matcher = matchReportWrite(item.selector);
+    const hit = matcher(asWrite(item.method, item.args));
+    assert.equal(hit, item.expected, `${item.label}: expected ${item.expected} but got ${hit}`);
+    observed.push({ label: item.label, method: item.method, expected: item.expected, hit });
+  }
+  console.log(`SUP0105_TRACE ${JSON.stringify(observed)}`);
+  assert.equal(observed.filter((row) => row.expected).every((row) => row.hit), true);
+  assert.equal(observed.filter((row) => !row.expected).every((row) => row.hit === false), true);
+});
+
+test('RP10 LR6-01 SUP-01-06 draftWriteBarrier hits a real Prisma upsert where.id with create/update payload, and rejects wrong id or marker', async () => {
+  const period = '2028-07';
+  const marker = 'upsert-proof';
+  const target = await makeReport(`rp10-s0106-${suffix}`, period, { revision: 'upsert-source' });
+
+  const gate = draftWriteBarrier(target.id, marker);
+  let call;
+  try {
+    call = gate.client.report.upsert({
+      where: { id: target.id },
+      create: { projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: period, content: { revision: marker }, status: 'DRAFT', createdById: actor.id },
+      update: { content: { revision: marker } },
+    });
+    await reachBarrier(gate, 'SUP-01-06:upsert');
+    assert.equal(gate.fired(), true,
+      'draftWriteBarrier must hit a real upsert: upsert data is null and the payload lives in create/update');
+    assert.equal(gate.firedMethod(), 'upsert', 'the intercepted primitive must be upsert');
+  } finally {
+    await settleGate(gate, call);
+  }
+  const released = await call;
+  assert.equal(released.id, target.id);
+  const row = await prisma.report.findUnique({ where: { id: target.id } });
+  assert.deepEqual(row.content, { revision: marker }, 'the released upsert must persist its payload');
+
+  // 负例 1：不同 reportId、相同 marker 不得命中
+  const otherPeriod = '2028-08';
+  const other = await makeReport(`rp10-s0106-other-${suffix}`, otherPeriod, { revision: 'other-source' });
+  const otherGate = draftWriteBarrier(target.id, marker);
+  const otherCall = otherGate.client.report.upsert({
+    where: { id: other.id },
+    create: { projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: otherPeriod, content: { revision: marker }, status: 'DRAFT', createdById: actor.id },
+    update: { content: { revision: marker } },
+  });
+  await otherCall;
+  assert.equal(otherGate.fired(), false, 'a different report id with the same marker must not fire the barrier');
+  const otherRow = await prisma.report.findUnique({ where: { id: other.id } });
+  assert.deepEqual(otherRow.content, { revision: marker }, 'the non-matching upsert must still execute normally');
+
+  // 负例 2：相同 reportId、不同 marker 不得命中
+  const wrongMarkerGate = draftWriteBarrier(target.id, 'not-the-marker');
+  const wrongMarkerCall = wrongMarkerGate.client.report.upsert({
+    where: { id: target.id },
+    create: { projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: period, content: { revision: 'another-revision' }, status: 'DRAFT', createdById: actor.id },
+    update: { content: { revision: 'another-revision' } },
+  });
+  await wrongMarkerCall;
+  assert.equal(wrongMarkerGate.fired(), false, 'a different payload marker must not fire the barrier');
+  const afterWrongMarker = await prisma.report.findUnique({ where: { id: target.id } });
+  assert.deepEqual(afterWrongMarker.content, { revision: 'another-revision' });
+  console.log(`SUP0106_TRACE ${JSON.stringify({
+    case: 'SUP-01-06', reportId: target.id, firedMethod: 'upsert', fired: true,
+    persistedAfterRelease: row.content,
+    wrongIdFired: otherGate.fired(), wrongMarkerFired: wrongMarkerGate.fired(),
+  })}`);
+});
+
+test('RP10 LR6-01 SUP-01-07 legacy/modern/sync draft races release, clear timers and settle on an intermediate exception', async () => {
+  const flavors = [
+    { name: 'legacy', period: '2028-09', marker: 'exc-legacy',
+      request: (app, id) => app.request(`/api/reports/${id}`, {
+        method: 'PUT', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ content: { revision: 'exc-legacy' }, clientMutationId: `rp10-s0107-legacy-${suffix}` }),
+      }) },
+    { name: 'modern', period: '2028-10', marker: 'exc-modern',
+      request: (app, id, baseline) => app.request(`/api/reports/${id}`, {
+        method: 'PUT', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ content: { revision: 'exc-modern' }, expectedUpdatedAt: baseline, clientContract: 'modern', clientMutationId: `rp10-s0107-modern-${suffix}` }),
+      }) },
+    { name: 'sync', period: '2028-11', marker: 'exc-sync',
+      request: (app, id, baseline) => syncV1Request(app, '/api/sync/push', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ deviceId: `rp10-s0107-device-${suffix}`, changes: [{
+          clientMutationId: `rp10-s0107-sync-${suffix}`, entity: 'reports', id, op: 'upsert',
+          baseUpdatedAt: baseline, data: { content: { revision: 'exc-sync' } },
+        }] }),
+      }, project.id) },
+  ];
+  const traces = [];
+  for (const flavor of flavors) {
+    const target = await makeReport(`rp10-s0107-${flavor.name}-${suffix}`, flavor.period, { revision: 'exc-source' });
+    const baseline = target.updatedAt.toISOString();
+    const gate = draftWriteBarrier(target.id, flavor.marker);
+    const app = makeApp(gate.client, WRITE_PERMS);
+    let pending = null;
+    let timer = null;
+    let timerCleared = false;
+    let observed = null;
+    try {
+      pending = flavor.request(app, target.id, baseline);
+      try {
+        await Promise.race([gate.reached, new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error(`${flavor.name}: BARRIER_NOT_REACHED`)), 10000);
+        })]);
+        assert.equal(gate.fired(), true,
+          `${flavor.name}: the draft race must reach the real write before the simulated failure`);
+        assert.equal(gate.firedMethod(), 'updateMany', `${flavor.name}: draft saves write with updateMany`);
+        throw new Error(`${flavor.name}: simulated mid-race failure`);
+      } finally {
+        if (timer) { clearTimeout(timer); timerCleared = true; }
+      }
+    } catch (error) {
+      observed = error;
+    } finally {
+      await settleGate(gate, pending);
+    }
+    assert.ok(observed, `${flavor.name}: the simulated mid-race failure must be observable`);
+    assert.equal(timerCleared, true, `${flavor.name}: the barrier timeout timer must be cleared`);
+    const settled = await pending;
+    const body = await settled.json();
+    // 该控制内没有竞争 submit，因此放行后的草稿写入应当真实生效。
+    assert.equal(settled.status, 200, `${flavor.name}: ${JSON.stringify(body)}`);
+    if (flavor.name === 'sync') {
+      assert.equal(body.results[0].status, 'applied', JSON.stringify(body));
+    }
+    const row = await prisma.report.findUnique({ where: { id: target.id } });
+    assert.deepEqual(row.content, { revision: flavor.marker }, `${flavor.name}: the released write must persist`);
+    traces.push({
+      flavor: flavor.name, fired: gate.fired(), firedMethod: gate.firedMethod(),
+      simulatedFailure: observed.message, timerCleared, settled: true,
+      lateStatus: settled.status, persistedContent: row.content,
+    });
+  }
+  console.log(`SUP0107_TRACE ${JSON.stringify(traces)}`);
+  assert.deepEqual(traces.map((row) => row.flavor), ['legacy', 'modern', 'sync']);
+  assert.ok(traces.every((row) => row.timerCleared && row.settled && row.firedMethod === 'updateMany'));
+});

@@ -72,6 +72,7 @@ export const P1_MANIFEST = [
 export const P1_UNFROZEN = [
   'projects.delete',
   'tasks.delete',
+  'milestones.delete', // RP05-T02 explicit tombstone command; 2026-10-06 delegated policy
   'reports.delete',
   'docs.delete',
   'project_templates.copy',

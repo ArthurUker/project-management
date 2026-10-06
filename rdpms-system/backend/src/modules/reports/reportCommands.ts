@@ -7,6 +7,7 @@
  * 迁移说明（v2 ADR-02）：由 reportCommands.js 迁入，行为不变；strict 模式，无 any / ts-ignore。
  */
 import { badRequest, HttpError } from '../../kernel/http.js';
+import { REPORT_EDITABLE_STATUSES } from '../access/writeGuards.js';
 import { normalizeReportType, validatePeriodKey } from './reportRules.js';
 
 /** 汇报内容（JSONB 对象） */
@@ -99,7 +100,14 @@ export interface ReportWriteDb {
 
 /**
  * 保存草稿（唯一写实现）：普通 API 与同步上行共用。
- * 调用方必须已完成鉴权、资源授权与状态判定（assertReportWritable / assertReportNotLocked）。
+ * 调用方必须已完成鉴权与资源授权（assertReportAuthority）。
+ *
+ * 写入边界与「真实可编辑状态」原子绑定（RP10-T02 / B10 返工）：
+ * 早期状态校验只能基于请求进入时读到的快照，无法阻止「校验通过 → 提交先完成 → 迟到保存覆盖
+ * SUBMITTED 正文」。因此这里把状态条件与并发基线放进**同一个原子 UPDATE 谓词**：
+ * `UPDATE ... WHERE id = ? AND status IN (<可编辑>) [AND <并发基线>]`。
+ * 迟到保存会阻塞在提交事务持有的行锁上；锁释放后 PostgreSQL 按已提交的新行版本重新求值谓词，
+ * 得到 0 行更新 → 拒绝，不覆盖真实正文、不产生版本/审计/成功回执。
  */
 export async function saveReportDraft(
   db: ReportWriteDb,
@@ -112,11 +120,23 @@ export async function saveReportDraft(
   },
 ): Promise<Record<string, unknown>> {
   const data = { ...patch, updatedById: actor.userId };
-  if (!cas) {
-    return db.report.update({ where: { id: reportId }, data });
-  }
-  const result = await db.report.updateMany({ where: { id: reportId, ...cas }, data });
+  const result = await db.report.updateMany({
+    where: {
+      id: reportId,
+      status: { in: [...REPORT_EDITABLE_STATUSES] },
+      ...(cas ?? {}),
+    },
+    data,
+  });
   if (result.count === 0) {
+    // 区分「不存在 / 已锁定 / 并发基线过期」，保留原有 404 与 409 CONFLICT 语义，
+    // 并让「提交先完成」返回明确的 INVALID_STATE（不静默降级为通用冲突）。
+    const current = await db.report.findUnique({ where: { id: reportId } });
+    if (!current) throw new HttpError(404, 'REPORT_NOT_FOUND', '汇报不存在');
+    const status = typeof current.status === 'string' ? current.status : '';
+    if (!REPORT_EDITABLE_STATUSES.includes(status)) {
+      throw new HttpError(409, 'INVALID_STATE', '汇报已提交或已审阅，内容已锁定');
+    }
     throw new HttpError(409, 'CONFLICT', '数据已被他人修改，请基于最新版本重试');
   }
   const row = await db.report.findUnique({ where: { id: reportId } });
@@ -137,12 +157,19 @@ export async function submitReport(
   db: ReportWriteDb,
   { actor, report, snapshot }: {
     actor: { userId: string };
-    report: { id: string; content: unknown; reportType?: string | null; periodKey?: string | null };
+    report: { id: string; content: unknown; status: string; currentVersion: number;
+      reportType?: string | null; periodKey?: string | null };
     snapshot?: unknown;
   },
 ): Promise<SubmitReportResult> {
   if (!db.reportVersion) {
     throw new Error('[reportCommands] submitReport 需要提供 reportVersion 客户端');
+  }
+  // D-S01-07: caller provides the row read under its transaction's report lock.
+  // This guard also prevents a different command caller from allowing new-key
+  // resubmission of SUBMITTED/REVIEWING/REVIEWED rows.
+  if (!REPORT_EDITABLE_STATUSES.includes(report.status)) {
+    throw new HttpError(409, 'INVALID_STATE', '仅草稿或需修改的汇报可以提交');
   }
   const lastVersion = await db.reportVersion.findFirst({
     where: { reportId: report.id },
@@ -159,9 +186,12 @@ export async function submitReport(
       createdById: actor.userId,
     },
   });
-  await db.report.update({
-    where: { id: report.id },
-    data: { status: 'SUBMITTED', submittedAt, updatedById: actor.userId },
+  const updated = await db.report.updateMany({
+    where: { id: report.id, status: report.status, currentVersion: report.currentVersion, deletedAt: null },
+    data: { status: 'SUBMITTED', currentVersion: version, submittedAt, updatedById: actor.userId },
   });
+  if (updated.count !== 1) {
+    throw new HttpError(409, 'CONFLICT', '汇报状态或版本已变化，请刷新后重试');
+  }
   return { version, submittedAt };
 }

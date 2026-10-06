@@ -1,5 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { projectAPI, userAPI, projectTemplatesAPI } from '@/api';
+import { tokenStore, type SessionSnapshot } from '../auth/tokenStore';
+import { useAuth } from '../auth/useAuth';
+import { buildProjectChildEdit, projectEditSnapshotSignature, type ProjectEditSnapshot } from '../shared/projectEditCommand';
 import { safeStorage } from '@/utils/safeStorage';
 import { getAllowedTransitions } from '../constants/statusColors';
 import { PROJECT_TYPE_OPTIONS, normalizeProjectType } from '../constants/projectType';
@@ -34,11 +37,12 @@ interface EditProjectModalProps {
 }
 
 const TYPE_OPTIONS = PROJECT_TYPE_OPTIONS;
-const TASK_STATUS_OPTIONS = ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', '已暂停'];
+const TASK_STATUS_OPTIONS = ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'BLOCKED', 'CANCELLED'];
 const MILESTONE_STATUS_OPTIONS = ['待完成', 'IN_PROGRESS', 'COMPLETED'];
 
-function getEditDraftKey(projectId: string) {
-  return `rdpms_edit_project_draft_${projectId}`;
+function getEditDraftKey(projectId: string, actorId: string) {
+  const epoch = tokenStore.datasetEpoch();
+  return `rdpms_edit_project_draft_v2_${actorId}_${projectId}${epoch ? '_' + epoch : ''}`;
 }
 
 interface Phase {
@@ -49,6 +53,12 @@ interface Phase {
 }
 
 const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) => {
+  const auth = useAuth();
+  const sourceOwner = useRef<SessionSnapshot | null>(null);
+  const original = useRef<ProjectEditSnapshot | null>(null);
+  const [draftBlocked, setDraftBlocked] = useState(false);
+  const generation = tokenStore.snapshot()?.loginGeneration;
+  const ownsSource = () => Boolean(sourceOwner.current && tokenStore.sameLogin(sourceOwner.current));
   const [form, setForm] = useState({
     name:      '',
     type:      '',
@@ -97,12 +107,19 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
   }, [project]);
 
   useEffect(() => {
-    if (!project?.id) return;
+    setPlanLoaded(false); setPlannedPhases([]); setPlannedMilestones([]); setParticipantIds([]); setDraftBlocked(false);
+    original.current = null; sourceOwner.current = null;
+    if (!project?.id || auth.status !== 'authenticated' || !auth.user?.id) return;
+    const session = tokenStore.snapshot();
+    if (!session || session.actorId !== auth.user.id) return;
+    sourceOwner.current = session;
     const loadProjectDetail = async () => {
       setLoadingPlan(true);
       try {
         const detail = await projectAPI.get(project.id) as any;
         const full = detail?.data || detail;
+        if (!tokenStore.sameLogin(session)) return;
+        original.current = { updatedAt: full.updatedAt, tasks: full.tasks ?? [], milestones: full.milestones ?? [], managerId: full.managerId };
         const manager = full?.managerId || project.managerId || '';
         const memberIds = (full?.members || [])
           .map((m: any) => m.userId || m.user?.id)
@@ -116,11 +133,12 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
           title: t.title || `任务 ${idx + 1}`,
           priority: t.priority || '中',
           status: t.status || 'NOT_STARTED',
-          phase: t.phase || '',
+          phase: t.phase?.name || '',
           phaseId: t.phaseId || '',
-          phaseOrder: t.phaseOrder ?? null,
+          phaseOrder: t.phase?.sortOrder ?? null,
           estimatedDays: t.estimatedDays ?? 3,
           dueDate: t.dueDate ? String(t.dueDate).slice(0, 10) : '',
+          assigneeId: t.assigneeId ?? null,
         }));
 
         const phaseMap = new Map<string, any[]>();
@@ -148,7 +166,8 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
         const mappedMilestones = (full?.milestones || []).map((m: any, idx: number) => ({
           id: m.id || `milestone_${idx}`,
           name: m.name || `里程碑 ${idx + 1}`,
-          date: m.date ? String(m.date).slice(0, 10) : '',
+          date: m.dueDate ? String(m.dueDate).slice(0, 10) : '',
+          phaseId: m.phaseId ?? null,
           status: m.status || '待完成',
         }));
 
@@ -157,11 +176,16 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
         let nextFormTemplateId = full?.templateId || project.templateId || '';
         let nextParticipantIds = Array.from(new Set(memberIds));
 
-        const draftRaw = safeStorage.get(getEditDraftKey(project.id));
+        const draftRaw = safeStorage.get(getEditDraftKey(project.id, sourceOwner.current?.actorId ?? 'unverified'));
         if (draftRaw) {
           try {
             const draft = JSON.parse(draftRaw);
-            // 静默恢复编辑草稿，不弹窗询问
+            if ((tokenStore.datasetEpoch() && draft.datasetEpoch !== tokenStore.datasetEpoch()) || draft.ownerId !== session.actorId || draft.baseUpdatedAt !== full.updatedAt || !draft.snapshot || projectEditSnapshotSignature(draft.snapshot) !== projectEditSnapshotSignature(original.current!)) {
+              setDraftBlocked(true);
+              throw Error('暂存草稿基线已变化，草稿已保留，请先核对');
+            }
+            original.current = draft.snapshot;
+            // Restore only proven same-owner, unchanged original revision.
             setForm((prev) => ({
               ...prev,
               name: draft.form?.name ?? prev.name,
@@ -179,7 +203,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
             nextMilestones = Array.isArray(draft.plannedMilestones) ? draft.plannedMilestones : nextMilestones;
             setShowPlanEditor(!!draft.showPlanEditor);
           } catch {
-            safeStorage.remove(getEditDraftKey(project.id));
+            setDraftBlocked(true); // Preserve unverified/corrupt original; never guess or erase ownership.
           }
         }
 
@@ -190,13 +214,13 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
         setExpandedPhaseIds(new Set(nextPhases.map((p) => p.id)));
         setPlanLoaded(true);
       } catch {
-        setPlanLoaded(false);
+        if (tokenStore.sameLogin(session)) setPlanLoaded(false);
       } finally {
-        setLoadingPlan(false);
+        if (tokenStore.sameLogin(session)) setLoadingPlan(false);
       }
     };
     loadProjectDetail();
-  }, [project?.id]);
+  }, [project?.id, auth.status, auth.user?.id, generation]);
 
   useEffect(() => {
     setParticipantIds((prev) => prev.filter((id) => id !== form.managerId));
@@ -239,41 +263,28 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
     if (!project) return;
     setSaving(true);
     try {
-      // 从阶段结构展开成平铺任务列表
-      const flatTasks = plannedPhases.flatMap((phase) =>
-        phase.tasks.map((t) => ({
-          title: t.title,
-          priority: t.priority || '中',
-          status: t.status || 'NOT_STARTED',
-          phase: phase.name || null,
-          phaseId: phase.id || null,
-          phaseOrder: phase.order ?? null,
-          dueDate: t.dueDate ? new Date(t.dueDate).toISOString() : null,
-          assigneeId: form.managerId || undefined,
-        }))
-      );
-
+      if (!ownsSource() || !original.current || draftBlocked) throw Error('账号或草稿基线已变化，请重新核对');
+      const flatTasks = plannedPhases.flatMap(phase => phase.tasks.map(t => ({
+        id: t.id, title: t.title, priority: t.priority || 'MEDIUM', status: t.status || 'NOT_STARTED',
+        phaseId: t.phaseId || null, dueDate: t.dueDate || null, assigneeId: t.assigneeId ?? null,
+      })));
+      const childEdit = planLoaded ? buildProjectChildEdit(original.current, flatTasks, plannedMilestones) : null;
       const payload = {
         name:      form.name,
         type:      form.type ? normalizeProjectType(form.type) : undefined,
         status:    form.status    || undefined,
-        position:  form.position  || undefined,
-        managerId: form.managerId || undefined,
+        positioning: form.position || undefined,
+        managerId: form.managerId && form.managerId !== original.current.managerId ? form.managerId : undefined,
+        baseUpdatedAt: original.current.updatedAt,
         participantIds,
         startDate: form.startDate || null,
         endDate:   form.endDate   || null,
         templateId: form.templateId || undefined,
-        ...(planLoaded ? {
-          tasks: flatTasks,
-          milestones: plannedMilestones.map((m) => ({
-            name: m.name,
-            date: m.date ? new Date(m.date).toISOString() : null,
-            status: m.status || '待完成',
-          })),
-        } : {}),
+        ...(childEdit ?? {}),
       };
       await projectAPI.update(project.id, payload);
-      safeStorage.remove(getEditDraftKey(project.id));
+      if (!ownsSource()) return;
+      safeStorage.remove(getEditDraftKey(project.id, sourceOwner.current!.actorId));
       onSaved();
       onClose();
     } catch (err: any) {
@@ -283,7 +294,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
     }
   };
 
-  if (!project) return null;
+  if (!project || auth.status !== 'authenticated' || !ownsSource()) return null;
 
   const selectedTemplate = templates.find((t: any) => t.id === form.templateId);
 
@@ -337,9 +348,10 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
           status: t.status || 'NOT_STARTED',
           phase: phaseName,
           phaseId: t.phaseId || '',
-          phaseOrder: t.phaseOrder ?? null,
+          phaseOrder: t.phase?.sortOrder ?? null,
           estimatedDays: t.estimatedDays ?? 3,
           dueDate: t.dueDate ? String(t.dueDate).slice(0, 10) : '',
+          assigneeId: t.assigneeId ?? null,
         });
       });
 
@@ -356,7 +368,8 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
       setPlannedMilestones(milestones.map((m: any, idx: number) => ({
         id: `tpl_m_${idx}_${Date.now()}`,
         name: m.name || `里程碑 ${idx + 1}`,
-        date: m.date ? String(m.date).slice(0, 10) : '',
+        date: m.dueDate ? String(m.dueDate).slice(0, 10) : '',
+          phaseId: m.phaseId ?? null,
         status: m.status || '待完成',
       })));
       setExpandedPhaseIds(new Set(phases.map((p) => p.id)));
@@ -451,8 +464,12 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
   };
 
   const saveDraft = () => {
-    if (!project?.id) return;
+    if (!project?.id || !ownsSource() || !original.current || draftBlocked) return;
     const draft = {
+      ownerId: sourceOwner.current!.actorId,
+      datasetEpoch: tokenStore.datasetEpoch(),
+      baseUpdatedAt: original.current.updatedAt,
+      snapshot: original.current,
       projectId: project.id,
       form,
       participantIds,
@@ -461,7 +478,7 @@ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) 
       showPlanEditor,
       savedAt: Date.now(),
     };
-    safeStorage.set(getEditDraftKey(project.id), JSON.stringify(draft));
+    safeStorage.set(getEditDraftKey(project.id, sourceOwner.current?.actorId ?? 'unverified'), JSON.stringify(draft));
     alert('已暂存草稿，可稍后继续编辑');
   };
 

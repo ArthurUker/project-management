@@ -1,3 +1,5 @@
+import { applyProjectChildren } from '../modules/projects/projectChildren.js';
+import { registrationActor as currentProjectActor } from '../modules/projects/registrationAccess.js';
 import { Hono } from 'hono';
 import { prisma } from '../platform/db/client.js';
 import { authenticate as authMiddleware, requirePermission, getAuth } from '../kernel/rbac.js';
@@ -5,6 +7,10 @@ import { pickAllowed, pickForCreate } from '../kernel/massAssign.js';
 import { AUDIT_ACTIONS } from '../kernel/constants.js';
 import { writeAudit } from '../kernel/audit.js';
 import { nextCode } from '../kernel/sequence.js';
+import { assertActionPermission } from '../modules/access/writeGuards.js';
+import { assertProjectStatusTransition, PROJECT_STATUS_TRANSITIONS, transferProjectManager, managerTransferId } from '../modules/projects/projectCommands.js';
+import { withIdempotency, resolveIdempotencyKey } from '../platform/idempotency/receipts.js';
+import { writeAuditStrict } from '../platform/audit/strictAudit.js';
 import {
   resolveProjectAccess,
   assertProjectCapability,
@@ -29,17 +35,25 @@ const projects = new Hono();
 
 projects.use('*', authMiddleware);
 
-// ── 状态机：允许的迁移路径（英文枚举；与前端 statusColors.ts 同步更新）────────
-const STATUS_TRANSITIONS = {
-  PLANNING: ['IN_PROGRESS', 'ARCHIVED', 'CANCELLED'],
-  IN_PROGRESS: ['PENDING_PROCESSING', 'PENDING_VERIFICATION', 'ON_HOLD', 'COMPLETED', 'ARCHIVED'],
-  PENDING_PROCESSING: ['IN_PROGRESS', 'PENDING_VERIFICATION', 'ARCHIVED'],
-  PENDING_VERIFICATION: ['IN_PROGRESS', 'COMPLETED', 'ARCHIVED'],
-  ON_HOLD: ['IN_PROGRESS', 'ARCHIVED', 'CANCELLED'],
-  COMPLETED: ['ARCHIVED'],
-  ARCHIVED: ['PLANNING'],
-  CANCELLED: [],
-};
+/** Ordinary project list/statistics combine visibility with the live-row scope. */
+function activeProjectVisibilityWhere(auth) {
+  return {
+    AND: [
+      projectVisibilityFilter(auth) ?? {},
+      { deletedAt: null },
+    ],
+  };
+}
+
+/** Business fields are loaded separately from the narrow authorization projection. */
+async function loadProjectBusinessSnapshot(id, select) {
+  const project = await prisma.project.findFirst({
+    where: { id, deletedAt: null },
+    select,
+  });
+  if (!project) throw notFound('PROJECT_NOT_FOUND', '项目不存在');
+  return project;
+}
 
 // 旧中文状态 → 新枚举（仅用于入参归一化，数据库中禁止出现中文状态值）
 const LEGACY_STATUS_MAP = {
@@ -104,6 +118,157 @@ function normalizeTaskInput(t, idx) {
   };
 }
 
+const TASK_STATUSES = new Set(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'BLOCKED', 'CANCELLED']);
+const TASK_PRIORITIES = new Set(['LOW', 'MEDIUM', 'HIGH', 'URGENT']);
+const TASK_TYPES = new Set([
+  'CLASSIFICATION', 'STRATEGY', 'REGISTRATION_DOSSIER', 'LABELING', 'QMS',
+  'CLINICAL_EVALUATION', 'CLINICAL_EVALUATION_EXEMPTION', 'CLINICAL_TRIAL',
+  'ANALYTICAL_VALIDATION', 'PERFORMANCE_VALIDATION', 'SOFTWARE', 'SUBMISSION',
+  'POST_MARKET', 'DESIGN_INPUT', 'DESIGN_OUTPUT', 'PRODUCTION', 'STABILITY', 'OTHER',
+]);
+const TASK_APPLICABILITIES = new Set(['REQUIRED', 'CONDITIONAL', 'NOT_APPLICABLE', 'TO_BE_CONFIRMED']);
+const REGULATORY_PRIORITIES = new Set(['P0', 'P1', 'P2', 'P3', 'P4']);
+
+function isRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function parseOptionalDate(value, field) {
+  if (value === undefined || value === null || value === '') return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) throw badRequest('VALIDATION_ERROR', `${field} 日期无效`);
+  return date;
+}
+
+/**
+ * RP04-T02 / B18（LR2-02）：顶层标量在 normalize 与 ORM **之前**受控检查。
+ *
+ * 目的：subtype 对象、type 数组、boolean 日期等非法输入必须明确 400，
+ * 既不能进 Prisma 后 500，也不能被 String()/new Date() 静默强制成合法值
+ * （`String(['TESTING']) === 'TESTING'`、`new Date(false) === 1970-01-01`）。
+ *
+ * 边界按当前客户端与 DTO 的实际调用登记：日期为 ISO 字符串或 null/''；
+ * 数字 epoch 不在当前契约内（若需支持须另行批准）。metadata 维持 JSON 合同，不加新约束。
+ */
+const TOP_LEVEL_STRING_FIELDS = ['name', 'type', 'subtype', 'positioning', 'managerId', 'templateId'];
+
+function assertTopLevelScalar(value, field) {
+  if (value === undefined || value === null) return;
+  if (typeof value !== 'string') throw badRequest('VALIDATION_ERROR', `${field} 必须是字符串`, { field });
+}
+
+function parseTopLevelDate(value, field) {
+  if (value === undefined || value === null || value === '') return null;
+  if (typeof value !== 'string') {
+    throw badRequest('VALIDATION_ERROR', `${field} 必须是字符串日期`, { field });
+  }
+  return parseOptionalDate(value, field);
+}
+
+function assertTopLevelProjectScalars(raw) {
+  for (const field of TOP_LEVEL_STRING_FIELDS) assertTopLevelScalar(raw[field], field);
+  if (raw.isDraft !== undefined && typeof raw.isDraft !== 'boolean') {
+    throw badRequest('VALIDATION_ERROR', 'isDraft 必须是布尔值', { field: 'isDraft' });
+  }
+  if (raw.startDate !== undefined) parseTopLevelDate(raw.startDate, 'startDate');
+  if (raw.endDate !== undefined) parseTopLevelDate(raw.endDate, 'endDate');
+}
+
+/** Validate the whole aggregate command before allocating a sequence or writing rows. */
+function validateProjectCreateCommand(raw, auth) {
+  if (!isRecord(raw)) throw badRequest('VALIDATION_ERROR', '创建项目: 请求体必须是 JSON 对象');
+  assertTopLevelProjectScalars(raw);
+  if (Object.prototype.hasOwnProperty.call(raw, 'code')) {
+    throw badRequest('VALIDATION_ERROR', 'code 由服务端统一发号，禁止客户端提交');
+  }
+  const data = pickForCreate(raw, [
+    'name', 'type', 'subtype', 'positioning', 'managerId', 'startDate', 'endDate',
+    'templateId', 'isDraft', 'metadata',
+  ], raw.isDraft === true ? [] : ['name'], { entityLabel: '创建项目' });
+  const tasks = raw.tasks ?? [];
+  const milestones = raw.milestones ?? [];
+  const participantIds = raw.participantIds ?? [];
+  if (!Array.isArray(tasks) || !tasks.every(isRecord)) throw badRequest('VALIDATION_ERROR', 'tasks 必须是对象数组');
+  if (!Array.isArray(milestones) || !milestones.every(isRecord)) throw badRequest('VALIDATION_ERROR', 'milestones 必须是对象数组');
+  if (!Array.isArray(participantIds) || !participantIds.every((id) => typeof id === 'string' && id.trim())) {
+    throw badRequest('VALIDATION_ERROR', 'participantIds 必须是非空字符串数组');
+  }
+  if (data.type !== undefined && !normalizeProjectType(data.type)) throw badRequest('VALIDATION_ERROR', '项目类型无效');
+  if (data.name !== undefined && (typeof data.name !== 'string' || !data.name.trim())) throw badRequest('VALIDATION_ERROR', '项目名称无效');
+  for (const field of ['managerId', 'templateId']) {
+    if (data[field] !== undefined && data[field] !== null && typeof data[field] !== 'string') {
+      throw badRequest('VALIDATION_ERROR', `${field} 无效`);
+    }
+  }
+  if (data.isDraft !== undefined && typeof data.isDraft !== 'boolean') throw badRequest('VALIDATION_ERROR', 'isDraft 必须是布尔值');
+  data.startDate = parseOptionalDate(data.startDate, 'startDate');
+  data.endDate = parseOptionalDate(data.endDate, 'endDate');
+  if (data.startDate && data.endDate && data.endDate < data.startDate) {
+    throw badRequest('VALIDATION_ERROR', 'endDate 不能早于 startDate');
+  }
+  const managerId = data.managerId || auth.userId;
+  const normalizedTasks = tasks.map((task, idx) => {
+    const taskStringFields = [
+      'title', 'description', 'status', 'priority', 'taskType', 'applicability',
+      'applicabilityStatus', 'regulatoryPriority', 'expectedDeliverable', 'regulatoryNotes',
+      'assigneeId', 'phaseId', 'phaseKey',
+    ];
+    for (const field of taskStringFields) {
+      if (task[field] !== undefined && task[field] !== null && typeof task[field] !== 'string') {
+        throw badRequest('VALIDATION_ERROR', `tasks[${idx}].${field} 必须是字符串`);
+      }
+    }
+    for (const field of ['sortOrder', 'phaseOrder']) {
+      if (task[field] !== undefined && task[field] !== null
+        && (!Number.isInteger(task[field]) || task[field] < 0)) {
+        throw badRequest('VALIDATION_ERROR', `tasks[${idx}].${field} 无效`);
+      }
+    }
+    if (task.dueDate !== undefined && task.dueDate !== null && task.dueDate !== ''
+      && typeof task.dueDate !== 'string' && typeof task.dueDate !== 'number') {
+      throw badRequest('VALIDATION_ERROR', `tasks[${idx}].dueDate 无效`);
+    }
+    const item = normalizeTaskInput(task, idx);
+    if (typeof item.title !== 'string' || !item.title.trim()) throw badRequest('VALIDATION_ERROR', `tasks[${idx}].title 无效`);
+    if (!TASK_STATUSES.has(item.status)) throw badRequest('VALIDATION_ERROR', `tasks[${idx}].status 无效`);
+    if (!TASK_PRIORITIES.has(item.priority)) throw badRequest('VALIDATION_ERROR', `tasks[${idx}].priority 无效`);
+    if (item.taskType !== null && !TASK_TYPES.has(item.taskType)) throw badRequest('VALIDATION_ERROR', `tasks[${idx}].taskType 无效`);
+    if (!TASK_APPLICABILITIES.has(item.applicability)) throw badRequest('VALIDATION_ERROR', `tasks[${idx}].applicability 无效`);
+    if (item.regulatoryPriority !== null && !REGULATORY_PRIORITIES.has(item.regulatoryPriority)) throw badRequest('VALIDATION_ERROR', `tasks[${idx}].regulatoryPriority 无效`);
+    for (const [field, value] of Object.entries({ description: item.description, expectedDeliverable: item.expectedDeliverable, regulatoryNotes: item.regulatoryNotes })) {
+      if (value !== null && typeof value !== 'string') throw badRequest('VALIDATION_ERROR', `tasks[${idx}].${field} 无效`);
+    }
+    if (item.phaseKey !== null && (typeof item.phaseKey !== 'string' || !item.phaseKey.trim())) throw badRequest('VALIDATION_ERROR', `tasks[${idx}].phaseId 无效`);
+    if (item.assigneeId !== null && typeof item.assigneeId !== 'string') throw badRequest('VALIDATION_ERROR', `tasks[${idx}].assigneeId 无效`);
+    if (!Number.isInteger(item.sortOrder) || item.sortOrder < 0) throw badRequest('VALIDATION_ERROR', `tasks[${idx}].sortOrder 无效`);
+    item.dueDate = parseOptionalDate(task.dueDate, `tasks[${idx}].dueDate`);
+    item.assigneeId ||= managerId;
+    return item;
+  });
+  const normalizedMilestones = milestones.map((milestone, idx) => {
+    if (typeof milestone.name !== 'undefined' && typeof milestone.name !== 'string') {
+      throw badRequest('VALIDATION_ERROR', `milestones[${idx}].name 无效`);
+    }
+    const status = normalizeStatus(milestone.status) || 'NOT_STARTED';
+    if (!TASK_STATUSES.has(status)) throw badRequest('VALIDATION_ERROR', `milestones[${idx}].status 无效`);
+    const phaseKey = milestone.phaseId || milestone.phaseKey || null;
+    if (phaseKey !== null && (typeof phaseKey !== 'string' || !phaseKey.trim())) throw badRequest('VALIDATION_ERROR', `milestones[${idx}].phaseId 无效`);
+    return { name: milestone.name?.trim() || '未命名里程碑', dueDate: parseOptionalDate(milestone.date ?? milestone.dueDate, `milestones[${idx}].date`), status, phaseKey };
+  });
+  const phaseKeys = [...new Set([...normalizedTasks.map((t) => t.phaseKey), ...normalizedMilestones.map((m) => m.phaseKey)].filter(Boolean))];
+  const userIds = [...new Set([auth.userId, managerId, ...participantIds, ...normalizedTasks.map((t) => t.assigneeId).filter(Boolean)])];
+  return {
+    data,
+    isDraft: data.isDraft === true,
+    managerId,
+    tasks: normalizedTasks,
+    milestones: normalizedMilestones,
+    participantIds: [...new Set(participantIds)],
+    phaseKeys,
+    userIds,
+  };
+}
+
 // ── 列表（projects.view；非 SUPER_ADMIN 按成员/负责人过滤）──────────────────
 projects.get('/', requirePermission('projects.view'), async (c) => {
   const auth = getAuth(c);
@@ -111,7 +276,7 @@ projects.get('/', requirePermission('projects.view'), async (c) => {
     page = 1, pageSize = 50, type, status, managerId, subtype, keyword, includeRegistration,
   } = c.req.query();
 
-  const where = projectVisibilityFilter(auth) ?? {};
+  const where = activeProjectVisibilityWhere(auth);
 
   // 旧口径 NOT type='项目注册管理' → 新口径：注册类项目以 subtype='registration' 标识
   // ⚠️ SQL NULL 语义：`subtype <> 'registration'` 会排除 subtype IS NULL 的行，
@@ -190,7 +355,7 @@ projects.get('/:id', requirePermission('projects.view'), async (c) => {
     ...project,
     myRole: access.memberRole,
     myCapabilities: access.capabilities,
-    allowedTransitions: STATUS_TRANSITIONS[project.status] ?? [],
+    allowedTransitions: PROJECT_STATUS_TRANSITIONS[project.status] ?? [],
   });
 });
 
@@ -198,109 +363,121 @@ projects.get('/:id', requirePermission('projects.view'), async (c) => {
 projects.post('/', requirePermission('projects.create'), async (c) => {
   const auth = getAuth(c);
   const raw = await c.req.json().catch(() => null);
-  if (raw && typeof raw === 'object' && 'code' in raw) {
-    throw badRequest('VALIDATION_ERROR', 'code 由服务端统一发号，禁止客户端提交');
-  }
-  const data = pickForCreate(raw, [
-    'name', 'type', 'subtype', 'positioning', 'managerId', 'startDate', 'endDate',
-    'templateId', 'isDraft', 'metadata',
-  ], raw?.isDraft === true ? [] : ['name'], { entityLabel: '创建项目' });
-
-  const isDraft = data.isDraft === true;
-  const managerId = data.managerId || auth.userId;
-  const year = new Date().getFullYear();
-  const code = await nextCode(prisma, 'PROJECT', { periodKey: String(year), fallbackPrefix: `PRJ-${year}-`, padding: 3 });
-
-  const { tasks = [], milestones = [], participantIds = [], ...projectData } = raw ?? {};
-  const project = await prisma.project.create({
-    data: {
-      ...data,
-      name: data.name || `未命名草稿-${new Date().toISOString().slice(0, 10)}`,
-      type: normalizeProjectType(data.type) || 'CUSTOMIZATION',
-      status: 'PLANNING',
-      isDraft,
-      code,
-      managerId,
-      startDate: data.startDate ? new Date(data.startDate) : null,
-      endDate: data.endDate ? new Date(data.endDate) : null,
-      createdById: auth.userId,
-      // 创建者固定为 OWNER 成员；负责人若非创建者，追加 MANAGER 成员
-      members: {
-        create: [
-          { userId: auth.userId, role: 'OWNER', createdById: auth.userId },
-          ...(managerId !== auth.userId ? [{ userId: managerId, role: 'MANAGER', createdById: auth.userId }] : []),
-          ...(Array.isArray(participantIds)
-            ? participantIds
-              .filter((uid) => typeof uid === 'string' && uid && uid !== auth.userId && uid !== managerId)
-              .map((uid) => ({ userId: uid, role: 'MEMBER', createdById: auth.userId }))
-            : []),
-        ],
-      },
+  // Auth and permission middleware run before receipt lookup; malformed commands
+  // are rejected before code allocation or any aggregate write.
+  const command = validateProjectCreateCommand(raw, auth);
+  const { key } = resolveIdempotencyKey(c, raw);
+  if (key && key.length > 200) throw badRequest('VALIDATION_ERROR', '幂等键长度不能超过 200 个字符');
+  const payload = {
+    ...command.data,
+    startDate: command.data.startDate?.toISOString() ?? null,
+    endDate: command.data.endDate?.toISOString() ?? null,
+    managerId: command.managerId,
+    tasks: command.tasks.map((task) => ({ ...task, dueDate: task.dueDate?.toISOString() ?? null })),
+    milestones: command.milestones.map((milestone) => ({ ...milestone, dueDate: milestone.dueDate?.toISOString() ?? null })),
+    participantIds: command.participantIds,
+  };
+  const result = await withIdempotency({
+    db: prisma,
+    actor: { userId: auth.userId },
+    command: 'POST /api/projects',
+    resourceScope: 'projects:create',
+    idempotencyKey: key,
+    payload,
+    validate: async (tx) => {
+      const users = await tx.user.findMany({ where: { id: { in: command.userIds } }, select: { id: true } });
+      const found = new Set(users.map((user) => user.id));
+      const missingUsers = command.userIds.filter((id) => !found.has(id));
+      if (missingUsers.length) throw badRequest('VALIDATION_ERROR', '负责人、参与者或任务负责人不存在');
+      if (command.data.templateId) {
+        const template = await tx.projectTemplate.findFirst({ where: { id: command.data.templateId, deletedAt: null }, select: { id: true } });
+        if (!template) throw badRequest('VALIDATION_ERROR', '项目模板不存在');
+      }
+      return true;
     },
-    include: { manager: MANAGER_SELECT },
-  });
-
-  // 批量创建任务 / 里程碑（旧中文枚举归一化）
-  if (Array.isArray(tasks) && tasks.length > 0) {
-    const phaseKeySet = [...new Set(tasks.map((t) => t.phaseId || t.phaseKey).filter(Boolean))];
-    const phaseIdByKey = new Map();
-    if (phaseKeySet.length > 0) {
-      const phaseRows = await prisma.projectPhase.createManyAndReturn?.({
-        data: phaseKeySet.map((key, idx) => ({
-          projectId: project.id, code: `PH-${code}-${idx + 1}`, name: key, sortOrder: idx,
-        })),
-      });
-      for (const row of phaseRows ?? []) phaseIdByKey.set(row.name, row.id);
-    }
-    await prisma.task.createMany({
-      data: tasks.map((t, idx) => {
-        const nt = normalizeTaskInput(t, idx);
-        return {
-          projectId: project.id,
-          title: nt.title,
-          description: nt.description,
-          status: nt.status,
-          priority: nt.priority,
-          taskType: nt.taskType,
-          applicability: nt.applicability,
-          regulatoryPriority: nt.regulatoryPriority,
-          expectedDeliverable: nt.expectedDeliverable,
-          regulatoryNotes: nt.regulatoryNotes,
-          dueDate: nt.dueDate,
-          assigneeId: nt.assigneeId || managerId,
-          phaseId: phaseIdByKey.get(nt.phaseKey) ?? null,
-          sortOrder: nt.sortOrder,
+    execute: async (tx) => {
+      const year = new Date().getFullYear();
+      const code = await nextCode(tx, 'PROJECT', { periodKey: String(year), fallbackPrefix: `PRJ-${year}-`, padding: 3 });
+      const members = [
+        { userId: auth.userId, role: 'OWNER', createdById: auth.userId },
+        ...(command.managerId !== auth.userId ? [{ userId: command.managerId, role: 'MANAGER', createdById: auth.userId }] : []),
+        ...command.participantIds
+          .filter((uid) => uid !== auth.userId && uid !== command.managerId)
+          .map((uid) => ({ userId: uid, role: 'MEMBER', createdById: auth.userId })),
+      ];
+      const project = await tx.project.create({
+        data: {
+          ...command.data,
+          name: command.data.name || `未命名草稿-${new Date().toISOString().slice(0, 10)}`,
+          type: normalizeProjectType(command.data.type) || 'CUSTOMIZATION',
+          status: 'PLANNING',
+          isDraft: command.isDraft,
+          code,
+          managerId: command.managerId,
           createdById: auth.userId,
-        };
-      }),
-    });
-  }
-  if (Array.isArray(milestones) && milestones.length > 0) {
-    await prisma.milestone.createMany({
-      data: milestones.map((m) => ({
-        projectId: project.id,
-        name: m.name || '未命名里程碑',
-        phaseId: m.phaseId || null,
-        dueDate: m.date ? new Date(m.date) : new Date(),
-        status: normalizeStatus(m.status) || 'NOT_STARTED',
-        createdById: auth.userId,
-      })),
-    });
-  }
+          members: { create: members },
+        },
+        include: { manager: MANAGER_SELECT },
+      });
 
-  await writeAudit(prisma, {
-    c,
-    actorId: auth.userId,
-    actorName: auth.user.displayName,
-    actorRole: auth.systemRole,
-    action: AUDIT_ACTIONS.CREATE,
-    entityType: 'PROJECT',
-    entityId: project.id,
-    entityLabel: project.name,
-    after: { code: project.code, name: project.name },
-    metadata: { permissionCode: 'projects.create' },
+      const phaseIdByKey = new Map();
+      for (const [idx, key] of command.phaseKeys.entries()) {
+        const phase = await tx.projectPhase.create({
+          data: { projectId: project.id, code: `PH-${code}-${idx + 1}`, name: key, sortOrder: idx, createdById: auth.userId },
+          select: { id: true },
+        });
+        phaseIdByKey.set(key, phase.id);
+      }
+      if (command.tasks.length) {
+        await tx.task.createMany({
+          data: command.tasks.map((task) => ({
+            projectId: project.id,
+            title: task.title.trim(),
+            description: task.description,
+            status: task.status,
+            priority: task.priority,
+            taskType: task.taskType,
+            applicability: task.applicability,
+            regulatoryPriority: task.regulatoryPriority,
+            expectedDeliverable: task.expectedDeliverable,
+            regulatoryNotes: task.regulatoryNotes,
+            dueDate: task.dueDate,
+            assigneeId: task.assigneeId,
+            phaseId: phaseIdByKey.get(task.phaseKey) ?? null,
+            sortOrder: task.sortOrder,
+            createdById: auth.userId,
+          })),
+        });
+      }
+      if (command.milestones.length) {
+        await tx.milestone.createMany({
+          data: command.milestones.map((milestone) => ({
+            projectId: project.id,
+            name: milestone.name,
+            phaseId: milestone.phaseKey ? phaseIdByKey.get(milestone.phaseKey) : null,
+            dueDate: milestone.dueDate || new Date(),
+            status: milestone.status,
+            createdById: auth.userId,
+          })),
+        });
+      }
+      await writeAuditStrict(tx, {
+        c,
+        actorId: auth.userId,
+        actorName: auth.user.displayName,
+        actorRole: auth.systemRole,
+        action: AUDIT_ACTIONS.CREATE,
+        entityType: 'PROJECT',
+        entityId: project.id,
+        entityLabel: project.name,
+        after: { code: project.code, name: project.name },
+        metadata: { permissionCode: 'projects.create' },
+      });
+      return { status: 201, body: project };
+    },
   });
-  return c.json(project, 201);
+  if (result.replayed) c.header('Idempotency-Replayed', 'true');
+  return c.json(result.body, result.status);
 });
 
 // ── 更新（projects.update + ∩ write；状态流转走 transition；归档需 projects.archive）─
@@ -311,6 +488,7 @@ projects.put('/:id', requirePermission('projects.update'), async (c) => {
 
   const access = await resolveProjectAccess(prisma, auth, id);
   await auditElevatedIfNeeded(prisma, c, access, 'projects.update');
+  const businessSnapshot = await loadProjectBusinessSnapshot(id, { status: true });
 
   const participantIds = Array.isArray(raw?.participantIds) ? raw.participantIds : null;
   const tasksInput = Array.isArray(raw?.tasks) ? raw.tasks : null;
@@ -319,7 +497,7 @@ projects.put('/:id', requirePermission('projects.update'), async (c) => {
   const data = pickAllowed(raw, [
     'name', 'positioning', 'status', 'managerId', 'startDate', 'endDate',
     'type', 'subtype', 'isDraft', 'metadata',
-  ], { entityLabel: '更新项目' });
+  ], { entityLabel: '更新项目', allowEmpty: ['tasks','milestones','deletedTaskIds','deletedMilestoneIds'].some(key => Object.hasOwn(raw ?? {}, key)) });
 
   // 类型规范化（同创建）：中文别名→枚举；非法值丢弃而非报错，避免覆盖既有类型
   if ('type' in data) {
@@ -328,19 +506,14 @@ projects.put('/:id', requirePermission('projects.update'), async (c) => {
     else delete data.type;
   }
 
-  if (data.status) {
-    const toStatus = normalizeStatus(data.status);
-    if (toStatus !== access.project.status) {
-      // 归档为独立 P0 权限
-      if (toStatus === 'ARCHIVED' && !auth.permissions.includes('projects.archive')) {
-        throw badRequest('PERMISSION_DENIED', '归档项目需要 projects.archive 权限');
-      }
-      const allowed = STATUS_TRANSITIONS[access.project.status] ?? [];
-      if (!allowed.includes(toStatus)) {
-        throw badRequest('INVALID_STATUS_TRANSITION',
-          `状态不可从 ${access.project.status} 变更为 ${toStatus}`,
-          { current: access.project.status, allowedTransitions: allowed });
-      }
+  if (data.status !== undefined) {
+    const toStatus = assertProjectStatusTransition({
+      actor: auth,
+      access,
+      currentStatus: businessSnapshot.status,
+      nextStatus: normalizeStatus(data.status),
+    });
+    if (toStatus !== businessSnapshot.status) {
       data.status = toStatus;
     } else {
       delete data.status;
@@ -348,41 +521,50 @@ projects.put('/:id', requirePermission('projects.update'), async (c) => {
   }
   if (data.startDate !== undefined) data.startDate = data.startDate ? new Date(data.startDate) : null;
   if (data.endDate !== undefined) data.endDate = data.endDate ? new Date(data.endDate) : null;
-  if (Object.keys(data).length === 0 && !participantIds && !tasksInput && !milestonesInput) {
+  if (Object.keys(data).length === 0 && !participantIds && !tasksInput && !milestonesInput && raw?.deletedTaskIds === undefined && raw?.deletedMilestoneIds === undefined) {
     throw badRequest('NO_VALID_FIELDS', '更新项目: 没有可写入的有效字段');
   }
 
+  const requestedManagerId = data.managerId !== undefined ? managerTransferId(data.managerId) : undefined;
+  delete data.managerId;
   await prisma.$transaction(async (tx) => {
-    // write 能力不足时仅允许不动核心字段的场景——统一按 write 断言
-    assertProjectCapability(access, 'write', 'projects.update');
-
-    await tx.project.update({ where: { id }, data: { ...data, updatedById: auth.userId } });
-
-    const effectiveManagerId = data.managerId || access.project.managerId;
-    if (data.managerId && data.managerId !== access.project.managerId) {
-      await tx.projectMember.upsert({
-        where: { projectId_userId: { projectId: id, userId: data.managerId } },
-        update: { role: 'MANAGER', leftAt: null },
-        create: { projectId: id, userId: data.managerId, role: 'MANAGER', createdById: auth.userId },
-      });
-      await tx.projectMember.updateMany({
-        where: { projectId: id, userId: access.project.managerId, role: 'MANAGER' },
-        data: { role: 'MEMBER' },
-      });
-    } else if (effectiveManagerId) {
-      await tx.projectMember.upsert({
-        where: { projectId_userId: { projectId: id, userId: effectiveManagerId } },
-        update: { leftAt: null },
-        create: { projectId: id, userId: effectiveManagerId, role: 'MANAGER', createdById: auth.userId },
-      });
+    const childCommand = ['tasks','milestones','deletedTaskIds','deletedMilestoneIds'].some(key => Object.hasOwn(raw, key));
+    let currentAuth = auth, currentAccess = access;
+    if (childCommand) {
+      const targetId = requestedManagerId ?? auth.userId;
+      await tx.$queryRaw`SELECT id FROM users WHERE id IN (${auth.userId}, ${targetId}) ORDER BY id FOR UPDATE`;
+      await tx.$queryRaw`SELECT id FROM projects WHERE id = ${id} FOR UPDATE`;
+      currentAuth = await currentProjectActor(tx, auth);
+      assertActionPermission(currentAuth, 'projects.update');
+      currentAccess = await resolveProjectAccess(tx, currentAuth, id);
+      assertProjectCapability(currentAccess, 'write', 'projects.update');
+      if (data.status !== undefined) {
+        const current = await tx.project.findUniqueOrThrow({ where: { id } });
+        data.status = assertProjectStatusTransition({ actor: currentAuth, access: currentAccess, currentStatus: current.status, nextStatus: data.status });
+      }
+      // Child delta uses the original project base before any parent-field update.
+      await applyProjectChildren(tx, { actor: currentAuth, access: currentAccess, projectId: id, body: raw, c });
     }
+    assertProjectCapability(currentAccess, 'write', 'projects.update');
+    const effectiveManagerId = requestedManagerId ?? currentAccess.project.managerId;
+    if (requestedManagerId && requestedManagerId !== currentAccess.project.managerId) {
+      await transferProjectManager(tx, { actor: currentAuth, projectId: id, managerId: requestedManagerId,
+        expectedUpdatedAt: raw?.baseUpdatedAt, entryPermission: 'projects.update', fields: data, c });
+    } else await tx.project.update({ where: { id }, data: { ...data, updatedById: currentAuth.userId } });
 
     // 同步参与人（前端传 participantIds 时生效）
     if (participantIds) {
-      assertProjectCapability(access, 'manage_members', 'projects.manage_members');
+      assertProjectCapability(currentAccess, 'manage_members', 'projects.manage_members');
       const normalized = [...new Set(participantIds.filter((uid) => typeof uid === 'string' && uid && uid !== effectiveManagerId))];
       const desired = new Set([effectiveManagerId, ...normalized].filter(Boolean));
-      const existing = await tx.projectMember.findMany({ where: { projectId: id }, select: { userId: true } });
+      const existing = await tx.projectMember.findMany({ where: { projectId: id }, select: { userId: true, role: true, leftAt: true } });
+      // A transfer never implicitly removes the previous manager or active owners.
+      // Explicit membership-removal commands remain separate from this combined edit.
+      if (requestedManagerId && requestedManagerId !== currentAccess.project.managerId) {
+        for (const member of existing) {
+          if (!member.leftAt && (member.role === 'OWNER' || member.userId === currentAccess.project.managerId)) desired.add(member.userId);
+        }
+      }
       const existingIds = existing.map((m) => m.userId);
       const toRemove = existingIds.filter((uid) => !desired.has(uid));
       const toAdd = [...desired].filter((uid) => !existingIds.includes(uid));
@@ -391,7 +573,7 @@ projects.put('/:id', requirePermission('projects.update'), async (c) => {
       }
       if (toAdd.length > 0) {
         await tx.projectMember.createMany({
-          data: toAdd.map((uid) => ({ projectId: id, userId: uid, role: uid === effectiveManagerId ? 'MANAGER' : 'MEMBER', createdById: auth.userId })),
+          data: toAdd.map((uid) => ({ projectId: id, userId: uid, role: uid === effectiveManagerId ? 'MANAGER' : 'MEMBER', createdById: currentAuth.userId })),
         });
       }
       if (normalized.length > 0) {
@@ -399,60 +581,7 @@ projects.put('/:id', requirePermission('projects.update'), async (c) => {
       }
     }
 
-    // 任务数组重建（旧中文枚举归一化；phase 字符串 → ProjectPhase 行）
-    if (tasksInput) {
-      assertProjectCapability(access, 'write', 'tasks.update');
-      await tx.task.deleteMany({ where: { projectId: id } });
-      if (tasksInput.length > 0) {
-        const phaseKeySet = [...new Set(tasksInput.map((t) => t.phaseId || t.phaseKey || t.phase).filter(Boolean))];
-        const phaseIdByKey = new Map();
-        for (const [idx, key] of phaseKeySet.entries()) {
-          const row = await tx.projectPhase.create({
-            data: { projectId: id, code: `PH-${id.slice(0, 8)}-${idx + 1}`, name: key, sortOrder: idx },
-          });
-          phaseIdByKey.set(key, row.id);
-        }
-        await tx.task.createMany({
-          data: tasksInput.map((t, idx) => {
-            const nt = normalizeTaskInput(t, idx);
-            return {
-              projectId: id,
-              title: nt.title,
-              description: nt.description,
-              status: nt.status,
-              priority: nt.priority,
-              taskType: nt.taskType,
-              applicability: nt.applicability,
-              regulatoryPriority: nt.regulatoryPriority,
-              expectedDeliverable: nt.expectedDeliverable,
-              regulatoryNotes: nt.regulatoryNotes,
-              dueDate: nt.dueDate,
-              assigneeId: nt.assigneeId || effectiveManagerId || null,
-              phaseId: phaseIdByKey.get(nt.phaseKey) ?? null,
-              sortOrder: nt.sortOrder,
-              createdById: auth.userId,
-            };
-          }),
-        });
-      }
-    }
 
-    // 里程碑数组重建
-    if (milestonesInput) {
-      await tx.milestone.deleteMany({ where: { projectId: id } });
-      if (milestonesInput.length > 0) {
-        await tx.milestone.createMany({
-          data: milestonesInput.map((m) => ({
-            projectId: id,
-            name: m.name || '未命名里程碑',
-            phaseId: m.phaseId || null,
-            dueDate: m.date ? new Date(m.date) : new Date(),
-            status: normalizeStatus(m.status) || 'NOT_STARTED',
-            createdById: auth.userId,
-          })),
-        });
-      }
-    }
   });
 
   const project = await prisma.project.findUnique({
@@ -632,10 +761,9 @@ projects.get('/:id/phases', requirePermission('project_phases.view'), async (c) 
 // ── 统计（带可见性过滤）──────────────────────────────────────────────────────
 projects.get('/stats/types', requirePermission('projects.view'), async (c) => {
   const auth = getAuth(c);
-  const visible = projectVisibilityFilter(auth);
   const stats = await prisma.project.groupBy({
     by: ['type'],
-    where: visible ?? {},
+    where: activeProjectVisibilityWhere(auth),
     _count: { id: true },
   });
   return c.json(stats.map((s) => ({ type: s.type, count: s._count.id })));
@@ -643,10 +771,9 @@ projects.get('/stats/types', requirePermission('projects.view'), async (c) => {
 
 projects.get('/stats/status', requirePermission('projects.view'), async (c) => {
   const auth = getAuth(c);
-  const visible = projectVisibilityFilter(auth);
   const stats = await prisma.project.groupBy({
     by: ['status'],
-    where: visible ?? {},
+    where: activeProjectVisibilityWhere(auth),
     _count: { id: true },
   });
   return c.json(stats.map((s) => ({ status: s.status, count: s._count.id })));
@@ -662,6 +789,7 @@ projects.post('/:id/apply-template', requirePermission('projects.update'), async
   const access = await resolveProjectAccess(prisma, auth, id);
   await auditElevatedIfNeeded(prisma, c, access, 'projects.update');
   assertProjectCapability(access, 'write', 'projects.update');
+  const businessSnapshot = await loadProjectBusinessSnapshot(id, { startDate: true });
 
   const template = await prisma.projectTemplate.findUnique({
     where: { id: templateId },
@@ -669,7 +797,7 @@ projects.post('/:id/apply-template', requirePermission('projects.update'), async
   });
   if (!template) throw notFound('TEMPLATE_NOT_FOUND', '模板不存在');
 
-  const base = startDate ? new Date(startDate) : (access.project.startDate || new Date());
+  const base = startDate ? new Date(startDate) : (businessSnapshot.startDate || new Date());
   let dayOffset = 0;
 
   const project = await prisma.$transaction(async (tx) => {
@@ -771,7 +899,7 @@ projects.post('/batch-delete', requirePermission('projects.delete'), async (c) =
 });
 
 // 批量更新状态（逐项目 ∩ transition 校验）
-projects.post('/batch-update-status', async (c) => {
+projects.post('/batch-update-status', requirePermission('projects.update'), async (c) => {
   const auth = getAuth(c);
   const { ids, status } = await c.req.json().catch(() => ({}));
   if (!Array.isArray(ids) || ids.length === 0 || !status) {
@@ -786,11 +914,8 @@ projects.post('/batch-update-status', async (c) => {
       // eslint-disable-next-line no-await-in-loop
       await auditElevatedIfNeeded(prisma, c, access, 'projects.update');
     }
-    assertProjectCapability(access, 'transition', 'projects.update');
-    const allowed = STATUS_TRANSITIONS[access.project.status] ?? [];
-    if (!allowed.includes(toStatus)) {
-      throw badRequest('INVALID_STATUS_TRANSITION', `项目 ${access.project.code} 不可从 ${access.project.status} 变更为 ${toStatus}`);
-    }
+    const businessSnapshot = await loadProjectBusinessSnapshot(id, { status: true });
+    assertProjectStatusTransition({ actor: auth, access, currentStatus: businessSnapshot.status, nextStatus: toStatus });
     // eslint-disable-next-line no-await-in-loop
     await prisma.project.update({ where: { id }, data: { status: toStatus, updatedById: auth.userId } });
     updated += 1;

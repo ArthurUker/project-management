@@ -11,8 +11,8 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createApp } from '../../dist/bootstrap/createApp.js';
-import { createStubDb, createStubActor, jsonRequest } from '../helpers/stubDeps.mjs';
+import { createSyncUnitApp as createApp, syncV1JsonRequest as jsonRequest, readSyncResult } from '../helpers/syncV1Fixture.mjs';
+import { createStubDb, createStubActor } from '../helpers/stubDeps.mjs';
 
 const AUTHOR = { userId: 'u1', displayName: '作者' };
 const OTHER = { userId: 'u2', displayName: '他人' };
@@ -209,7 +209,7 @@ test('RF04-U10 同步不得覆盖已审阅汇报的内容（reviewed 锁定）',
   const res = await jsonRequest(app, '/api/sync/push', {
     body: pushChange('reports', 'r1', { content: { hacked: true } }),
   });
-  const body = await res.json();
+  const body = await readSyncResult(res);
 
   assert.equal(body.results[0].status, 'rejected', `已审阅汇报必须拒绝，实际：${JSON.stringify(body.results[0])}`);
   assert.deepEqual(db.state.reports[0].content, {}, '内容不得被同步覆盖');
@@ -225,7 +225,7 @@ test('RF04-U11 同步不得修改他人汇报', async () => {
   const res = await jsonRequest(app, '/api/sync/push', {
     body: pushChange('reports', 'r1', { content: { hacked: true } }),
   });
-  const body = await res.json();
+  const body = await readSyncResult(res);
 
   assert.equal(body.results[0].status, 'rejected');
   assert.deepEqual(db.state.reports[0].content, {});
@@ -241,7 +241,7 @@ test('RF04-U12 同步改任务状态需要 tasks.change_status（无权限则拒
   const res = await jsonRequest(app, '/api/sync/push', {
     body: pushChange('tasks', 't1', { status: 'IN_PROGRESS' }),
   });
-  const body = await res.json();
+  const body = await readSyncResult(res);
 
   assert.equal(body.results[0].status, 'rejected', `同步改状态必须校验权限，实际：${JSON.stringify(body.results[0])}`);
   assert.equal(db.state.tasks[0].status, 'TODO');
@@ -261,10 +261,10 @@ test('RF04-U13 同步里的跨项目 phaseId 被拒绝', async () => {
   const res = await jsonRequest(app, '/api/sync/push', {
     body: pushChange('tasks', 't1', { phaseId: 'ph-other' }),
   });
-  const body = await res.json();
+  const body = await readSyncResult(res);
 
   assert.equal(body.results[0].status, 'rejected', `跨项目阶段必须拒绝，实际：${JSON.stringify(body.results[0])}`);
-  assert.match(String(body.results[0].reason), /phaseId/);
+  assert.equal(body.results[0].code, 'INVALID_REFERENCE', 'cross-project phase reference is rejected');
 });
 
 test('RF04-U16 任务 PUT 混合字段时必须全成功或全不变（多命令同事务）', async () => {
@@ -297,9 +297,9 @@ test('RF04-U17 同步实体补齐动作权限：projects / milestones 缺权限�
   const resProjects = await jsonRequest(appProjects, '/api/sync/push', {
     body: pushChange('projects', 'p1', { name: '改名' }),
   });
-  const bodyProjects = await resProjects.json();
+  const bodyProjects = await readSyncResult(resProjects);
   assert.equal(bodyProjects.results[0].status, 'rejected', '缺少 projects.update 必须拒绝');
-  assert.match(String(bodyProjects.results[0].reason), /projects\.update/);
+  assert.equal(bodyProjects.results[0].code, 'PERMISSION_DENIED');
 
   // milestones 更新：缺少 milestones.update
   const dbMilestones = createStubDb({ membership: OWNER_ACCESS });
@@ -311,7 +311,7 @@ test('RF04-U17 同步实体补齐动作权限：projects / milestones 缺权限�
   const resMilestones = await jsonRequest(appMilestones, '/api/sync/push', {
     body: pushChange('milestones', 'm1', { name: '改名' }),
   });
-  const bodyMilestones = await resMilestones.json();
+  const bodyMilestones = await readSyncResult(resMilestones);
   assert.equal(bodyMilestones.results[0].status, 'rejected', '缺少 milestones.update 必须拒绝');
 });
 
@@ -384,7 +384,7 @@ test('RF04-U14 被移出项目后同步更新被拒绝', async () => {
   const res = await jsonRequest(app, '/api/sync/push', {
     body: pushChange('tasks', 't1', { title: '改名' }),
   });
-  const body = await res.json();
+  const body = await readSyncResult(res);
 
   assert.equal(body.results[0].status, 'rejected');
   assert.equal(db.state.tasks[0].title, '任务一');

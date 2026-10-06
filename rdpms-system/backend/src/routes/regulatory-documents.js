@@ -8,6 +8,11 @@ import { putObject, safeStoragePath } from '../kernel/storage.js';
 import { forbidden, notFound } from '../kernel/http.js';
 import { decideFileAccess, FILE_ACTION, FILE_SCOPE } from '../modules/files/fileAccessPolicy.js';
 import { applyBindToFile, resolveBindTarget } from '../modules/files/fileCommands.js';
+import { decideFileRead } from '../modules/files/fileReadService.js';
+import { AUDIT_ACTIONS } from '../kernel/constants.js';
+import { writeAudit } from '../kernel/audit.js';
+import { writeAuditStrict } from '../platform/audit/strictAudit.js';
+import { resolveProjectAccess } from '../kernel/projectAccess.js';
 
 const regulatoryDocuments = new Hono();
 const STORAGE_DIR = path.resolve(process.cwd(), 'uploads', 'regulatory-documents');
@@ -540,10 +545,43 @@ regulatoryDocuments.get('/:id/original-file', async (c) => {
 
   if (att?.file && !att.file.deletedAt) {
     // RF05「import-source 也检查」：来源文件读取与其它入口同权（共享库读权限不足 → 403，未声明规则 → 404）
-    const decision = decideFileAccess(FILE_ACTION.IMPORT_SOURCE, actorFrom(c), att.file, {});
+    const auth = getAuth(c);
+    const context = att.file.accessScope === FILE_SCOPE.PROJECT && att.file.ownerProjectId
+      ? { projectAccess: await resolveProjectAccess(prisma, auth, att.file.ownerProjectId) } : {};
+    const decision = decideFileAccess(FILE_ACTION.IMPORT_SOURCE, actorFrom(c), att.file, context);
     if (!decision.allow) {
       if (decision.code === 'FILE_NOT_FOUND') throw notFound('FILE_NOT_FOUND', '文件不存在');
       throw forbidden('FILE_FORBIDDEN', decision.reason);
+    }
+    if (context.projectAccess?.elevated) {
+      await writeAuditStrict(prisma, {
+        c, actorId: auth.userId, actorRole: auth.systemRole,
+        action: AUDIT_ACTIONS.READ_SENSITIVE, entityType: 'FILE', entityId: att.file.id,
+        metadata: { permissionCode: 'regulatory_documents.view', elevated: true,
+          bypass: 'project_membership', source: 'regulatory-document-original-file' },
+      });
+    }
+    const scanDecision = decideFileRead(att.file.scanStatus);
+    if (!scanDecision.allow) {
+      await writeAuditStrict(prisma, {
+        c,
+        actorId: auth.userId,
+        actorRole: auth.systemRole,
+        action: AUDIT_ACTIONS.DOWNLOAD,
+        entityType: 'FILE',
+        entityId: att.file.id,
+        metadata: {
+          permissionCode: 'regulatory_documents.view',
+          accessScope: att.file.accessScope,
+          ownerProjectId: att.file.ownerProjectId ?? null,
+          ownerUserId: att.file.ownerUserId ?? null,
+          denied: scanDecision.code,
+          scanStatus: ['CLEAN', 'INFECTED', 'FAILED', 'SKIPPED', 'PENDING'].includes(att.file.scanStatus)
+            ? att.file.scanStatus : 'UNKNOWN',
+          source: 'regulatory-document-original-file',
+        },
+      });
+      throw forbidden(scanDecision.code, scanDecision.reason);
     }
     try {
       const buf = await fs.readFile(safeStoragePath(att.file.storageKey));
@@ -555,18 +593,16 @@ regulatoryDocuments.get('/:id/original-file', async (c) => {
     }
   }
 
-  // legacy 回退：早期直接落磁盘、没有 FileObject 归属的原文（仍有 regulatory_documents.view 把关）。
-  // 这些文件无法推导项目归属，属于「历史无归属」——只允许持法规查看权限的用户经本路由读取，
-  // 待其被重新导入并绑定后即转入正常作用域流程。
-  const found = await findOriginalFile(id);
-  if (!found) {
-    return c.json({ error: '未找到原始文件' }, 404);
-  }
-
-  const mime = guessMimeByFileName(found.originalName);
-  c.header('Content-Type', mime);
-  c.header('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(found.originalName)}`);
-  return c.body(found.fileBuffer);
+  // A raw legacy original has no reliable scan result. T-RP-05 forbids unknown
+  // byte exports, including fallback after a missing/deleted FileObject.
+  const auth = getAuth(c);
+  await writeAuditStrict(prisma, {
+    c, actorId: auth.userId, actorRole: auth.systemRole,
+    action: AUDIT_ACTIONS.DOWNLOAD, entityType: 'REGULATORY_DOCUMENT', entityId: id,
+    metadata: { permissionCode: 'regulatory_documents.view', denied: 'FILE_SCAN_NOT_CLEAN',
+      scanStatus: 'UNKNOWN', source: 'legacy-original-file' },
+  });
+  throw forbidden('FILE_SCAN_NOT_CLEAN', '原文缺少有效安全扫描记录，禁止下载');
 });
 
 export default regulatoryDocuments;
