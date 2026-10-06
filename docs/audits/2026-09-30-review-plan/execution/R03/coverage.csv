@@ -1,0 +1,15 @@
+packet,file,symbol_or_route,question,review_status,evidence_ref,unreviewed_reason
+R03,rdpms-system/backend/src/routes/projects.js,GET / and stats,Visibility and deletedAt scope consistent?,REVIEWED,"review.md#入口与聚合写入路径; projects.js:107-161,633-652",
+R03,rdpms-system/backend/src/routes/projects.js,GET /:id,Membership capability and nested live-record scope?,REVIEWED,review.md#入口与聚合写入路径; projects.js:164-195,
+R03,rdpms-system/backend/src/routes/projects.js,POST /,Project/children transaction and failure order?,REVIEWED,review.md#B18; projects.js:198-303,
+R03,rdpms-system/backend/src/routes/projects.js,PUT /:id,tasks and milestone replacement permissions/tombstones?,REVIEWED,review.md#B02; projects.js:307-479,
+R03,rdpms-system/backend/src/routes/projects.js,DELETE and batch-delete,Is direct delete exploitable by default ordinary roles?,NOT_APPLICABLE,review.md#已审查的授权范围与未覆盖项,Plan boundary: no evidence was gathered that ordinary default roles hold projects.delete; do not expand the historical finding without proof.
+R03,rdpms-system/backend/src/routes/projects.js,POST /:id/apply-template,Does resolver projection provide schedule start date?,REVIEWED,review.md#B03; projects.js:655-731,
+R03,rdpms-system/backend/src/routes/projects.js,POST /batch-update-status,Does resolver projection provide current status?,REVIEWED,review.md#B03; projects.js:774-799,
+R03,rdpms-system/backend/src/kernel/projectAccess.js,resolveProjectAccess/projectVisibilityFilter,Visibility and business projection fields?,REVIEWED,"review.md#入口与聚合写入路径; projectAccess.js:21-55,92-105",
+R03,rdpms-system/backend/src/kernel/constants.js,P1 permissions,Is dedicated task delete permission independently represented?,REVIEWED,review.md#B02; constants.js:48-80,
+R03,rdpms-system/backend/prisma/seed.js,MANAGER_CODES,Does default manager have project update but not task delete?,REVIEWED,review.md#B02; seed.js:267-300,
+R03,rdpms-system/backend/prisma/schema.prisma,Project/Task/Milestone,Are fields soft-delete-capable and what project fields exist?,REVIEWED,"review.md#B02/#B03; schema.prisma:591-650,791-868",
+R03,rdpms-system/frontend/src/api/endpoints/projects.ts,projectAPI.update,Which route does edit form call?,REVIEWED,review.md#入口与聚合写入路径; projects.ts:11-42,
+R03,rdpms-system/frontend/src/components/EditProjectModal.tsx,handleSubmit,Which fields/arrays are sent by form?,REVIEWED,review.md#入口与聚合写入路径; EditProjectModal.tsx:237-284,
+R03,rdpms-system/backend/src/routes/tasks.js,task delete handler,Full task-level authorization matrix?,NOT_APPLICABLE,review.md#已审查的授权范围与未覆盖项," ""Dedicated task handlers are not required in this packet; history supplies the narrow contrast used for B02."""

@@ -1,0 +1,38 @@
+{
+  "batchId": "parallel-lr7-2026-10-04-p01",
+  "windowId": "E",
+  "status": "READY_FOR_AGGREGATION",
+  "scope": "T-RP-03 / S03-OI-09 client revision full-chain matrix + proposed compatibility decision + external-evidence gap request (PREPARATION_ONLY)",
+  "workerManifest": {
+    "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/WORKER_MANIFEST.json",
+    "sha256": "cc03bd53ef4876e6668e0b50bc8e3a51daaaf9d7a2a53a3de4497bae1ae1bc47"
+  },
+  "actualResults": {
+    "deliverablesComplete": true,
+    "sourceClientMatrix": "delivered (csv+md) covering fields/status/assignee/batch/offline/retry/conflict with file:line+sha256 and evidence tiers",
+    "supportEvidenceRegister": "delivered; build/deployed/declared/cutoff separated; latter three UNCONFIRMED/OPEN_INPUT",
+    "decisionDraft": "T-RP-03 draft delivered; all policies PROPOSED, approvedBy/approvedAt null",
+    "acceptanceDraft": "delivered; dynamic scenarios NOT_RUN",
+    "externalEvidenceRequest": "delivered with blank fill-in; no server/SSH/credential access used",
+    "commonSevenCategories": "authorization/change-summary/evidence/acceptance/rollback/task-state/handoff/REVIEW_ENTRY delivered"
+  },
+  "notRun": [
+    "S03-OI-09 validation (deployed-supported-client inventory OPEN_INPUT)",
+    "PAC-RP00-02",
+    "RP10-T01 strict CAS (gated by S03-OI-09)",
+    "any dynamic build/DB/browser/IndexedDB/JWT test"
+  ],
+  "notApproved": [
+    "T-RP-03 (draft only; awaits owner named approval + external evidence)"
+  ],
+  "openInputs": [
+    "Deployed client versions (DV-1/DV-2)",
+    "Product-declared supported versions / legacy allowlist (PV-1/PV-2)",
+    "Upgrade cutoff dates (UC-1/UC-2)"
+  ],
+  "driftDisclosed": "Business source files read by this window carry uncommitted modifications vs frozen HEAD 138cf2da (sync.ts, engine.ts, sync.js, tasks.js, reports.js, reportCommands.ts). Inherited pre-existing, not produced here; disclosed in evidence/source-hashes.json and authorization.json. This window changed no code.",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "writerStopped": true,
+  "note": "READY does not constitute independent review approval. S03-OI-09 remains OPEN and T-RP-03 remains PROPOSED; this window neither closed the gate nor started RP10-T01."
+}

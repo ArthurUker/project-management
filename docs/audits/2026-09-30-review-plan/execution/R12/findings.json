@@ -1,0 +1,246 @@
+[
+  {
+    "id": "B13",
+    "packet": "R12",
+    "origin": "BASELINE",
+    "baselineSeverity": "P1",
+    "currentSeverity": "P1",
+    "disposition": "SUPPORTED",
+    "title": "恢复接口跳过重复唯一键记录却虚报恢复成功数量",
+    "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "workingTreeDigestRefs": [
+      "execution/R12/source-digests.json"
+    ],
+    "entrypoint": "POST /api/backup/restore/preview and POST /api/backup/restore",
+    "preconditions": [
+      "Payload contains rows with distinct primary keys but the same constrained unique value, as in duplicate usernames.",
+      "Rows are classified as new because their primary keys are absent from the target database."
+    ],
+    "source": [
+      {
+        "path": "rdpms-system/backend/src/kernel/backupRestore.js",
+        "lineStart": 19,
+        "lineEnd": 53,
+        "symbol": "RESTORE_TABLES unique/ref metadata"
+      },
+      {
+        "path": "rdpms-system/backend/src/kernel/backupRestore.js",
+        "lineStart": 176,
+        "lineEnd": 201,
+        "symbol": "payload primary-key-only duplicate validation"
+      },
+      {
+        "path": "rdpms-system/backend/src/kernel/backupRestore.js",
+        "lineStart": 203,
+        "lineEnd": 230,
+        "symbol": "partial target unique-key validation"
+      },
+      {
+        "path": "rdpms-system/backend/src/kernel/backupRestore.js",
+        "lineStart": 313,
+        "lineEnd": 349,
+        "symbol": "skipDuplicates and input-length counters"
+      },
+      {
+        "path": "rdpms-system/backend/prisma/schema.prisma",
+        "lineStart": 399,
+        "lineEnd": 429,
+        "symbol": "User unique constraints"
+      },
+      {
+        "path": "rdpms-system/backend/prisma/schema.prisma",
+        "lineStart": 634,
+        "lineEnd": 648,
+        "symbol": "ProjectMember composite unique"
+      },
+      {
+        "path": "rdpms-system/backend/prisma/schema.prisma",
+        "lineStart": 681,
+        "lineEnd": 735,
+        "symbol": "template composite unique constraints"
+      },
+      {
+        "path": "rdpms-system/backend/prisma/schema.prisma",
+        "lineStart": 741,
+        "lineEnd": 786,
+        "symbol": "project phase and transition unique constraints"
+      },
+      {
+        "path": "rdpms-system/backend/prisma/schema.prisma",
+        "lineStart": 878,
+        "lineEnd": 891,
+        "symbol": "task dependency composite unique"
+      },
+      {
+        "path": "rdpms-system/backend/prisma/schema.prisma",
+        "lineStart": 1040,
+        "lineEnd": 1109,
+        "symbol": "report/version/monthly progress composite unique constraints"
+      }
+    ],
+    "callPath": [
+      "backup route",
+      "validatePayload",
+      "applyRestore",
+      "createMany(skipDuplicates)",
+      "summary counters"
+    ],
+    "evidence": [
+      {
+        "level": "S",
+        "ref": "rdpms-system/backend/src/kernel/backupRestore.js:203-230,313-349",
+        "limitation": "Static review at unchanged baseline; no current restore was executed."
+      },
+      {
+        "level": "H",
+        "ref": "docs/audits/2026-09-29-rdpms/backend-results.json#B13_RESTORE_SILENT_DUPLICATE_DROP",
+        "limitation": "Historical isolated database probe reports previewOk=true, reportedCreated=2, actualCreated=1; not a production database result."
+      }
+    ],
+    "counterevidenceChecked": [
+      "Payload primary keys are checked for absence and duplicates.",
+      "Some single-column unique values are checked against existing rows, but payload-internal duplicate unique values and composite uniques are not covered by the metadata contract.",
+      "Database constraints and one transaction can reject non-skipped invalid writes and roll the transaction back.",
+      "Restore is restricted to SUPER_ADMIN and replace requires explicit confirmation; these guards do not correct merge duplicate skipping or the count."
+    ],
+    "observedImpact": "Historical isolated reproduction showed two payload users with a duplicate username pass preview, while the restore response reported two creates and the database contained one inserted row; unchanged current code still counts input rows after skipDuplicates.",
+    "potentialImpact": "Other unique or composite-unique collisions represented by the database but absent from the validator metadata may be silently skipped by createMany; this broader set was not dynamically exercised.",
+    "verification": "HISTORICAL_ONLY",
+    "recommendation": "Make the complete primary-key, unique-key, composite-key, and FK contract derive from one schema-aware registry; detect payload-internal and target conflicts without truncation; fail and roll back unexpected conflicts; return actual database affected counts and post-restore reconciliation.",
+    "acceptanceCriteria": [
+      "Per-table reported inserted/updated/deleted counts equal database effects for every supported table.",
+      "Duplicate payload values for every single and composite unique constraint are rejected before writes or cause explicit full rollback.",
+      "Test the 500/501 check boundary and target changes between preview and apply in isolated environments.",
+      "Reconcile restored primary keys, unique keys, FKs, and attachment/file references before reporting success."
+    ],
+    "pendingQuestions": [
+      "No current baseline rerun; the historical reproduction is inherited as sufficient for disposition."
+    ],
+    "supersedesOrRelated": []
+  },
+  {
+    "id": "D01",
+    "packet": "R12",
+    "origin": "BASELINE",
+    "baselineSeverity": "P1",
+    "currentSeverity": "P1",
+    "disposition": "SUPPORTED",
+    "title": "文件备份将新快照做成旧快照软链并可能改写历史内容",
+    "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "workingTreeDigestRefs": [
+      "execution/R12/source-digests.json"
+    ],
+    "entrypoint": "deploy/scripts/backup-pg.sh",
+    "preconditions": [
+      "An existing latest symlink is present when a subsequent uploads snapshot is started."
+    ],
+    "source": [
+      {
+        "path": "rdpms-system/deploy/scripts/backup-pg.sh",
+        "lineStart": 68,
+        "lineEnd": 77,
+        "symbol": "uploads snapshot cp/rsync/latest sequence"
+      },
+      {
+        "path": "docs/audits/2026-09-29-rdpms/verify-backup.py",
+        "lineStart": 1,
+        "lineEnd": 21,
+        "symbol": "historical disposable-file reproduction"
+      }
+    ],
+    "callPath": [
+      "backup-pg.sh",
+      "cp -al latest SNAP",
+      "rsync -a --delete UPLOAD_SRC/ SNAP/",
+      "ln -sfn SNAP latest"
+    ],
+    "evidence": [
+      {
+        "level": "S",
+        "ref": "rdpms-system/deploy/scripts/backup-pg.sh:68-77",
+        "limitation": "Static command path is current; no target Linux command execution."
+      },
+      {
+        "level": "H",
+        "ref": "docs/audits/2026-09-29-rdpms/backup-result.json#D01_BACKUP_SNAPSHOT_ALIASES_HISTORY",
+        "limitation": "Disposable-directory reproduction on macOS 27 arm64 only; does not establish target Linux or production damage."
+      }
+    ],
+    "counterevidenceChecked": [
+      "Database dump is checked with pg_restore -l and gets SHA-256; this does not verify immutable uploads snapshots."
+    ],
+    "observedImpact": "Historical macOS isolated test produced a symlink for snapshot two and changed snapshot one's observed content; production impact is unverified.",
+    "potentialImpact": "If target Linux follows the same path semantics, later rsync --delete can mutate the prior snapshot and break DB/files pairing.",
+    "verification": "HISTORICAL_ONLY",
+    "recommendation": "Create a real staging directory, use the resolved prior snapshot only as rsync --link-dest, create and verify a content manifest, then atomically publish immutable dated snapshot and latest; preserve and quarantine existing snapshots before changes.",
+    "acceptanceCriteria": [
+      "On target Linux in a disposable path, after two add/change/delete rounds, first snapshot manifest and bytes remain unchanged and the second is complete before latest is advanced."
+    ],
+    "pendingQuestions": [
+      "Target Linux distribution, cp/rsync versions and production storage semantics have not been verified."
+    ],
+    "supersedesOrRelated": []
+  },
+  {
+    "id": "R12-N01",
+    "packet": "R12",
+    "origin": "NEW",
+    "baselineSeverity": null,
+    "currentSeverity": "P2",
+    "disposition": "PENDING",
+    "title": "候选风险：数据库 dump 与 uploads 文件快照没有共同恢复点协调",
+    "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "workingTreeDigestRefs": [
+      "execution/R12/source-digests.json"
+    ],
+    "entrypoint": "deploy/scripts/backup-pg.sh",
+    "preconditions": [
+      "Application writes affecting both file metadata/attachments and uploads can continue during backup collection."
+    ],
+    "source": [
+      {
+        "path": "rdpms-system/deploy/scripts/backup-pg.sh",
+        "lineStart": 52,
+        "lineEnd": 77,
+        "symbol": "sequential database and upload capture"
+      },
+      {
+        "path": "rdpms-system/backend/prisma/schema.prisma",
+        "lineStart": 1413,
+        "lineEnd": 1449,
+        "symbol": "file binaries external to database and relational FileObject metadata"
+      }
+    ],
+    "callPath": [
+      "pg_dump captures database",
+      "dump list/hash check",
+      "rsync later captures uploads"
+    ],
+    "evidence": [
+      {
+        "level": "S",
+        "ref": "rdpms-system/deploy/scripts/backup-pg.sh:52-77; schema.prisma:1413-1449",
+        "limitation": "The code provides no write barrier/common snapshot identifier; the exact concurrent mutation outcome was not reproduced."
+      }
+    ],
+    "counterevidenceChecked": [
+      "The script comment says database and uploads should be backed up at the same frequency, but no shared checkpoint or coordinated snapshot mechanism is implemented in this script."
+    ],
+    "observedImpact": "本轮未观察到运行时不一致；仅确认脚本内数据库与文件采集是顺序步骤且没有共享 checkpoint。",
+    "potentialImpact": "若应用写入在两项采集之间持续运行，配对恢复可能呈现不同状态；实际运行条件和影响尚未证实。",
+    "verification": "PLANNED_NOT_RUN",
+    "recommendation": "Bind DB and files to a runId and proven common checkpoint using a write barrier or coordinated versioned snapshots; record dump hash, file manifest hash, and post-restore row/reference/checksum reconciliation.",
+    "acceptanceCriteria": [
+      "An isolated test with adjacent file metadata and binary add/change/delete operations proves a paired restore is coherent, and a mismatched pair/checksum is rejected before acceptance."
+    ],
+    "pendingQuestions": [
+      "确认实际备份期间业务写入是否持续，以及运维平台是否在脚本外提供共同快照/写入屏障；之后用隔离配对恢复演练判定是否形成缺陷。"
+    ],
+    "supersedesOrRelated": [
+      "D01"
+    ],
+    "aliases": [
+      "N-R12-01"
+    ]
+  }
+]

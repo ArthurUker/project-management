@@ -1,0 +1,112 @@
+{
+  "taskId": "RP09-T01",
+  "approvalRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/approval.json",
+  "cases": [
+    {
+      "caseId": "AC-B05-01",
+      "result": "PASS",
+      "scope": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP09/RP09-T01/runs/2026-10-05-sync-receipts-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-B05-02",
+      "result": "PASS",
+      "scope": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP09/RP09-T01/runs/2026-10-05-sync-receipts-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-B05-03",
+      "result": "PASS",
+      "scope": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP09/RP09-T01/runs/2026-10-05-sync-receipts-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-B06-01",
+      "result": "PASS",
+      "scope": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP09/RP09-T01/runs/2026-10-05-sync-receipts-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-B06-02",
+      "result": "PASS",
+      "scope": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP09/RP09-T01/runs/2026-10-05-sync-receipts-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-B06-03",
+      "result": "PASS",
+      "scope": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP09/RP09-T01/runs/2026-10-05-sync-receipts-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP09-01",
+      "result": "PASS",
+      "scope": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP09/RP09-T01/runs/2026-10-05-sync-receipts-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP09-02",
+      "result": "PASS",
+      "scope": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP09/RP09-T01/runs/2026-10-05-sync-receipts-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "TASK-RP09-T01",
+      "result": "PASS",
+      "scope": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP09/RP09-T01/runs/2026-10-05-sync-receipts-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "GATE-S03-OI-05",
+      "result": "PASS",
+      "scope": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP09/RP09-T01/runs/2026-10-05-sync-receipts-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "DECISION-T-RP-02",
+      "result": "PASS",
+      "scope": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP09/RP09-T01/runs/2026-10-05-sync-receipts-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "DECISION-T-RP-07",
+      "result": "PASS",
+      "scope": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP09/RP09-T01/runs/2026-10-05-sync-receipts-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP09-04",
+      "result": "NOT_RUN",
+      "reason": "Pending RP09-T02 transport/recovery or independent frontend/target/watermark/restore/budget scope; no broader PASS"
+    },
+    {
+      "caseId": "INT-PC02-01",
+      "result": "NOT_RUN",
+      "reason": "Pending RP09-T02 transport/recovery or independent frontend/target/watermark/restore/budget scope; no broader PASS"
+    },
+    {
+      "caseId": "INT-PC03-01",
+      "result": "NOT_RUN",
+      "reason": "Pending RP09-T02 transport/recovery or independent frontend/target/watermark/restore/budget scope; no broader PASS"
+    },
+    {
+      "caseId": "INT-PC05-01",
+      "result": "NOT_RUN",
+      "reason": "Pending RP09-T02 transport/recovery or independent frontend/target/watermark/restore/budget scope; no broader PASS"
+    }
+  ],
+  "localValidation": "PASS",
+  "jointValidation": "NOT_RUN",
+  "targetValidation": "NOT_RUN",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "limits": [
+    "30/30 formal scoped tests in accepted attempt03; earlier attempts retained.",
+    "Backend candidate reservation wire is incompatible with legacy push; UI/IDB/client activation NOT_RUN.",
+    "projectPhases/milestones/progress delete are frozen P1: real403 guards tested; no seed/grant expansion or false legal-delete positive.",
+    "Deleting a project removes current project visibility: subsequent replay/query denied, not a falsely authorized success.",
+    "Device scoped upsert P2025 maps404; no foreign metadata mutation; append-only actors kept to whole DB drop.",
+    "Generated Prisma artifacts are derived caches from owned schema and existing dependencies; no dependency install/upgrade.",
+    "B05/B06 SUPPORTED; target/release/independent review and joint contracts remain open."
+  ]
+}

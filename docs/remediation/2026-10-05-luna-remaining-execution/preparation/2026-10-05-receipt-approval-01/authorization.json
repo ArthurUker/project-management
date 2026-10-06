@@ -1,0 +1,23 @@
+{
+  "sessionId": "2026-10-05-receipt-approval-01",
+  "createdAt": "2026-10-05T22:51:20.320226+08:00",
+  "source": "User: 请继续推进待完成的任务; prior continuous local implementation authority retained",
+  "mode": "SCOPED_PREPARATION_ONLY_BEFORE_UNAPPROVED_IMPLEMENTATION_GATES",
+  "taskIdsPrepared": [
+    "RP09-T01",
+    "RP09-T02"
+  ],
+  "writeRoot": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01",
+  "businessImplementationActivated": false,
+  "prohibited": [
+    "writes outside this new run",
+    "business code/test/schema/migration edits before exact approval",
+    "root ledger/history updates in preparation",
+    "build/test/database/browser/network",
+    "dotenv/SSH credentials",
+    "subagents/model switch",
+    "stage/commit/push/merge/deploy",
+    "production/shared resources",
+    "approval by executor"
+  ]
+}

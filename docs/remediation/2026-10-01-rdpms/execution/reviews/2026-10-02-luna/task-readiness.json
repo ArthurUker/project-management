@@ -1,0 +1,1943 @@
+{
+  "asOf": "2026-10-02",
+  "authority": "TASK_GRAPH.json v2 + explicit task card gates",
+  "ledgerNotChanged": true,
+  "counts": {
+    "COMPLETE": 15,
+    "NOT_STARTED": 36,
+    "IN_PROGRESS": 3
+  },
+  "taskCount": 54,
+  "tasks": [
+    {
+      "taskId": "RP00-T01",
+      "title": "基线/逐包范围/合成隔离及合法前提登记",
+      "phase": 0,
+      "recordedImplementation": "COMPLETE",
+      "recordedValidation": "ENV_BLOCKED",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "IMPLEMENTED_AWAITING_SCOPED_VALIDATION",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "S00-OI-01",
+          "before": "VALIDATION",
+          "condition": "archive disposition only; missing historic startHead does not block any business task",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP00-T02",
+      "title": "500恢复合同定向静态补审",
+      "phase": 0,
+      "recordedImplementation": "COMPLETE",
+      "recordedValidation": "PASS",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "DELIVERED_WITH_RECORDED_PASS",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "S03-OI-03",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP00-T03",
+      "title": "任务revision全支持端矩阵",
+      "phase": 0,
+      "recordedImplementation": "COMPLETE",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "IMPLEMENTED_AWAITING_SCOPED_VALIDATION",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "S03-OI-09",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP00-T04",
+      "title": "refresh/auth transport与generation合同",
+      "phase": 0,
+      "recordedImplementation": "COMPLETE",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "IMPLEMENTED_AWAITING_SCOPED_VALIDATION",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-09",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        }
+      ],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP00-T05",
+      "title": "目标预算/监控/候选范围准备",
+      "phase": 0,
+      "recordedImplementation": "COMPLETE",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "IMPLEMENTED_AWAITING_SCOPED_VALIDATION",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-11",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "T-RP-13",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        }
+      ],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP01-T01",
+      "title": "合法角色创建DTO",
+      "phase": 1,
+      "recordedImplementation": "COMPLETE",
+      "recordedValidation": "PASS",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "REWORK_REQUIRED",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": [
+        "LR-03"
+      ]
+    },
+    {
+      "taskId": "RP01-T02",
+      "title": "账号等级保护与强制改密",
+      "phase": 1,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_GATE",
+      "selectedScope": "先仅账号等级/重置保护；强制改密allowlist需单独D-S01-02",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "D-S01-01",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PENDING"
+        },
+        {
+          "ref": "D-S01-02",
+          "before": "IMPLEMENTATION",
+          "condition": "only forced-password-change/business allowlist sub-scope; rank/reset protection uses D-S01-01 independently",
+          "resolution": "NOT_APPLICABLE_TO_SELECTED_SCOPE",
+          "recordedStatus": "PENDING"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "D-S01-01"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP01-T03",
+      "title": "自定义角色绑定扩展（仅获准需求）",
+      "phase": 1,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "CONDITIONAL_NOT_APPROVED",
+      "reviewerReadiness": "OPTIONAL_DISABLED",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP01-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "D-S01-03",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PENDING"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "D-S01-03"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP02-T01",
+      "title": "临时锁/管理员停用与真实TTL",
+      "phase": 1,
+      "recordedImplementation": "COMPLETE",
+      "recordedValidation": "ENV_BLOCKED",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "REWORK_REQUIRED",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": [
+        "LR-01",
+        "LR-02",
+        "LR-05"
+      ]
+    },
+    {
+      "taskId": "RP02-T02",
+      "title": "refresh单次消费和family重放合同",
+      "phase": 1,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_GATE",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T04"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [
+        "RP03-T01"
+      ],
+      "unmetAcceptanceDependencies": [
+        "RP03-T01"
+      ],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-09"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP03-T01",
+      "title": "跨tab/跨身份成功失败响应与原请求重放",
+      "phase": 2,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_GATE",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T04"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "S02-OPEN-05",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-09"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP03-T02",
+      "title": "获准会话撤销/security version",
+      "phase": 2,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_GATE",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [
+        "RP02-T02"
+      ],
+      "unmetAcceptanceDependencies": [
+        "RP02-T02"
+      ],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "D-S01-04",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PENDING"
+        },
+        {
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "S03-OI-06",
+          "before": "IMPLEMENTATION",
+          "condition": "same D-S01-04 approval; no second approval required",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "D-S01-04",
+        "T-RP-09",
+        "S03-OI-06"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP04-T01",
+      "title": "业务快照/状态日期/活跃查询",
+      "phase": 1,
+      "recordedImplementation": "COMPLETE",
+      "recordedValidation": "ENV_BLOCKED",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "IMPLEMENTED_AWAITING_SCOPED_VALIDATION",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP04-T02",
+      "title": "创建聚合单事务及审计/idempotency",
+      "phase": 1,
+      "recordedImplementation": "COMPLETE",
+      "recordedValidation": "ENV_BLOCKED",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "REWORK_REQUIRED",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [
+        "RP09-T01"
+      ],
+      "unmetAcceptanceDependencies": [
+        "RP09-T01"
+      ],
+      "evaluatedGateRequirements": [],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": [
+        "LR-04"
+      ]
+    },
+    {
+      "taskId": "RP05-T01",
+      "title": "阻断无授权硬删/跨项目parent",
+      "phase": 1,
+      "recordedImplementation": "COMPLETE",
+      "recordedValidation": "ENV_BLOCKED",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "REWORK_REQUIRED",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": [
+        "LR-06"
+      ]
+    },
+    {
+      "taskId": "RP05-T02",
+      "title": "保留ID的差量/删除/旧客户端适配",
+      "phase": 1,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_GATE",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP05-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PENDING"
+        },
+        {
+          "ref": "T-RP-07",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "S03-OI-05",
+          "before": "IMPLEMENTATION",
+          "condition": "only if stale/delete command adapter is changed; no gate on unrelated task fields or report snapshot",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "D-S01-08",
+        "T-RP-07",
+        "S03-OI-05"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP05-T03",
+      "title": "获准DAG/live引用的并发验证",
+      "phase": 1,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "CONDITIONAL_NOT_APPROVED",
+      "reviewerReadiness": "OPTIONAL_DISABLED",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP05-T02"
+      ],
+      "unmetImplementationDependencies": [
+        "RP05-T02"
+      ],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "DAG/live policy approved",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PENDING"
+        },
+        {
+          "ref": "T-RP-11",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "D-S01-08"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP06-T01",
+      "title": "registration全入口scope",
+      "phase": 1,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_GATE",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "D-S01-05",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PENDING"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "D-S01-05"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP06-T02",
+      "title": "registration负责人共享适配",
+      "phase": 1,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_DEPENDENCY",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP06-T01",
+        "RP07-T02"
+      ],
+      "unmetImplementationDependencies": [
+        "RP06-T01",
+        "RP07-T02"
+      ],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "D-S01-06",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PENDING"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "D-S01-06"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP07-T01",
+      "title": "状态共享命令和archive权限",
+      "phase": 1,
+      "recordedImplementation": "COMPLETE",
+      "recordedValidation": "ENV_BLOCKED",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "IMPLEMENTED_AWAITING_SCOPED_VALIDATION",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP04-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP07-T02",
+      "title": "负责人转移一致性",
+      "phase": 1,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_GATE",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "D-S01-06",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PENDING"
+        },
+        {
+          "ref": "S03-OI-07",
+          "before": "IMPLEMENTATION",
+          "condition": "same D-S01-06 approval; no second approval required",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "D-S01-06",
+        "S03-OI-07"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP08-T01",
+      "title": "每实体/字段/own-only读取授权",
+      "phase": 1,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "READY_FOR_SELECTED_IMPLEMENTATION_SCOPE",
+      "selectedScope": "普通实体/字段/own-only读权限；不启用注册项目全局例外",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "D-S01-05",
+          "before": "IMPLEMENTATION",
+          "condition": "only if registration global exception is requested",
+          "resolution": "NOT_APPLICABLE_TO_SELECTED_SCOPE",
+          "recordedStatus": "PENDING"
+        }
+      ],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP08-T02",
+      "title": "ACL角色版本/回填/撤权及outbox隔离",
+      "phase": 1,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_DEPENDENCY",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP08-T01"
+      ],
+      "unmetImplementationDependencies": [
+        "RP08-T01"
+      ],
+      "acceptanceDependencies": [
+        "RP11-T01"
+      ],
+      "unmetAcceptanceDependencies": [
+        "RP11-T01"
+      ],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-04",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "T-RP-12",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "S02-OPEN-02",
+          "before": "VALIDATION",
+          "condition": "joint authorized cache/page fallback acceptance",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-04",
+        "T-RP-12"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP09-T01",
+      "title": "单项授权/CAS/audit/receipt原子提交",
+      "phase": 2,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_GATE",
+      "selectedScope": "按批准T-RP-02实施非delete事务/回执；不改变delete adapter",
+      "implementationDependencies": [
+        "RP00-T02"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-02",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "T-RP-07",
+          "before": "IMPLEMENTATION",
+          "condition": "delete command adapter modified",
+          "resolution": "NOT_APPLICABLE_TO_SELECTED_SCOPE",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "S03-OI-05",
+          "before": "IMPLEMENTATION",
+          "condition": "only if stale/delete command adapter is changed; no gate on unrelated task fields or report snapshot",
+          "resolution": "NOT_APPLICABLE_TO_SELECTED_SCOPE",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-02"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP09-T02",
+      "title": "同key竞争/unknown恢复/保留清理",
+      "phase": 2,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_DEPENDENCY",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP09-T01"
+      ],
+      "unmetImplementationDependencies": [
+        "RP09-T01"
+      ],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "S03-OI-02",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        },
+        {
+          "ref": "S03-OI-04",
+          "before": "RELEASE",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        },
+        {
+          "ref": "T-RP-02",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-02"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP10-T01",
+      "title": "任务全部支持端CAS链",
+      "phase": 2,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_GATE",
+      "selectedScope": "仅字段/status/assignee CAS；不改变stale-delete规则",
+      "implementationDependencies": [
+        "RP00-T03"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-03",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "S03-OI-05",
+          "before": "IMPLEMENTATION",
+          "condition": "only if stale/delete command adapter is changed; no gate on unrelated task fields or report snapshot",
+          "resolution": "NOT_APPLICABLE_TO_SELECTED_SCOPE",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-03"
+      ],
+      "additionalPrerequisites": [
+        "S03-OI-09 supported deployed-client inventory/legacy window missing"
+      ],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP10-T02",
+      "title": "汇报同修订snapshot与版本原子性",
+      "phase": 2,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "READY_FOR_SELECTED_IMPLEMENTATION_SCOPE",
+      "selectedScope": "同一revision报告快照/版本原子性；维持当前source-state行为",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [
+        "RP09-T01"
+      ],
+      "unmetAcceptanceDependencies": [
+        "RP09-T01"
+      ],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "D-S01-07",
+          "before": "IMPLEMENTATION",
+          "condition": "source-state behavior changed",
+          "resolution": "NOT_APPLICABLE_TO_SELECTED_SCOPE",
+          "recordedStatus": "PENDING"
+        }
+      ],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP10-T03",
+      "title": "获准submit/resubmit状态及竞争",
+      "phase": 2,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_DEPENDENCY",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP10-T02"
+      ],
+      "unmetImplementationDependencies": [
+        "RP10-T02"
+      ],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "D-S01-07",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PENDING"
+        },
+        {
+          "ref": "S03-OI-08",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "D-S01-07"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP11-T01",
+      "title": "身份阶段/owner命名空间/ACL安全回退",
+      "phase": 1,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_GATE",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "T-RP-12",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "S02-OPEN-01",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        },
+        {
+          "ref": "S02-OPEN-02",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-09",
+        "T-RP-12"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP11-T02",
+      "title": "旧IDB行隔离迁移与多tab升级",
+      "phase": 1,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_DEPENDENCY",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP11-T01"
+      ],
+      "unmetImplementationDependencies": [
+        "RP11-T01"
+      ],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-01",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "S02-OPEN-06",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        },
+        {
+          "ref": "S02-OPEN-07",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-01"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP11-T03",
+      "title": "冲突原子移动/用户恢复和最后副本",
+      "phase": 1,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_DEPENDENCY",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP11-T01"
+      ],
+      "unmetImplementationDependencies": [
+        "RP11-T01"
+      ],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-12",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "S02-OPEN-03",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-12"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP12-T01",
+      "title": "条数/bytes/依赖与不可变发送批次",
+      "phase": 3,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_DEPENDENCY",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T02",
+        "RP11-T01"
+      ],
+      "unmetImplementationDependencies": [
+        "RP11-T01"
+      ],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "S02-OPEN-04",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        },
+        {
+          "ref": "T-RP-11",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-11"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP12-T02",
+      "title": "按key验证结果及partial retry",
+      "phase": 3,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_DEPENDENCY",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP12-T01",
+        "RP09-T01",
+        "RP11-T03"
+      ],
+      "unmetImplementationDependencies": [
+        "RP12-T01",
+        "RP09-T01",
+        "RP11-T03"
+      ],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-02",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "T-RP-12",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-02",
+        "T-RP-12"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP13-T01",
+      "title": "已证截断的稳定分页子修复",
+      "phase": 3,
+      "recordedImplementation": "COMPLETE",
+      "recordedValidation": "ENV_BLOCKED",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "IMPLEMENTED_AWAITING_SCOPED_VALIDATION",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [
+        "RP11-T01"
+      ],
+      "unmetAcceptanceDependencies": [
+        "RP11-T01"
+      ],
+      "evaluatedGateRequirements": [],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP13-T02",
+      "title": "safe-watermark/事件revision/epoch ADR",
+      "phase": 3,
+      "recordedImplementation": "IN_PROGRESS",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "READY_FOR_SELECTED_IMPLEMENTATION_SCOPE",
+      "selectedScope": "未签署ADR及自有PG barrier证据；不发布水位方案或迁移",
+      "implementationDependencies": [
+        "RP13-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-04",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "T-RP-10",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "S03-OI-01",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP13-T03",
+      "title": "生产者coverage/bootstrap/ACL/过期重建",
+      "phase": 3,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_DEPENDENCY",
+      "selectedScope": "待依赖和水位/epoch合同获准；不假定delete/live语义获准",
+      "implementationDependencies": [
+        "RP13-T02",
+        "RP09-T01",
+        "RP08-T02",
+        "RP11-T02"
+      ],
+      "unmetImplementationDependencies": [
+        "RP13-T02",
+        "RP09-T01",
+        "RP08-T02",
+        "RP11-T02"
+      ],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-04",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "T-RP-10",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "S03-OI-04",
+          "before": "RELEASE",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        },
+        {
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "only when approved delete/live-reference/tombstone semantics are changed",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PENDING"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-04",
+        "T-RP-10",
+        "D-S01-08"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP14-T01",
+      "title": "感染字节出口统一阻断",
+      "phase": 1,
+      "recordedImplementation": "COMPLETE",
+      "recordedValidation": "ENV_BLOCKED",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "IMPLEMENTED_AWAITING_SCOPED_VALIDATION",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP14-T02",
+      "title": "elevated/其他scan状态/审计",
+      "phase": 1,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_GATE",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP14-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-05",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-05"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP15-T01",
+      "title": "实际schema与历史异常只读核查",
+      "phase": 4,
+      "recordedImplementation": "IN_PROGRESS",
+      "recordedValidation": "ENV_BLOCKED",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "PREPARATION_READY_ACTUAL_DATA_ENV_BLOCKED",
+      "selectedScope": "可准备只读查询；实际统计等待获准只读副本",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "S04-OI-01",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP15-T02",
+      "title": "获准异常处置与迁移锁/关系设计",
+      "phase": 4,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_DEPENDENCY",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP15-T01",
+        "RP05-T01"
+      ],
+      "unmetImplementationDependencies": [
+        "RP15-T01"
+      ],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PENDING"
+        },
+        {
+          "ref": "T-RP-11",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "D-S01-08",
+        "T-RP-11"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP15-T03",
+      "title": "expand/validate/contract隔离演练",
+      "phase": 4,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_DEPENDENCY",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP15-T02"
+      ],
+      "unmetImplementationDependencies": [
+        "RP15-T02"
+      ],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PENDING"
+        },
+        {
+          "ref": "T-RP-11",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "D-S01-08"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP16-T01",
+      "title": "支持模块完整unique/FK registry",
+      "phase": 4,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_GATE",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-06",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-06"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP16-T02",
+      "title": "apply/真实计数/提交失败状态",
+      "phase": 4,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_DEPENDENCY",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP16-T01"
+      ],
+      "unmetImplementationDependencies": [
+        "RP16-T01"
+      ],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-06",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "S05-OI-03",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-06"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP16-T03",
+      "title": "恢复epoch/session/receipt/sync写入影响",
+      "phase": 4,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_DEPENDENCY",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP16-T02"
+      ],
+      "unmetImplementationDependencies": [
+        "RP16-T02"
+      ],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-10",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-10"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP17-T01",
+      "title": "实际目录staging与不可变发布",
+      "phase": 1,
+      "recordedImplementation": "COMPLETE",
+      "recordedValidation": "ENV_BLOCKED",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "IMPLEMENTED_AWAITING_SCOPED_VALIDATION",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP17-T02",
+      "title": "并发备份run锁/manifest/pair保留",
+      "phase": 1,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_GATE",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP17-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-11",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-11"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP17-T03",
+      "title": "目标Linux/inode/metadata及失败验收",
+      "phase": 1,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_DEPENDENCY",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP17-T02"
+      ],
+      "unmetImplementationDependencies": [
+        "RP17-T02"
+      ],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "S05-OI-01",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP18-T01",
+      "title": "先build candidate/config CLI后gate/DDL",
+      "phase": 2,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_GATE",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-08",
+        "T-RP-09"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP18-T02",
+      "title": "部署锁/原子切流/first-safe rollback",
+      "phase": 2,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_DEPENDENCY",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP18-T01"
+      ],
+      "unmetImplementationDependencies": [
+        "RP18-T01"
+      ],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-13",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "S05-OI-05",
+          "before": "RELEASE",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-13"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP18-T03",
+      "title": "目标运行配置/版本兼容验证",
+      "phase": 2,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_DEPENDENCY",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP18-T02"
+      ],
+      "unmetImplementationDependencies": [
+        "RP18-T02"
+      ],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "S05-OI-04",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        },
+        {
+          "ref": "T-RP-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-08"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP19-T01",
+      "title": "R12-N01候选外部协调证据裁定",
+      "phase": 5,
+      "recordedImplementation": "COMPLETE",
+      "recordedValidation": "ENV_BLOCKED",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "IMPLEMENTED_AWAITING_SCOPED_VALIDATION",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "S05-OI-02",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP19-T02",
+      "title": "配对恢复/一致时点/epoch演练",
+      "phase": 5,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_DEPENDENCY",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP19-T01",
+        "RP17-T02",
+        "RP18-T01"
+      ],
+      "unmetImplementationDependencies": [
+        "RP17-T02",
+        "RP18-T01"
+      ],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "T-RP-10",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        },
+        {
+          "ref": "S05-OI-02",
+          "before": "VALIDATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-10"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP19-T03",
+      "title": "按具体candidate范围计算release gates",
+      "phase": 5,
+      "recordedImplementation": "NOT_STARTED",
+      "recordedValidation": "NOT_RUN",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "WAIT_IMPLEMENTATION_DEPENDENCY",
+      "selectedScope": "任务卡标准范围；以具名批准合同为准",
+      "implementationDependencies": [
+        "RP18-T02",
+        "RP17-T03",
+        "RP00-T05"
+      ],
+      "unmetImplementationDependencies": [
+        "RP18-T02",
+        "RP17-T03"
+      ],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [
+        {
+          "ref": "S05-OI-04",
+          "before": "RELEASE",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        },
+        {
+          "ref": "S05-OI-05",
+          "before": "RELEASE",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "OPEN"
+        },
+        {
+          "ref": "T-RP-13",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "resolution": "UNRESOLVED",
+          "recordedStatus": "PROPOSED"
+        }
+      ],
+      "unresolvedImplementationGates": [
+        "T-RP-13"
+      ],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    },
+    {
+      "taskId": "RP19-T04",
+      "title": "32confirmed+candidate总体处置对账",
+      "phase": 5,
+      "recordedImplementation": "IN_PROGRESS",
+      "recordedValidation": "ENV_BLOCKED",
+      "recordedRelease": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "reviewerReadiness": "DEFER_PROGRAMME_CLOSURE",
+      "selectedScope": "保留中间对账，整体关闭放在最终收口",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "unmetImplementationDependencies": [],
+      "acceptanceDependencies": [],
+      "unmetAcceptanceDependencies": [],
+      "evaluatedGateRequirements": [],
+      "unresolvedImplementationGates": [],
+      "additionalPrerequisites": [],
+      "reviewerIssueIds": []
+    }
+  ],
+  "nextAction": "RP02-T01 scoped rework; next fresh task RP08-T01 without registration global exception"
+}

@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-05",
+  "scope": "REVIEW_AUTHORING_AND_INPUT_PRESERVATION_ONLY",
+  "executorSealVerdict": "MATERIAL_PRESERVED_SEAL_CORRECTION_NOT_ACCEPTED",
+  "currentK23Preserved": true,
+  "currentSixRootsPreserved": true,
+  "canonicalIndexRefOccurrences": 55,
+  "canonicalIndexReadbackErrors": [],
+  "diagnosticOriginalFailuresRemain": 13,
+  "payloadMatchedFiles": 19,
+  "payloadTotalFiles": 20,
+  "reviewArtifacts": {
+    "REVIEW_ENTRY.md": "b192d979751b52339510664f810b1d9d1cbb657cfa825e4adf4a179760c1d719",
+    "canonical-reference-index.json": "c70c84857fa5f8a06f53f517618bccf5f05c36588921e94ed70f37fa3fc3901b",
+    "findings.json": "c63f19564306884754252534c6c978243b0295104b9fb7f6ee7815270e87c424",
+    "REVIEW.md": "e97641cd2e3bf8555a6d53e3577a6f24a33ced2fd2beb95c76060fbb27d6af45",
+    "NEXT_EXECUTION_PROMPT.md": "476d26db5d7c692c3a9d3dcd1f7ce3ed055f444e29a769a2e98f1c317dd444f5",
+    "evidence/check-delivery.py": "e5331d3a17c5edcf2223e43e29817c87053e6641bf3c4ca30fc78d3beeb68e7a",
+    "evidence/reviewer-authoring-attempts.txt": "d42c7c49be64f83a1fd04726c1511573bba14bca4440f3a74a90b52e7c283661",
+    "evidence/readback.json": "444dfcd35331f99822967050b209bc34ac4c6ed16adfdc44232c3e1da98ab45e"
+  },
+  "excludedSelf": "authoring-readback.json",
+  "productCommandsRun": [],
+  "rootRecordWrites": false,
+  "policyApprovalsGranted": false
+}

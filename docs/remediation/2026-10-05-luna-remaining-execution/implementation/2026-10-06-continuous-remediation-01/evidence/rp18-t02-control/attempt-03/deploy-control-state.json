@@ -1,0 +1,353 @@
+{
+  "layer": "REAL_OWNED_FILESYSTEM_SIMULATED_SERVICE_DDL_HOOKS",
+  "cases": [
+    {
+      "name": "SUCCESS_ATOMIC_IDENTITY_AND_PHASE_ORDER",
+      "result": "PASS"
+    },
+    {
+      "name": "CANDIDATE_DRIFT_PRE_EFFECT_REJECTION",
+      "result": "PASS"
+    },
+    {
+      "name": "UNKNOWN_SCHEMA_MATRIX_NO_DDL",
+      "result": "PASS"
+    },
+    {
+      "name": "MIGRATION_UNKNOWN_EFFECT_FIRSTSAFE_CONTAINMENT",
+      "result": "PASS"
+    },
+    {
+      "name": "WRONG_BUILD_CONTAINED_NO_UNSAFE_ROLLBACK",
+      "result": "PASS"
+    },
+    {
+      "name": "EXPLICIT_CERTIFIED_COMPATIBLE_ROLLBACK_NOT_DEPLOY_SUCCESS",
+      "result": "PASS"
+    },
+    {
+      "name": "UNCERTIFIED_SECURITY_FLOOR_REJECTED",
+      "result": "PASS"
+    },
+    {
+      "name": "REAL_LIVING_PROCESS_LEASE_CONTENDER_NO_EFFECT",
+      "result": "PASS"
+    },
+    {
+      "name": "PARTIAL_STOP_UNKNOWN_NOT_HEALTHY_ROLLBACK",
+      "result": "PASS"
+    },
+    {
+      "name": "LOCAL_APPROVAL_CANNOT_ARM_TARGET_CLI",
+      "result": "PASS"
+    }
+  ],
+  "controls": [
+    {
+      "runId": "29acdbec779647c4a792c6ec23821d83",
+      "kind": "REAL_OWNED_FILESYSTEM_SIMULATED_SERVICE_DDL_HOOKS",
+      "state": "COMPLETE_CONTROLLED_CUTOVER",
+      "events": [
+        {
+          "phase": "CANDIDATE_VERIFIED",
+          "at": 1791290514.5048199,
+          "buildId": "new-candidate",
+          "previous": "/private/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-deploy-control-owned-id_73d5w/success/certifiable-prior"
+        },
+        {
+          "phase": "STOP_WRITES_REQUESTED",
+          "at": 1791290514.50502
+        },
+        {
+          "phase": "WRITES_STOPPED",
+          "at": 1791290514.505228
+        },
+        {
+          "phase": "PAIRED_BACKUP_VERIFIED",
+          "at": 1791290514.5054212,
+          "pairId": "SYNTHETIC-HOOK-PAIR"
+        },
+        {
+          "phase": "MIGRATION_STARTED",
+          "at": 1791290514.5065842
+        },
+        {
+          "phase": "MIGRATION_FINISHED",
+          "at": 1791290514.5067892
+        },
+        {
+          "phase": "POINTER_SWITCHED",
+          "at": 1791290514.508258
+        },
+        {
+          "phase": "RESTARTED",
+          "at": 1791290514.5084631
+        },
+        {
+          "phase": "READY_SMOKE_OBSERVED",
+          "at": 1791290514.508668
+        },
+        {
+          "phase": "COMPLETE_CONTROLLED_CUTOVER",
+          "at": 1791290514.508873
+        }
+      ],
+      "schemaMayHaveChanged": true,
+      "pointerChanged": true,
+      "release": "NOT_EVALUATED",
+      "result": "PASS"
+    },
+    {
+      "runId": "2075f959857149a8861b0c0e76cb5a4d",
+      "kind": "REAL_OWNED_FILESYSTEM_SIMULATED_SERVICE_DDL_HOOKS",
+      "state": "FAILED",
+      "events": [
+        {
+          "phase": "FAILED",
+          "at": 1791290514.5123699
+        }
+      ],
+      "schemaMayHaveChanged": false,
+      "pointerChanged": false,
+      "release": "NOT_EVALUATED",
+      "failure": "ValueError:CANDIDATE_HASH_DRIFT",
+      "result": "FAIL"
+    },
+    {
+      "runId": "79dbc9ba7c93431fb796d480401f2f2c",
+      "kind": "REAL_OWNED_FILESYSTEM_SIMULATED_SERVICE_DDL_HOOKS",
+      "state": "FAILED",
+      "events": [
+        {
+          "phase": "FAILED",
+          "at": 1791290514.516261
+        }
+      ],
+      "schemaMayHaveChanged": false,
+      "pointerChanged": false,
+      "release": "NOT_EVALUATED",
+      "failure": "ValueError:MIGRATION_COMPATIBILITY_UNKNOWN",
+      "result": "FAIL"
+    },
+    {
+      "runId": "03305a2e2ed441be95716d72a7236421",
+      "kind": "REAL_OWNED_FILESYSTEM_SIMULATED_SERVICE_DDL_HOOKS",
+      "state": "MAINTENANCE_REQUIRED",
+      "events": [
+        {
+          "phase": "CANDIDATE_VERIFIED",
+          "at": 1791290514.520808,
+          "buildId": "new-candidate",
+          "previous": "/private/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-deploy-control-owned-id_73d5w/migration-fail/certifiable-prior"
+        },
+        {
+          "phase": "STOP_WRITES_REQUESTED",
+          "at": 1791290514.5210009
+        },
+        {
+          "phase": "WRITES_STOPPED",
+          "at": 1791290514.521214
+        },
+        {
+          "phase": "PAIRED_BACKUP_VERIFIED",
+          "at": 1791290514.5214221,
+          "pairId": "SYNTHETIC-HOOK-PAIR"
+        },
+        {
+          "phase": "MIGRATION_STARTED",
+          "at": 1791290514.523032
+        },
+        {
+          "phase": "FAILED",
+          "at": 1791290514.523262
+        },
+        {
+          "phase": "MAINTENANCE_REQUIRED",
+          "at": 1791290514.523485
+        }
+      ],
+      "schemaMayHaveChanged": true,
+      "pointerChanged": false,
+      "release": "NOT_EVALUATED",
+      "failure": "ValueError:HOOK_FAILED:migrate",
+      "result": "FAIL"
+    },
+    {
+      "runId": "429a9c0f633649b9b2d2bfc1e20700b0",
+      "kind": "REAL_OWNED_FILESYSTEM_SIMULATED_SERVICE_DDL_HOOKS",
+      "state": "MAINTENANCE_REQUIRED",
+      "events": [
+        {
+          "phase": "CANDIDATE_VERIFIED",
+          "at": 1791290514.527416,
+          "buildId": "new-candidate",
+          "previous": "/private/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-deploy-control-owned-id_73d5w/ready-fail/certifiable-prior"
+        },
+        {
+          "phase": "STOP_WRITES_REQUESTED",
+          "at": 1791290514.5275788
+        },
+        {
+          "phase": "WRITES_STOPPED",
+          "at": 1791290514.527766
+        },
+        {
+          "phase": "PAIRED_BACKUP_VERIFIED",
+          "at": 1791290514.527945,
+          "pairId": "SYNTHETIC-HOOK-PAIR"
+        },
+        {
+          "phase": "MIGRATION_STARTED",
+          "at": 1791290514.529058
+        },
+        {
+          "phase": "MIGRATION_FINISHED",
+          "at": 1791290514.529262
+        },
+        {
+          "phase": "POINTER_SWITCHED",
+          "at": 1791290514.530755
+        },
+        {
+          "phase": "RESTARTED",
+          "at": 1791290514.530955
+        },
+        {
+          "phase": "FAILED",
+          "at": 1791290514.531153
+        },
+        {
+          "phase": "MAINTENANCE_REQUIRED",
+          "at": 1791290514.531355
+        }
+      ],
+      "schemaMayHaveChanged": true,
+      "pointerChanged": true,
+      "release": "NOT_EVALUATED",
+      "failure": "ValueError:SERVICE_BUILD_OR_READY_MISMATCH",
+      "result": "FAIL"
+    },
+    {
+      "runId": "7031762fe7014fe0a3b9ca057e554c3e",
+      "kind": "REAL_OWNED_FILESYSTEM_SIMULATED_SERVICE_DDL_HOOKS",
+      "state": "SAFE_COMPATIBLE_ROLLBACK",
+      "events": [
+        {
+          "phase": "CANDIDATE_VERIFIED",
+          "at": 1791290514.536396,
+          "buildId": "new-candidate",
+          "previous": "/private/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-deploy-control-owned-id_73d5w/safe-rollback/certifiable-prior"
+        },
+        {
+          "phase": "STOP_WRITES_REQUESTED",
+          "at": 1791290514.536573
+        },
+        {
+          "phase": "WRITES_STOPPED",
+          "at": 1791290514.536774
+        },
+        {
+          "phase": "PAIRED_BACKUP_VERIFIED",
+          "at": 1791290514.5369642,
+          "pairId": "SYNTHETIC-HOOK-PAIR"
+        },
+        {
+          "phase": "MIGRATION_STARTED",
+          "at": 1791290514.538079
+        },
+        {
+          "phase": "MIGRATION_FINISHED",
+          "at": 1791290514.53828
+        },
+        {
+          "phase": "POINTER_SWITCHED",
+          "at": 1791290514.539725
+        },
+        {
+          "phase": "RESTARTED",
+          "at": 1791290514.539967
+        },
+        {
+          "phase": "FAILED",
+          "at": 1791290514.54017
+        },
+        {
+          "phase": "SAFE_COMPATIBLE_ROLLBACK",
+          "at": 1791290514.5415869
+        }
+      ],
+      "schemaMayHaveChanged": true,
+      "pointerChanged": true,
+      "release": "NOT_EVALUATED",
+      "failure": "ValueError:SERVICE_BUILD_OR_READY_MISMATCH",
+      "result": "FAIL"
+    },
+    {
+      "runId": "38ec3e2f93984b34a9494072e0b28133",
+      "kind": "REAL_OWNED_FILESYSTEM_SIMULATED_SERVICE_DDL_HOOKS",
+      "state": "FAILED",
+      "events": [
+        {
+          "phase": "FAILED",
+          "at": 1791290514.547022
+        }
+      ],
+      "schemaMayHaveChanged": false,
+      "pointerChanged": false,
+      "release": "NOT_EVALUATED",
+      "failure": "ValueError:UNSAFE_ROLLBACK_TARGET",
+      "result": "FAIL"
+    },
+    {
+      "runId": "9797c323896449c2bc75f201550b5f73",
+      "kind": "REAL_OWNED_FILESYSTEM_SIMULATED_SERVICE_DDL_HOOKS",
+      "state": "LOCK_BUSY",
+      "events": [],
+      "schemaMayHaveChanged": false,
+      "pointerChanged": false,
+      "release": "NOT_EVALUATED",
+      "result": "FAIL"
+    },
+    {
+      "runId": "a66314daf94c4522bc90be5f9648b45c",
+      "kind": "REAL_OWNED_FILESYSTEM_SIMULATED_SERVICE_DDL_HOOKS",
+      "state": "MAINTENANCE_UNCONFIRMED",
+      "events": [
+        {
+          "phase": "CANDIDATE_VERIFIED",
+          "at": 1791290514.5877929,
+          "buildId": "new-candidate",
+          "previous": "/private/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-deploy-control-owned-id_73d5w/stop-uncertain/certifiable-prior"
+        },
+        {
+          "phase": "STOP_WRITES_REQUESTED",
+          "at": 1791290514.587996
+        },
+        {
+          "phase": "FAILED",
+          "at": 1791290514.588227
+        },
+        {
+          "phase": "MAINTENANCE_UNCONFIRMED",
+          "at": 1791290514.588445
+        }
+      ],
+      "schemaMayHaveChanged": false,
+      "pointerChanged": false,
+      "release": "NOT_EVALUATED",
+      "failure": "ValueError:HOOK_FAILED:stopWrites",
+      "containmentFailure": "RuntimeError:ValueError:HOOK_FAILED:stopWrites",
+      "result": "FAIL"
+    }
+  ],
+  "actualServiceOperations": 0,
+  "actualDDLOperations": 0,
+  "productionDeploymentOperations": 0,
+  "limits": [
+    "Synthetic service/DDL hook proof is not target service/rollback/DB acceptance",
+    "Only actual owned FS lease/rename/hash changes executed"
+  ],
+  "cleanup": {
+    "ownedRootRemoved": true
+  }
+}

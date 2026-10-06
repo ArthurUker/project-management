@@ -1,0 +1,23 @@
+{
+  "capturedAt": "2026-10-04T00:00:00Z",
+  "gitHead": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "headMatchesRP00T04Baseline": true,
+  "batchManifestExecutionStarted": false,
+  "batchManifestNewBusinessApprovalsGranted": false,
+  "frozenPromptSha256": {
+    "WINDOW_D_AUTH.md": "309c736... (verified 309c989f525135e1dc47c23e9aedc63b7380ae27378db843da5ffb7dfef7226f)",
+    "COMMON_RULES.md": "f0779c6370a7864cd0b80dc6d1f9fb656eb840f0dd86e063dd03d1b2dc34c0bb"
+  },
+  "repoStatusNote": "Working tree has unrelated business edits in rdpms-system (auth.js among modified) from prior sessions; these are NOT part of this window. Window D only reads source for fact tracing and writes exclusively to window-d-auth partition. No source file is modified by this window.",
+  "sourceFileSha256": {
+    "rdpms-system/backend/src/routes/auth.js": "8f736619a1526247073697865490a6fef67053f92c501fbe65f617b29b3f12b4",
+    "rdpms-system/frontend/src/api/http.ts": "ddc1df339ee119566375a32e36c94d6cae7c89b05aea4142749a20e80882d9a7",
+    "rdpms-system/frontend/src/auth/tokenStore.ts": "ee009d10b1225d799d5adfc41ffde972e628961ab776028944d9dffac3782266",
+    "rdpms-system/backend/src/kernel/rbac.js": "99ca8177a7c6aed2f4cf820e7bb82ae572c516d2647aec1366dbfcce9695ce2f",
+    "rdpms-system/frontend/src/auth/AuthProvider.tsx": "b16e610ddc4367fb6f8bf1b0c5531ea6c507db9b1f630012d47b21eeb2cf7617"
+  },
+  "reusedEvidence": {
+    "RP00-T04/evidence/auth-generation-matrix.json": "reused as the authoritative static transport/generation matrix source for this window; not rerun. Original matrix observations OBS-01..OBS-07 carried forward with current line-number/hash re-verification."
+  },
+  "driftCheck": "No protected/shared ledger file or business source file is written by this window. New files are confined to window-d-auth/. Parallel other windows (A-F) may add their own partitions but are not modified here."
+}

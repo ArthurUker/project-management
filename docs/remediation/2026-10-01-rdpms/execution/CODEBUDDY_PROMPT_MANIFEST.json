@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-02",
+  "prompt": "docs/remediation/2026-10-01-rdpms/execution/CODEBUDDY_EXECUTOR_PROMPT.md",
+  "sha256": "b037a686aba602944493e3e6ea657d04eaa9cfd2d397822cd571216c4cdf2c5d",
+  "taskIds": [
+    "RP10-T02",
+    "RP04-T02",
+    "RP02-T01",
+    "RP08-T01"
+  ],
+  "purpose": "bounded handoff prompt; no implementation or decision approval performed",
+  "reviewInput": "execution/reviews/2026-10-02-post-continuous/REVIEW.md"
+}

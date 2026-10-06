@@ -1,0 +1,8 @@
+{
+ "taskId":"RP04-T01","packageId":"RP04","implementation":"COMPLETE","validation":"ENV_BLOCKED","release":"NOT_EVALUATED","owner":"Codex executor","allowedTaskIds":["RP04-T01"],
+ "changedFiles":["rdpms-system/backend/src/routes/projects.js","rdpms-system/backend/tests/integration/rp04-project-snapshot-active.integration.test.mjs"],
+ "evidence":["authorization.json","change-summary.md","acceptance.json","rollback.md","evidence/historical-evidence.json","evidence/source-digest-comparison.json","evidence/source-diff.patch","evidence/commands-and-results.json"],
+ "stillOpen":["B03 local API/database acceptance blocked by missing build compiler and owned DB.","B20 current list/stat database acceptance blocked by missing build compiler and owned DB.","No current browser/client validation for UI status/default-date behavior."],
+ "cleanup":"no runtime resource created",
+ "releaseStatus":"NOT_EVALUATED"
+}

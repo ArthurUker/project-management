@@ -1,0 +1,324 @@
+{
+  "reviewId": "CODEBUDDY-SUPPLEMENTS-REVIEW-2026-10-03",
+  "businessSourceFileSetAndHashesUnchangedDuringReview": true,
+  "businessSourceFilesChecked": 174,
+  "untrackedBusinessSourceFilesIncluded": [
+    "rdpms-system/backend/src/modules/files/fileReadService.ts",
+    "rdpms-system/backend/src/modules/projects/projectCommands.ts"
+  ],
+  "codebuddyMetricMatchesCurrent": true,
+  "codebuddyMetricLimit": "Tracked-only metric does not cover the two untracked business source files; no saved executor start-baseline permits reconstructing a full historical start/end set. Current prior reviewed individual hashes match for business files.",
+  "codebuddyFormalTestsDuringReviewUnchanged": {
+    "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs": true,
+    "rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs": true
+  },
+  "frozenRootsChecked": 10,
+  "frozenFilesChecked": 506,
+  "frozenDriftedRoots": [],
+  "backendDistExistsNow": false,
+  "independentRuns": {
+    "independent-rp10": {
+      "results": "evidence/independent-rp10/attempt-01/run-results.json",
+      "testSummary": {
+        "tests": 19,
+        "pass": 19,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-supp-review-viyk7vpi/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-supp-review-viyk7vpi/pg",
+            "-l",
+            "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-supp-review-viyk7vpi/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 55676 -k /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-supp-review-viyk7vpi/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "guard-reset",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "reset"
+          ],
+          "exitCode": 0,
+          "log": "guard-reset.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+          ],
+          "exitCode": 0,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-supp-review-viyk7vpi/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true
+      },
+      "temporaryRootExistsNow": false
+    },
+    "independent-rp08": {
+      "results": "evidence/independent-rp08/attempt-01/run-results.json",
+      "testSummary": {
+        "tests": 12,
+        "pass": 12,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-supp-review-8huyrdwk/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-supp-review-8huyrdwk/pg",
+            "-l",
+            "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-supp-review-8huyrdwk/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 55817 -k /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-supp-review-8huyrdwk/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "guard-reset",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "reset"
+          ],
+          "exitCode": 0,
+          "log": "guard-reset.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rp08-sync-read-authorization.integration.test.mjs"
+          ],
+          "exitCode": 0,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-supp-review-8huyrdwk/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true
+      },
+      "temporaryRootExistsNow": false
+    }
+  },
+  "release": "NOT_EVALUATED",
+  "trackedMetricReconstruction": {
+    "reported": "7564dcf2b4da343ed077b8e85a2ba8ba0b5e1da9af6e5fbf9da1770a4a88a0eb",
+    "computedVariants": {
+      "sha1-lines-newline": "b4aa61828eda9e3b9bc103a14101a86d87738472d7c795b7e5f2db4bfea85c2d",
+      "sha1-lines-no-final-newline": "d80c55b0713bf8b47d019fce8047d394871795472c56f790ced39d3f5b36be2d",
+      "sha1-direct-concatenation": "b23cd8747bd9149da6a1ad3ce3ea96dad0ba59cc71df740ddfedf39d416c964c",
+      "sha1-sorted-lines": "7564dcf2b4da343ed077b8e85a2ba8ba0b5e1da9af6e5fbf9da1770a4a88a0eb"
+    },
+    "matchingRecipes": [
+      "sha1-sorted-lines"
+    ],
+    "meaning": "Recipe differences alone are not proof of business source change; individual prior-reviewed source hashes checked separately."
+  },
+  "computedGitPathOrderMetric": "b4aa61828eda9e3b9bc103a14101a86d87738472d7c795b7e5f2db4bfea85c2d",
+  "codebuddyReportedTrackedMetric": "7564dcf2b4da343ed077b8e85a2ba8ba0b5e1da9af6e5fbf9da1770a4a88a0eb",
+  "codebuddyMetricRecipe": "SHA256 of sorted git hash-object SHA1 lines including trailing newline"
+}

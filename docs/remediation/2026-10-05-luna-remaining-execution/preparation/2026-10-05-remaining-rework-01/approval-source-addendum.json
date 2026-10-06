@@ -1,0 +1,1421 @@
+{
+  "status": "PENDING_OWNER_DECISIONS",
+  "count": 21,
+  "requests": [
+    {
+      "decisionId": "D-S01-01",
+      "preparationWorkId": "LP-03",
+      "kind": "BUSINESS",
+      "sourceStatus": "PENDING",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/0"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP01-T02"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "Product owner",
+        "Security owner",
+        "System governance approver"
+      ],
+      "scope": "Reset, enable, disable and delete routes; SUPER_ADMIN recovery and account governance.",
+      "optionsAsRecorded": [
+        "Forbid reset/disable of equal or higher-ranked accounts; define separate emergency flow.",
+        "Allow only explicitly ranked superior roles, with approval and audit requirements.",
+        "Keep permission-only control as an intentional policy, with explicit scope."
+      ],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP01-T02"
+      ],
+      "contractRefs": [
+        "PC02"
+      ],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    },
+    {
+      "decisionId": "D-S01-02",
+      "preparationWorkId": "LP-03",
+      "kind": "BUSINESS",
+      "sourceStatus": "PENDING",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/1"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP01-T02"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "Security owner",
+        "Product owner"
+      ],
+      "scope": "First-login session permissions, account takeover containment, bootstrap UX.",
+      "optionsAsRecorded": [
+        "Restrict the session server-side to password change, logout and required self-service endpoints.",
+        "Restrict only sensitive operations with an explicit allowlist.",
+        "Intentionally retain current route-local enforcement and document rationale."
+      ],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP01-T02"
+      ],
+      "contractRefs": [],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    },
+    {
+      "decisionId": "D-S01-03",
+      "preparationWorkId": "LP-03",
+      "kind": "BUSINESS",
+      "sourceStatus": "PENDING",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/2"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP01-T03"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "IAM/security owner",
+        "Product owner"
+      ],
+      "scope": "Role creation and assignment DTOs, permission administration and M-1 role contract.",
+      "optionsAsRecorded": [
+        "Custom roles cannot be assigned; constrain creation to its intended use.",
+        "Custom roles can be assigned; define permission grant, lifecycle and management policy.",
+        "Only specified administrative roles can assign custom roles."
+      ],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP01-T03"
+      ],
+      "contractRefs": [],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    },
+    {
+      "decisionId": "D-S01-04",
+      "preparationWorkId": "LP-02",
+      "kind": "BUSINESS",
+      "sourceStatus": "PENDING",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-d-auth/decision-draft.json",
+          "expectedSha256": "ae87041b859acbfbd715cfbaeeba1074d8d66bfd787f70fa2d2d214b8c62aece",
+          "actualSha256": "ae87041b859acbfbd715cfbaeeba1074d8d66bfd787f70fa2d2d214b8c62aece",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-d-auth/interface-notes.md",
+          "expectedSha256": "0707f6abd733e8bd181fdd8fc7fb6e92222398048437c85425bb42ba073ac749",
+          "actualSha256": "0707f6abd733e8bd181fdd8fc7fb6e92222398048437c85425bb42ba073ac749",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/cache-recovery-matrix.csv",
+          "expectedSha256": "485508ae196dc28ae10d1e44d02766b244658ef278918883b5c5c5881e9ae316",
+          "actualSha256": "485508ae196dc28ae10d1e44d02766b244658ef278918883b5c5c5881e9ae316",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/interface-notes.md",
+          "expectedSha256": "9abb9162be50c0d459e15c0cf10c112cd12bacc93c797c4c5c8f0fc2f7af3535",
+          "actualSha256": "9abb9162be50c0d459e15c0cf10c112cd12bacc93c797c4c5c8f0fc2f7af3535",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/3"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP03-T02"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "Security owner",
+        "IAM owner",
+        "Product owner"
+      ],
+      "scope": "Authentication middleware, session/version/revocation design, password reset exposure window; separately specify disable and role downgrade behavior.",
+      "optionsAsRecorded": [
+        "Invalidate already-issued access JWTs immediately after password change/reset.",
+        "Allow a bounded grace period with a specified maximum duration.",
+        "Do not actively invalidate; rely on token expiry, with an explicitly approved maximum TTL."
+      ],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP03-T02"
+      ],
+      "contractRefs": [
+        "PC01"
+      ],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    },
+    {
+      "decisionId": "D-S01-05",
+      "preparationWorkId": "LP-03",
+      "kind": "BUSINESS",
+      "sourceStatus": "PENDING",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/4"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP06-T01",
+            "RP08-T01"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "Product owner",
+        "Data/privacy owner",
+        "M-1 governance approver"
+      ],
+      "scope": "Registration list/stats/detail/update/stage/profile/export and linked profile, tasks, members and regulatory data; SUPER_ADMIN audit.",
+      "optionsAsRecorded": [
+        "Apply the general project membership/capability boundary to all registration routes.",
+        "Allow global read for a defined field/statistics subset; keep writes membership-scoped.",
+        "Allow specified roles broader read/write, enumerating route and field scope."
+      ],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP06-T01",
+        "RP08-T01"
+      ],
+      "contractRefs": [
+        "PC02"
+      ],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    },
+    {
+      "decisionId": "D-S01-06",
+      "preparationWorkId": "LP-03",
+      "kind": "BUSINESS",
+      "sourceStatus": "PENDING",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/5"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP06-T02",
+            "RP07-T02"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "Project governance owner",
+        "Product owner",
+        "Technical owner"
+      ],
+      "scope": "Project and registration create/update, HTTP/sync behavior, membership roles, visibility and transfer atomicity.",
+      "optionsAsRecorded": [
+        "managerId must identify an active ProjectMember with MANAGER role.",
+        "A manager may be a non-member; define whether managerId grants any visibility or capability (recommended explicit no implicit grant).",
+        "managerId is display metadata only; authorization derives exclusively from ProjectMember."
+      ],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP06-T02",
+        "RP07-T02"
+      ],
+      "contractRefs": [
+        "PC02",
+        "PC07"
+      ],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    },
+    {
+      "decisionId": "D-S01-07",
+      "preparationWorkId": "LP-03",
+      "kind": "BUSINESS",
+      "sourceStatus": "PENDING",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/6"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP10-T02",
+            "RP10-T03"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "Report workflow product owner",
+        "Audit/compliance owner"
+      ],
+      "scope": "Report submit/version snapshots, resubmission UX, approval workflow and audit evidence.",
+      "optionsAsRecorded": [
+        "Allow submit only from DRAFT and NEEDS_REVISION.",
+        "Allow resubmit from SUBMITTED under a defined version/update rule; distinguish same-key replay from a new-key command.",
+        "Approve another explicit transition table and reviewer concurrency behavior."
+      ],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP10-T02",
+        "RP10-T03"
+      ],
+      "contractRefs": [],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    },
+    {
+      "decisionId": "D-S01-08",
+      "preparationWorkId": "LP-03",
+      "kind": "BUSINESS",
+      "sourceStatus": "PENDING",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/7"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP05-T02",
+            "RP05-T03",
+            "RP13-T03",
+            "RP15-T02",
+            "RP15-T03"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "Project governance owner",
+        "Data architecture owner",
+        "Technical owner"
+      ],
+      "scope": "HTTP/sync commands, schema constraints, recursive deletion, restore, existing data migration and offline caches.",
+      "optionsAsRecorded": [
+        "Require task parent and phase same-project/live references, enforce an acyclic dependency DAG, and define aggregate tombstone/restore behavior.",
+        "Require same-project references, preserve/label existing cycle and soft-delete anomalies during staged cleanup, and define DAG enforcement scope.",
+        "Approve another explicit relation and tombstone contract, including physical delete and offline sync propagation."
+      ],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP05-T02",
+        "RP05-T03",
+        "RP13-T03",
+        "RP15-T02",
+        "RP15-T03"
+      ],
+      "contractRefs": [
+        "PC07"
+      ],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    },
+    {
+      "decisionId": "T-RP-01",
+      "preparationWorkId": "LP-02",
+      "kind": "TECHNICAL_DESIGN",
+      "sourceStatus": "PROPOSED",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-d-auth/decision-draft.json",
+          "expectedSha256": "ae87041b859acbfbd715cfbaeeba1074d8d66bfd787f70fa2d2d214b8c62aece",
+          "actualSha256": "ae87041b859acbfbd715cfbaeeba1074d8d66bfd787f70fa2d2d214b8c62aece",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-d-auth/interface-notes.md",
+          "expectedSha256": "0707f6abd733e8bd181fdd8fc7fb6e92222398048437c85425bb42ba073ac749",
+          "actualSha256": "0707f6abd733e8bd181fdd8fc7fb6e92222398048437c85425bb42ba073ac749",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/cache-recovery-matrix.csv",
+          "expectedSha256": "485508ae196dc28ae10d1e44d02766b244658ef278918883b5c5c5881e9ae316",
+          "actualSha256": "485508ae196dc28ae10d1e44d02766b244658ef278918883b5c5c5881e9ae316",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/interface-notes.md",
+          "expectedSha256": "9abb9162be50c0d459e15c0cf10c112cd12bacc93c797c4c5c8f0fc2f7af3535",
+          "actualSha256": "9abb9162be50c0d459e15c0cf10c112cd12bacc93c797c4c5c8f0fc2f7af3535",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/8"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP11-T02"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "产品/数据负责人",
+        "前端负责人"
+      ],
+      "scope": "无可靠owner行隔离，认领不能从首个登录/内容猜测；导出和保留须获准。",
+      "optionsAsRecorded": [],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP11-T02"
+      ],
+      "contractRefs": [
+        "PC04",
+        "PC12"
+      ],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    },
+    {
+      "decisionId": "T-RP-02",
+      "preparationWorkId": "LP-01",
+      "kind": "TECHNICAL_DESIGN",
+      "sourceStatus": "PROPOSED",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/decision-draft.json",
+          "expectedSha256": "13a48fb7f595120b6d51c7aadfb6dd95339ca8de9bc16d6fc668597336b13194",
+          "actualSha256": "13a48fb7f595120b6d51c7aadfb6dd95339ca8de9bc16d6fc668597336b13194",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/current-contract.md",
+          "expectedSha256": "988beee86e7bf2e71b5e78865458a6f9ea5b4bce6ef70f8c284d71868f6ee9a2",
+          "actualSha256": "988beee86e7bf2e71b5e78865458a6f9ea5b4bce6ef70f8c284d71868f6ee9a2",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/acceptance-draft.csv",
+          "expectedSha256": "1288d0e73e121278f92bdfa00ebe08452bb8cecc3a8fbe571e15769a94837729",
+          "actualSha256": "1288d0e73e121278f92bdfa00ebe08452bb8cecc3a8fbe571e15769a94837729",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/interface-notes.md",
+          "expectedSha256": "ddd6d48de68f3d964c8dcbfbb1ef3a9386c34664dc6d31f7e47bbecd1306b157",
+          "actualSha256": "ddd6d48de68f3d964c8dcbfbb1ef3a9386c34664dc6d31f7e47bbecd1306b157",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/9"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP09-T01",
+            "RP09-T02",
+            "RP12-T02"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "后端/产品/运维负责人"
+      ],
+      "scope": "actor/resource/command/key/hash、device/hash版本、unknown/expired、replay查询和最大离线窗。",
+      "optionsAsRecorded": [],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP09-T01",
+        "RP09-T02",
+        "RP12-T02"
+      ],
+      "contractRefs": [
+        "PC03"
+      ],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    },
+    {
+      "decisionId": "T-RP-03",
+      "preparationWorkId": "LP-04",
+      "kind": "TECHNICAL_DESIGN",
+      "sourceStatus": "PROPOSED",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/decision-draft.md",
+          "expectedSha256": "160898d42aae3843e5fecdefa8677c75db533b9d0c632f09513d4673acc41bbf",
+          "actualSha256": "160898d42aae3843e5fecdefa8677c75db533b9d0c632f09513d4673acc41bbf",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/evidence/external-client-evidence-request.md",
+          "expectedSha256": "86e6c16e288320494b2d930f5e4a915b91b1338119fc00a98f8ca62bfa959c13",
+          "actualSha256": "86e6c16e288320494b2d930f5e4a915b91b1338119fc00a98f8ca62bfa959c13",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/watermark-options.md",
+          "expectedSha256": "aac760b35256e21efd1eab33d6e2b634a2d78d396ab239c302b29164c8e38197",
+          "actualSha256": "aac760b35256e21efd1eab33d6e2b634a2d78d396ab239c302b29164c8e38197",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/approval-request.md",
+          "expectedSha256": "55ca00b1eb3fb06e356465278b7d555c28f2e8ab8ad9245f116288949299f178",
+          "actualSha256": "55ca00b1eb3fb06e356465278b7d555c28f2e8ab8ad9245f116288949299f178",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/10"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP10-T01"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "产品/前后端负责人"
+      ],
+      "scope": "支持版本、missing base/409提示、字段/status/assignee链、升级截止。",
+      "optionsAsRecorded": [],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP10-T01"
+      ],
+      "contractRefs": [],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    },
+    {
+      "decisionId": "T-RP-04",
+      "preparationWorkId": "LP-04",
+      "kind": "TECHNICAL_DESIGN",
+      "sourceStatus": "PROPOSED",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/decision-draft.md",
+          "expectedSha256": "160898d42aae3843e5fecdefa8677c75db533b9d0c632f09513d4673acc41bbf",
+          "actualSha256": "160898d42aae3843e5fecdefa8677c75db533b9d0c632f09513d4673acc41bbf",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/evidence/external-client-evidence-request.md",
+          "expectedSha256": "86e6c16e288320494b2d930f5e4a915b91b1338119fc00a98f8ca62bfa959c13",
+          "actualSha256": "86e6c16e288320494b2d930f5e4a915b91b1338119fc00a98f8ca62bfa959c13",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/watermark-options.md",
+          "expectedSha256": "aac760b35256e21efd1eab33d6e2b634a2d78d396ab239c302b29164c8e38197",
+          "actualSha256": "aac760b35256e21efd1eab33d6e2b634a2d78d396ab239c302b29164c8e38197",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/approval-request.md",
+          "expectedSha256": "55ca00b1eb3fb06e356465278b7d555c28f2e8ab8ad9245f116288949299f178",
+          "actualSha256": "55ca00b1eb3fb06e356465278b7d555c28f2e8ab8ad9245f116288949299f178",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/11"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP08-T02",
+            "RP13-T02",
+            "RP13-T03"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "数据库/架构负责人"
+      ],
+      "scope": "方案先用barrier证明；source revision/epoch、有序发布/ACL、snapshot边界和保留/RESET合同。",
+      "optionsAsRecorded": [],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP08-T02",
+        "RP13-T02",
+        "RP13-T03"
+      ],
+      "contractRefs": [
+        "PC05"
+      ],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    },
+    {
+      "decisionId": "T-RP-05",
+      "preparationWorkId": "LP-03",
+      "kind": "TECHNICAL_DESIGN",
+      "sourceStatus": "PROPOSED",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/12"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP14-T02"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "安全/文件负责人"
+      ],
+      "scope": "INFECTED阻断固定；FAILED/SKIPPED、metadata/字节以及敏感/拒绝审计合同。",
+      "optionsAsRecorded": [],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP14-T02"
+      ],
+      "contractRefs": [
+        "PC02"
+      ],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    },
+    {
+      "decisionId": "T-RP-06",
+      "preparationWorkId": "LP-03",
+      "kind": "TECHNICAL_DESIGN",
+      "sourceStatus": "PROPOSED",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/13"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP16-T01",
+            "RP16-T02"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "数据库/备份负责人"
+      ],
+      "scope": "JSON模块完整unique/FK、merge/replace、count和提交后核查失败状态；与整库/文件DR区分。",
+      "optionsAsRecorded": [],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP16-T01",
+        "RP16-T02"
+      ],
+      "contractRefs": [
+        "PC06",
+        "PC07"
+      ],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    },
+    {
+      "decisionId": "T-RP-07",
+      "preparationWorkId": "LP-01",
+      "kind": "TECHNICAL_DESIGN",
+      "sourceStatus": "PROPOSED",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/decision-draft.json",
+          "expectedSha256": "13a48fb7f595120b6d51c7aadfb6dd95339ca8de9bc16d6fc668597336b13194",
+          "actualSha256": "13a48fb7f595120b6d51c7aadfb6dd95339ca8de9bc16d6fc668597336b13194",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/current-contract.md",
+          "expectedSha256": "988beee86e7bf2e71b5e78865458a6f9ea5b4bce6ef70f8c284d71868f6ee9a2",
+          "actualSha256": "988beee86e7bf2e71b5e78865458a6f9ea5b4bce6ef70f8c284d71868f6ee9a2",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/acceptance-draft.csv",
+          "expectedSha256": "1288d0e73e121278f92bdfa00ebe08452bb8cecc3a8fbe571e15769a94837729",
+          "actualSha256": "1288d0e73e121278f92bdfa00ebe08452bb8cecc3a8fbe571e15769a94837729",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/interface-notes.md",
+          "expectedSha256": "ddd6d48de68f3d964c8dcbfbb1ef3a9386c34664dc6d31f7e47bbecd1306b157",
+          "actualSha256": "ddd6d48de68f3d964c8dcbfbb1ef3a9386c34664dc6d31f7e47bbecd1306b157",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/14"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP05-T02",
+            "RP09-T01"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "产品/同步负责人"
+      ],
+      "scope": "stale delete、同key重复、restore/移动scope和保留窗，不能漏sync适配。",
+      "optionsAsRecorded": [],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP05-T02",
+        "RP09-T01"
+      ],
+      "contractRefs": [
+        "PC03"
+      ],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    },
+    {
+      "decisionId": "T-RP-08",
+      "preparationWorkId": "LP-04",
+      "kind": "TECHNICAL_DESIGN",
+      "sourceStatus": "PROPOSED",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/decision-draft.md",
+          "expectedSha256": "160898d42aae3843e5fecdefa8677c75db533b9d0c632f09513d4673acc41bbf",
+          "actualSha256": "160898d42aae3843e5fecdefa8677c75db533b9d0c632f09513d4673acc41bbf",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/evidence/external-client-evidence-request.md",
+          "expectedSha256": "86e6c16e288320494b2d930f5e4a915b91b1338119fc00a98f8ca62bfa959c13",
+          "actualSha256": "86e6c16e288320494b2d930f5e4a915b91b1338119fc00a98f8ca62bfa959c13",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/watermark-options.md",
+          "expectedSha256": "aac760b35256e21efd1eab33d6e2b634a2d78d396ab239c302b29164c8e38197",
+          "actualSha256": "aac760b35256e21efd1eab33d6e2b634a2d78d396ab239c302b29164c8e38197",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/approval-request.md",
+          "expectedSha256": "55ca00b1eb3fb06e356465278b7d555c28f2e8ab8ad9245f116288949299f178",
+          "actualSha256": "55ca00b1eb3fb06e356465278b7d555c28f2e8ab8ad9245f116288949299f178",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/15"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP18-T01",
+            "RP18-T03"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "安全/发布负责人"
+      ],
+      "scope": "来源/冲突/弃用、CORS/export真实消费、编译config CLI和运行app一致。",
+      "optionsAsRecorded": [],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP18-T01",
+        "RP18-T03"
+      ],
+      "contractRefs": [
+        "PC09"
+      ],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    },
+    {
+      "decisionId": "T-RP-09",
+      "preparationWorkId": "LP-02",
+      "kind": "TECHNICAL_DESIGN",
+      "sourceStatus": "PROPOSED",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-d-auth/decision-draft.json",
+          "expectedSha256": "ae87041b859acbfbd715cfbaeeba1074d8d66bfd787f70fa2d2d214b8c62aece",
+          "actualSha256": "ae87041b859acbfbd715cfbaeeba1074d8d66bfd787f70fa2d2d214b8c62aece",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-d-auth/interface-notes.md",
+          "expectedSha256": "0707f6abd733e8bd181fdd8fc7fb6e92222398048437c85425bb42ba073ac749",
+          "actualSha256": "0707f6abd733e8bd181fdd8fc7fb6e92222398048437c85425bb42ba073ac749",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/cache-recovery-matrix.csv",
+          "expectedSha256": "485508ae196dc28ae10d1e44d02766b244658ef278918883b5c5c5881e9ae316",
+          "actualSha256": "485508ae196dc28ae10d1e44d02766b244658ef278918883b5c5c5881e9ae316",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/interface-notes.md",
+          "expectedSha256": "9abb9162be50c0d459e15c0cf10c112cd12bacc93c797c4c5c8f0fc2f7af3535",
+          "actualSha256": "9abb9162be50c0d459e15c0cf10c112cd12bacc93c797c4c5c8f0fc2f7af3535",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/16"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP00-T04",
+            "RP02-T02",
+            "RP03-T01",
+            "RP03-T02",
+            "RP11-T01",
+            "RP18-T01"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "安全/认证/前端负责人"
+      ],
+      "scope": "核对实际Bearer/body refresh；cookie旗标不证明已支持cookie。token generation、两tab成功/失败及原请求actor不越界。",
+      "optionsAsRecorded": [],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP00-T04",
+        "RP02-T02",
+        "RP03-T01",
+        "RP03-T02",
+        "RP11-T01",
+        "RP18-T01"
+      ],
+      "contractRefs": [
+        "PC01",
+        "PC04",
+        "PC09"
+      ],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    },
+    {
+      "decisionId": "T-RP-10",
+      "preparationWorkId": "LP-04",
+      "kind": "TECHNICAL_DESIGN",
+      "sourceStatus": "PROPOSED",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/decision-draft.md",
+          "expectedSha256": "160898d42aae3843e5fecdefa8677c75db533b9d0c632f09513d4673acc41bbf",
+          "actualSha256": "160898d42aae3843e5fecdefa8677c75db533b9d0c632f09513d4673acc41bbf",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/evidence/external-client-evidence-request.md",
+          "expectedSha256": "86e6c16e288320494b2d930f5e4a915b91b1338119fc00a98f8ca62bfa959c13",
+          "actualSha256": "86e6c16e288320494b2d930f5e4a915b91b1338119fc00a98f8ca62bfa959c13",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/watermark-options.md",
+          "expectedSha256": "aac760b35256e21efd1eab33d6e2b634a2d78d396ab239c302b29164c8e38197",
+          "actualSha256": "aac760b35256e21efd1eab33d6e2b634a2d78d396ab239c302b29164c8e38197",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/approval-request.md",
+          "expectedSha256": "55ca00b1eb3fb06e356465278b7d555c28f2e8ab8ad9245f116288949299f178",
+          "actualSha256": "55ca00b1eb3fb06e356465278b7d555c28f2e8ab8ad9245f116288949299f178",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/17"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP13-T02",
+            "RP13-T03",
+            "RP16-T03",
+            "RP19-T02"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "数据/安全/同步负责人"
+      ],
+      "scope": "dataset epoch、旧会话/receipt/cursor/family撤销或隔离、草稿保全及重新授权/数据迁移后的日志切点。",
+      "optionsAsRecorded": [],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP13-T02",
+        "RP13-T03",
+        "RP16-T03",
+        "RP19-T02"
+      ],
+      "contractRefs": [
+        "PC05",
+        "PC06",
+        "PC08"
+      ],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    },
+    {
+      "decisionId": "T-RP-11",
+      "preparationWorkId": "LP-04",
+      "kind": "TECHNICAL_DESIGN",
+      "sourceStatus": "PROPOSED",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/decision-draft.md",
+          "expectedSha256": "160898d42aae3843e5fecdefa8677c75db533b9d0c632f09513d4673acc41bbf",
+          "actualSha256": "160898d42aae3843e5fecdefa8677c75db533b9d0c632f09513d4673acc41bbf",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/evidence/external-client-evidence-request.md",
+          "expectedSha256": "86e6c16e288320494b2d930f5e4a915b91b1338119fc00a98f8ca62bfa959c13",
+          "actualSha256": "86e6c16e288320494b2d930f5e4a915b91b1338119fc00a98f8ca62bfa959c13",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/watermark-options.md",
+          "expectedSha256": "aac760b35256e21efd1eab33d6e2b634a2d78d396ab239c302b29164c8e38197",
+          "actualSha256": "aac760b35256e21efd1eab33d6e2b634a2d78d396ab239c302b29164c8e38197",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/approval-request.md",
+          "expectedSha256": "55ca00b1eb3fb06e356465278b7d555c28f2e8ab8ad9245f116288949299f178",
+          "actualSha256": "55ca00b1eb3fb06e356465278b7d555c28f2e8ab8ad9245f116288949299f178",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/18"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP00-T05",
+            "RP05-T03",
+            "RP12-T01",
+            "RP15-T02",
+            "RP15-T03",
+            "RP17-T02"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "数据库/前端/运维负责人"
+      ],
+      "scope": "DB锁/timeout/死锁重试、DAG递归、IDB quota、publisher lag/热水位、body预算、备份容量和目标FS。",
+      "optionsAsRecorded": [],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP00-T05",
+        "RP05-T03",
+        "RP12-T01",
+        "RP15-T02",
+        "RP15-T03",
+        "RP17-T02"
+      ],
+      "contractRefs": [
+        "PC07",
+        "PC08",
+        "PC11"
+      ],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    },
+    {
+      "decisionId": "T-RP-12",
+      "preparationWorkId": "LP-02",
+      "kind": "TECHNICAL_DESIGN",
+      "sourceStatus": "PROPOSED",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-d-auth/decision-draft.json",
+          "expectedSha256": "ae87041b859acbfbd715cfbaeeba1074d8d66bfd787f70fa2d2d214b8c62aece",
+          "actualSha256": "ae87041b859acbfbd715cfbaeeba1074d8d66bfd787f70fa2d2d214b8c62aece",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-d-auth/interface-notes.md",
+          "expectedSha256": "0707f6abd733e8bd181fdd8fc7fb6e92222398048437c85425bb42ba073ac749",
+          "actualSha256": "0707f6abd733e8bd181fdd8fc7fb6e92222398048437c85425bb42ba073ac749",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/cache-recovery-matrix.csv",
+          "expectedSha256": "485508ae196dc28ae10d1e44d02766b244658ef278918883b5c5c5881e9ae316",
+          "actualSha256": "485508ae196dc28ae10d1e44d02766b244658ef278918883b5c5c5881e9ae316",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/interface-notes.md",
+          "expectedSha256": "9abb9162be50c0d459e15c0cf10c112cd12bacc93c797c4c5c8f0fc2f7af3535",
+          "actualSha256": "9abb9162be50c0d459e15c0cf10c112cd12bacc93c797c4c5c8f0fc2f7af3535",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/19"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP08-T02",
+            "RP11-T01",
+            "RP11-T03",
+            "RP12-T02"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "产品/数据/前端负责人"
+      ],
+      "scope": "conflict/dead-letter/unknown/oversize/quarantine的查看、选择、导出和放弃；清理前最后副本不丢，当前授权检查。",
+      "optionsAsRecorded": [],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP08-T02",
+        "RP11-T01",
+        "RP11-T03",
+        "RP12-T02"
+      ],
+      "contractRefs": [
+        "PC04",
+        "PC12"
+      ],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    },
+    {
+      "decisionId": "T-RP-13",
+      "preparationWorkId": "LP-04",
+      "kind": "TECHNICAL_DESIGN",
+      "sourceStatus": "PROPOSED",
+      "sourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/decision-draft.md",
+          "expectedSha256": "160898d42aae3843e5fecdefa8677c75db533b9d0c632f09513d4673acc41bbf",
+          "actualSha256": "160898d42aae3843e5fecdefa8677c75db533b9d0c632f09513d4673acc41bbf",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/evidence/external-client-evidence-request.md",
+          "expectedSha256": "86e6c16e288320494b2d930f5e4a915b91b1338119fc00a98f8ca62bfa959c13",
+          "actualSha256": "86e6c16e288320494b2d930f5e4a915b91b1338119fc00a98f8ca62bfa959c13",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/watermark-options.md",
+          "expectedSha256": "aac760b35256e21efd1eab33d6e2b634a2d78d396ab239c302b29164c8e38197",
+          "actualSha256": "aac760b35256e21efd1eab33d6e2b634a2d78d396ab239c302b29164c8e38197",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/approval-request.md",
+          "expectedSha256": "55ca00b1eb3fb06e356465278b7d555c28f2e8ab8ad9245f116288949299f178",
+          "actualSha256": "55ca00b1eb3fb06e356465278b7d555c28f2e8ab8ad9245f116288949299f178",
+          "hashMatch": true
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+          "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+          "pointer": "/decisions/20"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+          "taskIds": [
+            "RP00-T05",
+            "RP18-T02",
+            "RP19-T03"
+          ],
+          "pointerMeaning": "Match tasks by id, preserve condition/before/precise scope."
+        }
+      ],
+      "ownerRoles": [
+        "技术/安全/发布负责人"
+      ],
+      "scope": "trace/log去敏、授权拒绝、回执、队列、publisher、schema锁、完整恢复点、健康阈值、观察窗和rollback目标。",
+      "optionsAsRecorded": [],
+      "proposedChoice_notApproval": null,
+      "approvalFieldsRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "affectedTaskIds": [
+        "RP00-T05",
+        "RP18-T02",
+        "RP19-T03"
+      ],
+      "contractRefs": [
+        "PC10",
+        "PC11"
+      ],
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision.",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "externalEvidenceReceived": false
+    }
+  ]
+}

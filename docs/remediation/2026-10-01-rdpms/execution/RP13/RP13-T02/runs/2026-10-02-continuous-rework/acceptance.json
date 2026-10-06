@@ -1,0 +1,59 @@
+{
+  "taskId": "RP13-T02",
+  "baselineCommit": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "implementation": {
+    "LR-07": "RESOLVED_LOCAL_BARRIER_SCOPE_COMPLETED; SIGNOFF_PENDING"
+  },
+  "validation": "ENV_BLOCKED",
+  "release": "NOT_EVALUATED",
+  "cases": [
+    {
+      "id": "TASK-RP13-T02",
+      "status": "PASS",
+      "evidence": "evidence/attempt-02/barrier-summary.json",
+      "scope": "交付未签署ADR与本地候选barrier证据"
+    },
+    {
+      "id": "S03-OI-01",
+      "status": "PARTIAL",
+      "evidence": "evidence/attempt-02/barrier-summary.json",
+      "scope": "候选SQL模型提交次序/竞争锁/rollback与sequence反例；完整publisher crash/page/IDB未运行"
+    },
+    {
+      "id": "T-RP-04",
+      "status": "PENDING",
+      "reason": "未批准水位/bootstrap/producer scope方案"
+    },
+    {
+      "id": "T-RP-10",
+      "status": "PENDING",
+      "reason": "未批准restore dataset epoch与stale cursor/outbox规则"
+    },
+    {
+      "id": "AC-B07-01",
+      "status": "NOT_RUN",
+      "reason": "候选模型不是应用水位验收"
+    },
+    {
+      "id": "AC-B07-02",
+      "status": "NOT_RUN",
+      "reason": "现有同步应用未接入本候选模型"
+    },
+    {
+      "id": "AC-B07-03",
+      "status": "NOT_RUN",
+      "reason": "完整回滚/CDC/客户端checkpoint合同未验证"
+    },
+    {
+      "id": "INT-PC05-01",
+      "status": "NOT_RUN",
+      "reason": "PC05生产者/outbox/客户端联合合同尚未实现或批准"
+    },
+    {
+      "id": "GATE-T-RP-04/T-RP-10",
+      "status": "ENV_BLOCKED",
+      "reason": "VALIDATION/signoff gates only; no approval available"
+    }
+  ],
+  "overallBoundary": "Local task-scope result only; no target/deployment acceptance."
+}

@@ -1,0 +1,16 @@
+{
+  "changes": [
+    {
+      "file": "coverage.csv",
+      "beforeSha256": "d59e29415dee6700bd8360564d0235b05564cf0de55528ebcaf5c0764d7bef19",
+      "afterSha256": "472fbebee010dd82b686c61a0d29817310b803ce046baaf59d1cdf316f9bf337",
+      "reason": "Normalized from nine columns to required seven-column format; preserved full row details in standard columns."
+    },
+    {
+      "file": "findings.json",
+      "beforeSha256": "09f822fa24a7d20333551739c9085dad2be557b1af65292fdd93003949e72def",
+      "afterSha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "reason": "Standard findings file contains only finding records; S01 had no new confirmed findings. Preserved package policy adjudications and limitations in policy-adjudications.json and decision-register.json."
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "taskId": "RP13-T02",
+  "implementationStatus": "IN_PROGRESS",
+  "validationStatus": "NOT_RUN",
+  "releaseStatus": "NOT_EVALUATED",
+  "cases": [
+    {"id":"AC-B07-03","status":"NOT_RUN","evidence":"evidence/WATERMARK_ADR_DRAFT.md","scope":"Draft only; no commit barrier, safe-watermark proof, or approved ADR."},
+    {"id":"PAC-RP13-02","status":"NOT_RUN","evidence":"evidence/WATERMARK_ADR_DRAFT.md","scope":"Same timestamp, late commit, publisher crash, and concurrency cases are specified but not executed."},
+    {"id":"TASK-RP13-T02","status":"NOT_RUN","evidence":"evidence/WATERMARK_ADR_DRAFT.md","scope":"Unsigned draft does not complete the task's ADR/signoff boundary."},
+    {"id":"INT-PC05-01","status":"NOT_RUN","evidence":"none","scope":"No barrier PostgreSQL, snapshot, ACL, revision, or expiration validation."},
+    {"id":"GATE-S03-OI-01","status":"NOT_RUN","evidence":"OPEN_ITEM_GATES.json:S03-OI-01","scope":"No owned PostgreSQL resource or deterministic transaction barrier evidence."},
+    {"id":"DECISION-T-RP-04","status":"NOT_RUN","evidence":"DECISION_REGISTER.json:T-RP-04","scope":"No named approver, selected option, compatibility window, or approval artifact."},
+    {"id":"DECISION-T-RP-10","status":"NOT_RUN","evidence":"DECISION_REGISTER.json:T-RP-10","scope":"Restore epoch and stale cursor/session/outbox policy remains unselected."}
+  ],
+  "gates": {"T-RP-04":"PROPOSED","T-RP-10":"PROPOSED","S03-OI-01":"OPEN"},
+  "limitations": ["Draft is not a signed decision.", "No dynamic DB/runtime tests ran.", "No business or security rules were approved."]
+}

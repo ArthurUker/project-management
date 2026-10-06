@@ -1,0 +1,1347 @@
+{
+  "capturedAt": "2026-10-05T19:33:29.757064+08:00",
+  "authority": "TASK_GRAPH implementationDependencies, condition-specific gates and exact DECISION_REGISTER approvedScope; acceptanceDependencies only constrain validation",
+  "tasks": [
+    {
+      "taskId": "RP00-T01",
+      "title": "基线/逐包范围/合成隔离及合法前提登记",
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "S00-OI-01",
+          "before": "VALIDATION",
+          "condition": "archive disposition only; missing historic startHead does not block any business task"
+        }
+      ],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP00-T02",
+      "title": "500恢复合同定向静态补审",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "S03-OI-03",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP00-T03",
+      "title": "任务revision全支持端矩阵",
+      "implementation": "COMPLETE",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "S03-OI-09",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP00-T04",
+      "title": "refresh/auth transport与generation合同",
+      "implementation": "COMPLETE",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "T-RP-09",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP00-T05",
+      "title": "目标预算/监控/候选范围准备",
+      "implementation": "COMPLETE",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "T-RP-11",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "ref": "T-RP-13",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP01-T01",
+      "title": "合法角色创建DTO",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP01-T02",
+      "title": "账号等级保护与强制改密",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "D-S01-01",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        },
+        {
+          "ref": "D-S01-02",
+          "before": "IMPLEMENTATION",
+          "condition": "only forced-password-change/business allowlist sub-scope; rank/reset protection uses D-S01-01 independently",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING"
+    },
+    {
+      "taskId": "RP01-T03",
+      "title": "自定义角色绑定扩展（仅获准需求）",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "CONDITIONAL_NOT_APPROVED",
+      "required": false,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "D-S01-03",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "OPTIONAL_NOT_ACTIVATED"
+    },
+    {
+      "taskId": "RP02-T01",
+      "title": "临时锁/管理员停用与真实TTL",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP02-T02",
+      "title": "refresh单次消费和family重放合同",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "SATISFIED_SCOPED",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [
+        "RP03-T01"
+      ],
+      "laterGates": [],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP03-T01",
+      "title": "跨tab/跨身份成功失败响应与原请求重放",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "SATISFIED_SCOPED",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "S02-OPEN-05",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP03-T02",
+      "title": "获准会话撤销/security version",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "D-S01-04",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        },
+        {
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        },
+        {
+          "ref": "S03-OI-06",
+          "before": "IMPLEMENTATION",
+          "condition": "same D-S01-04 approval; no second approval required",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [
+        "RP02-T02"
+      ],
+      "laterGates": [],
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING"
+    },
+    {
+      "taskId": "RP04-T01",
+      "title": "业务快照/状态日期/活跃查询",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP04-T02",
+      "title": "创建聚合单事务及审计/idempotency",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [],
+      "acceptanceDependencies_validationOnly": [
+        "RP09-T01"
+      ],
+      "laterGates": [],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP05-T01",
+      "title": "阻断无授权硬删/跨项目parent",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP05-T02",
+      "title": "保留ID的差量/删除/旧客户端适配",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        },
+        {
+          "ref": "T-RP-07",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        },
+        {
+          "ref": "S03-OI-05",
+          "before": "IMPLEMENTATION",
+          "condition": "only if stale/delete command adapter is changed; no gate on unrelated task fields or report snapshot",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING"
+    },
+    {
+      "taskId": "RP05-T03",
+      "title": "获准DAG/live引用的并发验证",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "CONDITIONAL_NOT_APPROVED",
+      "required": false,
+      "unmetImplementationDependencies": [
+        "RP05-T02"
+      ],
+      "implementationGates": [
+        {
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "DAG/live policy approved",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "T-RP-11",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "readiness": "OPTIONAL_NOT_ACTIVATED"
+    },
+    {
+      "taskId": "RP06-T01",
+      "title": "registration全入口scope",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "D-S01-05",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING"
+    },
+    {
+      "taskId": "RP06-T02",
+      "title": "registration负责人共享适配",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [
+        "RP06-T01",
+        "RP07-T02"
+      ],
+      "implementationGates": [
+        {
+          "ref": "D-S01-06",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING"
+    },
+    {
+      "taskId": "RP07-T01",
+      "title": "状态共享命令和archive权限",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP07-T02",
+      "title": "负责人转移一致性",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "D-S01-06",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        },
+        {
+          "ref": "S03-OI-07",
+          "before": "IMPLEMENTATION",
+          "condition": "same D-S01-06 approval; no second approval required",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING"
+    },
+    {
+      "taskId": "RP08-T01",
+      "title": "每实体/字段/own-only读取授权",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "D-S01-05",
+          "before": "IMPLEMENTATION",
+          "condition": "only if registration global exception is requested",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP08-T02",
+      "title": "ACL角色版本/回填/撤权及outbox隔离",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "T-RP-04",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        },
+        {
+          "ref": "T-RP-12",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [
+        "RP11-T01"
+      ],
+      "laterGates": [
+        {
+          "ref": "S02-OPEN-02",
+          "before": "VALIDATION",
+          "condition": "joint authorized cache/page fallback acceptance"
+        }
+      ],
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING"
+    },
+    {
+      "taskId": "RP09-T01",
+      "title": "单项授权/CAS/audit/receipt原子提交",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "T-RP-02",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        },
+        {
+          "ref": "T-RP-07",
+          "before": "IMPLEMENTATION",
+          "condition": "delete command adapter modified",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        },
+        {
+          "ref": "S03-OI-05",
+          "before": "IMPLEMENTATION",
+          "condition": "only if stale/delete command adapter is changed; no gate on unrelated task fields or report snapshot",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING"
+    },
+    {
+      "taskId": "RP09-T02",
+      "title": "同key竞争/unknown恢复/保留清理",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [
+        "RP09-T01"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-02",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "S03-OI-02",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S03-OI-04",
+          "before": "RELEASE",
+          "condition": "always"
+        }
+      ],
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING"
+    },
+    {
+      "taskId": "RP10-T01",
+      "title": "任务全部支持端CAS链",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "T-RP-03",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        },
+        {
+          "ref": "S03-OI-05",
+          "before": "IMPLEMENTATION",
+          "condition": "only if stale/delete command adapter is changed; no gate on unrelated task fields or report snapshot",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING"
+    },
+    {
+      "taskId": "RP10-T02",
+      "title": "汇报同修订snapshot与版本原子性",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "D-S01-07",
+          "before": "IMPLEMENTATION",
+          "condition": "source-state behavior changed",
+          "status": "SATISFIED_SCOPED",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [
+        "RP09-T01"
+      ],
+      "laterGates": [],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP10-T03",
+      "title": "获准submit/resubmit状态及竞争",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "D-S01-07",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "SATISFIED_SCOPED",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "S03-OI-08",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP11-T01",
+      "title": "身份阶段/owner命名空间/ACL安全回退",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        },
+        {
+          "ref": "T-RP-12",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "S02-OPEN-01",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S02-OPEN-02",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING"
+    },
+    {
+      "taskId": "RP11-T02",
+      "title": "旧IDB行隔离迁移与多tab升级",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [
+        "RP11-T01"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-01",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "S02-OPEN-06",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S02-OPEN-07",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING"
+    },
+    {
+      "taskId": "RP11-T03",
+      "title": "冲突原子移动/用户恢复和最后副本",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [
+        "RP11-T01"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-12",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "S02-OPEN-03",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING"
+    },
+    {
+      "taskId": "RP12-T01",
+      "title": "条数/bytes/依赖与不可变发送批次",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [
+        "RP11-T01"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-11",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "S02-OPEN-04",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING"
+    },
+    {
+      "taskId": "RP12-T02",
+      "title": "按key验证结果及partial retry",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [
+        "RP12-T01",
+        "RP09-T01",
+        "RP11-T03"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-02",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        },
+        {
+          "ref": "T-RP-12",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING"
+    },
+    {
+      "taskId": "RP13-T01",
+      "title": "已证截断的稳定分页子修复",
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [],
+      "acceptanceDependencies_validationOnly": [
+        "RP11-T01"
+      ],
+      "laterGates": [],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP13-T02",
+      "title": "safe-watermark/事件revision/epoch ADR",
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "T-RP-04",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "ref": "T-RP-10",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S03-OI-01",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP13-T03",
+      "title": "生产者coverage/bootstrap/ACL/过期重建",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [
+        "RP09-T01",
+        "RP08-T02",
+        "RP11-T02"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-04",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        },
+        {
+          "ref": "T-RP-10",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        },
+        {
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "only when approved delete/live-reference/tombstone semantics are changed",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "S03-OI-04",
+          "before": "RELEASE",
+          "condition": "always"
+        }
+      ],
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING"
+    },
+    {
+      "taskId": "RP14-T01",
+      "title": "感染字节出口统一阻断",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP14-T02",
+      "title": "elevated/其他scan状态/审计",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "T-RP-05",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "SATISFIED_SCOPED",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP15-T01",
+      "title": "实际schema与历史异常只读核查",
+      "implementation": "IN_PROGRESS",
+      "validation": "ENV_BLOCKED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "S04-OI-01",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "readiness": "NEEDS_OWNER_READ_ONLY_DATA"
+    },
+    {
+      "taskId": "RP15-T02",
+      "title": "获准异常处置与迁移锁/关系设计",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [
+        "RP15-T01"
+      ],
+      "implementationGates": [
+        {
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        },
+        {
+          "ref": "T-RP-11",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING"
+    },
+    {
+      "taskId": "RP15-T03",
+      "title": "expand/validate/contract隔离演练",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [
+        "RP15-T02"
+      ],
+      "implementationGates": [
+        {
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "T-RP-11",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING"
+    },
+    {
+      "taskId": "RP16-T01",
+      "title": "支持模块完整unique/FK registry",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "T-RP-06",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING"
+    },
+    {
+      "taskId": "RP16-T02",
+      "title": "apply/真实计数/提交失败状态",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [
+        "RP16-T01"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-06",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "S05-OI-03",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING"
+    },
+    {
+      "taskId": "RP16-T03",
+      "title": "恢复epoch/session/receipt/sync写入影响",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [
+        "RP16-T02"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-10",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING"
+    },
+    {
+      "taskId": "RP17-T01",
+      "title": "实际目录staging与不可变发布",
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP17-T02",
+      "title": "并发备份run锁/manifest/pair保留",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "T-RP-11",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING"
+    },
+    {
+      "taskId": "RP17-T03",
+      "title": "目标Linux/inode/metadata及失败验收",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [
+        "RP17-T02"
+      ],
+      "implementationGates": [],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "S05-OI-01",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING"
+    },
+    {
+      "taskId": "RP18-T01",
+      "title": "先build candidate/config CLI后gate/DDL",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "T-RP-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        },
+        {
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING"
+    },
+    {
+      "taskId": "RP18-T02",
+      "title": "部署锁/原子切流/first-safe rollback",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [
+        "RP18-T01"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-13",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "S05-OI-05",
+          "before": "RELEASE",
+          "condition": "always"
+        }
+      ],
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING"
+    },
+    {
+      "taskId": "RP18-T03",
+      "title": "目标运行配置/版本兼容验证",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [
+        "RP18-T02"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "S05-OI-04",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING"
+    },
+    {
+      "taskId": "RP19-T01",
+      "title": "R12-N01候选外部协调证据裁定",
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "S05-OI-02",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "readiness": "IMPLEMENTED_LOCAL"
+    },
+    {
+      "taskId": "RP19-T02",
+      "title": "配对恢复/一致时点/epoch演练",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [
+        "RP17-T02",
+        "RP18-T01"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-10",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "S05-OI-02",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING"
+    },
+    {
+      "taskId": "RP19-T03",
+      "title": "按具体candidate范围计算release gates",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [
+        "RP18-T02",
+        "RP17-T03"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-13",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "status": "NEEDS_EXACT_SCOPE_OR_MATERIAL",
+          "scopeNote": "Evaluate condition only in listed sub-scope; never globalize conditional gates"
+        }
+      ],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [
+        {
+          "ref": "S05-OI-04",
+          "before": "RELEASE",
+          "condition": "always"
+        },
+        {
+          "ref": "S05-OI-05",
+          "before": "RELEASE",
+          "condition": "always"
+        }
+      ],
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING"
+    },
+    {
+      "taskId": "RP19-T04",
+      "title": "32confirmed+candidate总体处置对账",
+      "implementation": "IN_PROGRESS",
+      "validation": "ENV_BLOCKED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "required": true,
+      "unmetImplementationDependencies": [],
+      "implementationGates": [],
+      "acceptanceDependencies_validationOnly": [],
+      "laterGates": [],
+      "readiness": "FINAL_RECONCILIATION_PENDING_PLAN_ACCEPTANCE"
+    }
+  ],
+  "admittedTaskIds": [],
+  "nextReadyTask": null,
+  "blockerCounts": {
+    "APPLICABLE_SCOPE_DECISION_PENDING": 12,
+    "OPTIONAL_NOT_ACTIVATED": 2,
+    "IMPLEMENTATION_DEPENDENCY_PENDING": 16,
+    "NEEDS_OWNER_READ_ONLY_DATA": 1,
+    "FINAL_RECONCILIATION_PENDING_PLAN_ACCEPTANCE": 1
+  }
+}

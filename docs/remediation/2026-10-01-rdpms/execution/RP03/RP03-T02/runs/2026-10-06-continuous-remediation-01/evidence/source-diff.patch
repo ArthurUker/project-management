@@ -1,0 +1,343 @@
+--- before/rdpms-system/backend/src/kernel/rbac.js
++++ after/rdpms-system/backend/src/kernel/rbac.js
+@@ -38,7 +38,8 @@
+   ?? 900;
+ 
+ export function signAccessToken(user) {
+-  return jwt.sign({ userId: user.id, systemRole: user.systemRole }, JWT_SECRET, {
++  if (!Number.isSafeInteger(user.securityVersion) || user.securityVersion < 0) throw new Error('Current securityVersion required for token issuance');
++  return jwt.sign({ userId: user.id, systemRole: user.systemRole, securityVersion: user.securityVersion }, JWT_SECRET, {
+     expiresIn: ACCESS_TTL_SEC,
+   });
+ }
+@@ -74,6 +75,10 @@
+   } catch {
+     throw unauthorized('INVALID_TOKEN', '会话无效或已过期');
+   }
++  if (!decoded || typeof decoded !== 'object' || typeof decoded.userId !== 'string'
++    || !Number.isSafeInteger(decoded.securityVersion) || decoded.securityVersion < 0) {
++    throw unauthorized('SESSION_VERSION_REQUIRED', '旧会话需重新登录');
++  }
+   const user = await prisma.user.findUnique({
+     where: { id: decoded.userId },
+     select: {
+@@ -86,14 +91,17 @@
+       phone: true,
+       systemRole: true,
+       status: true,
++      deletedAt: true,
++      securityVersion: true,
+       mustChangePassword: true,
+       avatarFileId: true,
+     },
+   });
+-  if (!user || user.status !== 'ACTIVE') {
++  if (!user || user.deletedAt || user.status !== 'ACTIVE') {
+     throw unauthorized('SESSION_INVALID', '账号不存在或已停用');
+   }
+ 
++  if (decoded.securityVersion !== user.securityVersion) throw unauthorized('SESSION_REVOKED', '会话已撤销，请重新登录');
+   enforceForcedPassword(c, user);
+   let permissions;
+   if (user.systemRole === 'SUPER_ADMIN') {
+--- before/rdpms-system/backend/src/routes/users.js
++++ after/rdpms-system/backend/src/routes/users.js
+@@ -262,12 +262,12 @@
+   if (!['ACTIVE', 'DISABLED'].includes(nextStatus)) throw badRequest('VALIDATION_ERROR', 'status 仅允许 ACTIVE / DISABLED');
+   const permission = nextStatus === 'ACTIVE' ? 'users.enable' : 'users.disable';
+   await withAccountCommand(prisma, auth.userId, id, permission, async (tx, actor, target) => {
+-    await tx.user.update({ where: { id }, data: { status: nextStatus, failedLoginAttempts: 0, lockedUntil: null } });
+-    if (nextStatus === 'DISABLED') await tx.refreshToken.updateMany({ where: { userId: id, revokedAt: null }, data: { revokedAt: new Date() } });
++    await tx.user.update({ where: { id }, data: { status: nextStatus, securityVersion: { increment: 1 }, failedLoginAttempts: 0, lockedUntil: null } });
++    await tx.refreshToken.updateMany({ where: { userId: id, revokedAt: null }, data: { revokedAt: new Date() } });
+     await writeAuditStrict(tx, { c, actorId: actor.id, actorName: actor.displayName, actorRole: actor.systemRole,
+       action: AUDIT_ACTIONS.STATUS_CHANGE, entityType: 'USER', entityId: id, entityLabel: target.username,
+       before: { status: target.status }, after: { status: nextStatus }, metadata: { permissionCode: permission } });
+-  });
++  }, auth.user.securityVersion);
+   return c.json({ id, status: nextStatus });
+ });
+ 
+@@ -286,12 +286,12 @@
+     const systemRole = [...roleCodes].sort((a, b) => ACCOUNT_RANK[b] - ACCOUNT_RANK[a])[0];
+     await tx.userRole.deleteMany({ where: { userId: id } });
+     await tx.userRole.createMany({ data: roles.map(r => ({ userId: id, roleId: r.id, assignedById: actor.id })) });
+-    await tx.user.update({ where: { id }, data: { systemRole } });
++    await tx.user.update({ where: { id }, data: { systemRole, securityVersion: { increment: 1 } } });
+     await tx.refreshToken.updateMany({ where: { userId: id, revokedAt: null }, data: { revokedAt: new Date() } });
+     await writeAuditStrict(tx, { c, actorId: actor.id, actorName: actor.displayName, actorRole: actor.systemRole,
+       action: AUDIT_ACTIONS.PERMISSION_CHANGE, entityType: 'USER', entityId: id, entityLabel: target.username,
+       before: { systemRole: target.systemRole }, after: { systemRole, roleCodes }, metadata: { permissionCode: 'roles.assign_user' } });
+-  });
++  }, auth.user.securityVersion);
+   return c.json({ id, roleCodes });
+ });
+ 
+@@ -311,13 +311,13 @@
+   const passwordHash = await bcrypt.hash(newPassword, 12);
+   await withAccountCommand(prisma, auth.userId, id, 'users.reset_password', async (tx, actor, target) => {
+     const changedAt = new Date();
+-    await tx.user.update({ where: { id }, data: { passwordHash, mustChangePassword: true,
++    await tx.user.update({ where: { id }, data: { passwordHash, securityVersion: { increment: 1 }, mustChangePassword: true,
+       passwordChangedAt: changedAt, failedLoginAttempts: 0, lockedUntil: null } });
+     await tx.refreshToken.updateMany({ where: { userId: id, revokedAt: null }, data: { revokedAt: changedAt } });
+     await writeAuditStrict(tx, { c, actorId: actor.id, actorName: actor.displayName, actorRole: actor.systemRole,
+       action: AUDIT_ACTIONS.PASSWORD_CHANGE, entityType: 'USER', entityId: id, entityLabel: target.username,
+       metadata: { permissionCode: 'users.reset_password' } });
+-  });
++  }, auth.user.securityVersion);
+   return c.json({ success: true });
+ });
+ 
+@@ -327,13 +327,13 @@
+   const auth = getAuth(c);
+   await withAccountCommand(prisma, auth.userId, id, 'users.delete', async (tx, actor, target) => {
+     const changedAt = new Date();
+-    await tx.user.update({ where: { id }, data: { deletedAt: changedAt, status: 'DISABLED' } });
++    await tx.user.update({ where: { id }, data: { deletedAt: changedAt, status: 'DISABLED', securityVersion: { increment: 1 } } });
+     await tx.refreshToken.updateMany({ where: { userId: id, revokedAt: null }, data: { revokedAt: changedAt } });
+     await tx.userRole.deleteMany({ where: { userId: id } });
+     await writeAuditStrict(tx, { c, actorId: actor.id, actorName: actor.displayName, actorRole: actor.systemRole,
+       action: AUDIT_ACTIONS.DELETE, entityType: 'USER', entityId: id, entityLabel: target.username,
+       metadata: { permissionCode: 'users.delete', softDelete: true } });
+-  });
++  }, auth.user.securityVersion);
+   return c.json({ id, softDeleted: true });
+ });
+ 
+--- before/rdpms-system/backend/src/routes/auth.js
++++ after/rdpms-system/backend/src/routes/auth.js
+@@ -222,35 +222,39 @@
+   // Recover them only after correct credentials; never turn DISABLED back on.
+   const reset = user.status === 'LOCKED'
+     ? await prisma.user.updateMany({
+-      where: { id: user.id, status: 'LOCKED', lockedUntil: { lte: loginSucceededAt } },
++      where: { id: user.id, passwordHash: user.passwordHash, securityVersion: user.securityVersion, status: 'LOCKED', lockedUntil: { lte: loginSucceededAt } },
+       data: { ...resetLoginState, status: 'ACTIVE' },
+     })
+     : await prisma.user.updateMany({
+       where: {
+         id: user.id,
+         status: user.status,
++        passwordHash: user.passwordHash,
++        securityVersion: user.securityVersion,
+         OR: [{ lockedUntil: null }, { lockedUntil: { lte: loginSucceededAt } }],
+       },
+       data: resetLoginState,
+     });
+   if (reset.count !== 1) {
+-    const current = await prisma.user.findUnique({ where: { id: user.id }, select: { status: true } });
++    const current = await prisma.user.findUnique({ where: { id: user.id }, select: { status: true, securityVersion: true, passwordHash: true } });
+     if (!current || current.status === 'DISABLED') {
+       return c.json({ error: '账号已停用，请联系管理员', code: 'ACCOUNT_DISABLED' }, 403);
+     }
++    if (current.securityVersion !== user.securityVersion || current.passwordHash !== user.passwordHash) return c.json({ error: '凭据已改变，请重新登录', code: 'LOGIN_STATE_CHANGED' }, 401);
+     return c.json({ error: '账号已锁定，请稍后再试', code: 'ACCOUNT_LOCKED' }, 403);
+   }
+ 
+   // The conditional update may have restored an expired timed-lock row.
+   // Build the response from the committed state instead of the pre-update
+   // login lookup, so clients observe the same status as the database.
+-  const authenticatedUser = await prisma.user.findUnique({ where: { id: user.id } });
+-  if (!authenticatedUser || authenticatedUser.status === 'DISABLED') {
+-    return c.json({ error: '账号已停用，请联系管理员', code: 'ACCOUNT_DISABLED' }, 403);
+-  }
+-
+-  const accessToken = signAccessToken(authenticatedUser);
+-  const refreshToken = await issueRefreshToken(user.id, c);
++  const { authenticatedUser, accessToken, refreshToken } = await prisma.$transaction(async (tx) => {
++    await tx.$queryRaw`SELECT id FROM users WHERE id = ${user.id} FOR UPDATE`;
++    const current = await tx.user.findUnique({ where: { id: user.id } });
++    if (!current || current.deletedAt || current.status === 'DISABLED') throw unauthorized('ACCOUNT_DISABLED', '账号已停用');
++    if (current.passwordHash !== user.passwordHash || current.securityVersion !== user.securityVersion) throw unauthorized('LOGIN_STATE_CHANGED', '凭据已改变，请重新登录');
++    if (current.status === 'LOCKED' || current.lockedUntil && current.lockedUntil > new Date()) throw unauthorized('ACCOUNT_LOCKED', '账号已锁定');
++    return { authenticatedUser: current, accessToken: signAccessToken(current), refreshToken: await issueRefreshToken(current.id, c, tx) };
++  });
+ 
+   await writeAudit(prisma, {
+     c,
+@@ -382,10 +386,11 @@
+     await tx.$queryRaw`SELECT id FROM users WHERE id = ${user.id} FOR UPDATE`;
+     const current = await tx.user.findUnique({ where: { id: user.id } });
+     if (!current || current.deletedAt || current.status !== 'ACTIVE') throw unauthorized('SESSION_INVALID', '账号已失效');
++    if (current.securityVersion !== getAuth(c).user.securityVersion) throw unauthorized('SESSION_REVOKED', '会话已撤销');
+     if (force && !current.mustChangePassword) throw badRequest('FORBIDDEN', '当前账号不处于强制改密状态');
+     if (!force && !await bcrypt.compare(c.get('plainOldPassword') ?? '', current.passwordHash)) throw badRequest('WRONG_OLD_PASSWORD', '旧密码错误');
+     const changedAt = new Date();
+-    await tx.user.update({ where: { id: user.id }, data: { passwordHash, mustChangePassword: false,
++    await tx.user.update({ where: { id: user.id }, data: { passwordHash, securityVersion: { increment: 1 }, mustChangePassword: false,
+       passwordChangedAt: changedAt, failedLoginAttempts: 0, lockedUntil: null } });
+     await tx.refreshToken.updateMany({ where: { userId: user.id, revokedAt: null }, data: { revokedAt: changedAt } });
+     await writeAuditStrict(tx, { c, actorId: current.id, actorName: current.displayName, actorRole: current.systemRole,
+--- before/rdpms-system/backend/src/modules/auth/accountPolicy.ts
++++ after/rdpms-system/backend/src/modules/auth/accountPolicy.ts
+@@ -13,7 +13,7 @@
+   }
+ }
+ export async function withAccountCommand<T>(db: PrismaClient, actorId: string, targetId: string,
+-  permission: string, command: (tx: Prisma.TransactionClient, actor: User, target: User) => Promise<T>): Promise<T> {
++  permission: string, command: (tx: Prisma.TransactionClient, actor: User, target: User) => Promise<T>, expectedSecurityVersion?: number): Promise<T> {
+   try {
+     return await db.$transaction(async tx => {
+       // Shared lock order also fences role assignment, disable and resets.
+@@ -21,6 +21,7 @@
+       const actor = await tx.user.findUnique({ where: { id: actorId } });
+       const target = await tx.user.findUnique({ where: { id: targetId } });
+       if (!actor || actor.deletedAt || actor.status !== 'ACTIVE') throw new HttpError(401, 'SESSION_INVALID', '账号已失效');
++      if (expectedSecurityVersion !== undefined && actor.securityVersion !== expectedSecurityVersion) throw new HttpError(401, 'SESSION_REVOKED', '会话已撤销');
+       if (actor.mustChangePassword) throw new HttpError(403, 'PASSWORD_CHANGE_REQUIRED', '请先修改密码');
+       if (!target || target.deletedAt) throw new HttpError(404, 'USER_NOT_FOUND', '用户不存在');
+       const bindings = actor.systemRole === 'SUPER_ADMIN' ? [] : await tx.userRole.findMany({ where: { userId: actorId },
+--- before/rdpms-system/backend/prisma/schema.prisma
++++ after/rdpms-system/backend/prisma/schema.prisma
+@@ -403,6 +403,7 @@
+   email              String?    @unique @map("email") @db.VarChar(255)
+   passwordHash       String     @map("password_hash") @db.VarChar(255)
+   mustChangePassword Boolean    @default(false) @map("must_change_password")
++  securityVersion    Int        @default(0) @map("security_version")
+   passwordChangedAt  DateTime?  @map("password_changed_at") @db.Timestamptz(3)
+   displayName        String     @map("display_name") @db.VarChar(128)
+   position           String?    @map("position") @db.VarChar(128)
+--- before/rdpms-system/backend/prisma/migrations/20261006_user_security_version/migration.sql
++++ after/rdpms-system/backend/prisma/migrations/20261006_user_security_version/migration.sql
+@@ -0,0 +1,2 @@
++ALTER TABLE "users" ADD COLUMN "security_version" INTEGER NOT NULL DEFAULT 0;
++ALTER TABLE "users" ADD CONSTRAINT "users_security_version_nonnegative" CHECK ("security_version" >= 0);
+--- before/rdpms-system/backend/tests/integration/rp03-security-version.integration.test.mjs
++++ after/rdpms-system/backend/tests/integration/rp03-security-version.integration.test.mjs
+@@ -0,0 +1,36 @@
++import { test,before,after } from 'node:test';
++import assert from 'node:assert/strict';
++import crypto from 'node:crypto';
++import bcrypt from 'bcryptjs';
++import jwt from 'jsonwebtoken';
++import { PrismaClient } from '@prisma/client';
++import { createApp } from '../../dist/bootstrap/createApp.js';
++import { setRealSyncPermissions } from '../helpers/syncV1Fixture.mjs';
++import fs from 'node:fs';
++import path from 'node:path';
++const db=new PrismaClient();const prefix=crypto.randomUUID();const password='SequoiaHarbor71!Acorn';const changed='WillowRiver39!Maple';let app,admin,adminTokens;let n=0;const traces=[];
++async function makeUser(role='MEMBER'){const id=`rp03-${prefix}-${++n}`;const u=await db.user.create({data:{id,username:id,displayName:'RP03 synthetic',passwordHash:await bcrypt.hash(password,4),systemRole:role,status:'ACTIVE'}});await setRealSyncPermissions(db,id,['users.view','projects.view']);return u;}
++function request(a,token,method,url,body){return a.request(url,{method,headers:{authorization:`Bearer ${token}`,'content-type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});}
++async function login(u,pw=password,a=app){const r=await a.request('/api/auth/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({username:u.username,password:pw})});assert.equal(r.status,200,await r.clone().text());return r.json();}
++async function refresh(token){return app.request('/api/auth/refresh',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({refreshToken:token})});}
++async function revoked(u,tokens,version){const me=await request(app,tokens.accessToken,'GET','/api/auth/me');assert.equal(me.status,401);assert.equal((await refresh(tokens.refreshToken)).status,401);const current=await db.user.findUnique({where:{id:u.id}});assert.equal(current.securityVersion,version);assert.equal(await db.refreshToken.count({where:{userId:u.id,revokedAt:null}}),0);traces.push({userId:u.id,version,oldAccess:401,oldRefresh:401});}
++function auditFaultApp(){return createApp({db:new Proxy(db,{get(target,key){if(key==='$transaction')return(fn,opts)=>target.$transaction(tx=>fn(new Proxy(tx,{get(t,k){if(k==='auditLog')return{create:async()=>{throw new Error('RP03_AUDIT_FAULT');}};const v=t[k];return typeof v==='function'?v.bind(t):v;}})),opts);const v=target[key];return typeof v==='function'?v.bind(target):v;}})});}
++function loginGate(u){let enter,release;let hit=false;const reached=new Promise(r=>enter=r);const released=new Promise(r=>release=r);const client=new Proxy(db,{get(target,key){if(key==='user')return new Proxy(target.user,{get(model,m){if(m==='updateMany')return async args=>{if(!hit&&args.where.id===u.id&&args.data.lastLoginAt){hit=true;enter();await released;}return model.updateMany(args);};const v=model[m];return typeof v==='function'?v.bind(model):v;}});const v=target[key];return typeof v==='function'?v.bind(target):v;}});return{app:createApp({db:client}),reached,release,hit:()=>hit};}
++before(async()=>{app=createApp({db});admin=await makeUser('SUPER_ADMIN');adminTokens=await login(admin);assert.equal((await request(app,adminTokens.accessToken,'GET','/api/users')).status,200);});
++after(async()=>{if(process.env.RDPMS_EXEC_EVIDENCE_DIR)fs.writeFileSync(path.join(process.env.RDPMS_EXEC_EVIDENCE_DIR,'rp03-version-state.json'),JSON.stringify({kind:'REAL_DB_AND_JWT',traces,noTokensPersisted:true,wholeDBCleanup:true},null,2));await db.$disconnect();});
++
++test('RP03 versioned login/refresh use actual DB version; legacy missing version fails closed',async()=>{const u=await makeUser();const tokens=await login(u);assert.equal(jwt.decode(tokens.accessToken).securityVersion,0);assert.equal((await request(app,tokens.accessToken,'GET','/api/auth/me')).status,200);const legacy=jwt.sign({userId:u.id,systemRole:u.systemRole},process.env.JWT_SECRET,{expiresIn:'15m'});const rejected=await request(app,legacy,'GET','/api/auth/me');assert.equal(rejected.status,401);assert.equal((await rejected.json()).code,'SESSION_VERSION_REQUIRED');const r=await refresh(tokens.refreshToken);assert.equal(r.status,200);const next=await r.json();assert.equal(jwt.decode(next.accessToken).securityVersion,0);assert.equal((await request(app,next.accessToken,'GET','/api/auth/me')).status,200);});
++
++test('RP03 self password change atomically bumps version and revokes access/refresh; new password login works',async()=>{const u=await makeUser();const tokens=await login(u);const r=await request(app,tokens.accessToken,'PUT','/api/auth/password',{oldPassword:password,newPassword:changed});assert.equal(r.status,200);await revoked(u,tokens,1);const next=await login(u,changed);assert.equal(jwt.decode(next.accessToken).securityVersion,1);assert.equal((await request(app,next.accessToken,'GET','/api/users')).status,200);assert.equal((await db.user.findUnique({where:{id:u.id}})).mustChangePassword,false);});
++
++test('RP03 admin reset and force-change each revoke previous version without bypassing forced endpoint boundary',async()=>{const u=await makeUser();const tokens=await login(u);const reset=await request(app,adminTokens.accessToken,'PUT',`/api/users/${u.id}/reset-password`,{newPassword:changed});assert.equal(reset.status,200);await revoked(u,tokens,1);const fresh=await login(u,changed);assert.equal(jwt.decode(fresh.accessToken).securityVersion,1);const denied=await request(app,fresh.accessToken,'GET','/api/users');assert.equal(denied.status,403);assert.equal((await denied.json()).code,'PASSWORD_CHANGE_REQUIRED');assert.equal((await request(app,fresh.accessToken,'PUT','/api/auth/password/force',{newPassword:password})).status,200);await revoked(u,fresh,2);assert.equal((await request(app,(await login(u)).accessToken,'GET','/api/users')).status,200);});
++
++test('RP03 system-role change revokes old access and refresh; new login has current lower grants',async()=>{const u=await makeUser('MANAGER');const tokens=await login(u);assert.equal((await request(app,adminTokens.accessToken,'PUT',`/api/users/${u.id}/roles`,{roleCodes:['VIEWER']})).status,200);await revoked(u,tokens,1);const next=await login(u);assert.equal(next.user.systemRole,'VIEWER');assert.equal((await request(app,next.accessToken,'GET','/api/users')).status,403);assert.equal((await request(app,next.accessToken,'GET','/api/auth/me')).status,200);});
++
++test('RP03 disable then enable cannot revive old JWT; soft-delete retains audit actor but denies authentication',async()=>{const u=await makeUser();const tokens=await login(u);assert.equal((await request(app,adminTokens.accessToken,'PATCH',`/api/users/${u.id}/status`,{status:'DISABLED'})).status,200);await revoked(u,tokens,1);assert.equal((await request(app,adminTokens.accessToken,'PATCH',`/api/users/${u.id}/status`,{status:'ACTIVE'})).status,200);assert.equal((await request(app,tokens.accessToken,'GET','/api/auth/me')).status,401);const next=await login(u);assert.equal(jwt.decode(next.accessToken).securityVersion,2);assert.equal((await request(app,adminTokens.accessToken,'DELETE',`/api/users/${u.id}`)).status,200);await revoked(u,next,3);assert.ok((await db.user.findUnique({where:{id:u.id}})).deletedAt);assert.ok(await db.auditLog.count({where:{actorId:admin.id,entityId:u.id}}));});
++
++test('RP03 audit failure rolls back password/version/refresh and old valid access remains usable',async()=>{const u=await makeUser();const tokens=await login(u);const before=await db.user.findUnique({where:{id:u.id}});const r=await request(auditFaultApp(),tokens.accessToken,'PUT','/api/auth/password',{oldPassword:password,newPassword:changed});assert.equal(r.status,500);const current=await db.user.findUnique({where:{id:u.id}});assert.equal(current.securityVersion,0);assert.equal(current.passwordHash===before.passwordHash,true);assert.equal(await db.refreshToken.count({where:{userId:u.id,revokedAt:null}}),1);assert.equal((await request(app,tokens.accessToken,'GET','/api/auth/me')).status,200);});
++
++test('RP03 reset between old-password validation and conditional login issuance cannot mint successor/versioned JWT',async()=>{const u=await makeUser();const gate=loginGate(u);let pending,timer;try{pending=gate.app.request('/api/auth/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({username:u.username,password})});await Promise.race([gate.reached,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('RP03_LOGIN_GATE_MISSING')),10000);})]);assert.equal(gate.hit(),true);assert.equal((await request(app,adminTokens.accessToken,'PUT',`/api/users/${u.id}/reset-password`,{newPassword:changed})).status,200);}finally{clearTimeout(timer);gate.release();}const rejected=await pending;assert.equal(rejected.status,401);assert.equal((await rejected.json()).code,'LOGIN_STATE_CHANGED');assert.equal(await db.refreshToken.count({where:{userId:u.id}}),0);assert.equal(await db.auditLog.count({where:{actorId:u.id,action:'login'}}),0);assert.equal((await db.user.findUnique({where:{id:u.id}})).lastLoginAt,null);assert.equal(jwt.decode((await login(u,changed)).accessToken).securityVersion,1);});
++
++test('RP03 additive schema enforces nonnegative security version and keeps existing account identity',async()=>{const u=await makeUser();await assert.rejects(()=>db.user.update({where:{id:u.id},data:{securityVersion:-1}}));assert.equal((await db.user.findUnique({where:{id:u.id}})).securityVersion,0);const counts=await db.$queryRaw`SELECT column_default,is_nullable FROM information_schema.columns WHERE table_name='users' AND column_name='security_version'`;assert.equal(counts.length,1);assert.equal(counts[0].is_nullable,'NO');});
+--- before/rdpms-system/backend/tests/integration/rp02-login-lock-ttl.integration.test.mjs
++++ after/rdpms-system/backend/tests/integration/rp02-login-lock-ttl.integration.test.mjs
+@@ -189,11 +189,12 @@
+ //     该写入提交前若停用已提交，条件不再匹配 → 403 ACCOUNT_DISABLED。
+ //   * 登录拒绝：入口状态读（DISABLED / 有效锁）即为该请求的判定点。
+ //   * 管理员停用：`PATCH /api/users/:id/status` 的 `user.update` 提交成功。
+-//   * 因此「登录的条件写入先于停用提交」= 合法的更早成功，不追溯撤销；
++//   * 「登录先于停用提交」仍是合法的更早成功；RP01/RP03 的获准合同
++//     现在使随后停用撤销 refresh 并递增 securityVersion，不删除此前登录审计；
+ //     停用提交之后的任何新登录都被拒绝。会话/refresh 家族的追溯处置属 RP02-T02（T-RP-09），本任务不动。
+ 
+ /** 只在指定用户上、且只在指定 ORM 调用上暂停一次（路由、事务与 SQL 全部照常执行） */
+-function gateOn(db, { method, matches }) {
++function gateOn(db, { method, matches, beforeAccountLock = false }) {
+   let ready;
+   let release;
+   const reached = new Promise((resolve) => { ready = resolve; });
+@@ -218,6 +219,13 @@
+   const client = new Proxy(db, {
+     get(target, prop) {
+       if (prop === 'user') return wrapModel(target.user);
++      if (prop === '$transaction' && beforeAccountLock) return (fn, opts) => target.$transaction(tx => fn(new Proxy(tx, { get(inner, key) {
++        if (key === '$queryRaw') return async (strings, ...values) => {
++          if (!fired && strings.join('?').includes('ORDER BY id FOR UPDATE')) { fired = true; ready(); await released; }
++          return inner.$queryRaw(strings, ...values);
++        };
++        const value = inner[key]; return typeof value === 'function' ? value.bind(inner) : value;
++      } })), opts);
+       const value = target[prop];
+       return typeof value === 'function' ? value.bind(target) : value;
+     },
+@@ -234,10 +242,13 @@
+ 
+ async function makeAdminUser() {
+   const id = `rp02-admin-${crypto.randomUUID()}`;
+-  return prisma.user.create({ data: {
++  const admin = await prisma.user.create({ data: {
+     id, username: id, displayName: 'RP02 synthetic admin',
+     passwordHash: await bcrypt.hash(PASSWORD, 4), systemRole: 'ADMIN', status: 'ACTIVE',
+   } });
++  const role = await prisma.role.findUniqueOrThrow({ where: { code: 'ADMIN' } });
++  await prisma.userRole.create({ data: { userId: admin.id, roleId: role.id } });
++  return admin;
+ }
+ 
+ async function makeTargetUser(overrides = {}) {
+@@ -300,7 +311,7 @@
+ test('RP02 LR2-04 direction 2: a login whose conditional write commits before the disable stays a valid earlier success, and later logins are rejected', async () => {
+   const target = await makeTargetUser();
+   const admin = await makeAdminUser();
+-  const gate = gateOn(prisma, { method: 'update', matches: (args) => args?.where?.id === target.id && args?.data?.status === 'DISABLED' });
++  const gate = gateOn(prisma, { method: 'update', beforeAccountLock: true, matches: (args) => args?.where?.id === target.id && args?.data?.status === 'DISABLED' });
+   const loginApp = createApp({ db: gate.client, actorResolver: async () => null });
+   const adminApp = makeBarrierApp(gate.client, admin);
+ 
+@@ -323,8 +334,8 @@
+ 
+   const afterDisable = await prisma.user.findUnique({ where: { id: target.id } });
+   assert.equal(afterDisable.status, 'DISABLED', 'the later disable is authoritative for the persisted row');
+-  assert.equal(await prisma.refreshToken.count({ where: { userId: target.id, revokedAt: null } }), 1,
+-    'this task does not revoke sessions on disable; session-family policy belongs to RP02-T02 / T-RP-09');
++  assert.equal(await prisma.refreshToken.count({ where: { userId: target.id, revokedAt: null } }), 0,
++    'approved RP01/RP03 disable now revokes sessions; earlier successful login is retained as an audit event');
+ 
+   const later = await loginAs(target, loginApp);
+   assert.equal(later.response.status, 403, JSON.stringify(later.body));
+@@ -365,10 +376,10 @@
+ //
+ // 与本文件既有的两个方向的差异（必须同时保留）：
+ //   * 既有方向 1：屏障停在 user.findFirst 之前 → 证明停用后入口拒绝（不经过旧值竞争）；
+-//   * 既有方向 2：停用写入暂停、登录先全部完成 → 证明合法的更早成功不被追溯撤销；
++//   * 方向 2：停用行锁前暂停、登录先全部完成 → 保留此前登录成功及审计，随后撤销凭据；
+ //   * 本用例：登录已读到 ACTIVE、真实 bcrypt 校验通过，屏障停在**带 lastLoginAt 重置的
+ //     实际条件更新执行之前**，此时管理员停用先提交 → 登录必须被拒。
+-// 业务实现未修改；本用例不引入 refresh 家族、追溯会话撤销、激活或强制改密政策。
++// 原 RP02 复核未引入新政策；当前回归沿用其屏障，并核对后来获准的 RP01/RP03 会话撤销。
+ 
+ test('RP02 LR3-01 C01 the conditional login reset is refused when an administrator disables the account first', async () => {
+   // 0) 夹具有效性：同类合成账号先真实登录成功（token / 用户 / refresh / 审计）
+--- before/rdpms-system/backend/tests/integration/rp01-account-policy.integration.test.mjs
++++ after/rdpms-system/backend/tests/integration/rp01-account-policy.integration.test.mjs
+@@ -89,7 +89,7 @@
+   for(const failure of ['auditLog','refreshToken'])for(const [method,suffix,body] of [['PUT','reset-password',{newPassword:replacement}],['PATCH','status',{status:'DISABLED'}],['DELETE','',undefined],['PUT','roles',{roleCodes:['VIEWER']}]] ){
+     const target=await user();await login(target);const before=await db.user.findUnique({where:{id:target.id}});const active=await db.refreshToken.count({where:{userId:target.id,revokedAt:null}});const rolesBefore=await db.userRole.findMany({where:{userId:target.id}});const application=faultApp(failure);
+     const r=await request(application,superActor.token,method,`/api/users/${target.id}${suffix?'/'+suffix:''}`,body);assert.equal(r.status,500);
+-    assert.equal(JSON.stringify(await db.user.findUnique({where:{id:target.id}})),JSON.stringify(before));assert.equal(await db.refreshToken.count({where:{userId:target.id,revokedAt:null}}),active);assert.deepEqual(await db.userRole.findMany({where:{userId:target.id}}),rolesBefore);assert.equal(await db.auditLog.count({where:{entityId:target.id,action:{in:['PASSWORD_CHANGE','STATUS_CHANGE','DELETE','PERMISSION_CHANGE']}}}),0);
++    assert.equal(JSON.stringify(await db.user.findUnique({where:{id:target.id}})),JSON.stringify(before));assert.equal(await db.refreshToken.count({where:{userId:target.id,revokedAt:null}}),active);assert.deepEqual(await db.userRole.findMany({where:{userId:target.id}}),rolesBefore);assert.equal(await db.auditLog.count({where:{entityId:target.id,action:{in:['password.change','status.change','delete','permission.change']}}}),0);
+   }
+   for(const force of [false,true])for(const failure of ['auditLog','refreshToken']){
+     const target=await user('MEMBER',force);const credentials=await login(target);const before=await db.user.findUnique({where:{id:target.id}});
+@@ -101,7 +101,7 @@
+   const target=await user();const admin=actors.get('ADMIN');const gate=beforeCommandGate();let pending,timer;
+   try{pending=request(gate.application,admin.token,'PUT',`/api/users/${target.id}/reset-password`,{newPassword:replacement});await Promise.race([gate.arrived,new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('RP01_BARRIER_NOT_REACHED')),10000);})]);assert.equal(gate.hit(),true);await db.user.update({where:{id:target.id},data:{systemRole:'SUPER_ADMIN'}});}
+   finally{clearTimeout(timer);gate.release();}
+-  assert.equal((await pending).status,403);assert.ok(await bcrypt.compare(password,(await db.user.findUnique({where:{id:target.id}})).passwordHash));assert.equal(await db.auditLog.count({where:{entityId:target.id,action:'PASSWORD_CHANGE'}}),0);
++  assert.equal((await pending).status,403);assert.ok(await bcrypt.compare(password,(await db.user.findUnique({where:{id:target.id}})).passwordHash));assert.equal(await db.auditLog.count({where:{entityId:target.id,action:'password.change'}}),0);
+ });
+ 
+ test('RP01 actor forced-change committed before command lock denies stale middleware actor',async()=>{

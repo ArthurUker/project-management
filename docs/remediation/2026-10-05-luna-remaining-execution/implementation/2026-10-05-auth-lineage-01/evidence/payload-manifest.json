@@ -1,0 +1,1733 @@
+{
+  "createdAt": "2026-10-05T19:41:21.811145+08:00",
+  "pathBase": "REPOSITORY",
+  "files": [
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/REVIEW_ENTRY.md",
+      "sha256": "8768c20d31945a0c080ff7e2af50b945937c89e98b2382ee39354f7c7c6757eb"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/RP02-T02-delivery.json",
+      "sha256": "e69bdf5b123bfc76bd6c3c58424f55e0e3d9798e97069a0886c4bec8d90a10d7"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/RP03-T01-delivery.json",
+      "sha256": "71d7a52dbe570ae4a2b8d949f8fb8818ea31d943bd3eafd53b6f56cdb97bdfb2"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/SESSION_SUMMARY.md",
+      "sha256": "6b5066783750f5a60d787ee12e28892dd3924468114c139d3d8834850479a595"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/acceptance.json",
+      "sha256": "8e3fb986e79e7fb66e374b12b5141a9379f8b41926ee53f31b47ac19ca372836"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/approval.json",
+      "sha256": "d2297cefc77ac2b21a6c1b6e1fffe6ab9bb2995d3f199880f4c72cf733ac2a0d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/authorization.json",
+      "sha256": "9e66dab3822f36a7d87c6c774c93b34da6f253ee8e64c0a95c85ddd5357c5f8d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/before/rdpms-system/backend/src/routes/auth.js",
+      "sha256": "8f736619a1526247073697865490a6fef67053f92c501fbe65f617b29b3f12b4"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/before/rdpms-system/frontend/src/api/endpoints/auth.ts",
+      "sha256": "5e719ae5c81a5643698b5d23cb799bb0d27c51568e4baeeaa9851e81a5f12531"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/before/rdpms-system/frontend/src/api/http.ts",
+      "sha256": "ddc1df339ee119566375a32e36c94d6cae7c89b05aea4142749a20e80882d9a7"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/before/rdpms-system/frontend/src/auth/AuthProvider.tsx",
+      "sha256": "b16e610ddc4367fb6f8bf1b0c5531ea6c507db9b1f630012d47b21eeb2cf7617"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/before/rdpms-system/frontend/src/auth/tokenStore.ts",
+      "sha256": "ee009d10b1225d799d5adfc41ffde972e628961ab776028944d9dffac3782266"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/before/records/ACCEPTANCE_MATRIX.csv",
+      "sha256": "60d47fec5b71bfcba4284f5a500e77f729d9e5273039ecb1af45523b1ce36542"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/before/records/DECISION_REGISTER.json",
+      "sha256": "28c5a0c67705a6c0a8ce88b5a7a61872893b2b6cb5d07927470608ffbc1d319f"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/before/records/EXECUTION_REVISION_HISTORY.json",
+      "sha256": "d474bd8cb3b7cd712f766d21f57beb9bc1036e93a3a77bf66edfc2d28333f916"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/before/records/FINDING_TO_PACKAGE.json",
+      "sha256": "06050b9ecbfa874f70fd28a41e160e16cf0f9358de21c24e73904f9d6ef36a69"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/before/records/HANDOFF.md",
+      "sha256": "b08a619c86b66eeff07bf715abd12cec24a5d85570fcbaff67867cc8dfc82ece"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/before/records/IMPLEMENTATION_STATE.json",
+      "sha256": "f322779e1fd3d0d113ce8aefe067b43123eacfeeae1a75a901e93254d23908cd"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/before/records/OPEN_ITEM_GATES.json",
+      "sha256": "28f175147fe0267da465a4d26f0779039c0fad4545d558d0705ec66015ff5dee"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/before/records/PACKAGES.json",
+      "sha256": "0d1ca51ab969d75f81ecc6b3fe813759a42df3652a15edb6f61f87e0aedafcd8"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/before/records/REVISION_HISTORY.json",
+      "sha256": "d7ae1d2385a65c91541c2ba0a323b04772aa0a9126dc57c5d6ed26761e40cc50"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/before/records/TASK_GRAPH.json",
+      "sha256": "0a4d58eb3cf031a08464e06002ffe3496864e7b5ae5b2e4d0d9ddf5c8d08026d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/before/records/execution/handoff.md",
+      "sha256": "059b028fda7d07e3de7b111ea35c3d7e5bbfa47adf34b18280ff3cd1a5007b2e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/before/records/execution/state.json",
+      "sha256": "26ea3b32751ae30232abb59dfebf89afe963b61006c396872015ab3ef05ad395"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/browser-auth.integration.mjs",
+      "sha256": "9cde10239061fc1dbc745396af41d365ea41d5d48ba461a9726b0b08cc2a41c0"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/browser-entry.js",
+      "sha256": "9a7fcac39e03be2d333ccee0831612d15f7d47967e46760e379bbe46df43262e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/browser-entry.tsx",
+      "sha256": "0620c1e6abce7cef2b9808118b86f1ec2d1807405bfe1ca7a972d20aa8876c5c"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/change-summary.md",
+      "sha256": "89e3a271f0618dde0deb39495a7b8e37469e7411dffc352f286074d09b0fe4db"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/deliver-task.py",
+      "sha256": "0b4e564636ab0b0d25eb1f3076ad7760a35239b1505eb1da32c136f4b83a04c5"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/b17-runner-compatibility.json",
+      "sha256": "89092d036d143eed27ec7fea1a5d1b59d83b670400a9ea079f9c6e3d9b72c1db"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/browser-bundle-attempt-01.json",
+      "sha256": "9b56441eb37817f8fce215596231216ed154a43651c7b98e3166fca11b1ff5e3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/browser-bundle-attempt-01.log",
+      "sha256": "a938ddddde793b18549116ec187382052f4f39d53fe144dad5c740cf3c156dd8"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/browser-bundle-attempt-02.json",
+      "sha256": "17f7d702cc8d6b1f9c5ef888a421c8a2195a56e5d3cc633cacac739da45793d0"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/browser-bundle-attempt-02.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/browser-bundle-attempt-03.json",
+      "sha256": "17f7d702cc8d6b1f9c5ef888a421c8a2195a56e5d3cc633cacac739da45793d0"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/browser-bundle-attempt-03.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/browser-bundle-attempt-04.json",
+      "sha256": "17f7d702cc8d6b1f9c5ef888a421c8a2195a56e5d3cc633cacac739da45793d0"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/browser-bundle-attempt-04.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/browser-evidence-5058c6f9-f4e7-4096-ab92-96bb05f91e2d.json",
+      "sha256": "dbbfa3028e31e39f325ca0c8af780aac7d780211bebf6d318219693e13db898f"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/browser-evidence-7a86587a-22b2-48e3-97d3-4c76545812eb.json",
+      "sha256": "058eab45fd068aef9223b7f4f8119e8a9c064ca2eef1b600bd90d3eade6a5c73"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/browser-evidence-89ce28de-b410-4c26-96ec-8fc735da9b9a.json",
+      "sha256": "55fd7d3e019292d7607076d145721951ad48da724c83ea4652b13c35e26253ea"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/browser-evidence-903b5c38-feee-4375-9349-ce33ce353a41.json",
+      "sha256": "36505f2bfbad67927c664e4294ffebb0610722ab83fffda31e4b07ed6ced66aa"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/browser-evidence-a252c1c4-138d-489b-aa01-6ffa4d6b1f4c.json",
+      "sha256": "2475582c31a3c3774c1ea2eba0f3c32c74561492ac38192e675ba210cc8d79d6"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/browser-evidence-c97cb86f-07b4-4f38-a7ef-a2ca4891248e.json",
+      "sha256": "8bd77fa2c71abfdf94d2bbab21dd182c1fac67fccfcd2108c6763e9297304aac"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/browser-evidence-caf5d1b5-9042-45aa-b652-22529b8de7e2.json",
+      "sha256": "2475582c31a3c3774c1ea2eba0f3c32c74561492ac38192e675ba210cc8d79d6"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/final-diff-check.json",
+      "sha256": "42fa84d9a873cd66604d8e75644492e70b3a68978bbf070d0ed7be2fff56ca26"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/final-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/final-git-status.txt",
+      "sha256": "33df7f904971807a7d8c1b17d406eb4be5174925b64dfbd9f5becac21e45739d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/final-record-consistency.json",
+      "sha256": "2dbb214f0e0432c1231cfb4e56176ef6793af2bf5b6e8d08455490d99eb147a9"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/final-scope-and-cleanup.json",
+      "sha256": "e89a198dca09db3f911d3f4409cadb453b82208fede7a97d07799333331e4ad7"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/final-validation-index.json",
+      "sha256": "198edb41c1b7fd46f9b8fc4380360dbd20464636d8ac4d54ecd6494c1ca2e6ed"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/historical-fixture-limit.md",
+      "sha256": "fb4c7e25e9b84257f9769c74af0e9e3e9011223c2e69781a8a337bac69ebc41e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/owned-auth-provider-final.png",
+      "sha256": "79cbc28a24636a31726e4ff6164b58b2f02f9e5ce3a7708edb83dc154d6c5df8"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/preflight.json",
+      "sha256": "8f5e19d5762ff8958dd7522cd6d8a547a2cd1ce6e438e39cd86e082a11881658"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/regression-session.json",
+      "sha256": "ef3b262d16c0a45c188252c64a173698f1e0ad8d8e90df732701112de3d7bade"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/handoff.md",
+      "sha256": "62174772caf1800f9d79072f1fca4a01efd57d23c4a7a2dfe279bf2934b19338"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/reconcile-closeout.py",
+      "sha256": "872ab63a53614c53954ce4e026d9e9e0b10cb771763deb6abd2494c53f16bfe3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/remaining-inputs.md",
+      "sha256": "6dad5be540e91792311070c19ed9fd1bcfdbae627134812219bdb2206f71ab49"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/rollback.md",
+      "sha256": "345b2a158175ce71bd16c26435aa623d0efd1fa0425b3cb1eeffcac19780195f"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/run-regressions.py",
+      "sha256": "37913d609d5b8b9b4f6ef27585f87dd29b4648e17aa6d520ff0eb69741bd91a3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/run-suite-rp01.py",
+      "sha256": "6d0066a1aaedd966c66310465758a197c20328677eb75bcf134e909199c8c165"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/run-suite.py",
+      "sha256": "c1984b321261d4ed8bc7f62bd77371a7da54e986ac40fb874a178b9b4a73e0f1"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/seal-readback.py",
+      "sha256": "2e6f617b263e1b87eb6c8e0a4950cbd3afda31a8708db46bc4ef768937bcc98e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/start-baseline.json",
+      "sha256": "a4438218f38495e72e475a4b622fc0ee3b7875be7e8bcecd8163abd91121ba8d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/task-readiness.csv",
+      "sha256": "c9e1e02264e19d5de6544fe502e001298d8a250fd07ad28b71cd10f11f4aaf1a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/task-readiness.json",
+      "sha256": "cf3544389632bf52df0b14dd4eb7103f30de62f7f5895e4eb518a8c9a5d4d645"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/task-state.json",
+      "sha256": "729caee9ad1f58e09628015e954ce8b86bcd9d5a53ad5a19244b0d73ef58e412"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/acceptance.json",
+      "sha256": "888ce34f07cdd7f26d74c0c26374de53d21ee30aa711baf23d1af032bed5bdfa"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/authorization.json",
+      "sha256": "bdcbd13130bbc67d174023f1eb93bf77ef0aed2c8aa5ebf5d7bb800bedf40530"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/change-summary.md",
+      "sha256": "630148f8351bbfddff28526117d3fe283418118e419b71ff6e57b061dbe6ce4c"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/login-regression/attempt-01/backend-build.log",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/login-regression/attempt-01/backend-typecheck.log",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/login-regression/attempt-01/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/login-regression/attempt-01/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/login-regression/attempt-01/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/login-regression/attempt-01/guard-check.log",
+      "sha256": "36b04ec71fa545b9a38b28b74d6ad78e6934db049917a69175776f607273a825"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/login-regression/attempt-01/guard-drop.log",
+      "sha256": "8b7d4953c7f852abd9aa0cb5a1aa865473a529107893ab26d3f36f6b9190e134"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/login-regression/attempt-01/guard-reset.log",
+      "sha256": "dc62b8f936433e688c211c156e9cdd0a3a35265e79796cc19744bf3a825ef6eb"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/login-regression/attempt-01/initdb.log",
+      "sha256": "cecfb21c0fdd970b4f0287cff86744ca1017a81a015ed0ba47965159e33f0ff0"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/login-regression/attempt-01/integration-suite.log",
+      "sha256": "90cfcfabf30b6e6abc9b94a085e4b3a49045b2965288c350476264ca0f6f4374"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/login-regression/attempt-01/run-results.json",
+      "sha256": "f7bb07a6899311b0aa706aa4a2ffbcfcacc6297f750af4d761b92fcfd7397fb9"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/login-regression/attempt-01/undefined-check.log",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-01/backend-build.log",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-01/backend-typecheck.log",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-01/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-01/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-01/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-01/guard-check.log",
+      "sha256": "b8f4876df92de427f7f9e65089b3fa0dacd248bbd7faccef36856947d8ca0ce4"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-01/guard-drop.log",
+      "sha256": "4a782ac2d42a34c48d8cbd491fd29e90686f4276ec7d3875af2ab9e6e8371ed4"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-01/guard-reset.log",
+      "sha256": "5877ddd1885869592e0830fdd1b6303bf4131433770e6edbdf8b1d61f868ee2a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-01/initdb.log",
+      "sha256": "ee35a6c5b8d28307fc31cd3fc9d74effa6c5033d4ae3b9325d589098c9efdb52"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-01/integration-suite.log",
+      "sha256": "5c6ff5415acf186f85d1d8047b07a94559a0f5c22d6527fd2fb422084771d9fa"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-01/run-results.json",
+      "sha256": "70250bbbdeddfb1bae0b2e45f1be29b17a34586e6e02d77bad1eab965e1fbd29"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-01/undefined-check.log",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-02/backend-build.log",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-02/backend-typecheck.log",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-02/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-02/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-02/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-02/guard-check.log",
+      "sha256": "6e07d2d9163b22be468e1250706fde0ed7749a8390e7065a3acf442709c9b791"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-02/guard-drop.log",
+      "sha256": "db98711c90d28beb42599a30273a34053a3e75499f63d5147f019415f42ee5a2"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-02/guard-reset.log",
+      "sha256": "420c4e403b23857a682317163c324284fc70d5a7d045acc19e4bd5977cfc2c3e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-02/initdb.log",
+      "sha256": "98d18095c27695a0d987fcc7c8b7898ce3e604dbbca900019bcef9f103526e25"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-02/integration-suite.log",
+      "sha256": "1825ab2c8b7c0e4481103b1a156679e4960426e04c25c3ef6ca35a41ebd1ad48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-02/run-results.json",
+      "sha256": "c026340c7af7657af49cf394c90b6300c6abc609e8be6f8f289195e7fadb9bbb"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/policy/attempt-02/undefined-check.log",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/source-diff.patch",
+      "sha256": "19a8ef1737079a673111ddfb13ed70d7c31328631fdd327f8137269b317481f2"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/source-hashes.json",
+      "sha256": "8f23aa7029d0183a0b0be6178d86993f2dc3a2add26a8e249720cfe26106f5be"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/validation-summary.json",
+      "sha256": "c4235b322f9eb71882f46a0cc7e225ab2fef2fbe09b3d238296fdc0e6800592d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/handoff.md",
+      "sha256": "4163d76f1cbf4405454ceb65ce062f153cd23ff179857bb41d4c3829c364478a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/joint-validation/acceptance.json",
+      "sha256": "4fce3851c8dacf723ea621c680c198446c248f5889aab147158d9abcac75f9d2"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/joint-validation/authorization.json",
+      "sha256": "d8383efc4c0e1a51590e6b286d369286208e645568c94fe8042fc96a0db68563"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/joint-validation/change-summary.md",
+      "sha256": "a187829c667566557e7ac989a48183a53eec30fa22bdf47f079b3112a82fb491"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/joint-validation/evidence/validation-summary.json",
+      "sha256": "092861d46e77201cd8f9f4e72da5f7be3d2ac74cc7025d0fede86275df8ec434"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/joint-validation/handoff.md",
+      "sha256": "0d95478214152a0e42b7221ba539274ded6b894a88cfc1be679d7e5b1158490e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/joint-validation/rollback.md",
+      "sha256": "aa2ded1a05f2f8560f2000b3fa2918003d2dc3b8ac79fcc655ac55e33b88717d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/joint-validation/task-state.json",
+      "sha256": "fd82c01d4eddb9be3897c9af334524920bf29a2397d14318f86129569279ad1e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/rollback.md",
+      "sha256": "b3f2b0fd722b1677a500f132603fcc192c0689a22973cf2e2b5ccb1828fa5cdf"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/task-state.json",
+      "sha256": "8cb14189cf8a61f0abcf471bbfa4472fddfaade4ef6bc3f126928d1c55d47d37"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/acceptance.json",
+      "sha256": "4ca8037940a6bca1c9dc9a9e50f60e776633815ea2c99bda2081d5d349ed5277"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/authorization.json",
+      "sha256": "dc07e15030a95e1079008fe48f601061466f8f46408bee0e5995e23f5d3c9909"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/change-summary.md",
+      "sha256": "75c4b7b7272dc5405f981b168a38ddbfbf1b90d9478fc6d6330334e8a8857a5e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-01/backend-build.log",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-01/backend-typecheck.log",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-01/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-01/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-01/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-01/guard-check.log",
+      "sha256": "7e10239dac91d60d6b4b21f20724af0b5f4ed6f43fbfe0389b32a24b6be5aace"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-01/guard-drop.log",
+      "sha256": "de37e744cdf446e21256c91d1e9d8a92053013fa32892fa4469d703d13052a45"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-01/guard-reset.log",
+      "sha256": "cfb0b475d4a4b33f291605ab6935d079a565b5e61e4bad3a2229d68c0f06e8b0"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-01/initdb.log",
+      "sha256": "79088e2cc46ba631ba0cd74da313e70e2dbcc2c0cc700ea4e1666267f1ed8155"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-01/integration-suite.log",
+      "sha256": "b13d93757d8bba989d7a36b1d50a258c64e891e18062dd9b193f4845d63e707b"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-01/run-results.json",
+      "sha256": "808745915f79f6ab0e644e1dae53275277c08d93be14b54044f04e8849efa5c0"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-01/undefined-check.log",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-02/backend-build.log",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-02/backend-typecheck.log",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-02/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-02/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-02/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-02/guard-check.log",
+      "sha256": "3b170d325b49ba3f3bfba4d31e677cdc219495f2a44ee76044755b5cc42b452e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-02/guard-drop.log",
+      "sha256": "59f83d3183d71b0ae087b4e1ae997c5dc219b994d5581fc306aeece42edbc709"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-02/guard-reset.log",
+      "sha256": "8e92ef445e94401146158580de3761da0e14f7e8cccdb6ec4046bb5115d93927"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-02/initdb.log",
+      "sha256": "ac6366197996111d23050560153a462fd79031f9c14f7b0ba71c6cccd4f42873"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-02/integration-suite.log",
+      "sha256": "dc04fec4ff9c312736779978026a49a6c8ec18db96537699b4e5ff6b1552a2f8"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-02/run-results.json",
+      "sha256": "94eb9d4a61cdae47e475cfc454ffca3f4226c92ac0b0920b4001249360e0b2eb"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-02/undefined-check.log",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-03/backend-build.log",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-03/backend-typecheck.log",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-03/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-03/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-03/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-03/guard-check.log",
+      "sha256": "a457172dd989d359f94c8051fe7eabab7e01541dfbda73d090907216a11f2365"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-03/guard-drop.log",
+      "sha256": "7d0f5e728f0204d4ff531c12308f259a9e4b03ee490af1025d7ebc7ceadf841c"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-03/guard-reset.log",
+      "sha256": "89697bb16a751fb6569ecb0f904d4d2b0b49deea51d781400109d7be792dd059"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-03/initdb.log",
+      "sha256": "fdfaeddb4f3e218e98f7f0d556f81978d879678086e3e293e662eccf6fc60794"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-03/integration-suite.log",
+      "sha256": "c7deb47a2ebfbde4156b1f2f7a4f67e802112752feeafcd3b27bc0e3b4103659"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-03/run-results.json",
+      "sha256": "b1ebf88aedaa204ca43ca1648305f8bfa67ecc012b608d637b1bff94534d6fab"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-03/undefined-check.log",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-04/backend-build.log",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-04/backend-typecheck.log",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-04/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-04/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-04/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-04/guard-check.log",
+      "sha256": "fc6564a8ff76359570ca9a00c0727901490358a894557467af29dcc525a09426"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-04/guard-drop.log",
+      "sha256": "311ca502743376b1a97c1fb776d5338fda009808513a0a01716d2f9f503f2eef"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-04/guard-reset.log",
+      "sha256": "647c86c9a5a41a5e62ece3834b1af068712674d4e53ac447facbe372280d7d7f"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-04/initdb.log",
+      "sha256": "7cc79360721f9d55ef950152a2b7a44af1f6cdece0296b474f6a59b5f6d22757"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-04/integration-suite.log",
+      "sha256": "5d8dced40cfc0ef61a1960dbab82c63bccd6b74a9dcc5618200902a508801f0d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-04/run-results.json",
+      "sha256": "6295dc44206cdc3c91f1d3d2b7e302257302e7f80fd49565c2beeb15932ce9c8"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-04/undefined-check.log",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-05/backend-build.log",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-05/backend-typecheck.log",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-05/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-05/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-05/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-05/guard-check.log",
+      "sha256": "543e94bf26b1b463a31328358ce31c384c6491f47386bb39c0198cd5c48e484a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-05/guard-drop.log",
+      "sha256": "a35a19d516b2a537dde0d62aa9b9dbb57cee763d23035acbd85dfd54ad20a9cc"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-05/guard-reset.log",
+      "sha256": "d439f40b4a213647e0f2bb8621087b755c7527aef03b34fa378287b003d359b0"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-05/initdb.log",
+      "sha256": "fa6fb7140802e8b20e82218ba6d8390d8f7c89116c573b39fb1ba287a3bff9fa"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-05/integration-suite.log",
+      "sha256": "5eb0b16f9b1a3cc331d3ace836393a69a0542211f5c05599baa81df5b056efa4"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-05/run-results.json",
+      "sha256": "40deee61dc47de77c0edddf669ddffa38fcedbdf10354acc4fa65a11dd324653"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-05/undefined-check.log",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-06/backend-build.log",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-06/backend-typecheck.log",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-06/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-06/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-06/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-06/guard-check.log",
+      "sha256": "1a6824294b552b260ba0ca738cb5d2132ccd0e7b79017446968a32132c0f457e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-06/guard-drop.log",
+      "sha256": "ed8a6583397d72aacfda57320d306cb34962a3dcc355d250ae39089b8a23b21a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-06/guard-reset.log",
+      "sha256": "ae478f47c1709919a700d4449ad0b4f54c221358e0065f1ab99055f342b668e8"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-06/initdb.log",
+      "sha256": "765a9b8810c796eda409350af81da73e3abbbce77cd742d665bdb67fbb4cbbbe"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-06/integration-suite.log",
+      "sha256": "bb919a86e4cd11dd130f09a596bed9b65dd390b38c0c646dd05199e172a52de2"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-06/run-results.json",
+      "sha256": "dd8036319528077eecff34532fc726b676a9d38f2da34801a7a13efcbbb72520"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-06/undefined-check.log",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-07/backend-build.log",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-07/backend-typecheck.log",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-07/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-07/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-07/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-07/guard-check.log",
+      "sha256": "eb4a3afc81706e11d7e72b4b90f8e7578e3f2a267faab84dd49d818505c51782"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-07/guard-drop.log",
+      "sha256": "44d999ac9240e4c96cfe6fe3af59775cd6e5159751b8db9f84f0855d2dc4857a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-07/guard-reset.log",
+      "sha256": "e6cb90ae2926de78d922e39bec4cff955c426c05c962b9a2c1f46d5e3477a993"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-07/initdb.log",
+      "sha256": "ae6f933ef4d492b5aefcb62fe59b825d71de4cabaedf022ccaa524216e3e6840"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-07/integration-suite.log",
+      "sha256": "d82d4914659364cb95ca352a2223babe352b72b8af8237ea6aeaf7b09e0b838b"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-07/run-results.json",
+      "sha256": "490cad6b8dce71fe18e9adc14323fc368f36ad0acb53a35b66fa85775a68d15e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/browser/attempt-07/undefined-check.log",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/frontend-and-browser-bindings.json",
+      "sha256": "014145906da2a2e5a312e3c08903e06292ce826dd3b38aa3ed59ecd68c20ad30"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/frontend-checks/early-typecheck-attempt-01.json",
+      "sha256": "4fbcadaa57ff5c0870bdf6d036a2be4e8368fb90475d08163158bf827d590f42"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/frontend-checks/frontend-typecheck-attempt-01.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/frontend-checks/frontend-typecheck-attempt-02.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/frontend-checks/results-attempt-01.json",
+      "sha256": "5ee9c18a17d5450f47ad6ccde4e8192058ea44ae8b52ab75d4fe9c6d4b676820"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/frontend-checks/results-attempt-02.json",
+      "sha256": "341b0f6632d81045f69fbf9208d79075a3ce00da27d1ec714109d7a7f93e63d9"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/frontend-checks/rp03-unit-attempt-02.bundle.mjs",
+      "sha256": "ed588f7780e03537ca9a0631f62011ab49b4cbe6eb88bb268ab382c4efdb7520"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/frontend-checks/rp03-unit.bundle.mjs",
+      "sha256": "ed588f7780e03537ca9a0631f62011ab49b4cbe6eb88bb268ab382c4efdb7520"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/frontend-checks/unit-bundle-attempt-01.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/frontend-checks/unit-bundle-attempt-02.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/frontend-checks/unit-suite-attempt-01.log",
+      "sha256": "41de8ec8a745da79315e05610d4fdc417337ea3dc0fbcf47809ce52049b3bb1e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/frontend-checks/unit-suite-attempt-02.log",
+      "sha256": "a2908949cd5bf8b207f1791d506582dbff3031a3d8697195c76f208e4432d0af"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-01/backend-build.log",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-01/backend-typecheck.log",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-01/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-01/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-01/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-01/guard-check.log",
+      "sha256": "d05840bc50be1e78b509b436d9dd27990af9e61ca42a0690b6970bd27f810bb9"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-01/guard-drop.log",
+      "sha256": "53f5d12fec5af826392b03ddc0a2e4d6357f15518168285479ea0df87f2d0dd5"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-01/guard-reset.log",
+      "sha256": "da51ef0f73456253dc75502abbdeb8119b6f7978abb891f0ada13b0b72bdb99b"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-01/initdb.log",
+      "sha256": "65bb77076513746eb227b5f23d1fa3e9460ba57dd14e7d3e2f6b52d3978b179f"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-01/integration-suite.log",
+      "sha256": "af13165343fd500cfd1d47b4c94e6ca77064aac08bec2db76faebab1853b2f79"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-01/run-results.json",
+      "sha256": "015b714de167c84b45bec0da690b39505b568804782e0fbd0d85d6a0968ad03b"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-01/undefined-check.log",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-02/backend-build.log",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-02/backend-typecheck.log",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-02/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-02/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-02/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-02/guard-check.log",
+      "sha256": "442f69be87fd8434191ce70c97be38045b84f6337eb5681218837a7b34ddc4b8"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-02/guard-drop.log",
+      "sha256": "b2d832856bf8a4cf4d2cb084f883cfe21919f79d1ba11ea982793bab8c6b2214"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-02/guard-reset.log",
+      "sha256": "ee6946a438dac8b8ebcf61bcfd023b03d284a659a6b483604b50952219858e2d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-02/initdb.log",
+      "sha256": "11985499e25e3328a43b21e1aef7abf192c4e299b133c5b979e1f9f6c80b5e2c"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-02/integration-suite.log",
+      "sha256": "388686e79faf5d2757c47c7d71069776d353b8165f690909f1893d87d483d107"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-02/run-results.json",
+      "sha256": "00b55de10061e4a27702f1aa2a9ee110cdc5948076ef6e4e1dbf56f348c7be5b"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/b17-role-create/attempt-02/undefined-check.log",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/backend-unit-contract/attempt-01/backend-build.log",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/backend-unit-contract/attempt-01/backend-typecheck.log",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/backend-unit-contract/attempt-01/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/backend-unit-contract/attempt-01/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/backend-unit-contract/attempt-01/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/backend-unit-contract/attempt-01/guard-check.log",
+      "sha256": "13d772e6b5f9c798231c798d23ee12c4a18d62287894672e2c29f2f572fb695e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/backend-unit-contract/attempt-01/guard-drop.log",
+      "sha256": "064f58b8df5462d7a17d4ab9a10ccebd0ebf562e0d8a615fc4a24c53bd16f0ac"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/backend-unit-contract/attempt-01/guard-reset.log",
+      "sha256": "9bf74fdad6c539cb2c6329eca2daae8ad90b2ad729c16f20ca940f33edfb922a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/backend-unit-contract/attempt-01/initdb.log",
+      "sha256": "a980e32e8a562f23451cf8f5037b6bb7722fada2c43561503b805c22c24525bc"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/backend-unit-contract/attempt-01/integration-suite.log",
+      "sha256": "a15314847bbd00ffb92e38b6a891fce4bd31544e5755e5d2bae91eb2ab119249"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/backend-unit-contract/attempt-01/run-results.json",
+      "sha256": "15f5c16e986faf5961fcc3b66835c90d7267f8d1ad084c81f10d4fe8e60a876e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/backend-unit-contract/attempt-01/undefined-check.log",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-idempotency/attempt-01/backend-build.log",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-idempotency/attempt-01/backend-typecheck.log",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-idempotency/attempt-01/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-idempotency/attempt-01/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-idempotency/attempt-01/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-idempotency/attempt-01/guard-check.log",
+      "sha256": "27f7dd1143b50925417c8bf2e400c76c15c09b6ec6bc6a3f9fee2613a8abce63"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-idempotency/attempt-01/guard-drop.log",
+      "sha256": "2e14ba32a5e7ff05304e992ac838b98ec941aa33e1a2294cc9016ef906ff3a86"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-idempotency/attempt-01/guard-reset.log",
+      "sha256": "2156d7b170d454687aaf983c76e17907d45e79052f06dcea734d23863a1dabba"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-idempotency/attempt-01/initdb.log",
+      "sha256": "684d72c4b422d2906b59d9ee3b992502804d9e320f084ce4f99e562d245eb7a6"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-idempotency/attempt-01/integration-suite.log",
+      "sha256": "23f1b7ec8138bdec415c1a74bc5fd9c851614e600fa39ac538faac9d2498d51d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-idempotency/attempt-01/run-results.json",
+      "sha256": "8b260563b870c6bbc454aaafc56d67d3f79d11bd24a2d4ade4cca812ab8268cb"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-idempotency/attempt-01/undefined-check.log",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-post-concurrency/attempt-01/backend-build.log",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-post-concurrency/attempt-01/backend-typecheck.log",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-post-concurrency/attempt-01/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-post-concurrency/attempt-01/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-post-concurrency/attempt-01/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-post-concurrency/attempt-01/guard-check.log",
+      "sha256": "de78c02b0589be83aaebb00a534e159efc19c42d955b3fdac4ff256abab3482e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-post-concurrency/attempt-01/guard-drop.log",
+      "sha256": "575bef18ad3e08a213c664ee9512f9f5525d0e9735b1ec74371d8ccbbf9bffb8"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-post-concurrency/attempt-01/guard-reset.log",
+      "sha256": "48f9912e765531e326a42c660d2985c7f82f40a1f9d96ba0a4f5c5f42d961394"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-post-concurrency/attempt-01/initdb.log",
+      "sha256": "e4f2a1c637954567835984c6713e7129c17605f215b1dfc74c59b2c54c353e41"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-post-concurrency/attempt-01/integration-suite.log",
+      "sha256": "0632faa792b15eebefe37d1dc499587601dc255cce84e8454113549fb1541698"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-post-concurrency/attempt-01/run-results.json",
+      "sha256": "a69586eb6ecc89139c0750f7552bc371fdcf5cc4b68441a58ddbfa5fb8e4c6a5"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-post-concurrency/attempt-01/undefined-check.log",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-sync-rejection-retry/attempt-01/backend-build.log",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-sync-rejection-retry/attempt-01/backend-typecheck.log",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-sync-rejection-retry/attempt-01/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-sync-rejection-retry/attempt-01/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-sync-rejection-retry/attempt-01/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-sync-rejection-retry/attempt-01/guard-check.log",
+      "sha256": "79eb19b6effd2d629f424270748007981d6256c6bc2a00d5b9ba81bca04db8ef"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-sync-rejection-retry/attempt-01/guard-drop.log",
+      "sha256": "e98220a040a8e64d506aa7a1193b9f2bd367ffb94973cea401df09a5df3cf003"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-sync-rejection-retry/attempt-01/guard-reset.log",
+      "sha256": "922f39c8e7a8a5d711130ca1ad661897014ab384f6cc3dcfe9089bfacdff0346"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-sync-rejection-retry/attempt-01/initdb.log",
+      "sha256": "40dceff75ed20a5df2f121b4bf677cdb0d4739798270a82791c23c58dea4cbeb"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-sync-rejection-retry/attempt-01/integration-suite.log",
+      "sha256": "5b53c1246248eb22af0397225e97c6298d33466ea7a60095a84fbf5e38aeac0a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-sync-rejection-retry/attempt-01/run-results.json",
+      "sha256": "1c97ffa093a238872a26bce1b859a8816e23b50110b22de2dcd8978871210b67"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf02-sync-rejection-retry/attempt-01/undefined-check.log",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-versions-access/attempt-01/backend-build.log",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-versions-access/attempt-01/backend-typecheck.log",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-versions-access/attempt-01/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-versions-access/attempt-01/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-versions-access/attempt-01/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-versions-access/attempt-01/guard-check.log",
+      "sha256": "b70fdd454b41149b0eba8c4b099f3f61b11fbc66d34ec8559d0279100fa35dd3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-versions-access/attempt-01/guard-drop.log",
+      "sha256": "94980505eb6f0ab4b0035ad548355e6ed2997df7ee671f8bc808e97f325a7d98"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-versions-access/attempt-01/guard-reset.log",
+      "sha256": "c266d47866cf9581c2562900d5fa90ce84953d3532689fea30eefac250167160"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-versions-access/attempt-01/initdb.log",
+      "sha256": "26991f10aff61e8e16d07ad05789352b74e7fae8ffe40b677ba72b4900bb2bbc"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-versions-access/attempt-01/integration-suite.log",
+      "sha256": "3a50b8197d81013712ef40f2e8646a23fe62d6d85216391964bea6a7038fcf5f"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-versions-access/attempt-01/run-results.json",
+      "sha256": "3c2868862c930c09dea66281c3a6c5b7de9727c0a65e2f30dcb2dab4c12ba9c0"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-versions-access/attempt-01/undefined-check.log",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-write-authorization/attempt-01/backend-build.log",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-write-authorization/attempt-01/backend-typecheck.log",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-write-authorization/attempt-01/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-write-authorization/attempt-01/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-write-authorization/attempt-01/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-write-authorization/attempt-01/guard-check.log",
+      "sha256": "c21fca2022e449b6f39d0f2ac006a5934c28ab1427df6a3d27ca9c657d759c2e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-write-authorization/attempt-01/guard-drop.log",
+      "sha256": "79e9996bfdcad5a008eb1cea62d48ee4d3f64c15602d85e8ff00c3ea2d6b62c2"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-write-authorization/attempt-01/guard-reset.log",
+      "sha256": "7109995c249f936a8e426ae2cf77969b2ad938ac99380b20a0e88ea84c5fde95"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-write-authorization/attempt-01/initdb.log",
+      "sha256": "8f4a54318f8230a75c9c0caf2db856674142828e866ce6c99c69f2a72ff059e7"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-write-authorization/attempt-01/integration-suite.log",
+      "sha256": "44607a1f30620bb65df61c9e1369e45141d31aebd53c384ffd199c4ee7a1e4b1"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-write-authorization/attempt-01/run-results.json",
+      "sha256": "5b38c91924e39a50e02db9e5e0b236da246b5c13fe56c8d7d10f47cdaac8d361"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rf04-write-authorization/attempt-01/undefined-check.log",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp08-sync-read-authorization/attempt-01/backend-build.log",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp08-sync-read-authorization/attempt-01/backend-typecheck.log",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp08-sync-read-authorization/attempt-01/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp08-sync-read-authorization/attempt-01/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp08-sync-read-authorization/attempt-01/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp08-sync-read-authorization/attempt-01/guard-check.log",
+      "sha256": "aafa5230dd3013075850213def8b3f0744fc0c695d6c53d81b933929e4d580f7"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp08-sync-read-authorization/attempt-01/guard-drop.log",
+      "sha256": "8bf171da02decb79ce7f02a6844163c6b21906ded26c17f0e97fbf5671df54f5"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp08-sync-read-authorization/attempt-01/guard-reset.log",
+      "sha256": "828c014994eac12e2fa5dc8cfb63b9f694583ab59c527ce0830cd64755e91932"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp08-sync-read-authorization/attempt-01/initdb.log",
+      "sha256": "17b6ea5e0f70d0ea72488b6e2ebd9098c1ffd20f26b5e44b13b5ad9128b4105d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp08-sync-read-authorization/attempt-01/integration-suite.log",
+      "sha256": "f35860191a122d3ac2b5c523a3d846f122ff3014e1327d412ee1c512f9b51ae1"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp08-sync-read-authorization/attempt-01/run-results.json",
+      "sha256": "e813d30cbf80b254cb162bc8bd444d7de96de2a4e7d806921a3c0265017658eb"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp08-sync-read-authorization/attempt-01/undefined-check.log",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp10-report-submit-snapshot/attempt-01/backend-build.log",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp10-report-submit-snapshot/attempt-01/backend-typecheck.log",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp10-report-submit-snapshot/attempt-01/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp10-report-submit-snapshot/attempt-01/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp10-report-submit-snapshot/attempt-01/git-diff-check.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp10-report-submit-snapshot/attempt-01/guard-check.log",
+      "sha256": "2919a1ada620592e84ad99cbdf5ef66864644492f4b7036d2a706ae035599098"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp10-report-submit-snapshot/attempt-01/guard-drop.log",
+      "sha256": "cc991025c5290534ecb78c32f3d6841f5ba00689a3cd593617d5006401b027ba"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp10-report-submit-snapshot/attempt-01/guard-reset.log",
+      "sha256": "0d70d4ce77706eb4e5213d09dc216983dcbdfd50bc00a55e6cf46c9c2c5f9f39"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp10-report-submit-snapshot/attempt-01/initdb.log",
+      "sha256": "1699f18abd021f6a0369093545cdc30bddb967ed03b194949fb7192955e21605"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp10-report-submit-snapshot/attempt-01/integration-suite.log",
+      "sha256": "98e7cabdc179a545b4d7f8e80b35982222d9509cb3fc3193f21c9a3e38bd2b61"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp10-report-submit-snapshot/attempt-01/run-results.json",
+      "sha256": "e29df243225882ad26fa9dd454d700da46c90ef8f5b06281e2d31837c6ca068d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/regression/rp10-report-submit-snapshot/attempt-01/undefined-check.log",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/source-diff.patch",
+      "sha256": "982d763395d0256f4efb6dc8cb4ac6b1da905296f58c61f37f5e8f0ae0360918"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/source-hashes.json",
+      "sha256": "1edf776671af177f1054833dc061d4594429d675c0a8b71fdd80e4228cdb537f"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/validation-summary.json",
+      "sha256": "aae15a87b46bbacf7666666666d9d738ec3330457621c50d1801450127783a4a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/handoff.md",
+      "sha256": "70df8e2996099d43abbefc9e4c07265e24b4e4ffec8b2ff8daf0351deb8436f2"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/rollback.md",
+      "sha256": "3d94e665c77fad550608f6e2d228eb1b847f5aeee3d192eb7124b7a9fa787718"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/task-state.json",
+      "sha256": "fb57c1ec87a03d030e42e2b2e607c1b4b29299d7a022e49367e04d9445bc062d"
+    }
+  ],
+  "excludedNames": [
+    "READY_FOR_REVIEW.json",
+    "final-integrity.json",
+    "payload-manifest.json",
+    "post-seal-readback.json"
+  ],
+  "note": "Current owned payload and task runs; no self/history cycle. Mutable ledger hashes are this snapshot, not later-live invariants."
+}

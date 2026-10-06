@@ -1,0 +1,29 @@
+{
+  "sessionId": "parallel-lr7-2026-10-05-seal-correction-01",
+  "date": "2026-10-05",
+  "verifiedHead": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "gitStatusNote": "Only the prior J integration deliverables and this K correction directory are new vs the batch baseline; no business source/ledger/test drift is introduced by this correction.",
+  "sixRootRecordHashesAtStart": {
+    "IMPLEMENTATION_STATE.json": "3264584aaedf4a29769633c1b973554392368238bb16a189fb3e0edc60f7a60a",
+    "execution/state.json": "bb46d3185f04330f7ae0f3a62e345fadc9c4281a3eeefe1c89422bdb110b5e0c",
+    "HANDOFF.md": "b5723f898c81819b4b89a99cf55c8d09a5bb265edd93b419000a2f61f795f9bf",
+    "execution/handoff.md": "d3c1c498dacfb6c43f02735cde6e6603e5c3e89f0b1ebc245d7b3a4bac853d2b",
+    "REVISION_HISTORY.json": "7c99bd89cf3adce5160c7f16783eef15b066a55d857af67724de089cd06832c0",
+    "EXECUTION_REVISION_HISTORY.json": "e1c760b9f99dea518bb0ae81db8f340b21f40b103a88dfaa4655ad6c45a66dcd"
+  },
+  "priorIntegrationEntryCanonicalHashes": {
+    "REVISION_HISTORY.versions[26]": "11a772609809f5447966ac76195504c50910fc251f4008a5376574ea417c8169",
+    "EXECUTION_REVISION_HISTORY.entries[17]": "c237a4b3b2d1a5983527efce56fe04a792fcede89d6917870e39bd100e0af950"
+  },
+  "verifiedConsistency": {
+    "protectedFiles277": "zero drift (per review readback immutableProtectionDrift=[])",
+    "workerFiles948": "A 851 + B 19 + C 14 + D 18 + E 15 + F 18 + A-new-amendment delta = 948 all matched",
+    "oldJ17Files": "all matched",
+    "frozenPlan2335": "digest matched",
+    "priorPostSealOverall": "PASS (old post-seal-readback record preserved; not reused as current-history equivalence)"
+  },
+  "allowedWriter": "CodeBuddy (local bounded seal-correction executor)",
+  "allowedNewWritePrefix": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-correction-2026-10-05-01/",
+  "stopConditions": "Stop after sealed payload-manifest, final-integrity, two history correction entries and post-seal-readback; do not modify any frozen input, worker output, business code, or other root-record field; await independent review.",
+  "note": "Six root-record bytes saved verbatim to evidence/start-snapshots/ before any new write."
+}

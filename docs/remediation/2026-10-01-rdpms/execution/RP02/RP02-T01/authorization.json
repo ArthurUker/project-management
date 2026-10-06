@@ -1,0 +1,11 @@
+{
+  "createdAt":"2026-10-02",
+  "executor":"Codex executor",
+  "authorizationSource":"User's explicit bounded local remediation authorization, continued by latest instruction to proceed through tasks; executor prompt and RP02 task card.",
+  "baselineCommit":"138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "allowedTaskIds":["RP02-T01"],
+  "allowedActivities":["modify RP02-T01 allowed backend auth/TTL source", "add task-specific isolated integration acceptance file", "run syntax/diff/build/test checks and owned isolated DB verification when available"],
+  "prohibited":["RP02-T02 refresh CAS/family behavior", "schema/migration/dependency changes", "production/shared DB", "real accounts", "commit/stage/push/merge/deploy", "remove or modify pre-existing dirty files"],
+  "owner":"Codex executor",
+  "decisionBoundary":"No separate gate applies to RP02-T01. Refresh single-consumption remains RP02-T02 and is not implemented here."
+}

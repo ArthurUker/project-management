@@ -1,0 +1,20 @@
+{
+  "taskId": "RP18-T01",
+  "authorizationRef": "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/authorization.json",
+  "authority": "User approved subsequent local STANDARD repairs; delegated concrete option selection",
+  "allowedFiles": [
+    "rdpms-system/backend/src/platform/config/configSchema.ts",
+    "rdpms-system/backend/src/platform/config/configCli.ts",
+    "rdpms-system/backend/src/bootstrap/createApp.js",
+    "rdpms-system/backend/src/bootstrap/server.js",
+    "rdpms-system/backend/.env.example",
+    "rdpms-system/deploy/scripts/preflight.sh",
+    "rdpms-system/deploy/scripts/deploy.sh",
+    "rdpms-system/deploy/scripts/candidate-gate.py",
+    "rdpms-system/backend/tests/integration/rp18-candidate-config.integration.test.mjs"
+  ],
+  "approvedBy": "郭仁康",
+  "approvedRole": "研发副总监",
+  "scope": "RP18-T01 shared compiled app/config CLI, documented ALLOWED_ORIGINS alias conflict fail, actual Bearer/body and credential-free CORS, deprecate ignored export/cookie/proxy/storage flags explicitly; candidate supplied isolated immutable source/dependency tree builds frontend/backend before compiled CLI gate, source/build/migration manifest hashed. No real deployment/DDL/npm install/network/current pointer changes in preparation. Complete operational cutover RP18-T02.",
+  "noProductionOrRelease": true
+}

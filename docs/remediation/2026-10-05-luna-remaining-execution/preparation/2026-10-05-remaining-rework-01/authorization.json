@@ -1,0 +1,9 @@
+{
+  "scope": "Preparation rework authorized as necessary continuation work",
+  "source": "User message: 请继续按计划执行所有的修复工作，执行完才停下来",
+  "executionSessionRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-continuous-01/authorization.json",
+  "allowedWritePrefix": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-remaining-rework-01",
+  "businessCodeWritesByPreparation": false,
+  "productCommandsByPreparation": 0,
+  "oldArtifactsReadOnly": true
+}

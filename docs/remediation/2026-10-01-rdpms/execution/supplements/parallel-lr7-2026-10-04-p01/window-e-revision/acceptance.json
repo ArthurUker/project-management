@@ -1,0 +1,23 @@
+{
+  "windowId": "E",
+  "acceptanceLevel": "PREPARATION_MATERIAL_DELIVERY",
+  "preparedAt": "2026-10-04",
+  "criteria": [
+    { "id": "AC-1", "criterion": "Source client revision matrix delivered (csv+md) covering fields/status/assignee/batch/offline/retry/conflict", "result": "PASS", "evidence": "evidence/source-client-matrix.md, .csv" },
+    { "id": "AC-2", "criterion": "Support evidence register separates source/build/deployed/declared/cutoff with UNCONFIRMED/OPEN_INPUT where no external source", "result": "PASS", "evidence": "evidence/support-evidence-register.json" },
+    { "id": "AC-3", "criterion": "T-RP-03 decision draft produced with all policies PROPOSED and signatures null", "result": "PASS", "evidence": "decision-draft.json, .md" },
+    { "id": "AC-4", "criterion": "Acceptance draft covers support-side scenarios + real IDB/UI requirements; dynamic marked NOT_RUN", "result": "PASS", "evidence": "acceptance-draft.csv" },
+    { "id": "AC-5", "criterion": "External evidence request itemized with blank fill-in; no server/SSH/credential access used", "result": "PASS", "evidence": "evidence/external-client-evidence-request.md" },
+    { "id": "AC-6", "criterion": "Source citations carry current file:line + sha256; drift (DIFF vs HEAD) disclosed", "result": "PASS", "evidence": "evidence/source-hashes.json" },
+    { "id": "AC-7", "criterion": "No business source/schema/test/config/deploy/root-ledger modified", "result": "PASS", "evidence": "authorization.json driftNotice; git status unchanged by this window" }
+  ],
+  "businessValidation": {
+    "S03-OI-09": "NOT_RUN (deployed-supported-client inventory OPEN_INPUT)",
+    "PAC-RP00-02": "NOT_RUN",
+    "RP10-T01": "NOT_STARTED (gated by S03-OI-09)",
+    "B16": "SUPPORTED (historical, not rerun)"
+  },
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "note": "This acceptance evaluates material delivery and source/evidence consistency only. It does not certify the S03-OI-09 gate or approve T-RP-03."
+}

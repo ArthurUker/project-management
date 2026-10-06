@@ -1,0 +1,23 @@
+{
+  "id": "SUP-02",
+  "parentTask": "RP08-T01",
+  "finding": "LR4-02 / B04",
+  "mode": "TEST_ONLY",
+  "release": "NOT_EVALUATED",
+  "acceptance": [
+    { "id": "SUP-02-01", "name": "七实体精确行对照", "result": "PASS",
+      "evidence": "每个实体普通 API 与同步返回同一真实活跃行（按 id 提取）",
+      "note": "成员入口为裸数组，其他为 list/单对象，按真实响应形状提取" },
+    { "id": "SUP-02-02", "name": "字段键-值逐项比较", "result": "PASS",
+      "evidence": "每个同步键属于同一在线行；标量/数组 deepEqual；manager 逐键比较",
+      "note": "未用整段 JSON 字符串搜键、另一行字段或空集合 every() 代替" },
+    { "id": "SUP-02-03", "name": "禁止字段检查", "result": "PASS",
+      "evidence": "按 SYNC_READ_MATRIX[entity].forbidden 断言 createdById/updatedById/deletedAt/reviewerId/leftAt/metadata 及任务关系嵌入不存在",
+      "note": "保留既有明确禁止字段与关系检查" },
+    { "id": "SUP-02-04", "name": "权限拒绝 + 同步隔离", "result": "PASS",
+      "evidence": "移除读权限后普通 API 403，同步 upserts/tombstones 为空",
+      "note": "先证两侧成功且非空，再运行拒绝；未用 401/空库/错误 ID/SUPER_ADMIN 绕过成员范围" }
+  ],
+  "suite": { "target": "rp08-sync-read-authorization.integration.test.mjs", "total": 12, "passed": 12, "failed": 0 },
+  "note": "当前普通 API 对照不是独立产品或安全政策批准，发布保持 NOT_EVALUATED。"
+}

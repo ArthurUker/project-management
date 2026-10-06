@@ -1,0 +1,15 @@
+{
+  "status": "PASS_WITH_RECORDED_DIRTY_WORKTREE",
+  "stableInputs": 36,
+  "stableInputMismatches": 0,
+  "HEAD": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "requiredNFilesRead": 13,
+  "requiredPFilesRead": 19,
+  "acceptanceRowsParsed": 306,
+  "taskGraphRowsParsed": 54,
+  "decisionRowsParsed": 21,
+  "latestReviewRead": true,
+  "businessDecisionsRead": true,
+  "dynamicCommandsRun": 0,
+  "productValidation": "NOT_RUN"
+}

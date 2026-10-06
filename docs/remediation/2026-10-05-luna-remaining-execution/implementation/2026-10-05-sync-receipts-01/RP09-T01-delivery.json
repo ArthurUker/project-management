@@ -1,0 +1,51 @@
+{
+  "files": [
+    "rdpms-system/backend/src/routes/sync.js",
+    "rdpms-system/backend/src/modules/sync/syncMutationCommands.ts",
+    "rdpms-system/backend/prisma/schema.prisma",
+    "rdpms-system/backend/prisma/migrations/20261005_sync_receipt_v1_scope/migration.sql",
+    "rdpms-system/backend/tests/integration/rp09-scoped-receipt.integration.test.mjs"
+  ],
+  "runs": [
+    "owned-db"
+  ],
+  "casePass": {
+    "AC-B05-01": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+    "AC-B05-02": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+    "AC-B05-03": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+    "AC-B06-01": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+    "AC-B06-02": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+    "AC-B06-03": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+    "PAC-RP09-01": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+    "PAC-RP09-02": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+    "TASK-RP09-T01": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+    "GATE-S03-OI-05": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+    "DECISION-T-RP-02": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only",
+    "DECISION-T-RP-07": "Current local v1 owned PostgreSQL + actual password/Bearer authorization; exact scoped approved contract only"
+  },
+  "notRun": {
+    "PAC-RP09-04": "Pending RP09-T02 transport/recovery or independent frontend/target/watermark/restore/budget scope; no broader PASS",
+    "INT-PC02-01": "Pending RP09-T02 transport/recovery or independent frontend/target/watermark/restore/budget scope; no broader PASS",
+    "INT-PC03-01": "Pending RP09-T02 transport/recovery or independent frontend/target/watermark/restore/budget scope; no broader PASS",
+    "INT-PC05-01": "Pending RP09-T02 transport/recovery or independent frontend/target/watermark/restore/budget scope; no broader PASS"
+  },
+  "limits": [
+    "30/30 formal scoped tests in accepted attempt03; earlier attempts retained.",
+    "Backend candidate reservation wire is incompatible with legacy push; UI/IDB/client activation NOT_RUN.",
+    "projectPhases/milestones/progress delete are frozen P1: real403 guards tested; no seed/grant expansion or false legal-delete positive.",
+    "Deleting a project removes current project visibility: subsequent replay/query denied, not a falsely authorized success.",
+    "Device scoped upsert P2025 maps404; no foreign metadata mutation; append-only actors kept to whole DB drop.",
+    "Generated Prisma artifacts are derived caches from owned schema and existing dependencies; no dependency install/upgrade.",
+    "B05/B06 SUPPORTED; target/release/independent review and joint contracts remain open."
+  ],
+  "summary": "Approved RP09-T01 candidate implemented: immutable actor/device/resource/key/hash/version reservations; caller-tx current auth, shared command/CAS, strict audit and successful receipt; seven entity legal updates, six creates, available delete/noop, known-key isolation, real SQL/audit/receipt rollback and per-item batch recovery. 30/30 real owned PostgreSQL tests with actual login/Bearer.",
+  "compatibility": "Additive four nullable SyncMutation columns, named new migration tested only in owned DB. Existing global key kept, legacy null records quarantined; protocolVersion1/receiptHandle required. Frontend unchanged; no production activation.",
+  "rollback": "Do not revert to unsafe old global replay or separate-upsert write; keep additive columns/records, disable candidate sync writes for containment. Do not perform destructive down migration. Target rollback NOT_RUN.",
+  "next": "RP09-T02 deterministic competition, lookup/expiry/missing recovery, actual response loss and related regression validation",
+  "nextTask": "RP09-T02",
+  "findings": [
+    "B05",
+    "B06"
+  ],
+  "validation": "PASS"
+}

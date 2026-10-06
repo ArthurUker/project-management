@@ -1,0 +1,3 @@
+# Local common-point proof
+
+The fixture owns every file writer; its actual three-round promise settles before RESTORING DB state is set. Native trigger refuses another DB write; the dump and file copy then run while the state is held. Restoration exactly matches all captured table counts and file references/hash/size. This qualifies only that synthetic source; external API/worker/directSQL/AV/file-cleanup/upload writers and target FS snapshots are unknown. No published pair upgraded, no target restore approval or RPO/RTO signoff. Security seal is restricted to guarded new owned test DB and identical user/RBAC catalogs.

@@ -1,0 +1,80 @@
+{
+  "taskId": "RP11-T02",
+  "approvalRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/approval.json",
+  "cases": [
+    {
+      "caseId": "AC-F03-03",
+      "result": "PASS",
+      "scope": "Current real Chrome/IDB version1/2 copy+verify, explicit-owner quarantine, native blocked/abort/page-close during4000-row upgrade, source byte-data unchanged and reentry;13 current owner/product Tasks regression. Synthetic HTTP authentication clearly separated from native backend JWT. Exact delegated T-RP-01 forbids automatic unknown claim.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP11/RP11-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-N-S02-01-01",
+      "result": "PASS",
+      "scope": "Current real Chrome/IDB version1/2 copy+verify, explicit-owner quarantine, native blocked/abort/page-close during4000-row upgrade, source byte-data unchanged and reentry;13 current owner/product Tasks regression. Synthetic HTTP authentication clearly separated from native backend JWT. Exact delegated T-RP-01 forbids automatic unknown claim.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP11/RP11-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-N-S02-01-03",
+      "result": "PASS",
+      "scope": "Current real Chrome/IDB version1/2 copy+verify, explicit-owner quarantine, native blocked/abort/page-close during4000-row upgrade, source byte-data unchanged and reentry;13 current owner/product Tasks regression. Synthetic HTTP authentication clearly separated from native backend JWT. Exact delegated T-RP-01 forbids automatic unknown claim.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP11/RP11-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP11-04",
+      "result": "PASS",
+      "scope": "Current real Chrome/IDB version1/2 copy+verify, explicit-owner quarantine, native blocked/abort/page-close during4000-row upgrade, source byte-data unchanged and reentry;13 current owner/product Tasks regression. Synthetic HTTP authentication clearly separated from native backend JWT. Exact delegated T-RP-01 forbids automatic unknown claim.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP11/RP11-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "TASK-RP11-T02",
+      "result": "PASS",
+      "scope": "Current real Chrome/IDB version1/2 copy+verify, explicit-owner quarantine, native blocked/abort/page-close during4000-row upgrade, source byte-data unchanged and reentry;13 current owner/product Tasks regression. Synthetic HTTP authentication clearly separated from native backend JWT. Exact delegated T-RP-01 forbids automatic unknown claim.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP11/RP11-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "GATE-S02-OPEN-06",
+      "result": "PASS",
+      "scope": "Current real Chrome/IDB version1/2 copy+verify, explicit-owner quarantine, native blocked/abort/page-close during4000-row upgrade, source byte-data unchanged and reentry;13 current owner/product Tasks regression. Synthetic HTTP authentication clearly separated from native backend JWT. Exact delegated T-RP-01 forbids automatic unknown claim.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP11/RP11-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "GATE-S02-OPEN-07",
+      "result": "PASS",
+      "scope": "Current real Chrome/IDB version1/2 copy+verify, explicit-owner quarantine, native blocked/abort/page-close during4000-row upgrade, source byte-data unchanged and reentry;13 current owner/product Tasks regression. Synthetic HTTP authentication clearly separated from native backend JWT. Exact delegated T-RP-01 forbids automatic unknown claim.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP11/RP11-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "DECISION-T-RP-01",
+      "result": "PASS",
+      "scope": "Current real Chrome/IDB version1/2 copy+verify, explicit-owner quarantine, native blocked/abort/page-close during4000-row upgrade, source byte-data unchanged and reentry;13 current owner/product Tasks regression. Synthetic HTTP authentication clearly separated from native backend JWT. Exact delegated T-RP-01 forbids automatic unknown claim.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP11/RP11-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-N-S02-01-02",
+      "result": "NOT_RUN",
+      "reason": "Chosen policy prohibits unknown automatic/first-login claim; full recovery UI/explicit action display belongs RP11-T03. Do not relabel as tested user claim."
+    },
+    {
+      "caseId": "PAC-RP11-05",
+      "result": "NOT_RUN",
+      "reason": "Real blocking/abort/page closure/two tabs proven; quota and current recovery UI authorization remaining RP11-T03."
+    },
+    {
+      "caseId": "INT-PC04-01",
+      "result": "NOT_RUN",
+      "reason": "Native upgrade/blocked/abort/closure validated; quota remains not run until recovery task."
+    }
+  ],
+  "localValidation": "PASS",
+  "jointValidation": "NOT_RUN",
+  "targetValidation": "NOT_RUN",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "limits": [
+    "Current5 migration +13 owner/browser product Tasks cases, synthetic HTTP auth/push; no native JWT joint/target deployment",
+    "Unknown original source remains quarantined, no first-login claim/export enabled",
+    "Version4 only adds/copies/verifies stores; original stores retained. Whole transaction abort preserves original version2 on real page close during4000-row copy",
+    "Older regression attempt01 excluded due harness edit during run; source-start/end fenced attempt02 accepted"
+  ]
+}

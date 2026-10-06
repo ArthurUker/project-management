@@ -1,0 +1,16 @@
+{
+  "sessionId": "parallel-lr7-2026-10-05-seal-overlay-02",
+  "status": "IN_PROGRESS_PRECHECK",
+  "productAcceptance": "NOT_RUN",
+  "runnerDynamicAcceptance": "NOT_EVALUATED",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "scope": "SC-01..04 small overlay using 13 confirmed replacement targets",
+  "changedOrAdded": [
+    "seal-overlay-2026-10-05-02/ (new M deliverables)",
+    "REVISION_HISTORY.json +1 version entry",
+    "EXECUTION_REVISION_HISTORY.json +1 id entry"
+  ],
+  "originalTasksUnchanged": true,
+  "pendingInputsUnchanged": true
+}

@@ -1,0 +1,1103 @@
+{
+  "count": 21,
+  "preparationPackages": {
+    "LP-01": {
+      "title": "回执与删除恢复合同差分补齐",
+      "decisions": [
+        "T-RP-02",
+        "T-RP-07"
+      ],
+      "sources": [
+        "window-c-receipts/decision-draft.json",
+        "window-c-receipts/current-contract.md",
+        "window-c-receipts/acceptance-draft.csv",
+        "window-c-receipts/interface-notes.md"
+      ],
+      "products": [
+        "receipt-contract-addendum.md",
+        "failure-recovery-matrix.csv",
+        "command-scope-matrix.csv",
+        "acceptance-spec.json"
+      ]
+    },
+    "LP-02": {
+      "title": "认证与离线归属联合批准缺口",
+      "decisions": [
+        "T-RP-09",
+        "T-RP-01",
+        "T-RP-12",
+        "D-S01-04"
+      ],
+      "sources": [
+        "window-d-auth/decision-draft.json",
+        "window-d-auth/interface-notes.md",
+        "window-f-cache/cache-recovery-matrix.csv",
+        "window-f-cache/interface-notes.md"
+      ],
+      "products": [
+        "auth-owner-contract-addendum.md",
+        "identity-response-matrix.csv",
+        "last-copy-recovery-matrix.csv",
+        "acceptance-spec.json"
+      ]
+    },
+    "LP-03": {
+      "title": "独立业务规则与小范围修复批准表",
+      "decisions": [
+        "D-S01-01",
+        "D-S01-02",
+        "D-S01-03",
+        "D-S01-05",
+        "D-S01-06",
+        "D-S01-07",
+        "D-S01-08",
+        "T-RP-05",
+        "T-RP-06"
+      ],
+      "sources": [],
+      "products": [
+        "decision-gap-table.csv",
+        "bounded-fix-order.md",
+        "acceptance-spec.json"
+      ]
+    },
+    "LP-04": {
+      "title": "客户端、水位、环境预算与补验输入",
+      "decisions": [
+        "T-RP-03",
+        "T-RP-04",
+        "T-RP-08",
+        "T-RP-10",
+        "T-RP-11",
+        "T-RP-13"
+      ],
+      "sources": [
+        "window-e-revision/decision-draft.md",
+        "window-e-revision/evidence/external-client-evidence-request.md",
+        "window-f-cache/watermark-options.md",
+        "window-f-cache/approval-request.md"
+      ],
+      "products": [
+        "external-input-requests.json",
+        "environment-readiness.json",
+        "validation-plan.json",
+        "budget-and-release-gap-table.csv",
+        "case-evidence-gap-table.csv"
+      ]
+    }
+  },
+  "decisions": [
+    {
+      "id": "D-S01-01",
+      "preparationWorkId": "LP-03",
+      "topic": "Administrative account hierarchy",
+      "kind": "BUSINESS",
+      "statusAtCheckpoint": "PENDING",
+      "ownerRoles": [
+        "Product owner",
+        "Security owner",
+        "System governance approver"
+      ],
+      "originalScope": "Reset, enable, disable and delete routes; SUPER_ADMIN recovery and account governance.",
+      "optionsAsRecorded": [
+        "Forbid reset/disable of equal or higher-ranked accounts; define separate emergency flow.",
+        "Allow only explicitly ranked superior roles, with approval and audit requirements.",
+        "Keep permission-only control as an intentional policy, with explicit scope."
+      ],
+      "affectedTaskIdsAsRecorded": [
+        "RP01-T02"
+      ],
+      "contractRefs": [
+        "PC02"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    },
+    {
+      "id": "D-S01-02",
+      "preparationWorkId": "LP-03",
+      "topic": "Server-side boundary for forced password change",
+      "kind": "BUSINESS",
+      "statusAtCheckpoint": "PENDING",
+      "ownerRoles": [
+        "Security owner",
+        "Product owner"
+      ],
+      "originalScope": "First-login session permissions, account takeover containment, bootstrap UX.",
+      "optionsAsRecorded": [
+        "Restrict the session server-side to password change, logout and required self-service endpoints.",
+        "Restrict only sensitive operations with an explicit allowlist.",
+        "Intentionally retain current route-local enforcement and document rationale."
+      ],
+      "affectedTaskIdsAsRecorded": [
+        "RP01-T02"
+      ],
+      "contractRefs": [],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    },
+    {
+      "id": "D-S01-03",
+      "preparationWorkId": "LP-03",
+      "topic": "Binding custom roles to users",
+      "kind": "BUSINESS",
+      "statusAtCheckpoint": "PENDING",
+      "ownerRoles": [
+        "IAM/security owner",
+        "Product owner"
+      ],
+      "originalScope": "Role creation and assignment DTOs, permission administration and M-1 role contract.",
+      "optionsAsRecorded": [
+        "Custom roles cannot be assigned; constrain creation to its intended use.",
+        "Custom roles can be assigned; define permission grant, lifecycle and management policy.",
+        "Only specified administrative roles can assign custom roles."
+      ],
+      "affectedTaskIdsAsRecorded": [
+        "RP01-T03"
+      ],
+      "contractRefs": [],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    },
+    {
+      "id": "D-S01-04",
+      "preparationWorkId": "LP-02",
+      "topic": "Access JWT invalidation after password or privilege changes",
+      "kind": "BUSINESS",
+      "statusAtCheckpoint": "PENDING",
+      "ownerRoles": [
+        "Security owner",
+        "IAM owner",
+        "Product owner"
+      ],
+      "originalScope": "Authentication middleware, session/version/revocation design, password reset exposure window; separately specify disable and role downgrade behavior.",
+      "optionsAsRecorded": [
+        "Invalidate already-issued access JWTs immediately after password change/reset.",
+        "Allow a bounded grace period with a specified maximum duration.",
+        "Do not actively invalidate; rely on token expiry, with an explicitly approved maximum TTL."
+      ],
+      "affectedTaskIdsAsRecorded": [
+        "RP03-T02"
+      ],
+      "contractRefs": [
+        "PC01"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-d-auth/decision-draft.json",
+          "exists": true,
+          "sha256": "ae87041b859acbfbd715cfbaeeba1074d8d66bfd787f70fa2d2d214b8c62aece"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-d-auth/interface-notes.md",
+          "exists": true,
+          "sha256": "0707f6abd733e8bd181fdd8fc7fb6e92222398048437c85425bb42ba073ac749"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/cache-recovery-matrix.csv",
+          "exists": true,
+          "sha256": "485508ae196dc28ae10d1e44d02766b244658ef278918883b5c5c5881e9ae316"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/interface-notes.md",
+          "exists": true,
+          "sha256": "9abb9162be50c0d459e15c0cf10c112cd12bacc93c797c4c5c8f0fc2f7af3535"
+        }
+      ],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    },
+    {
+      "id": "D-S01-05",
+      "preparationWorkId": "LP-03",
+      "topic": "Registration project visibility and write scope",
+      "kind": "BUSINESS",
+      "statusAtCheckpoint": "PENDING",
+      "ownerRoles": [
+        "Product owner",
+        "Data/privacy owner",
+        "M-1 governance approver"
+      ],
+      "originalScope": "Registration list/stats/detail/update/stage/profile/export and linked profile, tasks, members and regulatory data; SUPER_ADMIN audit.",
+      "optionsAsRecorded": [
+        "Apply the general project membership/capability boundary to all registration routes.",
+        "Allow global read for a defined field/statistics subset; keep writes membership-scoped.",
+        "Allow specified roles broader read/write, enumerating route and field scope."
+      ],
+      "affectedTaskIdsAsRecorded": [
+        "RP06-T01",
+        "RP08-T01"
+      ],
+      "contractRefs": [
+        "PC02"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    },
+    {
+      "id": "D-S01-06",
+      "preparationWorkId": "LP-03",
+      "topic": "Project manager and ProjectMember consistency",
+      "kind": "BUSINESS",
+      "statusAtCheckpoint": "PENDING",
+      "ownerRoles": [
+        "Project governance owner",
+        "Product owner",
+        "Technical owner"
+      ],
+      "originalScope": "Project and registration create/update, HTTP/sync behavior, membership roles, visibility and transfer atomicity.",
+      "optionsAsRecorded": [
+        "managerId must identify an active ProjectMember with MANAGER role.",
+        "A manager may be a non-member; define whether managerId grants any visibility or capability (recommended explicit no implicit grant).",
+        "managerId is display metadata only; authorization derives exclusively from ProjectMember."
+      ],
+      "affectedTaskIdsAsRecorded": [
+        "RP06-T02",
+        "RP07-T02"
+      ],
+      "contractRefs": [
+        "PC02",
+        "PC07"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    },
+    {
+      "id": "D-S01-07",
+      "preparationWorkId": "LP-03",
+      "topic": "Report submit and resubmit source states",
+      "kind": "BUSINESS",
+      "statusAtCheckpoint": "PENDING",
+      "ownerRoles": [
+        "Report workflow product owner",
+        "Audit/compliance owner"
+      ],
+      "originalScope": "Report submit/version snapshots, resubmission UX, approval workflow and audit evidence.",
+      "optionsAsRecorded": [
+        "Allow submit only from DRAFT and NEEDS_REVISION.",
+        "Allow resubmit from SUBMITTED under a defined version/update rule; distinguish same-key replay from a new-key command.",
+        "Approve another explicit transition table and reviewer concurrency behavior."
+      ],
+      "affectedTaskIdsAsRecorded": [
+        "RP10-T02",
+        "RP10-T03"
+      ],
+      "contractRefs": [],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    },
+    {
+      "id": "D-S01-08",
+      "preparationWorkId": "LP-03",
+      "topic": "Task parent, phase, dependency DAG and soft-delete invariants",
+      "kind": "BUSINESS",
+      "statusAtCheckpoint": "PENDING",
+      "ownerRoles": [
+        "Project governance owner",
+        "Data architecture owner",
+        "Technical owner"
+      ],
+      "originalScope": "HTTP/sync commands, schema constraints, recursive deletion, restore, existing data migration and offline caches.",
+      "optionsAsRecorded": [
+        "Require task parent and phase same-project/live references, enforce an acyclic dependency DAG, and define aggregate tombstone/restore behavior.",
+        "Require same-project references, preserve/label existing cycle and soft-delete anomalies during staged cleanup, and define DAG enforcement scope.",
+        "Approve another explicit relation and tombstone contract, including physical delete and offline sync propagation."
+      ],
+      "affectedTaskIdsAsRecorded": [
+        "RP05-T02",
+        "RP05-T03",
+        "RP13-T03",
+        "RP15-T02",
+        "RP15-T03"
+      ],
+      "contractRefs": [
+        "PC07"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    },
+    {
+      "id": "T-RP-01",
+      "preparationWorkId": "LP-02",
+      "topic": "旧IDB行归属/保全",
+      "kind": "TECHNICAL_DESIGN",
+      "statusAtCheckpoint": "PROPOSED",
+      "ownerRoles": [
+        "产品/数据负责人",
+        "前端负责人"
+      ],
+      "originalScope": "无可靠owner行隔离，认领不能从首个登录/内容猜测；导出和保留须获准。",
+      "optionsAsRecorded": [],
+      "affectedTaskIdsAsRecorded": [
+        "RP11-T02"
+      ],
+      "contractRefs": [
+        "PC04",
+        "PC12"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-d-auth/decision-draft.json",
+          "exists": true,
+          "sha256": "ae87041b859acbfbd715cfbaeeba1074d8d66bfd787f70fa2d2d214b8c62aece"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-d-auth/interface-notes.md",
+          "exists": true,
+          "sha256": "0707f6abd733e8bd181fdd8fc7fb6e92222398048437c85425bb42ba073ac749"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/cache-recovery-matrix.csv",
+          "exists": true,
+          "sha256": "485508ae196dc28ae10d1e44d02766b244658ef278918883b5c5c5881e9ae316"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/interface-notes.md",
+          "exists": true,
+          "sha256": "9abb9162be50c0d459e15c0cf10c112cd12bacc93c797c4c5c8f0fc2f7af3535"
+        }
+      ],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    },
+    {
+      "id": "T-RP-02",
+      "preparationWorkId": "LP-01",
+      "topic": "作用域回执和保留窗",
+      "kind": "TECHNICAL_DESIGN",
+      "statusAtCheckpoint": "PROPOSED",
+      "ownerRoles": [
+        "后端/产品/运维负责人"
+      ],
+      "originalScope": "actor/resource/command/key/hash、device/hash版本、unknown/expired、replay查询和最大离线窗。",
+      "optionsAsRecorded": [],
+      "affectedTaskIdsAsRecorded": [
+        "RP09-T01",
+        "RP09-T02",
+        "RP12-T02"
+      ],
+      "contractRefs": [
+        "PC03"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/decision-draft.json",
+          "exists": true,
+          "sha256": "13a48fb7f595120b6d51c7aadfb6dd95339ca8de9bc16d6fc668597336b13194"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/current-contract.md",
+          "exists": true,
+          "sha256": "988beee86e7bf2e71b5e78865458a6f9ea5b4bce6ef70f8c284d71868f6ee9a2"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/acceptance-draft.csv",
+          "exists": true,
+          "sha256": "1288d0e73e121278f92bdfa00ebe08452bb8cecc3a8fbe571e15769a94837729"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/interface-notes.md",
+          "exists": true,
+          "sha256": "ddd6d48de68f3d964c8dcbfbb1ef3a9386c34664dc6d31f7e47bbecd1306b157"
+        }
+      ],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    },
+    {
+      "id": "T-RP-03",
+      "preparationWorkId": "LP-04",
+      "topic": "客户端revision兼容",
+      "kind": "TECHNICAL_DESIGN",
+      "statusAtCheckpoint": "PROPOSED",
+      "ownerRoles": [
+        "产品/前后端负责人"
+      ],
+      "originalScope": "支持版本、missing base/409提示、字段/status/assignee链、升级截止。",
+      "optionsAsRecorded": [],
+      "affectedTaskIdsAsRecorded": [
+        "RP10-T01"
+      ],
+      "contractRefs": [],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/decision-draft.md",
+          "exists": true,
+          "sha256": "160898d42aae3843e5fecdefa8677c75db533b9d0c632f09513d4673acc41bbf"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/evidence/external-client-evidence-request.md",
+          "exists": true,
+          "sha256": "86e6c16e288320494b2d930f5e4a915b91b1338119fc00a98f8ca62bfa959c13"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/watermark-options.md",
+          "exists": true,
+          "sha256": "aac760b35256e21efd1eab33d6e2b634a2d78d396ab239c302b29164c8e38197"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/approval-request.md",
+          "exists": true,
+          "sha256": "55ca00b1eb3fb06e356465278b7d555c28f2e8ab8ad9245f116288949299f178"
+        }
+      ],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    },
+    {
+      "id": "T-RP-04",
+      "preparationWorkId": "LP-04",
+      "topic": "提交可见水位和bootstrap",
+      "kind": "TECHNICAL_DESIGN",
+      "statusAtCheckpoint": "PROPOSED",
+      "ownerRoles": [
+        "数据库/架构负责人"
+      ],
+      "originalScope": "方案先用barrier证明；source revision/epoch、有序发布/ACL、snapshot边界和保留/RESET合同。",
+      "optionsAsRecorded": [],
+      "affectedTaskIdsAsRecorded": [
+        "RP08-T02",
+        "RP13-T02",
+        "RP13-T03"
+      ],
+      "contractRefs": [
+        "PC05"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/decision-draft.md",
+          "exists": true,
+          "sha256": "160898d42aae3843e5fecdefa8677c75db533b9d0c632f09513d4673acc41bbf"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/evidence/external-client-evidence-request.md",
+          "exists": true,
+          "sha256": "86e6c16e288320494b2d930f5e4a915b91b1338119fc00a98f8ca62bfa959c13"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/watermark-options.md",
+          "exists": true,
+          "sha256": "aac760b35256e21efd1eab33d6e2b634a2d78d396ab239c302b29164c8e38197"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/approval-request.md",
+          "exists": true,
+          "sha256": "55ca00b1eb3fb06e356465278b7d555c28f2e8ab8ad9245f116288949299f178"
+        }
+      ],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    },
+    {
+      "id": "T-RP-05",
+      "preparationWorkId": "LP-03",
+      "topic": "文件扫描和elevated",
+      "kind": "TECHNICAL_DESIGN",
+      "statusAtCheckpoint": "PROPOSED",
+      "ownerRoles": [
+        "安全/文件负责人"
+      ],
+      "originalScope": "INFECTED阻断固定；FAILED/SKIPPED、metadata/字节以及敏感/拒绝审计合同。",
+      "optionsAsRecorded": [],
+      "affectedTaskIdsAsRecorded": [
+        "RP14-T02"
+      ],
+      "contractRefs": [
+        "PC02"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    },
+    {
+      "id": "T-RP-06",
+      "preparationWorkId": "LP-03",
+      "topic": "restore目标范围和冲突",
+      "kind": "TECHNICAL_DESIGN",
+      "statusAtCheckpoint": "PROPOSED",
+      "ownerRoles": [
+        "数据库/备份负责人"
+      ],
+      "originalScope": "JSON模块完整unique/FK、merge/replace、count和提交后核查失败状态；与整库/文件DR区分。",
+      "optionsAsRecorded": [],
+      "affectedTaskIdsAsRecorded": [
+        "RP16-T01",
+        "RP16-T02"
+      ],
+      "contractRefs": [
+        "PC06",
+        "PC07"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    },
+    {
+      "id": "T-RP-07",
+      "preparationWorkId": "LP-01",
+      "topic": "删除revision/墓碑",
+      "kind": "TECHNICAL_DESIGN",
+      "statusAtCheckpoint": "PROPOSED",
+      "ownerRoles": [
+        "产品/同步负责人"
+      ],
+      "originalScope": "stale delete、同key重复、restore/移动scope和保留窗，不能漏sync适配。",
+      "optionsAsRecorded": [],
+      "affectedTaskIdsAsRecorded": [
+        "RP05-T02",
+        "RP09-T01"
+      ],
+      "contractRefs": [
+        "PC03"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/decision-draft.json",
+          "exists": true,
+          "sha256": "13a48fb7f595120b6d51c7aadfb6dd95339ca8de9bc16d6fc668597336b13194"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/current-contract.md",
+          "exists": true,
+          "sha256": "988beee86e7bf2e71b5e78865458a6f9ea5b4bce6ef70f8c284d71868f6ee9a2"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/acceptance-draft.csv",
+          "exists": true,
+          "sha256": "1288d0e73e121278f92bdfa00ebe08452bb8cecc3a8fbe571e15769a94837729"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/interface-notes.md",
+          "exists": true,
+          "sha256": "ddd6d48de68f3d964c8dcbfbb1ef3a9386c34664dc6d31f7e47bbecd1306b157"
+        }
+      ],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    },
+    {
+      "id": "T-RP-08",
+      "preparationWorkId": "LP-04",
+      "topic": "配置schema和有效行为",
+      "kind": "TECHNICAL_DESIGN",
+      "statusAtCheckpoint": "PROPOSED",
+      "ownerRoles": [
+        "安全/发布负责人"
+      ],
+      "originalScope": "来源/冲突/弃用、CORS/export真实消费、编译config CLI和运行app一致。",
+      "optionsAsRecorded": [],
+      "affectedTaskIdsAsRecorded": [
+        "RP18-T01",
+        "RP18-T03"
+      ],
+      "contractRefs": [
+        "PC09"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/decision-draft.md",
+          "exists": true,
+          "sha256": "160898d42aae3843e5fecdefa8677c75db533b9d0c632f09513d4673acc41bbf"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/evidence/external-client-evidence-request.md",
+          "exists": true,
+          "sha256": "86e6c16e288320494b2d930f5e4a915b91b1338119fc00a98f8ca62bfa959c13"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/watermark-options.md",
+          "exists": true,
+          "sha256": "aac760b35256e21efd1eab33d6e2b634a2d78d396ab239c302b29164c8e38197"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/approval-request.md",
+          "exists": true,
+          "sha256": "55ca00b1eb3fb06e356465278b7d555c28f2e8ab8ad9245f116288949299f178"
+        }
+      ],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    },
+    {
+      "id": "T-RP-09",
+      "preparationWorkId": "LP-02",
+      "topic": "认证transport及跨身份响应",
+      "kind": "TECHNICAL_DESIGN",
+      "statusAtCheckpoint": "PROPOSED",
+      "ownerRoles": [
+        "安全/认证/前端负责人"
+      ],
+      "originalScope": "核对实际Bearer/body refresh；cookie旗标不证明已支持cookie。token generation、两tab成功/失败及原请求actor不越界。",
+      "optionsAsRecorded": [],
+      "affectedTaskIdsAsRecorded": [
+        "RP00-T04",
+        "RP02-T02",
+        "RP03-T01",
+        "RP03-T02",
+        "RP11-T01",
+        "RP18-T01"
+      ],
+      "contractRefs": [
+        "PC01",
+        "PC04",
+        "PC09"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-d-auth/decision-draft.json",
+          "exists": true,
+          "sha256": "ae87041b859acbfbd715cfbaeeba1074d8d66bfd787f70fa2d2d214b8c62aece"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-d-auth/interface-notes.md",
+          "exists": true,
+          "sha256": "0707f6abd733e8bd181fdd8fc7fb6e92222398048437c85425bb42ba073ac749"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/cache-recovery-matrix.csv",
+          "exists": true,
+          "sha256": "485508ae196dc28ae10d1e44d02766b244658ef278918883b5c5c5881e9ae316"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/interface-notes.md",
+          "exists": true,
+          "sha256": "9abb9162be50c0d459e15c0cf10c112cd12bacc93c797c4c5c8f0fc2f7af3535"
+        }
+      ],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    },
+    {
+      "id": "T-RP-10",
+      "preparationWorkId": "LP-04",
+      "topic": "恢复epoch与在线离线状态",
+      "kind": "TECHNICAL_DESIGN",
+      "statusAtCheckpoint": "PROPOSED",
+      "ownerRoles": [
+        "数据/安全/同步负责人"
+      ],
+      "originalScope": "dataset epoch、旧会话/receipt/cursor/family撤销或隔离、草稿保全及重新授权/数据迁移后的日志切点。",
+      "optionsAsRecorded": [],
+      "affectedTaskIdsAsRecorded": [
+        "RP13-T02",
+        "RP13-T03",
+        "RP16-T03",
+        "RP19-T02"
+      ],
+      "contractRefs": [
+        "PC05",
+        "PC06",
+        "PC08"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/decision-draft.md",
+          "exists": true,
+          "sha256": "160898d42aae3843e5fecdefa8677c75db533b9d0c632f09513d4673acc41bbf"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/evidence/external-client-evidence-request.md",
+          "exists": true,
+          "sha256": "86e6c16e288320494b2d930f5e4a915b91b1338119fc00a98f8ca62bfa959c13"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/watermark-options.md",
+          "exists": true,
+          "sha256": "aac760b35256e21efd1eab33d6e2b634a2d78d396ab239c302b29164c8e38197"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/approval-request.md",
+          "exists": true,
+          "sha256": "55ca00b1eb3fb06e356465278b7d555c28f2e8ab8ad9245f116288949299f178"
+        }
+      ],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    },
+    {
+      "id": "T-RP-11",
+      "preparationWorkId": "LP-04",
+      "topic": "事务/容量/文件系统预算",
+      "kind": "TECHNICAL_DESIGN",
+      "statusAtCheckpoint": "PROPOSED",
+      "ownerRoles": [
+        "数据库/前端/运维负责人"
+      ],
+      "originalScope": "DB锁/timeout/死锁重试、DAG递归、IDB quota、publisher lag/热水位、body预算、备份容量和目标FS。",
+      "optionsAsRecorded": [],
+      "affectedTaskIdsAsRecorded": [
+        "RP00-T05",
+        "RP05-T03",
+        "RP12-T01",
+        "RP15-T02",
+        "RP15-T03",
+        "RP17-T02"
+      ],
+      "contractRefs": [
+        "PC07",
+        "PC08",
+        "PC11"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/decision-draft.md",
+          "exists": true,
+          "sha256": "160898d42aae3843e5fecdefa8677c75db533b9d0c632f09513d4673acc41bbf"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/evidence/external-client-evidence-request.md",
+          "exists": true,
+          "sha256": "86e6c16e288320494b2d930f5e4a915b91b1338119fc00a98f8ca62bfa959c13"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/watermark-options.md",
+          "exists": true,
+          "sha256": "aac760b35256e21efd1eab33d6e2b634a2d78d396ab239c302b29164c8e38197"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/approval-request.md",
+          "exists": true,
+          "sha256": "55ca00b1eb3fb06e356465278b7d555c28f2e8ab8ad9245f116288949299f178"
+        }
+      ],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    },
+    {
+      "id": "T-RP-12",
+      "preparationWorkId": "LP-02",
+      "topic": "用户可恢复流程与保留",
+      "kind": "TECHNICAL_DESIGN",
+      "statusAtCheckpoint": "PROPOSED",
+      "ownerRoles": [
+        "产品/数据/前端负责人"
+      ],
+      "originalScope": "conflict/dead-letter/unknown/oversize/quarantine的查看、选择、导出和放弃；清理前最后副本不丢，当前授权检查。",
+      "optionsAsRecorded": [],
+      "affectedTaskIdsAsRecorded": [
+        "RP08-T02",
+        "RP11-T01",
+        "RP11-T03",
+        "RP12-T02"
+      ],
+      "contractRefs": [
+        "PC04",
+        "PC12"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-d-auth/decision-draft.json",
+          "exists": true,
+          "sha256": "ae87041b859acbfbd715cfbaeeba1074d8d66bfd787f70fa2d2d214b8c62aece"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-d-auth/interface-notes.md",
+          "exists": true,
+          "sha256": "0707f6abd733e8bd181fdd8fc7fb6e92222398048437c85425bb42ba073ac749"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/cache-recovery-matrix.csv",
+          "exists": true,
+          "sha256": "485508ae196dc28ae10d1e44d02766b244658ef278918883b5c5c5881e9ae316"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/interface-notes.md",
+          "exists": true,
+          "sha256": "9abb9162be50c0d459e15c0cf10c112cd12bacc93c797c4c5c8f0fc2f7af3535"
+        }
+      ],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    },
+    {
+      "id": "T-RP-13",
+      "preparationWorkId": "LP-04",
+      "topic": "发布观察与停止条件",
+      "kind": "TECHNICAL_DESIGN",
+      "statusAtCheckpoint": "PROPOSED",
+      "ownerRoles": [
+        "技术/安全/发布负责人"
+      ],
+      "originalScope": "trace/log去敏、授权拒绝、回执、队列、publisher、schema锁、完整恢复点、健康阈值、观察窗和rollback目标。",
+      "optionsAsRecorded": [],
+      "affectedTaskIdsAsRecorded": [
+        "RP00-T05",
+        "RP18-T02",
+        "RP19-T03"
+      ],
+      "contractRefs": [
+        "PC10",
+        "PC11"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ],
+      "reuseSourceRefs": [
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/decision-draft.md",
+          "exists": true,
+          "sha256": "160898d42aae3843e5fecdefa8677c75db533b9d0c632f09513d4673acc41bbf"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/evidence/external-client-evidence-request.md",
+          "exists": true,
+          "sha256": "86e6c16e288320494b2d930f5e4a915b91b1338119fc00a98f8ca62bfa959c13"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/watermark-options.md",
+          "exists": true,
+          "sha256": "aac760b35256e21efd1eab33d6e2b634a2d78d396ab239c302b29164c8e38197"
+        },
+        {
+          "pathBase": "REPOSITORY",
+          "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/approval-request.md",
+          "exists": true,
+          "sha256": "55ca00b1eb3fb06e356465278b7d555c28f2e8ab8ad9245f116288949299f178"
+        }
+      ],
+      "proposedChoice": null,
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "executionApprovalMeaning": "Local implementation authorization does not approve this decision."
+    }
+  ],
+  "noApprovalGranted": true
+}

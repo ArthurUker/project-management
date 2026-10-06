@@ -1,0 +1,213 @@
+{
+  "validatedAt": "2026-10-02",
+  "type": "PLAN_DOCUMENT_INTEGRITY_ONLY",
+  "overall": "PASS",
+  "checkCount": 37,
+  "checks": [
+    {
+      "check": "20 exact package IDs",
+      "result": "PASS",
+      "detail": 20
+    },
+    {
+      "check": "54 unique task IDs and parents",
+      "result": "PASS",
+      "detail": 54
+    },
+    {
+      "check": "33 original unique finding IDs and primary assignments",
+      "result": "PASS",
+      "detail": "one original primary per finding/candidate"
+    },
+    {
+      "check": "Original finding evidence/severity/disposition preserved",
+      "result": "PASS",
+      "detail": "32 SUPPORTED, 1 PENDING candidate; no new defects"
+    },
+    {
+      "check": "Finding counts 16 P1 /16 P2 /1 pending",
+      "result": "PASS",
+      "detail": "33 records"
+    },
+    {
+      "check": "31 exact audit open-item IDs",
+      "result": "PASS",
+      "detail": "all OPEN; planning mapping is not closure"
+    },
+    {
+      "check": "21 unique unapproved decisions",
+      "result": "PASS",
+      "detail": "8 business, 13 technical"
+    },
+    {
+      "check": "12 unique proposed contracts",
+      "result": "PASS",
+      "detail": "no runtime acceptance"
+    },
+    {
+      "check": "All task dependency references valid",
+      "result": "PASS",
+      "detail": []
+    },
+    {
+      "check": "Implementation task DAG acyclic",
+      "result": "PASS",
+      "detail": "54 tasks traversed; acceptance edges are separate"
+    },
+    {
+      "check": "Conditional stage gates valid",
+      "result": "PASS",
+      "detail": []
+    },
+    {
+      "check": "Package-to-task and gate views consistent",
+      "result": "PASS",
+      "detail": "no package-wide inferred gates"
+    },
+    {
+      "check": "No stale whole-package implementation dependencies",
+      "result": "PASS",
+      "detail": "v1PackageDependencies retained as coordination only"
+    },
+    {
+      "check": "All 31 open items mapped to valid conditional tasks",
+      "result": "PASS",
+      "detail": "static gates consume RP00 outputs; duplicates reuse shared approval"
+    },
+    {
+      "check": "All 21 decisions mapped with valid contract refs",
+      "result": "PASS",
+      "detail": "named approval fields remain empty"
+    },
+    {
+      "check": "Every contract has valid participants/tasks/refs/cases",
+      "result": "PASS",
+      "detail": "12 joint scenario records"
+    },
+    {
+      "check": "306 unique future scenario records NOT_RUN",
+      "result": "PASS",
+      "detail": {
+        "count": 306,
+        "types": {
+          "FIX_ACCEPTANCE": 96,
+          "CANDIDATE_EVIDENCE": 1,
+          "PACKAGE_COMPLETION": 91,
+          "SUBTASK_DELIVERY": 54,
+          "CROSS_PACKAGE_CONTRACT": 12,
+          "OPEN_ITEM_GATE_EVIDENCE": 31,
+          "DESIGN_APPROVAL": 21
+        }
+      }
+    },
+    {
+      "check": "97 original acceptance IDs and targets retained",
+      "result": "PASS",
+      "detail": "unapproved policy goals conditional; original target retained separately"
+    },
+    {
+      "check": "All packages and tasks covered including RP00/RP15",
+      "result": "PASS",
+      "detail": "20 package /54 task coverage"
+    },
+    {
+      "check": "All open-item and decision evidence scenarios present",
+      "result": "PASS",
+      "detail": "31 gate and21 decision records"
+    },
+    {
+      "check": "Matrix task/decision/gate refs and conditions match",
+      "result": "PASS",
+      "detail": "trace links are not blanket gates"
+    },
+    {
+      "check": "Finding subtask and acceptance links scoped",
+      "result": "PASS",
+      "detail": "B17 DTO not blocked by role binding; B16 report policy not imported"
+    },
+    {
+      "check": "Unapproved optional expansions not mandatory",
+      "result": "PASS",
+      "detail": "DTO and cross-project guard can proceed separately"
+    },
+    {
+      "check": "Implementation state planning-only on every axis",
+      "result": "PASS",
+      "detail": "no execution authorized; no fixed/deployed claims"
+    },
+    {
+      "check": "Release profiles scoped and not falsely ready",
+      "result": "PASS",
+      "detail": "4 scope templates; first-safe containment and all32+candidate closure stated"
+    },
+    {
+      "check": "Shared file coordination retained with no imaginary owners",
+      "result": "PASS",
+      "detail": "22 paths; no parallel mutations started"
+    },
+    {
+      "check": "All existing allowed-file paths exist",
+      "result": "PASS",
+      "detail": []
+    },
+    {
+      "check": "v1 snapshot 13 files unchanged",
+      "result": "PASS",
+      "detail": "13/13 hashes match"
+    },
+    {
+      "check": "Original 17 frozen audit inputs unchanged",
+      "result": "PASS",
+      "detail": "17/17 hashes match"
+    },
+    {
+      "check": "Historical audit manifest 11 artifacts unchanged",
+      "result": "PASS",
+      "detail": "11/11 hashes match"
+    },
+    {
+      "check": "Targeted source-read baseline hashes stable",
+      "result": "PASS",
+      "detail": "25 targeted source hashes match"
+    },
+    {
+      "check": "HEAD and no business-code changes",
+      "result": "PASS",
+      "detail": {
+        "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+        "gitStatus": "?? docs/audits/\n?? docs/remediation/"
+      }
+    },
+    {
+      "check": "Markdown local links resolve",
+      "result": "PASS",
+      "detail": []
+    },
+    {
+      "check": "Markdown tables contiguous",
+      "result": "PASS",
+      "detail": "no blank lines splitting table rows"
+    },
+    {
+      "check": "18 planning gaps addressed without product closure",
+      "result": "PASS",
+      "detail": "all referenced output files and contracts delivered"
+    },
+    {
+      "check": "Revision content ledger matches",
+      "result": "PASS",
+      "detail": "v2 root content hashes match; validation separate"
+    },
+    {
+      "check": "Phase schedule matches package wave assignment",
+      "result": "PASS",
+      "detail": "waves are priorities only; task edges remain authoritative"
+    }
+  ],
+  "runtimeTests": "NOT_RUN",
+  "build": "NOT_RUN",
+  "migrations": "NOT_RUN",
+  "implementation": "NOT_STARTED",
+  "productionAccess": "NOT_PERFORMED",
+  "note": "Document/hash/reference checks only; does not approve decisions, close audit open items, reproduce/fix defects, or accept release."
+}

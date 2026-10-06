@@ -1,0 +1,1 @@
+{"command":["node_modules/.bin/tsc","-p","tsconfig.app.json","--noEmit"],"cwd":"rdpms-system/frontend","exitCode":2,"output":"src/api/http.ts(26,4): error TS2554: Expected 0-1 arguments, but got 3.","reason":"Patch initially attached synchronous options to axios.create rather than request interceptor; corrected before runtime verification","status":"FAILED_ATTEMPT_PRESERVED"}

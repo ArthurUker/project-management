@@ -1,0 +1,52 @@
+{
+  "kind": "STATIC_HELPER_CONTROL_WITH_IN_MEMORY_METHOD_STUB",
+  "databaseAccess": false,
+  "productAcceptance": "NOT_EVALUATED",
+  "sourcePath": "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs",
+  "compoundSelector": {
+    "projectId": "target-project",
+    "authorId": "target-author",
+    "reportType": "MONTHLY",
+    "periodKey": "2028-01",
+    "marker": "target-payload"
+  },
+  "wrongIdentity": {
+    "projectId": "different-project",
+    "authorId": "different-author",
+    "reportType": "ANNUAL",
+    "periodKey": "2028-01",
+    "content": {
+      "revision": "target-payload"
+    }
+  },
+  "wrongIdentityMatched": true,
+  "upsertDraftGate": {
+    "actualInputShape": "where.id + create/update.content, no data",
+    "fired": false,
+    "underlyingStubCalls": 1
+  },
+  "existingDraftCleanup": [
+    {
+      "test": "submit commits first: legacy draft save already past validation is rejected and leaves no business/audit/receipt change",
+      "line": 256,
+      "finallyPresent": false,
+      "clearTimeoutPresent": false,
+      "inlineTimeoutPresent": true
+    },
+    {
+      "test": "submit commits first: modern CAS draft save with a stale baseline is rejected with INVALID_STATE",
+      "line": 294,
+      "finallyPresent": false,
+      "clearTimeoutPresent": false,
+      "inlineTimeoutPresent": true
+    },
+    {
+      "test": "sync push shares the same write boundary: late offline report save after submit is rejected",
+      "line": 329,
+      "finallyPresent": false,
+      "clearTimeoutPresent": false,
+      "inlineTimeoutPresent": true
+    }
+  ],
+  "meaning": "Pure helper counterexamples only; these controls do not prove an HTTP/database product regression."
+}

@@ -1,0 +1,236 @@
+{
+  "executedAt": "2026-09-29T06:51:04.945Z",
+  "isolation": {
+    "database": "rdpms_audit_isolated",
+    "dataDirectory": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-deep-audit-hru8uwnj/pgdata",
+    "port": 50796
+  },
+  "summary": {
+    "reproduced": 20,
+    "notReproduced": 0
+  },
+  "results": [
+    {
+      "id": "B01_ADMIN_RESETS_SUPER_ADMIN",
+      "defectReproduced": true,
+      "evidence": {
+        "adminResetStatus": 200,
+        "newLoginRole": "SUPER_ADMIN",
+        "mustChangePassword": true,
+        "privilegedEndpointStatus": 200
+      }
+    },
+    {
+      "id": "B02_PROJECT_NESTED_HARD_DELETE",
+      "defectReproduced": true,
+      "evidence": {
+        "dedicatedDeleteStatus": 403,
+        "nestedEditStatus": 200,
+        "taskPhysicallyAbsent": true
+      }
+    },
+    {
+      "id": "B03_PROJECT_STATUS_UNDEFINED",
+      "defectReproduced": true,
+      "evidence": {
+        "status": 400,
+        "body": {
+          "error": "状态不可从 undefined 变更为 IN_PROGRESS",
+          "code": "INVALID_STATUS_TRANSITION"
+        }
+      }
+    },
+    {
+      "id": "B04_SYNC_READ_WITHOUT_VIEW_PERMISSION",
+      "defectReproduced": true,
+      "evidence": {
+        "onlineStatus": 403,
+        "syncStatus": 200,
+        "taskReadWithoutPermission": true
+      }
+    },
+    {
+      "id": "B05_SYNC_REPLAY_SCOPE_AND_PAYLOAD",
+      "defectReproduced": true,
+      "evidence": {
+        "differentPayloadResult": {
+          "id": "6be96a31-78a3-4f18-a205-99d7327740a3",
+          "op": "upsert",
+          "action": "updated",
+          "entity": "tasks",
+          "status": "applied",
+          "serverUpdatedAt": "2026-09-29T06:51:04.247Z",
+          "clientMutationId": "audit-cm-shared",
+          "replayed": true
+        },
+        "outsiderResult": {
+          "id": "6be96a31-78a3-4f18-a205-99d7327740a3",
+          "op": "upsert",
+          "action": "updated",
+          "entity": "tasks",
+          "status": "applied",
+          "serverUpdatedAt": "2026-09-29T06:51:04.247Z",
+          "clientMutationId": "audit-cm-shared",
+          "replayed": true
+        },
+        "storedTitle": "first-content"
+      }
+    },
+    {
+      "id": "B06_SYNC_WRITE_RECEIPT_NOT_ATOMIC",
+      "defectReproduced": true,
+      "evidence": {
+        "httpStatus": 500,
+        "committedTitle": "committed-despite-error",
+        "receiptCount": 0,
+        "fault": "receipt persistence failure after real SQL write"
+      }
+    },
+    {
+      "id": "B07_SYNC_PULL_CAP_LOSES_ROWS",
+      "defectReproduced": true,
+      "evidence": {
+        "databaseRows": 3001,
+        "firstPullRows": 3000,
+        "nextPullRows": 0,
+        "cursor": "2026-09-29T06:51:04.738Z"
+      }
+    },
+    {
+      "id": "B08_SYNC_NEW_MEMBERSHIP_NO_BACKFILL",
+      "defectReproduced": true,
+      "evidence": {
+        "aclIncludesNewProject": true,
+        "projectBackfilled": false,
+        "historicalTaskBackfilled": false
+      }
+    },
+    {
+      "id": "B09_SYNC_ARCHIVE_WITHOUT_TRANSITION",
+      "defectReproduced": true,
+      "evidence": {
+        "from": "PLANNING",
+        "to": "ARCHIVED",
+        "actorPermissions": [
+          "projects.update"
+        ],
+        "projectMemberRole": "MEMBER"
+      }
+    },
+    {
+      "id": "B10_REPORT_SUBMIT_STALE_SNAPSHOT",
+      "defectReproduced": true,
+      "evidence": {
+        "status": "SUBMITTED",
+        "currentContent": {
+          "text": "concurrent-save"
+        },
+        "submittedSnapshot": {
+          "text": "before"
+        },
+        "resubmitWhileSubmittedStatus": 200,
+        "controlledInterleaving": "save after submit read, before submit transaction"
+      }
+    },
+    {
+      "id": "B11_ORIGINAL_FILE_BYPASSES_INFECTED_BLOCK",
+      "defectReproduced": true,
+      "evidence": {
+        "directStatus": 403,
+        "originalStatus": 200,
+        "byteFixture": "benign text, no malware"
+      }
+    },
+    {
+      "id": "B12_SUPER_ADMIN_PROJECT_FILE_DENIED",
+      "defectReproduced": true,
+      "evidence": {
+        "elevatedProjectStatus": 200,
+        "projectFileStatus": 404
+      }
+    },
+    {
+      "id": "B13_RESTORE_SILENT_DUPLICATE_DROP",
+      "defectReproduced": true,
+      "evidence": {
+        "previewOk": true,
+        "reportedCreated": 2,
+        "actualCreated": 1
+      }
+    },
+    {
+      "id": "B14_EXPIRED_LOCK_STILL_REJECTED",
+      "defectReproduced": true,
+      "evidence": {
+        "status": 403,
+        "body": {
+          "error": "账号已锁定，请稍后再试",
+          "code": "ACCOUNT_LOCKED"
+        },
+        "lockedUntil": "2026-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "id": "B15_REFRESH_PARALLEL_REUSE",
+      "defectReproduced": true,
+      "evidence": {
+        "statuses": [
+          200,
+          200
+        ],
+        "successorTokensCreated": 2,
+        "advertisedTtl": 7200,
+        "signedTtl": 900,
+        "controlledInterleaving": "both reads finish before either revokes old token",
+        "sourceId": "010993bc-5717-47e3-8d97-9195e8174388"
+      }
+    },
+    {
+      "id": "B16_TASK_HTTP_IGNORES_BASELINE",
+      "defectReproduced": true,
+      "evidence": {
+        "status": 200,
+        "submittedBaseline": "2026-01-01T00:00:00.000Z",
+        "serverBaseline": "2026-09-29T06:51:04.888Z",
+        "staleOverwriteAccepted": true
+      }
+    },
+    {
+      "id": "B17_ROLE_CREATION_REJECTS_REQUIRED_CODE",
+      "defectReproduced": true,
+      "evidence": {
+        "status": 400,
+        "body": {
+          "error": "创建角色: 包含禁止提交的字段 code",
+          "code": "VALIDATION_ERROR"
+        }
+      }
+    },
+    {
+      "id": "B18_PROJECT_CREATE_PARTIAL_COMMIT",
+      "defectReproduced": true,
+      "evidence": {
+        "httpStatus": 500,
+        "projectCommitted": true,
+        "taskCount": 0
+      }
+    },
+    {
+      "id": "B19_CROSS_PROJECT_PARENT_ACCEPTED",
+      "defectReproduced": true,
+      "evidence": {
+        "childProject": "audit-project",
+        "parentProject": "audit-foreign-parent",
+        "accepted": true
+      }
+    },
+    {
+      "id": "B20_PROJECT_SOFT_DELETE_STILL_LISTED",
+      "defectReproduced": true,
+      "evidence": {
+        "listCount": 1,
+        "detailStatus": 404
+      }
+    }
+  ]
+}

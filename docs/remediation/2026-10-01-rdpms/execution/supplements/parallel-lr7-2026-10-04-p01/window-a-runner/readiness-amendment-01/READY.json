@@ -1,0 +1,51 @@
+{
+  "amendment": "readiness-amendment-01",
+  "window": "A",
+  "taskId": "LR7-01",
+  "batchId": "parallel-lr7-2026-10-04-p01",
+  "windowId": "A",
+  "status": "READY_FOR_AGGREGATION",
+  "scope": "DELIVERY_PROTOCOL_AMENDMENT_ONLY",
+  "kind": "DELIVERY_PROTOCOL_AMENDMENT_ONLY",
+  "workerManifest": {
+    "pathBase": "REPOSITORY",
+    "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/readiness-amendment-01/WORKER_MANIFEST.json",
+    "sha256": "3bcd2abd8f8380fa98fcb813f6b629a6c163aa2f292970ace705b510417ff5d3"
+  },
+  "actualResults": {
+    "ninePaths": "REUSED_EXECUTOR_SIMULATED_EVIDENCE (normal exit 0; 8 failure paths each hit their specific fault; no re-run)",
+    "dynamicRuns": 0
+  },
+  "notRun": [
+    "runner/control re-execution",
+    "build",
+    "tests",
+    "database",
+    "browser",
+    "JWT/IDB/network"
+  ],
+  "pendingApprovals": {
+    "toolScope": "delivery-protocol field completion only",
+    "businessGate": "none in this amendment scope; not expanded to system-wide decisions"
+  },
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "writerStopped": true,
+  "originalWriterStoppedConfirmed": true,
+  "supersedesReadyRef": {
+    "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/READY.json",
+    "sha256": "5cf841b3ac343738809f1486e7af337862c541a9cf103ba7ad6cfe0897f49578"
+  },
+  "originalManifestRef": {
+    "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/WORKER_MANIFEST.json",
+    "sha256": "a4b1430f5cd78387fc0309900f09c73bc2e8337d77033deea853ffb6b60b2b"
+  },
+  "baseline": {
+    "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "frozenPlanDigest": "edad8b5937849ecb88ab282f4c2254b2faadee01d41020904c88996259d2d62d",
+    "protectedFileCount": 283,
+    "protectedFileDrift": "none"
+  },
+  "drift": "zero",
+  "note": "原 A 零漂移；本补正仅向 N 追加交付协议，绑定原 A 843 冻结输入与本次 N 产物。"
+}

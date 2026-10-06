@@ -1,0 +1,35 @@
+{
+  "taskId": "RP14-T01",
+  "packageId": "RP14",
+  "authorizedBy": "User continuation request on 2026-10-02 under EXECUTOR_PROMPT.md bounded local implementation authorization",
+  "executor": "Codex executor",
+  "allowedTaskIdsThisExecution": [
+    "RP14-T01"
+  ],
+  "sourceFiles": [
+    "rdpms-system/backend/src/routes/files.js",
+    "rdpms-system/backend/src/routes/regulatory-documents.js",
+    "rdpms-system/backend/src/modules/files/fileReadService.ts"
+  ],
+  "testFiles": [
+    "rdpms-system/backend/tests/integration/rp14-infected-file-read.integration.test.mjs"
+  ],
+  "prohibitedActions": [
+    "stage",
+    "commit",
+    "push",
+    "merge",
+    "deploy",
+    "production/shared database access or changes",
+    "real data restore",
+    "dependency upgrade",
+    "real account operations",
+    "approval of pending product/security/data rules"
+  ],
+  "databaseMigration": false,
+  "runtimeResourcesCreated": false,
+  "decisionBoundary": {
+    "T-RP-05": "PROPOSED; RP14-T02 gate; FAILED/SKIPPED scan policy not selected or changed"
+  },
+  "authorizationDoesNotApproveBusinessOrSecurityRules": true
+}

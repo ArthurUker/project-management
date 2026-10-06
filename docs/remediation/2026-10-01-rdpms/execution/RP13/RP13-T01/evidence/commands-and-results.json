@@ -1,0 +1,49 @@
+{
+  "baseline": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "commands": [
+    {
+      "command": "node --check src/routes/sync.js",
+      "exitCode": 0
+    },
+    {
+      "command": "node --check tests/integration/rp13-stable-pull-pagination.integration.test.mjs",
+      "exitCode": 0
+    },
+    {
+      "command": "node --check frontend src and test TS files",
+      "exitCode": 0
+    },
+    {
+      "command": "frontend tsc --noEmit -p tsconfig.app.json",
+      "exitCode": 0
+    },
+    {
+      "command": "frontend npm test",
+      "exitCode": 1,
+      "result": "ENV_BLOCKED: cannot resolve fake-indexeddb/auto; no tests ran"
+    },
+    {
+      "command": "backend npm run build",
+      "exitCode": 127,
+      "result": "ENV_BLOCKED: tsc not found"
+    },
+    {
+      "command": "backend node --test tests/integration/rp13-stable-pull-pagination.integration.test.mjs",
+      "exitCode": null,
+      "result": "NOT_RUN: no dist or isolated DB"
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0
+    }
+  ],
+  "preflight": {
+    "root test env": "absent",
+    "backend test env": "absent",
+    "DATABASE_URL process variable": "absent",
+    "dotenv loaded": false,
+    "DB connected": false,
+    "resources created": false,
+    "dependencies installed": false
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "taskId": "RP06-T01",
+  "authority": "USER_DELEGATED_OPTION_SELECTION",
+  "contracts": {
+    "D-S01-05": {
+      "proposal": "REGISTRATION_MEMBER_SCOPE_NO_GLOBAL_EXCEPTION_V1",
+      "rules": "No registration-wide read/write exception. Ordinary list/stats/detail require ACTIVE membership (leftAt null), alive registration subtype and read capability plus registrations.view; managerId alone without active membership is not exception. Detail/project profile are registration-owned projection; linked tasks/taskcounts require tasks.view, milestones requires milestones.view, phases requires project_phases.view, member profiles require projects.view and active members only, regulatory links require regulatory_documents.view. SUPER_ADMIN nonmember allowed with audit elevated and permissionCode, list/stats access logs sensitive scope. Updates/profile require registrations.update AND write capability; stage requires registrations.change_stage AND transition capability. Current actor status/deleted/forced/securityVersion/current DB role grants rechecked in same tx/snapshot; writer locks actor/project, rechecks alive subtype/currentmember and applies strict audit atomically. No caller-supplied visibility override. Stage lock+currentstate no stale edge. Templates remain global active public template catalog (registrations.view), no projectdata. Creator uses existing registrations.create only; new creator becomes OWNER to ensure project scoped readability; no implicit activation. Manager transfer existing D6 unchanged mandatory exactbaseline/membertarget."
+    }
+  },
+  "dependenciesAndCases": {
+    "id": "RP06-T01",
+    "packageId": "RP06",
+    "title": "registration全入口scope",
+    "implementationDependencies": [
+      "RP00-T01"
+    ],
+    "gateRequirements": [
+      {
+        "ref": "D-S01-05",
+        "before": "IMPLEMENTATION",
+        "condition": "always"
+      }
+    ],
+    "acceptanceDependencies": [],
+    "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+    "requiredForPackageCompletion": true,
+    "status": "NOT_STARTED",
+    "validation": "NOT_RUN",
+    "owner": null,
+    "deliverable": "design/implementation/evidence per approved scope",
+    "implementationStatus": "NOT_STARTED",
+    "validationStatus": "NOT_RUN",
+    "releaseStatus": "NOT_EVALUATED",
+    "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+    "acceptanceCaseIds": [
+      "AC-B21-01",
+      "AC-B21-02",
+      "AC-B21-03",
+      "AC-B21-04",
+      "PAC-RP06-01",
+      "PAC-RP06-02",
+      "PAC-RP06-03",
+      "PAC-RP06-04",
+      "TASK-RP06-T01",
+      "INT-PC02-01",
+      "GATE-D-S01-05",
+      "DECISION-D-S01-05"
+    ],
+    "contractRefs": [
+      "PC02"
+    ]
+  },
+  "boundary": "Current registration list/stats/detail/update/stage/profile alive membership and capability scope; filtered linked entities/softdelete; same transaction current authority/write/strict audit. Existing no-export/noDELETE remains absent. No global exception, system role policy or new migrations. Creation atomic scaffold is independently outside B21 acceptance unless necessary validated creation admission."
+}

@@ -1,0 +1,51 @@
+{
+  "files": [
+    "rdpms-system/backend/src/kernel/rbac.js",
+    "rdpms-system/backend/src/routes/users.js",
+    "rdpms-system/backend/src/routes/auth.js",
+    "rdpms-system/backend/src/modules/auth/accountPolicy.ts",
+    "rdpms-system/backend/prisma/schema.prisma",
+    "rdpms-system/backend/prisma/migrations/20261006_user_security_version/migration.sql",
+    "rdpms-system/backend/tests/integration/rp03-security-version.integration.test.mjs",
+    "rdpms-system/backend/tests/integration/rp02-login-lock-ttl.integration.test.mjs",
+    "rdpms-system/backend/tests/integration/rp01-account-policy.integration.test.mjs"
+  ],
+  "beforeDirectory": "before-RP03-T02",
+  "runs": [
+    "rp03-t02",
+    "rp03-regression-lock",
+    "rp03-regression-rp01",
+    "rp03-regression-refresh",
+    "rp03-regression-unit",
+    "rp03-regression-receipts"
+  ],
+  "casePass": {
+    "AC-N-R02-02-01": "Current real native JWT and owned PostgreSQL;8 security-version cases,8 account-policy cases with144 matrix combinations,12 login-lock cases,refresh regression,52 scoped/receipt recovery and93 unit/contract. Exact D-S01-04 immediate version contract in immutable decision artifact.",
+    "AC-N-R02-02-02": "Current real native JWT and owned PostgreSQL;8 security-version cases,8 account-policy cases with144 matrix combinations,12 login-lock cases,refresh regression,52 scoped/receipt recovery and93 unit/contract. Exact D-S01-04 immediate version contract in immutable decision artifact.",
+    "PAC-RP03-03": "Current real native JWT and owned PostgreSQL;8 security-version cases,8 account-policy cases with144 matrix combinations,12 login-lock cases,refresh regression,52 scoped/receipt recovery and93 unit/contract. Exact D-S01-04 immediate version contract in immutable decision artifact.",
+    "TASK-RP03-T02": "Current real native JWT and owned PostgreSQL;8 security-version cases,8 account-policy cases with144 matrix combinations,12 login-lock cases,refresh regression,52 scoped/receipt recovery and93 unit/contract. Exact D-S01-04 immediate version contract in immutable decision artifact.",
+    "GATE-D-S01-04": "Current real native JWT and owned PostgreSQL;8 security-version cases,8 account-policy cases with144 matrix combinations,12 login-lock cases,refresh regression,52 scoped/receipt recovery and93 unit/contract. Exact D-S01-04 immediate version contract in immutable decision artifact.",
+    "GATE-S03-OI-06": "Current real native JWT and owned PostgreSQL;8 security-version cases,8 account-policy cases with144 matrix combinations,12 login-lock cases,refresh regression,52 scoped/receipt recovery and93 unit/contract. Exact D-S01-04 immediate version contract in immutable decision artifact.",
+    "DECISION-D-S01-04": "Current real native JWT and owned PostgreSQL;8 security-version cases,8 account-policy cases with144 matrix combinations,12 login-lock cases,refresh regression,52 scoped/receipt recovery and93 unit/contract. Exact D-S01-04 immediate version contract in immutable decision artifact.",
+    "DECISION-T-RP-09": "Current real native JWT and owned PostgreSQL;8 security-version cases,8 account-policy cases with144 matrix combinations,12 login-lock cases,refresh regression,52 scoped/receipt recovery and93 unit/contract. Exact D-S01-04 immediate version contract in immutable decision artifact."
+  },
+  "notRun": {
+    "PAC-RP03-04": "Actual old/new candidate and target app/schema rollout matrix not run. Additive migration exercised in owned database only; retain version guard on rollback.",
+    "INT-PC01-01": "Prior browser evidence frozen; current versioned source browser joint two-tab JWT chain not rerun here.",
+    "INT-PC06-01": "Actual recovery/epoch replay and restored historical credentials not run; no actual restore authorized."
+  },
+  "limits": [
+    "Local real JWT/DB; no target deployment or actual historical restore",
+    "Missing-version legacy JWT rejected; actual supported deployed client/rollback matrix not supplied",
+    "Full current browser/IDB joint acceptance not claimed; earlier browser evidence retained without relabelling"
+  ],
+  "summary": "Immediate user securityVersion revokes access after password/reset/role/status/delete; version increment + refresh revocation + strict audit transactional. Native authentication checks current active nondeleted row/version. Login cannot mint fresh-version credentials from an old password validated before reset; deterministic race and audit rollback validated. Additive nonnegative users.security_version migration exercised only in self-owned DB.",
+  "compatibility": "Existing Bearer/body URLs; access without version now401 and new login/current valid refresh issues versioned token. Additive field default0 retains all existing rows; no old migration rewrite.",
+  "rollback": "Retain security_version and current checks; do not deploy old application ignoring version. Target containment/compatible rollback not run.",
+  "next": "RP11-T01 owner-scoped IndexedDB, authenticated generation fencing and cache authorization under delegated preservation policy",
+  "nextTask": "RP11-T01",
+  "findings": [
+    "N-R02-02"
+  ],
+  "validation": "PASS"
+}

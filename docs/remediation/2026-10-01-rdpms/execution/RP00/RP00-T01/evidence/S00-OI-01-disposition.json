@@ -1,0 +1,12 @@
+{
+  "id": "S00-OI-01",
+  "boundedChecks": [
+    "R09 execution state metadata",
+    "R09 review/findings/source digests",
+    "S00 item and review",
+    "R00 baseline metadata"
+  ],
+  "recordedR09StartHead": "UNKNOWN_NOT_RECORDED",
+  "evidence": "Original execution state omitted startHead/endHead. End head is supported by R09 findings/source-digests; start head cannot be reconstructed from the retained record and is explicitly unknown.",
+  "decision": "Preserve UNKNOWN_NOT_RECORDED; no verifiable contemporaneous start-HEAD record in retained checkpoint. No inference from unchanged end HEAD. Non-blocking for RP01-T01."
+}

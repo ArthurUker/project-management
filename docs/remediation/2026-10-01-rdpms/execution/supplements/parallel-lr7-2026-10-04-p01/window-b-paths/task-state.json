@@ -1,0 +1,30 @@
+{
+  "kind": "TASK_STATE",
+  "windowId": "B",
+  "workId": "LR7-02",
+  "status": "COMPLETE",
+  "mode": "NEW_METADATA_TOOLS_ONLY",
+  "deliverables": [
+    "authorization.json",
+    "start-baseline.json",
+    "strict-path-resolver.py",
+    "build-corrections.py",
+    "evidence/corrections-map.json",
+    "evidence/corrected-frozen-payload.json",
+    "evidence/per-file-readback.json",
+    "evidence/synthetic-control.json",
+    "historical-record-snapshots/ (4 record snapshots + verification.json)",
+    "change-summary.md",
+    "acceptance.json",
+    "rollback.md",
+    "handoff.md",
+    "REVIEW_ENTRY.md",
+    "WORKER_MANIFEST.json",
+    "READY.json"
+  ],
+  "blockers": [],
+  "notRun": ["business acceptance / DB / build / JWT / IDB / browser / UI validation"],
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "writerStopped": true
+}

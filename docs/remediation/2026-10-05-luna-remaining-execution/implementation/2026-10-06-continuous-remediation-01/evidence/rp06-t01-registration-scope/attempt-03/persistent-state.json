@@ -1,0 +1,4619 @@
+{
+  "trace": [
+    {
+      "label": "owner",
+      "endpoint": "",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "list": [
+          {
+            "id": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "code": "RP06-2990e018-4886-4f64-ba57-384cf5ccdb9c",
+            "name": "Synthetic private registration",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.246Z",
+            "updatedAt": "2026-10-06T02:25:28.246Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "manager": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "71dc3c5d-7802-495a-bd8c-88e9d41bd1a2",
+              "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "DOSSIER_PREPARATION",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "owned-private-profile",
+              "createdAt": "2026-10-06T02:25:28.246Z",
+              "updatedAt": "2026-10-06T02:25:28.246Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "_count": {
+              "tasks": 1,
+              "members": 3
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          }
+        ],
+        "total": 1,
+        "page": 1,
+        "pageSize": 50
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/stats",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "total": 1,
+        "byStage": {
+          "DOSSIER_PREPARATION": 1
+        },
+        "byRisk": {
+          "MEDIUM": 1
+        },
+        "overdueCount": 0,
+        "dueSoonCount": 0
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/d82bba00-6447-4eb5-aa02-b96dfab58072",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "id": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+        "code": "RP06-2990e018-4886-4f64-ba57-384cf5ccdb9c",
+        "name": "Synthetic private registration",
+        "type": "CUSTOMIZATION",
+        "subtype": "registration",
+        "status": "PLANNING",
+        "isDraft": false,
+        "positioning": null,
+        "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+        "templateId": null,
+        "startDate": null,
+        "endDate": null,
+        "actualEndDate": null,
+        "metadata": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:25:28.246Z",
+        "updatedAt": "2026-10-06T02:25:28.246Z",
+        "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+        "updatedById": null,
+        "manager": {
+          "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+          "displayName": "Synthetic owner",
+          "position": null,
+          "avatarFileId": null
+        },
+        "template": null,
+        "members": [
+          {
+            "id": "22db0304-0282-4591-9e02-580e49180de3",
+            "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "userId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "role": "OWNER",
+            "joinedAt": "2026-10-06T02:25:28.246Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "b861d436-a7c9-4411-9ff8-72a4ea8c03b7",
+            "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "userId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+            "role": "MEMBER",
+            "joinedAt": "2026-10-06T02:25:28.246Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+              "displayName": "Synthetic member",
+              "position": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "a42b19f6-36af-4800-adda-0803b559c5d5",
+            "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "userId": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+            "role": "VIEWER",
+            "joinedAt": "2026-10-06T02:25:28.246Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+              "displayName": "Synthetic viewer",
+              "position": null,
+              "avatarFileId": null
+            }
+          }
+        ],
+        "tasks": [
+          {
+            "id": "b04c42bc-f553-4284-a46d-d3ab622b290e",
+            "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "phaseId": "c6054fd9-b564-4f11-8c06-18d0551250e4",
+            "parentId": null,
+            "templateTaskId": null,
+            "code": null,
+            "title": "PRIVATE-d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "description": null,
+            "assigneeId": null,
+            "status": "NOT_STARTED",
+            "priority": "MEDIUM",
+            "taskType": null,
+            "applicability": "REQUIRED",
+            "regulatoryPriority": null,
+            "expectedDeliverable": null,
+            "regulatoryNotes": null,
+            "sortOrder": 0,
+            "estimatedHours": null,
+            "actualHours": null,
+            "progressPercent": 0,
+            "startDate": null,
+            "dueDate": null,
+            "startedAt": null,
+            "completedAt": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.249Z",
+            "updatedAt": "2026-10-06T02:25:28.249Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "assignee": null,
+            "regulatoryDocuments": []
+          }
+        ],
+        "milestones": [
+          {
+            "id": "286b6d1f-115c-4cf1-a58c-120ccceae99a",
+            "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "phaseId": null,
+            "name": "Private milestone",
+            "description": null,
+            "dueDate": "2026-10-06T00:00:00.000Z",
+            "status": "NOT_STARTED",
+            "completedAt": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.250Z",
+            "updatedAt": "2026-10-06T02:25:28.250Z",
+            "createdById": null,
+            "updatedById": null
+          }
+        ],
+        "phases": [
+          {
+            "id": "c6054fd9-b564-4f11-8c06-18d0551250e4",
+            "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "templatePhaseId": null,
+            "code": "LIVE",
+            "name": "Visible phase",
+            "sortOrder": 1,
+            "status": "NOT_STARTED",
+            "plannedStart": null,
+            "plannedEnd": null,
+            "actualStart": null,
+            "actualEnd": null,
+            "progressPercent": 0,
+            "isMilestone": false,
+            "notes": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.248Z",
+            "updatedAt": "2026-10-06T02:25:28.248Z",
+            "createdById": null,
+            "updatedById": null
+          }
+        ],
+        "registrationProfile": {
+          "id": "71dc3c5d-7802-495a-bd8c-88e9d41bd1a2",
+          "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+          "registrationType": "IVD",
+          "region": "MACAO_ISAF",
+          "authority": null,
+          "submissionNo": null,
+          "certificateNo": null,
+          "currentStage": "DOSSIER_PREPARATION",
+          "riskLevel": "MEDIUM",
+          "plannedSubmissionDate": null,
+          "actualSubmissionDate": null,
+          "expectedApprovalDate": null,
+          "approvalDate": null,
+          "complianceOwnerId": null,
+          "notes": "owned-private-profile",
+          "createdAt": "2026-10-06T02:25:28.246Z",
+          "updatedAt": "2026-10-06T02:25:28.246Z",
+          "createdById": null,
+          "updatedById": null,
+          "complianceOwner": null
+        },
+        "stageOptions": [
+          "DOSSIER_PREPARATION",
+          "SUBMISSION_ACCEPTED",
+          "TECHNICAL_REVIEW",
+          "ADMIN_APPROVAL",
+          "CERTIFIED",
+          "ARCHIVED"
+        ],
+        "allowedStageTransitions": [
+          "SUBMISSION_ACCEPTED"
+        ],
+        "due": {
+          "daysLeft": null
+        }
+      }
+    },
+    {
+      "label": "member",
+      "endpoint": "",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "list": [
+          {
+            "id": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "code": "RP06-2990e018-4886-4f64-ba57-384cf5ccdb9c",
+            "name": "Synthetic private registration",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.246Z",
+            "updatedAt": "2026-10-06T02:25:28.246Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "manager": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "71dc3c5d-7802-495a-bd8c-88e9d41bd1a2",
+              "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "DOSSIER_PREPARATION",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "owned-private-profile",
+              "createdAt": "2026-10-06T02:25:28.246Z",
+              "updatedAt": "2026-10-06T02:25:28.246Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "_count": {
+              "tasks": 1,
+              "members": 3
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          }
+        ],
+        "total": 1,
+        "page": 1,
+        "pageSize": 50
+      }
+    },
+    {
+      "label": "member",
+      "endpoint": "/stats",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "total": 1,
+        "byStage": {
+          "DOSSIER_PREPARATION": 1
+        },
+        "byRisk": {
+          "MEDIUM": 1
+        },
+        "overdueCount": 0,
+        "dueSoonCount": 0
+      }
+    },
+    {
+      "label": "member",
+      "endpoint": "/d82bba00-6447-4eb5-aa02-b96dfab58072",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "id": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+        "code": "RP06-2990e018-4886-4f64-ba57-384cf5ccdb9c",
+        "name": "Synthetic private registration",
+        "type": "CUSTOMIZATION",
+        "subtype": "registration",
+        "status": "PLANNING",
+        "isDraft": false,
+        "positioning": null,
+        "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+        "templateId": null,
+        "startDate": null,
+        "endDate": null,
+        "actualEndDate": null,
+        "metadata": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:25:28.246Z",
+        "updatedAt": "2026-10-06T02:25:28.246Z",
+        "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+        "updatedById": null,
+        "manager": {
+          "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+          "displayName": "Synthetic owner",
+          "position": null,
+          "avatarFileId": null
+        },
+        "template": null,
+        "members": [
+          {
+            "id": "22db0304-0282-4591-9e02-580e49180de3",
+            "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "userId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "role": "OWNER",
+            "joinedAt": "2026-10-06T02:25:28.246Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "b861d436-a7c9-4411-9ff8-72a4ea8c03b7",
+            "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "userId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+            "role": "MEMBER",
+            "joinedAt": "2026-10-06T02:25:28.246Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+              "displayName": "Synthetic member",
+              "position": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "a42b19f6-36af-4800-adda-0803b559c5d5",
+            "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "userId": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+            "role": "VIEWER",
+            "joinedAt": "2026-10-06T02:25:28.246Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+              "displayName": "Synthetic viewer",
+              "position": null,
+              "avatarFileId": null
+            }
+          }
+        ],
+        "tasks": [
+          {
+            "id": "b04c42bc-f553-4284-a46d-d3ab622b290e",
+            "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "phaseId": "c6054fd9-b564-4f11-8c06-18d0551250e4",
+            "parentId": null,
+            "templateTaskId": null,
+            "code": null,
+            "title": "PRIVATE-d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "description": null,
+            "assigneeId": null,
+            "status": "NOT_STARTED",
+            "priority": "MEDIUM",
+            "taskType": null,
+            "applicability": "REQUIRED",
+            "regulatoryPriority": null,
+            "expectedDeliverable": null,
+            "regulatoryNotes": null,
+            "sortOrder": 0,
+            "estimatedHours": null,
+            "actualHours": null,
+            "progressPercent": 0,
+            "startDate": null,
+            "dueDate": null,
+            "startedAt": null,
+            "completedAt": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.249Z",
+            "updatedAt": "2026-10-06T02:25:28.249Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "assignee": null,
+            "regulatoryDocuments": []
+          }
+        ],
+        "milestones": [
+          {
+            "id": "286b6d1f-115c-4cf1-a58c-120ccceae99a",
+            "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "phaseId": null,
+            "name": "Private milestone",
+            "description": null,
+            "dueDate": "2026-10-06T00:00:00.000Z",
+            "status": "NOT_STARTED",
+            "completedAt": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.250Z",
+            "updatedAt": "2026-10-06T02:25:28.250Z",
+            "createdById": null,
+            "updatedById": null
+          }
+        ],
+        "phases": [
+          {
+            "id": "c6054fd9-b564-4f11-8c06-18d0551250e4",
+            "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "templatePhaseId": null,
+            "code": "LIVE",
+            "name": "Visible phase",
+            "sortOrder": 1,
+            "status": "NOT_STARTED",
+            "plannedStart": null,
+            "plannedEnd": null,
+            "actualStart": null,
+            "actualEnd": null,
+            "progressPercent": 0,
+            "isMilestone": false,
+            "notes": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.248Z",
+            "updatedAt": "2026-10-06T02:25:28.248Z",
+            "createdById": null,
+            "updatedById": null
+          }
+        ],
+        "registrationProfile": {
+          "id": "71dc3c5d-7802-495a-bd8c-88e9d41bd1a2",
+          "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+          "registrationType": "IVD",
+          "region": "MACAO_ISAF",
+          "authority": null,
+          "submissionNo": null,
+          "certificateNo": null,
+          "currentStage": "DOSSIER_PREPARATION",
+          "riskLevel": "MEDIUM",
+          "plannedSubmissionDate": null,
+          "actualSubmissionDate": null,
+          "expectedApprovalDate": null,
+          "approvalDate": null,
+          "complianceOwnerId": null,
+          "notes": "owned-private-profile",
+          "createdAt": "2026-10-06T02:25:28.246Z",
+          "updatedAt": "2026-10-06T02:25:28.246Z",
+          "createdById": null,
+          "updatedById": null,
+          "complianceOwner": null
+        },
+        "stageOptions": [
+          "DOSSIER_PREPARATION",
+          "SUBMISSION_ACCEPTED",
+          "TECHNICAL_REVIEW",
+          "ADMIN_APPROVAL",
+          "CERTIFIED",
+          "ARCHIVED"
+        ],
+        "allowedStageTransitions": [
+          "SUBMISSION_ACCEPTED"
+        ],
+        "due": {
+          "daysLeft": null
+        }
+      }
+    },
+    {
+      "label": "viewer",
+      "endpoint": "",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "list": [
+          {
+            "id": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "code": "RP06-2990e018-4886-4f64-ba57-384cf5ccdb9c",
+            "name": "Synthetic private registration",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.246Z",
+            "updatedAt": "2026-10-06T02:25:28.246Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "manager": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "71dc3c5d-7802-495a-bd8c-88e9d41bd1a2",
+              "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "DOSSIER_PREPARATION",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "owned-private-profile",
+              "createdAt": "2026-10-06T02:25:28.246Z",
+              "updatedAt": "2026-10-06T02:25:28.246Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "_count": {
+              "tasks": 1,
+              "members": 3
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          }
+        ],
+        "total": 1,
+        "page": 1,
+        "pageSize": 50
+      }
+    },
+    {
+      "label": "viewer",
+      "endpoint": "/stats",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "total": 1,
+        "byStage": {
+          "DOSSIER_PREPARATION": 1
+        },
+        "byRisk": {
+          "MEDIUM": 1
+        },
+        "overdueCount": 0,
+        "dueSoonCount": 0
+      }
+    },
+    {
+      "label": "viewer",
+      "endpoint": "/d82bba00-6447-4eb5-aa02-b96dfab58072",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "id": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+        "code": "RP06-2990e018-4886-4f64-ba57-384cf5ccdb9c",
+        "name": "Synthetic private registration",
+        "type": "CUSTOMIZATION",
+        "subtype": "registration",
+        "status": "PLANNING",
+        "isDraft": false,
+        "positioning": null,
+        "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+        "templateId": null,
+        "startDate": null,
+        "endDate": null,
+        "actualEndDate": null,
+        "metadata": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:25:28.246Z",
+        "updatedAt": "2026-10-06T02:25:28.246Z",
+        "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+        "updatedById": null,
+        "manager": {
+          "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+          "displayName": "Synthetic owner",
+          "position": null,
+          "avatarFileId": null
+        },
+        "template": null,
+        "members": [
+          {
+            "id": "22db0304-0282-4591-9e02-580e49180de3",
+            "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "userId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "role": "OWNER",
+            "joinedAt": "2026-10-06T02:25:28.246Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "b861d436-a7c9-4411-9ff8-72a4ea8c03b7",
+            "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "userId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+            "role": "MEMBER",
+            "joinedAt": "2026-10-06T02:25:28.246Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+              "displayName": "Synthetic member",
+              "position": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "a42b19f6-36af-4800-adda-0803b559c5d5",
+            "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "userId": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+            "role": "VIEWER",
+            "joinedAt": "2026-10-06T02:25:28.246Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+              "displayName": "Synthetic viewer",
+              "position": null,
+              "avatarFileId": null
+            }
+          }
+        ],
+        "tasks": [
+          {
+            "id": "b04c42bc-f553-4284-a46d-d3ab622b290e",
+            "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "phaseId": "c6054fd9-b564-4f11-8c06-18d0551250e4",
+            "parentId": null,
+            "templateTaskId": null,
+            "code": null,
+            "title": "PRIVATE-d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "description": null,
+            "assigneeId": null,
+            "status": "NOT_STARTED",
+            "priority": "MEDIUM",
+            "taskType": null,
+            "applicability": "REQUIRED",
+            "regulatoryPriority": null,
+            "expectedDeliverable": null,
+            "regulatoryNotes": null,
+            "sortOrder": 0,
+            "estimatedHours": null,
+            "actualHours": null,
+            "progressPercent": 0,
+            "startDate": null,
+            "dueDate": null,
+            "startedAt": null,
+            "completedAt": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.249Z",
+            "updatedAt": "2026-10-06T02:25:28.249Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "assignee": null,
+            "regulatoryDocuments": []
+          }
+        ],
+        "milestones": [
+          {
+            "id": "286b6d1f-115c-4cf1-a58c-120ccceae99a",
+            "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "phaseId": null,
+            "name": "Private milestone",
+            "description": null,
+            "dueDate": "2026-10-06T00:00:00.000Z",
+            "status": "NOT_STARTED",
+            "completedAt": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.250Z",
+            "updatedAt": "2026-10-06T02:25:28.250Z",
+            "createdById": null,
+            "updatedById": null
+          }
+        ],
+        "phases": [
+          {
+            "id": "c6054fd9-b564-4f11-8c06-18d0551250e4",
+            "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "templatePhaseId": null,
+            "code": "LIVE",
+            "name": "Visible phase",
+            "sortOrder": 1,
+            "status": "NOT_STARTED",
+            "plannedStart": null,
+            "plannedEnd": null,
+            "actualStart": null,
+            "actualEnd": null,
+            "progressPercent": 0,
+            "isMilestone": false,
+            "notes": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.248Z",
+            "updatedAt": "2026-10-06T02:25:28.248Z",
+            "createdById": null,
+            "updatedById": null
+          }
+        ],
+        "registrationProfile": {
+          "id": "71dc3c5d-7802-495a-bd8c-88e9d41bd1a2",
+          "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+          "registrationType": "IVD",
+          "region": "MACAO_ISAF",
+          "authority": null,
+          "submissionNo": null,
+          "certificateNo": null,
+          "currentStage": "DOSSIER_PREPARATION",
+          "riskLevel": "MEDIUM",
+          "plannedSubmissionDate": null,
+          "actualSubmissionDate": null,
+          "expectedApprovalDate": null,
+          "approvalDate": null,
+          "complianceOwnerId": null,
+          "notes": "owned-private-profile",
+          "createdAt": "2026-10-06T02:25:28.246Z",
+          "updatedAt": "2026-10-06T02:25:28.246Z",
+          "createdById": null,
+          "updatedById": null,
+          "complianceOwner": null
+        },
+        "stageOptions": [
+          "DOSSIER_PREPARATION",
+          "SUBMISSION_ACCEPTED",
+          "TECHNICAL_REVIEW",
+          "ADMIN_APPROVAL",
+          "CERTIFIED",
+          "ARCHIVED"
+        ],
+        "allowedStageTransitions": [
+          "SUBMISSION_ACCEPTED"
+        ],
+        "due": {
+          "daysLeft": null
+        }
+      }
+    },
+    {
+      "label": "outside",
+      "endpoint": "",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "list": [],
+        "total": 0,
+        "page": 1,
+        "pageSize": 50
+      }
+    },
+    {
+      "label": "outside",
+      "endpoint": "/stats",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "total": 0,
+        "byStage": {},
+        "byRisk": {},
+        "overdueCount": 0,
+        "dueSoonCount": 0
+      }
+    },
+    {
+      "label": "outside",
+      "endpoint": "/82986431-53de-4492-be57-aa9173417805",
+      "method": "GET",
+      "status": 404,
+      "response": {
+        "error": "项目不存在",
+        "code": "PROJECT_NOT_FOUND"
+      }
+    },
+    {
+      "label": "outside",
+      "endpoint": "/82986431-53de-4492-be57-aa9173417805",
+      "method": "PUT",
+      "status": 404,
+      "body": {
+        "name": "denied"
+      },
+      "response": {
+        "error": "项目不存在",
+        "code": "PROJECT_NOT_FOUND"
+      }
+    },
+    {
+      "label": "outside",
+      "endpoint": "/82986431-53de-4492-be57-aa9173417805/profile",
+      "method": "PATCH",
+      "status": 404,
+      "body": {
+        "notes": "denied"
+      },
+      "response": {
+        "error": "项目不存在",
+        "code": "PROJECT_NOT_FOUND"
+      }
+    },
+    {
+      "label": "outside",
+      "endpoint": "/82986431-53de-4492-be57-aa9173417805/stage",
+      "method": "PATCH",
+      "status": 404,
+      "body": {
+        "toStage": "SUBMISSION_ACCEPTED"
+      },
+      "response": {
+        "error": "项目不存在",
+        "code": "PROJECT_NOT_FOUND"
+      }
+    },
+    {
+      "label": "left",
+      "endpoint": "",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "list": [],
+        "total": 0,
+        "page": 1,
+        "pageSize": 50
+      }
+    },
+    {
+      "label": "left",
+      "endpoint": "/stats",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "total": 0,
+        "byStage": {},
+        "byRisk": {},
+        "overdueCount": 0,
+        "dueSoonCount": 0
+      }
+    },
+    {
+      "label": "left",
+      "endpoint": "/e52f0531-cc41-499c-a53d-c3b98bb5b48a",
+      "method": "GET",
+      "status": 404,
+      "response": {
+        "error": "项目不存在",
+        "code": "PROJECT_NOT_FOUND"
+      }
+    },
+    {
+      "label": "left",
+      "endpoint": "/e52f0531-cc41-499c-a53d-c3b98bb5b48a",
+      "method": "PUT",
+      "status": 404,
+      "body": {
+        "name": "denied"
+      },
+      "response": {
+        "error": "项目不存在",
+        "code": "PROJECT_NOT_FOUND"
+      }
+    },
+    {
+      "label": "left",
+      "endpoint": "/e52f0531-cc41-499c-a53d-c3b98bb5b48a/profile",
+      "method": "PATCH",
+      "status": 404,
+      "body": {
+        "notes": "denied"
+      },
+      "response": {
+        "error": "项目不存在",
+        "code": "PROJECT_NOT_FOUND"
+      }
+    },
+    {
+      "label": "left",
+      "endpoint": "/e52f0531-cc41-499c-a53d-c3b98bb5b48a/stage",
+      "method": "PATCH",
+      "status": 404,
+      "body": {
+        "toStage": "SUBMISSION_ACCEPTED"
+      },
+      "response": {
+        "error": "项目不存在",
+        "code": "PROJECT_NOT_FOUND"
+      }
+    },
+    {
+      "label": "zero",
+      "endpoint": "",
+      "method": "GET",
+      "status": 403,
+      "response": {
+        "error": "缺少权限 registrations.view",
+        "code": "PERMISSION_DENIED"
+      }
+    },
+    {
+      "label": "zero",
+      "endpoint": "/stats",
+      "method": "GET",
+      "status": 403,
+      "response": {
+        "error": "缺少权限 registrations.view",
+        "code": "PERMISSION_DENIED"
+      }
+    },
+    {
+      "label": "zero",
+      "endpoint": "/5b3c9562-b9b0-4d90-a081-77b72bf493de",
+      "method": "GET",
+      "status": 403,
+      "response": {
+        "error": "缺少权限 registrations.view",
+        "code": "PERMISSION_DENIED"
+      }
+    },
+    {
+      "label": "zero",
+      "endpoint": "/5b3c9562-b9b0-4d90-a081-77b72bf493de",
+      "method": "PUT",
+      "status": 403,
+      "body": {
+        "name": "denied"
+      },
+      "response": {
+        "error": "缺少权限 registrations.update",
+        "code": "PERMISSION_DENIED"
+      }
+    },
+    {
+      "label": "zero",
+      "endpoint": "/5b3c9562-b9b0-4d90-a081-77b72bf493de/profile",
+      "method": "PATCH",
+      "status": 403,
+      "body": {
+        "notes": "denied"
+      },
+      "response": {
+        "error": "缺少权限 registrations.update",
+        "code": "PERMISSION_DENIED"
+      }
+    },
+    {
+      "label": "zero",
+      "endpoint": "/5b3c9562-b9b0-4d90-a081-77b72bf493de/stage",
+      "method": "PATCH",
+      "status": 403,
+      "body": {
+        "toStage": "SUBMISSION_ACCEPTED"
+      },
+      "response": {
+        "error": "缺少权限 registrations.change_stage",
+        "code": "PERMISSION_DENIED"
+      }
+    },
+    {
+      "label": "outside",
+      "endpoint": "/aa482cca-bff2-4be4-a4fd-d95dbf9e137d",
+      "method": "GET",
+      "status": 404,
+      "response": {
+        "error": "项目不存在",
+        "code": "PROJECT_NOT_FOUND"
+      }
+    },
+    {
+      "label": "outside",
+      "endpoint": "",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "list": [],
+        "total": 0,
+        "page": 1,
+        "pageSize": 50
+      }
+    },
+    {
+      "label": "member",
+      "endpoint": "/8c10ab72-b855-4175-a05b-89ed9d1df473",
+      "method": "PUT",
+      "status": 200,
+      "body": {
+        "name": "authorized member"
+      },
+      "response": {
+        "id": "8c10ab72-b855-4175-a05b-89ed9d1df473",
+        "code": "RP06-dbadb9d8-2433-4012-b4d5-45fc1104d96a",
+        "name": "authorized member",
+        "type": "CUSTOMIZATION",
+        "subtype": "registration",
+        "status": "PLANNING",
+        "isDraft": false,
+        "positioning": null,
+        "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+        "templateId": null,
+        "startDate": null,
+        "endDate": null,
+        "actualEndDate": null,
+        "metadata": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:25:28.351Z",
+        "updatedAt": "2026-10-06T02:25:28.356Z",
+        "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+        "updatedById": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+        "manager": {
+          "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+          "displayName": "Synthetic owner",
+          "position": null
+        },
+        "registrationProfile": {
+          "id": "589ef620-6a57-47b3-9ab8-696d77ca24ac",
+          "projectId": "8c10ab72-b855-4175-a05b-89ed9d1df473",
+          "registrationType": "IVD",
+          "region": "MACAO_ISAF",
+          "authority": null,
+          "submissionNo": null,
+          "certificateNo": null,
+          "currentStage": "DOSSIER_PREPARATION",
+          "riskLevel": "MEDIUM",
+          "plannedSubmissionDate": null,
+          "actualSubmissionDate": null,
+          "expectedApprovalDate": null,
+          "approvalDate": null,
+          "complianceOwnerId": null,
+          "notes": "owned-private-profile",
+          "createdAt": "2026-10-06T02:25:28.351Z",
+          "updatedAt": "2026-10-06T02:25:28.351Z",
+          "createdById": null,
+          "updatedById": null,
+          "complianceOwner": null
+        }
+      }
+    },
+    {
+      "label": "member",
+      "endpoint": "/8c10ab72-b855-4175-a05b-89ed9d1df473/profile",
+      "method": "PATCH",
+      "status": 200,
+      "body": {
+        "notes": "authorized member profile"
+      },
+      "response": {
+        "id": "589ef620-6a57-47b3-9ab8-696d77ca24ac",
+        "projectId": "8c10ab72-b855-4175-a05b-89ed9d1df473",
+        "registrationType": "IVD",
+        "region": "MACAO_ISAF",
+        "authority": null,
+        "submissionNo": null,
+        "certificateNo": null,
+        "currentStage": "DOSSIER_PREPARATION",
+        "riskLevel": "MEDIUM",
+        "plannedSubmissionDate": null,
+        "actualSubmissionDate": null,
+        "expectedApprovalDate": null,
+        "approvalDate": null,
+        "complianceOwnerId": null,
+        "notes": "authorized member profile",
+        "createdAt": "2026-10-06T02:25:28.351Z",
+        "updatedAt": "2026-10-06T02:25:28.362Z",
+        "createdById": null,
+        "updatedById": null,
+        "complianceOwner": null
+      }
+    },
+    {
+      "label": "viewer",
+      "endpoint": "/8c10ab72-b855-4175-a05b-89ed9d1df473",
+      "method": "PUT",
+      "status": 403,
+      "body": {
+        "name": "denied"
+      },
+      "response": {
+        "error": "当前项目角色（VIEWER）不具备 write 能力",
+        "code": "PROJECT_CAPABILITY_DENIED"
+      }
+    },
+    {
+      "label": "viewer",
+      "endpoint": "/8c10ab72-b855-4175-a05b-89ed9d1df473/profile",
+      "method": "PATCH",
+      "status": 403,
+      "body": {
+        "notes": "denied"
+      },
+      "response": {
+        "error": "当前项目角色（VIEWER）不具备 write 能力",
+        "code": "PROJECT_CAPABILITY_DENIED"
+      }
+    },
+    {
+      "label": "member",
+      "endpoint": "/8c10ab72-b855-4175-a05b-89ed9d1df473/stage",
+      "method": "PATCH",
+      "status": 403,
+      "body": {
+        "toStage": "SUBMISSION_ACCEPTED"
+      },
+      "response": {
+        "error": "当前项目角色（MEMBER）不具备 transition 能力",
+        "code": "PROJECT_CAPABILITY_DENIED"
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/8c10ab72-b855-4175-a05b-89ed9d1df473/stage",
+      "method": "PATCH",
+      "status": 200,
+      "body": {
+        "toStage": "SUBMISSION_ACCEPTED"
+      },
+      "response": {
+        "success": true,
+        "fromStage": "DOSSIER_PREPARATION",
+        "toStage": "SUBMISSION_ACCEPTED",
+        "profile": {
+          "id": "589ef620-6a57-47b3-9ab8-696d77ca24ac",
+          "projectId": "8c10ab72-b855-4175-a05b-89ed9d1df473",
+          "registrationType": "IVD",
+          "region": "MACAO_ISAF",
+          "authority": null,
+          "submissionNo": null,
+          "certificateNo": null,
+          "currentStage": "SUBMISSION_ACCEPTED",
+          "riskLevel": "MEDIUM",
+          "plannedSubmissionDate": null,
+          "actualSubmissionDate": null,
+          "expectedApprovalDate": null,
+          "approvalDate": null,
+          "complianceOwnerId": null,
+          "notes": "authorized member profile",
+          "createdAt": "2026-10-06T02:25:28.351Z",
+          "updatedAt": "2026-10-06T02:25:28.377Z",
+          "createdById": null,
+          "updatedById": null
+        }
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "list": [
+          {
+            "id": "8c10ab72-b855-4175-a05b-89ed9d1df473",
+            "code": "RP06-dbadb9d8-2433-4012-b4d5-45fc1104d96a",
+            "name": "authorized member",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.351Z",
+            "updatedAt": "2026-10-06T02:25:28.356Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+            "manager": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "589ef620-6a57-47b3-9ab8-696d77ca24ac",
+              "projectId": "8c10ab72-b855-4175-a05b-89ed9d1df473",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "SUBMISSION_ACCEPTED",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "authorized member profile",
+              "createdAt": "2026-10-06T02:25:28.351Z",
+              "updatedAt": "2026-10-06T02:25:28.377Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "_count": {
+              "tasks": 1,
+              "members": 3
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          },
+          {
+            "id": "aa482cca-bff2-4be4-a4fd-d95dbf9e137d",
+            "code": "RP06-05fa0fb6-4e48-4fb6-bc16-c0535889e0fb",
+            "name": "Synthetic private registration",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "310850db-64c6-4809-ade9-7853065360d9",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.343Z",
+            "updatedAt": "2026-10-06T02:25:28.345Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "manager": {
+              "id": "310850db-64c6-4809-ade9-7853065360d9",
+              "displayName": "Synthetic outside",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "c1d739ad-0139-4d40-9dc9-d1fc0cccf10e",
+              "projectId": "aa482cca-bff2-4be4-a4fd-d95dbf9e137d",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "DOSSIER_PREPARATION",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "owned-private-profile",
+              "createdAt": "2026-10-06T02:25:28.343Z",
+              "updatedAt": "2026-10-06T02:25:28.343Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "_count": {
+              "tasks": 1,
+              "members": 3
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          },
+          {
+            "id": "5b3c9562-b9b0-4d90-a081-77b72bf493de",
+            "code": "RP06-c17428e1-9f23-4394-9f0b-0b5d70025c29",
+            "name": "Synthetic private registration",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.335Z",
+            "updatedAt": "2026-10-06T02:25:28.335Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "manager": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "9741abbf-8d4a-45db-a8b2-e2d78608be99",
+              "projectId": "5b3c9562-b9b0-4d90-a081-77b72bf493de",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "DOSSIER_PREPARATION",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "owned-private-profile",
+              "createdAt": "2026-10-06T02:25:28.335Z",
+              "updatedAt": "2026-10-06T02:25:28.335Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "_count": {
+              "tasks": 1,
+              "members": 3
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          },
+          {
+            "id": "e52f0531-cc41-499c-a53d-c3b98bb5b48a",
+            "code": "RP06-cf93c60d-5d49-4962-bd0b-a840d106da69",
+            "name": "Synthetic private registration",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.313Z",
+            "updatedAt": "2026-10-06T02:25:28.313Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "manager": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "3f3cca4a-8c02-44c2-a153-ab693804de01",
+              "projectId": "e52f0531-cc41-499c-a53d-c3b98bb5b48a",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "DOSSIER_PREPARATION",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "owned-private-profile",
+              "createdAt": "2026-10-06T02:25:28.313Z",
+              "updatedAt": "2026-10-06T02:25:28.313Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "_count": {
+              "tasks": 1,
+              "members": 3
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          },
+          {
+            "id": "82986431-53de-4492-be57-aa9173417805",
+            "code": "RP06-b95d4f6b-5bdc-48f9-80dc-d45f060578e3",
+            "name": "Synthetic private registration",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.288Z",
+            "updatedAt": "2026-10-06T02:25:28.288Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "manager": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "08160dc6-60df-4d0b-9b72-b66d968b4b5d",
+              "projectId": "82986431-53de-4492-be57-aa9173417805",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "DOSSIER_PREPARATION",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "owned-private-profile",
+              "createdAt": "2026-10-06T02:25:28.288Z",
+              "updatedAt": "2026-10-06T02:25:28.288Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "_count": {
+              "tasks": 1,
+              "members": 3
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          },
+          {
+            "id": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "code": "RP06-2990e018-4886-4f64-ba57-384cf5ccdb9c",
+            "name": "Synthetic private registration",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.246Z",
+            "updatedAt": "2026-10-06T02:25:28.246Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "manager": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "71dc3c5d-7802-495a-bd8c-88e9d41bd1a2",
+              "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "DOSSIER_PREPARATION",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "owned-private-profile",
+              "createdAt": "2026-10-06T02:25:28.246Z",
+              "updatedAt": "2026-10-06T02:25:28.246Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "_count": {
+              "tasks": 1,
+              "members": 3
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          }
+        ],
+        "total": 6,
+        "page": 1,
+        "pageSize": 50
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/a137a986-5773-4e97-8546-7869c7b8baaa",
+      "method": "GET",
+      "status": 404,
+      "response": {
+        "error": "注册项目不存在",
+        "code": "REGISTRATION_NOT_FOUND"
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/a137a986-5773-4e97-8546-7869c7b8baaa",
+      "method": "PUT",
+      "status": 404,
+      "body": {
+        "name": "denied"
+      },
+      "response": {
+        "error": "注册项目不存在",
+        "code": "REGISTRATION_NOT_FOUND"
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/a137a986-5773-4e97-8546-7869c7b8baaa/profile",
+      "method": "PATCH",
+      "status": 404,
+      "body": {
+        "notes": "denied"
+      },
+      "response": {
+        "error": "注册项目不存在",
+        "code": "REGISTRATION_NOT_FOUND"
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/a137a986-5773-4e97-8546-7869c7b8baaa/stage",
+      "method": "PATCH",
+      "status": 404,
+      "body": {
+        "toStage": "SUBMISSION_ACCEPTED"
+      },
+      "response": {
+        "error": "注册项目不存在",
+        "code": "REGISTRATION_NOT_FOUND"
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "list": [
+          {
+            "id": "8c10ab72-b855-4175-a05b-89ed9d1df473",
+            "code": "RP06-dbadb9d8-2433-4012-b4d5-45fc1104d96a",
+            "name": "authorized member",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.351Z",
+            "updatedAt": "2026-10-06T02:25:28.356Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+            "manager": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "589ef620-6a57-47b3-9ab8-696d77ca24ac",
+              "projectId": "8c10ab72-b855-4175-a05b-89ed9d1df473",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "SUBMISSION_ACCEPTED",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "authorized member profile",
+              "createdAt": "2026-10-06T02:25:28.351Z",
+              "updatedAt": "2026-10-06T02:25:28.377Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "_count": {
+              "tasks": 1,
+              "members": 3
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          },
+          {
+            "id": "aa482cca-bff2-4be4-a4fd-d95dbf9e137d",
+            "code": "RP06-05fa0fb6-4e48-4fb6-bc16-c0535889e0fb",
+            "name": "Synthetic private registration",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "310850db-64c6-4809-ade9-7853065360d9",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.343Z",
+            "updatedAt": "2026-10-06T02:25:28.345Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "manager": {
+              "id": "310850db-64c6-4809-ade9-7853065360d9",
+              "displayName": "Synthetic outside",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "c1d739ad-0139-4d40-9dc9-d1fc0cccf10e",
+              "projectId": "aa482cca-bff2-4be4-a4fd-d95dbf9e137d",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "DOSSIER_PREPARATION",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "owned-private-profile",
+              "createdAt": "2026-10-06T02:25:28.343Z",
+              "updatedAt": "2026-10-06T02:25:28.343Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "_count": {
+              "tasks": 1,
+              "members": 3
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          },
+          {
+            "id": "5b3c9562-b9b0-4d90-a081-77b72bf493de",
+            "code": "RP06-c17428e1-9f23-4394-9f0b-0b5d70025c29",
+            "name": "Synthetic private registration",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.335Z",
+            "updatedAt": "2026-10-06T02:25:28.335Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "manager": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "9741abbf-8d4a-45db-a8b2-e2d78608be99",
+              "projectId": "5b3c9562-b9b0-4d90-a081-77b72bf493de",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "DOSSIER_PREPARATION",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "owned-private-profile",
+              "createdAt": "2026-10-06T02:25:28.335Z",
+              "updatedAt": "2026-10-06T02:25:28.335Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "_count": {
+              "tasks": 1,
+              "members": 3
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          },
+          {
+            "id": "e52f0531-cc41-499c-a53d-c3b98bb5b48a",
+            "code": "RP06-cf93c60d-5d49-4962-bd0b-a840d106da69",
+            "name": "Synthetic private registration",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.313Z",
+            "updatedAt": "2026-10-06T02:25:28.313Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "manager": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "3f3cca4a-8c02-44c2-a153-ab693804de01",
+              "projectId": "e52f0531-cc41-499c-a53d-c3b98bb5b48a",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "DOSSIER_PREPARATION",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "owned-private-profile",
+              "createdAt": "2026-10-06T02:25:28.313Z",
+              "updatedAt": "2026-10-06T02:25:28.313Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "_count": {
+              "tasks": 1,
+              "members": 3
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          },
+          {
+            "id": "82986431-53de-4492-be57-aa9173417805",
+            "code": "RP06-b95d4f6b-5bdc-48f9-80dc-d45f060578e3",
+            "name": "Synthetic private registration",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.288Z",
+            "updatedAt": "2026-10-06T02:25:28.288Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "manager": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "08160dc6-60df-4d0b-9b72-b66d968b4b5d",
+              "projectId": "82986431-53de-4492-be57-aa9173417805",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "DOSSIER_PREPARATION",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "owned-private-profile",
+              "createdAt": "2026-10-06T02:25:28.288Z",
+              "updatedAt": "2026-10-06T02:25:28.288Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "_count": {
+              "tasks": 1,
+              "members": 3
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          },
+          {
+            "id": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "code": "RP06-2990e018-4886-4f64-ba57-384cf5ccdb9c",
+            "name": "Synthetic private registration",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.246Z",
+            "updatedAt": "2026-10-06T02:25:28.246Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "manager": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "71dc3c5d-7802-495a-bd8c-88e9d41bd1a2",
+              "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "DOSSIER_PREPARATION",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "owned-private-profile",
+              "createdAt": "2026-10-06T02:25:28.246Z",
+              "updatedAt": "2026-10-06T02:25:28.246Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "_count": {
+              "tasks": 1,
+              "members": 3
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          }
+        ],
+        "total": 6,
+        "page": 1,
+        "pageSize": 50
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/a4342bb5-f76b-4a5e-9545-70c106368374",
+      "method": "GET",
+      "status": 404,
+      "response": {
+        "error": "注册项目不存在",
+        "code": "REGISTRATION_NOT_FOUND"
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/a4342bb5-f76b-4a5e-9545-70c106368374",
+      "method": "PUT",
+      "status": 404,
+      "body": {
+        "name": "denied"
+      },
+      "response": {
+        "error": "注册项目不存在",
+        "code": "REGISTRATION_NOT_FOUND"
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/a4342bb5-f76b-4a5e-9545-70c106368374/profile",
+      "method": "PATCH",
+      "status": 404,
+      "body": {
+        "notes": "denied"
+      },
+      "response": {
+        "error": "注册项目不存在",
+        "code": "REGISTRATION_NOT_FOUND"
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/a4342bb5-f76b-4a5e-9545-70c106368374/stage",
+      "method": "PATCH",
+      "status": 404,
+      "body": {
+        "toStage": "SUBMISSION_ACCEPTED"
+      },
+      "response": {
+        "error": "注册项目不存在",
+        "code": "REGISTRATION_NOT_FOUND"
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/8d9c6f58-3a29-413d-9555-d294d3215c70",
+      "method": "GET",
+      "status": 403,
+      "response": {
+        "error": "缺少权限 registrations.view",
+        "code": "PERMISSION_DENIED"
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/8d9c6f58-3a29-413d-9555-d294d3215c70",
+      "method": "PUT",
+      "status": 403,
+      "body": {
+        "name": "denied"
+      },
+      "response": {
+        "error": "缺少权限 registrations.update",
+        "code": "PERMISSION_DENIED"
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/8d9c6f58-3a29-413d-9555-d294d3215c70/profile",
+      "method": "PATCH",
+      "status": 403,
+      "body": {
+        "notes": "denied"
+      },
+      "response": {
+        "error": "缺少权限 registrations.update",
+        "code": "PERMISSION_DENIED"
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/8d9c6f58-3a29-413d-9555-d294d3215c70/stage",
+      "method": "PATCH",
+      "status": 403,
+      "body": {
+        "toStage": "SUBMISSION_ACCEPTED"
+      },
+      "response": {
+        "error": "缺少权限 registrations.change_stage",
+        "code": "PERMISSION_DENIED"
+      }
+    },
+    {
+      "label": "viewer",
+      "endpoint": "/8d9c6f58-3a29-413d-9555-d294d3215c70",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "id": "8d9c6f58-3a29-413d-9555-d294d3215c70",
+        "code": "RP06-350e7c9d-98a7-4bb7-8267-ebdc5c99d4b6",
+        "name": "Synthetic private registration",
+        "type": "CUSTOMIZATION",
+        "subtype": "registration",
+        "status": "PLANNING",
+        "isDraft": false,
+        "positioning": null,
+        "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+        "templateId": null,
+        "startDate": null,
+        "endDate": null,
+        "actualEndDate": null,
+        "metadata": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:25:28.411Z",
+        "updatedAt": "2026-10-06T02:25:28.411Z",
+        "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+        "updatedById": null,
+        "manager": {
+          "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+          "displayName": "Synthetic owner",
+          "position": null,
+          "avatarFileId": null
+        },
+        "template": null,
+        "registrationProfile": {
+          "id": "bc4f3058-27ce-4658-9453-afa594ec1556",
+          "projectId": "8d9c6f58-3a29-413d-9555-d294d3215c70",
+          "registrationType": "IVD",
+          "region": "MACAO_ISAF",
+          "authority": null,
+          "submissionNo": null,
+          "certificateNo": null,
+          "currentStage": "DOSSIER_PREPARATION",
+          "riskLevel": "MEDIUM",
+          "plannedSubmissionDate": null,
+          "actualSubmissionDate": null,
+          "expectedApprovalDate": null,
+          "approvalDate": null,
+          "complianceOwnerId": null,
+          "notes": "owned-private-profile",
+          "createdAt": "2026-10-06T02:25:28.411Z",
+          "updatedAt": "2026-10-06T02:25:28.411Z",
+          "createdById": null,
+          "updatedById": null,
+          "complianceOwner": null
+        },
+        "stageOptions": [
+          "DOSSIER_PREPARATION",
+          "SUBMISSION_ACCEPTED",
+          "TECHNICAL_REVIEW",
+          "ADMIN_APPROVAL",
+          "CERTIFIED",
+          "ARCHIVED"
+        ],
+        "allowedStageTransitions": [
+          "SUBMISSION_ACCEPTED"
+        ],
+        "due": {
+          "daysLeft": null
+        }
+      }
+    },
+    {
+      "label": "viewer",
+      "endpoint": "",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "list": [
+          {
+            "id": "8d9c6f58-3a29-413d-9555-d294d3215c70",
+            "code": "RP06-350e7c9d-98a7-4bb7-8267-ebdc5c99d4b6",
+            "name": "Synthetic private registration",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.411Z",
+            "updatedAt": "2026-10-06T02:25:28.411Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "manager": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "bc4f3058-27ce-4658-9453-afa594ec1556",
+              "projectId": "8d9c6f58-3a29-413d-9555-d294d3215c70",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "DOSSIER_PREPARATION",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "owned-private-profile",
+              "createdAt": "2026-10-06T02:25:28.411Z",
+              "updatedAt": "2026-10-06T02:25:28.411Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          },
+          {
+            "id": "8c10ab72-b855-4175-a05b-89ed9d1df473",
+            "code": "RP06-dbadb9d8-2433-4012-b4d5-45fc1104d96a",
+            "name": "authorized member",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.351Z",
+            "updatedAt": "2026-10-06T02:25:28.356Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+            "manager": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "589ef620-6a57-47b3-9ab8-696d77ca24ac",
+              "projectId": "8c10ab72-b855-4175-a05b-89ed9d1df473",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "SUBMISSION_ACCEPTED",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "authorized member profile",
+              "createdAt": "2026-10-06T02:25:28.351Z",
+              "updatedAt": "2026-10-06T02:25:28.377Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          },
+          {
+            "id": "aa482cca-bff2-4be4-a4fd-d95dbf9e137d",
+            "code": "RP06-05fa0fb6-4e48-4fb6-bc16-c0535889e0fb",
+            "name": "Synthetic private registration",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "310850db-64c6-4809-ade9-7853065360d9",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.343Z",
+            "updatedAt": "2026-10-06T02:25:28.345Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "manager": {
+              "id": "310850db-64c6-4809-ade9-7853065360d9",
+              "displayName": "Synthetic outside",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "c1d739ad-0139-4d40-9dc9-d1fc0cccf10e",
+              "projectId": "aa482cca-bff2-4be4-a4fd-d95dbf9e137d",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "DOSSIER_PREPARATION",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "owned-private-profile",
+              "createdAt": "2026-10-06T02:25:28.343Z",
+              "updatedAt": "2026-10-06T02:25:28.343Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          },
+          {
+            "id": "5b3c9562-b9b0-4d90-a081-77b72bf493de",
+            "code": "RP06-c17428e1-9f23-4394-9f0b-0b5d70025c29",
+            "name": "Synthetic private registration",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.335Z",
+            "updatedAt": "2026-10-06T02:25:28.335Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "manager": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "9741abbf-8d4a-45db-a8b2-e2d78608be99",
+              "projectId": "5b3c9562-b9b0-4d90-a081-77b72bf493de",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "DOSSIER_PREPARATION",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "owned-private-profile",
+              "createdAt": "2026-10-06T02:25:28.335Z",
+              "updatedAt": "2026-10-06T02:25:28.335Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          },
+          {
+            "id": "e52f0531-cc41-499c-a53d-c3b98bb5b48a",
+            "code": "RP06-cf93c60d-5d49-4962-bd0b-a840d106da69",
+            "name": "Synthetic private registration",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.313Z",
+            "updatedAt": "2026-10-06T02:25:28.313Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "manager": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "3f3cca4a-8c02-44c2-a153-ab693804de01",
+              "projectId": "e52f0531-cc41-499c-a53d-c3b98bb5b48a",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "DOSSIER_PREPARATION",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "owned-private-profile",
+              "createdAt": "2026-10-06T02:25:28.313Z",
+              "updatedAt": "2026-10-06T02:25:28.313Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          },
+          {
+            "id": "82986431-53de-4492-be57-aa9173417805",
+            "code": "RP06-b95d4f6b-5bdc-48f9-80dc-d45f060578e3",
+            "name": "Synthetic private registration",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.288Z",
+            "updatedAt": "2026-10-06T02:25:28.288Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "manager": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "08160dc6-60df-4d0b-9b72-b66d968b4b5d",
+              "projectId": "82986431-53de-4492-be57-aa9173417805",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "DOSSIER_PREPARATION",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "owned-private-profile",
+              "createdAt": "2026-10-06T02:25:28.288Z",
+              "updatedAt": "2026-10-06T02:25:28.288Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          },
+          {
+            "id": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+            "code": "RP06-2990e018-4886-4f64-ba57-384cf5ccdb9c",
+            "name": "Synthetic private registration",
+            "type": "CUSTOMIZATION",
+            "subtype": "registration",
+            "status": "PLANNING",
+            "isDraft": false,
+            "positioning": null,
+            "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "templateId": null,
+            "startDate": null,
+            "endDate": null,
+            "actualEndDate": null,
+            "metadata": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.246Z",
+            "updatedAt": "2026-10-06T02:25:28.246Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "manager": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null
+            },
+            "registrationProfile": {
+              "id": "71dc3c5d-7802-495a-bd8c-88e9d41bd1a2",
+              "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+              "registrationType": "IVD",
+              "region": "MACAO_ISAF",
+              "authority": null,
+              "submissionNo": null,
+              "certificateNo": null,
+              "currentStage": "DOSSIER_PREPARATION",
+              "riskLevel": "MEDIUM",
+              "plannedSubmissionDate": null,
+              "actualSubmissionDate": null,
+              "expectedApprovalDate": null,
+              "approvalDate": null,
+              "complianceOwnerId": null,
+              "notes": "owned-private-profile",
+              "createdAt": "2026-10-06T02:25:28.246Z",
+              "updatedAt": "2026-10-06T02:25:28.246Z",
+              "createdById": null,
+              "updatedById": null,
+              "complianceOwner": null
+            },
+            "due": {
+              "daysLeft": null,
+              "alertLevel": "none"
+            }
+          }
+        ],
+        "total": 7,
+        "page": 1,
+        "pageSize": 50
+      }
+    },
+    {
+      "label": "super",
+      "endpoint": "/f94e200c-7baf-4f60-ad9c-b491f9339104",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "id": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+        "code": "RP06-50d8146f-cb9a-42af-b827-e4cb3f02b8f8",
+        "name": "Synthetic private registration",
+        "type": "CUSTOMIZATION",
+        "subtype": "registration",
+        "status": "PLANNING",
+        "isDraft": false,
+        "positioning": null,
+        "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+        "templateId": null,
+        "startDate": null,
+        "endDate": null,
+        "actualEndDate": null,
+        "metadata": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:25:28.466Z",
+        "updatedAt": "2026-10-06T02:25:28.466Z",
+        "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+        "updatedById": null,
+        "manager": {
+          "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+          "displayName": "Synthetic owner",
+          "position": null,
+          "avatarFileId": null
+        },
+        "template": null,
+        "members": [
+          {
+            "id": "333333c9-bf86-4721-94c8-7331ad577aed",
+            "projectId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+            "userId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "role": "OWNER",
+            "joinedAt": "2026-10-06T02:25:28.466Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "ac2c11e0-ca8e-45c5-9f9d-acf29e83c7d9",
+            "projectId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+            "userId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+            "role": "MEMBER",
+            "joinedAt": "2026-10-06T02:25:28.466Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+              "displayName": "Synthetic member",
+              "position": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "6dbd4e29-5806-4980-b176-71fca2b0aab9",
+            "projectId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+            "userId": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+            "role": "VIEWER",
+            "joinedAt": "2026-10-06T02:25:28.466Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+              "displayName": "Synthetic viewer",
+              "position": null,
+              "avatarFileId": null
+            }
+          }
+        ],
+        "tasks": [
+          {
+            "id": "9c4c4ef3-a67d-4f40-a3d5-1845a792a3eb",
+            "projectId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+            "phaseId": "937eec0c-cfc3-4848-bb35-51d3bde484bb",
+            "parentId": null,
+            "templateTaskId": null,
+            "code": null,
+            "title": "PRIVATE-f94e200c-7baf-4f60-ad9c-b491f9339104",
+            "description": null,
+            "assigneeId": null,
+            "status": "NOT_STARTED",
+            "priority": "MEDIUM",
+            "taskType": null,
+            "applicability": "REQUIRED",
+            "regulatoryPriority": null,
+            "expectedDeliverable": null,
+            "regulatoryNotes": null,
+            "sortOrder": 0,
+            "estimatedHours": null,
+            "actualHours": null,
+            "progressPercent": 0,
+            "startDate": null,
+            "dueDate": null,
+            "startedAt": null,
+            "completedAt": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.468Z",
+            "updatedAt": "2026-10-06T02:25:28.468Z",
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "updatedById": null,
+            "assignee": null,
+            "regulatoryDocuments": []
+          }
+        ],
+        "milestones": [
+          {
+            "id": "e7abd301-ff3d-4849-a79b-2b8c27ae7a55",
+            "projectId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+            "phaseId": null,
+            "name": "Private milestone",
+            "description": null,
+            "dueDate": "2026-10-06T00:00:00.000Z",
+            "status": "NOT_STARTED",
+            "completedAt": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.468Z",
+            "updatedAt": "2026-10-06T02:25:28.468Z",
+            "createdById": null,
+            "updatedById": null
+          }
+        ],
+        "phases": [
+          {
+            "id": "937eec0c-cfc3-4848-bb35-51d3bde484bb",
+            "projectId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+            "templatePhaseId": null,
+            "code": "LIVE",
+            "name": "Visible phase",
+            "sortOrder": 1,
+            "status": "NOT_STARTED",
+            "plannedStart": null,
+            "plannedEnd": null,
+            "actualStart": null,
+            "actualEnd": null,
+            "progressPercent": 0,
+            "isMilestone": false,
+            "notes": null,
+            "deletedAt": null,
+            "createdAt": "2026-10-06T02:25:28.467Z",
+            "updatedAt": "2026-10-06T02:25:28.467Z",
+            "createdById": null,
+            "updatedById": null
+          }
+        ],
+        "registrationProfile": {
+          "id": "fc54c811-ab6a-488f-ae74-2642f95c80cc",
+          "projectId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+          "registrationType": "IVD",
+          "region": "MACAO_ISAF",
+          "authority": null,
+          "submissionNo": null,
+          "certificateNo": null,
+          "currentStage": "DOSSIER_PREPARATION",
+          "riskLevel": "MEDIUM",
+          "plannedSubmissionDate": null,
+          "actualSubmissionDate": null,
+          "expectedApprovalDate": null,
+          "approvalDate": null,
+          "complianceOwnerId": null,
+          "notes": "owned-private-profile",
+          "createdAt": "2026-10-06T02:25:28.466Z",
+          "updatedAt": "2026-10-06T02:25:28.466Z",
+          "createdById": null,
+          "updatedById": null,
+          "complianceOwner": null
+        },
+        "stageOptions": [
+          "DOSSIER_PREPARATION",
+          "SUBMISSION_ACCEPTED",
+          "TECHNICAL_REVIEW",
+          "ADMIN_APPROVAL",
+          "CERTIFIED",
+          "ARCHIVED"
+        ],
+        "allowedStageTransitions": [
+          "SUBMISSION_ACCEPTED"
+        ],
+        "due": {
+          "daysLeft": null
+        }
+      }
+    },
+    {
+      "label": "super",
+      "endpoint": "/f94e200c-7baf-4f60-ad9c-b491f9339104",
+      "method": "PUT",
+      "status": 200,
+      "body": {
+        "name": "super permitted"
+      },
+      "response": {
+        "id": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+        "code": "RP06-50d8146f-cb9a-42af-b827-e4cb3f02b8f8",
+        "name": "super permitted",
+        "type": "CUSTOMIZATION",
+        "subtype": "registration",
+        "status": "PLANNING",
+        "isDraft": false,
+        "positioning": null,
+        "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+        "templateId": null,
+        "startDate": null,
+        "endDate": null,
+        "actualEndDate": null,
+        "metadata": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:25:28.466Z",
+        "updatedAt": "2026-10-06T02:25:28.474Z",
+        "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+        "updatedById": "5f1d12bc-840d-48e1-bc6e-1fc3f7cb37f2",
+        "manager": {
+          "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+          "displayName": "Synthetic owner",
+          "position": null
+        },
+        "registrationProfile": {
+          "id": "fc54c811-ab6a-488f-ae74-2642f95c80cc",
+          "projectId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+          "registrationType": "IVD",
+          "region": "MACAO_ISAF",
+          "authority": null,
+          "submissionNo": null,
+          "certificateNo": null,
+          "currentStage": "DOSSIER_PREPARATION",
+          "riskLevel": "MEDIUM",
+          "plannedSubmissionDate": null,
+          "actualSubmissionDate": null,
+          "expectedApprovalDate": null,
+          "approvalDate": null,
+          "complianceOwnerId": null,
+          "notes": "owned-private-profile",
+          "createdAt": "2026-10-06T02:25:28.466Z",
+          "updatedAt": "2026-10-06T02:25:28.466Z",
+          "createdById": null,
+          "updatedById": null,
+          "complianceOwner": null
+        }
+      }
+    },
+    {
+      "label": "super",
+      "endpoint": "/f94e200c-7baf-4f60-ad9c-b491f9339104/profile",
+      "method": "PATCH",
+      "status": 200,
+      "body": {
+        "notes": "super permitted"
+      },
+      "response": {
+        "id": "fc54c811-ab6a-488f-ae74-2642f95c80cc",
+        "projectId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+        "registrationType": "IVD",
+        "region": "MACAO_ISAF",
+        "authority": null,
+        "submissionNo": null,
+        "certificateNo": null,
+        "currentStage": "DOSSIER_PREPARATION",
+        "riskLevel": "MEDIUM",
+        "plannedSubmissionDate": null,
+        "actualSubmissionDate": null,
+        "expectedApprovalDate": null,
+        "approvalDate": null,
+        "complianceOwnerId": null,
+        "notes": "super permitted",
+        "createdAt": "2026-10-06T02:25:28.466Z",
+        "updatedAt": "2026-10-06T02:25:28.477Z",
+        "createdById": null,
+        "updatedById": null,
+        "complianceOwner": null
+      }
+    },
+    {
+      "label": "super",
+      "endpoint": "/f94e200c-7baf-4f60-ad9c-b491f9339104/stage",
+      "method": "PATCH",
+      "status": 200,
+      "body": {
+        "toStage": "SUBMISSION_ACCEPTED"
+      },
+      "response": {
+        "success": true,
+        "fromStage": "DOSSIER_PREPARATION",
+        "toStage": "SUBMISSION_ACCEPTED",
+        "profile": {
+          "id": "fc54c811-ab6a-488f-ae74-2642f95c80cc",
+          "projectId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+          "registrationType": "IVD",
+          "region": "MACAO_ISAF",
+          "authority": null,
+          "submissionNo": null,
+          "certificateNo": null,
+          "currentStage": "SUBMISSION_ACCEPTED",
+          "riskLevel": "MEDIUM",
+          "plannedSubmissionDate": null,
+          "actualSubmissionDate": null,
+          "expectedApprovalDate": null,
+          "approvalDate": null,
+          "complianceOwnerId": null,
+          "notes": "super permitted",
+          "createdAt": "2026-10-06T02:25:28.466Z",
+          "updatedAt": "2026-10-06T02:25:28.480Z",
+          "createdById": null,
+          "updatedById": null
+        }
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/f94e200c-7baf-4f60-ad9c-b491f9339104",
+      "method": "PUT",
+      "status": 500,
+      "body": {
+        "name": "roll back",
+        "notes": "roll back"
+      },
+      "response": {
+        "error": "OWNED_REGISTRATION_AUDIT_FAULT",
+        "code": 500
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/f94e200c-7baf-4f60-ad9c-b491f9339104/profile",
+      "method": "PATCH",
+      "status": 500,
+      "body": {
+        "notes": "roll back"
+      },
+      "response": {
+        "error": "OWNED_REGISTRATION_AUDIT_FAULT",
+        "code": 500
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/f94e200c-7baf-4f60-ad9c-b491f9339104/stage",
+      "method": "PATCH",
+      "status": 500,
+      "body": {
+        "toStage": "TECHNICAL_REVIEW"
+      },
+      "response": {
+        "error": "OWNED_REGISTRATION_AUDIT_FAULT",
+        "code": 500
+      }
+    },
+    {
+      "label": "member",
+      "endpoint": "/6a51c30d-e08a-4dfa-80ba-1cfbb148d3fc",
+      "method": "PUT",
+      "status": 404,
+      "body": {
+        "name": "must not write"
+      },
+      "response": {
+        "error": "项目不存在",
+        "code": "PROJECT_NOT_FOUND"
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/4726c759-0290-45d8-ac99-d98217cc6751/stage",
+      "method": "PATCH",
+      "status": 200,
+      "body": {
+        "toStage": "SUBMISSION_ACCEPTED"
+      },
+      "response": {
+        "success": true,
+        "fromStage": "DOSSIER_PREPARATION",
+        "toStage": "SUBMISSION_ACCEPTED",
+        "profile": {
+          "id": "e3bec031-9371-471b-9f5f-0d915e2ea5c9",
+          "projectId": "4726c759-0290-45d8-ac99-d98217cc6751",
+          "registrationType": "IVD",
+          "region": "MACAO_ISAF",
+          "authority": null,
+          "submissionNo": null,
+          "certificateNo": null,
+          "currentStage": "SUBMISSION_ACCEPTED",
+          "riskLevel": "MEDIUM",
+          "plannedSubmissionDate": null,
+          "actualSubmissionDate": null,
+          "expectedApprovalDate": null,
+          "approvalDate": null,
+          "complianceOwnerId": null,
+          "notes": "owned-private-profile",
+          "createdAt": "2026-10-06T02:25:28.517Z",
+          "updatedAt": "2026-10-06T02:25:28.523Z",
+          "createdById": null,
+          "updatedById": null
+        }
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/4726c759-0290-45d8-ac99-d98217cc6751/stage",
+      "method": "PATCH",
+      "status": 400,
+      "body": {
+        "toStage": "SUBMISSION_ACCEPTED"
+      },
+      "response": {
+        "error": "非法阶段流转",
+        "code": "INVALID_STAGE_TRANSITION"
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "",
+      "method": "POST",
+      "status": 201,
+      "body": {
+        "name": "Synthetic created registration",
+        "managerId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42"
+      },
+      "response": {
+        "id": "54b675c9-3f1f-4751-beb2-c25906bfcc69",
+        "code": "PRJ-2026-001",
+        "name": "Synthetic created registration",
+        "type": "CUSTOMIZATION",
+        "subtype": "registration",
+        "status": "PLANNING",
+        "isDraft": false,
+        "positioning": null,
+        "managerId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+        "templateId": null,
+        "startDate": null,
+        "endDate": null,
+        "actualEndDate": null,
+        "metadata": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:25:28.531Z",
+        "updatedAt": "2026-10-06T02:25:28.531Z",
+        "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+        "updatedById": null,
+        "manager": {
+          "id": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+          "displayName": "Synthetic member",
+          "position": null
+        },
+        "registrationProfile": {
+          "id": "e16b46d4-0361-4127-a616-5731ad49d6bc",
+          "projectId": "54b675c9-3f1f-4751-beb2-c25906bfcc69",
+          "registrationType": "IVD",
+          "region": "MACAO_ISAF",
+          "authority": null,
+          "submissionNo": null,
+          "certificateNo": null,
+          "currentStage": "DOSSIER_PREPARATION",
+          "riskLevel": "MEDIUM",
+          "plannedSubmissionDate": null,
+          "actualSubmissionDate": null,
+          "expectedApprovalDate": null,
+          "approvalDate": null,
+          "complianceOwnerId": null,
+          "notes": null,
+          "createdAt": "2026-10-06T02:25:28.531Z",
+          "updatedAt": "2026-10-06T02:25:28.531Z",
+          "createdById": null,
+          "updatedById": null
+        }
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/54b675c9-3f1f-4751-beb2-c25906bfcc69",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "id": "54b675c9-3f1f-4751-beb2-c25906bfcc69",
+        "code": "PRJ-2026-001",
+        "name": "Synthetic created registration",
+        "type": "CUSTOMIZATION",
+        "subtype": "registration",
+        "status": "PLANNING",
+        "isDraft": false,
+        "positioning": null,
+        "managerId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+        "templateId": null,
+        "startDate": null,
+        "endDate": null,
+        "actualEndDate": null,
+        "metadata": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:25:28.531Z",
+        "updatedAt": "2026-10-06T02:25:28.531Z",
+        "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+        "updatedById": null,
+        "manager": {
+          "id": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+          "displayName": "Synthetic member",
+          "position": null,
+          "avatarFileId": null
+        },
+        "template": null,
+        "members": [
+          {
+            "id": "fcf1675e-6ec7-42dc-a862-89f1fc21930d",
+            "projectId": "54b675c9-3f1f-4751-beb2-c25906bfcc69",
+            "userId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "role": "OWNER",
+            "joinedAt": "2026-10-06T02:25:28.531Z",
+            "leftAt": null,
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "user": {
+              "id": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+              "displayName": "Synthetic owner",
+              "position": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "98f2a716-e192-4158-ab6d-207064dc9620",
+            "projectId": "54b675c9-3f1f-4751-beb2-c25906bfcc69",
+            "userId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+            "role": "MANAGER",
+            "joinedAt": "2026-10-06T02:25:28.531Z",
+            "leftAt": null,
+            "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+            "user": {
+              "id": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+              "displayName": "Synthetic member",
+              "position": null,
+              "avatarFileId": null
+            }
+          }
+        ],
+        "tasks": [],
+        "milestones": [],
+        "phases": [],
+        "registrationProfile": {
+          "id": "e16b46d4-0361-4127-a616-5731ad49d6bc",
+          "projectId": "54b675c9-3f1f-4751-beb2-c25906bfcc69",
+          "registrationType": "IVD",
+          "region": "MACAO_ISAF",
+          "authority": null,
+          "submissionNo": null,
+          "certificateNo": null,
+          "currentStage": "DOSSIER_PREPARATION",
+          "riskLevel": "MEDIUM",
+          "plannedSubmissionDate": null,
+          "actualSubmissionDate": null,
+          "expectedApprovalDate": null,
+          "approvalDate": null,
+          "complianceOwnerId": null,
+          "notes": null,
+          "createdAt": "2026-10-06T02:25:28.531Z",
+          "updatedAt": "2026-10-06T02:25:28.531Z",
+          "createdById": null,
+          "updatedById": null,
+          "complianceOwner": null
+        },
+        "stageOptions": [
+          "DOSSIER_PREPARATION",
+          "SUBMISSION_ACCEPTED",
+          "TECHNICAL_REVIEW",
+          "ADMIN_APPROVAL",
+          "CERTIFIED",
+          "ARCHIVED"
+        ],
+        "allowedStageTransitions": [
+          "SUBMISSION_ACCEPTED"
+        ],
+        "due": {
+          "daysLeft": null
+        }
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "",
+      "method": "POST",
+      "status": 500,
+      "body": {
+        "name": "audit failure"
+      },
+      "response": {
+        "error": "OWNED_REGISTRATION_AUDIT_FAULT",
+        "code": 500
+      }
+    },
+    {
+      "label": "owner",
+      "endpoint": "/abf4c637-1aa2-4990-b0de-22022aef83c4",
+      "method": "PUT",
+      "status": 403,
+      "body": {
+        "name": "denied after grant fence"
+      },
+      "response": {
+        "error": "缺少权限 registrations.update",
+        "code": "PERMISSION_DENIED"
+      }
+    }
+  ],
+  "projects": [
+    {
+      "id": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+      "code": "RP06-2990e018-4886-4f64-ba57-384cf5ccdb9c",
+      "name": "Synthetic private registration",
+      "type": "CUSTOMIZATION",
+      "subtype": "registration",
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:25:28.246Z",
+      "updatedAt": "2026-10-06T02:25:28.246Z",
+      "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "updatedById": null
+    },
+    {
+      "id": "82986431-53de-4492-be57-aa9173417805",
+      "code": "RP06-b95d4f6b-5bdc-48f9-80dc-d45f060578e3",
+      "name": "Synthetic private registration",
+      "type": "CUSTOMIZATION",
+      "subtype": "registration",
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:25:28.288Z",
+      "updatedAt": "2026-10-06T02:25:28.288Z",
+      "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "updatedById": null
+    },
+    {
+      "id": "e52f0531-cc41-499c-a53d-c3b98bb5b48a",
+      "code": "RP06-cf93c60d-5d49-4962-bd0b-a840d106da69",
+      "name": "Synthetic private registration",
+      "type": "CUSTOMIZATION",
+      "subtype": "registration",
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:25:28.313Z",
+      "updatedAt": "2026-10-06T02:25:28.313Z",
+      "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "updatedById": null
+    },
+    {
+      "id": "5b3c9562-b9b0-4d90-a081-77b72bf493de",
+      "code": "RP06-c17428e1-9f23-4394-9f0b-0b5d70025c29",
+      "name": "Synthetic private registration",
+      "type": "CUSTOMIZATION",
+      "subtype": "registration",
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:25:28.335Z",
+      "updatedAt": "2026-10-06T02:25:28.335Z",
+      "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "updatedById": null
+    },
+    {
+      "id": "aa482cca-bff2-4be4-a4fd-d95dbf9e137d",
+      "code": "RP06-05fa0fb6-4e48-4fb6-bc16-c0535889e0fb",
+      "name": "Synthetic private registration",
+      "type": "CUSTOMIZATION",
+      "subtype": "registration",
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "310850db-64c6-4809-ade9-7853065360d9",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:25:28.343Z",
+      "updatedAt": "2026-10-06T02:25:28.345Z",
+      "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "updatedById": null
+    },
+    {
+      "id": "8c10ab72-b855-4175-a05b-89ed9d1df473",
+      "code": "RP06-dbadb9d8-2433-4012-b4d5-45fc1104d96a",
+      "name": "authorized member",
+      "type": "CUSTOMIZATION",
+      "subtype": "registration",
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:25:28.351Z",
+      "updatedAt": "2026-10-06T02:25:28.356Z",
+      "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "updatedById": "ac1dd999-e2a3-49f2-8dfa-74a610148e42"
+    },
+    {
+      "id": "a137a986-5773-4e97-8546-7869c7b8baaa",
+      "code": "RP06-26cc0d42-f63e-4864-a355-241c48130639",
+      "name": "Synthetic private registration",
+      "type": "CUSTOMIZATION",
+      "subtype": "registration",
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": "2026-10-06T02:25:28.380Z",
+      "createdAt": "2026-10-06T02:25:28.378Z",
+      "updatedAt": "2026-10-06T02:25:28.380Z",
+      "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "updatedById": null
+    },
+    {
+      "id": "a4342bb5-f76b-4a5e-9545-70c106368374",
+      "code": "RP06-178d10e4-8226-4fa0-a38a-893b763d016c",
+      "name": "Synthetic private registration",
+      "type": "CUSTOMIZATION",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:25:28.394Z",
+      "updatedAt": "2026-10-06T02:25:28.396Z",
+      "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "updatedById": null
+    },
+    {
+      "id": "8d9c6f58-3a29-413d-9555-d294d3215c70",
+      "code": "RP06-350e7c9d-98a7-4bb7-8267-ebdc5c99d4b6",
+      "name": "Synthetic private registration",
+      "type": "CUSTOMIZATION",
+      "subtype": "registration",
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:25:28.411Z",
+      "updatedAt": "2026-10-06T02:25:28.411Z",
+      "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "updatedById": null
+    },
+    {
+      "id": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+      "code": "RP06-50d8146f-cb9a-42af-b827-e4cb3f02b8f8",
+      "name": "super permitted",
+      "type": "CUSTOMIZATION",
+      "subtype": "registration",
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:25:28.466Z",
+      "updatedAt": "2026-10-06T02:25:28.474Z",
+      "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "updatedById": "5f1d12bc-840d-48e1-bc6e-1fc3f7cb37f2"
+    },
+    {
+      "id": "6a51c30d-e08a-4dfa-80ba-1cfbb148d3fc",
+      "code": "RP06-9bd9f47a-2b78-4d11-8d50-1bc6aeb26a20",
+      "name": "Synthetic private registration",
+      "type": "CUSTOMIZATION",
+      "subtype": "registration",
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:25:28.506Z",
+      "updatedAt": "2026-10-06T02:25:28.506Z",
+      "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "updatedById": null
+    },
+    {
+      "id": "4726c759-0290-45d8-ac99-d98217cc6751",
+      "code": "RP06-2a662580-9175-425c-ab63-11bb2f5a51ec",
+      "name": "Synthetic private registration",
+      "type": "CUSTOMIZATION",
+      "subtype": "registration",
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:25:28.517Z",
+      "updatedAt": "2026-10-06T02:25:28.517Z",
+      "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "updatedById": null
+    },
+    {
+      "id": "54b675c9-3f1f-4751-beb2-c25906bfcc69",
+      "code": "PRJ-2026-001",
+      "name": "Synthetic created registration",
+      "type": "CUSTOMIZATION",
+      "subtype": "registration",
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:25:28.531Z",
+      "updatedAt": "2026-10-06T02:25:28.531Z",
+      "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "updatedById": null
+    },
+    {
+      "id": "abf4c637-1aa2-4990-b0de-22022aef83c4",
+      "code": "RP06-5ae68b42-5166-4d21-bac4-3e26820ecc97",
+      "name": "Synthetic private registration",
+      "type": "CUSTOMIZATION",
+      "subtype": "registration",
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:25:28.544Z",
+      "updatedAt": "2026-10-06T02:25:28.544Z",
+      "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "updatedById": null
+    }
+  ],
+  "profiles": [
+    {
+      "id": "71dc3c5d-7802-495a-bd8c-88e9d41bd1a2",
+      "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+      "registrationType": "IVD",
+      "region": "MACAO_ISAF",
+      "authority": null,
+      "submissionNo": null,
+      "certificateNo": null,
+      "currentStage": "DOSSIER_PREPARATION",
+      "riskLevel": "MEDIUM",
+      "plannedSubmissionDate": null,
+      "actualSubmissionDate": null,
+      "expectedApprovalDate": null,
+      "approvalDate": null,
+      "complianceOwnerId": null,
+      "notes": "owned-private-profile",
+      "createdAt": "2026-10-06T02:25:28.246Z",
+      "updatedAt": "2026-10-06T02:25:28.246Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "08160dc6-60df-4d0b-9b72-b66d968b4b5d",
+      "projectId": "82986431-53de-4492-be57-aa9173417805",
+      "registrationType": "IVD",
+      "region": "MACAO_ISAF",
+      "authority": null,
+      "submissionNo": null,
+      "certificateNo": null,
+      "currentStage": "DOSSIER_PREPARATION",
+      "riskLevel": "MEDIUM",
+      "plannedSubmissionDate": null,
+      "actualSubmissionDate": null,
+      "expectedApprovalDate": null,
+      "approvalDate": null,
+      "complianceOwnerId": null,
+      "notes": "owned-private-profile",
+      "createdAt": "2026-10-06T02:25:28.288Z",
+      "updatedAt": "2026-10-06T02:25:28.288Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "3f3cca4a-8c02-44c2-a153-ab693804de01",
+      "projectId": "e52f0531-cc41-499c-a53d-c3b98bb5b48a",
+      "registrationType": "IVD",
+      "region": "MACAO_ISAF",
+      "authority": null,
+      "submissionNo": null,
+      "certificateNo": null,
+      "currentStage": "DOSSIER_PREPARATION",
+      "riskLevel": "MEDIUM",
+      "plannedSubmissionDate": null,
+      "actualSubmissionDate": null,
+      "expectedApprovalDate": null,
+      "approvalDate": null,
+      "complianceOwnerId": null,
+      "notes": "owned-private-profile",
+      "createdAt": "2026-10-06T02:25:28.313Z",
+      "updatedAt": "2026-10-06T02:25:28.313Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "9741abbf-8d4a-45db-a8b2-e2d78608be99",
+      "projectId": "5b3c9562-b9b0-4d90-a081-77b72bf493de",
+      "registrationType": "IVD",
+      "region": "MACAO_ISAF",
+      "authority": null,
+      "submissionNo": null,
+      "certificateNo": null,
+      "currentStage": "DOSSIER_PREPARATION",
+      "riskLevel": "MEDIUM",
+      "plannedSubmissionDate": null,
+      "actualSubmissionDate": null,
+      "expectedApprovalDate": null,
+      "approvalDate": null,
+      "complianceOwnerId": null,
+      "notes": "owned-private-profile",
+      "createdAt": "2026-10-06T02:25:28.335Z",
+      "updatedAt": "2026-10-06T02:25:28.335Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "c1d739ad-0139-4d40-9dc9-d1fc0cccf10e",
+      "projectId": "aa482cca-bff2-4be4-a4fd-d95dbf9e137d",
+      "registrationType": "IVD",
+      "region": "MACAO_ISAF",
+      "authority": null,
+      "submissionNo": null,
+      "certificateNo": null,
+      "currentStage": "DOSSIER_PREPARATION",
+      "riskLevel": "MEDIUM",
+      "plannedSubmissionDate": null,
+      "actualSubmissionDate": null,
+      "expectedApprovalDate": null,
+      "approvalDate": null,
+      "complianceOwnerId": null,
+      "notes": "owned-private-profile",
+      "createdAt": "2026-10-06T02:25:28.343Z",
+      "updatedAt": "2026-10-06T02:25:28.343Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "589ef620-6a57-47b3-9ab8-696d77ca24ac",
+      "projectId": "8c10ab72-b855-4175-a05b-89ed9d1df473",
+      "registrationType": "IVD",
+      "region": "MACAO_ISAF",
+      "authority": null,
+      "submissionNo": null,
+      "certificateNo": null,
+      "currentStage": "SUBMISSION_ACCEPTED",
+      "riskLevel": "MEDIUM",
+      "plannedSubmissionDate": null,
+      "actualSubmissionDate": null,
+      "expectedApprovalDate": null,
+      "approvalDate": null,
+      "complianceOwnerId": null,
+      "notes": "authorized member profile",
+      "createdAt": "2026-10-06T02:25:28.351Z",
+      "updatedAt": "2026-10-06T02:25:28.377Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "67c4e459-a389-4a94-b293-1aa6c42b5ef8",
+      "projectId": "a137a986-5773-4e97-8546-7869c7b8baaa",
+      "registrationType": "IVD",
+      "region": "MACAO_ISAF",
+      "authority": null,
+      "submissionNo": null,
+      "certificateNo": null,
+      "currentStage": "DOSSIER_PREPARATION",
+      "riskLevel": "MEDIUM",
+      "plannedSubmissionDate": null,
+      "actualSubmissionDate": null,
+      "expectedApprovalDate": null,
+      "approvalDate": null,
+      "complianceOwnerId": null,
+      "notes": "owned-private-profile",
+      "createdAt": "2026-10-06T02:25:28.378Z",
+      "updatedAt": "2026-10-06T02:25:28.378Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "86942464-e68b-4eb1-b732-8d1f3b6bb476",
+      "projectId": "a4342bb5-f76b-4a5e-9545-70c106368374",
+      "registrationType": "IVD",
+      "region": "MACAO_ISAF",
+      "authority": null,
+      "submissionNo": null,
+      "certificateNo": null,
+      "currentStage": "DOSSIER_PREPARATION",
+      "riskLevel": "MEDIUM",
+      "plannedSubmissionDate": null,
+      "actualSubmissionDate": null,
+      "expectedApprovalDate": null,
+      "approvalDate": null,
+      "complianceOwnerId": null,
+      "notes": "owned-private-profile",
+      "createdAt": "2026-10-06T02:25:28.394Z",
+      "updatedAt": "2026-10-06T02:25:28.394Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "bc4f3058-27ce-4658-9453-afa594ec1556",
+      "projectId": "8d9c6f58-3a29-413d-9555-d294d3215c70",
+      "registrationType": "IVD",
+      "region": "MACAO_ISAF",
+      "authority": null,
+      "submissionNo": null,
+      "certificateNo": null,
+      "currentStage": "DOSSIER_PREPARATION",
+      "riskLevel": "MEDIUM",
+      "plannedSubmissionDate": null,
+      "actualSubmissionDate": null,
+      "expectedApprovalDate": null,
+      "approvalDate": null,
+      "complianceOwnerId": null,
+      "notes": "owned-private-profile",
+      "createdAt": "2026-10-06T02:25:28.411Z",
+      "updatedAt": "2026-10-06T02:25:28.411Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "fc54c811-ab6a-488f-ae74-2642f95c80cc",
+      "projectId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+      "registrationType": "IVD",
+      "region": "MACAO_ISAF",
+      "authority": null,
+      "submissionNo": null,
+      "certificateNo": null,
+      "currentStage": "SUBMISSION_ACCEPTED",
+      "riskLevel": "MEDIUM",
+      "plannedSubmissionDate": null,
+      "actualSubmissionDate": null,
+      "expectedApprovalDate": null,
+      "approvalDate": null,
+      "complianceOwnerId": null,
+      "notes": "super permitted",
+      "createdAt": "2026-10-06T02:25:28.466Z",
+      "updatedAt": "2026-10-06T02:25:28.480Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "8a30f483-7f52-476a-97f8-61cb37b7d609",
+      "projectId": "6a51c30d-e08a-4dfa-80ba-1cfbb148d3fc",
+      "registrationType": "IVD",
+      "region": "MACAO_ISAF",
+      "authority": null,
+      "submissionNo": null,
+      "certificateNo": null,
+      "currentStage": "DOSSIER_PREPARATION",
+      "riskLevel": "MEDIUM",
+      "plannedSubmissionDate": null,
+      "actualSubmissionDate": null,
+      "expectedApprovalDate": null,
+      "approvalDate": null,
+      "complianceOwnerId": null,
+      "notes": "owned-private-profile",
+      "createdAt": "2026-10-06T02:25:28.506Z",
+      "updatedAt": "2026-10-06T02:25:28.506Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "e3bec031-9371-471b-9f5f-0d915e2ea5c9",
+      "projectId": "4726c759-0290-45d8-ac99-d98217cc6751",
+      "registrationType": "IVD",
+      "region": "MACAO_ISAF",
+      "authority": null,
+      "submissionNo": null,
+      "certificateNo": null,
+      "currentStage": "SUBMISSION_ACCEPTED",
+      "riskLevel": "MEDIUM",
+      "plannedSubmissionDate": null,
+      "actualSubmissionDate": null,
+      "expectedApprovalDate": null,
+      "approvalDate": null,
+      "complianceOwnerId": null,
+      "notes": "owned-private-profile",
+      "createdAt": "2026-10-06T02:25:28.517Z",
+      "updatedAt": "2026-10-06T02:25:28.523Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "e16b46d4-0361-4127-a616-5731ad49d6bc",
+      "projectId": "54b675c9-3f1f-4751-beb2-c25906bfcc69",
+      "registrationType": "IVD",
+      "region": "MACAO_ISAF",
+      "authority": null,
+      "submissionNo": null,
+      "certificateNo": null,
+      "currentStage": "DOSSIER_PREPARATION",
+      "riskLevel": "MEDIUM",
+      "plannedSubmissionDate": null,
+      "actualSubmissionDate": null,
+      "expectedApprovalDate": null,
+      "approvalDate": null,
+      "complianceOwnerId": null,
+      "notes": null,
+      "createdAt": "2026-10-06T02:25:28.531Z",
+      "updatedAt": "2026-10-06T02:25:28.531Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "9f30306c-8602-434d-9dfe-65682560008f",
+      "projectId": "abf4c637-1aa2-4990-b0de-22022aef83c4",
+      "registrationType": "IVD",
+      "region": "MACAO_ISAF",
+      "authority": null,
+      "submissionNo": null,
+      "certificateNo": null,
+      "currentStage": "DOSSIER_PREPARATION",
+      "riskLevel": "MEDIUM",
+      "plannedSubmissionDate": null,
+      "actualSubmissionDate": null,
+      "expectedApprovalDate": null,
+      "approvalDate": null,
+      "complianceOwnerId": null,
+      "notes": "owned-private-profile",
+      "createdAt": "2026-10-06T02:25:28.544Z",
+      "updatedAt": "2026-10-06T02:25:28.544Z",
+      "createdById": null,
+      "updatedById": null
+    }
+  ],
+  "members": [
+    {
+      "id": "22db0304-0282-4591-9e02-580e49180de3",
+      "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+      "userId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:25:28.246Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "b861d436-a7c9-4411-9ff8-72a4ea8c03b7",
+      "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+      "userId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.246Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "a42b19f6-36af-4800-adda-0803b559c5d5",
+      "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+      "userId": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:25:28.246Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "619a9e57-fdaa-4d8b-82a3-08267b397fdd",
+      "projectId": "d82bba00-6447-4eb5-aa02-b96dfab58072",
+      "userId": "dc2a1515-1145-40db-baaa-1caee7dc5636",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.246Z",
+      "leftAt": "2026-10-06T02:25:28.246Z",
+      "createdById": null
+    },
+    {
+      "id": "3c4cf04c-931d-4c34-9805-3e74b187645f",
+      "projectId": "82986431-53de-4492-be57-aa9173417805",
+      "userId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:25:28.288Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "0f186995-4594-4a5c-a7c2-73f6bc175428",
+      "projectId": "82986431-53de-4492-be57-aa9173417805",
+      "userId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.288Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "613ac11c-3185-4ae5-bc04-a81c7a2899e8",
+      "projectId": "82986431-53de-4492-be57-aa9173417805",
+      "userId": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:25:28.288Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "95a54d8e-b4d2-4ad6-8b87-658a42ec9e3f",
+      "projectId": "82986431-53de-4492-be57-aa9173417805",
+      "userId": "dc2a1515-1145-40db-baaa-1caee7dc5636",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.288Z",
+      "leftAt": "2026-10-06T02:25:28.287Z",
+      "createdById": null
+    },
+    {
+      "id": "bfbaab99-b684-4834-a956-5d4c0fb9b3c2",
+      "projectId": "e52f0531-cc41-499c-a53d-c3b98bb5b48a",
+      "userId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:25:28.313Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "b8a04c70-bcd6-4379-b59a-b7b76fe3e2f0",
+      "projectId": "e52f0531-cc41-499c-a53d-c3b98bb5b48a",
+      "userId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.313Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "3fd08b99-282d-40cc-9e49-6d33157d02b9",
+      "projectId": "e52f0531-cc41-499c-a53d-c3b98bb5b48a",
+      "userId": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:25:28.313Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "dbe07807-115c-4e69-b53e-b5ab735e4472",
+      "projectId": "e52f0531-cc41-499c-a53d-c3b98bb5b48a",
+      "userId": "dc2a1515-1145-40db-baaa-1caee7dc5636",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.313Z",
+      "leftAt": "2026-10-06T02:25:28.312Z",
+      "createdById": null
+    },
+    {
+      "id": "2667a540-fac3-4e3a-9440-94d430805fc0",
+      "projectId": "5b3c9562-b9b0-4d90-a081-77b72bf493de",
+      "userId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:25:28.335Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "97db41da-6484-40f2-956e-e652d8ae1ec3",
+      "projectId": "5b3c9562-b9b0-4d90-a081-77b72bf493de",
+      "userId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.335Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "c35532dc-5290-4099-b97a-9923a1fb7c57",
+      "projectId": "5b3c9562-b9b0-4d90-a081-77b72bf493de",
+      "userId": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:25:28.335Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "3d5c279d-1698-48ba-8ea1-0f6f9ae8f362",
+      "projectId": "5b3c9562-b9b0-4d90-a081-77b72bf493de",
+      "userId": "dc2a1515-1145-40db-baaa-1caee7dc5636",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.335Z",
+      "leftAt": "2026-10-06T02:25:28.334Z",
+      "createdById": null
+    },
+    {
+      "id": "a7ac3416-5522-443f-9c37-6ff4e4b6527e",
+      "projectId": "aa482cca-bff2-4be4-a4fd-d95dbf9e137d",
+      "userId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:25:28.343Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "fb5160b4-e449-4cc8-8236-8bd440190e92",
+      "projectId": "aa482cca-bff2-4be4-a4fd-d95dbf9e137d",
+      "userId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.343Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "c35cafe3-fed5-4c18-a0bd-ff291169e861",
+      "projectId": "aa482cca-bff2-4be4-a4fd-d95dbf9e137d",
+      "userId": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:25:28.343Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "51ad58cc-0d05-4c27-8a22-8c5e833579a0",
+      "projectId": "aa482cca-bff2-4be4-a4fd-d95dbf9e137d",
+      "userId": "dc2a1515-1145-40db-baaa-1caee7dc5636",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.343Z",
+      "leftAt": "2026-10-06T02:25:28.342Z",
+      "createdById": null
+    },
+    {
+      "id": "4310101c-9188-4f58-87ee-5899e8a83117",
+      "projectId": "8c10ab72-b855-4175-a05b-89ed9d1df473",
+      "userId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:25:28.351Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "4068ed37-7df0-4225-ab63-e94469c1dabc",
+      "projectId": "8c10ab72-b855-4175-a05b-89ed9d1df473",
+      "userId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.351Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "615e519b-9dd6-469e-833d-053e43babc45",
+      "projectId": "8c10ab72-b855-4175-a05b-89ed9d1df473",
+      "userId": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:25:28.351Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "472b29e3-af85-415e-82f2-dc055615a674",
+      "projectId": "8c10ab72-b855-4175-a05b-89ed9d1df473",
+      "userId": "dc2a1515-1145-40db-baaa-1caee7dc5636",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.351Z",
+      "leftAt": "2026-10-06T02:25:28.351Z",
+      "createdById": null
+    },
+    {
+      "id": "ba2c1cf3-5982-45c4-9109-a0c0a73dc98b",
+      "projectId": "a137a986-5773-4e97-8546-7869c7b8baaa",
+      "userId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:25:28.378Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "420289a5-11d7-4b58-ba06-2df57b8cede8",
+      "projectId": "a137a986-5773-4e97-8546-7869c7b8baaa",
+      "userId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.378Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "fcfe947a-e0e4-42b2-b696-4d6cf77976fd",
+      "projectId": "a137a986-5773-4e97-8546-7869c7b8baaa",
+      "userId": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:25:28.378Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "56377441-aaa3-4726-8db0-09a05826ba4d",
+      "projectId": "a137a986-5773-4e97-8546-7869c7b8baaa",
+      "userId": "dc2a1515-1145-40db-baaa-1caee7dc5636",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.378Z",
+      "leftAt": "2026-10-06T02:25:28.378Z",
+      "createdById": null
+    },
+    {
+      "id": "0cf7de97-fd77-458f-8fd8-bab9ab6496b3",
+      "projectId": "a4342bb5-f76b-4a5e-9545-70c106368374",
+      "userId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:25:28.394Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "adceb66a-c00a-48e9-a2f5-cb7d6d036601",
+      "projectId": "a4342bb5-f76b-4a5e-9545-70c106368374",
+      "userId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.394Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "50c881c4-c0ac-4f7f-9697-46a87db466c0",
+      "projectId": "a4342bb5-f76b-4a5e-9545-70c106368374",
+      "userId": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:25:28.394Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "1763d319-f7f4-4afa-8425-11fef704b355",
+      "projectId": "a4342bb5-f76b-4a5e-9545-70c106368374",
+      "userId": "dc2a1515-1145-40db-baaa-1caee7dc5636",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.394Z",
+      "leftAt": "2026-10-06T02:25:28.394Z",
+      "createdById": null
+    },
+    {
+      "id": "7897f635-8f7b-4db6-99dc-e8c8099d1037",
+      "projectId": "8d9c6f58-3a29-413d-9555-d294d3215c70",
+      "userId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:25:28.411Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "93d6e9af-ce72-4be2-89b3-58bf3e2d8aba",
+      "projectId": "8d9c6f58-3a29-413d-9555-d294d3215c70",
+      "userId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.411Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "370b7b99-9c84-459d-83da-484d28691514",
+      "projectId": "8d9c6f58-3a29-413d-9555-d294d3215c70",
+      "userId": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:25:28.411Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "a3860fae-d15c-456f-9130-35aecd79c3c6",
+      "projectId": "8d9c6f58-3a29-413d-9555-d294d3215c70",
+      "userId": "dc2a1515-1145-40db-baaa-1caee7dc5636",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.411Z",
+      "leftAt": "2026-10-06T02:25:28.410Z",
+      "createdById": null
+    },
+    {
+      "id": "333333c9-bf86-4721-94c8-7331ad577aed",
+      "projectId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+      "userId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:25:28.466Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "ac2c11e0-ca8e-45c5-9f9d-acf29e83c7d9",
+      "projectId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+      "userId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.466Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "6dbd4e29-5806-4980-b176-71fca2b0aab9",
+      "projectId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+      "userId": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:25:28.466Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "8b5f15a9-8b7b-4b98-8478-4f0b2bc03ea5",
+      "projectId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+      "userId": "dc2a1515-1145-40db-baaa-1caee7dc5636",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.466Z",
+      "leftAt": "2026-10-06T02:25:28.465Z",
+      "createdById": null
+    },
+    {
+      "id": "8446ebd8-bd6f-484a-985d-62758852b461",
+      "projectId": "6a51c30d-e08a-4dfa-80ba-1cfbb148d3fc",
+      "userId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:25:28.506Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "eb3838ab-c175-4412-a9b9-fd09d6cdc46e",
+      "projectId": "6a51c30d-e08a-4dfa-80ba-1cfbb148d3fc",
+      "userId": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:25:28.506Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "abe946f1-f53b-4b92-9bf6-83340311dead",
+      "projectId": "6a51c30d-e08a-4dfa-80ba-1cfbb148d3fc",
+      "userId": "dc2a1515-1145-40db-baaa-1caee7dc5636",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.506Z",
+      "leftAt": "2026-10-06T02:25:28.505Z",
+      "createdById": null
+    },
+    {
+      "id": "2abfee81-9595-48e6-aae3-3603e74b4582",
+      "projectId": "6a51c30d-e08a-4dfa-80ba-1cfbb148d3fc",
+      "userId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.506Z",
+      "leftAt": "2026-10-06T02:25:28.511Z",
+      "createdById": null
+    },
+    {
+      "id": "77042752-3402-4fcb-9bbc-4cf9884daf7e",
+      "projectId": "4726c759-0290-45d8-ac99-d98217cc6751",
+      "userId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:25:28.517Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "6b59391b-2bb7-4c12-9b2d-f5b5fcbfc0e1",
+      "projectId": "4726c759-0290-45d8-ac99-d98217cc6751",
+      "userId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.517Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "3c3c25c5-8ed1-4925-90f9-38a13521065b",
+      "projectId": "4726c759-0290-45d8-ac99-d98217cc6751",
+      "userId": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:25:28.517Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "f6a9141c-e989-4331-8a62-c521066e0b9d",
+      "projectId": "4726c759-0290-45d8-ac99-d98217cc6751",
+      "userId": "dc2a1515-1145-40db-baaa-1caee7dc5636",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.517Z",
+      "leftAt": "2026-10-06T02:25:28.517Z",
+      "createdById": null
+    },
+    {
+      "id": "fcf1675e-6ec7-42dc-a862-89f1fc21930d",
+      "projectId": "54b675c9-3f1f-4751-beb2-c25906bfcc69",
+      "userId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:25:28.531Z",
+      "leftAt": null,
+      "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911"
+    },
+    {
+      "id": "98f2a716-e192-4158-ab6d-207064dc9620",
+      "projectId": "54b675c9-3f1f-4751-beb2-c25906bfcc69",
+      "userId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+      "role": "MANAGER",
+      "joinedAt": "2026-10-06T02:25:28.531Z",
+      "leftAt": null,
+      "createdById": "9d2df6e1-0d33-4da3-9787-51d32495b911"
+    },
+    {
+      "id": "86427f1e-a4dd-48d4-824c-466c079c75c5",
+      "projectId": "abf4c637-1aa2-4990-b0de-22022aef83c4",
+      "userId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:25:28.544Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "586a8c3b-2744-4c0b-ae0d-8073b5c4c2d1",
+      "projectId": "abf4c637-1aa2-4990-b0de-22022aef83c4",
+      "userId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.544Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "7888d13c-979e-4aec-bf76-8f33e539a68e",
+      "projectId": "abf4c637-1aa2-4990-b0de-22022aef83c4",
+      "userId": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:25:28.544Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "e98e028f-b6b1-4aa4-9de8-bdb8fc0425e1",
+      "projectId": "abf4c637-1aa2-4990-b0de-22022aef83c4",
+      "userId": "dc2a1515-1145-40db-baaa-1caee7dc5636",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:25:28.544Z",
+      "leftAt": "2026-10-06T02:25:28.543Z",
+      "createdById": null
+    }
+  ],
+  "audits": [
+    {
+      "id": "cd5172a7-bbf4-4ab1-b0b6-2933e84be3d6",
+      "actorId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "actorName": "Synthetic owner",
+      "actorRole": "MEMBER",
+      "action": "login",
+      "entityType": "USER",
+      "entityId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "entityLabel": "rp06-owner-b8b1aa21-33da-4def-a571-95127c3fec7e",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": null,
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:25:28.185Z"
+    },
+    {
+      "id": "37559da1-9402-4199-a2ef-dbc647143856",
+      "actorId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+      "actorName": "Synthetic member",
+      "actorRole": "MEMBER",
+      "action": "login",
+      "entityType": "USER",
+      "entityId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+      "entityLabel": "rp06-member-9fc114f5-8aef-428d-b556-5fa62f3ffe78",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": null,
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:25:28.199Z"
+    },
+    {
+      "id": "d0f6c3f0-af22-4da5-aee5-c93e36197832",
+      "actorId": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+      "actorName": "Synthetic viewer",
+      "actorRole": "MEMBER",
+      "action": "login",
+      "entityType": "USER",
+      "entityId": "7ed7e4a9-1b50-43ce-9775-22a45ccbf3cf",
+      "entityLabel": "rp06-viewer-430400f1-c193-4ccc-8f09-c1e5c70e6ab4",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": null,
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:25:28.210Z"
+    },
+    {
+      "id": "bdb90605-05ca-49d1-9fa3-a6e2a6e94aae",
+      "actorId": "dc2a1515-1145-40db-baaa-1caee7dc5636",
+      "actorName": "Synthetic left",
+      "actorRole": "MEMBER",
+      "action": "login",
+      "entityType": "USER",
+      "entityId": "dc2a1515-1145-40db-baaa-1caee7dc5636",
+      "entityLabel": "rp06-left-44c9e1fa-8c19-401b-b7d8-4333e28b9479",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": null,
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:25:28.221Z"
+    },
+    {
+      "id": "3efcb7cf-996f-4855-b43a-d961aee18be8",
+      "actorId": "310850db-64c6-4809-ade9-7853065360d9",
+      "actorName": "Synthetic outside",
+      "actorRole": "MEMBER",
+      "action": "login",
+      "entityType": "USER",
+      "entityId": "310850db-64c6-4809-ade9-7853065360d9",
+      "entityLabel": "rp06-outside-9c85186c-9f48-4b89-9716-79b45b97cb71",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": null,
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:25:28.232Z"
+    },
+    {
+      "id": "e212e812-0b5d-45ec-a061-77702bd93b60",
+      "actorId": "3ab20384-41f7-46f5-8832-30ec81a3b20d",
+      "actorName": "Synthetic zero",
+      "actorRole": "MEMBER",
+      "action": "login",
+      "entityType": "USER",
+      "entityId": "3ab20384-41f7-46f5-8832-30ec81a3b20d",
+      "entityLabel": "rp06-zero-9f0d3ab5-83a4-4845-a5b8-921243aa5266",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": null,
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:25:28.239Z"
+    },
+    {
+      "id": "ebf7344a-9b39-4f64-8b8d-30a5da54de6c",
+      "actorId": "5f1d12bc-840d-48e1-bc6e-1fc3f7cb37f2",
+      "actorName": "Synthetic super",
+      "actorRole": "SUPER_ADMIN",
+      "action": "login",
+      "entityType": "USER",
+      "entityId": "5f1d12bc-840d-48e1-bc6e-1fc3f7cb37f2",
+      "entityLabel": "rp06-super-98f95417-2df9-4d9a-afc5-90045456a79d",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": null,
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:25:28.244Z"
+    },
+    {
+      "id": "94ff1652-ff54-4ee1-b1c6-c1150a0fac01",
+      "actorId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+      "actorName": "Synthetic member",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "REGISTRATION",
+      "entityId": "8c10ab72-b855-4175-a05b-89ed9d1df473",
+      "entityLabel": null,
+      "before": null,
+      "after": null,
+      "changedFields": [
+        "name"
+      ],
+      "metadata": {
+        "elevated": false,
+        "permissionCode": "registrations.update"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:25:28.357Z"
+    },
+    {
+      "id": "9028ccbe-2fde-48a6-8cd6-eebc394d2394",
+      "actorId": "ac1dd999-e2a3-49f2-8dfa-74a610148e42",
+      "actorName": "Synthetic member",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "REGISTRATION",
+      "entityId": "8c10ab72-b855-4175-a05b-89ed9d1df473",
+      "entityLabel": null,
+      "before": null,
+      "after": null,
+      "changedFields": [
+        "notes"
+      ],
+      "metadata": {
+        "elevated": false,
+        "permissionCode": "registrations.update"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:25:28.362Z"
+    },
+    {
+      "id": "66592ab9-cef5-4c14-9864-0606ae64172c",
+      "actorId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "actorName": "Synthetic owner",
+      "actorRole": "MEMBER",
+      "action": "status.change",
+      "entityType": "REGISTRATION",
+      "entityId": "8c10ab72-b855-4175-a05b-89ed9d1df473",
+      "entityLabel": "authorized member",
+      "before": {
+        "stage": "DOSSIER_PREPARATION"
+      },
+      "after": {
+        "stage": "SUBMISSION_ACCEPTED"
+      },
+      "changedFields": [],
+      "metadata": {
+        "elevated": false,
+        "permissionCode": "registrations.change_stage"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:25:28.377Z"
+    },
+    {
+      "id": "5c4ee76b-8833-40e4-837b-734f85a1f4de",
+      "actorId": "5f1d12bc-840d-48e1-bc6e-1fc3f7cb37f2",
+      "actorName": "Synthetic super",
+      "actorRole": "SUPER_ADMIN",
+      "action": "read.sensitive",
+      "entityType": "PROJECT",
+      "entityId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+      "entityLabel": "registration scope",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": {
+        "scope": "nonmember-project",
+        "elevated": true,
+        "permissionCode": "registrations.view"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:25:28.469Z"
+    },
+    {
+      "id": "0a10ea29-1f92-42b2-8ca8-aefcca17dc65",
+      "actorId": "5f1d12bc-840d-48e1-bc6e-1fc3f7cb37f2",
+      "actorName": "Synthetic super",
+      "actorRole": "SUPER_ADMIN",
+      "action": "read.sensitive",
+      "entityType": "PROJECT",
+      "entityId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+      "entityLabel": "registration scope",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": {
+        "scope": "nonmember-project",
+        "elevated": true,
+        "permissionCode": "registrations.update"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:25:28.473Z"
+    },
+    {
+      "id": "6f151314-60aa-4adc-877c-96e2d2ac76ae",
+      "actorId": "5f1d12bc-840d-48e1-bc6e-1fc3f7cb37f2",
+      "actorName": "Synthetic super",
+      "actorRole": "SUPER_ADMIN",
+      "action": "update",
+      "entityType": "REGISTRATION",
+      "entityId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+      "entityLabel": null,
+      "before": null,
+      "after": null,
+      "changedFields": [
+        "name"
+      ],
+      "metadata": {
+        "elevated": true,
+        "permissionCode": "registrations.update"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:25:28.474Z"
+    },
+    {
+      "id": "6c121f0e-be8a-41b3-9e72-fff34c7a7815",
+      "actorId": "5f1d12bc-840d-48e1-bc6e-1fc3f7cb37f2",
+      "actorName": "Synthetic super",
+      "actorRole": "SUPER_ADMIN",
+      "action": "read.sensitive",
+      "entityType": "PROJECT",
+      "entityId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+      "entityLabel": "registration scope",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": {
+        "scope": "nonmember-project",
+        "elevated": true,
+        "permissionCode": "registrations.update"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:25:28.477Z"
+    },
+    {
+      "id": "d750da2f-589b-48a5-b3a6-50dbd302e283",
+      "actorId": "5f1d12bc-840d-48e1-bc6e-1fc3f7cb37f2",
+      "actorName": "Synthetic super",
+      "actorRole": "SUPER_ADMIN",
+      "action": "update",
+      "entityType": "REGISTRATION",
+      "entityId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+      "entityLabel": null,
+      "before": null,
+      "after": null,
+      "changedFields": [
+        "notes"
+      ],
+      "metadata": {
+        "elevated": true,
+        "permissionCode": "registrations.update"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:25:28.478Z"
+    },
+    {
+      "id": "7d2add0b-a9d6-4711-93d6-2e4f2255d786",
+      "actorId": "5f1d12bc-840d-48e1-bc6e-1fc3f7cb37f2",
+      "actorName": "Synthetic super",
+      "actorRole": "SUPER_ADMIN",
+      "action": "read.sensitive",
+      "entityType": "PROJECT",
+      "entityId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+      "entityLabel": "registration scope",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": {
+        "scope": "nonmember-project",
+        "elevated": true,
+        "permissionCode": "registrations.change_stage"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:25:28.480Z"
+    },
+    {
+      "id": "d3e5eded-1d16-4273-8cb0-ecd916213dc7",
+      "actorId": "5f1d12bc-840d-48e1-bc6e-1fc3f7cb37f2",
+      "actorName": "Synthetic super",
+      "actorRole": "SUPER_ADMIN",
+      "action": "status.change",
+      "entityType": "REGISTRATION",
+      "entityId": "f94e200c-7baf-4f60-ad9c-b491f9339104",
+      "entityLabel": "super permitted",
+      "before": {
+        "stage": "DOSSIER_PREPARATION"
+      },
+      "after": {
+        "stage": "SUBMISSION_ACCEPTED"
+      },
+      "changedFields": [],
+      "metadata": {
+        "elevated": true,
+        "permissionCode": "registrations.change_stage"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:25:28.481Z"
+    },
+    {
+      "id": "0ef87c9c-c735-4f9d-ba59-5ae0a9ff9944",
+      "actorId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "actorName": "Synthetic owner",
+      "actorRole": "MEMBER",
+      "action": "status.change",
+      "entityType": "REGISTRATION",
+      "entityId": "4726c759-0290-45d8-ac99-d98217cc6751",
+      "entityLabel": "Synthetic private registration",
+      "before": {
+        "stage": "DOSSIER_PREPARATION"
+      },
+      "after": {
+        "stage": "SUBMISSION_ACCEPTED"
+      },
+      "changedFields": [],
+      "metadata": {
+        "elevated": false,
+        "permissionCode": "registrations.change_stage"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:25:28.523Z"
+    },
+    {
+      "id": "0fa5152a-f9c0-44e1-9fc0-c6191610f8e6",
+      "actorId": "9d2df6e1-0d33-4da3-9787-51d32495b911",
+      "actorName": "Synthetic owner",
+      "actorRole": "MEMBER",
+      "action": "create",
+      "entityType": "PROJECT",
+      "entityId": "54b675c9-3f1f-4751-beb2-c25906bfcc69",
+      "entityLabel": "Synthetic created registration",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": {
+        "subtype": "registration",
+        "permissionCode": "registrations.create"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:25:28.532Z"
+    }
+  ]
+}

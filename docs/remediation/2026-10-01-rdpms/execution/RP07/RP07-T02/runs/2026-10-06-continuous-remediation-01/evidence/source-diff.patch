@@ -1,0 +1,385 @@
+--- before/rdpms-system/backend/src/modules/projects/projectCommands.ts
++++ after/rdpms-system/backend/src/modules/projects/projectCommands.ts
+@@ -70,3 +70,57 @@
+   }
+   return normalized;
+ }
++
++import type { Prisma } from '@prisma/client';
++import { HttpError } from '../../kernel/http.js';
++import { P0_PERMISSIONS, P1_UNFROZEN } from '../../kernel/constants.js';
++import { getActorResolver } from '../../platform/identity/actorResolver.js';
++import { resolveProjectAccess } from '../../kernel/projectAccess.js';
++import { writeAuditStrict } from '../../platform/audit/strictAudit.js';
++
++export function managerTransferId(value: unknown): string {
++  if (typeof value !== 'string' || !value.trim() || value.length > 180) throw badRequest('INVALID_MANAGER', '负责人必须是有效账号ID');
++  return value;
++}
++/** One caller transaction; no automatic enrollment or owner-role demotion. */
++export async function transferProjectManager(tx: Prisma.TransactionClient, args: {
++  actor: AuthActor; projectId: string; managerId: unknown; expectedUpdatedAt: unknown;
++  entryPermission: 'projects.update' | 'registrations.update'; fields?: Record<string, unknown>; c?: unknown;
++}) {
++  const targetId = managerTransferId(args.managerId);
++  if (typeof args.expectedUpdatedAt !== 'string' || !Number.isFinite(Date.parse(args.expectedUpdatedAt))) {
++    throw new HttpError(409, 'MANAGER_BASELINE_REQUIRED', '负责人转移需要当前项目时间基线');
++  }
++  await tx.$queryRaw`SELECT id FROM users WHERE id IN (${args.actor.userId}, ${targetId}) ORDER BY id FOR UPDATE`;
++  const currentUser = await tx.user.findUnique({ where: { id: args.actor.userId } });
++  const target = await tx.user.findUnique({ where: { id: targetId } });
++  if (!currentUser || currentUser.deletedAt || currentUser.status !== 'ACTIVE') throw new HttpError(401, 'SESSION_INVALID', '账号已失效');
++  const injected = Boolean(getActorResolver());
++  const expectedVersion = (args.actor.user as { securityVersion?: number } | null)?.securityVersion;
++  if (!injected && expectedVersion !== undefined && currentUser.securityVersion !== expectedVersion) throw new HttpError(401, 'SESSION_REVOKED', '会话已撤销');
++  if (currentUser.mustChangePassword) throw new HttpError(403, 'PASSWORD_CHANGE_REQUIRED', '请先修改密码');
++  const bindings = currentUser.systemRole === 'SUPER_ADMIN' || injected ? [] : await tx.userRole.findMany({ where: { userId: currentUser.id },
++    select: { role: { select: { permissions: { select: { permission: { select: { code: true } } } } } } } });
++  const actor = injected ? args.actor : { ...args.actor, user: currentUser, systemRole: currentUser.systemRole,
++    permissions: currentUser.systemRole === 'SUPER_ADMIN' ? [...P0_PERMISSIONS, ...P1_UNFROZEN] : bindings.flatMap(b => b.role.permissions.map(p => p.permission.code)) };
++  assertActionPermission(actor, args.entryPermission); assertActionPermission(actor, 'projects.manage_members');
++  if (!target || target.deletedAt || target.status !== 'ACTIVE') throw badRequest('MANAGER_NOT_ACTIVE', '负责人必须为当前有效账号');
++  await tx.$queryRaw`SELECT id FROM projects WHERE id = ${args.projectId} FOR UPDATE`;
++  const access = await resolveProjectAccess(tx, actor, args.projectId); assertProjectCapability(access, 'manage_members', 'projects.manage_members');
++  const project = await tx.project.findUniqueOrThrow({ where: { id: args.projectId } });
++  if (project.updatedAt.getTime() !== Date.parse(args.expectedUpdatedAt)) throw new HttpError(409, 'MANAGER_CONCURRENT_CHANGE', '项目已变化，请重新核对负责人');
++  const member = await tx.projectMember.findUnique({ where: { projectId_userId: { projectId: project.id, userId: targetId } } });
++  if (!member || member.leftAt) throw badRequest('MANAGER_NOT_MEMBER', '负责人必须为本项目当前有效成员');
++  if (project.managerId === targetId) return project;
++  const fields = args.fields ?? {};
++  if (fields.status !== undefined) fields.status = assertProjectStatusTransition({ actor, access, currentStatus: project.status, nextStatus: fields.status });
++  const previousId = project.managerId;
++  await tx.projectMember.update({ where: { id: member.id }, data: { role: member.role === 'OWNER' ? 'OWNER' : 'MANAGER' } });
++  if (previousId) await tx.projectMember.updateMany({ where: { projectId: project.id, userId: previousId, leftAt: null, role: 'MANAGER' }, data: { role: 'MEMBER' } });
++  const changed = await tx.project.update({ where: { id: project.id }, data: { ...fields, managerId: targetId, updatedById: actor.userId } as Prisma.ProjectUncheckedUpdateInput });
++  await writeAuditStrict(tx, { c: args.c, actorId: actor.userId, actorName: actor.user?.displayName ?? null,
++    actorRole: actor.systemRole, action: 'update', entityType: 'PROJECT', entityId: project.id, entityLabel: project.name,
++    changedFields: ['managerId', 'memberRoles'], metadata: { command: 'TRANSFER_MANAGER_V1', entryPermission: args.entryPermission,
++      previousManagerId: previousId, managerId: targetId, targetRole: member.role === 'OWNER' ? 'OWNER' : 'MANAGER', elevated: Boolean(access.elevated) } });
++  return changed;
++}
+--- before/rdpms-system/backend/src/routes/projects.js
++++ after/rdpms-system/backend/src/routes/projects.js
+@@ -6,7 +6,7 @@
+ import { writeAudit } from '../kernel/audit.js';
+ import { nextCode } from '../kernel/sequence.js';
+ import { assertActionPermission } from '../modules/access/writeGuards.js';
+-import { assertProjectStatusTransition, PROJECT_STATUS_TRANSITIONS } from '../modules/projects/projectCommands.js';
++import { assertProjectStatusTransition, PROJECT_STATUS_TRANSITIONS, transferProjectManager, managerTransferId } from '../modules/projects/projectCommands.js';
+ import { withIdempotency, resolveIdempotencyKey } from '../platform/idempotency/receipts.js';
+ import { writeAuditStrict } from '../platform/audit/strictAudit.js';
+ import {
+@@ -523,37 +523,29 @@
+     throw badRequest('NO_VALID_FIELDS', '更新项目: 没有可写入的有效字段');
+   }
+ 
++  const requestedManagerId = data.managerId !== undefined ? managerTransferId(data.managerId) : undefined;
++  delete data.managerId;
+   await prisma.$transaction(async (tx) => {
+-    // write 能力不足时仅允许不动核心字段的场景——统一按 write 断言
+     assertProjectCapability(access, 'write', 'projects.update');
+-
+-    await tx.project.update({ where: { id }, data: { ...data, updatedById: auth.userId } });
+-
+-    const effectiveManagerId = data.managerId || access.project.managerId;
+-    if (data.managerId && data.managerId !== access.project.managerId) {
+-      await tx.projectMember.upsert({
+-        where: { projectId_userId: { projectId: id, userId: data.managerId } },
+-        update: { role: 'MANAGER', leftAt: null },
+-        create: { projectId: id, userId: data.managerId, role: 'MANAGER', createdById: auth.userId },
+-      });
+-      await tx.projectMember.updateMany({
+-        where: { projectId: id, userId: access.project.managerId, role: 'MANAGER' },
+-        data: { role: 'MEMBER' },
+-      });
+-    } else if (effectiveManagerId) {
+-      await tx.projectMember.upsert({
+-        where: { projectId_userId: { projectId: id, userId: effectiveManagerId } },
+-        update: { leftAt: null },
+-        create: { projectId: id, userId: effectiveManagerId, role: 'MANAGER', createdById: auth.userId },
+-      });
+-    }
++    const effectiveManagerId = requestedManagerId ?? access.project.managerId;
++    if (requestedManagerId && requestedManagerId !== access.project.managerId) {
++      await transferProjectManager(tx, { actor: auth, projectId: id, managerId: requestedManagerId,
++        expectedUpdatedAt: raw?.baseUpdatedAt, entryPermission: 'projects.update', fields: data, c });
++    } else await tx.project.update({ where: { id }, data: { ...data, updatedById: auth.userId } });
+ 
+     // 同步参与人（前端传 participantIds 时生效）
+     if (participantIds) {
+       assertProjectCapability(access, 'manage_members', 'projects.manage_members');
+       const normalized = [...new Set(participantIds.filter((uid) => typeof uid === 'string' && uid && uid !== effectiveManagerId))];
+       const desired = new Set([effectiveManagerId, ...normalized].filter(Boolean));
+-      const existing = await tx.projectMember.findMany({ where: { projectId: id }, select: { userId: true } });
++      const existing = await tx.projectMember.findMany({ where: { projectId: id }, select: { userId: true, role: true, leftAt: true } });
++      // A transfer never implicitly removes the previous manager or active owners.
++      // Explicit membership-removal commands remain separate from this combined edit.
++      if (requestedManagerId && requestedManagerId !== access.project.managerId) {
++        for (const member of existing) {
++          if (!member.leftAt && (member.role === 'OWNER' || member.userId === access.project.managerId)) desired.add(member.userId);
++        }
++      }
+       const existingIds = existing.map((m) => m.userId);
+       const toRemove = existingIds.filter((uid) => !desired.has(uid));
+       const toAdd = [...desired].filter((uid) => !existingIds.includes(uid));
+--- before/rdpms-system/backend/src/routes/sync.js
++++ after/rdpms-system/backend/src/routes/sync.js
+@@ -8,7 +8,7 @@
+ import { writeAudit } from '../kernel/audit.js';
+ import { badRequest, HttpError } from '../kernel/http.js';
+ import { projectVisibilityFilter, assertProjectCapability } from '../kernel/projectAccess.js';
+-import { assertProjectStatusTransition, normalizeProjectStatus } from '../modules/projects/projectCommands.js';
++import { assertProjectStatusTransition, normalizeProjectStatus, transferProjectManager, managerTransferId } from '../modules/projects/projectCommands.js';
+ import {
+   assertActionPermission,
+   assertTaskStatusChange,
+@@ -241,7 +241,12 @@
+ 
+   if (entity === 'projects') {
+     if (op !== 'delete' && Object.prototype.hasOwnProperty.call(rawData, 'managerId')) {
+-      throw badRequest('DECISION_REQUIRED', '项目负责人变更需按批准的负责人转移命令执行');
++      managerTransferId(rawData.managerId);
++      if (!existing) throw badRequest('INVALID_REFERENCE', '负责人转移需要已存在的项目');
++      if (rawData.managerId !== existing.managerId) {
++        assertActionPermission(auth, 'projects.manage_members');
++        assertProjectCapability(access, 'manage_members', 'projects.manage_members');
++      }
+     }
+     if (op !== 'delete' && Object.prototype.hasOwnProperty.call(rawData, 'status')) {
+       if (!existing) throw badRequest('INVALID_REFERENCE', '离线项目状态命令需要已存在的项目');
+@@ -514,6 +519,7 @@
+   assertProjectCapability(access, def.requireCapability ?? 'write', def.permission ?? 'sync.write');
+   if (def.ownOnly && existing) assertReportAuthority(existing, actor, access, def.permission);
+   if (def.ownOnly && !existing && command.op === 'delete') throw new HttpError(404, 'RECEIPT_UNAVAILABLE', '回执不可用');
++  if (command.entity === 'projects' && Object.hasOwn(command.data, 'managerId')) managerTransferId(command.data.managerId);
+   const data = pickFields(command.data, def.fields);
+   const requiredPermissions = [];
+   const requiredCapabilities = [def.requireCapability ?? 'write'];
+@@ -538,6 +544,11 @@
+     if (command.entity === 'projectPhases' && existing && data.status !== undefined && data.status !== existing.status) {
+       requiredPermissions.push('project_phases.change_status'); requiredCapabilities.push('transition');
+     }
++    if (command.entity === 'projects' && Object.hasOwn(command.data, 'managerId') && command.data.managerId !== existing?.managerId) {
++      assertActionPermission(actor, 'projects.manage_members'); assertProjectCapability(access, 'manage_members', 'projects.manage_members');
++      requiredPermissions.push('projects.manage_members'); requiredCapabilities.push('manage_members');
++      if (typeof command.baseUpdatedAt !== 'string') throw new HttpError(409, 'MANAGER_BASELINE_REQUIRED', '负责人转移需要当前项目时间基线');
++    }
+     if (command.entity === 'projects' && Object.hasOwn(command.data, 'status') && normalizeProjectStatus(command.data.status) !== existing?.status) {
+       requiredCapabilities.push('transition');
+       if (normalizeProjectStatus(command.data.status) === 'ARCHIVED') requiredPermissions.push('projects.archive');
+@@ -546,7 +557,7 @@
+   return { existing, data, access, requiredPermissions, requiredCapabilities };
+ }
+ 
+-async function executeSyncCommand(tx, actor, command, context) {
++async function executeSyncCommand(tx, actor, command, context, c) {
+   const { entity, id, op, projectId } = command;
+   const def = SYNC_ENTITIES[entity];
+   const { existing, data, access } = context;
+@@ -581,6 +592,8 @@
+     if (statusChanging) await changeTaskStatus(tx, { actor, access, task: existing, status: nextStatus, cas: nextCas() });
+     if (assigneeChanging) await assignTask(tx, { actor, access, task: existing, assigneeId: nextAssignee, cas: nextCas() });
+     row = await tx.task.findUnique({ where: { id } });
++  } else if (existing && entity === 'projects' && Object.hasOwn(command.data, 'managerId') && command.data.managerId !== existing.managerId) {
++    row = await transferProjectManager(tx, { actor: { ...actor, user: { ...actor.user, securityVersion: getAuth(c).user?.securityVersion } }, projectId: id, managerId: command.data.managerId, expectedUpdatedAt: command.baseUpdatedAt, entryPermission: 'projects.update', fields: data, c });
+   } else if (existing) {
+     const changed = await tx[def.model].updateMany({ where: { id, ...casFilter }, data: { ...data, ...(def.touchUpdatedBy ? { updatedById: actor.userId } : {}) } });
+     if (changed.count !== 1) throw new HttpError(409, 'CONFLICT', '并发基线已变化');
+@@ -595,8 +608,8 @@
+   return { status: 'applied', action: existing ? 'updated' : 'created', serverUpdatedAt: row?.[tsField] };
+ }
+ 
+-function syncCommands() {
+-  return createSyncMutationCommands(prisma, { authorize: authorizeSyncCommand, execute: executeSyncCommand });
++function syncCommands(c) {
++  return createSyncMutationCommands(prisma, { authorize: authorizeSyncCommand, execute: (tx, actor, command, context) => executeSyncCommand(tx, actor, command, context, c) });
+ }
+ 
+ sync.post('/receipts/reserve', async (c) => {
+@@ -604,7 +617,7 @@
+   const { deviceId, changes } = parseSyncEnvelope(await c.req.json().catch(() => null));
+   const commands = changes.map((raw) => parseSyncCommand(raw, SYNC_ENTITIES));
+   const results = [];
+-  for (const command of commands) results.push(await syncCommands().reserve(getAuth(c).userId, deviceId, command));
++  for (const command of commands) results.push(await syncCommands(c).reserve(getAuth(c).userId, deviceId, command));
+   return c.json({ protocolVersion: 1, results });
+ });
+ 
+@@ -612,7 +625,7 @@
+   const { deviceId, changes } = parseSyncEnvelope(await c.req.json().catch(() => null));
+   const commands = changes.map((raw) => parseSyncCommand(raw, SYNC_ENTITIES));
+   const results = [];
+-  for (const command of commands) results.push(await syncCommands().query(getAuth(c).userId, deviceId, command));
++  for (const command of commands) results.push(await syncCommands(c).query(getAuth(c).userId, deviceId, command));
+   return c.json({ protocolVersion: 1, results });
+ });
+ 
+@@ -622,7 +635,7 @@
+   const commands = changes.map((raw) => parseSyncCommand(raw, SYNC_ENTITIES));
+   const results = [];
+   for (const command of commands) {
+-    try { results.push(await syncCommands().push(getAuth(c).userId, deviceId, command, c)); }
++    try { results.push(await syncCommands(c).push(getAuth(c).userId, deviceId, command, c)); }
+     catch (error) {
+       // Validation/authorization failures leave reservation unchanged. Unexpected
+       // audit/receipt/SQL faults escape, preserving prior committed batch items.
+--- before/rdpms-system/backend/src/routes/registrations.js
++++ after/rdpms-system/backend/src/routes/registrations.js
+@@ -1,3 +1,4 @@
++import { transferProjectManager, managerTransferId } from '../modules/projects/projectCommands.js';
+ import { Hono } from 'hono';
+ import { prisma } from '../platform/db/client.js';
+ import { authenticate as authMiddleware, requirePermission, getAuth } from '../kernel/rbac.js';
+@@ -329,7 +330,7 @@
+ 
+   const existing = await prisma.project.findFirst({
+     where: registrationProjectWhere({ id }),
+-    select: { id: true },
++    select: { id: true, managerId: true },
+   });
+   if (!existing) throw notFound('REGISTRATION_NOT_FOUND', '注册项目不存在');
+ 
+@@ -339,7 +340,7 @@
+     projectData.positioning = body.positioning ?? body.position;
+   }
+   if (body.subtype !== undefined && body.subtype !== REGISTRATION_SUBTYPE) projectData.subtype = REGISTRATION_SUBTYPE;
+-  if (body.managerId !== undefined) projectData.managerId = body.managerId;
++  const requestedManagerId = body.managerId !== undefined ? managerTransferId(body.managerId) : undefined;
+   if (body.startDate !== undefined) projectData.startDate = body.startDate ? new Date(body.startDate) : null;
+   if (body.endDate !== undefined) projectData.endDate = body.endDate ? new Date(body.endDate) : null;
+   if (Object.keys(projectData).length > 0) {
+@@ -347,9 +348,9 @@
+   }
+ 
+   await prisma.$transaction(async (tx) => {
+-    if (Object.keys(projectData).length > 0) {
+-      await tx.project.update({ where: { id }, data: projectData });
+-    }
++    if (requestedManagerId && requestedManagerId !== existing.managerId) {
++      await transferProjectManager(tx, { actor: auth, projectId: id, managerId: requestedManagerId, expectedUpdatedAt: body.baseUpdatedAt, entryPermission: 'registrations.update', fields: projectData, c });
++    } else if (Object.keys(projectData).length > 0) await tx.project.update({ where: { id }, data: projectData });
+ 
+     const profilePayload = {};
+     for (const k of ['registrationType', 'region', 'authority', 'submissionNo', 'certificateNo', 'currentStage', 'complianceOwnerId', 'riskLevel', 'notes']) {
+--- before/rdpms-system/backend/tests/integration/rp07-manager-transfer.integration.test.mjs
++++ after/rdpms-system/backend/tests/integration/rp07-manager-transfer.integration.test.mjs
+@@ -0,0 +1,25 @@
++import { test, before, after } from 'node:test'; import assert from 'node:assert/strict'; import crypto from 'node:crypto'; import fs from 'node:fs'; import path from 'node:path'; import bcrypt from 'bcryptjs';
++import { PrismaClient } from '@prisma/client'; import { createApp } from '../../dist/bootstrap/createApp.js';
++const url=new URL(process.env.DATABASE_URL);assert.equal(url.hostname,'127.0.0.1');assert.equal(url.pathname.slice(1),process.env.RDPMS_EXEC_OWNED_DB);
++const db=new PrismaClient();const app=createApp({db});const uuid=()=>crypto.randomUUID();let admin,actor,old,target,outsider,token;const trace=[];
++async function user(kind,role='MEMBER'){return db.user.create({data:{username:'rp07-'+kind+'-'+uuid(),displayName:'Synthetic '+kind,passwordHash:await bcrypt.hash('Owned transfer fixture 2026!',4),systemRole:role,status:'ACTIVE'}})}
++async function login(u){const r=await app.request('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u.username,password:'Owned transfer fixture 2026!'})});assert.equal(r.status,200);const b=await r.json();assert.equal(b.user.id,u.id);return b.accessToken;}
++async function fixture(subtype=null){return db.project.create({data:{code:'RP07-'+uuid(),name:'Owned transfer project',type:'TESTING',subtype,managerId:old.id,createdById:actor.id,members:{create:[{userId:actor.id,role:'OWNER'},{userId:old.id,role:'MANAGER'},{userId:target.id,role:'VIEWER'}]},...(subtype?{registrationProfile:{create:{}}}:{})}})}
++async function call(endpoint,body,server=app,accessToken=token){const r=await server.request(endpoint,{method:'PUT',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify(body)});const value=await r.json();trace.push({endpoint,body,status:r.status,response:value});return {r,value};}
++async function state(p){return {project:await db.project.findUnique({where:{id:p.id}}),members:await db.projectMember.findMany({where:{projectId:p.id},orderBy:{userId:'asc'}}),audits:await db.auditLog.findMany({where:{entityId:p.id},orderBy:{createdAt:'asc'}})};}
++async function syncTransfer(p,server=app){const change={clientMutationId:uuid(),entity:'projects',op:'upsert',id:p.id,projectId:p.id,baseUpdatedAt:p.updatedAt.toISOString(),data:{managerId:target.id}},device='rp07-device-'+uuid();const opts=changes=>({method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({protocolVersion:1,deviceId:device,changes})});const r=await server.request('/api/sync/receipts/reserve',opts([change]));assert.equal(r.status,200,JSON.stringify(await r.clone().json()));const b=await r.json();change.receiptHandle=b.results[0].receiptHandle;change.payloadHash=b.results[0].payloadHash;const push=await server.request('/api/sync/push',opts([change]));const outcome=await push.json();trace.push({endpoint:'sync',change,status:push.status,outcome});return {r:push,value:outcome,change,device};}
++function fault(model,method){const proxy=new Proxy(db,{get(t,k){if(k==='$transaction')return(fn,opts)=>t.$transaction(tx=>fn(new Proxy(tx,{get(t,k){if(k===model)return new Proxy(t[k],{get(m,op){if(op===method)return async()=>{throw new Error('OWNED_TRANSFER_'+model+'_'+method)};const v=m[op];return typeof v==='function'?v.bind(m):v;}});const v=t[k];return typeof v==='function'?v.bind(t):v;}})),opts);const v=t[k];return typeof v==='function'?v.bind(t):v;}});return createApp({db:proxy});}
++before(async()=>{admin=await user('admin','SUPER_ADMIN');actor=await user('owner');old=await user('old');target=await user('target');outsider=await user('outside');const grants=await db.permission.findMany({where:{code:{in:['projects.view','projects.update','projects.manage_members','registrations.update','registrations.view']}}});assert.equal(grants.length,5);const role=await db.role.create({data:{code:'rp07_'+uuid(),name:'Synthetic transfer grants',permissions:{create:grants.map(p=>({permissionId:p.id}))}}});await db.userRole.create({data:{userId:actor.id,roleId:role.id}});token=await login(actor);});
++after(async()=>{try{fs.writeFileSync(path.join(process.env.RDPMS_EXEC_EVIDENCE_DIR,'persistent-state.json'),JSON.stringify({trace,projects:await db.project.findMany(),members:await db.projectMember.findMany(),receipts:await db.syncMutation.findMany(),audits:await db.auditLog.findMany()},null,2));}finally{await db.$disconnect();}});
++test('HTTP/sync/registration same explicit transfer yields active targetMANAGER, priorMEMBER, OWNER retained and changed ACL',async()=>{for(const entry of ['http','sync','registration']){const p=await fixture(entry==='registration'?'registration':null);const before=await app.request('/api/sync/init',{headers:{Authorization:'Bearer '+token}});assert.equal(before.status,200);const oldAcl=(await before.json()).acl.aclVersion;const r=entry==='sync'?await syncTransfer(p):await call(`/api/${entry==='http'?'projects':'registrations'}/${p.id}`,{managerId:target.id,baseUpdatedAt:p.updatedAt.toISOString()});assert.equal(r.r.status,200,JSON.stringify(r.value));if(entry==='sync')assert.equal(r.value.results[0].status,'applied');const s=await state(p);assert.equal(s.project.managerId,target.id);assert.equal(s.members.find(x=>x.userId===target.id).role,'MANAGER');assert.equal(s.members.find(x=>x.userId===target.id).leftAt,null);assert.equal(s.members.find(x=>x.userId===old.id).role,'MEMBER');assert.equal(s.members.find(x=>x.userId===actor.id).role,'OWNER');assert.equal(s.audits.filter(x=>x.metadata?.command==='TRANSFER_MANAGER_V1').length,1);const after=await app.request('/api/sync/init',{headers:{Authorization:'Bearer '+token}});assert.notEqual((await after.json()).acl.aclVersion,oldAcl);}});
++test('new OWNER keeps OWNER; old OWNER never automatically demoted',async()=>{const p=await fixture();await db.project.update({where:{id:p.id},data:{managerId:actor.id}});const current=await db.project.findUnique({where:{id:p.id}});const r=await call('/api/projects/'+p.id,{managerId:target.id,baseUpdatedAt:current.updatedAt.toISOString()});assert.equal(r.r.status,200);assert.equal((await state(p)).members.find(x=>x.userId===actor.id).role,'OWNER');const now=await db.project.findUnique({where:{id:p.id}});assert.equal((await call('/api/projects/'+p.id,{managerId:actor.id,baseUpdatedAt:now.updatedAt.toISOString()})).r.status,200);assert.equal((await state(p)).members.find(x=>x.userId===actor.id).role,'OWNER');});
++test('missing/stale baseline, wrong scalar, absent/outside/left/disabled/deleted target have no business effects',async()=>{const p=await fixture();for(const body of [{managerId:target.id},{managerId:target.id,baseUpdatedAt:'2000-01-01'},{managerId:[]},{managerId:outsider.id,baseUpdatedAt:p.updatedAt.toISOString()},{managerId:uuid(),baseUpdatedAt:p.updatedAt.toISOString()}]){const before=await state(p);const r=await call('/api/projects/'+p.id,body);assert.ok([400,409].includes(r.r.status));assert.deepEqual(await state(p),before);}for(const kind of ['left','disabled','deleted']){if(kind==='left')await db.projectMember.update({where:{projectId_userId:{projectId:p.id,userId:target.id}},data:{leftAt:new Date()}});else await db.user.update({where:{id:target.id},data:kind==='disabled'?{status:'DISABLED'}:{deletedAt:new Date()}});const before=await state(p);const r=await call('/api/projects/'+p.id,{managerId:target.id,baseUpdatedAt:p.updatedAt.toISOString()});assert.equal(r.r.status,400);assert.deepEqual(await state(p),before);await db.projectMember.update({where:{projectId_userId:{projectId:p.id,userId:target.id}},data:{leftAt:null}});await db.user.update({where:{id:target.id},data:{status:'ACTIVE',deletedAt:null}});}});
++test('current OWNER lacking manage_members and non-owner lacking capability cannot transfer or grant themselves management',async()=>{const p=await fixture();const access=await login(target);const before=await state(p);assert.equal((await call('/api/projects/'+p.id,{managerId:target.id,baseUpdatedAt:p.updatedAt.toISOString()},app,access)).r.status,403);const grants=await db.userRole.findMany({where:{userId:actor.id}});await db.userRole.deleteMany({where:{userId:actor.id}});try{assert.equal((await call('/api/projects/'+p.id,{managerId:target.id,baseUpdatedAt:p.updatedAt.toISOString()})).r.status,403);assert.deepEqual(await state(p),before);}finally{await db.userRole.createMany({data:grants});}});
++for(const [model,method] of [['projectMember','update'],['projectMember','updateMany'],['project','update'],['auditLog','create']])test(`membership/project/strict audit fault ${model}.${method} rolls back whole transfer`,async()=>{const p=await fixture();const before=await state(p);const r=await call('/api/projects/'+p.id,{managerId:target.id,baseUpdatedAt:p.updatedAt.toISOString()},fault(model,method));assert.equal(r.r.status,500);assert.deepEqual(await state(p),before);});
++test('same-base competing transfers have one success and preserve consistent manager/member outcome',async()=>{const p=await fixture();await db.projectMember.create({data:{projectId:p.id,userId:outsider.id,role:'MEMBER'}});const replies=await Promise.all([target,outsider].map(t=>call('/api/projects/'+p.id,{managerId:t.id,baseUpdatedAt:p.updatedAt.toISOString()})));assert.equal(replies.filter(r=>r.r.status===200).length,1);assert.ok(replies.some(r=>r.r.status===409));const s=await state(p);assert.equal(s.members.find(m=>m.userId===s.project.managerId).role,'MANAGER');assert.equal(s.members.find(m=>m.userId===old.id).role,'MEMBER');assert.equal(s.audits.filter(a=>a.metadata?.command==='TRANSFER_MANAGER_V1').length,1);});
++test('unrelated generic edit does not silently reactivate historical left manager membership',async()=>{const p=await fixture();await db.projectMember.update({where:{projectId_userId:{projectId:p.id,userId:old.id}},data:{leftAt:new Date()}});const before=await db.projectMember.findUnique({where:{projectId_userId:{projectId:p.id,userId:old.id}}});assert.equal((await call('/api/projects/'+p.id,{name:'safe unrelated edit'})).r.status,200);assert.deepEqual(await db.projectMember.findUnique({where:{id:before.id}}),before);});
++
++test('combined participant edit cannot undo owner/prior membership preservation of transfer',async()=>{const p=await fixture();const r=await call('/api/projects/'+p.id,{managerId:target.id,participantIds:[],baseUpdatedAt:p.updatedAt.toISOString()});assert.equal(r.r.status,200);const s=await state(p);for(const u of [actor,old,target])assert.equal(s.members.find(m=>m.userId===u.id).leftAt,null);assert.equal(s.members.find(m=>m.userId===actor.id).role,'OWNER');assert.equal(s.members.find(m=>m.userId===old.id).role,'MEMBER');assert.equal(s.members.find(m=>m.userId===target.id).role,'MANAGER');});
++
++test('sync strict-audit failure retains pending receipt and rolls back manager and membership',async()=>{const p=await fixture();const before=await state(p);const r=await syncTransfer(p,fault('auditLog','create'));assert.equal(r.r.status,500);assert.deepEqual(await state(p),before);const receipt=await db.syncMutation.findUnique({where:{clientMutationId:r.change.clientMutationId}});assert.equal(receipt.status,'pending');});
++test('current account admission is rechecked after JWT auth before transfer lock',async()=>{for(const who of [target,actor]){const p=await fixture();const before=await state(p);let reached,release;const hit=new Promise(r=>reached=r),gate=new Promise(r=>release=r);const proxy=new Proxy(db,{get(t,k){if(k==='$transaction')return(fn,opts)=>t.$transaction(tx=>fn(new Proxy(tx,{get(t,k){if(k==='$queryRaw')return async(...args)=>{if(String(args[0]).includes('FROM users')){reached();await gate;}return t.$queryRaw(...args);};const v=t[k];return typeof v==='function'?v.bind(t):v;}})),opts);const v=t[k];return typeof v==='function'?v.bind(t):v;}});const pending=call('/api/projects/'+p.id,{managerId:target.id,baseUpdatedAt:p.updatedAt.toISOString()},createApp({db:proxy}));try{await Promise.race([hit,new Promise((_,rej)=>setTimeout(()=>rej(new Error('manager lock not reached')),5000))]);await db.user.update({where:{id:who.id},data:{status:'DISABLED'}});}finally{release();}const r=await pending;assert.equal(r.r.status,who===actor?401:400);assert.deepEqual(await state(p),before);await db.user.update({where:{id:who.id},data:{status:'ACTIVE'}});}});
+--- before/rdpms-system/backend/tests/integration/rp07-project-status-shared.integration.test.mjs
++++ after/rdpms-system/backend/tests/integration/rp07-project-status-shared.integration.test.mjs
+@@ -3,6 +3,7 @@
+ import crypto from 'node:crypto';
+ import { PrismaClient } from '@prisma/client';
+ import { createApp } from '../../dist/bootstrap/createApp.js';
++import { setRealSyncPermissions, syncV1Request, readSyncResult } from '../helpers/syncV1Fixture.mjs';
+ 
+ // Run only against a newly created, task-owned throwaway PostgreSQL database.
+ const prisma = new PrismaClient();
+@@ -43,7 +44,8 @@
+   await prisma.$disconnect();
+ });
+ 
+-function buildApp(permissions) {
++async function buildApp(permissions) {
++  await setRealSyncPermissions(prisma, actor.id, permissions);
+   return createApp({ db: prisma, actorResolver: async () => ({
+     userId: actor.id,
+     user: { id: actor.id, username: actor.username, displayName: actor.displayName },
+@@ -53,13 +55,13 @@
+ }
+ 
+ async function request(app, path, method = 'GET', body) {
+-  const response = await app.request(`/api${path}`, {
++  const response = await syncV1Request(app, `/api${path}`, {
+     method,
+     headers: { 'content-type': 'application/json' },
+     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+   });
+   let json;
+-  try { json = await response.json(); } catch { json = null; }
++  try { json = path === '/sync/push' ? await readSyncResult(response) : await response.json(); } catch { json = null; }
+   return { response, json };
+ }
+ 
+@@ -77,32 +79,32 @@
+ }
+ 
+ test('RP07-T01 AC-B09-01 projects.update alone cannot archive through HTTP or sync', async () => {
+-  const app = buildApp(['projects.update']);
++  const app = await buildApp(['projects.update']);
+   const http = await request(app, `/projects/${projects['archive-denied'].id}`, 'PUT', { status: 'ARCHIVED' });
+   assert.equal(http.response.status, 403);
+   assert.equal((await prisma.project.findUnique({ where: { id: projects['archive-denied'].id } })).status, 'PLANNING');
+ 
+   const sync = await syncStatus(app, projects['archive-denied'], 'ARCHIVED', crypto.randomUUID());
+-  assert.equal(sync.response.status, 200);
++  assert.ok([200,400,403].includes(sync.response.status), 'actual authorization/state rejection, not protocol failure');
+   assert.equal(sync.json.results[0].status, 'rejected');
+   assert.equal((await prisma.project.findUnique({ where: { id: projects['archive-denied'].id } })).status, 'PLANNING');
+ });
+ 
+ test('RP07-T01 AC-B09-02 archive permission does not allow an edge outside the shared state machine', async () => {
+-  const app = buildApp(['projects.update', 'projects.archive']);
++  const app = await buildApp(['projects.update', 'projects.archive']);
+   const http = await request(app, `/projects/${projects['illegal-edge-http'].id}`, 'PUT', { status: 'COMPLETED' });
+   assert.equal(http.response.status, 400);
+   assert.equal(http.json.code, 'INVALID_STATUS_TRANSITION');
+ 
+   const sync = await syncStatus(app, projects['illegal-edge-sync'], 'COMPLETED', crypto.randomUUID());
+-  assert.equal(sync.response.status, 200);
++  assert.ok([200,400,403].includes(sync.response.status), 'actual authorization/state rejection, not protocol failure');
+   assert.equal(sync.json.results[0].status, 'rejected');
+   assert.equal((await prisma.project.findUnique({ where: { id: projects['illegal-edge-http'].id } })).status, 'PLANNING');
+   assert.equal((await prisma.project.findUnique({ where: { id: projects['illegal-edge-sync'].id } })).status, 'PLANNING');
+ });
+ 
+ test('RP07-T01 AC-B09-03 HTTP and sync use the same allowed project transition', async () => {
+-  const app = buildApp(['projects.update']);
++  const app = await buildApp(['projects.update']);
+   const http = await request(app, `/projects/${projects['http-allowed'].id}`, 'PUT', { status: 'IN_PROGRESS' });
+   assert.equal(http.response.status, 200);
+   assert.equal((await prisma.project.findUnique({ where: { id: projects['http-allowed'].id } })).status, 'IN_PROGRESS');
+@@ -113,8 +115,8 @@
+   assert.equal((await prisma.project.findUnique({ where: { id: projects['sync-allowed'].id } })).status, 'IN_PROGRESS');
+ });
+ 
+-test('RP07-T01 managerId is not a generic sync field while D-S01-06 transfer policy is pending', async () => {
+-  const app = buildApp(['projects.update']);
++test('RP07-T01 managerId requires explicit manage_members transfer permission under approved D-S01-06 policy', async () => {
++  const app = await buildApp(['projects.update']);
+   const result = await request(app, '/sync/push', 'POST', {
+     deviceId: `rp07-manager-device-${crypto.randomUUID()}`,
+     changes: [{
+@@ -125,7 +127,7 @@
+       data: { managerId: 'unapproved-manager-target' },
+     }],
+   });
+-  assert.equal(result.response.status, 200);
++  assert.equal(result.response.status, 403);
+   assert.equal(result.json.results[0].status, 'rejected');
+   assert.equal((await prisma.project.findUnique({ where: { id: projects['manager-guard'].id } })).managerId, actor.id);
+ });

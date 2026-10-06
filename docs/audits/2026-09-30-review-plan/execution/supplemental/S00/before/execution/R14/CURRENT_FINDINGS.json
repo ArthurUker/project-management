@@ -1,0 +1,806 @@
+{
+  "baseline": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "generatedAt": "2026-09-30",
+  "summary": {
+    "legacyCount": 28,
+    "legacySeverity": {
+      "P1": 16,
+      "P2": 12
+    },
+    "legacyDisposition": {
+      "SUPPORTED": 28
+    },
+    "legacyP1Disposition": {
+      "SUPPORTED": 16
+    },
+    "legacyP2Disposition": {
+      "SUPPORTED": 12
+    },
+    "confirmedNewCount": 3,
+    "pendingCandidateCount": 1,
+    "oldIdsComplete": true
+  },
+  "legacyFindings": [
+    {
+      "id": "B01",
+      "baselineSeverity": "P1",
+      "baselineTitle": "ADMIN 可接管 SUPER_ADMIN",
+      "currentSeverity": "P1",
+      "disposition": "SUPPORTED",
+      "packet": "R01",
+      "currentTitle": "ADMIN可重置SUPER_ADMIN密码并取得其身份",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B01_ADMIN_RESETS_SUPER_ADMIN",
+        "users.js:347-385; rbac.js:49-126; seed.js:258-270"
+      ],
+      "pendingQuestions": [
+        "Confirm whether target-rank protection applies to same/higher role accounts generally."
+      ],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "B02",
+      "baselineSeverity": "P1",
+      "baselineTitle": "项目编辑可绕过删除权限并硬删任务/里程碑",
+      "currentSeverity": "P1",
+      "disposition": "SUPPORTED",
+      "packet": "R03",
+      "currentTitle": "项目编辑通过嵌套数组替换绕过子实体删除权限并物理删除任务",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B02_PROJECT_NESTED_HARD_DELETE",
+        "execution/R03/review.md#B02"
+      ],
+      "pendingQuestions": [],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "B03",
+      "baselineSeverity": "P1",
+      "baselineTitle": "项目状态与模板起始日期读取了未选择的字段",
+      "currentSeverity": "P1",
+      "disposition": "SUPPORTED",
+      "packet": "R03",
+      "currentTitle": "项目状态与模板基准日期从未选取这些字段的授权投影读取",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B03_PROJECT_STATUS_UNDEFINED",
+        "execution/R03/review.md#B03"
+      ],
+      "pendingQuestions": [],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "B04",
+      "baselineSeverity": "P1",
+      "baselineTitle": "同步拉取绕过各实体查看权限",
+      "currentSeverity": "P1",
+      "disposition": "SUPPORTED",
+      "packet": "R05",
+      "currentTitle": "同步拉取只按项目范围过滤，未实施实体查看权限",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B04_SYNC_READ_WITHOUT_VIEW_PERMISSION",
+        "execution/R05/review.md#B04"
+      ],
+      "pendingQuestions": [],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "B05",
+      "baselineSeverity": "P2",
+      "baselineTitle": "同步回执未绑定主体与载荷",
+      "currentSeverity": "P2",
+      "disposition": "SUPPORTED",
+      "packet": "R06",
+      "currentTitle": "同步回执未绑定主体与载荷",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B05_SYNC_REPLAY_SCOPE_AND_PAYLOAD",
+        "execution/R06/review.md#B05"
+      ],
+      "pendingQuestions": [],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "B06",
+      "baselineSeverity": "P1",
+      "baselineTitle": "同步业务写入与回执非原子",
+      "currentSeverity": "P1",
+      "disposition": "SUPPORTED",
+      "packet": "R06",
+      "currentTitle": "同步业务写入与成功回执非原子",
+      "verification": "HISTORICAL_AND_SOURCE",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B06_SYNC_WRITE_RECEIPT_NOT_ATOMIC",
+        "execution/R06/review.md#B06"
+      ],
+      "pendingQuestions": [
+        "Specify the client recovery/query contract when a push response is lost after some per-item outcomes have committed."
+      ],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "B07",
+      "baselineSeverity": "P1",
+      "baselineTitle": "同步截断后推进时间游标，永久漏数",
+      "currentSeverity": "P1",
+      "disposition": "SUPPORTED",
+      "packet": "R05",
+      "currentTitle": "同步拉取受硬上限截断后仍推进时间游标",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B07_SYNC_PULL_CAP_LOSES_ROWS",
+        "execution/R05/review.md#B07"
+      ],
+      "pendingQuestions": [
+        "Choose/verify a database-consistent snapshot boundary or a change log whose visibility ordering handles late commits."
+      ],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "B08",
+      "baselineSeverity": "P2",
+      "baselineTitle": "新增项目成员不能得到历史数据",
+      "currentSeverity": "P2",
+      "disposition": "SUPPORTED",
+      "packet": "R05",
+      "currentTitle": "新授权项目只更新同步 ACL，没有触发历史数据回填",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B08_SYNC_NEW_MEMBERSHIP_NO_BACKFILL",
+        "execution/R05/review.md#B08"
+      ],
+      "pendingQuestions": [],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "B09",
+      "baselineSeverity": "P1",
+      "baselineTitle": "同步直接修改项目状态绕过归档权限与状态机",
+      "currentSeverity": "P1",
+      "disposition": "SUPPORTED",
+      "packet": "R06",
+      "currentTitle": "同步项目状态写入绕过归档权限与状态转换",
+      "verification": "HISTORICAL_AND_SOURCE",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B09_SYNC_ARCHIVE_WITHOUT_TRANSITION",
+        "execution/R06/review.md#B09"
+      ],
+      "pendingQuestions": [],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "B10",
+      "baselineSeverity": "P1",
+      "baselineTitle": "汇报提交快照与最终正文可能不一致",
+      "currentSeverity": "P1",
+      "disposition": "SUPPORTED",
+      "packet": "R09",
+      "currentTitle": "汇报提交版本快照可能落后于最终正文",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B10_REPORT_SUBMIT_STALE_SNAPSHOT; docs/audits/2026-09-29-rdpms/verify-backend.mjs:175-197",
+        "execution/R09/review.md#B10"
+      ],
+      "pendingQuestions": [
+        "数据库默认隔离下并发修订/version竞态需在隔离环境受控验证。",
+        "复提合法来源状态须由产品/审批规则确认；当前代码未证明其业务意图。"
+      ],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "B11",
+      "baselineSeverity": "P1",
+      "baselineTitle": "法规原文件入口绕过感染文件拦截",
+      "currentSeverity": "P1",
+      "disposition": "SUPPORTED",
+      "packet": "R10",
+      "currentTitle": "法规原文读取别名绕过统一下载入口的感染状态阻断",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B11_ORIGINAL_FILE_BYPASSES_INFECTED_BLOCK",
+        "execution/R10/review.md#B11"
+      ],
+      "pendingQuestions": [],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "B12",
+      "baselineSeverity": "P2",
+      "baselineTitle": "超管对非成员项目的文件访问被错误拒绝",
+      "currentSeverity": "P2",
+      "disposition": "SUPPORTED",
+      "packet": "R10",
+      "currentTitle": "项目文件策略丢失 elevated 上下文并拒绝超管非成员访问",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B12_SUPER_ADMIN_PROJECT_FILE_DENIED",
+        "execution/R10/review.md#B12"
+      ],
+      "pendingQuestions": [],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "B13",
+      "baselineSeverity": "P1",
+      "baselineTitle": "恢复接口跳过重复记录却虚报恢复成功数量",
+      "currentSeverity": "P1",
+      "disposition": "SUPPORTED",
+      "packet": "R12",
+      "currentTitle": "恢复接口跳过重复唯一键记录却虚报恢复成功数量",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "rdpms-system/backend/src/kernel/backupRestore.js:203-230,313-349",
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B13_RESTORE_SILENT_DUPLICATE_DROP"
+      ],
+      "pendingQuestions": [
+        "No current baseline rerun; the historical reproduction is inherited as sufficient for disposition."
+      ],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "B14",
+      "baselineSeverity": "P1",
+      "baselineTitle": "临时登录锁定实际永久生效",
+      "currentSeverity": "P1",
+      "disposition": "SUPPORTED",
+      "packet": "R02",
+      "currentTitle": "临时登录锁定实际永久生效（到期不自动解锁）",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B14_EXPIRED_LOCK_STILL_REJECTED",
+        "rdpms-system/backend/src/routes/auth.js:110-169; users.js:261-297; kernel/rbac.js:69-87"
+      ],
+      "pendingQuestions": [],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "B15",
+      "baselineSeverity": "P2",
+      "baselineTitle": "刷新令牌并发可双重消费，TTL响应也不准确",
+      "currentSeverity": "P2",
+      "disposition": "SUPPORTED",
+      "packet": "R02",
+      "currentTitle": "刷新令牌并发可双重消费，TTL响应也不准确",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B15_REFRESH_PARALLEL_REUSE",
+        "rdpms-system/backend/src/routes/auth.js:30-42,183-216; kernel/rbac.js:20-43; schema.prisma:505-520"
+      ],
+      "pendingQuestions": [],
+      "supersedesOrRelated": [
+        "N-R02-01"
+      ]
+    },
+    {
+      "id": "B16",
+      "baselineSeverity": "P2",
+      "baselineTitle": "在线任务修改未应用并发基线",
+      "currentSeverity": "P2",
+      "disposition": "SUPPORTED",
+      "packet": "R09",
+      "currentTitle": "在线任务修改未应用客户端并发基线",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B16_TASK_HTTP_IGNORES_BASELINE; docs/audits/2026-09-29-rdpms/verify-backend.mjs:259-263",
+        "execution/R09/review.md#B16"
+      ],
+      "pendingQuestions": [
+        "任务客户端当前是否稳定提交expectedUpdatedAt及兼容版本范围待确认。",
+        "静态审阅未逐字段或任务状态并发复现。"
+      ],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "B17",
+      "baselineSeverity": "P2",
+      "baselineTitle": "自定义角色创建无法提交必填code",
+      "currentSeverity": "P2",
+      "disposition": "SUPPORTED",
+      "packet": "R01",
+      "currentTitle": "Role create whitelist conflicts with global code blacklist",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B17_ROLE_CREATION_REJECTS_REQUIRED_CODE",
+        "roles.js:63-84; massAssign.js:20-46; constants.js:183-201"
+      ],
+      "pendingQuestions": [
+        "Confirm whether custom roles are intended to be assignable to users; role creation creates custom role but user binding route accepts SYSTEM_ROLES only."
+      ],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "B18",
+      "baselineSeverity": "P1",
+      "baselineTitle": "创建项目子步骤失败留下已提交项目",
+      "currentSeverity": "P1",
+      "disposition": "SUPPORTED",
+      "packet": "R03",
+      "currentTitle": "创建项目及其阶段任务里程碑分步提交，失败可留下半成品",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B18_PROJECT_CREATE_PARTIAL_COMMIT",
+        "execution/R03/review.md#B18"
+      ],
+      "pendingQuestions": [],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "B19",
+      "baselineSeverity": "P2",
+      "baselineTitle": "任务父子关系允许跨项目",
+      "currentSeverity": "P2",
+      "disposition": "SUPPORTED",
+      "packet": "R11",
+      "currentTitle": "任务父子关系允许跨项目",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B19_CROSS_PROJECT_PARENT_ACCEPTED",
+        "execution/R11/review.md#B19"
+      ],
+      "pendingQuestions": [
+        "What remediation policy applies to existing cross-project edges, cycles and references to tombstoned parents?",
+        "Can the selected Prisma/PostgreSQL migration add composite relation constraints without unacceptable locking?"
+      ],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "B20",
+      "baselineSeverity": "P2",
+      "baselineTitle": "软删除项目仍出现在普通列表",
+      "currentSeverity": "P2",
+      "disposition": "SUPPORTED",
+      "packet": "R03",
+      "currentTitle": "软删除项目仍进入普通项目列表和统计过滤范围",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B20_PROJECT_SOFT_DELETE_STILL_LISTED",
+        "execution/R03/review.md#B20"
+      ],
+      "pendingQuestions": [],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "B21",
+      "baselineSeverity": "P1",
+      "baselineTitle": "注册项目入口绕过项目成员边界",
+      "currentSeverity": "P1",
+      "disposition": "SUPPORTED",
+      "packet": "R04",
+      "currentTitle": "注册项目入口绕过项目成员边界",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/additional-results.json#B21_REGISTRATION_BYPASSES_PROJECT_SCOPE",
+        "execution/R04/review.md#B21"
+      ],
+      "pendingQuestions": [
+        "Is registration project visibility intentionally global for actors with registrations.view? If so, define read fields, write scope, and audit policy."
+      ],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "F01",
+      "baselineSeverity": "P1",
+      "baselineTitle": "初始化身份时清空尚未同步的用户草稿",
+      "currentSeverity": "P1",
+      "disposition": "SUPPORTED",
+      "packet": "R07",
+      "currentTitle": "初始化身份时清理路径仍可能清空尚未同步的用户草稿",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/offline-results.json#F01_BOOTSTRAP_ERASES_USER_OUTBOX",
+        "execution/R07/review.md#f01"
+      ],
+      "pendingQuestions": [
+        "使用测试账号和临时浏览器目录验证有效 token + 慢/断网 /me + 预置带主体 outbox 的真实启动时序。"
+      ],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "F02",
+      "baselineSeverity": "P1",
+      "baselineTitle": "冲突先出队后持久化，失败会丢失本地修改",
+      "currentSeverity": "P1",
+      "disposition": "SUPPORTED",
+      "packet": "R08",
+      "currentTitle": "冲突先从 outbox 删除，再批量持久化冲突，写入失败会丢失本地修改",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/offline-results.json#F02_CONFLICT_DELETED_BEFORE_PERSISTENCE",
+        "execution/R08/review.md#F02：冲突先出队后持久化"
+      ],
+      "pendingQuestions": [
+        "以真实浏览器 IndexedDB 对冲突写事务失败和页面中止进行验收；当前未运行。"
+      ],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "F03",
+      "baselineSeverity": "P2",
+      "baselineTitle": "实体缓存没有账号命名空间",
+      "currentSeverity": "P2",
+      "disposition": "SUPPORTED",
+      "packet": "R07",
+      "currentTitle": "实体缓存没有账号命名空间，缓存 API 可跨账号读取",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/offline-results.json#F03_RECORD_CACHE_NOT_SCOPED_BY_ACCOUNT",
+        "execution/R07/review.md#f03"
+      ],
+      "pendingQuestions": [
+        "如需将 UI 影响从潜在提升为已观察，需用隔离测试数据分别覆盖共享项目任务缓存和报告实体页面，并记录页面可见字段；当前未运行。"
+      ],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "F04",
+      "baselineSeverity": "P2",
+      "baselineTitle": "离线队列不分批，超过500条后无法推进",
+      "currentSeverity": "P2",
+      "disposition": "SUPPORTED",
+      "packet": "R08",
+      "currentTitle": "离线出队没有分批，超过服务端 500 条限制后队列无法推进",
+      "verification": "HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "docs/audits/2026-09-29-rdpms/offline-results.json#F04_OUTBOX_NOT_CHUNKED_TO_SERVER_LIMIT",
+        "execution/R08/review.md#F04：超过服务器单批 500 条后队列无法推进"
+      ],
+      "pendingQuestions": [
+        "生产反向代理/应用 body byte limit 未查证。",
+        "完整实体依赖图与部署网络请求体阈值需在实现验收阶段核实。"
+      ],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "D01",
+      "baselineSeverity": "P1",
+      "baselineTitle": "文件备份把新快照建成旧快照的软链",
+      "currentSeverity": "P1",
+      "disposition": "SUPPORTED",
+      "packet": "R12",
+      "currentTitle": "文件备份将新快照做成旧快照软链并可能改写历史内容",
+      "verification": "HISTORICAL_MACOS_ONLY",
+      "evidenceRefs": [
+        "rdpms-system/deploy/scripts/backup-pg.sh:68-77",
+        "docs/audits/2026-09-29-rdpms/backup-result.json#D01_BACKUP_SNAPSHOT_ALIASES_HISTORY"
+      ],
+      "pendingQuestions": [
+        "Target Linux distribution, cp/rsync versions and production storage semantics have not been verified."
+      ],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "D02",
+      "baselineSeverity": "P2",
+      "baselineTitle": "发布前检查校验旧版本而非候选版本",
+      "currentSeverity": "P2",
+      "disposition": "SUPPORTED",
+      "packet": "R13",
+      "currentTitle": "发布前检查校验旧版本而非候选版本",
+      "verification": "STATIC_REVIEW_HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "rdpms-system/deploy/scripts/deploy.sh:94-152; deploy/scripts/preflight.sh:58-61",
+        "docs/audits/2026-09-29-rdpms/REPORT.md#d02"
+      ],
+      "pendingQuestions": [
+        "No candidate-gate failure-injection run was performed in this read-only package."
+      ],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "D03",
+      "baselineSeverity": "P2",
+      "baselineTitle": "部署配置检查与运行时配置不一致",
+      "currentSeverity": "P2",
+      "disposition": "SUPPORTED",
+      "packet": "R13",
+      "currentTitle": "部署配置检查与运行时配置不一致",
+      "verification": "STATIC_REVIEW_HISTORICAL_ONLY",
+      "evidenceRefs": [
+        "backend/.env.example:29-48; deploy/scripts/preflight.sh:120-132; deploy/systemd/rdpms-api.service:12-15; backend/src/bootstrap/createApp.js:65-69",
+        "docs/audits/2026-09-29-rdpms/REPORT.md#d03"
+      ],
+      "pendingQuestions": [
+        "Actual production variables are unknown because the live .env was not read.",
+        "No runtime CORS or export request was executed."
+      ],
+      "supersedesOrRelated": []
+    }
+  ],
+  "newFindings": [
+    {
+      "id": "N-R02-01",
+      "packet": "R02",
+      "origin": "NEW",
+      "baselineSeverity": null,
+      "currentSeverity": "P2",
+      "disposition": "SUPPORTED",
+      "title": "跨tab刷新失败可清除已轮换的新会话",
+      "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+      "workingTreeDigestRefs": [
+        "execution/R02/source-digests.json"
+      ],
+      "entrypoint": "frontend Axios response interceptor refresh flow after a 401",
+      "preconditions": [
+        "Two same-origin tabs hold the same refresh token in localStorage",
+        "Both tabs trigger refresh before either observes the other's update",
+        "One request stores the rotated token before the other tab's old-token request fails"
+      ],
+      "source": [
+        {
+          "path": "rdpms-system/frontend/src/api/http.ts",
+          "lineStart": 78,
+          "lineEnd": 107,
+          "symbol": "module-scoped inflight refresh promise"
+        },
+        {
+          "path": "rdpms-system/frontend/src/api/http.ts",
+          "lineStart": 128,
+          "lineEnd": 151,
+          "symbol": "refresh failure clears token store and emits session expiry"
+        },
+        {
+          "path": "rdpms-system/frontend/src/auth/tokenStore.ts",
+          "lineStart": 10,
+          "lineEnd": 49,
+          "symbol": "shared localStorage token storage"
+        }
+      ],
+      "callPath": [
+        "Each tab has a distinct module-scoped inflight variable",
+        "both can read same refresh token from shared localStorage",
+        "one tab rotates and writes new token",
+        "other old-token refresh rejects",
+        "its interceptor catch unconditionally clears shared token storage"
+      ],
+      "evidence": [
+        {
+          "level": "S",
+          "ref": "rdpms-system/frontend/src/api/http.ts:78-107,128-151; frontend/src/auth/tokenStore.ts:10-49",
+          "limitation": "Static cross-tab control-flow inference only; no browser run this turn."
+        }
+      ],
+      "counterevidenceChecked": [
+        "Single-flight does coalesce requests within one module instance.",
+        "No cross-tab lock, broadcast-based refresh coordination, or conditional clear is present in the reviewed tokenStore/http code."
+      ],
+      "observedImpact": "An old refresh request that fails after another tab has stored a valid successor can remove that successor from shared localStorage and cause an unnecessary local logout. No unauthorized access gain is established.",
+      "verification": "NOT_NEEDED",
+      "recommendation": "Coordinate rotation across tabs and make failure cleanup conditional on the failed token still being the current token; use server replay tolerance only with an explicit bounded contract.",
+      "acceptanceCriteria": [
+        "In two-browser-context controlled response ordering, a losing old-token response cannot clear a newer stored token.",
+        "A genuinely invalid current refresh still clears local session and routes to login."
+      ],
+      "pendingQuestions": [],
+      "supersedesOrRelated": [
+        "B15"
+      ]
+    },
+    {
+      "id": "N-R02-02",
+      "packet": "R02",
+      "origin": "NEW",
+      "baselineSeverity": null,
+      "currentSeverity": "P2",
+      "disposition": "SUPPORTED",
+      "title": "改密或管理员重置未即时撤销已签发access JWT",
+      "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+      "workingTreeDigestRefs": [
+        "execution/R02/source-digests.json"
+      ],
+      "entrypoint": "PUT /api/auth/password and PUT /api/users/:id/reset-password",
+      "preconditions": [
+        "A user has a still-valid access JWT",
+        "That user's password is changed by self-service or administrator reset",
+        "The account remains ACTIVE"
+      ],
+      "source": [
+        {
+          "path": "rdpms-system/backend/src/routes/auth.js",
+          "lineStart": 261,
+          "lineEnd": 299,
+          "symbol": "self-service password update and refresh-token revocation"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/users.js",
+          "lineStart": 346,
+          "lineEnd": 385,
+          "symbol": "admin password reset and refresh-token revocation"
+        },
+        {
+          "path": "rdpms-system/backend/src/kernel/rbac.js",
+          "lineStart": 49,
+          "lineEnd": 107,
+          "symbol": "JWT authentication checks status but no password/session version"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/schema.prisma",
+          "lineStart": 404,
+          "lineEnd": 419,
+          "symbol": "passwordChangedAt and account security fields"
+        }
+      ],
+      "callPath": [
+        "Password hash and passwordChangedAt update",
+        "active refresh-token rows revoked separately",
+        "old access JWT remains cryptographically valid",
+        "authenticate verifies JWT and current ACTIVE user but does not compare iat/passwordChangedAt or lookup a session revocation marker"
+      ],
+      "evidence": [
+        {
+          "level": "S",
+          "ref": "rdpms-system/backend/src/routes/auth.js:261-299; users.js:346-385; kernel/rbac.js:49-107; prisma/schema.prisma:404-419",
+          "limitation": "Static call-path conclusion. Exact remaining acceptance window depends on deployed access TTL; no request replay was run."
+        }
+      ],
+      "counterevidenceChecked": [
+        "Disabled/locked users are rejected on each authenticated request.",
+        "System role and permissions are reloaded from current DB state per request, so role changes are not frozen in the token.",
+        "Refresh tokens are revoked after password update, but access JWTs are not."
+      ],
+      "observedImpact": "A holder of an already-issued access token can keep using it for the remaining token lifetime after password change/reset; max duration depends on configured access TTL.",
+      "verification": "NOT_NEEDED",
+      "recommendation": "Define whether password change/reset requires immediate session invalidation. If yes, enforce a session version or server-side revocation contract on each request and keep credential update, refresh revocation, and audit failure semantics recoverable.",
+      "acceptanceCriteria": [
+        "After the chosen contract window, old access and refresh credentials are both rejected following self-change and administrator reset.",
+        "New login using the resulting password works and must-change behavior remains enforced according to policy."
+      ],
+      "pendingQuestions": [
+        "Confirm whether self-password change and administrator reset must invalidate existing access sessions immediately, and specify the maximum allowed delay."
+      ],
+      "supersedesOrRelated": [
+        "B01"
+      ]
+    },
+    {
+      "id": "R06-N01",
+      "packet": "R06",
+      "origin": "NEW",
+      "baselineSeverity": null,
+      "currentSeverity": "P2",
+      "disposition": "SUPPORTED",
+      "title": "同步更新项目负责人时未同步负责人成员关系",
+      "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+      "workingTreeDigestRefs": [
+        "execution/R06/source-digests.json"
+      ],
+      "entrypoint": "POST /api/sync/push with entity=projects and data.managerId",
+      "preconditions": [
+        "Actor can write the project and has projects.update.",
+        "The new managerId differs from the current value."
+      ],
+      "source": [
+        {
+          "path": "rdpms-system/backend/src/routes/sync.js",
+          "lineStart": 42,
+          "lineEnd": 53,
+          "symbol": "project managerId allowed field"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/sync.js",
+          "lineStart": 453,
+          "lineEnd": 515,
+          "symbol": "project generic update has no ProjectMember transfer"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/projects.js",
+          "lineStart": 355,
+          "lineEnd": 378,
+          "symbol": "HTTP project update transaction upserts new manager and demotes prior manager"
+        },
+        {
+          "path": "rdpms-system/backend/src/kernel/projectAccess.js",
+          "lineStart": 21,
+          "lineEnd": 55,
+          "symbol": "project capability resolution requires active ProjectMember except SUPER_ADMIN"
+        },
+        {
+          "path": "rdpms-system/backend/src/kernel/projectAccess.js",
+          "lineStart": 94,
+          "lineEnd": 101,
+          "symbol": "managerId contributes to list visibility"
+        }
+      ],
+      "callPath": [
+        "sync project managerId passes writable field whitelist",
+        "projects.update authorization",
+        "generic Project row update",
+        "no ProjectMember role/leftAt update",
+        "managerId list visibility can differ from detail/write access resolved via active membership"
+      ],
+      "evidence": [
+        {
+          "level": "S",
+          "ref": "execution/R06/review.md#R06-N01",
+          "limitation": "Static comparison: HTTP explicitly synchronizes ProjectMember in same transaction whereas sync updates only Project. No dynamic manager-transfer probe this turn."
+        }
+      ],
+      "counterevidenceChecked": [
+        "HTTP update's membership transfer is an explicit source-level invariant and transactional side effect.",
+        "projectAccess resolves non-SUPER_ADMIN capabilities from active ProjectMember; managerId is a separate visibility condition."
+      ],
+      "observedImpact": "Source paths have divergent manager transfer semantics: sync changes Project.managerId without promoting the new manager or demoting the old one; capability resolution still requires active membership. No live request impact was dynamically measured.",
+      "potentialImpact": "The new manager may be listed as able to see the project but lack detail/write access; old manager membership/capabilities can remain. Business policy may define an intentional exception, not found in the reviewed HTTP path.",
+      "verification": "SOURCE_ONLY",
+      "recommendation": "Route sync manager transfers through the same transactional command as HTTP, or document and consistently implement a policy allowing a manager without ProjectMember membership.",
+      "acceptanceCriteria": [
+        "Equivalent managerId changes from HTTP and sync leave project.managerId and active ProjectMember roles consistent.",
+        "Resolver visibility and capability access for the new and previous manager match the documented policy.",
+        "Failure during membership synchronization rolls back the managerId change."
+      ],
+      "pendingQuestions": [
+        "Confirm whether managerId is required to imply active MANAGER membership; current HTTP update/create paths implement that relationship."
+      ],
+      "supersedesOrRelated": []
+    },
+    {
+      "id": "R12-N01",
+      "packet": "R12",
+      "origin": "NEW",
+      "baselineSeverity": null,
+      "currentSeverity": "P2",
+      "disposition": "PENDING",
+      "title": "候选风险：数据库 dump 与 uploads 文件快照没有共同恢复点协调",
+      "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+      "workingTreeDigestRefs": [
+        "execution/R12/source-digests.json"
+      ],
+      "entrypoint": "deploy/scripts/backup-pg.sh",
+      "preconditions": [
+        "Application writes affecting both file metadata/attachments and uploads can continue during backup collection."
+      ],
+      "source": [
+        {
+          "path": "rdpms-system/deploy/scripts/backup-pg.sh",
+          "lineStart": 52,
+          "lineEnd": 77,
+          "symbol": "sequential database and upload capture"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/schema.prisma",
+          "lineStart": 1413,
+          "lineEnd": 1449,
+          "symbol": "file binaries external to database and relational FileObject metadata"
+        }
+      ],
+      "callPath": [
+        "pg_dump captures database",
+        "dump list/hash check",
+        "rsync later captures uploads"
+      ],
+      "evidence": [
+        {
+          "level": "S",
+          "ref": "rdpms-system/deploy/scripts/backup-pg.sh:52-77; schema.prisma:1413-1449",
+          "limitation": "The code provides no write barrier/common snapshot identifier; the exact concurrent mutation outcome was not reproduced."
+        }
+      ],
+      "counterevidenceChecked": [
+        "The script comment says database and uploads should be backed up at the same frequency, but no shared checkpoint or coordinated snapshot mechanism is implemented in this script."
+      ],
+      "observedImpact": "本轮未观察到运行时不一致；仅确认脚本内数据库与文件采集是顺序步骤且没有共享 checkpoint。",
+      "potentialImpact": "若应用写入在两项采集之间持续运行，配对恢复可能呈现不同状态；实际运行条件和影响尚未证实。",
+      "verification": "PLANNED_NOT_RUN",
+      "recommendation": "Bind DB and files to a runId and proven common checkpoint using a write barrier or coordinated versioned snapshots; record dump hash, file manifest hash, and post-restore row/reference/checksum reconciliation.",
+      "acceptanceCriteria": [
+        "An isolated test with adjacent file metadata and binary add/change/delete operations proves a paired restore is coherent, and a mismatched pair/checksum is rejected before acceptance."
+      ],
+      "pendingQuestions": [
+        "确认实际备份期间业务写入是否持续，以及运维平台是否在脚本外提供共同快照/写入屏障；之后用隔离配对恢复演练判定是否形成缺陷。"
+      ],
+      "supersedesOrRelated": [
+        "D01"
+      ]
+    }
+  ],
+  "evidenceBoundaries": [
+    "Historical H evidence is inherited and labeled historical, not rerun this turn.",
+    "Current source S was checked at the unchanged baseline; no business code changed.",
+    "No new dynamic D evidence was produced in R01-R14 continuation packets.",
+    "R12-N01 remains PENDING and is excluded from confirmed defect counts.",
+    "COMPLETE or COMPLETE_WITH_PENDING means review work is documented, not that findings are fixed or product acceptance passed."
+  ]
+}

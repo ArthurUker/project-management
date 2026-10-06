@@ -1,0 +1,11 @@
+{
+  "taskId": "RP13-T02",
+  "packageId": "RP13",
+  "authorizedBy": "User continuation request 2026-10-02 under EXECUTOR_PROMPT.md bounded local implementation authorization",
+  "executor": "Codex executor",
+  "allowedTaskIdsThisExecution": ["RP13-T02"],
+  "scope": "Draft safe-watermark ADR only; no option signed or activated",
+  "prohibitedActions": ["stage", "commit", "push", "merge", "deploy", "production/shared DB", "schema migration", "approval of pending product/security/data rules"],
+  "databaseMigration": false,
+  "runtimeResourcesCreated": false
+}

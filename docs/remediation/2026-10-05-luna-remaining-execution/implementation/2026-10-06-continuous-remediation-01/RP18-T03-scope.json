@@ -1,0 +1,11 @@
+{
+  "allowedFiles": [
+    "rdpms-system/backend/tests/integration/rp18-runtime-candidate.integration.test.mjs",
+    "rdpms-system/backend/src/platform/config/configCli.ts"
+  ],
+  "gateRefs": [
+    "T-RP-08"
+  ],
+  "scope": "RP18-T03 actual self-owned compiled candidate daemon startup/health/ready/JWT/CORS/manifest and literal configexec; loopback unique port, new tempcandidate/files/PG only, no systemd/proxy/current production/deployed-version assertions. Actual target gate S05-OI-04 remains ENV_BLOCKED. Reuse full RP18-T01 exact configcontract; no new business policy.; real own runtime exposed /var to /private/var entry URL alias skipping config CLI execution: normalize entry via realpath, keep import pure",
+  "contracts": {}
+}

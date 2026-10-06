@@ -1,0 +1,47 @@
+{
+  "files": [
+    "rdpms-system/backend/src/routes/sync.js",
+    "rdpms-system/backend/src/modules/sync/syncMutationCommands.ts",
+    "rdpms-system/backend/tests/integration/rp09-receipt-recovery.integration.test.mjs"
+  ],
+  "beforeDirectory": "before-RP09-T02",
+  "runs": [
+    "owned-db",
+    "t01-current-revalidation"
+  ],
+  "casePass": {
+    "AC-B06-01": "Approved current local v1 backend scope: deterministic owned DB/JWT/actual HTTP response loss; excludes real frontend IDB/target",
+    "AC-B06-02": "Approved current local v1 backend scope: deterministic owned DB/JWT/actual HTTP response loss; excludes real frontend IDB/target",
+    "AC-B06-03": "Approved current local v1 backend scope: deterministic owned DB/JWT/actual HTTP response loss; excludes real frontend IDB/target",
+    "PAC-RP09-03": "Approved current local v1 backend scope: deterministic owned DB/JWT/actual HTTP response loss; excludes real frontend IDB/target",
+    "PAC-RP09-04": "Approved current local v1 backend scope: deterministic owned DB/JWT/actual HTTP response loss; excludes real frontend IDB/target",
+    "TASK-RP09-T02": "Approved current local v1 backend scope: deterministic owned DB/JWT/actual HTTP response loss; excludes real frontend IDB/target",
+    "GATE-S03-OI-02": "Approved current local v1 backend scope: deterministic owned DB/JWT/actual HTTP response loss; excludes real frontend IDB/target"
+  },
+  "notRun": {
+    "PAC-RP09-05": "Backend expired/pending/applied/unknown/current ACL cases PASS; actual IDB last-copy/queue UI NOT_RUN, so whole case not PASS.",
+    "INT-PC03-01": "Backend commit/audit/receipt and actual HTTP loss proved; end-to-end existing client dequeue/recovery not implemented or run.",
+    "INT-PC06-01": "Real restore epochs/backup point/client/session/receipt reset not authorized or available.",
+    "GATE-S03-OI-04": "No target retention/volume/job owner/cadence or max deployed-client facts; release gate unresolved."
+  },
+  "limits": [
+    "Formal final RP09-T02 attempt05 is22/22; current source RP09-T01 revalidation30/30. Earlier failures retained.",
+    "P2010 rawSQL40001/40P01 bounded same-key/hash retries added only after actual DB failure evidence; other raw SQL errors are not retried.",
+    "Current snapshot ordering: committed revoke before tx reads denied; overlap valid serial order, no instantaneous access JWT revocation claim.",
+    "Actual HTTP socket disconnect after commit proved with localhost server and genuine JWT; frontend IDB/old-client activation not run.",
+    "Four legacy-protocol regression groups still FAIL: backend unit(10 cases), old sync retry(1), old RF04 sync authorization(6), old RP10 sync races(2); they send no protocol/handle and hit approved426. Existing formal tests remain unchanged. New v1 equivalent true DB/JWT cases pass; current CI is not green.",
+    "B17 initial runner library DB-name mismatch corrected by owned rp01 prefix; unchanged formal test rerun PASS.",
+    "No GC/drop of receipts by application; production job/budget/restore validation pending.",
+    "Three real SQL semantic negative-control assertions fail as expected when root task writes are intentionally placed outside tx; control is not product PASS."
+  ],
+  "summary": "RP09-T02 scoped backend recovery delivered:22/22 real owned DB/JWT formal cases, receipt-lock/unique/CAS concurrency,24h expiry,unknown without re-reserve,lastPushAt postcommit500,real HTTP loss,current-auth revocation order,repeat/delete/fixture-restore and write-disabled containment. Current RP09-T01 source revalidated30/30. CI old-wire incompatibility remains explicitly FAIL; complete client/target scope open.",
+  "compatibility": "No further schema change. Bounded raw SQL serialization retry and exact server creation/expiry window; RDPMS_SYNC_WRITE_DISABLED=true stops reserve/push with503 while authorized queries remain. Frontend and old protocol fixtures unchanged.",
+  "rollback": "Validated owned containment switch; do not reenable old global replay or independently committing receipt paths. Preserve additive schema and receipt/audit/last-copy data. Target rollback/restore not run.",
+  "next": "No other business task activated by these scoped approvals. Next resolve client/legacy test protocol migration and exact T-RP-04/T-RP-12 or other pending contracts/materials; no automatic deployment.",
+  "nextTask": null,
+  "findings": [
+    "B05",
+    "B06"
+  ],
+  "validation": "PASS"
+}

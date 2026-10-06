@@ -1,0 +1,11 @@
+{
+  "reason": "Frozen B17 test requires unique rdpms_test_rp01_ prefix before opening DB; prior approved-prefix attempt failed only that ownership-prefix precondition. New owned runner changes exactly synthetic DB prefix, preserving random uniqueness, 127.0.0.1, guard/reset/drop and all cleanup. Original test and guard unchanged.",
+  "sourceRunner": "run-suite.py",
+  "newRunner": "run-suite-rp01.py",
+  "changedExpression": {
+    "from": "db = 'rdpms_test_approved_' + secrets.token_hex(5)",
+    "to": "db = 'rdpms_test_rp01_' + secrets.token_hex(5)"
+  },
+  "sourceSha256": "c1984b321261d4ed8bc7f62bd77371a7da54e986ac40fb874a178b9b4a73e0f1",
+  "candidateSha256": "6d0066a1aaedd966c66310465758a197c20328677eb75bcf134e909199c8c165"
+}

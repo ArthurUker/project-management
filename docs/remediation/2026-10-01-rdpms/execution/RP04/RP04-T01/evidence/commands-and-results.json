@@ -1,0 +1,10 @@
+[
+ {"command":"git rev-parse HEAD","exitCode":0,"result":"138cf2da1b63195cef7e884f69bdf8ded6ed3c21"},
+ {"command":"node --check src/routes/projects.js","exitCode":0,"result":"PASS"},
+ {"command":"node --check tests/integration/rp04-project-snapshot-active.integration.test.mjs","exitCode":0,"result":"PASS"},
+ {"command":"git diff --check","exitCode":0,"result":"PASS"},
+ {"command":"rg -n 'access\\.project\\.status|access\\.project\\.startDate' rdpms-system/backend/src/routes/projects.js","exitCode":1,"result":"No remaining business consumers read those fields from the authorization projection."},
+ {"command":"npm run build","exitCode":127,"result":"Previously attempted in same checkout for RP02-T01; blocked because TypeScript compiler is absent (`tsc: command not found`), and no source/build installation state has changed."},
+ {"command":"node --test tests/integration/rp04-project-snapshot-active.integration.test.mjs","exitCode":null,"result":"NOT_RUN: test depends on newly built dist/bootstrap/createApp.js; build is ENV_BLOCKED."},
+ {"command":"owned PostgreSQL integration scenarios","exitCode":null,"result":"ENV_BLOCKED: no registered private test env or active owned DB; none started or contacted."}
+]

@@ -1,0 +1,110 @@
+[
+  {
+    "id": "F01",
+    "packet": "R07",
+    "origin": "BASELINE",
+    "baselineSeverity": "P1",
+    "currentSeverity": "P1",
+    "disposition": "SUPPORTED",
+    "title": "初始化身份时清理路径仍可能清空尚未同步的用户草稿",
+    "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "workingTreeDigestRefs": ["execution/R07/source-digests.json"],
+    "entrypoint": "SyncProvider useEffect：user?.id 不存在时调用 engine.resetOnLogout()",
+    "preconditions": [
+      "页面初始化时 SyncProvider 的 user 为 null，身份恢复仍在进行",
+      "IndexedDB outbox 存在带 userId=A 的未同步变更",
+      "resetOnLogout 的清理先于 start(A) 完成"
+    ],
+    "source": [
+      {"path":"rdpms-system/frontend/src/App.tsx","lineStart":183,"lineEnd":189,"symbol":"AuthProvider 与 SyncProvider 嵌套"},
+      {"path":"rdpms-system/frontend/src/auth/AuthProvider.tsx","lineStart":18,"lineEnd":19,"symbol":"初始 bootstrapping 与 user=null"},
+      {"path":"rdpms-system/frontend/src/auth/AuthProvider.tsx","lineStart":32,"lineEnd":57,"symbol":"异步恢复 /me 身份"},
+      {"path":"rdpms-system/frontend/src/offline/SyncProvider.tsx","lineStart":30,"lineEnd":35,"symbol":"null 身份走 resetOnLogout"},
+      {"path":"rdpms-system/frontend/src/offline/engine.ts","lineStart":473,"lineEnd":491,"symbol":"按 uid 选择待保留 outbox"},
+      {"path":"rdpms-system/frontend/src/offline/engine.ts","lineStart":515,"lineEnd":541,"symbol":"登出捕获主体、并清理 outbox"},
+      {"path":"rdpms-system/frontend/src/offline/idb.ts","lineStart":176,"lineEnd":188,"symbol":"clearAll 全局清空 records/outbox"}
+    ],
+    "callPath": [
+      "App 初始渲染 AuthProvider(user=null, bootstrapping)",
+      "SyncProvider 初始 user?.id 为空，effect 调 resetOnLogout()",
+      "fresh engine currentUserId=null；preservePendingForUser(null) 排除有 userId=A 的队列行",
+      "idb.clearAll(null) 全局清空 records/outbox",
+      "若清理先于 AuthProvider /me 成功并 start(A)，A 的离线变更没有保留副本"
+    ],
+    "evidence": [
+      {"level":"H","ref":"docs/audits/2026-09-29-rdpms/offline-results.json#F01_BOOTSTRAP_ERASES_USER_OUTBOX","limitation":"历史实际引擎 + fake-indexeddb + 注入 transport；观察 outbox 1->0、用户拒绝区 0；无真实浏览器渲染或 React 启动时序验证。"},
+      {"level":"S","ref":"execution/R07/review.md#f01","limitation":"本轮基线源码确认 null 引导和明确退出共用清理路径，且有主体字段的行不属于 null preserve 集合；具体浏览器触发时序待验证。"}
+    ],
+    "counterevidenceChecked": [
+      "resetOnLogout 在第一个 await 前递增 sessionGen 并捕获 uidAtLogout。",
+      "若新会话先开始，代次检查会阻止旧 reset 尾部继续清理。",
+      "正常 start(userId) 会恢复该主体 deadLetters 并将显式 foreign outbox 隔离。",
+      "这些保护不改变首次 user=null 仍调用 resetOnLogout 的事实，也不避免 uidAtLogout=null 后的全局 outboxClear。"
+    ],
+    "observedImpact": "历史离线引擎夹具观察到初始 null 用户触发清理后 outbox 由 1 变为 0，且无拒绝区副本，表明该触发序列会丢失待同步内容。",
+    "potentialImpact": "带真实会话的页面刷新在身份恢复慢于本地清理时可能删除 A 的离线变更；该浏览器启动窗口未实测。",
+    "verification": "HISTORICAL_ONLY",
+    "recommendation": "将 bootstrapping 与显式 logout 分开；身份未恢复前禁止按匿名主体执行全局清理。退出保留与清除应按队列原 userId 在同一 IndexedDB 事务完成，并为未标主体旧行定义保守保全策略。",
+    "acceptanceCriteria": [
+      "断网刷新时 A 的待同步变更不因 bootstrapping 而清除。",
+      "显式退出后 A 的队列只能由 A 恢复，不由 B 代发；A 再登录可重试。",
+      "快速退出/登录时旧会话清理不能删除新账号数据。"
+    ],
+    "pendingQuestions": ["使用测试账号和临时浏览器目录验证有效 token + 慢/断网 /me + 预置带主体 outbox 的真实启动时序。"],
+    "supersedesOrRelated": []
+  },
+  {
+    "id": "F03",
+    "packet": "R07",
+    "origin": "BASELINE",
+    "baselineSeverity": "P2",
+    "currentSeverity": "P2",
+    "disposition": "SUPPORTED",
+    "title": "实体缓存没有账号命名空间，缓存 API 可跨账号读取",
+    "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "workingTreeDigestRefs": ["execution/R07/source-digests.json"],
+    "entrypoint": "engine.readCachedRecords(entity)；Tasks 页面 API 失败时的 tasks 缓存回退为静态消费者",
+    "preconditions": [
+      "records 中存在其他账号拉取的 entity 记录",
+      "当前账号与旧记录账号共享项目可见性，或旧记录未被 ACL 清理",
+      "调用 readCachedRecords 的页面进入离线/API 失败回退（若主张页面影响）"
+    ],
+    "source": [
+      {"path":"rdpms-system/frontend/src/offline/idb.ts","lineStart":24,"lineEnd":30,"symbol":"RecordRow 无主体字段"},
+      {"path":"rdpms-system/frontend/src/offline/idb.ts","lineStart":42,"lineEnd":47,"symbol":"records 全局 store 与 entity:id 主键约定"},
+      {"path":"rdpms-system/frontend/src/offline/idb.ts","lineStart":88,"lineEnd":112,"symbol":"records 写入及全库读取"},
+      {"path":"rdpms-system/frontend/src/offline/engine.ts","lineStart":140,"lineEnd":144,"symbol":"readCachedRecords 仅按 entity 过滤"},
+      {"path":"rdpms-system/frontend/src/offline/engine.ts","lineStart":189,"lineEnd":210,"symbol":"同步拉取写入全局 entity:id 键"},
+      {"path":"rdpms-system/frontend/src/offline/engine.ts","lineStart":213,"lineEnd":235,"symbol":"ACL 按项目可见性清理缓存"},
+      {"path":"rdpms-system/frontend/src/pages/Tasks.tsx","lineStart":427,"lineEnd":443,"symbol":"任务 API 失败时读取任务缓存"}
+    ],
+    "callPath": [
+      "sync init -> applyPull -> recordsPutMany(entity:id) 写全局 records store",
+      "ACL 变化时仅清除当前主体不可见项目的数据；共享项目记录保留",
+      "readCachedRecords(entity) -> recordsAll -> entity 过滤，不接收/比较 userId",
+      "Tasks 页面 taskAPI.list 失败 -> readCachedRecords('tasks') -> setTasks",
+      "历史确定复现为报告记录通过缓存 API 跨账号可读；没有复现报告页面或 Tasks 页面跨账号展示"
+    ],
+    "evidence": [
+      {"level":"H","ref":"docs/audits/2026-09-29-rdpms/offline-results.json#F03_RECORD_CACHE_NOT_SCOPED_BY_ACCOUNT","limitation":"历史实际引擎 + fake-indexeddb 证明 user-b 可通过 readCachedRecords 读到 user-a 创建的报告记录，sharedProjectStillAuthorized=true；没有浏览器渲染或报告 UI 展示证据。"},
+      {"level":"S","ref":"execution/R07/review.md#f03","limitation":"本轮确认静态消费者为 Tasks 页面；该消费者请求 tasks 实体，不等于已证明 user-a 报告在报告 UI 显示给 user-b，也没有证明缓存任务为用户私有。"}
+    ],
+    "counterevidenceChecked": [
+      "logout 清理会清全局 records，但同项目账号仍同时在线/切换窗口或该清理未先于读缓存完成时不提供主体隔离。",
+      "ACL 变化会清除当前账号不可见的项目数据，但共享项目可见的缓存保留。",
+      "deadLetters 具有 userId 主键/过滤；records 没有对应隔离。",
+      "当前报告页面未找到 readCachedRecords 消费者；Tasks 页面存在 tasks 实体回退调用，但本包未证实敏感任务的 UI 跨账号展示。"
+    ],
+    "observedImpact": "历史缓存 API 层复现读取到前一账号创建的报告记录；记录并未证明报告 UI 显示、或用户看到其他账号报告正文。",
+    "potentialImpact": "共享设备和共享项目下，Tasks API 失败时页面会将本地 tasks 缓存写入页面状态；跨账号是否显示了应隔离的数据及其敏感性未验证。",
+    "verification": "HISTORICAL_ONLY",
+    "recommendation": "将 records 纳入 userId 分区，或使每个读写 API 必须显式提供主体并以主体过滤；账号切换与 ACL 清理分开处理；schema 迁移保全未同步数据并保守处理旧记录归属。",
+    "acceptanceCriteria": [
+      "同一共享项目中 A 写入/拉取的缓存不会被 B 的缓存读取 API 返回。",
+      "在线请求失败时每个缓存消费者仅显示当前用户获准数据。",
+      "A 再登录可恢复其缓存；旧版本存储升级不会丢失 outbox。"
+    ],
+    "pendingQuestions": ["如需将 UI 影响从潜在提升为已观察，需用隔离测试数据分别覆盖共享项目任务缓存和报告实体页面，并记录页面可见字段；当前未运行。"],
+    "supersedesOrRelated": []
+  }
+]

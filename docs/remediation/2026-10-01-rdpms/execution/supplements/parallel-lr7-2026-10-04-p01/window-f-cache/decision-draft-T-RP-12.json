@@ -1,0 +1,36 @@
+{
+  "decisionId": "T-RP-12",
+  "kind": "TECHNICAL_DESIGN",
+  "topic": "用户可恢复流程与保留",
+  "status": "PROPOSED",
+  "approvedBy": null,
+  "approvedAt": null,
+  "evidenceRef": null,
+  "sourceDecisionRegister": "DECISION_REGISTER.json:T-RP-12 (PROPOSED, null signatures)",
+  "recommendedOption": "Explicit recoverable states (conflict/dead-letter/unknown/oversize/quarantine) with last-copy preservation and current-user authorization before any cleanup",
+  "scenarios": [
+    {"id": "conflict", "current": "engine.ts L370-382 resolveConflict; local re-push new clientMutationId", "lastCopy": "original change in conflict record", "proposed": "view/select/export/abandon; re-push new key no overwrite of sent record"},
+    {"id": "dead_letter", "current": "engine.ts L315-339 deadLetterMove same IDB tx; L390-401 retry; L426-430 drop; L417-423 get", "lastCopy": "persistent copy survives logout", "proposed": "export/copy before abandon; abandon deletes only after explicit user action"},
+    {"id": "unknown", "current": "GAP: SyncPushResult union applied|conflict|rejected only (sync.ts L31-46)", "lastCopy": "n/a", "proposed": "add explicit unknown status; preserve payload; surface for decision"},
+    {"id": "oversize", "current": "GAP: no size guard except 500-change cap (sync.js L506)", "lastCopy": "outbox row may exceed quota", "proposed": "size/quota guard at enqueue; preserve in dead-letter; user export/abandon"},
+    {"id": "quarantine", "current": "GAP: no quarantine concept", "lastCopy": "n/a", "proposed": "distinct state from rejected; preserve copy; authorized owner review/export/abandon"},
+    {"id": "logout_unsynced", "current": "engine.ts L525-551 resetOnLogout moves outbox to dead-letter", "lastCopy": "recoverable after re-login", "proposed": "preserve last copy before any cache clear; clearAll excludes dead-letter"}
+  ],
+  "compatibility": "Adds states/fields to SyncPushResult and dead-letter schema; requires approved client window; current types lack unknown/oversize/quarantine.",
+  "migration": "Additive dead-letter fields + new receipt statuses; no destructive change. Outbox ownership already by userId (engine.ts L173-177).",
+  "rollback": "Additive; disabling new states falls back to current conflict/rejected handling; existing dead-letter data retained.",
+  "userFlow": "User can view/select/export/abandon each recoverable item; current authorization checked at view/export/abandon; last copy preserved until explicit abandon; no auto-drop or cross-owner leak.",
+  "requiredApproval": {
+    "chosenOption": "pending",
+    "namedApprover": null,
+    "date": null,
+    "compatibleClientSchemaWindow": "pending",
+    "runtimeEvidence": "conflict/oversize/quarantine/revoke runtime (NOT produced this round)",
+    "riskAcceptance": null
+  },
+  "reusedEvidence": [
+    "execution/RP13/RP13-T02/evidence/WATERMARK_ADR_DRAFT.md (ACL purge retains outbox principle)",
+    "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/evidence/source-facts.md"
+  ],
+  "note": "No option selected; signatures null; gaps (unknown/oversize/quarantine) explicitly listed, not assumed implemented."
+}

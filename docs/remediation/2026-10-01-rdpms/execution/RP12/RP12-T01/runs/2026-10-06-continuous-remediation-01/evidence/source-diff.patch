@@ -1,0 +1,270 @@
+--- before/rdpms-system/frontend/src/offline/engine.ts
++++ after/rdpms-system/frontend/src/offline/engine.ts
+@@ -51,6 +51,7 @@
+ export interface SyncTransport {
+   init: (params: { since?: string; deviceId: string; deviceLabel?: string; platform?: string; paginationVersion?: 1; pageToken?: string }) => Promise<SyncInitResponse>;
+   push: (payload: {
++    protocolVersion: 1;
+     deviceId: string;
+     deviceLabel?: string;
+     platform?: string;
+@@ -196,12 +197,56 @@
+   if (sameOwner(owner)) set({ pending });
+ }
+ 
++export const SYNC_BATCH_MAX_COUNT = 500;
++export const SYNC_BATCH_MAX_BYTES = 256 * 1024;
++function wireChange(row: OutboxRecord): SyncChange {
++  return { clientMutationId: row.clientMutationId, entity: row.entity, op: row.op, id: row.id,
++    ...(row.projectId ? { projectId: row.projectId } : {}), ...(row.data !== undefined ? { data: row.data } : {}),
++    ...(row.baseUpdatedAt !== undefined ? { baseUpdatedAt: row.baseUpdatedAt } : {}) };
++}
++function freezeValue<T>(value: T): T {
++  if (value && typeof value === 'object') { Object.values(value).forEach(freezeValue); Object.freeze(value); }
++  return value;
++}
++export function batchBytes(rows: OutboxRecord[], deviceId: string): number {
++  return new TextEncoder().encode(JSON.stringify({ protocolVersion: 1, deviceId, ...deviceMeta(), changes: rows.map(wireChange) })).byteLength;
++}
++/** Snapshot only currently ready commands. A parent is not ready until its prerequisite applied. */
++export function planSyncBatch(rows: OutboxRecord[], deviceId: string, maxBytes = SYNC_BATCH_MAX_BYTES) {
++  const ordered = [...rows].sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0) || a.createdAt.localeCompare(b.createdAt) || a.clientMutationId.localeCompare(b.clientMutationId));
++  const selected: OutboxRecord[] = []; const blocked: Array<{ key: string; reason: string }> = [];
++  const identities = new Set<string>(); const presentKeys = new Set(rows.map((r) => r.clientMutationId));
++  for (const row of ordered) {
++    const identity = `${row.entity}:${row.id}`;
++    const previousSame = identities.has(identity); identities.add(identity);
++    if (row.origin !== 'fresh-v1') { blocked.push({ key: row.clientMutationId, reason: 'LEGACY_UNVERIFIED' }); continue; }
++    if (!row.projectId) { blocked.push({ key: row.clientMutationId, reason: 'PROJECT_SCOPE_REQUIRED' }); continue; }
++    if (previousSame || row.dependsOn?.some((key) => presentKeys.has(key))) { blocked.push({ key: row.clientMutationId, reason: 'DEPENDENCY_PENDING' }); continue; }
++    // Missing explicit dependencies are safe only when an applied marker was
++    // recorded by the engine; the caller filters/validates those markers first.
++    if (selected.length === SYNC_BATCH_MAX_COUNT) break;
++    if (batchBytes([row], deviceId) > maxBytes) { blocked.push({ key: row.clientMutationId, reason: 'OVERSIZE' }); continue; }
++    if (batchBytes([...selected, row], deviceId) > maxBytes) break;
++    selected.push(row);
++  }
++  return { rows: freezeValue(structuredClone(selected)), blocked };
++}
++
+ /** 本地变更入队（离线写入唯一入口）；在线时立即触发同步 */
+ export async function enqueueChange(change: SyncChange): Promise<void> {
+   const owner = captureOwner(); const db = idb.forOwner(owner);
+   // A03：入队时标记主体归属——登出切换账号时不得把 A 的未同步内容并入 B
++  const cached = await db.recordsAll();
++  const projectId = change.projectId ?? (typeof change.data?.projectId === 'string' ? change.data.projectId : undefined)
++    ?? (change.entity === 'projects' ? change.id : cached.find((r) => r.entity === change.entity && r.id === change.id)?.projectId ?? undefined);
++  const queued = await db.outboxAll();
++  const prerequisites = new Set(change.dependsOn ?? []);
++  for (const prior of queued) {
++    if ((prior.entity === change.entity && prior.id === change.id) || (prior.entity === 'projects' && prior.id === projectId)
++      || (prior.entity === 'tasks' && prior.id === change.data?.parentId) || (prior.entity === 'projectPhases' && prior.id === change.data?.phaseId)) prerequisites.add(prior.clientMutationId);
++  }
+   const row: OutboxRecord = {
+-    ...change,
++    ...change, projectId, dependsOn: [...prerequisites], origin: 'fresh-v1',
+     createdAt: new Date().toISOString(),
+     userId: owner.userId,
+   };
+@@ -317,25 +362,39 @@
+     }
+     const res = pull;
+ 
+-    const outbox = await db.outboxAll();
+-    const nextRejections: DeadLetterRecord[] = [];
+-    if (outbox.length) {
+-      const { results } = await transport.push({
+-        deviceId,
+-        ...deviceMeta(),
+-        changes: outbox.map((r) => ({
+-          clientMutationId: r.clientMutationId,
+-          entity: r.entity,
+-          op: r.op,
+-          id: r.id,
+-          data: r.data,
+-          baseUpdatedAt: r.baseUpdatedAt,
+-        })),
+-      });
++    while (true) {
++      const queued = await db.outboxAll();
++      if (isStale()) return;
++      const ready: OutboxRecord[] = [];
++      for (const row of queued) {
++        const unknownPrerequisite = (row.dependsOn ?? []).some((key) => !queued.some((r) => r.clientMutationId === key));
++        if (unknownPrerequisite) {
++          const applied = await Promise.all((row.dependsOn ?? []).map((key) => db.kvGet<boolean>('rdpms.sync.applied:' + key)));
++          if (applied.some((v) => !v)) continue;
++        }
++        ready.push(row);
++      }
++      const planned = planSyncBatch(ready, deviceId);
++      if (planned.blocked.length && !planned.rows.length) {
++        set({ lastError: '部分草稿需要处理：' + [...new Set(planned.blocked.map((r) => r.reason))].join(', ') });
++      }
++      const outbox = planned.rows;
++      if (!outbox.length) break;
++      const beforeKeys = new Set(outbox.map((r) => r.clientMutationId));
++      if (isStale()) return;
++      const { results } = await transport.push({ protocolVersion: 1, deviceId, ...deviceMeta(), changes: outbox.map(wireChange) });
++      const seen = new Set<string>();
++      if (!Array.isArray(results) || results.length !== outbox.length) throw new Error('SYNC_RESULT_INCOMPLETE');
++      for (const result of results) {
++        const original = outbox.find((row) => row.clientMutationId === result.clientMutationId);
++        if (!original || seen.has(result.clientMutationId) || result.entity !== original.entity || result.id !== original.id
++          || result.op !== original.op || !['applied', 'conflict', 'rejected'].includes(result.status)) throw new Error('SYNC_RESULT_MISMATCH');
++        seen.add(result.clientMutationId);
++      }
+       for (const r of results) {
+         if (isStale()) return; // A03：账号已切换，本轮上行结果一律不落盘
+         if (r.status === 'applied') {
+-          await db.outboxDelete(r.clientMutationId);
++          await db.outboxConfirmApplied(outbox.find((row) => row.clientMutationId === r.clientMutationId)!);
+         } else if (r.status === 'conflict') {
+           const src = outbox.find((o) => o.clientMutationId === r.clientMutationId);
+           if (src) {
+@@ -360,7 +419,6 @@
+               existing as DeadLetterRecord | undefined,
+               record,
+             ));
+-            nextRejections.push(record);
+           } else if (src) {
+             // 没有主体归属时**不得删除**待发送队列：宁可留待下轮同步，也不能静默销毁用户内容
+             // （正常情况下 syncNow 已在无主体时提前返回，这里是兜底）
+@@ -370,6 +428,8 @@
+           }
+         }
+       }
++      const afterKeys = new Set((await db.outboxAll()).map((r) => r.clientMutationId));
++      if ([...beforeKeys].every((key) => afterKeys.has(key))) break;
+     }
+ 
+     if (isStale()) return;
+--- before/rdpms-system/frontend/src/api/endpoints/sync.ts
++++ after/rdpms-system/frontend/src/api/endpoints/sync.ts
+@@ -26,6 +26,9 @@
+   data?: Record<string, unknown>;
+   /** 客户端最后一次看到的服务端 updatedAt（ISO）；用于服务端冲突检测 */
+   baseUpdatedAt?: string;
++  projectId?: string;
++  /** Explicit local causal prerequisites, not server authorization. */
++  dependsOn?: string[];
+ }
+ 
+ export type SyncChangeStatus = 'applied' | 'conflict' | 'rejected';
+@@ -74,7 +77,7 @@
+     get<SyncInitResponse>('/sync/init', { params } as never),
+ 
+   push: (payload: { deviceId: string; deviceLabel?: string; platform?: string; changes: SyncChange[] }) =>
+-    post<{ serverTime: string; results: SyncPushResult[]; conflictCount: number }>('/sync/push', payload),
++    post<{ serverTime: string; results: SyncPushResult[]; conflictCount: number }>('/sync/push', { protocolVersion: 1, ...payload }),
+ 
+   registerDevice: (payload: { deviceId: string; label?: string; platform?: string }) =>
+     post<{ id: string }>('/sync/device', payload),
+--- before/rdpms-system/frontend/src/offline/idb.ts
++++ after/rdpms-system/frontend/src/offline/idb.ts
+@@ -6,7 +6,8 @@
+ export interface OfflineOwner { userId: string; loginGeneration: string }
+ export interface OutboxRecord {
+   clientMutationId: string; entity: string; op: 'upsert' | 'delete'; id: string;
+-  data?: Record<string, unknown>; baseUpdatedAt?: string; createdAt: string; userId?: string;
++  data?: Record<string, unknown>; baseUpdatedAt?: string; createdAt: string; userId?: string; projectId?: string;
++  origin?: 'fresh-v1' | 'legacy-unverified'; sequence?: number; dependsOn?: string[];
+ }
+ export interface RecordRow {
+   key: string; entity: string; id: string; projectId?: string | null;
+@@ -68,7 +69,7 @@
+           if (ownerId) {
+             const destination = source === 'outbox' ? OWNED.outbox : source === 'deadLetters' ? OWNED.deadLetters : OWNED.kv;
+             const store = tx.objectStore(destination);
+-            const copied = source === 'kv' ? { ownerId, key: originalKey, value } : value;
++            const copied = source === 'kv' ? { ownerId, key: originalKey, value } : source === 'outbox' ? { ...value, origin: 'legacy-unverified' } : value;
+             const identity = source === 'outbox' ? (value as OutboxRecord).clientMutationId : source === 'deadLetters' ? (value as { key: string }).key : originalKey;
+             const existing = store.get([ownerId, identity as IDBValidKey]);
+             existing.onsuccess = () => { if (existing.result === undefined) store.put(copied); row.continue(); };
+@@ -159,7 +160,7 @@
+   return rows.filter((r) => (r.ownerId ?? r.userId) === owner.userId);
+ }
+ function command(row: OutboxRecord) {
+-  return JSON.stringify([row.clientMutationId, row.entity, row.op, row.id, row.data ?? null, row.baseUpdatedAt ?? null]);
++  return JSON.stringify([row.clientMutationId, row.entity, row.op, row.id, row.projectId ?? null, row.data ?? null, row.baseUpdatedAt ?? null]);
+ }
+ function forOwner(owner: OfflineOwner) {
+   const fixed = Object.freeze({ ...owner });
+@@ -218,14 +219,26 @@
+     recordsDeleteMany: (keys: string[]) => transaction<void>(fixed, ['records'], 'readwrite', (s, result) => { keys.forEach((k) => s.records.delete(ownerKey(fixed, k))); result(undefined); }),
+     recordsAll: () => all<RecordRow & { ownerId: string }>('records'),
+     recordsClear: () => transaction<void>(fixed, ['records'], 'readwrite', (s, result) => request(s.records.getAll(), (rows) => { ownedRows(rows, fixed).forEach((r) => s.records.delete([fixed.userId, r.key])); result(undefined); })),
+-    outboxPut: (row: OutboxRecord) => transaction<void>(fixed, ['outbox'], 'readwrite', (s, result, tx) => {
++    outboxPut: (row: OutboxRecord) => transaction<void>(fixed, ['kv', 'outbox'], 'readwrite', (s, result, tx) => {
+       if (row.userId && row.userId !== fixed.userId) { tx.abort(); return; }
+       request(s.outbox.get(ownerKey(fixed, row.clientMutationId)), (prev: OutboxRecord | undefined) => {
+         if (prev && command(prev) !== command(row)) { tx.abort(); return; }
+-        s.outbox.put({ ...row, userId: fixed.userId }); result(undefined);
++        request(s.kv.get(ownerKey(fixed, 'rdpms.sync.sequence')), (counter) => {
++          const sequence = prev?.sequence ?? (Number(counter?.value) || 0) + 1;
++          if (!prev) s.kv.put({ ownerId: fixed.userId, key: 'rdpms.sync.sequence', value: sequence });
++          s.outbox.put({ ...row, origin: prev ? prev.origin : row.origin, createdAt: prev?.createdAt ?? row.createdAt, sequence, userId: fixed.userId }); result(undefined);
++        });
+       });
+     }),
+     outboxAll: () => all<OutboxRecord>('outbox'),
++    outboxConfirmApplied: (original: OutboxRecord) => transaction<void>(fixed, ['kv', 'outbox'], 'readwrite', (s, result, tx) => {
++      request(s.outbox.get(ownerKey(fixed, original.clientMutationId)), (pending: OutboxRecord | undefined) => {
++        if (!pending) { result(undefined); return; }
++        if (pending.userId !== fixed.userId || command(pending) !== command(original)) { tx.abort(); return; }
++        s.kv.put({ ownerId: fixed.userId, key: 'rdpms.sync.applied:' + original.clientMutationId, value: true });
++        s.outbox.delete(ownerKey(fixed, original.clientMutationId)); result(undefined);
++      });
++    }),
+     outboxDelete: (key: string) => transaction(fixed, ['outbox'], 'readwrite', (s, result) => request(s.outbox.delete(ownerKey(fixed, key)), result)),
+     deadLetterMove: (record: { key: string; clientMutationId: string; userId: string },
+       merge?: (existing: { key: string } | undefined) => { key: string; clientMutationId: string; userId: string }) =>
+--- before/rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx
++++ after/rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx
+@@ -27,7 +27,11 @@
+   return { userId: snapshot.actorId, loginGeneration: snapshot.loginGeneration };
+ }
+ function store() { return idb.forOwner(owner()); }
+-const sent: Array<{ actorId: string; mutationIds: string[] }> = [];
++const sent: Array<{ actorId: string; mutationIds: string[]; bytes: number }> = [];
++let pushMode = 'normal';
++let pushCall = 0;
++let heldPush: ReturnType<typeof deferred> | null = null;
++let enteredPush: ReturnType<typeof deferred> | null = null;
+ let pullGate: { entered: Promise<void>; enter: () => void; released: Promise<void>; release: () => void } | null = null;
+ function deferred() { let resolve!: () => void; const promise = new Promise<void>((r) => { resolve = r; }); return { promise, resolve }; }
+ function response(actor: string) {
+@@ -39,8 +43,16 @@
+   init: async () => { const actor = owner().userId; const gate = pullGate;
+     if (gate) { gate.enter(); await gate.released; if (pullGate === gate) pullGate = null; }
+     return response(actor); },
+-  push: async (body) => { sent.push({ actorId: owner().userId, mutationIds: body.changes.map((c) => c.clientMutationId) });
+-    return { serverTime: new Date().toISOString(), conflictCount: 0, results: body.changes.map((c) => ({ ...c, status: 'applied' as const })) }; },
++  push: async (body) => {
++    pushCall++; sent.push({ actorId: owner().userId, mutationIds: body.changes.map((c) => c.clientMutationId), bytes: new TextEncoder().encode(JSON.stringify({ protocolVersion: 1, ...body })).byteLength });
++    if (pushMode === 'fail-second' && pushCall === 2) throw new Error('OWNED_BATCH_SECOND_RESPONSE_LOST');
++    if (pushMode === 'hold-once' && pushCall === 1) { enteredPush?.resolve(); await heldPush?.promise; }
++    const results = body.changes.map((c) => ({ ...c, status: pushMode === 'reject-parent' ? 'rejected' as const : 'applied' as const }));
++    if (pushMode === 'missing') results.pop();
++    if (pushMode === 'duplicate' && results.length) results.push(results[0]);
++    if (pushMode === 'unknown' && results.length) results[0] = { ...results[0], clientMutationId: 'not-submitted' };
++    return { serverTime: new Date().toISOString(), conflictCount: 0, results };
++  },
+ });
+ function network(online: boolean) {
+   Object.defineProperty(navigator, 'onLine', { configurable: true, value: online });
+@@ -137,6 +149,14 @@
+       tx.oncomplete = () => { db.close(); resolve(); }; tx.onabort = () => { db.close(); reject(tx.error); }; };
+     req.onerror = () => reject(req.error); }); },
+   sent: () => sent,
++  pushMode(mode: string) { pushMode = mode; pushCall = 0; if (mode === 'hold-once') { heldPush = deferred(); enteredPush = deferred(); } },
++  waitPush: () => enteredPush?.promise, releasePush: () => heldPush?.resolve(),
++  async seedBatch(count: number, content = 'small', origin: 'fresh-v1' | 'legacy-unverified' = 'fresh-v1') {
++    for (let i = 0; i < count; i++) await store().outboxPut({ clientMutationId: `batch-${i}`, entity: 'tasks', op: 'upsert', id: `task-${i}`, projectId: 'shared-project', data: { title: content }, userId: owner().userId, origin, createdAt: new Date().toISOString() });
++  },
++  async batchPlan() { return engine.planSyncBatch(await store().outboxAll(), engine.getDeviceId()); },
++  async awaitSyncEnd() { if (!engine.getState().syncing) return; await new Promise<void>((resolve) => { const off = engine.subscribe((s) => { if (!s.syncing) queueMicrotask(() => { off(); resolve(); }); }); }); network(false); },
++  async queueExplicit(key: string, id: string, dependsOn: string[] = []) { await engine.enqueueChange({ clientMutationId: key, entity: 'tasks', op: 'upsert', id, projectId: 'shared-project', data: { title: key }, dependsOn }); },
+ };
+ Object.assign(window, { bridge });
+ createRoot(document.getElementById('root')!).render(<BrowserRouter><AuthProvider><SyncProvider><Screen /></SyncProvider></AuthProvider></BrowserRouter>);

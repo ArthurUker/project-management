@@ -1,0 +1,29 @@
+{
+  "sessionId": "parallel-lr7-2026-10-04-p01-integration",
+  "window": "integration",
+  "subDir": "readiness-resume-01",
+  "batchId": "parallel-lr7-2026-10-04-p01",
+  "executor": "CodeBuddy (local isolated integrator)",
+  "date": "2026-10-04",
+  "authorizedBy": "docs/remediation/2026-10-04-parallel-handoff-check/INTEGRATOR_RESUME_PROMPT.md",
+  "independentRuling": "A_READINESS_GATE_PASS_WITH_EVIDENCE_LIMITS (amendment-review-01)",
+  "authorityMeaning": "Resume aggregation authorization only. A's delivery-protocol gate passed WITH EVIDENCE LIMITS. It does NOT approve nine-path rerun, whole-batch pass, any business decision, or any release.",
+  "allowedNewWritePrefix": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/readiness-resume-01/",
+  "rootRecordsAllowedAppend": [
+    "IMPLEMENTATION_STATE.json (supplementalExecutions.continuations[])",
+    "execution/state.json (supplementalExecution.continuations[])",
+    "HANDOFF.md (final chapter)",
+    "execution/handoff.md (final chapter)",
+    "REVISION_HISTORY.json (versions[] unique entry)",
+    "EXECUTION_REVISION_HISTORY.json (entries[] unique entry)"
+  ],
+  "prohibited": [
+    "modify A-F worker files, old READY/manifest/logs, Q instruction dir, or old integration/WAITING_FOR_WORKERS.md",
+    "rerun runner/controls/build/tests/DB/JWT/IDB/browser",
+    "modify business code/tests/deps/migrations/deploy config",
+    "approve business policy, change original 54/306 axes, or start other fix tasks",
+    "stage/commit/push/merge/deploy/reset/clean/stash, subagent, model switch, or memory writes"
+  ],
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED"
+}

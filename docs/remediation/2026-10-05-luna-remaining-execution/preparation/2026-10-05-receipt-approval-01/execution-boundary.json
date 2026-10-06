@@ -1,0 +1,75 @@
+{
+  "mode": "PROSPECTIVE_NOT_ACTIVATED",
+  "serialOrder": [
+    "RP09-T01",
+    "RP09-T02"
+  ],
+  "allowedExistingBusinessFiles": [
+    "rdpms-system/backend/src/routes/sync.js",
+    "rdpms-system/backend/prisma/schema.prisma"
+  ],
+  "allowedNewFilesAfterApproval": [
+    "rdpms-system/backend/src/modules/sync/syncMutationCommands.ts",
+    "rdpms-system/backend/prisma/migrations/20261005_sync_receipt_v1_scope/migration.sql",
+    "rdpms-system/backend/tests/integration/rp09-scoped-receipt.integration.test.mjs",
+    "rdpms-system/backend/tests/integration/rp09-receipt-recovery.integration.test.mjs"
+  ],
+  "readOnlySharedFiles": [
+    "backend/src/platform/idempotency/receipts.js",
+    "backend/src/platform/idempotency/payloadHash.js",
+    "backend/src/platform/audit/strictAudit.js",
+    "backend/src/modules/tasks/taskCommands.ts",
+    "backend/src/modules/reports/reportCommands.ts",
+    "frontend/src/offline/engine.ts",
+    "frontend/src/api/endpoints/sync.ts",
+    "deploy/scripts/backup-pg.sh"
+  ],
+  "noFrontendChanges": true,
+  "rootRecordWritesOnlyDuringActualAuthorizedImplementation": "existing standard task ledgers/handoffs/history append with exact run references; not during this preparation",
+  "conditions": [
+    {
+      "taskId": "RP09-T01",
+      "gate": "T-RP-02",
+      "stage": "IMPLEMENTATION",
+      "condition": true,
+      "status": "PROPOSED"
+    },
+    {
+      "taskId": "RP09-T01",
+      "gate": "T-RP-07/S03-OI-05",
+      "stage": "IMPLEMENTATION",
+      "condition": "delete adapter touched",
+      "status": "PROPOSED"
+    },
+    {
+      "taskId": "RP09-T02",
+      "gate": "RP09-T01",
+      "stage": "IMPLEMENTATION",
+      "condition": true,
+      "status": "NOT_STARTED"
+    },
+    {
+      "taskId": "RP09-T02",
+      "gate": "S03-OI-02",
+      "stage": "VALIDATION",
+      "condition": true,
+      "status": "NOT_RUN"
+    },
+    {
+      "taskId": "RP09-T02",
+      "gate": "S03-OI-04",
+      "stage": "RELEASE",
+      "condition": true,
+      "status": "EXTERNAL_INPUT_REQUIRED"
+    }
+  ],
+  "stopConditions": [
+    "exact approval absent",
+    "shared helper/root transaction or delete policy expands beyond scope",
+    "unsafe old write fallback",
+    "scope/hash/result mutation after applied",
+    "foreign resource or actual env credentials",
+    "unexplained DB/audit/receipt divergence",
+    "missing client/release evidence being labelled joint PASS"
+  ]
+}

@@ -1,0 +1,173 @@
+diff --git a/rdpms-system/backend/src/kernel/rbac.js b/rdpms-system/backend/src/kernel/rbac.js
+index e6405e0..a8dbaa9 100644
+--- a/rdpms-system/backend/src/kernel/rbac.js
++++ b/rdpms-system/backend/src/kernel/rbac.js
+@@ -43,6 +43,13 @@ export function signAccessToken(user) {
+   });
+ }
+ 
++/** Return the remaining lifetime represented by a signed access token. */
++export function accessTokenExpiresInSeconds(token, nowMs = Date.now()) {
++  const decoded = jwt.decode(token);
++  if (!decoded || typeof decoded !== 'object' || typeof decoded.exp !== 'number') return 0;
++  return Math.max(0, decoded.exp - Math.floor(nowMs / 1000));
++}
++
+ /**
+  * 认证 + 权限装载。c.set('auth', {...})。
+  */
+diff --git a/rdpms-system/backend/src/routes/auth.js b/rdpms-system/backend/src/routes/auth.js
+index 80c8f91..053867f 100644
+--- a/rdpms-system/backend/src/routes/auth.js
++++ b/rdpms-system/backend/src/routes/auth.js
+@@ -8,6 +8,7 @@ import {
+   getAuth,
+   JWT_SECRET,
+   parseTtlToSec,
++  accessTokenExpiresInSeconds,
+ } from '../kernel/rbac.js';
+ import { AUDIT_ACTIONS } from '../kernel/constants.js';
+ import { writeAudit, requestCtx } from '../kernel/audit.js';
+@@ -125,22 +126,61 @@ auth.post('/login', async (c) => {
+   if (user.status === 'DISABLED') {
+     return c.json({ error: '账号已停用，请联系管理员', code: 'ACCOUNT_DISABLED' }, 403);
+   }
+-  if (user.status === 'LOCKED' || (user.lockedUntil && user.lockedUntil > new Date())) {
++  const loginCheckedAt = new Date();
++  // LOCKED without an expiry represents a non-temporary/manual hold. A timed lock
++  // is enforced only while its deadline is in the future and may recover on login.
++  if ((user.status === 'LOCKED' && (!user.lockedUntil || user.lockedUntil > loginCheckedAt))
++    || (user.lockedUntil && user.lockedUntil > loginCheckedAt)) {
+     return c.json({ error: '账号已锁定，请稍后再试', code: 'ACCOUNT_LOCKED' }, 403);
+   }
+ 
+   const valid = await bcrypt.compare(password, user.passwordHash);
+   if (!valid) {
+-    const attempts = user.failedLoginAttempts + 1;
+     const maxAttempts = 5;
+-    await prisma.user.update({
++    const failed = await prisma.$transaction(async (tx) => {
++      // Atomic increment under a row update lock: simultaneous failures cannot
++      // overwrite one another with the same stale absolute count.
++      const changed = await tx.user.updateMany({
++        where: {
++          id: user.id,
++          OR: [
++            { status: 'ACTIVE', OR: [{ lockedUntil: null }, { lockedUntil: { lte: loginCheckedAt } }] },
++            { status: 'LOCKED', lockedUntil: { lte: loginCheckedAt } },
++            // Preserve existing PENDING_ACTIVATION credential behavior; it is
++            // not converted to ACTIVE by a login success or failure update.
++            { status: 'PENDING_ACTIVATION' },
++          ],
++        },
++        data: { failedLoginAttempts: { increment: 1 } },
++      });
++      if (changed.count !== 1) return null;
++      const latest = await tx.user.findUnique({
++        where: { id: user.id },
++        select: { failedLoginAttempts: true },
++      });
++      if (!latest) return null;
++      const attempts = latest.failedLoginAttempts;
++      const locked = attempts >= maxAttempts;
++      if (locked) {
++        await tx.user.updateMany({
++          where: { id: user.id, status: { in: ['ACTIVE', 'LOCKED'] } },
++          data: { status: 'LOCKED', lockedUntil: new Date(Date.now() + 15 * 60 * 1000) },
++        });
++      }
++      return { attempts, locked };
++    });
++    const current = failed ? null : await prisma.user.findUnique({
+       where: { id: user.id },
+-      data: {
+-        failedLoginAttempts: attempts,
+-        lockedUntil: attempts >= maxAttempts ? new Date(Date.now() + 15 * 60 * 1000) : null,
+-        status: attempts >= maxAttempts ? 'LOCKED' : user.status,
+-      },
++      select: { status: true, failedLoginAttempts: true, lockedUntil: true },
+     });
++    if (current?.status === 'DISABLED') {
++      return c.json({ error: '账号已停用，请联系管理员', code: 'ACCOUNT_DISABLED' }, 403);
++    }
++    if (current && ((current.status === 'LOCKED' && (!current.lockedUntil || current.lockedUntil > new Date()))
++      || (current.lockedUntil && current.lockedUntil > new Date()))) {
++      return c.json({ error: '账号已锁定，请稍后再试', code: 'ACCOUNT_LOCKED' }, 403);
++    }
++    const attempts = failed?.attempts ?? current?.failedLoginAttempts ?? user.failedLoginAttempts;
+     await writeAudit(prisma, {
+       c,
+       actorId: user.id,
+@@ -150,20 +190,40 @@ auth.post('/login', async (c) => {
+       entityType: 'USER',
+       entityId: user.id,
+       entityLabel: user.username,
+-      metadata: { attempts },
++      metadata: { attempts, locked: Boolean(failed?.locked) },
+     });
+     return c.json({ error: '用户名或密码错误', code: 'BAD_CREDENTIALS' }, 401);
+   }
+ 
+-  await prisma.user.update({
+-    where: { id: user.id },
+-    data: {
+-      failedLoginAttempts: 0,
+-      lockedUntil: null,
+-      lastLoginAt: new Date(),
+-      lastLoginIp: ctx.ip,
+-    },
+-  });
++  const loginSucceededAt = new Date();
++  const resetLoginState = {
++    failedLoginAttempts: 0,
++    lockedUntil: null,
++    lastLoginAt: loginSucceededAt,
++    lastLoginIp: ctx.ip,
++  };
++  // Expired LOCKED rows are the legacy representation of a timed login lock.
++  // Recover them only after correct credentials; never turn DISABLED back on.
++  const reset = user.status === 'LOCKED'
++    ? await prisma.user.updateMany({
++      where: { id: user.id, status: 'LOCKED', lockedUntil: { lte: loginSucceededAt } },
++      data: { ...resetLoginState, status: 'ACTIVE' },
++    })
++    : await prisma.user.updateMany({
++      where: {
++        id: user.id,
++        status: user.status,
++        OR: [{ lockedUntil: null }, { lockedUntil: { lte: loginSucceededAt } }],
++      },
++      data: resetLoginState,
++    });
++  if (reset.count !== 1) {
++    const current = await prisma.user.findUnique({ where: { id: user.id }, select: { status: true } });
++    if (!current || current.status === 'DISABLED') {
++      return c.json({ error: '账号已停用，请联系管理员', code: 'ACCOUNT_DISABLED' }, 403);
++    }
++    return c.json({ error: '账号已锁定，请稍后再试', code: 'ACCOUNT_LOCKED' }, 403);
++  }
+ 
+   const accessToken = signAccessToken(user);
+   const refreshToken = await issueRefreshToken(user.id, c);
+@@ -184,7 +244,7 @@ auth.post('/login', async (c) => {
+   return c.json({
+     accessToken,
+     refreshToken,
+-    expiresIn: 7200,
++    expiresIn: accessTokenExpiresInSeconds(accessToken),
+     token: accessToken, // 兼容旧客户端字段
+     user: {
+       ...(await currentUserPayload(user)),
+@@ -213,7 +273,11 @@ auth.post('/refresh', async (c) => {
+     entityType: 'USER',
+     entityId: row.user.id,
+   });
+-  return c.json({ accessToken, refreshToken: newRefresh, expiresIn: 7200 });
++  return c.json({
++    accessToken,
++    refreshToken: newRefresh,
++    expiresIn: accessTokenExpiresInSeconds(accessToken),
++  });
+ });
+ 
+ // ── 登出 ─────────────────────────────────────────────────────────────────────

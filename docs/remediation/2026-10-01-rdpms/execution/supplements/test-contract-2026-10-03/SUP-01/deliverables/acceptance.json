@@ -1,0 +1,26 @@
+{
+  "id": "SUP-01",
+  "parentTask": "RP10-T02",
+  "finding": "LR4-01 / B10",
+  "mode": "TEST_ONLY",
+  "release": "NOT_EVALUATED",
+  "acceptance": [
+    { "id": "SUP-01-01", "name": "原语兼容/屏障命中", "result": "PASS",
+      "evidence": "SUP-01-01 测试屏障命中真实 create，迟到请求受控 409，正文未被覆盖",
+      "note": "覆盖 create/upsert/updateMany/update 多原语；屏障不因原语替换而错过写入窗口" },
+    { "id": "SUP-01-02a", "name": "迟到新建冲突（当前实现）", "result": "PASS_RETAINED",
+      "evidence": "既有 A02 保留并运行：迟到新建 → 409 DUPLICATE_PERIOD_KEY",
+      "note": "当前实现正确；非本轮新增" },
+    { "id": "SUP-01-02b", "name": "迟到墓碑恢复冲突（当前实现）", "result": "PASS_RETAINED",
+      "evidence": "既有 A06b 保留并运行：迟到恢复 → 409，墓碑不被无条件覆盖",
+      "note": "当前实现正确；非本轮新增" },
+    { "id": "SUP-01-03", "name": "语义负对照识别坏结果", "result": "PASS_SEMANTIC_NEGATIVE_CONTROL",
+      "evidence": "迟到新建被适配层无条件 upsert 覆盖：201 + SUBMITTED 正文≠版本快照 + 多 1 回执 + 多 1 create 审计",
+      "note": "确认测试识别到坏结果；控制运行 exit 0 不是修复/发布 PASS" },
+    { "id": "SUP-01-04", "name": "真实持久状态核对", "result": "PASS",
+      "evidence": "核对 Report / ReportVersion / auditLog / mutationReceipt 真实行数",
+      "note": "mock 或源码检查未替代真实 DB 验收" }
+  ],
+  "suite": { "target": "rp10-report-submit-snapshot.integration.test.mjs", "total": 19, "passed": 19, "failed": 0 },
+  "notReached": "超时仅记 BARRIER_NOT_REACHED，不视为缺陷复现"
+}

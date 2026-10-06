@@ -1,0 +1,10 @@
+{
+ "source":"docs/audits/2026-09-30-review-plan/execution/R03/review.md",
+ "baseline":"138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+ "reused":[
+  {"finding":"B03","status":"SUPPORTED / P1","evidence":"R03 static inspection confirms resolveProjectAccess selects id/code/name/deletedAt/managerId but status and startDate consumers read from that narrow projection; historical isolated API evidence records legal PLANNING->IN_PROGRESS returning 400 undefined.","refs":"R03/review.md:34-40; docs/audits/2026-09-29-rdpms/backend-results.json#B03_PROJECT_STATUS_UNDEFINED"},
+  {"finding":"B20","status":"SUPPORTED / P2","evidence":"R03 source review confirms list and type/status statistics lacked deletedAt:null; historical isolated API evidence observed soft-deleted project in ordinary list while detail returned 404.","refs":"R03/review.md:48-52; docs/audits/2026-09-29-rdpms/backend-results.json#B20_PROJECT_SOFT_DELETE_STILL_LISTED"}
+ ],
+ "historicalProbeRerun":false,
+ "arbitration":"No severity/status changed. Current task applies only to RP04-T01 routes; sync, reports, files and other visibilityFilter consumers are not changed."
+}

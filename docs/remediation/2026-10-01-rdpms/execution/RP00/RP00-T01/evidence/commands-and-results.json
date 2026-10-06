@@ -1,0 +1,58 @@
+{
+  "commands": [
+    {
+      "command": "initdb -D <private-temp>/data -A trust --no-locale --encoding=UTF8 --username renkang",
+      "exitCode": 0,
+      "scope": "new private local cluster"
+    },
+    {
+      "command": "pg_ctl -D <private-temp>/data -l <private-temp>/postgres.log -o \"-h 127.0.0.1 -p 65199 -k <private-temp>/socket\" -w start (LC_ALL=C)",
+      "exitCode": 0,
+      "scope": "owned temporary postgres only"
+    },
+    {
+      "command": "npm run test:db:reset",
+      "exitCode": 0,
+      "scope": "explicit RDPMS_TEST_ENV_FILE, generated rdpms_test_rp01_ddcfa140 only; 6 migrations and seed completed"
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 127,
+      "scope": "compile attempt; blocked because tsc is not installed in existing node_modules"
+    },
+    {
+      "command": "node node_modules/prisma/build/index.js generate --schema prisma/schema.prisma",
+      "exitCode": 0,
+      "scope": "generated client using current schema; no DB connection/dependency upgrade"
+    },
+    {
+      "command": "node --test tests/integration/b17-role-create.integration.test.mjs",
+      "exitCode": 0,
+      "scope": "actual auth/role routes over local HTTP and owned temporary PostgreSQL rdpms_test_rp01_ddcfa140; 5 linked acceptance checks passed (6 TAP tests including suite)"
+    },
+    {
+      "command": "npm run test:db:drop",
+      "exitCode": 0,
+      "scope": "guarded drop of exact generated test DB rdpms_test_rp01_ddcfa140"
+    },
+    {
+      "command": "pg_ctl -D <private-temp>/data -m fast -w stop (LC_ALL=C)",
+      "exitCode": 0,
+      "scope": "stopped exact owned temporary postgres cluster"
+    },
+    {
+      "command": "pg_ctl status -D <private-temp>/data; TCP probe 127.0.0.1:65199",
+      "exitCode": 3,
+      "scope": "status 3 and refused TCP connection confirm stopped owned server"
+    },
+    {
+      "command": "remove exact private temp directory after copying sanitized evidence",
+      "exitCode": 0,
+      "scope": "only this run private root"
+    }
+  ],
+  "limitations": [
+    "Full npm build and full createApp/dist runtime not available: installed node_modules lacks TypeScript compiler; test used real auth and role route modules with Hono and real DB, not mocks.",
+    "No production/shared DB, real accounts, deployment, commit, or dependency installation was used."
+  ]
+}

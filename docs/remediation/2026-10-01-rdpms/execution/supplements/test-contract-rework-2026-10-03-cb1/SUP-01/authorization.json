@@ -1,0 +1,48 @@
+{
+  "supplementId": "SUP-01",
+  "parentTaskIds": [
+    "RP10-T02"
+  ],
+  "kind": "TEST_ONLY",
+  "originalFinding": "LR4-03",
+  "currentFindings": [
+    "LR5-01",
+    "LR5-04",
+    "LR5-05"
+  ],
+  "sessionId": "test-contract-rework-2026-10-03-cb1",
+  "executor": "CodeBuddy",
+  "userInstructionSource": "execution/CODEBUDDY_SUPPLEMENT_REWORK_PROMPT_2026-10-03.md",
+  "allowedWrites": [
+    "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs",
+    "docs/remediation/2026-10-01-rdpms/execution/supplements/test-contract-rework-2026-10-03-cb1/ (new only)"
+  ],
+  "businessSourceChangesAuthorized": false,
+  "resourceOwnership": {
+    "database": "rdpms_test_rework_4a56c2cb29",
+    "port": 52671,
+    "bindHost": "127.0.0.1",
+    "ownerRole": "rdpms_exec",
+    "tempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-s3ke49hq",
+    "envFileMode": "0600",
+    "dotenv": "new private env file only; repository dotenv files never read",
+    "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+  },
+  "commandsRun": [
+    "initdb",
+    "cluster-start",
+    "guard-check",
+    "guard-reset",
+    "backend-build",
+    "integration-suite",
+    "backend-typecheck",
+    "undefined-check",
+    "git-diff-check",
+    "guard-drop",
+    "cluster-stop"
+  ],
+  "stopConditions": [
+    "SUP-01 rework delivered and sealed",
+    "independent review pending"
+  ]
+}

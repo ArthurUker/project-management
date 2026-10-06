@@ -1,0 +1,37 @@
+{
+  "pathBase": "REPOSITORY",
+  "generatedAt": "2026-10-05",
+  "batchId": "parallel-lr7-2026-10-04-p01",
+  "purpose": "Strict post-seal readback for the SC-01..04 overlay. Independently re-reads from disk every declared ref, the manifest, final-integrity, and the two new history entries; verifies enumeration, four non-history root bytes, history +1 each, and frozen inputs unchanged.",
+  "payloadManifest": {
+    "relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-overlay-2026-10-05-02/payload-manifest.json",
+    "sha256": "9176aedf59815b642d3c7e15d7e07fb1feb65f1175f232c8af505a9ede5f8c99"
+  },
+  "verifications": {
+    "manifestEntries": 18,
+    "manifestMismatch": [],
+    "finalToManifestMatch": true,
+    "allValidRefsResolveAndMatch": true,
+    "mStaticCount": 18,
+    "mTotalCount": 21,
+    "rootNonHistoryUnchanged": true,
+    "historyCounts": {
+      "REVISION": 29,
+      "EXECUTION": 20
+    },
+    "historyNewIdsUnique": true,
+    "kUnchanged": true,
+    "errors": []
+  },
+  "revisionHistoryFinalSha": "868e335a633fcf837318069e989addb5a2b7ef1deeeccd461c92b42a82978e85",
+  "executionRevisionHistoryFinalSha": "0e348d1460174adb397f5b1fdb45d3365fc105dce5df4174c72a72fac06a7886",
+  "excludedFromSelf": [
+    "payload-manifest.json",
+    "final-integrity.json",
+    "post-seal-readback.json",
+    "REVISION_HISTORY.json",
+    "EXECUTION_REVISION_HISTORY.json"
+  ],
+  "oldKSealVerdict": "FAIL",
+  "newMOverlayVerdict": "PASS"
+}

@@ -1,0 +1,13 @@
+{
+  "taskId": "FOLLOWUP-SYNC-V1-CI",
+  "kind": "TEST_ONLY",
+  "implementation": "COMPLETE",
+  "validation": "PASS",
+  "parentTaskIds": [
+    "RP09-T01",
+    "RP09-T02"
+  ],
+  "includedIn54TaskGraph": false,
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED"
+}

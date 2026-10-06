@@ -1,0 +1,8 @@
+{
+  "findingId": "B11",
+  "historicalDisposition": "SUPPORTED",
+  "historicalEvidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+  "originalAudit": "docs/audits/2026-09-29-rdpms/REPORT.md#b11",
+  "historicalClaim": "regulatory original-file alias returned bytes for an INFECTED FileObject while the common files download returned 403",
+  "currentTaskRelation": "shared scan guard invoked by common file aliases and regulatory attachment alias; runtime inverse not run"
+}

@@ -1,0 +1,11 @@
+[
+ {"command":"git rev-parse HEAD","exitCode":0,"result":"138cf2da1b63195cef7e884f69bdf8ded6ed3c21"},
+ {"command":"git status --short","exitCode":0,"result":"Pre-existing role DTO/docs/test changes preserved; this task adds only auth.js, rbac.js, RP02 integration test and RP02 evidence."},
+ {"command":"node --check src/routes/auth.js","exitCode":0,"result":"PASS"},
+ {"command":"node --check src/kernel/rbac.js","exitCode":0,"result":"PASS"},
+ {"command":"node --check tests/integration/rp02-login-lock-ttl.integration.test.mjs","exitCode":0,"result":"PASS"},
+ {"command":"git diff --check","exitCode":0,"result":"PASS; no whitespace errors in tracked diff"},
+ {"command":"npm run build","exitCode":127,"result":"ENV_BLOCKED: shell reports tsc: command not found; no build output produced."},
+ {"command":"node --test tests/integration/rp02-login-lock-ttl.integration.test.mjs","exitCode":null,"result":"NOT_RUN: integration test imports dist/bootstrap/createApp.js, which is absent; fresh build is blocked by missing TypeScript. No DB connection attempted."},
+ {"command":"isolated PostgreSQL acceptance","exitCode":null,"result":"ENV_BLOCKED: no test env file or owned active DB is registered; prior RP00-T01 temporary cluster was stopped/dropped/cleaned. No database started or accessed in this task."}
+]

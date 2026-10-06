@@ -1,0 +1,528 @@
+{
+  "status": "READ_ONLY_SOURCE_BINDINGS",
+  "count": 104,
+  "files": [
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-plan/WORK_ITEMS.json",
+      "sha256": "96b3bb690ea1da4e9a3e5698c83ea9b2fb2683034c2866179fcdf4cf288ed310"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-plan/VALIDATION_BACKLOG.json",
+      "sha256": "3fa7e8b0b98a84b3a11dc45bcaa7bdb9c0e9711b5fea15a82dfa9de3006faca7"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+      "sha256": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+      "sha256": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/ACCEPTANCE_MATRIX.csv",
+      "sha256": "8679b60edbc3db7241b2eb2629b7d8d710e4c49419f34f5f6a3d55869272cfc0"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-codebuddy-luna-independent-review/findings.json",
+      "sha256": "e4b0351a46c9b3b34f0113b815e0acf5965ecfb5211c492de126adc010e20945"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-codebuddy-luna-independent-review/case-reconciliation.csv",
+      "sha256": "24942940187bc4d94ad8c6bb2866f805334e27474b8b1c7759da8af6d913df8d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05T110512Z-luna-preparation-01/TASK_ALLOWLIST_DRAFTS.json",
+      "sha256": "6d58699ce854bbcd10b2fc4689984fb9498ec33d3a915a662771850acf3fc6e6"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05T110512Z-luna-preparation-01/APPROVAL_REQUESTS.json",
+      "sha256": "6b0c822a05dcd6481bea565cff897ab424457d7b858b81dce893ed7d558c50e7"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05T110512Z-luna-preparation-01/LP-02/identity-response-matrix.csv",
+      "sha256": "698c11e1f1bd14ba17af51ba003afd8f6d6b9c1dac47fa7a24fb290d2a24cf04"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05T110512Z-luna-preparation-01/LP-02/last-copy-recovery-matrix.csv",
+      "sha256": "44ea273c83a1d68cc1753cafd3bfa151c7f18e3ddb658c0fc185da78bebbcdd4"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T01/change-summary.md",
+      "sha256": "8a1aa913010cd0d25f43168710169e8c1721e0434253b4a7ec812c96572fd7c2"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T01/acceptance.json",
+      "sha256": "aa0ce5c3ef836502bb73ec1565236a2c68c6245d3a1711e6596e66b732920884"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T01/evidence/baseline-and-preconditions.json",
+      "sha256": "7f2a6c1a248f99ac8821aaf951159303f2398089f105b1e9bc1228c88c1a6069"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T01/evidence/S00-OI-01-disposition.json",
+      "sha256": "0fadc3659918aa018221721be08138c6abebe165bfc2ba98810c331540639c49"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T01/evidence/isolated-environment.json",
+      "sha256": "258971243435a314ae42b397e84c38980d9e6c7372310ce3b95e558b884bce60"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T01/evidence/commands-and-results.json",
+      "sha256": "e884d92da78cc31f72bf48d97e6b24a73ea9f1619f25265eccdd5f1214ff679c"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T01/evidence/plan-coverage-static-check.json",
+      "sha256": "e9d84b2cad264ed97964c7cd21f7d6f3aa8fee0429130108ca7d1a306456ac7e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T01/evidence/cleanup-verification.json",
+      "sha256": "be21a44cca9f895ba62104140a7cfa7e511c34be9ba3fd39cbf137313993beca"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T01/evidence/frozen-input-check.json",
+      "sha256": "4f183f0f5262e644dc77a08fd02e8f2806870a5d9a9c7182859a6345bead07b4"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T03/change-summary.md",
+      "sha256": "a4d26172c5d31095d5c72754bade9680e8d5f8ba3a6428f83951123dad038426"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T03/authorization.json",
+      "sha256": "861b81fe9a115701c9a4179ce019f82e089f3f2ee7225f27c9540469c0510e16"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T03/acceptance.json",
+      "sha256": "f2a773d35fbfa553c5de24ada183e97458d6846915e5e0002b36bf98a8c694bb"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T03/evidence/revision-support-matrix.json",
+      "sha256": "a55cfb85dacd52bb07a2049540c791bbdd87a88560edd74b3ecc1b019a6f41a2"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T03/evidence/source-digest-comparison.json",
+      "sha256": "ae23cff454f2059f27ed79669908d350158fa6dcb770b1a0518ba07b7bfbd8ec"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T03/evidence/historical-evidence.json",
+      "sha256": "06e524f01a74d83a73b80b506b0947f70a2bae76978f13c50cb522a675ba42f6"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T03/evidence/commands-and-results.json",
+      "sha256": "e2c15286eef1c4316b92269ac203f08828f006234bd650ad6c09c08023170dad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T04/authorization.json",
+      "sha256": "ba134296ae2f8ecf87a70e262c9a83ace2b1cfe9469b698b38368075433a1222"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T04/change-summary.md",
+      "sha256": "6246b26467a032d383e78f163ad79303bfdcb8a9711bc4f1fcd9ec10d0da03f8"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T04/acceptance.json",
+      "sha256": "addac4f7616fe7ebc603c34884caac3e1693c1b2bcfba038a0ef9a3f3ddcb76a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T04/rollback.md",
+      "sha256": "5de0efef638049d22551573ff86497db11db9fa782411ed4260d87358384d2ed"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T04/evidence/auth-generation-matrix.json",
+      "sha256": "1a53707721bc6f59087dc08cf8beb9176cf48accd6a6d03abab0428c7fef4a73"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T04/evidence/source-digest-comparison.json",
+      "sha256": "088e6d000dc055c5f79ad505496e50c903b285cac30005e556cef8a16935ae1c"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T04/evidence/historical-evidence.json",
+      "sha256": "6f96a066e4b19c137177155030953ddc2d22d6bf0030325aa0dd223c3b49e37f"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T04/evidence/commands-and-results.json",
+      "sha256": "6f9afd701a84ade0e52fcd93a044db1f9d3804826b652e0f11e30ae466e3e6c8"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T05/authorization.json",
+      "sha256": "95464b55c944783c7fa6ca8239964e3bf464e834d878a63aff8c943c1295e367"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T05/change-summary.md",
+      "sha256": "14443dab85c38f7069195e754f4a9b4bdd0f74aaf45712ffb4e7d6f5de336483"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T05/acceptance.json",
+      "sha256": "5fb70797afb7cea539e7a3cfa7bfc884913de725685b19a715cdf3c8e8264c07"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T05/rollback.md",
+      "sha256": "5ca0228f5d076d3a8ad7ba7d0f9c1136cccc58bfdd13c1b7a4f65da4eca57bb3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T05/evidence/budget-monitoring-register.json",
+      "sha256": "9dcdd4a5f5364fc369997542011115f66da6d384dc6e8ccca6f02d9ea48c7e1c"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T01/runs/2026-10-02-followup-validation/task-state.json",
+      "sha256": "dbe19d5f42fa5a85ca643bf1fb3d01f8e9eb643e9e119fd96774e4311799a4b3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/task-state.json",
+      "sha256": "4c7f41a7c80322029a5155b133e86761c1df032062cfcc923e4f3d38946e93f4"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/acceptance.json",
+      "sha256": "25f0ac95f7f72b37676ad34ce4637b6da4c29661dbf56470a1ce8204b50df401"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/authorization.json",
+      "sha256": "7f360c2630df0d05804e55fcd7724ce6ee6bee3aed77478dba270f73e18088aa"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/change-summary.md",
+      "sha256": "12b0202cdb05c12b5c31d87e058b1ea061a41df0b7e36d3c581087439faa9f87"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/evidence/WATERMARK_ADR_DRAFT.md",
+      "sha256": "b827fd28a1a011f30afb84323a7593c2f7e7bd1f584b1f1746d88d7a675e02d9"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/rollback.md",
+      "sha256": "5c2a01b91131c34985fcd8ceb6826da0d488636ebb954e812c20b342f2bef470"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/acceptance.json",
+      "sha256": "62dc5847e4788452f6c18c3498073f1282a838ef387c3325f79ca1cdfa6bc824"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/authorization.json",
+      "sha256": "a4a131b09b4259b3b67de04ccad34ebad3e64e17eec10e5ac07a3e47fc151159"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/change-summary.md",
+      "sha256": "4d3cd7087dfcf1d4b93fc63e50bcfb16da10d15b6b5c8548ae048ff15256e934"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/commands-and-results.json",
+      "sha256": "ada9e2e82234b451602a94d5c605a7b9c95441a2183201b337e22d8d40f3790a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/guard-check.log",
+      "sha256": "fc5e82f51a152c548c3b8ce58d04870d59ad83cb2dd7216c992a1b0d8d56dbc2"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/guard-drop.log",
+      "sha256": "1e218503ce52696072414cea573603a3340ef3c07e8e85905ec4cf5bd1b3dafb"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/guard-reset.log",
+      "sha256": "d15df64d10f3822e98c22d0ca25d8dc301ad0882a3b484eb107f3d511a5b7404"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/initdb.log",
+      "sha256": "21321fae9e375d273680c5b16d0fc04a3ed4a80c9f13ef9fbd0fdbc415c2d635"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/publisher-one.log",
+      "sha256": "89a7f929a2e25c09ccc2e57e96a60314c7baa0fa3a8479d6e91fca7fa8b76adf"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/pull-after-publish.log",
+      "sha256": "72958dd92e8a7cf205ef1a0d562ed666eed72043d4509c5a1aefd5d3fb6602b6"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/pull-before-source-commit.log",
+      "sha256": "52f96c26a39ed25108a6db43d6e11c6051eba8a498a5baab1891adfa7ac7c262"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/schema-setup.log",
+      "sha256": "b57201eb5d19bb5956d4c17ebaf793bea3e93a8c0f319e397aa9b03936e359d6"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/unsafe-seq-a-commit.log",
+      "sha256": "2344f06a3effe34d8d7acd1c967f579fbc2a25060cc9b1424c6367b34a3de777"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/unsafe-seq-after-cut.log",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/unsafe-seq-b-allocate.log",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/unsafe-seq-b-commit.log",
+      "sha256": "2344f06a3effe34d8d7acd1c967f579fbc2a25060cc9b1424c6367b34a3de777"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/unsafe-seq-cut.log",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/barrier-summary.json",
+      "sha256": "4fe87be5484004e3e8c2a62b04bc51624202e7e6216984e162d1929652cec924"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/cluster-start.log",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/cluster-stop.log",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/commands-and-results.json",
+      "sha256": "a165fcd1d92cde670cb953d5e38e4e82708b3381c49078feccab54ef666532bc"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/guard-check.log",
+      "sha256": "d7fd4f47afae4bd4960bbad5074dd1fe27ae8d1920c647b7949d587a8e26d868"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/guard-drop.log",
+      "sha256": "4881549e15a74b895746c2aa8bddf81f6f7c874a71989a66eedb696ebbb4ed2c"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/guard-reset.log",
+      "sha256": "aa5d03d4fc7622eaad8bb197186ae9ae3e0b58220ff7eaecf58f316ecf3b5942"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/initdb.log",
+      "sha256": "8a69b6887e27cadd172d1f86b1e642cbe9cf7f0d2c13d9904896e351aacb44d8"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/publisher-competing-check.log",
+      "sha256": "96a30ad207d4c99bf07ee30854e9d11903343a0c7aede1fde3b608af267e68d2"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/publisher-one.log",
+      "sha256": "89a7f929a2e25c09ccc2e57e96a60314c7baa0fa3a8479d6e91fca7fa8b76adf"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/pull-after-publish.log",
+      "sha256": "72958dd92e8a7cf205ef1a0d562ed666eed72043d4509c5a1aefd5d3fb6602b6"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/pull-before-source-commit.log",
+      "sha256": "52f96c26a39ed25108a6db43d6e11c6051eba8a498a5baab1891adfa7ac7c262"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/schema-setup.log",
+      "sha256": "b57201eb5d19bb5956d4c17ebaf793bea3e93a8c0f319e397aa9b03936e359d6"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/source-rollback-check.log",
+      "sha256": "ef089bef8850862e8679e5bf04e8c78ee9d66561cfe361a7a8048cfa668ca4f3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/source-rollback.log",
+      "sha256": "035715f3d12fc35492e4edf8309901075075a1e337b019a4271dd866a3a3162b"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/unsafe-seq-a-commit.log",
+      "sha256": "2344f06a3effe34d8d7acd1c967f579fbc2a25060cc9b1424c6367b34a3de777"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/unsafe-seq-after-cut.log",
+      "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/unsafe-seq-b-allocate.log",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/unsafe-seq-b-commit.log",
+      "sha256": "2344f06a3effe34d8d7acd1c967f579fbc2a25060cc9b1424c6367b34a3de777"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/unsafe-seq-cut.log",
+      "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/owned-watermark-barrier.py",
+      "sha256": "55670bac99934aaa1520b3ddde2b7ac8f21850578638588f9aa858c72dc195f4"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/handoff.md",
+      "sha256": "a0565b8fc31a4e44598001069bfdf8b568bb6be705ad437c96086a0783810673"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/rollback.md",
+      "sha256": "96eb1349f18c6e5c10da560ddd6dc1b318f51ff3f8b1867dc4586aa97f3a6389"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/task-state.json",
+      "sha256": "0ed931c3cae41d33a11902b39f373f5afa5109b2dae37d4e9172aff4bc5e17b0"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP19/RP19-T01/authorization.json",
+      "sha256": "50bd20525c02c54b577706326b052c7d5033064a6d4f2b2cfeac8291488f5e3d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP19/RP19-T01/change-summary.md",
+      "sha256": "dadc28e37ff93a695213a2bf20efec75b2a6ebfcbc777d13ae1e9cc095a98adf"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP19/RP19-T01/acceptance.json",
+      "sha256": "c031d9031d5850d6c83fd142f55d12f80d46a83b2c65765cb540299af4af6056"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP19/RP19-T01/evidence/evidence-inventory.json",
+      "sha256": "b9707b9bc166996bda1d72cfb6b0e2faf9e58a78aee3e246cc3adbe22720ce93"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T01/acceptance.json",
+      "sha256": "b4c74387d1592ccf41413f65218b0c697fa9b85c44303d0160ff4c6151317c73"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T01/runs/2026-10-02-followup-validation/acceptance.json",
+      "sha256": "74fa0ac498aa784589b6b79b5cc3a97e05c5093f77ae2aed662abbcee3fe872d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP17/RP17-T01/acceptance.json",
+      "sha256": "273e31e52640706ff58d7489b68fd3dd0b065afe4c646b57ac188128c558d7fa"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP17/RP17-T01/evidence/commands-and-results.json",
+      "sha256": "9fc59d0bb2870adb7a1bd7ed7259b5780a22a47238c048d13a3592279db3080f"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP17/RP17-T01/evidence/owned-fs-validation.log",
+      "sha256": "cf2e0276251403c9e1cde3f6621aa04c0b92aa8f9a8ace12fac0f7e655b93e5e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP08/RP08-T01/runs/2026-10-03-codebuddy-lr3-validation/acceptance.json",
+      "sha256": "713783c48bd737dc7cf322edd4c79483c9d71c02c977fe9cfe03a26e9b044e69"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP14/RP14-T01/runs/2026-10-02-followup-validation/acceptance.json",
+      "sha256": "875ada8f92beb35485ee78110f2566cb0d27edeb6667e4d8378e68c54035132f"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP05/RP05-T01/runs/2026-10-02-continuous-rework/acceptance.json",
+      "sha256": "3414c1f7e0353242d96741898be07b536c3b3198414f9333ffe48530808b2cf4"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP04/RP04-T01/runs/2026-10-02-followup-validation/acceptance.json",
+      "sha256": "63a81366da18b876baa33ad255adf40722dba20744ba675b1ac5aebc33a8e962"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP04/RP04-T02/runs/2026-10-03-codebuddy-b18-rework/acceptance.json",
+      "sha256": "0a7b7c2abe2cdd7fee9dda7edede6113b17f9a64b387ac9839bf3048a5833a5a"
+    }
+  ],
+  "oldArtifactsNotOverwritten": true,
+  "dynamicStatus": "NOT_RUN"
+}

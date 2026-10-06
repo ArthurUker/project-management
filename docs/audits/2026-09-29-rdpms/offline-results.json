@@ -1,0 +1,48 @@
+{
+  "executedAt": "2026-09-29T06:53:20.806Z",
+  "kind": "real frontend engine with fake-indexeddb and injected transport; no browser rendering",
+  "summary": {
+    "reproduced": 4,
+    "notReproduced": 0
+  },
+  "results": [
+    {
+      "id": "F01_BOOTSTRAP_ERASES_USER_OUTBOX",
+      "defectReproduced": true,
+      "evidence": {
+        "outboxBefore": 1,
+        "outboxAfter": 0,
+        "userDeadLettersAfter": 0,
+        "trigger": "fresh module state currentUserId=null; SyncProvider initial user=null effect"
+      }
+    },
+    {
+      "id": "F02_CONFLICT_DELETED_BEFORE_PERSISTENCE",
+      "defectReproduced": true,
+      "evidence": {
+        "outboxAfter": 0,
+        "persistedConflicts": 0,
+        "lastError": "AUDIT_INJECTED_CONFLICT_STORAGE_FAILURE"
+      }
+    },
+    {
+      "id": "F03_RECORD_CACHE_NOT_SCOPED_BY_ACCOUNT",
+      "defectReproduced": true,
+      "evidence": {
+        "currentAccount": "user-b",
+        "cachedAuthorVisibleThroughReadCachedRecords": "user-a",
+        "sharedProjectStillAuthorized": true
+      }
+    },
+    {
+      "id": "F04_OUTBOX_NOT_CHUNKED_TO_SERVER_LIMIT",
+      "defectReproduced": true,
+      "evidence": {
+        "requestSize": 501,
+        "serverLimit": 500,
+        "queueAfter": 501,
+        "lastError": "server limit: 500 changes"
+      }
+    }
+  ]
+}

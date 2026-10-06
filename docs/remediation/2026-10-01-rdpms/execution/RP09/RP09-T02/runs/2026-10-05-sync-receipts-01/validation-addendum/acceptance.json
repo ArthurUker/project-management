@@ -1,0 +1,10 @@
+{
+  "taskId": "RP09-T02",
+  "localApprovedBackendValidation": "PASS",
+  "ciRegression": "FAIL",
+  "jointClientValidation": "NOT_RUN",
+  "targetValidation": "NOT_RUN",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "scope": "Current candidate v1 backend only; old legacy harness failures19 retained; not client/CI/release all-clear"
+}

@@ -1,0 +1,320 @@
+{
+  "reviewId": "CODEBUDDY-LR6-CLOSEOUT-INDEPENDENT-REVIEW-2026-10-04",
+  "verdict": "SCOPED_ACCEPTANCE_WITH_TWO_REQUIRED_CORRECTIONS",
+  "formalSuitesRerunByThisReview": "NOT_RUN",
+  "productBuildsTypecheckByThisReview": "NOT_RUN",
+  "executorsAcceptedEvidence": {
+    "reportFinalCounters": {
+      "tests": 25,
+      "pass": 25,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "finalReportTestSha256": "23e4cff4da62cb2714bfc564ebc582e4c6245a7d3b535797273150ef314ad9e8",
+    "old22NamesAndOrderPreserved": true,
+    "rawTraceConsistency": [
+      {
+        "artifact": "matcher-identity-control.json",
+        "storedKeys": [
+          "kind",
+          "case",
+          "databaseAccess",
+          "productAcceptance",
+          "logRef",
+          "cases",
+          "meaning"
+        ],
+        "traceMatchesRawLog": true
+      },
+      {
+        "artifact": "draft-upsert-compat.json",
+        "storedKeys": [
+          "kind",
+          "case",
+          "database",
+          "logRef",
+          "trace",
+          "meaning"
+        ],
+        "traceMatchesRawLog": true
+      },
+      {
+        "artifact": "draft-race-settle-control.json",
+        "storedKeys": [
+          "kind",
+          "case",
+          "logRef",
+          "traces",
+          "meaning"
+        ],
+        "traceMatchesRawLog": true
+      }
+    ],
+    "existingRunnerControlsCount": 6,
+    "SUP02": "REUSED_PREVIOUS_INDEPENDENT_12/12_AND101/101; hash unchanged; not rerun"
+  },
+  "actualReviewActivities": [
+    "source and diff review",
+    "command raw log and JSON trace comparison",
+    "real byte hashes and strict base path resolution",
+    "state/history append structural comparison",
+    "protected inventories and snapshots readback",
+    "two minimum all-subprocess simulated runner log failure controls"
+  ],
+  "minimumRunnerControls": [
+    {
+      "kind": "SIMULATED_CONTROL_ALL_SUBPROCESSES_STUBBED",
+      "mode": "normal-log-ioerror",
+      "realDatabaseBuildOrServerAccess": false,
+      "executorRunnerSha256": "36551b9281bc45209bdfb03f9912cba9e264b158c0b9599a4e0aacf3cb2a81a7",
+      "unchangedCopySha256": "36551b9281bc45209bdfb03f9912cba9e264b158c0b9599a4e0aacf3cb2a81a7",
+      "injectedLogErrors": [
+        {
+          "target": "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-04-codebuddy-lr6-closeout/evidence/runner-log-controls/normal-log-ioerror/attempt-01/integration-suite.log",
+          "error": "OSError: injected command-log write failure"
+        }
+      ],
+      "observedRunnerExitCode": 0,
+      "escapedException": null,
+      "criticalFailures": [],
+      "primaryExceptions": [],
+      "exitReason": "no critical failures",
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_lr6_63ab458f28",
+          "ownedPort": 54938,
+          "ownedTempRoot": "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-04-codebuddy-lr6-closeout/evidence/runner-log-controls/normal-log-ioerror/rdpms-lr6-kpg4lkkv",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commandsInvoked": [
+        [
+          "/opt/homebrew/bin/initdb",
+          "-D",
+          "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-04-codebuddy-lr6-closeout/evidence/runner-log-controls/normal-log-ioerror/rdpms-lr6-kpg4lkkv/pg",
+          "-U",
+          "rdpms_exec",
+          "--auth=trust"
+        ],
+        [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-04-codebuddy-lr6-closeout/evidence/runner-log-controls/normal-log-ioerror/rdpms-lr6-kpg4lkkv/pg",
+          "-l",
+          "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-04-codebuddy-lr6-closeout/evidence/runner-log-controls/normal-log-ioerror/rdpms-lr6-kpg4lkkv/postgres.log",
+          "-o",
+          "-h 127.0.0.1 -p 54938 -k /Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-04-codebuddy-lr6-closeout/evidence/runner-log-controls/normal-log-ioerror/rdpms-lr6-kpg4lkkv/socket",
+          "-w",
+          "start"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "check"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "reset"
+        ],
+        [
+          "npm",
+          "run",
+          "build"
+        ],
+        [
+          "node",
+          "--test",
+          "tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "drop"
+        ],
+        [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-04-codebuddy-lr6-closeout/evidence/runner-log-controls/normal-log-ioerror/rdpms-lr6-kpg4lkkv/pg",
+          "-m",
+          "fast",
+          "-w",
+          "stop"
+        ]
+      ],
+      "persistedCommandLabels": [
+        "initdb",
+        "cluster-start",
+        "guard-check",
+        "guard-reset",
+        "backend-build",
+        "guard-drop",
+        "cluster-stop"
+      ],
+      "ownedRootsRemaining": [],
+      "falseSuccessObserved": true
+    },
+    {
+      "kind": "SIMULATED_CONTROL_ALL_SUBPROCESSES_STUBBED",
+      "mode": "timeout-log-ioerror",
+      "realDatabaseBuildOrServerAccess": false,
+      "executorRunnerSha256": "36551b9281bc45209bdfb03f9912cba9e264b158c0b9599a4e0aacf3cb2a81a7",
+      "unchangedCopySha256": "36551b9281bc45209bdfb03f9912cba9e264b158c0b9599a4e0aacf3cb2a81a7",
+      "injectedLogErrors": [
+        {
+          "target": "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-04-codebuddy-lr6-closeout/evidence/runner-log-controls/timeout-log-ioerror/attempt-01/backend-build.log",
+          "error": "OSError: injected command-log write failure"
+        }
+      ],
+      "observedRunnerExitCode": 0,
+      "escapedException": null,
+      "criticalFailures": [],
+      "primaryExceptions": [],
+      "exitReason": "no critical failures",
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_lr6_1c1a9e7413",
+          "ownedPort": 54939,
+          "ownedTempRoot": "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-04-codebuddy-lr6-closeout/evidence/runner-log-controls/timeout-log-ioerror/rdpms-lr6-0a66wqnn",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commandsInvoked": [
+        [
+          "/opt/homebrew/bin/initdb",
+          "-D",
+          "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-04-codebuddy-lr6-closeout/evidence/runner-log-controls/timeout-log-ioerror/rdpms-lr6-0a66wqnn/pg",
+          "-U",
+          "rdpms_exec",
+          "--auth=trust"
+        ],
+        [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-04-codebuddy-lr6-closeout/evidence/runner-log-controls/timeout-log-ioerror/rdpms-lr6-0a66wqnn/pg",
+          "-l",
+          "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-04-codebuddy-lr6-closeout/evidence/runner-log-controls/timeout-log-ioerror/rdpms-lr6-0a66wqnn/postgres.log",
+          "-o",
+          "-h 127.0.0.1 -p 54939 -k /Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-04-codebuddy-lr6-closeout/evidence/runner-log-controls/timeout-log-ioerror/rdpms-lr6-0a66wqnn/socket",
+          "-w",
+          "start"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "check"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "reset"
+        ],
+        [
+          "npm",
+          "run",
+          "build"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "drop"
+        ],
+        [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-04-codebuddy-lr6-closeout/evidence/runner-log-controls/timeout-log-ioerror/rdpms-lr6-0a66wqnn/pg",
+          "-m",
+          "fast",
+          "-w",
+          "stop"
+        ]
+      ],
+      "persistedCommandLabels": [
+        "initdb",
+        "cluster-start",
+        "guard-check",
+        "guard-reset",
+        "guard-drop",
+        "cluster-stop"
+      ],
+      "ownedRootsRemaining": [],
+      "falseSuccessObserved": true
+    }
+  ],
+  "seal": {
+    "declaredSessionPaths": 519,
+    "declaredResolutionFailures": 519,
+    "normalizedSessionHashFailures": 0,
+    "recordHashesMatched": 4,
+    "repositoryHashesMatched": 4,
+    "note": "Diagnostic normalization does not satisfy the declared path contract."
+  },
+  "scopeProtection": {
+    "businessSourceFilesUnchanged": 174,
+    "otherTestConfigFilesUnchanged": 71,
+    "additionalReadOnlyFilesUnchanged": 13,
+    "frozenPlanFilesUnchanged": 17,
+    "frozenDirectoriesUnchanged": 13,
+    "sixRecordAppendScopePass": true,
+    "existingFilesWrittenByReview": []
+  },
+  "cleanup": {
+    "executorOwnedRootsReadback": "both absent",
+    "backendDistAbsent": true,
+    "independentSafeControlsOwnedRootsRemaining": 0,
+    "realDBOrBuildStartedByReview": false
+  },
+  "statusCounts": {
+    "tasks": 54,
+    "axes": {
+      "implementation": {
+        "COMPLETE": 18,
+        "NOT_STARTED": 34,
+        "IN_PROGRESS": 2
+      },
+      "validation": {
+        "ENV_BLOCKED": 7,
+        "PASS": 10,
+        "NOT_RUN": 37
+      },
+      "release": {
+        "NOT_EVALUATED": 54
+      }
+    },
+    "incompleteImplementation": 36,
+    "acceptanceRows": 306,
+    "acceptanceResults": {
+      "NOT_RUN": 228,
+      "PASS": 53,
+      "ENV_BLOCKED": 25
+    },
+    "nextReadyTask": null,
+    "activeTask": null
+  },
+  "notRun": [
+    "formalDB suite rerun by reviewer",
+    "JWT full chain",
+    "frontend IndexedDB/UI",
+    "phase dynamic API/UI",
+    "candidate/target environment",
+    "deploy"
+  ],
+  "businessApprovalsAdded": false,
+  "release": "NOT_EVALUATED"
+}

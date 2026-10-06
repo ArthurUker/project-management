@@ -1,0 +1,80 @@
+{
+  "taskId": "RP12-T01",
+  "runs": [
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP12/RP12-T01/runs/2026-10-06-continuous-remediation-01/evidence/rp12-t01-batch/attempt-02/run-results.json",
+      "sha256": "5324acc4b6aa27e5ddeb2ab239a94d944c68385a865d84b19b3bada08dbfdb2b",
+      "commandResults": [
+        {
+          "label": "frontend-typecheck",
+          "command": [
+            "/Users/renkang/.nvm/versions/node/v24.15.0/bin/node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/frontend/node_modules/typescript/bin/tsc",
+            "--project",
+            "/Users/renkang/VS Code/project-management/rdpms-system/frontend/tsconfig.app.json",
+            "--noEmit"
+          ],
+          "exitCode": 0
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0
+        }
+      ],
+      "cleanup": {
+        "chromeExit": {
+          "code": 0,
+          "signal": null
+        },
+        "ownedServerClosed": true,
+        "ownedProfileRootRemoved": true
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP12/RP12-T01/runs/2026-10-06-continuous-remediation-01/evidence/rp12-t01-owner-regression/attempt-01/run-results.json",
+      "sha256": "2acc8140f714b418e2f07b89b22d8ceb723d161ad37f587b1e28f11a7eb98c08",
+      "commandResults": [
+        {
+          "label": "frontend-typecheck",
+          "command": [
+            "/Users/renkang/.nvm/versions/node/v24.15.0/bin/node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/frontend/node_modules/typescript/bin/tsc",
+            "--project",
+            "/Users/renkang/VS Code/project-management/rdpms-system/frontend/tsconfig.app.json",
+            "--noEmit"
+          ],
+          "exitCode": 0
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0
+        }
+      ],
+      "cleanup": {
+        "chromeExit": {
+          "code": 0,
+          "signal": null
+        },
+        "ownedServerClosed": true,
+        "ownedProfileRootRemoved": true
+      }
+    }
+  ],
+  "limits": [
+    "Current7 real-browser IDB batch cases use synthetic transport response; not real backend receipt/native JWT acceptance",
+    "New local producer rows marked fresh-v1 with immutable project/sequence/dependency metadata; old ambiguous/imported queues retained and never automatic fresh reservation",
+    "Only candidate256KiB proactive budget; effective deployed app/proxy upper limit and gateway version unavailable",
+    "Candidate push hasprotocolVersion1, but reservation/handle integration not yet delivered; current native backend correctly denies missing handles without deleting local copies"
+  ],
+  "earlierAttempts": "Preserved; only enumerated current attempts support acceptance"
+}

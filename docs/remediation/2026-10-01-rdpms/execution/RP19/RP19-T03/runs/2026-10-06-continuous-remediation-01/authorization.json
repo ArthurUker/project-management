@@ -1,0 +1,13 @@
+{
+  "taskId": "RP19-T03",
+  "authorizationRef": "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/authorization.json",
+  "authority": "User approved subsequent local STANDARD repairs; delegated concrete option selection",
+  "allowedFiles": [
+    "rdpms-system/deploy/scripts/drill/release-gates.py",
+    "rdpms-system/backend/tests/integration/rp19-release-gates.integration.test.mjs"
+  ],
+  "approvedBy": "郭仁康",
+  "approvedRole": "研发副总监",
+  "scope": "Read-only deterministic scoped candidate release evaluator; actual included and affected owner tasks, transitive implementation vs acceptance dependencies, exact stage/condition gates and shared contracts, manifest/source/evidence hashes, honest target/budgets/clientcatalog/containment deficits. Local controlled evaluator tests and real local candidate blockers; no release approval or deployment/data operation.",
+  "noProductionOrRelease": true
+}

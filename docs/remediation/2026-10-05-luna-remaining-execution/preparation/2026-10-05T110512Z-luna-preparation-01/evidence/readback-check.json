@@ -1,0 +1,70 @@
+{
+  "status": "PASS",
+  "scope": "preparation artifact/readback only; not product/runtime/approval/release acceptance",
+  "runId": "2026-10-05T110512Z-luna-preparation-01",
+  "checks": [
+    {
+      "check": "required_artifacts",
+      "status": "PASS",
+      "detail": "39/39"
+    },
+    {
+      "check": "json_parse",
+      "status": "PASS",
+      "detail": "27/27; errors=[]"
+    },
+    {
+      "check": "stable_input_pins",
+      "status": "PASS",
+      "detail": "36 pin checks; mismatch=[]"
+    },
+    {
+      "check": "allowlist_count",
+      "status": "PASS",
+      "detail": "36"
+    },
+    {
+      "check": "approval_count",
+      "status": "PASS",
+      "detail": "21"
+    },
+    {
+      "check": "approvals_unsigned",
+      "status": "PASS",
+      "detail": "all approved fields null"
+    },
+    {
+      "check": "validation_backlog_count",
+      "status": "PASS",
+      "detail": "8"
+    },
+    {
+      "check": "acceptance_rows",
+      "status": "PASS",
+      "detail": "306"
+    },
+    {
+      "check": "case_remainder_rows",
+      "status": "PASS",
+      "detail": "13"
+    },
+    {
+      "check": "writer_stopped",
+      "status": "PASS",
+      "detail": "True"
+    },
+    {
+      "check": "no_product_execution",
+      "status": "PASS",
+      "detail": "{'gitMetadata': 2, 'build': 0, 'tests': 0, 'database': 0, 'browser': 0, 'dockerOrServices': 0, 'network': 0, 'install': 0, 'appCommands': 0}"
+    },
+    {
+      "check": "rp13_t02_conflict",
+      "status": "PASS",
+      "detail": "observed acceptance IN_PROGRESS preserved alongside backlog COMPLETE"
+    }
+  ],
+  "errors": [],
+  "jsonFilesChecked": 27,
+  "requiredArtifactCount": 39
+}

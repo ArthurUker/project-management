@@ -1,0 +1,294 @@
+{
+  "count": 8,
+  "notAdditionalImplementationTasks": true,
+  "tasks": [
+    {
+      "taskId": "RP00-T01",
+      "title": "基线/逐包范围/合成隔离及合法前提登记",
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "gateRequirements": [
+        {
+          "ref": "S00-OI-01",
+          "before": "VALIDATION",
+          "condition": "archive disposition only; missing historic startHead does not block any business task"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "caseIds": [
+        "PAC-RP00-01",
+        "PAC-RP00-03",
+        "PAC-RP00-04",
+        "TASK-RP00-T01",
+        "INT-PC09-01",
+        "INT-PC11-01",
+        "GATE-S00-OI-01"
+      ],
+      "evidenceRefsAsRecorded": [
+        "execution/RP00/RP00-T01/change-summary.md",
+        "execution/RP00/RP00-T01/acceptance.json",
+        "execution/RP00/RP00-T01/evidence/baseline-and-preconditions.json",
+        "execution/RP00/RP00-T01/evidence/S00-OI-01-disposition.json",
+        "execution/RP00/RP00-T01/evidence/isolated-environment.json",
+        "execution/RP00/RP00-T01/evidence/commands-and-results.json",
+        "execution/RP00/RP00-T01/evidence/plan-coverage-static-check.json",
+        "execution/RP00/RP00-T01/evidence/cleanup-verification.json",
+        "execution/RP00/RP00-T01/evidence/frozen-input-check.json"
+      ],
+      "executionModeNow": "PREPARE_OR_REUSE_EVIDENCE_ONLY",
+      "noAutoReimplementation": true
+    },
+    {
+      "taskId": "RP00-T03",
+      "title": "任务revision全支持端矩阵",
+      "implementation": "COMPLETE",
+      "validation": "NOT_RUN",
+      "gateRequirements": [
+        {
+          "ref": "S03-OI-09",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "caseIds": [
+        "PAC-RP00-02",
+        "TASK-RP00-T03",
+        "GATE-S03-OI-09"
+      ],
+      "evidenceRefsAsRecorded": [
+        "execution/RP00/RP00-T03/change-summary.md",
+        "execution/RP00/RP00-T03/authorization.json",
+        "execution/RP00/RP00-T03/acceptance.json",
+        "execution/RP00/RP00-T03/evidence/revision-support-matrix.json",
+        "execution/RP00/RP00-T03/evidence/source-digest-comparison.json",
+        "execution/RP00/RP00-T03/evidence/historical-evidence.json",
+        "execution/RP00/RP00-T03/evidence/commands-and-results.json"
+      ],
+      "executionModeNow": "PREPARE_OR_REUSE_EVIDENCE_ONLY",
+      "noAutoReimplementation": true
+    },
+    {
+      "taskId": "RP00-T04",
+      "title": "refresh/auth transport与generation合同",
+      "implementation": "COMPLETE",
+      "validation": "NOT_RUN",
+      "gateRequirements": [
+        {
+          "ref": "T-RP-09",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "caseIds": [
+        "TASK-RP00-T04",
+        "INT-PC01-01",
+        "DECISION-T-RP-09"
+      ],
+      "evidenceRefsAsRecorded": [
+        "execution/RP00/RP00-T04/authorization.json",
+        "execution/RP00/RP00-T04/change-summary.md",
+        "execution/RP00/RP00-T04/acceptance.json",
+        "execution/RP00/RP00-T04/rollback.md",
+        "execution/RP00/RP00-T04/evidence/auth-generation-matrix.json",
+        "execution/RP00/RP00-T04/evidence/source-digest-comparison.json",
+        "execution/RP00/RP00-T04/evidence/historical-evidence.json",
+        "execution/RP00/RP00-T04/evidence/commands-and-results.json"
+      ],
+      "executionModeNow": "PREPARE_OR_REUSE_EVIDENCE_ONLY",
+      "noAutoReimplementation": true
+    },
+    {
+      "taskId": "RP00-T05",
+      "title": "目标预算/监控/候选范围准备",
+      "implementation": "COMPLETE",
+      "validation": "NOT_RUN",
+      "gateRequirements": [
+        {
+          "ref": "T-RP-11",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "ref": "T-RP-13",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "caseIds": [
+        "TASK-RP00-T05",
+        "INT-PC11-01",
+        "DECISION-T-RP-11",
+        "DECISION-T-RP-13"
+      ],
+      "evidenceRefsAsRecorded": [
+        "execution/RP00/RP00-T05/authorization.json",
+        "execution/RP00/RP00-T05/change-summary.md",
+        "execution/RP00/RP00-T05/acceptance.json",
+        "execution/RP00/RP00-T05/rollback.md",
+        "execution/RP00/RP00-T05/evidence/budget-monitoring-register.json"
+      ],
+      "executionModeNow": "PREPARE_OR_REUSE_EVIDENCE_ONLY",
+      "noAutoReimplementation": true
+    },
+    {
+      "taskId": "RP13-T01",
+      "title": "已证截断的稳定分页子修复",
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "gateRequirements": [],
+      "acceptanceDependencies": [
+        "RP11-T01"
+      ],
+      "caseIds": [
+        "AC-B07-01",
+        "AC-B07-02",
+        "AC-B07-03",
+        "PAC-RP13-01",
+        "TASK-RP13-T01"
+      ],
+      "evidenceRefsAsRecorded": [
+        "execution/RP13/RP13-T01/runs/2026-10-02-followup-validation/task-state.json"
+      ],
+      "executionModeNow": "PREPARE_OR_REUSE_EVIDENCE_ONLY",
+      "noAutoReimplementation": true
+    },
+    {
+      "taskId": "RP13-T02",
+      "title": "safe-watermark/事件revision/epoch ADR",
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "gateRequirements": [
+        {
+          "ref": "T-RP-04",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "ref": "T-RP-10",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S03-OI-01",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "caseIds": [
+        "AC-B07-01",
+        "AC-B07-02",
+        "AC-B07-03",
+        "PAC-RP13-02",
+        "TASK-RP13-T02",
+        "INT-PC05-01",
+        "GATE-S03-OI-01",
+        "DECISION-T-RP-04",
+        "DECISION-T-RP-10"
+      ],
+      "evidenceRefsAsRecorded": [
+        "execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/task-state.json",
+        "RP13/RP13-T02/acceptance.json",
+        "RP13/RP13-T02/authorization.json",
+        "RP13/RP13-T02/change-summary.md",
+        "RP13/RP13-T02/evidence/WATERMARK_ADR_DRAFT.md",
+        "RP13/RP13-T02/rollback.md",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/acceptance.json",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/authorization.json",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/change-summary.md",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/cluster-start.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/cluster-stop.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/commands-and-results.json",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/guard-check.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/guard-drop.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/guard-reset.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/initdb.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/publisher-one.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/pull-after-publish.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/pull-before-source-commit.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/schema-setup.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/unsafe-seq-a-commit.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/unsafe-seq-after-cut.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/unsafe-seq-b-allocate.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/unsafe-seq-b-commit.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/unsafe-seq-cut.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/barrier-summary.json",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/cluster-start.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/cluster-stop.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/commands-and-results.json",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/guard-check.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/guard-drop.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/guard-reset.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/initdb.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/publisher-competing-check.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/publisher-one.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/pull-after-publish.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/pull-before-source-commit.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/schema-setup.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/source-rollback-check.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/source-rollback.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/unsafe-seq-a-commit.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/unsafe-seq-after-cut.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/unsafe-seq-b-allocate.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/unsafe-seq-b-commit.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/unsafe-seq-cut.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/owned-watermark-barrier.py",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/handoff.md",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/rollback.md",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/task-state.json",
+        "RP13/RP13-T02/task-state.json"
+      ],
+      "executionModeNow": "PREPARE_OR_REUSE_EVIDENCE_ONLY",
+      "noAutoReimplementation": true
+    },
+    {
+      "taskId": "RP17-T01",
+      "title": "实际目录staging与不可变发布",
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "gateRequirements": [],
+      "acceptanceDependencies": [],
+      "caseIds": [
+        "AC-D01-01",
+        "PAC-RP17-01",
+        "PAC-RP17-02",
+        "TASK-RP17-T01",
+        "INT-PC08-01"
+      ],
+      "evidenceRefsAsRecorded": [],
+      "executionModeNow": "PREPARE_OR_REUSE_EVIDENCE_ONLY",
+      "noAutoReimplementation": true
+    },
+    {
+      "taskId": "RP19-T01",
+      "title": "R12-N01候选外部协调证据裁定",
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "gateRequirements": [
+        {
+          "ref": "S05-OI-02",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "caseIds": [
+        "AC-R12-N01-01",
+        "PAC-RP19-01",
+        "TASK-RP19-T01",
+        "GATE-S05-OI-02"
+      ],
+      "evidenceRefsAsRecorded": [
+        "execution/RP19/RP19-T01/authorization.json",
+        "execution/RP19/RP19-T01/change-summary.md",
+        "execution/RP19/RP19-T01/acceptance.json",
+        "execution/RP19/RP19-T01/evidence/evidence-inventory.json"
+      ],
+      "executionModeNow": "PREPARE_OR_REUSE_EVIDENCE_ONLY",
+      "noAutoReimplementation": true
+    }
+  ]
+}

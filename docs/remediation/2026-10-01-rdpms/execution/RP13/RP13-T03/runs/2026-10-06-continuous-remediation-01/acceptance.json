@@ -1,0 +1,102 @@
+{
+  "taskId": "RP13-T03",
+  "approvalRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/approval.json",
+  "cases": [
+    {
+      "caseId": "AC-B07-01",
+      "result": "PASS",
+      "scope": "Seven producer DB tables capture exact source revision/scope/epoch/deletion atomically on all DML, commit-visible on-demand publication head allocated in same transaction, no sequence holes on rollback; signed fixed-cut500 pages/latest-revision collapse/current ACL/report own-only/live metadata projection. Native JWT journal9; real Chrome IDB6 revision/tombstone/abort/partial-page; regressions ACL6/read12/legacy pagination2/JWT Chrome ACL7/receipts6 twice/restore1/apply11/epoch10/unit93. Legacy timestamp always full safely; candidate v2 cursor upgrade reset preserves originals. No automatic journal GC or production target claim.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-B07-02",
+      "result": "PASS",
+      "scope": "Seven producer DB tables capture exact source revision/scope/epoch/deletion atomically on all DML, commit-visible on-demand publication head allocated in same transaction, no sequence holes on rollback; signed fixed-cut500 pages/latest-revision collapse/current ACL/report own-only/live metadata projection. Native JWT journal9; real Chrome IDB6 revision/tombstone/abort/partial-page; regressions ACL6/read12/legacy pagination2/JWT Chrome ACL7/receipts6 twice/restore1/apply11/epoch10/unit93. Legacy timestamp always full safely; candidate v2 cursor upgrade reset preserves originals. No automatic journal GC or production target claim.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-B07-03",
+      "result": "PASS",
+      "scope": "Seven producer DB tables capture exact source revision/scope/epoch/deletion atomically on all DML, commit-visible on-demand publication head allocated in same transaction, no sequence holes on rollback; signed fixed-cut500 pages/latest-revision collapse/current ACL/report own-only/live metadata projection. Native JWT journal9; real Chrome IDB6 revision/tombstone/abort/partial-page; regressions ACL6/read12/legacy pagination2/JWT Chrome ACL7/receipts6 twice/restore1/apply11/epoch10/unit93. Legacy timestamp always full safely; candidate v2 cursor upgrade reset preserves originals. No automatic journal GC or production target claim.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP13-01",
+      "result": "PASS",
+      "scope": "Seven producer DB tables capture exact source revision/scope/epoch/deletion atomically on all DML, commit-visible on-demand publication head allocated in same transaction, no sequence holes on rollback; signed fixed-cut500 pages/latest-revision collapse/current ACL/report own-only/live metadata projection. Native JWT journal9; real Chrome IDB6 revision/tombstone/abort/partial-page; regressions ACL6/read12/legacy pagination2/JWT Chrome ACL7/receipts6 twice/restore1/apply11/epoch10/unit93. Legacy timestamp always full safely; candidate v2 cursor upgrade reset preserves originals. No automatic journal GC or production target claim.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP13-02",
+      "result": "PASS",
+      "scope": "Seven producer DB tables capture exact source revision/scope/epoch/deletion atomically on all DML, commit-visible on-demand publication head allocated in same transaction, no sequence holes on rollback; signed fixed-cut500 pages/latest-revision collapse/current ACL/report own-only/live metadata projection. Native JWT journal9; real Chrome IDB6 revision/tombstone/abort/partial-page; regressions ACL6/read12/legacy pagination2/JWT Chrome ACL7/receipts6 twice/restore1/apply11/epoch10/unit93. Legacy timestamp always full safely; candidate v2 cursor upgrade reset preserves originals. No automatic journal GC or production target claim.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP13-03",
+      "result": "PASS",
+      "scope": "Seven producer DB tables capture exact source revision/scope/epoch/deletion atomically on all DML, commit-visible on-demand publication head allocated in same transaction, no sequence holes on rollback; signed fixed-cut500 pages/latest-revision collapse/current ACL/report own-only/live metadata projection. Native JWT journal9; real Chrome IDB6 revision/tombstone/abort/partial-page; regressions ACL6/read12/legacy pagination2/JWT Chrome ACL7/receipts6 twice/restore1/apply11/epoch10/unit93. Legacy timestamp always full safely; candidate v2 cursor upgrade reset preserves originals. No automatic journal GC or production target claim.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP13-05",
+      "result": "PASS",
+      "scope": "Seven producer DB tables capture exact source revision/scope/epoch/deletion atomically on all DML, commit-visible on-demand publication head allocated in same transaction, no sequence holes on rollback; signed fixed-cut500 pages/latest-revision collapse/current ACL/report own-only/live metadata projection. Native JWT journal9; real Chrome IDB6 revision/tombstone/abort/partial-page; regressions ACL6/read12/legacy pagination2/JWT Chrome ACL7/receipts6 twice/restore1/apply11/epoch10/unit93. Legacy timestamp always full safely; candidate v2 cursor upgrade reset preserves originals. No automatic journal GC or production target claim.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "TASK-RP13-T03",
+      "result": "PASS",
+      "scope": "Seven producer DB tables capture exact source revision/scope/epoch/deletion atomically on all DML, commit-visible on-demand publication head allocated in same transaction, no sequence holes on rollback; signed fixed-cut500 pages/latest-revision collapse/current ACL/report own-only/live metadata projection. Native JWT journal9; real Chrome IDB6 revision/tombstone/abort/partial-page; regressions ACL6/read12/legacy pagination2/JWT Chrome ACL7/receipts6 twice/restore1/apply11/epoch10/unit93. Legacy timestamp always full safely; candidate v2 cursor upgrade reset preserves originals. No automatic journal GC or production target claim.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "DECISION-T-RP-04",
+      "result": "PASS",
+      "scope": "Seven producer DB tables capture exact source revision/scope/epoch/deletion atomically on all DML, commit-visible on-demand publication head allocated in same transaction, no sequence holes on rollback; signed fixed-cut500 pages/latest-revision collapse/current ACL/report own-only/live metadata projection. Native JWT journal9; real Chrome IDB6 revision/tombstone/abort/partial-page; regressions ACL6/read12/legacy pagination2/JWT Chrome ACL7/receipts6 twice/restore1/apply11/epoch10/unit93. Legacy timestamp always full safely; candidate v2 cursor upgrade reset preserves originals. No automatic journal GC or production target claim.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP13-04",
+      "result": "ENV_BLOCKED",
+      "reason": "Local v2/legacy upgrade/real browser original/epoch retention subset passed. Actual supported deployed client catalog, longest offline window, target publisher/locking/storage budget unknown; no journal pruning enabled.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "INT-PC04-01",
+      "result": "NOT_RUN",
+      "reason": "Only enumerated local subset; full cross-package quota/physical recovery/user UI/target compatibility not complete."
+    },
+    {
+      "caseId": "INT-PC05-01",
+      "result": "NOT_RUN",
+      "reason": "Only enumerated local subset; full cross-package quota/physical recovery/user UI/target compatibility not complete."
+    },
+    {
+      "caseId": "INT-PC06-01",
+      "result": "NOT_RUN",
+      "reason": "Only enumerated local subset; full cross-package quota/physical recovery/user UI/target compatibility not complete."
+    },
+    {
+      "caseId": "INT-PC11-01",
+      "result": "NOT_RUN",
+      "reason": "Only enumerated local subset; full cross-package quota/physical recovery/user UI/target compatibility not complete."
+    },
+    {
+      "caseId": "INT-PC12-01",
+      "result": "NOT_RUN",
+      "reason": "Only enumerated local subset; full cross-package quota/physical recovery/user UI/target compatibility not complete."
+    }
+  ],
+  "localValidation": "PASS",
+  "jointValidation": "NOT_RUN",
+  "targetValidation": "NOT_RUN",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "limits": [
+    "Native fixtures use owned synthetic accounts/DB/HTTP/Chrome; synthetic browser revision mode explicitly not JWT. All source tables producer capture proven by actual DML+DB triggers, plus current native HTTP/sync/restore regression; full UI/template/import actor scenarios not all individually replayed.",
+    "Publisher conservative cap10000 unpublished returns503/rollsback and never falsely advances; target sizing/lag and arbitrary large initial bootstrap not certified. Retain all journal, no automatic garbage collection/scheduling; production operational limits external.",
+    "One uninstrumented receipt owner-reentry regression failed at A automatic retry after correct A→B isolation; scoped diagnostic copy with unchanged assertions passed6 twice. Cause not conclusively determined, original failure retained for independent review; no unrelated auth/retry policy repair.",
+    "Legacy incremental fixture assertions now bind actual v2 signed commit sequence with no wall clock sleep; ordinary legacy fields unchanged. Complete actual supported client and release catalog external."
+  ]
+}

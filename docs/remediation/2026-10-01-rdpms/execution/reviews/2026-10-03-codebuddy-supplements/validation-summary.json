@@ -1,0 +1,110 @@
+{
+  "reviewId": "CODEBUDDY-SUPPLEMENTS-REVIEW-2026-10-03",
+  "verdict": "REWORK_WITH_SCOPED_PASSES",
+  "supplements": {
+    "SUP-01": {
+      "implementation": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "meaning": "Required completion scope not fully covered; see PASS subscopes and findings"
+    },
+    "SUP-02": {
+      "implementation": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "meaning": "Required completion scope not fully covered; see PASS subscopes and findings"
+    },
+    "SUP-03": {
+      "implementation": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "meaning": "Required completion scope not fully covered; see PASS subscopes and findings"
+    }
+  },
+  "localPassedScopes": {
+    "SUP-01": [
+      "Current create conflict and original normal suite19/19",
+      "One real DB semantic unconditional-upsert negative control identifies bad invariant"
+    ],
+    "SUP-02": [
+      "Same target-row exact field keys/values across seven entities",
+      "General zero-actor rejection and normal suite12/12"
+    ],
+    "SUP-03": [
+      "Selected phase read/sync/delete observations supported by current source; review remains incomplete"
+    ]
+  },
+  "requiredMissingScopes": {
+    "SUP-01": [
+      "Relevant original race gates migrated to primitive-aware matcher",
+      "Restore then submit before late-restore formal regression",
+      "Actual primitive compatibility coverage",
+      "Finally release/settle on failure"
+    ],
+    "SUP-02": [
+      "Same positive user after target permission removed",
+      "Accurate complete field CSV/md"
+    ],
+    "SUP-03": [
+      "Project-detail phases/no-projectId list",
+      "Direct actual client trace or NOT_FOUND",
+      "Original B20 project-only scope",
+      "Attributable policy/source boundaries"
+    ]
+  },
+  "independentResultsRef": "evidence/independent-validation.json",
+  "executorLogsInspectedRef": "evidence/executor-run-inspection.json",
+  "independentSuites": {
+    "RP10": {
+      "tests": 19,
+      "pass": 19,
+      "fail": 0
+    },
+    "RP08": {
+      "tests": 12,
+      "pass": 12,
+      "fail": 0
+    }
+  },
+  "independentChecks": [
+    "backend build0",
+    "typecheck0",
+    "lint:undefined0",
+    "git diff --check0"
+  ],
+  "executorCheckEvidenceMissing": [
+    "typecheck",
+    "lint:undefined",
+    "git diff --check"
+  ],
+  "runnerCleanupControl": "SIMULATED_CONTROL_FLOW_ONLY; no live DB failure injected",
+  "notEvaluated": [
+    "full JWT chain",
+    "frontend IndexedDB",
+    "actual UI phase display",
+    "approved phase field/deletion policy",
+    "target/candidate environment",
+    "joint contracts",
+    "deployment/release"
+  ],
+  "original54Counts": {
+    "implementation": {
+      "COMPLETE": 18,
+      "IN_PROGRESS": 2,
+      "NOT_STARTED": 34
+    },
+    "validation": {
+      "PASS": 10,
+      "NOT_RUN": 37,
+      "ENV_BLOCKED": 7,
+      "FAIL": 0
+    }
+  },
+  "original306Counts": {
+    "PASS": 53,
+    "NOT_RUN": 228,
+    "ENV_BLOCKED": 25,
+    "FAIL": 0
+  },
+  "historicalFindings": "B10/B04/B14/B20 and frozen31 open items retain prior disposition; do not reinterpret local test/control exit as FIX_ACCEPTED"
+}

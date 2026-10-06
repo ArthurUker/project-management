@@ -1,0 +1,110 @@
+[
+  {
+    "id": "S03-OI-01",
+    "relatedPacketOrFinding": ["R05", "B07"],
+    "question": "Can a change transaction commit after GET /sync/init returns a cursor later than the change row timestamp, causing the next strict-greater-than pull to miss it?",
+    "type": "EXPERIMENT",
+    "currentEvidence": "sync.js performs entity queries before assigning serverTime cursor; R05 inherited B07 and documented the late-commit window as untested. No current-turn DB experiment.",
+    "missingInput": "Owned isolated PostgreSQL instance, deterministic two-connection barrier, and captured SQL/response logs.",
+    "ownerRole": "Audit executor with isolated database access",
+    "releaseCondition": "Run the protocol in protocol-questions.md and record timestamps, commit order, second-pull result, and cleanup evidence.",
+    "status": "OPEN",
+    "reason": "Database visibility/timestamp ordering cannot be established from static source alone."
+  },
+  {
+    "id": "S03-OI-02",
+    "relatedPacketOrFinding": ["R06", "B05", "B06"],
+    "question": "Under two barrier-synchronized pushes with the same key and stale base, what are the final entity state and receipt status; can a later loser receipt overwrite the winner receipt?",
+    "type": "EXPERIMENT",
+    "currentEvidence": "Successful receipt prefetch is outside the business write; existing-record updates use CAS; business write and receipt upsert are separate. Historical B06 tests post-write receipt failure, not same-key concurrency.",
+    "missingInput": "Isolated DB, synthetic row, deterministic barrier at prefetch/read and before receipt upsert, and repeatable transaction logs.",
+    "ownerRole": "Audit executor with isolated database access",
+    "releaseCondition": "Run a controlled two-request experiment including identical and divergent payloads; assert database row, both HTTP outcomes, and final SyncMutation contents.",
+    "status": "OPEN",
+    "reason": "Interleaving final state depends on database CAS/upsert scheduling and was not run."
+  },
+  {
+    "id": "S03-OI-03",
+    "relatedPacketOrFinding": ["R06", "B06"],
+    "question": "After an HTTP 500 at each point around mutation write and receipt persistence, what stable client-visible recovery route resolves each outbox item?",
+    "type": "STATIC_REVIEW",
+    "currentEvidence": "Historical B06 shows business write committed with missing receipt; frontend processes/removes outbox only after a successful push response; /sync/status exposes counts, not key-specific outcome lookup.",
+    "missingInput": "Defined client recovery contract and targeted failure-point outcome evidence. Do not infer whole-batch atomicity.",
+    "ownerRole": "Sync protocol owner and audit executor",
+    "releaseCondition": "Specify per-item retry/query semantics; if code behavior remains insufficiently evidenced, run isolated failure injection at business-write/receipt boundary and verify retry.",
+    "status": "OPEN",
+    "reason": "The historical single fault demonstrates ambiguity but does not cover every entity or recovery branch."
+  },
+  {
+    "id": "S03-OI-04",
+    "relatedPacketOrFinding": ["R06"],
+    "question": "Does the deployed environment run a cleanup job for SyncMutation and expired MutationReceipt rows, and what is the effective replay/idempotency window?",
+    "type": "ENVIRONMENT",
+    "currentEvidence": "Targeted backend/src search found no SyncMutation cleanup call; receipts.js marks expiresAt and says cleanup is outside its scope. This does not rule out external scheduled jobs.",
+    "missingInput": "Non-sensitive deployment scheduler/runbook and retention configuration.",
+    "ownerRole": "Deployment operator",
+    "releaseCondition": "Inspect the candidate deployment's scheduled jobs and document retention/deletion cadence and replay behavior after expiry.",
+    "status": "OPEN",
+    "reason": "Repository route/helper evidence alone cannot establish deployed external cleanup."
+  },
+  {
+    "id": "S03-OI-05",
+    "relatedPacketOrFinding": ["R06", "R09", "B16"],
+    "question": "Should offline delete mutations conflict when their baseUpdatedAt is stale, and what should repeated tombstones return?",
+    "type": "DECISION",
+    "currentEvidence": "sync.js excludes delete from the stale-base precheck and performs update by id; HTTP delete behavior follows a different route. No stale-delete probe or product rule was found in reviewed packet evidence.",
+    "missingInput": "Business rule for delete-wins versus stale-delete conflict, plus explicit repeated-delete contract.",
+    "ownerRole": "Product owner",
+    "releaseCondition": "Record an approved deletion conflict/replay contract, then verify online and offline routes against it.",
+    "status": "OPEN",
+    "reason": "Static route difference alone does not establish unintended data loss without the expected conflict contract."
+  },
+  {
+    "id": "S03-OI-06",
+    "relatedPacketOrFinding": ["R02", "N-R02-02"],
+    "question": "What is the required access-token invalidation time after self-service password change or administrator reset?",
+    "type": "DECISION",
+    "currentEvidence": "R02/N-R02-02 statically confirms passwordChangedAt is not checked by access-token authentication; R02 records the policy timing question.",
+    "missingInput": "Security/product-approved session invalidation SLA and separate self-service/admin reset expectations.",
+    "ownerRole": "Security and product owner",
+    "releaseCondition": "Resolve under S01 and append the decision reference to final reconciliation; this S03 item must not duplicate the finding.",
+    "status": "OPEN",
+    "reason": "S03 records cross-cutting dependency only; it does not decide security policy."
+  },
+  {
+    "id": "S03-OI-07",
+    "relatedPacketOrFinding": ["R06", "R06-N01"],
+    "question": "Must setting a project manager through any write entry point imply an active ProjectMember row with role MANAGER?",
+    "type": "DECISION",
+    "currentEvidence": "R06 found HTTP manager transfer updates the project and membership relation transactionally while generic sync projects.managerId is a field update. This package inherited that matrix and did not rerun it.",
+    "missingInput": "Approved product rule for managerId/member-role coupling and behavior when the prior manager is removed.",
+    "ownerRole": "Product owner",
+    "releaseCondition": "Resolve the relationship contract in S01, then compare HTTP/sync outcomes against it.",
+    "status": "OPEN",
+    "reason": "Current code behavior is known from R06; whether the behavior is contractually required is a pending business decision."
+  },
+  {
+    "id": "S03-OI-08",
+    "relatedPacketOrFinding": ["R09", "B10"],
+    "question": "Do concurrent report version allocations or transaction isolation permit duplicate/incorrect version outcomes, and which source statuses may legally be resubmitted?",
+    "type": "EXPERIMENT",
+    "currentEvidence": "R09 statically found max(version)+1 allocation inside command transaction and inherited a controlled stale snapshot probe. This S03 review confirms sync has no submit command; it did not run version-allocation contention.",
+    "missingInput": "Owned isolated PostgreSQL and barrier-controlled concurrent submit scenario; product-approved valid resubmission source states.",
+    "ownerRole": "Audit executor with isolated database access and report policy owner",
+    "releaseCondition": "Run simultaneous submits in the isolated DB and separately resolve legal source statuses with S01; record version uniqueness and transaction result.",
+    "status": "OPEN",
+    "reason": "Static code and the historic probe do not establish all isolation-level/version race outcomes or the intended resubmission policy."
+  },
+  {
+    "id": "S03-OI-09",
+    "relatedPacketOrFinding": ["R09", "B16"],
+    "question": "Which supported task client versions send expectedUpdatedAt, and are stale writes rejected across every field/status/assignee entry?",
+    "type": "STATIC_REVIEW",
+    "currentEvidence": "Two offline status UI paths pass task.updatedAt to outbox; online task PUT and PATCH routes do not parse/pass a client baseline. R09 historical probe established stale PUT overwrite. This package did not enumerate all deployed client versions or run per-field interleavings.",
+    "missingInput": "Supported client/version contract and entry-point/field test matrix.",
+    "ownerRole": "Frontend/API owner and audit executor",
+    "releaseCondition": "Enumerate supported clients and run the B16 acceptance matrix for ordinary fields, status, assignment, mixed PUT, and PATCH; retain legacy compatibility boundaries.",
+    "status": "OPEN",
+    "reason": "Current source establishes route DTO gap but does not identify all deployed clients or prove each stale-write outcome."
+  }
+]

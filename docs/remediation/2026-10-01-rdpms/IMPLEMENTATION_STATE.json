@@ -1,0 +1,3470 @@
+{
+  "planDate": "2026-10-01",
+  "baseline": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "planningStatus": "COMPLETE",
+  "executionAuthorized": true,
+  "executionPhase": "IN_PROGRESS",
+  "activePackage": null,
+  "nextPlanningRead": "GAP_REVIEW.md",
+  "implementationEntryWhenAuthorized": "RP00-T01",
+  "packages": {
+    "RP00": {
+      "title": "实施准备、规则登记与两项定向审阅门禁",
+      "phase": 0,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "taskIds": [
+        "RP00-T01",
+        "RP00-T02",
+        "RP00-T03",
+        "RP00-T04",
+        "RP00-T05"
+      ],
+      "dependsOn": [],
+      "dependencyAuthority": "TASK_GRAPH.json",
+      "conditionalGateRequirements": [
+        {
+          "taskId": "RP00-T01",
+          "ref": "S00-OI-01",
+          "before": "VALIDATION",
+          "condition": "archive disposition only; missing historic startHead does not block any business task"
+        },
+        {
+          "taskId": "RP00-T02",
+          "ref": "S03-OI-03",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP00-T03",
+          "ref": "S03-OI-09",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP00-T04",
+          "ref": "T-RP-09",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP00-T05",
+          "ref": "T-RP-11",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP00-T05",
+          "ref": "T-RP-13",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "ownerAssigned": false,
+      "completedEvidence": [
+        "execution/RP00/RP00-T04/change-summary.md; validation NOT_RUN (T-RP-09 proposed)",
+        "execution/RP00/RP00-T05/change-summary.md; validation NOT_RUN (T-RP-11/T-RP-13 proposed)"
+      ]
+    },
+    "RP01": {
+      "title": "账号目标保护、强制改密与角色创建 DTO",
+      "phase": 1,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "taskIds": [
+        "RP01-T01",
+        "RP01-T02",
+        "RP01-T03"
+      ],
+      "dependsOn": [],
+      "dependencyAuthority": "TASK_GRAPH.json",
+      "conditionalGateRequirements": [
+        {
+          "taskId": "RP01-T02",
+          "ref": "D-S01-01",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP01-T02",
+          "ref": "D-S01-02",
+          "before": "IMPLEMENTATION",
+          "condition": "only forced-password-change/business allowlist sub-scope; rank/reset protection uses D-S01-01 independently"
+        },
+        {
+          "taskId": "RP01-T03",
+          "ref": "D-S01-03",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "ownerAssigned": false,
+      "completedEvidence": [
+        "execution/RP01/RP01-T02/runs/2026-10-06-continuous-remediation-01/task-state.json"
+      ],
+      "statusNote": "All required implementation tasks may be complete locally, but package joint/target/release acceptance remains open."
+    },
+    "RP02": {
+      "title": "临时锁定与 refresh 单次消费和真实 TTL",
+      "phase": 1,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "taskIds": [
+        "RP02-T01",
+        "RP02-T02"
+      ],
+      "dependsOn": [],
+      "dependencyAuthority": "TASK_GRAPH.json",
+      "conditionalGateRequirements": [
+        {
+          "taskId": "RP02-T02",
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "ownerAssigned": false,
+      "completedEvidence": [
+        "execution/RP02/RP02-T01/change-summary.md (implementation complete; dynamic validation ENV_BLOCKED)",
+        "execution/RP02/RP02-T01/change-summary.md (implementation complete; validation ENV_BLOCKED)",
+        "execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/task-state.json",
+        "execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/joint-validation/task-state.json"
+      ],
+      "latestReviewRef": "execution/reviews/2026-10-03-codebuddy-followup/REVIEW.md",
+      "statusNote": "All required implementation tasks may be complete locally, but package joint/target/release acceptance remains open."
+    },
+    "RP03": {
+      "title": "会话失效合同与跨标签 token 协调",
+      "phase": 2,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "taskIds": [
+        "RP03-T01",
+        "RP03-T02"
+      ],
+      "dependsOn": [],
+      "dependencyAuthority": "TASK_GRAPH.json",
+      "conditionalGateRequirements": [
+        {
+          "taskId": "RP03-T01",
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP03-T01",
+          "ref": "S02-OPEN-05",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP03-T02",
+          "ref": "D-S01-04",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP03-T02",
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP03-T02",
+          "ref": "S03-OI-06",
+          "before": "IMPLEMENTATION",
+          "condition": "same D-S01-04 approval; no second approval required"
+        }
+      ],
+      "ownerAssigned": false,
+      "completedEvidence": [
+        "execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/task-state.json",
+        "execution/RP03/RP03-T02/runs/2026-10-06-continuous-remediation-01/task-state.json"
+      ],
+      "statusNote": "All required implementation tasks may be complete locally, but package joint/target/release acceptance remains open."
+    },
+    "RP04": {
+      "title": "项目业务快照、创建聚合事务与活跃查询",
+      "phase": 1,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "taskIds": [
+        "RP04-T01",
+        "RP04-T02"
+      ],
+      "dependsOn": [],
+      "dependencyAuthority": "TASK_GRAPH.json",
+      "conditionalGateRequirements": [],
+      "ownerAssigned": false,
+      "completedEvidence": [
+        "execution/RP04/RP04-T01/change-summary.md (implementation complete; validation ENV_BLOCKED)"
+      ],
+      "latestReviewRef": "execution/reviews/2026-10-03-codebuddy/REVIEW.md"
+    },
+    "RP05": {
+      "title": "嵌套差量命令、删除授权与同项目父关系防护",
+      "phase": 1,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "taskIds": [
+        "RP05-T01",
+        "RP05-T02",
+        "RP05-T03"
+      ],
+      "dependsOn": [],
+      "dependencyAuthority": "TASK_GRAPH.json",
+      "conditionalGateRequirements": [
+        {
+          "taskId": "RP05-T02",
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP05-T02",
+          "ref": "T-RP-07",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP05-T02",
+          "ref": "S03-OI-05",
+          "before": "IMPLEMENTATION",
+          "condition": "only if stale/delete command adapter is changed; no gate on unrelated task fields or report snapshot"
+        },
+        {
+          "taskId": "RP05-T03",
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "DAG/live policy approved"
+        },
+        {
+          "taskId": "RP05-T03",
+          "ref": "T-RP-11",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "ownerAssigned": false,
+      "completedEvidence": [
+        "execution/RP05/RP05-T02/runs/2026-10-06-continuous-remediation-01/task-state.json"
+      ],
+      "statusNote": "All required implementation tasks may be complete locally, but package joint/target/release acceptance remains open."
+    },
+    "RP06": {
+      "title": "注册项目全入口访问范围",
+      "phase": 1,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "taskIds": [
+        "RP06-T01",
+        "RP06-T02"
+      ],
+      "dependsOn": [],
+      "dependencyAuthority": "TASK_GRAPH.json",
+      "conditionalGateRequirements": [
+        {
+          "taskId": "RP06-T01",
+          "ref": "D-S01-05",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP06-T02",
+          "ref": "D-S01-06",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "ownerAssigned": false,
+      "completedEvidence": [
+        "execution/RP06/RP06-T01/runs/2026-10-06-continuous-remediation-01/task-state.json",
+        "execution/RP06/RP06-T02/runs/2026-10-06-continuous-remediation-01/task-state.json"
+      ],
+      "statusNote": "All required implementation tasks may be complete locally, but package joint/target/release acceptance remains open."
+    },
+    "RP07": {
+      "title": "项目状态与负责人跨入口共享命令",
+      "phase": 1,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "taskIds": [
+        "RP07-T01",
+        "RP07-T02"
+      ],
+      "dependsOn": [],
+      "dependencyAuthority": "TASK_GRAPH.json",
+      "conditionalGateRequirements": [
+        {
+          "taskId": "RP07-T02",
+          "ref": "D-S01-06",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP07-T02",
+          "ref": "S03-OI-07",
+          "before": "IMPLEMENTATION",
+          "condition": "same D-S01-06 approval; no second approval required"
+        }
+      ],
+      "ownerAssigned": false,
+      "completedEvidence": [
+        "execution/RP07/RP07-T02/runs/2026-10-06-continuous-remediation-01/task-state.json"
+      ],
+      "statusNote": "All required implementation tasks may be complete locally, but package joint/target/release acceptance remains open."
+    },
+    "RP08": {
+      "title": "同步实体读权限与授权增量回填",
+      "phase": 1,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "taskIds": [
+        "RP08-T01",
+        "RP08-T02"
+      ],
+      "dependsOn": [],
+      "dependencyAuthority": "TASK_GRAPH.json",
+      "conditionalGateRequirements": [
+        {
+          "taskId": "RP08-T01",
+          "ref": "D-S01-05",
+          "before": "IMPLEMENTATION",
+          "condition": "only if registration global exception is requested"
+        },
+        {
+          "taskId": "RP08-T02",
+          "ref": "T-RP-04",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP08-T02",
+          "ref": "T-RP-12",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP08-T02",
+          "ref": "S02-OPEN-02",
+          "before": "VALIDATION",
+          "condition": "joint authorized cache/page fallback acceptance"
+        }
+      ],
+      "ownerAssigned": false,
+      "completedEvidence": [
+        "execution/RP08/RP08-T02/runs/2026-10-06-continuous-remediation-01/task-state.json"
+      ],
+      "latestReviewRef": "execution/reviews/2026-10-03-codebuddy-followup/REVIEW.md",
+      "statusNote": "All required implementation tasks may be complete locally, but package joint/target/release acceptance remains open."
+    },
+    "RP09": {
+      "title": "单 mutation 事务、作用域回执与失败恢复",
+      "phase": 2,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "taskIds": [
+        "RP09-T01",
+        "RP09-T02"
+      ],
+      "dependsOn": [],
+      "dependencyAuthority": "TASK_GRAPH.json",
+      "conditionalGateRequirements": [
+        {
+          "taskId": "RP09-T01",
+          "ref": "T-RP-02",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP09-T01",
+          "ref": "T-RP-07",
+          "before": "IMPLEMENTATION",
+          "condition": "delete command adapter modified"
+        },
+        {
+          "taskId": "RP09-T01",
+          "ref": "S03-OI-05",
+          "before": "IMPLEMENTATION",
+          "condition": "only if stale/delete command adapter is changed; no gate on unrelated task fields or report snapshot"
+        },
+        {
+          "taskId": "RP09-T02",
+          "ref": "S03-OI-02",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP09-T02",
+          "ref": "S03-OI-04",
+          "before": "RELEASE",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP09-T02",
+          "ref": "T-RP-02",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "ownerAssigned": false,
+      "completedEvidence": [
+        "execution/RP09/RP09-T01/runs/2026-10-05-sync-receipts-01/task-state.json",
+        "execution/RP09/RP09-T02/runs/2026-10-05-sync-receipts-01/task-state.json"
+      ],
+      "statusNote": "All required implementation tasks may be complete locally, but package joint/target/release acceptance remains open."
+    },
+    "RP10": {
+      "title": "任务全入口 revision 与汇报同修订提交",
+      "phase": 2,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "taskIds": [
+        "RP10-T01",
+        "RP10-T02",
+        "RP10-T03"
+      ],
+      "dependsOn": [],
+      "dependencyAuthority": "TASK_GRAPH.json",
+      "conditionalGateRequirements": [
+        {
+          "taskId": "RP10-T01",
+          "ref": "T-RP-03",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP10-T01",
+          "ref": "S03-OI-05",
+          "before": "IMPLEMENTATION",
+          "condition": "only if stale/delete command adapter is changed; no gate on unrelated task fields or report snapshot"
+        },
+        {
+          "taskId": "RP10-T02",
+          "ref": "D-S01-07",
+          "before": "IMPLEMENTATION",
+          "condition": "source-state behavior changed"
+        },
+        {
+          "taskId": "RP10-T03",
+          "ref": "D-S01-07",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP10-T03",
+          "ref": "S03-OI-08",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "ownerAssigned": false,
+      "completedEvidence": [
+        "execution/RP10/RP10-T03/runs/2026-10-05-approved-contracts-01/task-state.json"
+      ],
+      "latestReviewRef": "execution/reviews/2026-10-03-codebuddy-followup/REVIEW.md",
+      "statusNote": "All required implementation tasks may be complete locally, but package joint/target/release acceptance remains open."
+    },
+    "RP11": {
+      "title": "离线身份生命周期、持久副本与旧库隔离",
+      "phase": 1,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "taskIds": [
+        "RP11-T01",
+        "RP11-T02",
+        "RP11-T03"
+      ],
+      "dependsOn": [],
+      "dependencyAuthority": "TASK_GRAPH.json",
+      "conditionalGateRequirements": [
+        {
+          "taskId": "RP11-T01",
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP11-T01",
+          "ref": "T-RP-12",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP11-T01",
+          "ref": "S02-OPEN-01",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP11-T01",
+          "ref": "S02-OPEN-02",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP11-T02",
+          "ref": "T-RP-01",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP11-T02",
+          "ref": "S02-OPEN-06",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP11-T02",
+          "ref": "S02-OPEN-07",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP11-T03",
+          "ref": "T-RP-12",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP11-T03",
+          "ref": "S02-OPEN-03",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "ownerAssigned": false,
+      "completedEvidence": [
+        "execution/RP11/RP11-T01/runs/2026-10-06-continuous-remediation-01/task-state.json",
+        "execution/RP11/RP11-T02/runs/2026-10-06-continuous-remediation-01/task-state.json",
+        "execution/RP11/RP11-T03/runs/2026-10-06-continuous-remediation-01/task-state.json"
+      ],
+      "statusNote": "All required implementation tasks may be complete locally, but package joint/target/release acceptance remains open."
+    },
+    "RP12": {
+      "title": "离线按条数/字节分批与结果核对",
+      "phase": 3,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "taskIds": [
+        "RP12-T01",
+        "RP12-T02"
+      ],
+      "dependsOn": [],
+      "dependencyAuthority": "TASK_GRAPH.json",
+      "conditionalGateRequirements": [
+        {
+          "taskId": "RP12-T01",
+          "ref": "S02-OPEN-04",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP12-T01",
+          "ref": "T-RP-11",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP12-T02",
+          "ref": "T-RP-02",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP12-T02",
+          "ref": "T-RP-12",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "ownerAssigned": false,
+      "completedEvidence": [
+        "execution/RP12/RP12-T01/runs/2026-10-06-continuous-remediation-01/task-state.json",
+        "execution/RP12/RP12-T02/runs/2026-10-06-continuous-remediation-01/task-state.json"
+      ],
+      "statusNote": "All required implementation tasks may be complete locally, but package joint/target/release acceptance remains open."
+    },
+    "RP13": {
+      "title": "稳定分页、提交可见水位与版本化 pull",
+      "phase": 3,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "taskIds": [
+        "RP13-T01",
+        "RP13-T02",
+        "RP13-T03"
+      ],
+      "dependsOn": [],
+      "dependencyAuthority": "TASK_GRAPH.json",
+      "conditionalGateRequirements": [
+        {
+          "taskId": "RP13-T02",
+          "ref": "T-RP-04",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP13-T02",
+          "ref": "T-RP-10",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP13-T02",
+          "ref": "S03-OI-01",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP13-T03",
+          "ref": "T-RP-04",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP13-T03",
+          "ref": "T-RP-10",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP13-T03",
+          "ref": "S03-OI-04",
+          "before": "RELEASE",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP13-T03",
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "only when approved delete/live-reference/tombstone semantics are changed"
+        }
+      ],
+      "ownerAssigned": false,
+      "completedEvidence": [
+        "execution/RP13/RP13-T03/runs/2026-10-06-continuous-remediation-01/task-state.json"
+      ],
+      "statusNote": "All required implementation tasks may be complete locally, but package joint/target/release acceptance remains open."
+    },
+    "RP14": {
+      "title": "文件字节出口、扫描策略与 elevated 上下文",
+      "phase": 1,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "taskIds": [
+        "RP14-T01",
+        "RP14-T02"
+      ],
+      "dependsOn": [],
+      "dependencyAuthority": "TASK_GRAPH.json",
+      "conditionalGateRequirements": [
+        {
+          "taskId": "RP14-T02",
+          "ref": "T-RP-05",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "ownerAssigned": false,
+      "completedEvidence": [
+        "execution/RP14/RP14-T02/runs/2026-10-05-approved-contracts-01/task-state.json"
+      ],
+      "statusNote": "All required implementation tasks may be complete locally, but package joint/target/release acceptance remains open."
+    },
+    "RP15": {
+      "title": "历史异常处置与关系约束迁移",
+      "phase": 4,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "taskIds": [
+        "RP15-T01",
+        "RP15-T02",
+        "RP15-T03"
+      ],
+      "dependsOn": [],
+      "dependencyAuthority": "TASK_GRAPH.json",
+      "conditionalGateRequirements": [
+        {
+          "taskId": "RP15-T01",
+          "ref": "S04-OI-01",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP15-T02",
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP15-T02",
+          "ref": "T-RP-11",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP15-T03",
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP15-T03",
+          "ref": "T-RP-11",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "ownerAssigned": false,
+      "completedEvidence": []
+    },
+    "RP16": {
+      "title": "restore 完整约束校验与真实影响计数",
+      "phase": 4,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "taskIds": [
+        "RP16-T01",
+        "RP16-T02",
+        "RP16-T03"
+      ],
+      "dependsOn": [],
+      "dependencyAuthority": "TASK_GRAPH.json",
+      "conditionalGateRequirements": [
+        {
+          "taskId": "RP16-T01",
+          "ref": "T-RP-06",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP16-T02",
+          "ref": "T-RP-06",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP16-T02",
+          "ref": "S05-OI-03",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP16-T03",
+          "ref": "T-RP-10",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "ownerAssigned": false,
+      "completedEvidence": [
+        "execution/RP16/RP16-T01/runs/2026-10-06-continuous-remediation-01/task-state.json",
+        "execution/RP16/RP16-T02/runs/2026-10-06-continuous-remediation-01/task-state.json",
+        "execution/RP16/RP16-T03/runs/2026-10-06-continuous-remediation-01/task-state.json"
+      ],
+      "statusNote": "All required implementation tasks may be complete locally, but package joint/target/release acceptance remains open."
+    },
+    "RP17": {
+      "title": "不可变 uploads 快照与备份清单",
+      "phase": 1,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "taskIds": [
+        "RP17-T01",
+        "RP17-T02",
+        "RP17-T03"
+      ],
+      "dependsOn": [],
+      "dependencyAuthority": "TASK_GRAPH.json",
+      "conditionalGateRequirements": [
+        {
+          "taskId": "RP17-T02",
+          "ref": "T-RP-11",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP17-T03",
+          "ref": "S05-OI-01",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "ownerAssigned": false,
+      "completedEvidence": [
+        "execution/RP17/RP17-T02/runs/2026-10-06-continuous-remediation-01/task-state.json",
+        "execution/RP17/RP17-T03/runs/2026-10-06-continuous-remediation-01/task-state.json"
+      ],
+      "statusNote": "All required implementation tasks may be complete locally, but package joint/target/release acceptance remains open."
+    },
+    "RP18": {
+      "title": "候选门禁、统一配置与发布兼容矩阵",
+      "phase": 2,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "taskIds": [
+        "RP18-T01",
+        "RP18-T02",
+        "RP18-T03"
+      ],
+      "dependsOn": [],
+      "dependencyAuthority": "TASK_GRAPH.json",
+      "conditionalGateRequirements": [
+        {
+          "taskId": "RP18-T01",
+          "ref": "T-RP-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP18-T01",
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP18-T02",
+          "ref": "T-RP-13",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP18-T02",
+          "ref": "S05-OI-05",
+          "before": "RELEASE",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP18-T03",
+          "ref": "S05-OI-04",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "taskId": "RP18-T03",
+          "ref": "T-RP-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "ownerAssigned": false,
+      "completedEvidence": [
+        "execution/RP18/RP18-T01/runs/2026-10-06-continuous-remediation-01/task-state.json",
+        "execution/RP18/RP18-T02/runs/2026-10-06-continuous-remediation-01/task-state.json",
+        "execution/RP18/RP18-T03/runs/2026-10-06-continuous-remediation-01/task-state.json"
+      ],
+      "statusNote": "All required implementation tasks may be complete locally, but package joint/target/release acceptance remains open."
+    },
+    "RP19": {
+      "previousMirrorValue": "IN_PROGRESS",
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "completedEvidence": [
+        "execution/RP19/RP19-T02/runs/2026-10-06-continuous-remediation-01/task-state.json",
+        "execution/RP19/RP19-T03/runs/2026-10-06-continuous-remediation-01/task-state.json",
+        "execution/RP19/RP19-T04/runs/2026-10-06-continuous-remediation-01/task-state.json"
+      ],
+      "statusNote": "All required implementation tasks may be complete locally, but package joint/target/release acceptance remains open."
+    }
+  },
+  "planVersion": "v2",
+  "updatedAt": "2026-10-06T21:21:34.300486+08:00",
+  "planningMeaning": "Plan definitions remain v2; execution status is recorded separately in task state and evidence.",
+  "activeTask": null,
+  "dependencyAuthority": "TASK_GRAPH.json",
+  "counts": {
+    "tasks": 54,
+    "implementation": {
+      "COMPLETE": 48,
+      "NOT_STARTED": 5,
+      "IN_PROGRESS": 1
+    },
+    "validation": {
+      "ENV_BLOCKED": 12,
+      "PASS": 34,
+      "NOT_RUN": 8
+    },
+    "release": "NOT_EVALUATED for all tasks",
+    "incompleteImplementation": 6,
+    "note": "Implementation/local/target/release are separate; original planning checkpoints preserved"
+  },
+  "statusAxes": [
+    "implementation NOT_STARTED/IN_PROGRESS/COMPLETE",
+    "validation PASS/FAIL/NOT_RUN/ENV_BLOCKED",
+    "release NOT_EVALUATED/BLOCKED/READY/DEPLOYED",
+    "finding NOT_STARTED/FIX_ACCEPTED/RISK_ACCEPTED/CANDIDATE_DISPOSITION"
+  ],
+  "tasks": {
+    "RP00-T01": {
+      "packageId": "RP00",
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex executor",
+      "evidence": [
+        "execution/RP00/RP00-T01/change-summary.md",
+        "execution/RP00/RP00-T01/acceptance.json",
+        "execution/RP00/RP00-T01/evidence/baseline-and-preconditions.json",
+        "execution/RP00/RP00-T01/evidence/S00-OI-01-disposition.json",
+        "execution/RP00/RP00-T01/evidence/isolated-environment.json",
+        "execution/RP00/RP00-T01/evidence/commands-and-results.json",
+        "execution/RP00/RP00-T01/evidence/plan-coverage-static-check.json",
+        "execution/RP00/RP00-T01/evidence/cleanup-verification.json",
+        "execution/RP00/RP00-T01/evidence/frozen-input-check.json"
+      ]
+    },
+    "RP00-T02": {
+      "packageId": "RP00",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex executor",
+      "evidence": [
+        "execution/RP00/RP00-T02/change-summary.md",
+        "execution/RP00/RP00-T02/authorization.json",
+        "execution/RP00/RP00-T02/acceptance.json",
+        "execution/RP00/RP00-T02/evidence/failure-point-matrix.json",
+        "execution/RP00/RP00-T02/evidence/source-digest-comparison.json",
+        "execution/RP00/RP00-T02/evidence/historical-evidence.json",
+        "execution/RP00/RP00-T02/evidence/commands-and-results.json"
+      ]
+    },
+    "RP00-T03": {
+      "packageId": "RP00",
+      "implementation": "COMPLETE",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex executor",
+      "evidence": [
+        "execution/RP00/RP00-T03/change-summary.md",
+        "execution/RP00/RP00-T03/authorization.json",
+        "execution/RP00/RP00-T03/acceptance.json",
+        "execution/RP00/RP00-T03/evidence/revision-support-matrix.json",
+        "execution/RP00/RP00-T03/evidence/source-digest-comparison.json",
+        "execution/RP00/RP00-T03/evidence/historical-evidence.json",
+        "execution/RP00/RP00-T03/evidence/commands-and-results.json"
+      ]
+    },
+    "RP00-T04": {
+      "packageId": "RP00",
+      "implementation": "COMPLETE",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex executor",
+      "evidence": [
+        "execution/RP00/RP00-T04/authorization.json",
+        "execution/RP00/RP00-T04/change-summary.md",
+        "execution/RP00/RP00-T04/acceptance.json",
+        "execution/RP00/RP00-T04/rollback.md",
+        "execution/RP00/RP00-T04/evidence/auth-generation-matrix.json",
+        "execution/RP00/RP00-T04/evidence/source-digest-comparison.json",
+        "execution/RP00/RP00-T04/evidence/historical-evidence.json",
+        "execution/RP00/RP00-T04/evidence/commands-and-results.json"
+      ]
+    },
+    "RP00-T05": {
+      "packageId": "RP00",
+      "implementation": "COMPLETE",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex executor",
+      "evidence": [
+        "execution/RP00/RP00-T05/authorization.json",
+        "execution/RP00/RP00-T05/change-summary.md",
+        "execution/RP00/RP00-T05/acceptance.json",
+        "execution/RP00/RP00-T05/rollback.md",
+        "execution/RP00/RP00-T05/evidence/budget-monitoring-register.json"
+      ]
+    },
+    "RP01-T01": {
+      "packageId": "RP01",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex",
+      "evidence": [
+        "execution/RP01/RP01-T01/runs/2026-10-02-continuous-rework/task-state.json",
+        "RP01/RP01-T01/acceptance.json",
+        "RP01/RP01-T01/change-summary.md",
+        "RP01/RP01-T01/evidence/b17-test.log",
+        "RP01/RP01-T01/evidence/build.log",
+        "RP01/RP01-T01/evidence/candidate-baseline.json",
+        "RP01/RP01-T01/evidence/database-after-test-summary.json",
+        "RP01/RP01-T01/evidence/db-aggregate.log",
+        "RP01/RP01-T01/evidence/initdb.log",
+        "RP01/RP01-T01/evidence/pg-stop.log",
+        "RP01/RP01-T01/evidence/postgres-start.log",
+        "RP01/RP01-T01/evidence/prisma-generate.log",
+        "RP01/RP01-T01/evidence/reviewer-scope.md",
+        "RP01/RP01-T01/evidence/revision-history-integrity.json",
+        "RP01/RP01-T01/evidence/workspace-after.json",
+        "RP01/RP01-T01/handoff.md",
+        "RP01/RP01-T01/rollback.md",
+        "RP01/RP01-T01/runs/2026-10-02-continuous-rework/acceptance.json",
+        "RP01/RP01-T01/runs/2026-10-02-continuous-rework/authorization.json",
+        "RP01/RP01-T01/runs/2026-10-02-continuous-rework/change-summary.md",
+        "RP01/RP01-T01/runs/2026-10-02-continuous-rework/evidence/attempt-01/backend-build.log",
+        "RP01/RP01-T01/runs/2026-10-02-continuous-rework/evidence/attempt-01/cluster-start.log",
+        "RP01/RP01-T01/runs/2026-10-02-continuous-rework/evidence/attempt-01/cluster-stop.log",
+        "RP01/RP01-T01/runs/2026-10-02-continuous-rework/evidence/attempt-01/guard-check.log",
+        "RP01/RP01-T01/runs/2026-10-02-continuous-rework/evidence/attempt-01/guard-drop.log",
+        "RP01/RP01-T01/runs/2026-10-02-continuous-rework/evidence/attempt-01/guard-reset.log",
+        "RP01/RP01-T01/runs/2026-10-02-continuous-rework/evidence/attempt-01/initdb.log",
+        "RP01/RP01-T01/runs/2026-10-02-continuous-rework/evidence/attempt-01/integration-suite.log",
+        "RP01/RP01-T01/runs/2026-10-02-continuous-rework/evidence/attempt-01/run-results.json",
+        "RP01/RP01-T01/runs/2026-10-02-continuous-rework/evidence/source-diff.patch",
+        "RP01/RP01-T01/runs/2026-10-02-continuous-rework/evidence/source-hash.json",
+        "RP01/RP01-T01/runs/2026-10-02-continuous-rework/handoff.md",
+        "RP01/RP01-T01/runs/2026-10-02-continuous-rework/rollback.md",
+        "RP01/RP01-T01/runs/2026-10-02-continuous-rework/task-state.json",
+        "RP01/RP01-T01/task-state.json"
+      ],
+      "latestValidationEvidence": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/FOLLOWUP-COMPILED-ACCEPTANCE/acceptance.json"
+    },
+    "RP01-T02": {
+      "packageId": "RP01",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP01/RP01-T02/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP01/RP01-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T01:00:34.166761+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监",
+      "latestRun": "execution/RP01/RP01-T02/runs/2026-10-06-continuous-remediation-01"
+    },
+    "RP01-T03": {
+      "packageId": "RP01",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "activation": "CONDITIONAL_NOT_APPROVED",
+      "owner": null,
+      "evidence": []
+    },
+    "RP02-T01": {
+      "packageId": "RP02",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "CodeBuddy (2026-10-03 session 2); earlier executors preserved",
+      "evidence": [
+        "execution/RP02/RP02-T01/runs/2026-10-03-codebuddy-lr3-testonly/task-state.json",
+        "execution/RP02/RP02-T01/runs/2026-10-03-codebuddy-lr3-testonly/acceptance.json",
+        "execution/RP02/RP02-T01/runs/2026-10-03-codebuddy-lr3-testonly/change-summary.md",
+        "execution/RP02/RP02-T01/runs/2026-10-03-codebuddy-lr3-testonly/authorization.json",
+        "execution/RP02/RP02-T01/runs/2026-10-03-codebuddy-lr3-testonly/rollback.md",
+        "execution/RP02/RP02-T01/runs/2026-10-03-codebuddy-lr3-testonly/handoff.md",
+        "execution/reviews/2026-10-03-codebuddy-followup/REVIEW.md",
+        "execution/reviews/2026-10-03-codebuddy-followup/evidence/observations.json"
+      ],
+      "latestReviewRef": "execution/reviews/2026-10-03-codebuddy-followup/REVIEW.md",
+      "reviewFindings": [
+        "OBS-RP02-FENCE"
+      ],
+      "previousLocalResult": {
+        "implementation": "COMPLETE",
+        "validation": "PASS",
+        "run": "2026-10-02-continuous-rework",
+        "meaning": "preserved scoped observations; superseded aggregate task assessment"
+      },
+      "latestRun": "execution/RP02/RP02-T01/runs/2026-10-03-codebuddy-lr3-testonly/",
+      "executionNote": "Permanent C01 conditional-reset fence verified in source and executor 12/12, independently repeated after real bcrypt positive login. Protected admin actor injected; no full JWT-chain acceptance or session-policy change.",
+      "previousRunsPreserved": true,
+      "previousExecutorAssessment": {
+        "implementation": "COMPLETE",
+        "validation": "PASS",
+        "run": "execution/RP02/RP02-T01/runs/2026-10-03-codebuddy-b14-validation",
+        "meaning": "Frozen executor observation; superseded aggregate assessment only."
+      },
+      "independentReviewEvidence": [
+        "execution/reviews/2026-10-03-codebuddy-followup/validation-summary.json",
+        "execution/reviews/2026-10-03-codebuddy-followup/evidence/observations.json"
+      ],
+      "reviewFindingDisposition": {
+        "prior": "See latest independent review; local code scope accepted, policy/joint/target boundaries retained."
+      }
+    },
+    "RP02-T02": {
+      "packageId": "RP02",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/acceptance.json",
+        "execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/validation-summary.json",
+        "execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/joint-validation/acceptance.json"
+      ],
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-05T19:33:29.757064+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监",
+      "latestRun": "execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01",
+      "latestValidationAddendum": "execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/joint-validation"
+    },
+    "RP03-T01": {
+      "packageId": "RP03",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/acceptance.json",
+        "execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/validation-summary.json"
+      ],
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-05T19:29:52.665163+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监",
+      "latestRun": "execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01"
+    },
+    "RP03-T02": {
+      "packageId": "RP03",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP03/RP03-T02/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP03/RP03-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T01:20:33.900790+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监",
+      "latestRun": "execution/RP03/RP03-T02/runs/2026-10-06-continuous-remediation-01"
+    },
+    "RP04-T01": {
+      "packageId": "RP04",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex executor",
+      "evidence": [
+        "execution/RP04/RP04-T01/runs/2026-10-02-followup-validation/task-state.json",
+        "RP04/RP04-T01/acceptance.json",
+        "RP04/RP04-T01/authorization.json",
+        "RP04/RP04-T01/change-summary.md",
+        "RP04/RP04-T01/evidence/commands-and-results.json",
+        "RP04/RP04-T01/evidence/historical-evidence.json",
+        "RP04/RP04-T01/evidence/source-diff.patch",
+        "RP04/RP04-T01/evidence/source-digest-comparison.json",
+        "RP04/RP04-T01/handoff.md",
+        "RP04/RP04-T01/rollback.md",
+        "RP04/RP04-T01/runs/2026-10-02-followup-validation/acceptance.json",
+        "RP04/RP04-T01/runs/2026-10-02-followup-validation/authorization.json",
+        "RP04/RP04-T01/runs/2026-10-02-followup-validation/change-summary.md",
+        "RP04/RP04-T01/runs/2026-10-02-followup-validation/evidence/regression-pointer.json",
+        "RP04/RP04-T01/runs/2026-10-02-followup-validation/handoff.md",
+        "RP04/RP04-T01/runs/2026-10-02-followup-validation/rollback.md",
+        "RP04/RP04-T01/runs/2026-10-02-followup-validation/task-state.json",
+        "RP04/RP04-T01/task-state.json"
+      ]
+    },
+    "RP04-T02": {
+      "packageId": "RP04",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "CodeBuddy (2026-10-03 rework/validation) / Codex (2026-10-02 prior run preserved)",
+      "evidence": [
+        "execution/RP04/RP04-T02/runs/2026-10-03-codebuddy-b18-rework/task-state.json",
+        "execution/RP04/RP04-T02/runs/2026-10-03-codebuddy-b18-rework/acceptance.json",
+        "execution/RP04/RP04-T02/runs/2026-10-03-codebuddy-b18-rework/change-summary.md",
+        "execution/RP04/RP04-T02/runs/2026-10-03-codebuddy-b18-rework/authorization.json",
+        "execution/RP04/RP04-T02/runs/2026-10-03-codebuddy-b18-rework/rollback.md",
+        "execution/RP04/RP04-T02/runs/2026-10-03-codebuddy-b18-rework/handoff.md",
+        "execution/reviews/2026-10-03-codebuddy/REVIEW.md",
+        "execution/reviews/2026-10-03-codebuddy/evidence/observations.json"
+      ],
+      "latestReviewRef": "execution/reviews/2026-10-03-codebuddy/REVIEW.md",
+      "reviewFindings": [
+        "LR2-02"
+      ],
+      "previousLocalResult": {
+        "implementation": "COMPLETE",
+        "validation": "PASS",
+        "run": "2026-10-02-continuous-rework",
+        "meaning": "preserved scoped observations; superseded aggregate task assessment"
+      },
+      "latestRun": "execution/RP04/RP04-T02/runs/2026-10-03-codebuddy-b18-rework",
+      "executionNote": "CodeBuddy 5/5 plus independent invalid top-level type inverse acceptance passed; PC03 remains NOT_RUN. No business fix in review.",
+      "previousRunsPreserved": true,
+      "previousExecutorAssessment": {
+        "implementation": "COMPLETE",
+        "validation": "PASS",
+        "run": "execution/RP04/RP04-T02/runs/2026-10-03-codebuddy-b18-rework",
+        "meaning": "Frozen executor observation; superseded aggregate assessment only."
+      },
+      "independentReviewEvidence": [
+        "execution/reviews/2026-10-03-codebuddy/validation-summary.json",
+        "execution/reviews/2026-10-03-codebuddy/evidence/observations.json"
+      ]
+    },
+    "RP05-T01": {
+      "packageId": "RP05",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex",
+      "evidence": [
+        "execution/RP05/RP05-T01/runs/2026-10-02-continuous-rework/task-state.json",
+        "RP05/RP05-T01/acceptance.json",
+        "RP05/RP05-T01/authorization.json",
+        "RP05/RP05-T01/change-summary.md",
+        "RP05/RP05-T01/evidence/commands-and-results.json",
+        "RP05/RP05-T01/evidence/historical-evidence.json",
+        "RP05/RP05-T01/evidence/source-diff.patch",
+        "RP05/RP05-T01/evidence/source-digest-comparison.json",
+        "RP05/RP05-T01/handoff.md",
+        "RP05/RP05-T01/rollback.md",
+        "RP05/RP05-T01/runs/2026-10-02-continuous-rework/acceptance.json",
+        "RP05/RP05-T01/runs/2026-10-02-continuous-rework/authorization.json",
+        "RP05/RP05-T01/runs/2026-10-02-continuous-rework/change-summary.md",
+        "RP05/RP05-T01/runs/2026-10-02-continuous-rework/evidence/attempt-01/backend-build.log",
+        "RP05/RP05-T01/runs/2026-10-02-continuous-rework/evidence/attempt-01/cluster-start.log",
+        "RP05/RP05-T01/runs/2026-10-02-continuous-rework/evidence/attempt-01/cluster-stop.log",
+        "RP05/RP05-T01/runs/2026-10-02-continuous-rework/evidence/attempt-01/guard-check.log",
+        "RP05/RP05-T01/runs/2026-10-02-continuous-rework/evidence/attempt-01/guard-drop.log",
+        "RP05/RP05-T01/runs/2026-10-02-continuous-rework/evidence/attempt-01/guard-reset.log",
+        "RP05/RP05-T01/runs/2026-10-02-continuous-rework/evidence/attempt-01/initdb.log",
+        "RP05/RP05-T01/runs/2026-10-02-continuous-rework/evidence/attempt-01/integration-suite.log",
+        "RP05/RP05-T01/runs/2026-10-02-continuous-rework/evidence/attempt-01/run-results.json",
+        "RP05/RP05-T01/runs/2026-10-02-continuous-rework/handoff.md",
+        "RP05/RP05-T01/runs/2026-10-02-continuous-rework/rollback.md",
+        "RP05/RP05-T01/runs/2026-10-02-continuous-rework/task-state.json",
+        "RP05/RP05-T01/task-state.json"
+      ]
+    },
+    "RP05-T02": {
+      "packageId": "RP05",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP05/RP05-T02/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP05/RP05-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP05/RP05-T02/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T10:48:58.704687+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP05-T03": {
+      "packageId": "RP05",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "activation": "CONDITIONAL_NOT_APPROVED",
+      "owner": null,
+      "evidence": []
+    },
+    "RP06-T01": {
+      "packageId": "RP06",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP06/RP06-T01/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP06/RP06-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP06/RP06-T01/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T10:26:33.645376+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP06-T02": {
+      "packageId": "RP06",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP06/RP06-T02/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP06/RP06-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP06/RP06-T02/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T10:28:14.222509+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP07-T01": {
+      "packageId": "RP07",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex executor",
+      "evidence": [
+        "execution/RP07/RP07-T01/runs/2026-10-02-followup-validation/task-state.json",
+        "RP07/RP07-T01/acceptance.json",
+        "RP07/RP07-T01/authorization.json",
+        "RP07/RP07-T01/change-summary.md",
+        "RP07/RP07-T01/evidence/commands-and-results.json",
+        "RP07/RP07-T01/evidence/historical-evidence.json",
+        "RP07/RP07-T01/evidence/source-diff.patch",
+        "RP07/RP07-T01/evidence/source-digest-comparison.json",
+        "RP07/RP07-T01/handoff.md",
+        "RP07/RP07-T01/rollback.md",
+        "RP07/RP07-T01/runs/2026-10-02-followup-validation/acceptance.json",
+        "RP07/RP07-T01/runs/2026-10-02-followup-validation/authorization.json",
+        "RP07/RP07-T01/runs/2026-10-02-followup-validation/change-summary.md",
+        "RP07/RP07-T01/runs/2026-10-02-followup-validation/evidence/regression-pointer.json",
+        "RP07/RP07-T01/runs/2026-10-02-followup-validation/handoff.md",
+        "RP07/RP07-T01/runs/2026-10-02-followup-validation/rollback.md",
+        "RP07/RP07-T01/runs/2026-10-02-followup-validation/task-state.json",
+        "RP07/RP07-T01/task-state.json"
+      ]
+    },
+    "RP07-T02": {
+      "packageId": "RP07",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP07/RP07-T02/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP07/RP07-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP07/RP07-T02/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T10:20:52.988279+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP08-T01": {
+      "packageId": "RP08",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "CodeBuddy (2026-10-03 session 2); earlier executors preserved",
+      "evidence": [
+        "execution/RP08/RP08-T01/runs/2026-10-03-codebuddy-lr3-validation/task-state.json",
+        "execution/RP08/RP08-T01/runs/2026-10-03-codebuddy-lr3-validation/acceptance.json",
+        "execution/RP08/RP08-T01/runs/2026-10-03-codebuddy-lr3-validation/change-summary.md",
+        "execution/RP08/RP08-T01/runs/2026-10-03-codebuddy-lr3-validation/authorization.json",
+        "execution/RP08/RP08-T01/runs/2026-10-03-codebuddy-lr3-validation/rollback.md",
+        "execution/RP08/RP08-T01/runs/2026-10-03-codebuddy-lr3-validation/handoff.md",
+        "execution/reviews/2026-10-03-codebuddy-followup/REVIEW.md",
+        "execution/reviews/2026-10-03-codebuddy-followup/evidence/observations.json"
+      ],
+      "latestReviewRef": "execution/reviews/2026-10-03-codebuddy-followup/REVIEW.md",
+      "reviewFindings": [
+        "LR3-02"
+      ],
+      "previousLocalResult": {
+        "implementation": "COMPLETE",
+        "validation": "PASS",
+        "run": "2026-10-02-continuous-rework",
+        "meaning": "preserved scoped observations; superseded aggregate task assessment"
+      },
+      "latestRun": "execution/RP08/RP08-T01/runs/2026-10-03-codebuddy-lr3-validation/",
+      "executionNote": "Current ordinary-API local comparison accepted using executor 11/11 plus independent exact-row key/value/permission contrast across all seven entities. Phase ordinary view returns deleted rows: contract erratum, not sync unauthorized leakage. Independent product/security field policy NOT_EVALUATED; cache/backfill/IDB remain NOT_RUN.",
+      "previousRunsPreserved": true,
+      "previousExecutorAssessment": {
+        "implementation": "COMPLETE",
+        "validation": "PASS",
+        "run": "execution/RP08/RP08-T01/runs/2026-10-03-codebuddy-b04-validation",
+        "meaning": "Frozen executor observation; superseded aggregate assessment only."
+      },
+      "independentReviewEvidence": [
+        "execution/reviews/2026-10-03-codebuddy-followup/validation-summary.json",
+        "execution/reviews/2026-10-03-codebuddy-followup/evidence/observations.json"
+      ],
+      "reviewFindingDisposition": {
+        "prior": "See latest independent review; local code scope accepted, policy/joint/target boundaries retained."
+      }
+    },
+    "RP08-T02": {
+      "packageId": "RP08",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP08/RP08-T02/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP08/RP08-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP08/RP08-T02/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T10:10:44.958289+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP09-T01": {
+      "packageId": "RP09",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP09/RP09-T01/runs/2026-10-05-sync-receipts-01/acceptance.json",
+        "execution/RP09/RP09-T01/runs/2026-10-05-sync-receipts-01/evidence/validation-summary.json",
+        "execution/RP09/RP09-T01/runs/2026-10-05-sync-receipts-01/validation-addendum/acceptance.json"
+      ],
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-05T23:17:06.290439+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监",
+      "latestRun": "execution/RP09/RP09-T01/runs/2026-10-05-sync-receipts-01",
+      "validationScope": "APPROVED_LOCAL_V1_BACKEND_ONLY",
+      "ciRegression": "FAIL",
+      "jointValidation": "NOT_RUN",
+      "latestValidationAddendum": "execution/RP09/RP09-T01/runs/2026-10-05-sync-receipts-01/validation-addendum"
+    },
+    "RP09-T02": {
+      "packageId": "RP09",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP09/RP09-T02/runs/2026-10-05-sync-receipts-01/acceptance.json",
+        "execution/RP09/RP09-T02/runs/2026-10-05-sync-receipts-01/evidence/validation-summary.json",
+        "execution/RP09/RP09-T02/runs/2026-10-05-sync-receipts-01/validation-addendum/acceptance.json"
+      ],
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-05T23:38:42.538125+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监",
+      "latestRun": "execution/RP09/RP09-T02/runs/2026-10-05-sync-receipts-01",
+      "validationScope": "APPROVED_LOCAL_V1_BACKEND_ONLY",
+      "ciRegression": "FAIL",
+      "jointValidation": "NOT_RUN",
+      "latestValidationAddendum": "execution/RP09/RP09-T02/runs/2026-10-05-sync-receipts-01/validation-addendum"
+    },
+    "RP10-T01": {
+      "packageId": "RP10",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": null,
+      "evidence": []
+    },
+    "RP10-T02": {
+      "packageId": "RP10",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "CodeBuddy (2026-10-03 session 2); earlier executors preserved",
+      "evidence": [
+        "execution/RP10/RP10-T02/runs/2026-10-03-codebuddy-lr3-rework/task-state.json",
+        "execution/RP10/RP10-T02/runs/2026-10-03-codebuddy-lr3-rework/acceptance.json",
+        "execution/RP10/RP10-T02/runs/2026-10-03-codebuddy-lr3-rework/change-summary.md",
+        "execution/RP10/RP10-T02/runs/2026-10-03-codebuddy-lr3-rework/authorization.json",
+        "execution/RP10/RP10-T02/runs/2026-10-03-codebuddy-lr3-rework/rollback.md",
+        "execution/RP10/RP10-T02/runs/2026-10-03-codebuddy-lr3-rework/handoff.md",
+        "execution/reviews/2026-10-03-codebuddy-followup/REVIEW.md",
+        "execution/reviews/2026-10-03-codebuddy-followup/evidence/observations.json"
+      ],
+      "latestReviewRef": "execution/reviews/2026-10-03-codebuddy-followup/REVIEW.md",
+      "reviewFindings": [
+        "LR3-01"
+      ],
+      "previousLocalResult": {
+        "implementation": "COMPLETE",
+        "validation": "PASS",
+        "run": "2026-10-02-continuous-rework",
+        "meaning": "preserved scoped observations; superseded aggregate task assessment"
+      },
+      "latestRun": "execution/RP10/RP10-T02/runs/2026-10-03-codebuddy-lr3-rework/",
+      "executionNote": "Local current-code acceptance: create rejects absent-row race 409; tombstone restore rejects after competing restore+submit; no losing receipts/content/version divergence. Original negative control had barrier timeouts; independent semantic SQL control supplied. Wider source-state/revision/joint/target scope remains open.",
+      "previousRunsPreserved": true,
+      "previousExecutorAssessment": {
+        "implementation": "COMPLETE",
+        "validation": "PASS",
+        "run": "execution/RP10/RP10-T02/runs/2026-10-03-codebuddy-b10-rework",
+        "meaning": "Frozen executor observation; superseded aggregate assessment only."
+      },
+      "independentReviewEvidence": [
+        "execution/reviews/2026-10-03-codebuddy-followup/validation-summary.json",
+        "execution/reviews/2026-10-03-codebuddy-followup/evidence/observations.json"
+      ],
+      "reviewFindingDisposition": {
+        "prior": "See latest independent review; local code scope accepted, policy/joint/target boundaries retained."
+      }
+    },
+    "RP10-T03": {
+      "packageId": "RP10",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP10/RP10-T03/runs/2026-10-05-approved-contracts-01/acceptance.json",
+        "execution/RP10/RP10-T03/runs/2026-10-05-approved-contracts-01/evidence/validation-summary.json"
+      ],
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-05T09:19:07.599661+00:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监",
+      "latestRun": "execution/RP10/RP10-T03/runs/2026-10-05-approved-contracts-01"
+    },
+    "RP11-T01": {
+      "packageId": "RP11",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP11/RP11-T01/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP11/RP11-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP11/RP11-T01/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T01:47:10.633362+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP11-T02": {
+      "packageId": "RP11",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP11/RP11-T02/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP11/RP11-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP11/RP11-T02/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T01:54:05.982839+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP11-T03": {
+      "packageId": "RP11",
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP11/RP11-T03/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP11/RP11-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP11/RP11-T03/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T02:07:50.427533+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP12-T01": {
+      "packageId": "RP12",
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP12/RP12-T01/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP12/RP12-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP12/RP12-T01/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T02:19:08.002435+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP12-T02": {
+      "packageId": "RP12",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP12/RP12-T02/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP12/RP12-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP12/RP12-T02/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T09:53:54.975597+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP13-T01": {
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "release": "NOT_EVALUATED",
+      "B07": "SUPPORTED / not FIX_ACCEPTED",
+      "RP11-T01": "acceptance dependency; validation only",
+      "AC-B07-03": "NOT_RUN; RP13-T02",
+      "evidence": [
+        "execution/RP13/RP13-T01/runs/2026-10-02-followup-validation/task-state.json"
+      ]
+    },
+    "RP13-T02": {
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "release": "NOT_EVALUATED",
+      "draft": "execution/RP13/RP13-T02/evidence/WATERMARK_ADR_DRAFT.md",
+      "T-RP-04": "PROPOSED",
+      "T-RP-10": "PROPOSED",
+      "S03-OI-01": "OPEN",
+      "owner": "Codex",
+      "evidence": [
+        "execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/task-state.json",
+        "RP13/RP13-T02/acceptance.json",
+        "RP13/RP13-T02/authorization.json",
+        "RP13/RP13-T02/change-summary.md",
+        "RP13/RP13-T02/evidence/WATERMARK_ADR_DRAFT.md",
+        "RP13/RP13-T02/rollback.md",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/acceptance.json",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/authorization.json",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/change-summary.md",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/cluster-start.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/cluster-stop.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/commands-and-results.json",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/guard-check.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/guard-drop.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/guard-reset.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/initdb.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/publisher-one.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/pull-after-publish.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/pull-before-source-commit.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/schema-setup.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/unsafe-seq-a-commit.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/unsafe-seq-after-cut.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/unsafe-seq-b-allocate.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/unsafe-seq-b-commit.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-01/unsafe-seq-cut.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/barrier-summary.json",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/cluster-start.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/cluster-stop.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/commands-and-results.json",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/guard-check.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/guard-drop.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/guard-reset.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/initdb.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/publisher-competing-check.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/publisher-one.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/pull-after-publish.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/pull-before-source-commit.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/schema-setup.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/source-rollback-check.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/source-rollback.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/unsafe-seq-a-commit.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/unsafe-seq-after-cut.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/unsafe-seq-b-allocate.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/unsafe-seq-b-commit.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/unsafe-seq-cut.log",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/owned-watermark-barrier.py",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/handoff.md",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/rollback.md",
+        "RP13/RP13-T02/runs/2026-10-02-continuous-rework/task-state.json",
+        "RP13/RP13-T02/task-state.json"
+      ]
+    },
+    "RP13-T03": {
+      "packageId": "RP13",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP13/RP13-T03/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP13/RP13-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP13/RP13-T03/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T20:13:37.579759+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP14-T01": {
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "B11": "SUPPORTED / not FIX_ACCEPTED",
+      "T-RP-05": "PROPOSED; RP14-T02 gated",
+      "build": "ENV_BLOCKED: tsc missing",
+      "evidence": [
+        "execution/RP14/RP14-T01/runs/2026-10-02-followup-validation/task-state.json",
+        "RP14/RP14-T01/acceptance.json",
+        "RP14/RP14-T01/authorization.json",
+        "RP14/RP14-T01/change-summary.md",
+        "RP14/RP14-T01/evidence/commands-and-results.json",
+        "RP14/RP14-T01/evidence/historical-evidence.json",
+        "RP14/RP14-T01/evidence/source-diff.patch",
+        "RP14/RP14-T01/evidence/source-digest-comparison.json",
+        "RP14/RP14-T01/handoff.md",
+        "RP14/RP14-T01/rollback.md",
+        "RP14/RP14-T01/runs/2026-10-02-followup-validation/acceptance.json",
+        "RP14/RP14-T01/runs/2026-10-02-followup-validation/authorization.json",
+        "RP14/RP14-T01/runs/2026-10-02-followup-validation/change-summary.md",
+        "RP14/RP14-T01/runs/2026-10-02-followup-validation/evidence/regression-pointer.json",
+        "RP14/RP14-T01/runs/2026-10-02-followup-validation/handoff.md",
+        "RP14/RP14-T01/runs/2026-10-02-followup-validation/rollback.md",
+        "RP14/RP14-T01/runs/2026-10-02-followup-validation/task-state.json",
+        "RP14/RP14-T01/task-state.json"
+      ]
+    },
+    "RP14-T02": {
+      "packageId": "RP14",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP14/RP14-T02/runs/2026-10-05-approved-contracts-01/acceptance.json",
+        "execution/RP14/RP14-T02/runs/2026-10-05-approved-contracts-01/evidence/validation-summary.json"
+      ],
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-05T09:08:23.360904+00:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监",
+      "latestRun": "execution/RP14/RP14-T02/runs/2026-10-05-approved-contracts-01"
+    },
+    "RP15-T01": {
+      "implementation": "IN_PROGRESS",
+      "validation": "ENV_BLOCKED",
+      "release": "NOT_EVALUATED",
+      "S04-OI-01": "OPEN",
+      "B02": "SUPPORTED / not FIX_ACCEPTED",
+      "B19": "SUPPORTED / not FIX_ACCEPTED"
+    },
+    "RP15-T02": {
+      "packageId": "RP15",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": null,
+      "evidence": []
+    },
+    "RP15-T03": {
+      "packageId": "RP15",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": null,
+      "evidence": []
+    },
+    "RP16-T01": {
+      "packageId": "RP16",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP16/RP16-T01/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP16/RP16-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP16/RP16-T01/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T10:54:19.499737+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP16-T02": {
+      "packageId": "RP16",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP16/RP16-T02/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP16/RP16-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP16/RP16-T02/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T11:10:36.409689+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP16-T03": {
+      "packageId": "RP16",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP16/RP16-T03/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP16/RP16-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP16/RP16-T03/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T11:44:18.416494+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP17-T01": {
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "release": "NOT_EVALUATED",
+      "PAC-RP17-01": "PASS (owned local FS only)",
+      "D01": "not closed",
+      "T-RP-11": "PROPOSED; RP17-T02 gated"
+    },
+    "RP17-T02": {
+      "packageId": "RP17",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP17/RP17-T02/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP17/RP17-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP17/RP17-T02/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T20:19:23.490253+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP17-T03": {
+      "packageId": "RP17",
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP17/RP17-T03/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP17/RP17-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP17/RP17-T03/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T20:20:48.691576+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP18-T01": {
+      "packageId": "RP18",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP18/RP18-T01/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP18/RP18-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP18/RP18-T01/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T20:33:18.001053+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP18-T02": {
+      "packageId": "RP18",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP18/RP18-T02/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP18/RP18-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP18/RP18-T02/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T20:43:45.318410+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP18-T03": {
+      "packageId": "RP18",
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP18/RP18-T03/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP18/RP18-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP18/RP18-T03/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T20:54:49.311893+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP19-T01": {
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "release": "NOT_EVALUATED",
+      "R12-N01": "PENDING / candidate retained",
+      "S05-OI-02": "OPEN",
+      "evidence": [
+        "execution/RP19/RP19-T01/authorization.json",
+        "execution/RP19/RP19-T01/change-summary.md",
+        "execution/RP19/RP19-T01/acceptance.json",
+        "execution/RP19/RP19-T01/evidence/evidence-inventory.json"
+      ]
+    },
+    "RP19-T02": {
+      "packageId": "RP19",
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP19/RP19-T02/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP19/RP19-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP19/RP19-T02/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T21:02:20.933092+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP19-T03": {
+      "packageId": "RP19",
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": "Codex single executor",
+      "evidence": [
+        "execution/RP19/RP19-T03/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP19/RP19-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP19/RP19-T03/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "updatedAt": "2026-10-06T21:19:14.685720+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    "RP19-T04": {
+      "implementation": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "release": "NOT_EVALUATED",
+      "scope": "Complete 33-record current-state reconciliation snapshot; programme closure criteria remain unmet",
+      "evidence": [
+        "execution/RP19/RP19-T04/runs/2026-10-06-continuous-remediation-01/acceptance.json",
+        "execution/RP19/RP19-T04/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+      ],
+      "latestRun": "execution/RP19/RP19-T04/runs/2026-10-06-continuous-remediation-01",
+      "targetValidation": "NOT_RUN",
+      "independentReview": "PENDING",
+      "owner": "Codex single executor",
+      "updatedAt": "2026-10-06T21:21:34.300486+08:00",
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    }
+  },
+  "decisions": {
+    "D-S01-01": "APPROVED",
+    "D-S01-02": "APPROVED",
+    "D-S01-03": "PENDING",
+    "D-S01-04": "APPROVED",
+    "D-S01-05": "PENDING",
+    "D-S01-06": "PENDING",
+    "D-S01-07": "APPROVED",
+    "D-S01-08": "PENDING",
+    "T-RP-01": "APPROVED",
+    "T-RP-02": "APPROVED",
+    "T-RP-03": "PROPOSED",
+    "T-RP-04": "PROPOSED",
+    "T-RP-05": "APPROVED",
+    "T-RP-06": "PROPOSED",
+    "T-RP-07": "APPROVED",
+    "T-RP-08": "PROPOSED",
+    "T-RP-09": "APPROVED",
+    "T-RP-10": "PROPOSED",
+    "T-RP-11": "APPROVED",
+    "T-RP-12": "APPROVED",
+    "T-RP-13": "PROPOSED"
+  },
+  "auditOpenItems": {
+    "S00-OI-01": "OPEN",
+    "D-S01-01": "OPEN",
+    "D-S01-02": "OPEN",
+    "D-S01-03": "OPEN",
+    "D-S01-04": "OPEN",
+    "D-S01-05": "OPEN",
+    "D-S01-06": "OPEN",
+    "D-S01-07": "OPEN",
+    "D-S01-08": "OPEN",
+    "S02-OPEN-01": "OPEN",
+    "S02-OPEN-02": "OPEN",
+    "S02-OPEN-03": "OPEN",
+    "S02-OPEN-04": "OPEN",
+    "S02-OPEN-05": "OPEN",
+    "S02-OPEN-06": "OPEN",
+    "S02-OPEN-07": "OPEN",
+    "S03-OI-01": "OPEN",
+    "S03-OI-02": "OPEN",
+    "S03-OI-03": "OPEN",
+    "S03-OI-04": "OPEN",
+    "S03-OI-05": "OPEN",
+    "S03-OI-06": "OPEN",
+    "S03-OI-07": "OPEN",
+    "S03-OI-08": "OPEN",
+    "S03-OI-09": "OPEN",
+    "S04-OI-01": "OPEN",
+    "S05-OI-01": "OPEN",
+    "S05-OI-02": "OPEN",
+    "S05-OI-03": "OPEN",
+    "S05-OI-04": "OPEN",
+    "S05-OI-05": "OPEN"
+  },
+  "runtimeChecksRun": true,
+  "businessFixesImplemented": true,
+  "executionAuthorization": {
+    "executor": "Codex single serial executor",
+    "clientDate": "2026-10-06",
+    "sourceQuote": "继续完成待进行的修复项，不要等我批准了， 后续的修复我都批准。全部推进修复",
+    "approver": "郭仁康",
+    "approverRole": "研发副总监",
+    "authority": "User authorizes local implementation and selection of best planned remaining standard remediation contracts; record exact decision before each affected task",
+    "taskIds": [
+      "RP00-T01",
+      "RP00-T02",
+      "RP00-T03",
+      "RP00-T04",
+      "RP00-T05",
+      "RP01-T01",
+      "RP01-T02",
+      "RP02-T01",
+      "RP02-T02",
+      "RP03-T01",
+      "RP03-T02",
+      "RP04-T01",
+      "RP04-T02",
+      "RP05-T01",
+      "RP05-T02",
+      "RP06-T01",
+      "RP06-T02",
+      "RP07-T01",
+      "RP07-T02",
+      "RP08-T01",
+      "RP08-T02",
+      "RP09-T01",
+      "RP09-T02",
+      "RP10-T01",
+      "RP10-T02",
+      "RP10-T03",
+      "RP11-T01",
+      "RP11-T02",
+      "RP11-T03",
+      "RP12-T01",
+      "RP12-T02",
+      "RP13-T01",
+      "RP13-T02",
+      "RP13-T03",
+      "RP14-T01",
+      "RP14-T02",
+      "RP15-T01",
+      "RP15-T02",
+      "RP15-T03",
+      "RP16-T01",
+      "RP16-T02",
+      "RP16-T03",
+      "RP17-T01",
+      "RP17-T02",
+      "RP17-T03",
+      "RP18-T01",
+      "RP18-T02",
+      "RP18-T03",
+      "RP19-T01",
+      "RP19-T02",
+      "RP19-T03",
+      "RP19-T04"
+    ],
+    "continuous": true,
+    "activeTask": "FOLLOWUP-SYNC-V1-CI",
+    "excluded": [
+      "stage/commit/push/merge/deploy",
+      "production/shared DB/accounts/actual restore",
+      "dependency install/upgrade",
+      "subagents/model switch",
+      "reset/clean/stash",
+      "real dotenv/SSH credentials",
+      "Automatic optional feature activation"
+    ],
+    "notImplied": [
+      "Actual external client inventory supplied",
+      "Real readonly data snapshot supplied",
+      "Target validation passed",
+      "All policy proposals separately named signed by approver"
+    ],
+    "scopeRegistry": "task-scopes.json"
+  },
+  "nextReadyTask": null,
+  "executionNotes": [
+    "Local current-code acceptance: create rejects absent-row race 409; tombstone restore rejects after competing restore+submit; no losing receipts/content/version divergence. Original negative control had barrier timeouts; independent semantic SQL control supplied. Wider source-state/revision/joint/target scope remains open.",
+    "Current ordinary-API local comparison accepted using executor 11/11 plus independent exact-row key/value/permission contrast across all seven entities. Phase ordinary view returns deleted rows: contract erratum, not sync unauthorized leakage. Independent product/security field policy NOT_EVALUATED; cache/backfill/IDB remain NOT_RUN.",
+    "Permanent C01 conditional-reset fence verified in source and executor 12/12, independently repeated after real bcrypt positive login. Protected admin actor injected; no full JWT-chain acceptance or session-policy change.",
+    "LR4-01 current runtime mirrors and stale ready queue corrected by independent review; records are not product acceptance.",
+    "All release states NOT_EVALUATED; frozen findings/open items unchanged.",
+    "2026-10-05 two approved scopes implemented and locally validated; 20 COMPLETE, 2 IN_PROGRESS, 32 NOT_STARTED; 12 local PASS; no target/deploy/whole finding closure."
+  ],
+  "authorizedTaskIds": [
+    "RP00-T01",
+    "RP01-T01",
+    "RP00-T02",
+    "RP00-T03",
+    "RP00-T04",
+    "RP00-T05",
+    "RP02-T01",
+    "RP04-T01",
+    "RP04-T02",
+    "RP05-T01",
+    "RP07-T01",
+    "RP14-T01",
+    "RP17-T01",
+    "RP13-T01",
+    "RP13-T02",
+    "RP15-T01",
+    "RP19-T01",
+    "RP19-T04",
+    "RP08-T01",
+    "RP10-T02",
+    "RP14-T02",
+    "RP10-T03",
+    "RP02-T02",
+    "RP03-T01",
+    "RP09-T01",
+    "RP09-T02"
+  ],
+  "nextReadyReason": "RP09 local v1 backend delivered; CI old-wire harness migration and complete client/IDB are pending. Remaining30 need exact scoped decisions/materials/dependencies; no current READY_STANDARD.",
+  "blockedReadyCandidates": [
+    {
+      "taskId": "RP01-T02",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING",
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "D-S01-01",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PENDING",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        },
+        {
+          "ref": "D-S01-02",
+          "before": "IMPLEMENTATION",
+          "condition": "only forced-password-change/business allowlist sub-scope; rank/reset protection uses D-S01-01 independently",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PENDING",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": []
+    },
+    {
+      "taskId": "RP01-T03",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "OPTIONAL_NOT_ACTIVATED",
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "D-S01-03",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PENDING",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": []
+    },
+    {
+      "taskId": "RP03-T02",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING",
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "D-S01-04",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PENDING",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        },
+        {
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "APPROVED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        },
+        {
+          "ref": "S03-OI-06",
+          "before": "IMPLEMENTATION",
+          "condition": "same D-S01-04 approval; no second approval required",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "CHECK_OPEN_ITEM_GATE",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [
+        "RP02-T02"
+      ],
+      "laterGates": []
+    },
+    {
+      "taskId": "RP05-T02",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING",
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PENDING",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        },
+        {
+          "ref": "T-RP-07",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "APPROVED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        },
+        {
+          "ref": "S03-OI-05",
+          "before": "IMPLEMENTATION",
+          "condition": "only if stale/delete command adapter is changed; no gate on unrelated task fields or report snapshot",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "CHECK_OPEN_ITEM_GATE",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": []
+    },
+    {
+      "taskId": "RP05-T03",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "OPTIONAL_NOT_ACTIVATED",
+      "unmetImplementationDependencies": [
+        "RP05-T02"
+      ],
+      "implementationGates": [
+        {
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "DAG/live policy approved",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PENDING",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": [
+        {
+          "ref": "T-RP-11",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ]
+    },
+    {
+      "taskId": "RP06-T01",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING",
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "D-S01-05",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PENDING",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": []
+    },
+    {
+      "taskId": "RP06-T02",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING",
+      "unmetImplementationDependencies": [
+        "RP06-T01",
+        "RP07-T02"
+      ],
+      "implementationGates": [
+        {
+          "ref": "D-S01-06",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PENDING",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": []
+    },
+    {
+      "taskId": "RP07-T02",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING",
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "D-S01-06",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PENDING",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        },
+        {
+          "ref": "S03-OI-07",
+          "before": "IMPLEMENTATION",
+          "condition": "same D-S01-06 approval; no second approval required",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "CHECK_OPEN_ITEM_GATE",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": []
+    },
+    {
+      "taskId": "RP08-T02",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING",
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "T-RP-04",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PROPOSED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        },
+        {
+          "ref": "T-RP-12",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PROPOSED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [
+        "RP11-T01"
+      ],
+      "laterGates": [
+        {
+          "ref": "S02-OPEN-02",
+          "before": "VALIDATION",
+          "condition": "joint authorized cache/page fallback acceptance"
+        }
+      ]
+    },
+    {
+      "taskId": "RP10-T01",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING",
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "T-RP-03",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PROPOSED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        },
+        {
+          "ref": "S03-OI-05",
+          "before": "IMPLEMENTATION",
+          "condition": "only if stale/delete command adapter is changed; no gate on unrelated task fields or report snapshot",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "CHECK_OPEN_ITEM_GATE",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": []
+    },
+    {
+      "taskId": "RP11-T01",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING",
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "APPROVED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        },
+        {
+          "ref": "T-RP-12",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PROPOSED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": [
+        {
+          "ref": "S02-OPEN-01",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S02-OPEN-02",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ]
+    },
+    {
+      "taskId": "RP11-T02",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING",
+      "unmetImplementationDependencies": [
+        "RP11-T01"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-01",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PROPOSED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": [
+        {
+          "ref": "S02-OPEN-06",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S02-OPEN-07",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ]
+    },
+    {
+      "taskId": "RP11-T03",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING",
+      "unmetImplementationDependencies": [
+        "RP11-T01"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-12",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PROPOSED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": [
+        {
+          "ref": "S02-OPEN-03",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ]
+    },
+    {
+      "taskId": "RP12-T01",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING",
+      "unmetImplementationDependencies": [
+        "RP11-T01"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-11",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PROPOSED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": [
+        {
+          "ref": "S02-OPEN-04",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ]
+    },
+    {
+      "taskId": "RP12-T02",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING",
+      "unmetImplementationDependencies": [
+        "RP12-T01",
+        "RP11-T03"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-02",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "APPROVED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        },
+        {
+          "ref": "T-RP-12",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PROPOSED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": []
+    },
+    {
+      "taskId": "RP13-T03",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING",
+      "unmetImplementationDependencies": [
+        "RP08-T02",
+        "RP11-T02"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-04",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PROPOSED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        },
+        {
+          "ref": "T-RP-10",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PROPOSED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        },
+        {
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "only when approved delete/live-reference/tombstone semantics are changed",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PENDING",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": [
+        {
+          "ref": "S03-OI-04",
+          "before": "RELEASE",
+          "condition": "always"
+        }
+      ]
+    },
+    {
+      "taskId": "RP15-T01",
+      "implementation": "IN_PROGRESS",
+      "validation": "ENV_BLOCKED",
+      "readiness": "NEEDS_OWNER_READ_ONLY_DATA",
+      "unmetImplementationDependencies": [],
+      "implementationGates": [],
+      "acceptanceDependencies": [],
+      "laterGates": [
+        {
+          "ref": "S04-OI-01",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ]
+    },
+    {
+      "taskId": "RP15-T02",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING",
+      "unmetImplementationDependencies": [
+        "RP15-T01"
+      ],
+      "implementationGates": [
+        {
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PENDING",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        },
+        {
+          "ref": "T-RP-11",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PROPOSED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": []
+    },
+    {
+      "taskId": "RP15-T03",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING",
+      "unmetImplementationDependencies": [
+        "RP15-T02"
+      ],
+      "implementationGates": [
+        {
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PENDING",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": [
+        {
+          "ref": "T-RP-11",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ]
+    },
+    {
+      "taskId": "RP16-T01",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING",
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "T-RP-06",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PROPOSED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": []
+    },
+    {
+      "taskId": "RP16-T02",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING",
+      "unmetImplementationDependencies": [
+        "RP16-T01"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-06",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PROPOSED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": [
+        {
+          "ref": "S05-OI-03",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ]
+    },
+    {
+      "taskId": "RP16-T03",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING",
+      "unmetImplementationDependencies": [
+        "RP16-T02"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-10",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PROPOSED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": []
+    },
+    {
+      "taskId": "RP17-T02",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING",
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "T-RP-11",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PROPOSED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": []
+    },
+    {
+      "taskId": "RP17-T03",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING",
+      "unmetImplementationDependencies": [
+        "RP17-T02"
+      ],
+      "implementationGates": [],
+      "acceptanceDependencies": [],
+      "laterGates": [
+        {
+          "ref": "S05-OI-01",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ]
+    },
+    {
+      "taskId": "RP18-T01",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "APPLICABLE_SCOPE_DECISION_PENDING",
+      "unmetImplementationDependencies": [],
+      "implementationGates": [
+        {
+          "ref": "T-RP-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PROPOSED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        },
+        {
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "APPROVED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": []
+    },
+    {
+      "taskId": "RP18-T02",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING",
+      "unmetImplementationDependencies": [
+        "RP18-T01"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-13",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PROPOSED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": [
+        {
+          "ref": "S05-OI-05",
+          "before": "RELEASE",
+          "condition": "always"
+        }
+      ]
+    },
+    {
+      "taskId": "RP18-T03",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING",
+      "unmetImplementationDependencies": [
+        "RP18-T02"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PROPOSED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": [
+        {
+          "ref": "S05-OI-04",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ]
+    },
+    {
+      "taskId": "RP19-T02",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING",
+      "unmetImplementationDependencies": [
+        "RP17-T02",
+        "RP18-T01"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-10",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PROPOSED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": [
+        {
+          "ref": "S05-OI-02",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ]
+    },
+    {
+      "taskId": "RP19-T03",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "readiness": "IMPLEMENTATION_DEPENDENCY_PENDING",
+      "unmetImplementationDependencies": [
+        "RP18-T02",
+        "RP17-T03"
+      ],
+      "implementationGates": [
+        {
+          "ref": "T-RP-13",
+          "before": "IMPLEMENTATION",
+          "condition": "always",
+          "approvedInExactTaskScope": false,
+          "decisionStatus": "PROPOSED",
+          "conditionEvaluation": "Evaluate actual scoped adapter; conditional is not a global gate"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "laterGates": [
+        {
+          "ref": "S05-OI-04",
+          "before": "RELEASE",
+          "condition": "always"
+        },
+        {
+          "ref": "S05-OI-05",
+          "before": "RELEASE",
+          "condition": "always"
+        }
+      ]
+    },
+    {
+      "taskId": "RP19-T04",
+      "implementation": "IN_PROGRESS",
+      "validation": "ENV_BLOCKED",
+      "readiness": "FINAL_RECONCILIATION_PENDING_PLAN_ACCEPTANCE",
+      "unmetImplementationDependencies": [],
+      "implementationGates": [],
+      "acceptanceDependencies": [],
+      "laterGates": []
+    }
+  ],
+  "latestRun": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01",
+  "latestReviewRef": "execution/reviews/2026-10-03-codebuddy-followup/REVIEW.md",
+  "readyReviewQueue": [
+    {
+      "sessionId": "2026-10-05-sync-receipts-01",
+      "status": "PENDING",
+      "taskIds": [
+        "RP09-T01",
+        "RP09-T02"
+      ],
+      "entry": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/REVIEW_ENTRY.md"
+    }
+  ],
+  "authorizationContinuationNote": "2026-10-03：连续本地授权按既有范围继续使用；普通本地实施不再重复请求授权，产品/安全/数据/发布门禁仍需具名批准，执行者不代签。",
+  "previousExecutionNotes": [
+    "LR3-01: newly proven POST absent-row/upsert bypass still overwrites SUBMITTED content; shared PUT/sync predicate works.",
+    "LR3-02: existing sync matrix passed locally; online API/field contract comparison and nonempty elevated report/tombstone/pull coverage remain unexecuted.",
+    "CodeBuddy 11/11 plus independent real-password stale-ACTIVE-before-conditional-reset disable fence passed; not full JWT chain. No business fix in review.",
+    "CodeBuddy 5/5 plus independent invalid top-level type inverse acceptance passed; PC03 remains NOT_RUN. No business fix in review.",
+    "LR3-03 current run-state mirrors reconciled in independent review; this is not product acceptance.",
+    "Release/target environment remain NOT_EVALUATED/NOT_RUN. No gate or historical finding definition changed."
+  ],
+  "supplementalExecutions": {
+    "sessionId": "test-contract-2026-10-03",
+    "date": "2026-10-03",
+    "executor": "CodeBuddy (local isolated)",
+    "note": "三项 SUP 补充交付（SUP-01 RP10-T02 TEST_ONLY / SUP-02 RP08-T01 TEST_ONLY / SUP-03 phase soft-delete REVIEW_ONLY）。仅改两个白名单测试与新建 session 文档；业务源码/handler/前端/helper/schema 零变化。包实现/验证/发布轴未改写，发布保持 NOT_EVALUATED。",
+    "tasks": {
+      "SUP-01": {
+        "parentTask": "RP10-T02",
+        "finding": "LR4-01 / B10",
+        "mode": "TEST_ONLY",
+        "state": "DONE_TEST_HARDENING",
+        "release": "NOT_EVALUATED"
+      },
+      "SUP-02": {
+        "parentTask": "RP08-T01",
+        "finding": "LR4-02 / B04",
+        "mode": "TEST_ONLY",
+        "state": "DONE_TEST_HARDENING",
+        "release": "NOT_EVALUATED"
+      },
+      "SUP-03": {
+        "parentTask": "RP04/RP08",
+        "finding": "LR4-04 / B20",
+        "mode": "REVIEW_ONLY",
+        "state": "DONE_REVIEW_ONLY",
+        "release": "NOT_EVALUATED"
+      }
+    },
+    "deliverables": "execution/supplements/test-contract-2026-10-03/",
+    "independentReview": {
+      "date": "2026-10-03",
+      "reviewRef": "execution/reviews/2026-10-03-codebuddy-supplements/REVIEW.md",
+      "findingsRef": "execution/reviews/2026-10-03-codebuddy-supplements/findings.json",
+      "validationRef": "execution/reviews/2026-10-03-codebuddy-supplements/validation-summary.json",
+      "verdict": "REWORK_WITH_SCOPED_PASSES",
+      "supplements": {
+        "SUP-01": {
+          "implementation": "IN_PROGRESS",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED",
+          "note": "Required completion evidence missing; successful existing formal suite observations retained"
+        },
+        "SUP-02": {
+          "implementation": "IN_PROGRESS",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED",
+          "note": "Required completion evidence missing; successful existing formal suite observations retained"
+        },
+        "SUP-03": {
+          "implementation": "IN_PROGRESS",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED",
+          "note": "Required completion evidence missing; successful existing formal suite observations retained"
+        }
+      },
+      "localIndependentSuites": {
+        "RP10": "19/19 PASS",
+        "RP08": "12/12 PASS"
+      },
+      "original54TaskAxesUnchanged": true,
+      "original306CaseResultsUnchanged": true,
+      "businessFixAuthorizationAdded": false,
+      "nextRead": "execution/reviews/2026-10-03-codebuddy-supplements/NEXT_EXECUTION.md"
+    },
+    "continuations": [
+      {
+        "sessionId": "test-contract-rework-2026-10-03-cb1",
+        "date": "2026-10-03",
+        "executor": "CodeBuddy",
+        "kind": "SUPPLEMENT_REWORK_TEST_AND_REVIEW_ONLY",
+        "authorityReview": "execution/reviews/2026-10-03-codebuddy-supplements/REVIEW.md",
+        "promptRef": "execution/CODEBUDDY_SUPPLEMENT_REWORK_PROMPT_2026-10-03.md",
+        "correctOriginalMapping": {
+          "SUP-01": "LR4-03",
+          "SUP-02": "LR4-02",
+          "SUP-03": "LR4-02",
+          "note": "LR4-01 is prior record drift; LR4-04 is not defined in prior findings"
+        },
+        "supplementIds": [
+          {
+            "supplementId": "SUP-01",
+            "parentTaskIds": [
+              "RP10-T02"
+            ],
+            "kind": "TEST_ONLY",
+            "findings": [
+              "LR5-01",
+              "LR5-04",
+              "LR5-05"
+            ],
+            "result": "formal report test only: unified primitive-aware gate, four-primitive hit matrix, restore+submit race, release/settle control, real-DB semantic negative control",
+            "suite": "tests 22 / pass 22 / fail 0 (fresh owned PostgreSQL)"
+          },
+          {
+            "supplementId": "SUP-02",
+            "parentTaskIds": [
+              "RP08-T01"
+            ],
+            "kind": "TEST_ONLY",
+            "findings": [
+              "LR5-02",
+              "LR5-04",
+              "LR5-05"
+            ],
+            "result": "seven-entity same-actor permission contrast; field CSV/MD regenerated from the real run; old false forbidden-field entries corrected",
+            "suite": "tests 12 / pass 12 / fail 0 (fresh owned PostgreSQL)"
+          },
+          {
+            "supplementId": "SUP-03",
+            "parentTaskIds": [
+              "RP04-T01",
+              "RP08-T01"
+            ],
+            "kind": "REVIEW_ONLY",
+            "findings": [
+              "LR5-03",
+              "LR5-04"
+            ],
+            "result": "phase read/write/client/B20 read-only trace; phase-resource DELETE and restore NOT_FOUND; direct client caller NOT_FOUND; phase policy CONTRACT_UNRESOLVED; UI/dynamic NOT_RUN"
+          }
+        ],
+        "sharedDeliveryWork": [
+          "LR5-04",
+          "LR5-05"
+        ],
+        "runnerControls": "three SIMULATED_CONTROL runs (build-fail, drop-raise, stop-fail); stop-fail owned cluster manually released per recorded condition",
+        "businessSourceChanges": 0,
+        "srcChanges": 0,
+        "independentReview": "PENDING",
+        "release": "NOT_EVALUATED",
+        "parentTaskStatusChanged": false,
+        "originalTaskAndAcceptanceCountsChanged": false,
+        "evidenceRoot": "execution/supplements/test-contract-rework-2026-10-03-cb1",
+        "reviewEntry": "execution/supplements/test-contract-rework-2026-10-03-cb1/REVIEW_ENTRY.md",
+        "sessionSummary": "execution/supplements/test-contract-rework-2026-10-03-cb1/SESSION_SUMMARY.md",
+        "deliveryErrata": "execution/supplements/test-contract-rework-2026-10-03-cb1/delivery-errata.md",
+        "finalIntegrity": "execution/supplements/test-contract-rework-2026-10-03-cb1/final-integrity.json",
+        "startBaseline": "execution/supplements/test-contract-rework-2026-10-03-cb1/evidence/start-baseline.json",
+        "note": "SUP ids are not added to the original 54 tasks and do not change the 306 acceptance rows; local suite PASS is not fix acceptance or release acceptance"
+      },
+      {
+        "sessionId": "lr6-closeout-2026-10-04-cb1",
+        "date": "2026-10-04",
+        "executor": "CodeBuddy",
+        "kind": "LR6_CLOSEOUT_SUPPLEMENT",
+        "authorityReview": "execution/reviews/2026-10-04-codebuddy-supplement-rework/REVIEW.md",
+        "promptRef": "execution/CODEBUDDY_FINAL_SUP_REWORK_PROMPT_2026-10-04.md",
+        "workItems": [
+          {
+            "closeId": "CLOSE-01",
+            "finding": "LR6-01",
+            "supplement": "SUP-01",
+            "parentTask": "RP10-T02",
+            "kind": "TEST_ONLY",
+            "result": "report test precision fix: full identity/id + mandatory marker, per-primitive parameter shapes, draftWriteBarrier real upsert, three legacy/modern/sync draft races with try/finally + timer cleanup + settle; 3 new control cases, all 22 original cases retained; full report suite 25/25 in a fresh owned DB"
+          },
+          {
+            "closeId": "CLOSE-02",
+            "finding": "LR6-02",
+            "kind": "RUNNER_ONLY_IN_NEW_SESSION",
+            "result": "new-session runner records primary subprocess exceptions, keeps nonzero after cleanup, returns nonzero on result-persistence failure with a fallback log, isolates each cleanup step, preserves the owned cluster root when stop fails; six safe simulated controls all nonzero"
+          },
+          {
+            "closeId": "CLOSE-03",
+            "finding": "LR6-03",
+            "kind": "NEW_CORRECTION_DELIVERY_AND_SEALING",
+            "result": "unique per-registry id with explicit correctsRef (index + old id + old canonical sha256 + old session), non-cyclic payload/final seals excluding both histories/self/readback, real per-file hash readback"
+          },
+          {
+            "closeId": "CLOSE-04",
+            "finding": "LR6-04",
+            "supplement": "SUP-03",
+            "parentTasks": [
+              "RP04-T01",
+              "RP08-T01"
+            ],
+            "kind": "DOCUMENT_ERRATUM_ONLY",
+            "result": "new erratum separates single-project resolver/404 from the global manager/active-member/elevated visibility filter; no project.deletedAt condition in the global branch; no code change"
+          }
+        ],
+        "acceptedEvidenceReuse": {
+          "SUP-02": "REUSED_INDEPENDENTLY_VERIFIED_EVIDENCE (12/12 and 101/101 from the independent review run; rp08 not rerun this round)"
+        },
+        "runnerControls": "SIMULATED_CONTROL_ALL_SUBPROCESSES_STUBBED; six controls; no real cluster or server",
+        "businessSourceChanges": 0,
+        "syncFormalTestChanges": 0,
+        "realReportSuite": {
+          "tests": 25,
+          "pass": 25,
+          "fail": 0,
+          "ownedDatabase": true
+        },
+        "requiredChecks": {
+          "build": 0,
+          "typecheck": 0,
+          "lint:undefined": 0,
+          "gitDiffCheck": 0
+        },
+        "parentTaskStatusChanged": false,
+        "originalTaskAndAcceptanceCountsChanged": false,
+        "independentReview": "PENDING",
+        "release": "NOT_EVALUATED",
+        "evidenceRoot": "execution/supplements/lr6-closeout-2026-10-04-cb1",
+        "reviewEntry": "execution/supplements/lr6-closeout-2026-10-04-cb1/REVIEW_ENTRY.md",
+        "sessionSummary": "execution/supplements/lr6-closeout-2026-10-04-cb1/SESSION_SUMMARY.md",
+        "payloadManifest": "execution/supplements/lr6-closeout-2026-10-04-cb1/evidence/payload-manifest.json",
+        "finalIntegrity": "execution/supplements/lr6-closeout-2026-10-04-cb1/final-integrity.json",
+        "postSealReadback": "execution/supplements/lr6-closeout-2026-10-04-cb1/post-seal-readback.json",
+        "nextBusinessInputs": "execution/supplements/lr6-closeout-2026-10-04-cb1/next-business-inputs.md",
+        "correctsOldDelivery": {
+          "REVISION_HISTORY.json": "versions[24] duplicate version id from the previous session (corrected by a new unique entry with correctsRef)",
+          "EXECUTION_REVISION_HISTORY.json": "entries[15] old executor session entry (corrected by a new unique entry with correctsRef)"
+        },
+        "note": "CLOSE items are supplemental deliveries; they are not added to the original 54 tasks and do not change the 306 acceptance rows, package statuses, gates or approvals; local PASS is not fix acceptance or release acceptance"
+      },
+      {
+        "sessionId": "parallel-lr7-2026-10-04-p01-integration",
+        "date": "2026-10-04",
+        "executor": "CodeBuddy (local isolated integrator)",
+        "kind": "PARALLEL_SIX_WINDOW_INTEGRATION_AGGREGATION",
+        "authorityRef": "docs/remediation/2026-10-04-parallel-handoff-check/INTEGRATOR_RESUME_PROMPT.md",
+        "correctsRef": {
+          "arrayIndexZeroBased": 25,
+          "existingId": "lr6-closeout-2026-10-04-cb1",
+          "entryCanonicalSha256": "7c7c0d4401e30d833b35e02e46a104a5d56febf544d12029cce400667f0e9a82",
+          "sessionRef": "execution/supplements/lr6-closeout-2026-10-04-cb1/",
+          "problem": "A original READY missing writerStopped=true; batch aggregation gate blocked until A readiness-amendment-01 passed independent ruling A_READINESS_GATE_PASS_WITH_EVIDENCE_LIMITS"
+        },
+        "windowsAggregated": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E",
+          "F"
+        ],
+        "aAmendment": "readiness-amendment-01 (READY ec5ac4bc..., manifest 3bcd2abd...)",
+        "dTechBinding": "ORIGINAL_READY_NONCONFORMING; real manifest sha 0f7a93bd... recorded as workerManifest",
+        "bExtraCapture": "make-worker-manifest.py (1f532c34...) captured as AGGREGATOR_CAPTURED_UNSEALED_WORKER_INPUT",
+        "summary": "Aggregated six parallel windows: A (protocol amendment + reused 9-path simulated evidence), B (strict path correction), C (T-RP-02 receipts PROPOSED), D (T-RP-09 auth transport PROPOSED), E (T-RP-03 client revision matrix PROPOSED), F (T-RP-04+T-RP-12 watermark/cache PROPOSED). Sealed J=integration/readiness-resume-01. No business code/test/ledger changed; 54/306 axes, 31 open items, gates, approvals unchanged.",
+        "businessSourceChanges": 0,
+        "originalTaskAndAcceptanceCountsChanged": false,
+        "evidenceRoot": "execution/supplements/parallel-lr7-2026-10-04-p01/integration/readiness-resume-01",
+        "payloadManifest": "execution/supplements/parallel-lr7-2026-10-04-p01/integration/readiness-resume-01/payload-manifest.json",
+        "finalIntegrity": "execution/supplements/parallel-lr7-2026-10-04-p01/integration/readiness-resume-01/final-integrity.json",
+        "postSealReadback": "execution/supplements/parallel-lr7-2026-10-04-p01/integration/readiness-resume-01/post-seal-readback.json",
+        "independentReview": "PENDING",
+        "release": "NOT_EVALUATED",
+        "note": "Material aggregation only; not business acceptance or release acceptance. A 9-path evidence REUSED_EXECUTOR_SIMULATED_EVIDENCE, full dynamic acceptance NOT_EVALUATED. Old integration/WAITING_FOR_WORKERS.md preserved; its waiting condition lifted by A new declaration."
+      }
+    ]
+  },
+  "testOnlyFollowupRecommendations": [
+    {
+      "taskId": "RP10-T02",
+      "scope": "Semantic negative-control barrier hardening; no business change"
+    },
+    {
+      "taskId": "RP08-T01",
+      "scope": "Permanent exact-row seven-entity online field comparison; no business change"
+    }
+  ],
+  "authorizationContinuations": [
+    {
+      "sessionId": "continuous-local-2026-10-05-01",
+      "registeredAtUtc": "2026-10-05T05:09:15.295984+00:00",
+      "source": "User continuous local repair authorization; business decisions remain separate",
+      "authorizationRef": {
+        "pathBase": "REPOSITORY",
+        "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-continuous-01/authorization.json",
+        "sha256": "1a0727287e8a81e10dd7230369955602e2aeefd9b16a0b3328f602c852eff418"
+      },
+      "allowedStandardTaskIds": [
+        "RP01-T02",
+        "RP02-T02",
+        "RP03-T01",
+        "RP03-T02",
+        "RP05-T02",
+        "RP06-T01",
+        "RP06-T02",
+        "RP07-T02",
+        "RP08-T02",
+        "RP09-T01",
+        "RP09-T02",
+        "RP10-T01",
+        "RP10-T03",
+        "RP11-T01",
+        "RP11-T02",
+        "RP11-T03",
+        "RP12-T01",
+        "RP12-T02",
+        "RP13-T03",
+        "RP14-T02",
+        "RP15-T01",
+        "RP15-T02",
+        "RP15-T03",
+        "RP16-T01",
+        "RP16-T02",
+        "RP16-T03",
+        "RP17-T02",
+        "RP17-T03",
+        "RP18-T01",
+        "RP18-T02",
+        "RP18-T03",
+        "RP19-T02",
+        "RP19-T03",
+        "RP19-T04"
+      ],
+      "allowedValidationOnlyTaskIds": [
+        "RP00-T01",
+        "RP00-T03",
+        "RP00-T04",
+        "RP00-T05",
+        "RP13-T01",
+        "RP13-T02",
+        "RP17-T01",
+        "RP19-T01"
+      ],
+      "admittedCodeTasks": [],
+      "decisionsApproved": [],
+      "phase": "PREPARATION_REWORK_DELIVERED_AWAITING_TASK_DECISIONS_AND_EXTERNAL_INPUTS",
+      "newBusinessImplementation": false,
+      "newProductRuntimeValidation": "NOT_RUN",
+      "release": "NOT_EVALUATED"
+    },
+    {
+      "sessionId": "2026-10-05-approved-contracts-01",
+      "authorizationRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-approved-contracts-01/authorization.json",
+      "approvedDecisionIds": [
+        "T-RP-05",
+        "D-S01-07"
+      ],
+      "taskIds": [
+        "RP14-T02",
+        "RP10-T03"
+      ],
+      "approvedBy": "郭仁康",
+      "approvedRole": "研发副总监"
+    },
+    {
+      "run": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01",
+      "taskIds": [
+        "RP02-T02",
+        "RP03-T01"
+      ],
+      "mode": "CONTINUOUS_LOCAL_SERIAL",
+      "approvedDecision": "T-RP-09",
+      "scope": [
+        "RP02-T02",
+        "RP03-T01"
+      ],
+      "authorizationRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/authorization.json"
+    },
+    {
+      "sessionId": "2026-10-05-sync-receipts-01",
+      "authorizationRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/authorization.json",
+      "taskIds": [
+        "RP09-T01",
+        "RP09-T02"
+      ],
+      "status": "DELIVERED_LOCAL_WITH_CI_AND_JOINT_LIMITS"
+    },
+    {
+      "source": "继续完成待进行的修复项，不要等我批准了， 后续的修复我都批准。全部推进修复",
+      "sessionRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/authorization.json",
+      "clientDate": "2026-10-06",
+      "scope": "Remaining STANDARD local tasks; concrete policy chosen and recorded per task; optional inactive"
+    },
+    {
+      "id": "2026-10-06-continuous-remediation-01-ci",
+      "taskId": "FOLLOWUP-SYNC-V1-CI",
+      "stateRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/FOLLOWUP-SYNC-V1-CI/task-state.json",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED"
+    }
+  ],
+  "currentContinuation": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01",
+  "decisionScopeEvidence": {
+    "T-RP-09": {
+      "approvedScope": [
+        "RP02-T02",
+        "RP03-T01"
+      ],
+      "evidenceRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/approval.json"
+    },
+    "T-RP-02": {
+      "approvedScope": [
+        "RP09-T01",
+        "RP09-T02"
+      ],
+      "selectedProposal": "T-RP-02-SCOPED-RESERVATION-V1",
+      "evidenceRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/approval.json"
+    },
+    "T-RP-07": {
+      "approvedScope": [
+        "RP09-T01 sync delete adapter only"
+      ],
+      "selectedProposal": "T-RP-07-SYNC-DELETE-WINS-V1",
+      "evidenceRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/approval.json"
+    },
+    "D-S01-01": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/approval.json",
+    "D-S01-02": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/approval.json",
+    "D-S01-04": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/approval.json",
+    "T-RP-12": "docs/remediation/2026-10-01-rdpms/execution/RP11/RP11-T01/runs/2026-10-06-continuous-remediation-01/evidence/decision-contract.json"
+  },
+  "ciRegression": {
+    "latest": {
+      "result": "PASS",
+      "scope": "Existing backend unit/contract + three affected integration groups",
+      "evidenceRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/FOLLOWUP-SYNC-V1-CI/acceptance.json",
+      "priorFailureEvidencePreserved": true,
+      "frontendTargetReleaseNotRun": true
+    }
+  },
+  "validationSupplements": [
+    {
+      "id": "FOLLOWUP-COMPILED-ACCEPTANCE-2026-10-06-continuous-remediation-01",
+      "parentTask": "RP01-T01",
+      "evidenceRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/FOLLOWUP-COMPILED-ACCEPTANCE/acceptance.json",
+      "local": "PASS",
+      "release": "NOT_EVALUATED"
+    }
+  ],
+  "nextReadyBusinessTask": null,
+  "localWorkBoundary": "CURRENT_INDEPENDENT_AUTHORIZED_STANDARD_SCOPE_DELIVERED",
+  "remainingMaterialRef": "docs/remediation/2026-10-01-rdpms/execution/RP19/RP19-T04/runs/2026-10-06-continuous-remediation-01/evidence/remaining-work.json"
+}

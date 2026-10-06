@@ -1,0 +1,75 @@
+{
+  "businessSourceFileHashes": {
+    "count": 174,
+    "drift": []
+  },
+  "frozenPlanInputHashes": {
+    "count": 17,
+    "drift": []
+  },
+  "otherTestAndConfigHashes": {
+    "count": 71,
+    "drift": []
+  },
+  "additionalReadOnlyFileHashes": {
+    "count": 13,
+    "drift": []
+  },
+  "syncTest": {
+    "unchanged": true
+  },
+  "frozenDirectories": {
+    "docs/remediation/2026-10-01-rdpms/execution/supplements/test-contract-2026-10-03": {
+      "fileCount": 79,
+      "unchanged": true
+    },
+    "docs/audits/2026-09-29-rdpms": {
+      "fileCount": 12,
+      "unchanged": true
+    },
+    "docs/remediation/2026-10-01-rdpms/revisions/v1-2026-10-01": {
+      "fileCount": 14,
+      "unchanged": true
+    },
+    "docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-03-codebuddy": {
+      "fileCount": 52,
+      "unchanged": true
+    },
+    "docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-02-post-continuous": {
+      "fileCount": 36,
+      "unchanged": true
+    },
+    "docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-02-luna": {
+      "fileCount": 39,
+      "unchanged": true
+    },
+    "docs/remediation/2026-10-01-rdpms/execution/RP10/RP10-T02/runs/2026-10-03-codebuddy-lr3-rework": {
+      "fileCount": 170,
+      "unchanged": true
+    },
+    "docs/remediation/2026-10-01-rdpms/execution/RP08/RP08-T01/runs/2026-10-03-codebuddy-lr3-validation": {
+      "fileCount": 35,
+      "unchanged": true
+    },
+    "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T01/runs/2026-10-03-codebuddy-lr3-testonly": {
+      "fileCount": 15,
+      "unchanged": true
+    },
+    "docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-03-codebuddy-followup": {
+      "fileCount": 54,
+      "unchanged": true
+    },
+    "docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-03-codebuddy-supplements": {
+      "fileCount": 48,
+      "unchanged": true
+    },
+    "docs/remediation/2026-10-01-rdpms/execution/supplements/test-contract-rework-2026-10-03-cb1": {
+      "fileCount": 245,
+      "unchanged": true
+    },
+    "docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-04-codebuddy-supplement-rework": {
+      "fileCount": 77,
+      "unchanged": true
+    }
+  }
+}

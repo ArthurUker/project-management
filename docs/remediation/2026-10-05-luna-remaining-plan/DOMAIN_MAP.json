@@ -1,0 +1,78 @@
+{
+  "domains": {
+    "A": {
+      "title": "账号、认证与会话",
+      "tasks": [
+        "RP01-T02",
+        "RP01-T03",
+        "RP02-T02",
+        "RP03-T01",
+        "RP03-T02"
+      ]
+    },
+    "B": {
+      "title": "项目关系、注册项目与负责人",
+      "tasks": [
+        "RP05-T02",
+        "RP05-T03",
+        "RP06-T01",
+        "RP06-T02",
+        "RP07-T02"
+      ]
+    },
+    "C": {
+      "title": "任务 revision 与报告状态",
+      "tasks": [
+        "RP10-T01",
+        "RP10-T03"
+      ]
+    },
+    "D": {
+      "title": "回执事务与同步生产者",
+      "tasks": [
+        "RP09-T01",
+        "RP09-T02",
+        "RP13-T03"
+      ]
+    },
+    "E": {
+      "title": "离线身份、缓存、队列与恢复",
+      "tasks": [
+        "RP08-T02",
+        "RP11-T01",
+        "RP11-T02",
+        "RP11-T03",
+        "RP12-T01",
+        "RP12-T02"
+      ]
+    },
+    "F": {
+      "title": "文件、历史数据与模块恢复",
+      "tasks": [
+        "RP14-T02",
+        "RP15-T01",
+        "RP15-T02",
+        "RP15-T03",
+        "RP16-T01",
+        "RP16-T02",
+        "RP16-T03"
+      ]
+    },
+    "G": {
+      "title": "备份、候选构建、灾备与最终对账",
+      "tasks": [
+        "RP17-T02",
+        "RP17-T03",
+        "RP18-T01",
+        "RP18-T02",
+        "RP18-T03",
+        "RP19-T02",
+        "RP19-T03",
+        "RP19-T04"
+      ]
+    }
+  },
+  "domainCount": 7,
+  "parallelBusinessPermission": false,
+  "partitionMeaning": "Ownership and scheduling groups, not permission for seven shared-checkout writers."
+}

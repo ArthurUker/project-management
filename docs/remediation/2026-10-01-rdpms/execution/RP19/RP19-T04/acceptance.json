@@ -1,0 +1,11 @@
+{
+  "taskId": "RP19-T04",
+  "implementationStatus": "IN_PROGRESS",
+  "validationStatus": "ENV_BLOCKED",
+  "releaseStatus": "NOT_EVALUATED",
+  "cases": [
+    {"id": "PAC-RP19-04", "status": "ENV_BLOCKED", "evidence": "evidence/programme-reconciliation.json; evidence/programme-reconciliation.csv", "scope": "All 33 records are reconciled, but closure conditions are not met: open findings, pending validations and releases remain."},
+    {"id": "TASK-RP19-T04", "status": "ENV_BLOCKED", "evidence": "evidence/programme-reconciliation.json; evidence/programme-reconciliation.csv", "scope": "A current-state snapshot is delivered; this is not final remediation closure or risk acceptance."}
+  ],
+  "limits": ["Frozen audit statuses are unchanged", "No risk was accepted", "No release was evaluated", "Current-state counts do not represent successful remediation"]
+}

@@ -1,0 +1,27 @@
+{
+  "approvedBy": "郭仁康",
+  "approverRole": "研发副总监",
+  "approvedAt": "2026-10-05T08:59:20.767957+00:00",
+  "source": "User message: 批准上述两项，批准人：郭仁康，职责：研发副总监; exact preceding two contracts",
+  "contracts": {
+    "T-RP-05": {
+      "byteRead": "CLEAN only; INFECTED/FAILED/SKIPPED/PENDING/unknown/null denied, including elevated actors",
+      "metadataAndDelete": "Existing system permissions and resource scope retained; no scan gate on metadata/delete",
+      "audit": "Redacted denial audit; intended existing M-1 elevated context preserved, scan policy never bypassed",
+      "compatibility": "Existing URLs retained; non-CLEAN byte reads now 403; unclassified legacy raw originals have unknown scan status and cannot export bytes",
+      "migration": "none"
+    },
+    "D-S01-07": {
+      "sourceStatuses": [
+        "DRAFT",
+        "NEEDS_REVISION"
+      ],
+      "newKeySubmitted": "409 INVALID_STATE",
+      "sameKey": "Replay original committed result without a second version or state change",
+      "reviewConcurrency": "Transaction-local state and version govern acceptance; no stale review may overwrite a newer submission",
+      "compatibility": "Existing submit URLs and idempotency keys retained; SUBMITTED new-key resubmit denied",
+      "migration": "none"
+    }
+  },
+  "notApproved": "All other decisions, optional expansions, production access and release"
+}

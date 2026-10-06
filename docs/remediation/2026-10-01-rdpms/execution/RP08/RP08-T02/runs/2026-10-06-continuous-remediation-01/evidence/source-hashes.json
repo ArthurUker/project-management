@@ -1,0 +1,42 @@
+[
+  {
+    "path": "rdpms-system/backend/src/routes/sync.js",
+    "beforeSha256": "46fa95355309ecd680b5aab8171bfc630b79ade3c74cb93abf8c293e9d43e170",
+    "afterSha256": "896e22efc0b741f9d102d752dbfcc5ca18f8630903fc4035f230040f91e3efd0"
+  },
+  {
+    "path": "rdpms-system/backend/src/modules/sync/syncReadPolicy.ts",
+    "beforeSha256": null,
+    "afterSha256": "518882640bc22ef30528752e5dbaa3a1dbeaa72c913de89f7419f44deeb4732c"
+  },
+  {
+    "path": "rdpms-system/frontend/src/offline/engine.ts",
+    "beforeSha256": "962874d7413110139f66c6740e7ae35f62c12d1ad28d5bde400e8e40ad64b5da",
+    "afterSha256": "9c18e46559dd51f756c4f0010bebf902e495fcf34ac085f0bca1cf2a58c1be8c"
+  },
+  {
+    "path": "rdpms-system/frontend/src/offline/idb.ts",
+    "beforeSha256": "3ea27a4d2d8e67831c6a8ddf9e9065f39bfdea6c8793ce2558bf3b4f6e9ace1f",
+    "afterSha256": "bb0b319f8207bed3f1d8cb5f702bbc14458579ba7dedcae053edf33bf216a56a"
+  },
+  {
+    "path": "rdpms-system/frontend/src/api/endpoints/sync.ts",
+    "beforeSha256": "5f6143ddbc4e152f4d1bfeadde57e49c2d93e848ff1a177ba34d804f004dbebf",
+    "afterSha256": "c89641c301a8605f49ef18bfb9b9267f4b93492c9a6c1a354e08907fc7a0e12c"
+  },
+  {
+    "path": "rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx",
+    "beforeSha256": "78456badac6bd111f171fd2c065eea7b299996198f04e3fb295f383e63e96a4e",
+    "afterSha256": "59cba93a4419a0834d101778aebe655990665c9e990d6b2afd2e44601db7c121"
+  },
+  {
+    "path": "rdpms-system/backend/tests/integration/rp08-acl-backfill.integration.test.mjs",
+    "beforeSha256": null,
+    "afterSha256": "9dc7d5e31bd67e35cc73c787d734760d739aeaa05c88d238e56d2ff1a2d952e1"
+  },
+  {
+    "path": "rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs",
+    "beforeSha256": "720c3f6a7b4badc3a7f8dfd754371467812b1c67cbe90358d504c2d2284d9fc7",
+    "afterSha256": "352149021601f7e6ffc56e30b2b1da2e61cbedaedab89582b4a4e29d4a06027b"
+  }
+]

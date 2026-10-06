@@ -1,0 +1,265 @@
+{
+  "kind": "SIMULATED_CONTROL",
+  "runnerSha256": "d8e2b02302d8d62e2618192e9aef8f1de443ad2a6ac0724ebbb213a798d85f74",
+  "note": "控制流模拟：注入 build 失败 / guard-drop 抛异常 / cluster-stop 非零；未注入真实数据库故障，不冒充真实 DB 验收",
+  "controls": {
+    "build-fail": {
+      "attempt": "attempt-03",
+      "kind": "SIMULATED_CONTROL",
+      "simulation": {
+        "buildFail": true,
+        "dropRaise": false,
+        "dropNonZero": false,
+        "stopFail": false,
+        "skipSuite": true,
+        "skipBuild": false
+      },
+      "criticalFailures": [
+        "backend-build failed"
+      ],
+      "commands": [
+        [
+          "initdb",
+          0
+        ],
+        [
+          "cluster-start",
+          0
+        ],
+        [
+          "guard-check",
+          2
+        ],
+        [
+          "guard-reset",
+          0
+        ],
+        [
+          "backend-build",
+          1
+        ],
+        [
+          "backend-typecheck",
+          0
+        ],
+        [
+          "undefined-check",
+          0
+        ],
+        [
+          "git-diff-check",
+          0
+        ],
+        [
+          "guard-drop",
+          0
+        ],
+        [
+          "cluster-stop",
+          0
+        ]
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_rework_33b3599414",
+          "ownedPort": 52347,
+          "ownedTempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-3mjl3cez",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    },
+    "drop-raise": {
+      "attempt": "attempt-03",
+      "kind": "SIMULATED_CONTROL",
+      "simulation": {
+        "buildFail": false,
+        "dropRaise": true,
+        "dropNonZero": false,
+        "stopFail": false,
+        "skipSuite": true,
+        "skipBuild": true
+      },
+      "criticalFailures": [
+        "guard-drop cleanup failed"
+      ],
+      "commands": [
+        [
+          "initdb",
+          0
+        ],
+        [
+          "cluster-start",
+          0
+        ],
+        [
+          "guard-check",
+          2
+        ],
+        [
+          "guard-reset",
+          0
+        ],
+        [
+          "backend-typecheck",
+          0
+        ],
+        [
+          "undefined-check",
+          0
+        ],
+        [
+          "git-diff-check",
+          0
+        ],
+        [
+          "cluster-stop",
+          0
+        ]
+      ],
+      "cleanup": {
+        "guardDropError": "FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-pd6hvei9/missing-drop-binary'",
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_rework_d95bb5a13b",
+          "ownedPort": 52394,
+          "ownedTempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-pd6hvei9",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    },
+    "stop-fail": {
+      "attempt": "attempt-03",
+      "kind": "SIMULATED_CONTROL",
+      "simulation": {
+        "buildFail": false,
+        "dropRaise": false,
+        "dropNonZero": false,
+        "stopFail": true,
+        "skipSuite": true,
+        "skipBuild": true
+      },
+      "criticalFailures": [
+        "cluster-stop cleanup failed",
+        "cluster-stop failed, owned temp root preserved (release condition recorded)"
+      ],
+      "commands": [
+        [
+          "initdb",
+          0
+        ],
+        [
+          "cluster-start",
+          0
+        ],
+        [
+          "guard-check",
+          2
+        ],
+        [
+          "guard-reset",
+          0
+        ],
+        [
+          "backend-typecheck",
+          0
+        ],
+        [
+          "undefined-check",
+          0
+        ],
+        [
+          "git-diff-check",
+          0
+        ],
+        [
+          "guard-drop",
+          0
+        ],
+        [
+          "cluster-stop",
+          1
+        ]
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 1,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": false,
+        "preservedOwnedTempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-twxmdkws",
+        "releaseCondition": "cluster-stop did not succeed; the owned temp root is preserved on purpose. Release: run pg_ctl -D <root>/pg -m fast -w stop, then remove the root. Never delete a root with a running cluster.",
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_rework_400fd11437",
+          "ownedPort": 52431,
+          "ownedTempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-twxmdkws",
+          "rootExistsAfterCleanup": true,
+          "postmasterPidExists": true,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    }
+  },
+  "processExitCodes": {
+    "build-fail": 1,
+    "drop-raise": 1,
+    "stop-fail": 1
+  },
+  "manualReleases": [
+    {
+      "kind": "OWNED_RESOURCE_MANUAL_RELEASE",
+      "reason": "cluster-stop simulation intentionally did not stop the owned cluster; the runner preserved the root.",
+      "root": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-ree4kjeq",
+      "ownedDatabase": "rdpms_test_rework_04d939786e",
+      "ownedPort": 63951,
+      "commands": [
+        "/opt/homebrew/bin/pg_ctl -D <root>/pg -m fast -w stop",
+        "rm -rf <root>"
+      ],
+      "manualStopExit": 0,
+      "rootRemovedAfterManualRelease": true,
+      "ownershipProof": "db/port/root recorded by controls/stop-fail/attempt-01/run-results.json"
+    },
+    {
+      "kind": "OWNED_RESOURCE_MANUAL_RELEASE",
+      "reason": "stop-fail control attempt-03 intentionally did not stop the owned cluster; runner preserved the root",
+      "root": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-twxmdkws",
+      "ownedDatabase": "rdpms_test_rework_400fd11437",
+      "commands": [
+        "/opt/homebrew/bin/pg_ctl -D <root>/pg -m fast -w stop",
+        "rm -rf <root>"
+      ],
+      "manualStopExit": 0,
+      "rootRemovedAfterManualRelease": true,
+      "ownershipProof": "controls/stop-fail/attempt-03/run-results.json"
+    },
+    {
+      "kind": "OWNED_RESOURCE_MANUAL_RELEASE",
+      "reason": "stop-fail control attempt-02 intentionally did not stop the owned cluster; runner preserved the root",
+      "root": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-g1gq0htj",
+      "ownedDatabase": "rdpms_test_rework_e0828d703d",
+      "commands": [
+        "/opt/homebrew/bin/pg_ctl -D <root>/pg -m fast -w stop",
+        "rm -rf <root>"
+      ],
+      "manualStopExit": 0,
+      "rootRemovedAfterManualRelease": true,
+      "ownershipProof": "controls/stop-fail/attempt-02/run-results.json"
+    }
+  ],
+  "ownedResourcesAfterControls": {
+    "clustersRunning": 0,
+    "tempRootsRemaining": 0
+  }
+}

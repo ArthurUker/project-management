@@ -1,0 +1,12 @@
+{
+  "baseline":"138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "commands":[
+    {"command":"rg --files rdpms-system/backend/prisma/migrations | sort","exitCode":0,"result":"PASS; six migration SQL files plus migration_lock.toml"},
+    {"command":"rg -n -i 'fk_tasks_|tasks_parent|task_dependencies|project_members.*unique|project_phases.*unique|phase_id|parent_id|prerequisite_id' rdpms-system/backend/prisma/migrations","exitCode":0,"result":"PASS; current repository migration definitions inspected"},
+    {"command":"git diff --check","exitCode":0,"result":"PASS"},
+    {"command":"shasum -a 256 prisma/schema.prisma and six migration SQL files","exitCode":0,"result":"PASS; hashes in static-schema-inventory.json"}
+  ],
+  "databaseAccess":{"attempted":false,"reason":"No data-owner-approved read-only snapshot; S04-OI-01 remains OPEN","businessDatabaseConnected":false,"runtimeResourcesCreated":false,"queryTemplateExecuted":false},
+  "scope":"Read-only repository source and historical S04 artifacts only; no .env loaded; no credentials accessed.",
+  "cleanup":"No resources created; no cleanup needed."
+}

@@ -1,0 +1,19 @@
+{
+  "kind": "REAL_OWNED_DB_TRACE",
+  "case": "SUP-01-02",
+  "logRef": "SUP-01/runs/rp10-suite/attempt-05/integration-suite.log",
+  "trace": {
+    "case": "SUP-01-02",
+    "reportId": "rp10-s01-02-74c8fe29-6316-462e-99e0-87a7f7e096a2",
+    "periodKey": "2028-05",
+    "interceptedPrimitive": "updateMany",
+    "lateStatus": 409,
+    "lateCode": "CONFLICT",
+    "rowStatus": "SUBMITTED",
+    "deletedAt": null,
+    "currentVersion": 1,
+    "versionCount": 1,
+    "restoreAuditCount": 1
+  },
+  "meaning": "墓碑恢复后 submit 先完成的正式竞争：迟到恢复受控 409 CONFLICT，正文/版本/审计未被覆盖"
+}

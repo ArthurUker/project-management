@@ -1,0 +1,46 @@
+diff --git a/rdpms-system/backend/src/modules/reports/reportCommands.ts b/rdpms-system/backend/src/modules/reports/reportCommands.ts
+index aece2a6..9a4f753 100644
+--- a/rdpms-system/backend/src/modules/reports/reportCommands.ts
++++ b/rdpms-system/backend/src/modules/reports/reportCommands.ts
+@@ -161,7 +161,7 @@ export async function submitReport(
+   });
+   await db.report.update({
+     where: { id: report.id },
+-    data: { status: 'SUBMITTED', submittedAt, updatedById: actor.userId },
++    data: { status: 'SUBMITTED', currentVersion: version, submittedAt, updatedById: actor.userId },
+   });
+   return { version, submittedAt };
+ }
+diff --git a/rdpms-system/backend/src/routes/reports.js b/rdpms-system/backend/src/routes/reports.js
+index dd76414..c2d0a77 100644
+--- a/rdpms-system/backend/src/routes/reports.js
++++ b/rdpms-system/backend/src/routes/reports.js
+@@ -412,8 +412,17 @@ reports.post('/:id/submit', requirePermission('reports.submit'), async (c) => {
+       }
+     },
+     execute: async (tx) => {
+-      // 共用命令：版本快照 + 状态（与其余入口同一实现，见 modules/reports/reportCommands.ts）
+-      await submitReport(tx, { actor: auth, report });
++      // Serialize submissions with draft writes, then snapshot the exact row revision
++      // observed under this transaction's lock. The preflight row above is only for
++      // authorization; it must never supply the version content.
++      await tx.$queryRaw`SELECT id FROM reports WHERE id = ${id} FOR UPDATE`;
++      const source = await tx.report.findUnique({ where: { id } });
++      if (!source || source.deletedAt) throw notFound('REPORT_NOT_FOUND', '汇报不存在');
++      if (source.status === 'REVIEWED') {
++        throw new HttpError(409, 'INVALID_STATE', '已审阅的汇报不能再次提交');
++      }
++      // 共用命令：同一锁定修订的版本快照 + 状态（见 modules/reports/reportCommands.ts）。
++      await submitReport(tx, { actor: auth, report: source, snapshot: source.content });
+       await writeAuditStrict(tx, {
+         c,
+         actorId: auth.userId,
+@@ -422,7 +431,7 @@ reports.post('/:id/submit', requirePermission('reports.submit'), async (c) => {
+         action: AUDIT_ACTIONS.SUBMIT,
+         entityType: 'REPORT',
+         entityId: id,
+-        entityLabel: `${report.reportType}/${report.periodKey}`,
++        entityLabel: `${source.reportType}/${source.periodKey}`,
+         metadata: { permissionCode: 'reports.submit' },
+       });
+       return { status: 200, body: { success: true } };

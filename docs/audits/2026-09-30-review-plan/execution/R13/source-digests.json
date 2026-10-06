@@ -1,0 +1,18 @@
+{
+  "packet": "R13",
+  "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "generatedAt": "2026-09-30",
+  "files": [
+    {"path": "rdpms-system/deploy/scripts/deploy.sh", "sha256": "098b598f34275ffc8ab28895570693a8e24add5640e132dbf5c5db78efb05f05"},
+    {"path": "rdpms-system/deploy/scripts/preflight.sh", "sha256": "007232105af56d7993e0570b5a09a921e60a32ab86c6c70b156bfc73ee1ddfba"},
+    {"path": "rdpms-system/deploy/scripts/rdpms-start.sh", "sha256": "ce57de2b869b409b0e7360d7f2f240fd58cccda5db842700f45f144f671eb9d4"},
+    {"path": "rdpms-system/deploy/scripts/smoke-test.sh", "sha256": "525fef865ca84fa795100a8787fe555cd9fa577f6bda47478697cc2cb48b6396"},
+    {"path": "rdpms-system/deploy/systemd/rdpms-api.service", "sha256": "2256d8e97ef3b879d71b0a0d2da9a63fbb8a1d545d0a0375c9b7216dcc079252"},
+    {"path": "rdpms-system/backend/src/bootstrap/createApp.js", "sha256": "78aaeaf543649f712d51fe1782069026533d7e166ce5a04ab3b38c414ca3f894"},
+    {"path": "rdpms-system/backend/.env.example", "sha256": "e4295d8872b17db057ff85024ae222045405caa089a85c782b913ebb5ac2719a"}
+  ],
+  "notes": [
+    "SHA-256 values cover current in-scope source files; no live configuration or host state was read.",
+    "Historical D02/D03 disposition inherited from the frozen prior audit report; source has not been rewritten."
+  ]
+}

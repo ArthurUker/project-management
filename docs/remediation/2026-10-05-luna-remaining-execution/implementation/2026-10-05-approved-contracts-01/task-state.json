@@ -1,0 +1,37 @@
+{
+  "implementation": "COMPLETE_ADMITTED_SCOPE_ONLY",
+  "tasks": [
+    "RP14-T02",
+    "RP10-T03"
+  ],
+  "localValidation": "PASS",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "allRepairsComplete": false,
+  "remainingImplementationTasks": 34,
+  "remainingRequiredImplementationTasks": 32,
+  "optionalInactive": 2,
+  "taskCounts": {
+    "tasks": 54,
+    "implementation": {
+      "COMPLETE": 20,
+      "NOT_STARTED": 32,
+      "IN_PROGRESS": 2
+    },
+    "validation": {
+      "ENV_BLOCKED": 7,
+      "PASS": 12,
+      "NOT_RUN": 35
+    },
+    "release": "NOT_EVALUATED for all tasks",
+    "incompleteImplementation": 34,
+    "note": "Implementation/local/target/release are separate; original planning checkpoints preserved"
+  },
+  "acceptanceCounts": {
+    "NOT_RUN": 214,
+    "PASS": 67,
+    "ENV_BLOCKED": 25
+  },
+  "remainingUnsignedDecisions": 19,
+  "writerStopped": true
+}

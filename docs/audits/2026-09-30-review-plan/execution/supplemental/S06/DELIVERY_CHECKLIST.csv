@@ -1,0 +1,13 @@
+item,criterion,result,evidence,limitation
+D-01,R00-R14 packet records terminal,PASS,execution/state.json,First-round completion only
+D-02,28 historical IDs retained once,PASS,execution/R14/findings.json,All dispositions remain supported; no repair acceptance
+D-03,R14 findings equals R01-R13 concatenation (32 records),PASS,execution/supplemental/S00/contract-checklist.csv,Includes one pending candidate
+D-04,S00-S06 required artifact set present,PASS,SUPPLEMENTAL_STATE.json,Package status is COMPLETE_WITH_PENDING
+D-05,S00-S06 coverage use 7 columns and canonical review statuses,PASS,S00-S06/coverage.csv,S01 format correction preserved in before/ and change record
+D-06,S00-S06 findings.json are arrays; parseable JSON,PASS,S00-S06/findings.json,Policy adjudications remain separately indexed
+D-07,Current source anchors exist and line ranges fit,PASS,S06 review.md; targeted validator output,Historical text anchors are retained by reference
+D-08,Supplemental source digests S03-S05 match,PASS,S03/S04/S05 source-digests.json,S02 did not require source-digests file
+D-09,Frozen 2026-09-29 manifest,PASS,docs/audits/2026-09-29-rdpms/manifest.json,11/11 matches
+D-10,R09 original startHead provenance,PENDING,S00-OI-01; execution/state.json,No contemporaneous value retained; UNKNOWN_NOT_RECORDED
+D-11,Business rule and target environment closure,PENDING,OPEN_ITEMS.json,31 explicit open items; decisions/isolated environments unavailable
+D-12,Business repair/production acceptance,NOT_IN_SCOPE,S00-S06 review.md,"No business fixes, migrations, deployments or production actions authorized/performed"

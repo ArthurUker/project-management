@@ -1,0 +1,145 @@
+{
+  "date": "2026-10-02",
+  "suites": [
+    {
+      "suite": "b17-role-create",
+      "attempt": 2,
+      "exitCode": 0,
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "evidence": "final-regression-2026-10-02/RP01/b17-role-create/attempt-02/integration-suite.log",
+      "runResults": "final-regression-2026-10-02/RP01/b17-role-create/attempt-02/run-results.json",
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true
+      }
+    },
+    {
+      "suite": "rp02-login-lock-ttl",
+      "attempt": 2,
+      "exitCode": 0,
+      "tests": 7,
+      "pass": 7,
+      "fail": 0,
+      "evidence": "final-regression-2026-10-02/RP02/rp02-login-lock-ttl/attempt-02/integration-suite.log",
+      "runResults": "final-regression-2026-10-02/RP02/rp02-login-lock-ttl/attempt-02/run-results.json",
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true
+      }
+    },
+    {
+      "suite": "rp04-project-snapshot-active",
+      "attempt": 2,
+      "exitCode": 0,
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "evidence": "final-regression-2026-10-02/RP04/rp04-project-snapshot-active/attempt-02/integration-suite.log",
+      "runResults": "final-regression-2026-10-02/RP04/rp04-project-snapshot-active/attempt-02/run-results.json",
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true
+      }
+    },
+    {
+      "suite": "rp04-project-create-aggregate",
+      "attempt": 2,
+      "exitCode": 0,
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "evidence": "final-regression-2026-10-02/RP04/rp04-project-create-aggregate/attempt-02/integration-suite.log",
+      "runResults": "final-regression-2026-10-02/RP04/rp04-project-create-aggregate/attempt-02/run-results.json",
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true
+      }
+    },
+    {
+      "suite": "rp05-parent-delete-guard",
+      "attempt": 2,
+      "exitCode": 0,
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "evidence": "final-regression-2026-10-02/RP05/rp05-parent-delete-guard/attempt-02/integration-suite.log",
+      "runResults": "final-regression-2026-10-02/RP05/rp05-parent-delete-guard/attempt-02/run-results.json",
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true
+      }
+    },
+    {
+      "suite": "rp07-project-status-shared",
+      "attempt": 2,
+      "exitCode": 0,
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "evidence": "final-regression-2026-10-02/RP07/rp07-project-status-shared/attempt-02/integration-suite.log",
+      "runResults": "final-regression-2026-10-02/RP07/rp07-project-status-shared/attempt-02/run-results.json",
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true
+      }
+    },
+    {
+      "suite": "rp13-stable-pull-pagination",
+      "attempt": 2,
+      "exitCode": 0,
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "evidence": "final-regression-2026-10-02/RP13/rp13-stable-pull-pagination/attempt-02/integration-suite.log",
+      "runResults": "final-regression-2026-10-02/RP13/rp13-stable-pull-pagination/attempt-02/run-results.json",
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true
+      }
+    },
+    {
+      "suite": "rp14-infected-file-read",
+      "attempt": 2,
+      "exitCode": 0,
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "evidence": "final-regression-2026-10-02/RP14/rp14-infected-file-read/attempt-02/integration-suite.log",
+      "runResults": "final-regression-2026-10-02/RP14/rp14-infected-file-read/attempt-02/run-results.json",
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true
+      }
+    }
+  ],
+  "aggregate": {
+    "testCount": 32,
+    "pass": 32,
+    "fail": 0,
+    "suiteCount": 8
+  },
+  "allPassed": true,
+  "build": "PASS",
+  "typecheck": "PASS",
+  "diffCheck": "PASS",
+  "sourceSyntaxChecks": "PASS",
+  "historyNote": "RP13 attempt-01 failed because the synthetic actor lacked tasks.view; that failed log is retained. attempt-02 used a valid task-view fixture and passed 2/2. The summary reports the latest numbered attempt."
+}

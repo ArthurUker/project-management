@@ -1,0 +1,35 @@
+{
+  "tasks": {
+    "RP02-T02": {
+      "implementation": "COMPLETE",
+      "localValidation": "PASS",
+      "originalAcceptance": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/acceptance.json",
+      "jointAddendum": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/joint-validation/acceptance.json"
+    },
+    "RP03-T01": {
+      "implementation": "COMPLETE",
+      "localValidation": "PASS",
+      "acceptanceRef": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/acceptance.json"
+    }
+  },
+  "targetValidation": "NOT_RUN",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "fullPlanComplete": false,
+  "counts": {
+    "tasks": 54,
+    "implementation": {
+      "COMPLETE": 22,
+      "NOT_STARTED": 30,
+      "IN_PROGRESS": 2
+    },
+    "validation": {
+      "ENV_BLOCKED": 7,
+      "PASS": 14,
+      "NOT_RUN": 33
+    },
+    "incompleteImplementation": 32,
+    "release": "NOT_EVALUATED for all tasks",
+    "note": "22 local implementations complete; validation/target/release separate;2 inactive optional tasks not activated."
+  }
+}

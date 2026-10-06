@@ -1,0 +1,17 @@
+{
+  "sessionId": "parallel-lr7-2026-10-04-p01-integration",
+  "date": "2026-10-04",
+  "scope": "INTEGRATION_DELIVERY_ONLY",
+  "acceptanceLevel": "MATERIAL_CONSISTENCY_AND_SEALING",
+  "checks": {
+    "gateReverification": "PASS (HEAD 138cf2da; A new READY writerStopped+originalWriterStoppedConfirmed; A manifest 851/851; B-F manifest file-by-file consistent; D real manifest sha recorded)",
+    "rootRecordAppends": "PASS (2 state continuations, 2 handoff chapters, 2 history unique correction entries appended; old bytes of other fields preserved)",
+    "sealing": "PASS (payload-manifest, final-integrity, post-seal-readback generated; strict path/hash readback per declared base)",
+    "oldBytesPreserved": "PASS (no protected file, worker file, old READY/manifest/log, Q instruction dir, or WAITING_FOR_WORKERS.md modified)",
+    "newIdsUnique": "PASS (parallel-lr7-2026-10-04-p01-integration / EXEC-parallel-lr7-2026-10-04-p01-integration, distinct from lr6-closeout ids)"
+  },
+  "businessAcceptance": "NOT_RUN",
+  "note": "This acceptance covers only the integrator's material delivery, source/byte consistency, and sealing. It is NOT business acceptance, gate approval, or release acceptance for any T-RP decision or worker task.",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED"
+}

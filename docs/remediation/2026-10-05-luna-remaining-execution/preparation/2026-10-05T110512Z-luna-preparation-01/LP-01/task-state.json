@@ -1,0 +1,34 @@
+{
+  "preparationId": "LP-01",
+  "preparationDelivery": "COMPLETE",
+  "implementation": "NOT_APPLICABLE_PREPARATION_ONLY",
+  "validation": "NOT_RUN",
+  "release": "NOT_EVALUATED",
+  "originalTasks": [
+    {
+      "taskId": "RP09-T01",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED"
+    },
+    {
+      "taskId": "RP09-T02",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED"
+    },
+    {
+      "taskId": "RP12-T02",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED"
+    },
+    {
+      "taskId": "RP05-T02",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED"
+    }
+  ],
+  "decisionStatuses": "unchanged"
+}

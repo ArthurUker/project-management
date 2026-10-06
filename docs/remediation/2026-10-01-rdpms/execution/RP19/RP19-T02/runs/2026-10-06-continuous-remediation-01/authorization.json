@@ -1,0 +1,13 @@
+{
+  "taskId": "RP19-T02",
+  "authorizationRef": "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/authorization.json",
+  "authority": "User approved subsequent local STANDARD repairs; delegated concrete option selection",
+  "allowedFiles": [
+    "rdpms-system/deploy/scripts/drill/paired-restore-check.py",
+    "rdpms-system/backend/tests/integration/rp19-paired-restore.integration.test.mjs"
+  ],
+  "approvedBy": "郭仁康",
+  "approvedRole": "研发副总监",
+  "scope": "Local owned synthetic paused-writer+actual DB restore-state barrier common-point proof, real pg_dump/pg_restore into newly guarded owned target with no overwritten source, full tablecounts/file ref sizehash, mismatch/hash refuse before restore; owned-only physical security seal preserves current same-ID user auth floor and policy, newepoch+refresh revoke+oldreceipts unchanged. Not general production restore or targetRPO/RTO acceptance.",
+  "noProductionOrRelease": true
+}

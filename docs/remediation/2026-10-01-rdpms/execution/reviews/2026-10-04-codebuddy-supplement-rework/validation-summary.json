@@ -1,0 +1,88 @@
+{
+  "reviewId": "CODEBUDDY-SUPPLEMENT-REWORK-REVIEW-2026-10-04",
+  "verdict": "SCOPED_PASSES_WITH_REQUIRED_REWORK",
+  "supplements": {
+    "SUP-01": {
+      "delivery": "IN_PROGRESS",
+      "validation": "FAIL",
+      "acceptedCases": [
+        "SUP-01-01b",
+        "SUP-01-02",
+        "SUP-01-03"
+      ],
+      "incompleteCases": [
+        "SUP-01-01",
+        "SUP-01-04"
+      ],
+      "suite": "22/22 real owned DB PASS",
+      "remaining": "LR6-01 plus shared LR6-02/03",
+      "parentTaskAxesChanged": false,
+      "release": "NOT_EVALUATED"
+    },
+    "SUP-02": {
+      "delivery": "COMPLETE",
+      "validation": "PASS",
+      "acceptedCases": [
+        "SUP-02-01",
+        "SUP-02-02",
+        "SUP-02-03",
+        "SUP-02-04"
+      ],
+      "suite": "12/12 real owned DB PASS",
+      "acceptanceScope": "local ordinary/sync current implementation comparison only; product/security approval remains unevaluated",
+      "remaining": "No SUP-02 test or field-table rework; shared session runner/sealing remains unresolved",
+      "parentTaskAxesChanged": false,
+      "release": "NOT_EVALUATED"
+    },
+    "SUP-03": {
+      "delivery": "IN_PROGRESS",
+      "validation": "FAIL",
+      "acceptedCases": [
+        "SUP-03-01",
+        "SUP-03-03",
+        "SUP-03-04"
+      ],
+      "incompleteCases": [
+        "SUP-03-02 factual summary erratum only"
+      ],
+      "remaining": "LR6-04 document-only correction; no phase business repair",
+      "parentTaskAxesChanged": false,
+      "release": "NOT_EVALUATED"
+    }
+  },
+  "sharedDelivery": {
+    "runner": "FAIL under newly identified primary-exception/persistence controls",
+    "seal": "FAIL current nested-history hash/duplicate-id readback"
+  },
+  "independentResultsRef": "evidence/independent-validation.json",
+  "normalSuites": "rp10 22/22 and rp08 12/12 PASS; build/typecheck/lint:undefined/diff/drop/stop all0; pre-reset guard2 is expected",
+  "limits": [
+    "Injected actor tests are not full JWT acceptance",
+    "Helper controls use method stubs, not DB/product acceptance",
+    "Runner exception controls simulate every subprocess; no real fault injection",
+    "Phase conclusions static, API/UI NOT_RUN",
+    "No target/candidate/joint/release testing"
+  ],
+  "originalCounts": {
+    "tasks": 54,
+    "implementation": {
+      "COMPLETE": 18,
+      "IN_PROGRESS": 2,
+      "NOT_STARTED": 34
+    },
+    "validation": {
+      "PASS": 10,
+      "NOT_RUN": 37,
+      "ENV_BLOCKED": 7
+    },
+    "acceptance": {
+      "rows": 306,
+      "PASS": 53,
+      "NOT_RUN": 228,
+      "ENV_BLOCKED": 25
+    },
+    "implementationIncomplete": 36
+  },
+  "businessFixesMadeByReviewer": false,
+  "existingLedgerUpdatesMadeByReviewer": false
+}

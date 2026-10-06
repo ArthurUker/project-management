@@ -1,0 +1,17 @@
+{
+  "taskId": "RP03-T01",
+  "packageId": "RP03",
+  "implementation": "COMPLETE",
+  "validation": "PASS",
+  "targetValidation": "NOT_RUN",
+  "release": "NOT_EVALUATED",
+  "independentReview": "PENDING",
+  "owner": "Codex single executor",
+  "evidence": [
+    "execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/acceptance.json",
+    "execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/validation-summary.json"
+  ],
+  "updatedAt": "2026-10-05T19:29:52.665163+08:00",
+  "approvedBy": "郭仁康",
+  "approvedRole": "研发副总监"
+}

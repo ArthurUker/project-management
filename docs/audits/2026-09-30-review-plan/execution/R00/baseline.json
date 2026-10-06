@@ -1,0 +1,77 @@
+{
+  "date": "2026-09-30",
+  "baselineCommit": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "currentHead": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "branch": "main",
+  "headMatchesBaseline": true,
+  "workspaceStatus": [
+    "?? docs/audits/"
+  ],
+  "rdpmsSystemStatus": [],
+  "interpretation": "Only docs/audits/ is untracked; no source change under rdpms-system.",
+  "oldManifestSha256Checks": {
+    "REPORT.md": {
+      "expected": "704d2aacc5ab0677a4a3fb26de2b5b1352247be096b46cab6fa49ddbdaff0978",
+      "actual": "704d2aacc5ab0677a4a3fb26de2b5b1352247be096b46cab6fa49ddbdaff0978",
+      "matches": true
+    },
+    "HANDOFF.md": {
+      "expected": "33a94fc76c879fcc38db439386e6d73cf84489af77b8ef3d0e0df1ba8221741c",
+      "actual": "33a94fc76c879fcc38db439386e6d73cf84489af77b8ef3d0e0df1ba8221741c",
+      "matches": true
+    },
+    "findings.json": {
+      "expected": "c304f8288ab9b812eb014456d7a7209c86a89d22e1e6744316060153ecc715f2",
+      "actual": "c304f8288ab9b812eb014456d7a7209c86a89d22e1e6744316060153ecc715f2",
+      "matches": true
+    },
+    "backend-results.json": {
+      "expected": "256f091df2e27f86e733a21b15636a09c7ae09081dd813e9d56ba142afc84ee5",
+      "actual": "256f091df2e27f86e733a21b15636a09c7ae09081dd813e9d56ba142afc84ee5",
+      "matches": true
+    },
+    "additional-results.json": {
+      "expected": "ef0971c8f91f787ca84c14258478c18f07795399a55d005340723f0c5756dc80",
+      "actual": "ef0971c8f91f787ca84c14258478c18f07795399a55d005340723f0c5756dc80",
+      "matches": true
+    },
+    "offline-results.json": {
+      "expected": "88f60d08dfe24281e6b9c3ffbfa059fa4fb2fc13f4c58c45482c49f5e81ee390",
+      "actual": "88f60d08dfe24281e6b9c3ffbfa059fa4fb2fc13f4c58c45482c49f5e81ee390",
+      "matches": true
+    },
+    "backup-result.json": {
+      "expected": "57bac6cb5a1a72a14be00c706b3c3e820e4a4a58c5ad8c80c5b8bb8f98aa0268",
+      "actual": "57bac6cb5a1a72a14be00c706b3c3e820e4a4a58c5ad8c80c5b8bb8f98aa0268",
+      "matches": true
+    },
+    "verify-backend.mjs": {
+      "expected": "9f2caad59565c1feaca6af0cd5fc4e8820c6df16eb5f9c2caa10c8f138aca189",
+      "actual": "9f2caad59565c1feaca6af0cd5fc4e8820c6df16eb5f9c2caa10c8f138aca189",
+      "matches": true
+    },
+    "verify-additional.mjs": {
+      "expected": "54e707dc51031b261b698c2609644f9cbe1f0581e66be55ff6fe9e22c69ad372",
+      "actual": "54e707dc51031b261b698c2609644f9cbe1f0581e66be55ff6fe9e22c69ad372",
+      "matches": true
+    },
+    "verify-offline.ts": {
+      "expected": "2c1412a2a55f71dc8da5503d95d1e685a29251f110e91f2a8ffaf69c2b6b0ea7",
+      "actual": "2c1412a2a55f71dc8da5503d95d1e685a29251f110e91f2a8ffaf69c2b6b0ea7",
+      "matches": true
+    },
+    "verify-backup.py": {
+      "expected": "b0bda85bd342234939ee2d2498144b2f43d4730b1ac245aaa10ac1eb638fccc3",
+      "actual": "b0bda85bd342234939ee2d2498144b2f43d4730b1ac245aaa10ac1eb638fccc3",
+      "matches": true
+    }
+  },
+  "oldFindingCount": 28,
+  "oldReportHeadingCount": 28,
+  "oldIdsMatchReport": true,
+  "severityCounts": {
+    "P1": 16,
+    "P2": 12
+  },
+  "existingExecutionBeforeThisRun": false
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "kind": "OWNED_RESOURCE_MANUAL_RELEASE",
+    "reason": "cluster-stop simulation intentionally did not stop the owned cluster; the runner preserved the root.",
+    "root": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-ree4kjeq",
+    "ownedDatabase": "rdpms_test_rework_04d939786e",
+    "ownedPort": 63951,
+    "commands": [
+      "/opt/homebrew/bin/pg_ctl -D <root>/pg -m fast -w stop",
+      "rm -rf <root>"
+    ],
+    "manualStopExit": 0,
+    "rootRemovedAfterManualRelease": true,
+    "ownershipProof": "db/port/root recorded by controls/stop-fail/attempt-01/run-results.json"
+  },
+  {
+    "kind": "OWNED_RESOURCE_MANUAL_RELEASE",
+    "reason": "stop-fail control attempt-03 intentionally did not stop the owned cluster; runner preserved the root",
+    "root": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-twxmdkws",
+    "ownedDatabase": "rdpms_test_rework_400fd11437",
+    "commands": [
+      "/opt/homebrew/bin/pg_ctl -D <root>/pg -m fast -w stop",
+      "rm -rf <root>"
+    ],
+    "manualStopExit": 0,
+    "rootRemovedAfterManualRelease": true,
+    "ownershipProof": "controls/stop-fail/attempt-03/run-results.json"
+  },
+  {
+    "kind": "OWNED_RESOURCE_MANUAL_RELEASE",
+    "reason": "stop-fail control attempt-02 intentionally did not stop the owned cluster; runner preserved the root",
+    "root": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-g1gq0htj",
+    "ownedDatabase": "rdpms_test_rework_e0828d703d",
+    "commands": [
+      "/opt/homebrew/bin/pg_ctl -D <root>/pg -m fast -w stop",
+      "rm -rf <root>"
+    ],
+    "manualStopExit": 0,
+    "rootRemovedAfterManualRelease": true,
+    "ownershipProof": "controls/stop-fail/attempt-02/run-results.json"
+  }
+]

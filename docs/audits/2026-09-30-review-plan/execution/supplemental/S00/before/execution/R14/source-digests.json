@@ -1,0 +1,62 @@
+{
+  "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "kind": "synthesis-input-digests",
+  "files": [
+    {
+      "path": "docs/audits/2026-09-30-review-plan/execution/R00/findings.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    },
+    {
+      "path": "docs/audits/2026-09-30-review-plan/execution/R01/findings.json",
+      "sha256": "2797ab57cffd661aabb3aa47f3fb2cbab19cab9ffb42f67266464cba1b2e7eaa"
+    },
+    {
+      "path": "docs/audits/2026-09-30-review-plan/execution/R02/findings.json",
+      "sha256": "e178372f9b1401761198fd59a4ce0e3988ce734f16c0361736444a901c043773"
+    },
+    {
+      "path": "docs/audits/2026-09-30-review-plan/execution/R03/findings.json",
+      "sha256": "7ac3ddf4f9e83b38a304b8f51d1ada056607fd183f2603a8c685de0b6aefa8bc"
+    },
+    {
+      "path": "docs/audits/2026-09-30-review-plan/execution/R04/findings.json",
+      "sha256": "c899652fcd026373fefb4bbc33b26cf771ee8cda73de4869efc9c53b5b0b32a1"
+    },
+    {
+      "path": "docs/audits/2026-09-30-review-plan/execution/R05/findings.json",
+      "sha256": "281d930fac2129227bbe2b56e6958c26b60e5f3a609e558b7fc65eb13253993d"
+    },
+    {
+      "path": "docs/audits/2026-09-30-review-plan/execution/R06/findings.json",
+      "sha256": "364880149db0c2a3dcb0b11a55678ae0c593be394da34784f4fd4a7c9b9283d3"
+    },
+    {
+      "path": "docs/audits/2026-09-30-review-plan/execution/R07/findings.json",
+      "sha256": "2345362c77cac39918d1328e710fdf8879383c2152956a713190ffe2a0a971eb"
+    },
+    {
+      "path": "docs/audits/2026-09-30-review-plan/execution/R08/findings.json",
+      "sha256": "3fd5713f4e3a0d86b1a942620ea558fc85bf27ac613cbcf6424f1395d9e2bec8"
+    },
+    {
+      "path": "docs/audits/2026-09-30-review-plan/execution/R09/findings.json",
+      "sha256": "311905e2b32aefdc128086569cb61b9241d2f2c3b69cd5a87477221a136dc3f9"
+    },
+    {
+      "path": "docs/audits/2026-09-30-review-plan/execution/R10/findings.json",
+      "sha256": "527ca0b96296f4a4c781dbb8f7531aa7df211a62e9cef49be1e9262690959119"
+    },
+    {
+      "path": "docs/audits/2026-09-30-review-plan/execution/R11/findings.json",
+      "sha256": "84bd0e51d4ebfe582488701033aa208c498ce0bb237668b0d7b68536c7c355b4"
+    },
+    {
+      "path": "docs/audits/2026-09-30-review-plan/execution/R12/findings.json",
+      "sha256": "056386d463246cb56ddd346d19c691446bc7a90fa6be8a2f5dac52d0d0b40dca"
+    },
+    {
+      "path": "docs/audits/2026-09-30-review-plan/execution/R13/findings.json",
+      "sha256": "5e40c2eabb48659896afe1990cc5d3b8225affd4f5e928ca9386f5a0d05ac6da"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "id": "SUP-02",
+  "parentTask": "RP08-T01",
+  "finding": "LR4-02 / B04",
+  "mode": "TEST_ONLY",
+  "state": "DONE_TEST_HARDENING",
+  "release": "NOT_EVALUATED",
+  "codeChanges": {
+    "businessSource": "none",
+    "syncProjection": "none",
+    "permissions": "none",
+    "frontend": "none",
+    "testFile": "rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs",
+    "added": ["extractOnlineRow (L611-619)", "SUP-02 seven-entity exact-row comparison (L629-~710)"]
+  },
+  "verification": { "suite": "rp08-sync-read-authorization.integration.test.mjs", "total": 12, "passed": 12, "failed": 0 },
+  "note": "测试补强完成；原 54 任务 / 306 验收定义与统计未改写，包未标 COMPLETE，发布保持 NOT_EVALUATED。"
+}

@@ -1,0 +1,8 @@
+{
+  "allowedFiles": [
+    "rdpms-system/deploy/scripts/drill/backup-filesystem-check.py"
+  ],
+  "gateRefs": [],
+  "scope": "RP17-T03 owned independent filesystem validation harness and exact target Linux evidence request; no target FS available. Local real files only, never production source/snapshot, no deployment.",
+  "contracts": {}
+}

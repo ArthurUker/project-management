@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-02",
+  "executor": "Codex",
+  "baselineCommit": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "authorizationSource": "User explicit bounded local continuous-execution authorization; current turn expressly authorizes this task.",
+  "taskId": "RP02-T01",
+  "allowedTaskIds": [
+    "RP02-T01"
+  ],
+  "allowedScope": "Task card standard scope and task-owned source/tests/evidence only.",
+  "verificationResources": "Unique local loopback PostgreSQL/temp environment; synthetic data only; no dependency changes.",
+  "prohibited": [
+    "stage",
+    "commit",
+    "push",
+    "merge",
+    "deploy",
+    "production/shared DB",
+    "real accounts/data",
+    "restore real data",
+    "dependency upgrade",
+    "approve pending decisions"
+  ]
+}

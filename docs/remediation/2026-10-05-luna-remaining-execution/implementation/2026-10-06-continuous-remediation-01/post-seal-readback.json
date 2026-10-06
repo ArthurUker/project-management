@@ -1,0 +1,26 @@
+{
+  "result": "PASS",
+  "boundFileCount": 5852,
+  "payloadDrift": [],
+  "integrity": {
+    "pathBase": "REPOSITORY",
+    "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/final-integrity.json",
+    "sha256": "93e4cf7042258724422ebfd55b918e402e635d797fe5a005f98d5e9466020dc9"
+  },
+  "historyRefs": [
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/REVISION_HISTORY.json",
+      "sha256": "2d84c1d8394f212b6bdaedb930158e7396f01f1708f77d6c651113a3fe6ec14f"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/EXECUTION_REVISION_HISTORY.json",
+      "sha256": "9765d9856b8075fb117c11edebd5083dd206bc8fb62eb1d1f09c9e280b31aca7"
+    }
+  ],
+  "mirror54Agreement": true,
+  "protectedFrozenFiles": 3283,
+  "protectedDrift": [],
+  "release": "NOT_EVALUATED"
+}

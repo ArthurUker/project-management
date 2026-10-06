@@ -1,0 +1,33 @@
+{
+  "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "files": [
+    {
+      "path": "rdpms-system/backend/src/routes/projects.js",
+      "sha256": "61fb1d34ecdb331ace4e4674a091d30021f1998a7c2a602daca5707e623c5dce"
+    },
+    {
+      "path": "rdpms-system/backend/src/kernel/projectAccess.js",
+      "sha256": "53bbcf704b1d2c9df641e243ac952e333699431aedc8c6620308612d1262d339"
+    },
+    {
+      "path": "rdpms-system/backend/src/kernel/constants.js",
+      "sha256": "970a00d2fc422377058d9b6ab42701d6b845e13a1fc09ba24c2b1c724a146780"
+    },
+    {
+      "path": "rdpms-system/backend/prisma/schema.prisma",
+      "sha256": "fac40301f61926686ae1466b83e6b71b9c4bf8be9f519bf11dde32a04d967f22"
+    },
+    {
+      "path": "rdpms-system/backend/prisma/seed.js",
+      "sha256": "0fbb7b9db94ab71f430e83b7be8c2f3c0cf59a875760c0e90ab064c1d62fd845"
+    },
+    {
+      "path": "rdpms-system/frontend/src/api/endpoints/projects.ts",
+      "sha256": "f0d4335fbdcec70fc26f0b018aa7f9499ca9437d5d0a75aafa2670b7d047d426"
+    },
+    {
+      "path": "rdpms-system/frontend/src/components/EditProjectModal.tsx",
+      "sha256": "ed658c1793b391941327fdf32d6cae292ce87260f4d80749addae060ca3b9e76"
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-05",
+  "scope": "PLANNING_INTEGRITY_CHECK_ONLY",
+  "checks": {
+    "remainingTasksExactlyCovered": true,
+    "required34Optional2": true,
+    "sevenDomainsNoOverlap": true,
+    "eightValidationTasksSeparate": true,
+    "thirteenAdditionalCasesSeparate": true,
+    "all306OriginalRowsAccounted": true,
+    "all21DecisionsCoveredNoApprovalAdded": true,
+    "sourceGatesAndDependenciesPreserved": true,
+    "everyReuseSourceExistsAndMatches": true,
+    "stable36InputsUnchanged": true,
+    "protected277FilesUnchanged": true,
+    "frozen2335PlanDigestUnchanged": true
+  },
+  "overall": "PASS",
+  "productValidation": "NOT_RUN",
+  "businessImplementationByThisTurn": false,
+  "rootLedgerWritesByThisTurn": false,
+  "businessDecisionsApprovedByThisTurn": false,
+  "codebuddyHistories": {
+    "semantics": "Concurrent-owner mutable observations; changes are not asserted to be unchanged",
+    "observedCurrentHashes": {
+      "REVISION_HISTORY.json": "868e335a633fcf837318069e989addb5a2b7ef1deeeccd461c92b42a82978e85",
+      "EXECUTION_REVISION_HISTORY.json": "0e348d1460174adb397f5b1fdb45d3365fc105dce5df4174c72a72fac06a7886"
+    }
+  },
+  "acceptanceDispositionCounts": {
+    "REMAINING_IMPLEMENTATION_OR_JOINT_ACCEPTANCE": 227,
+    "REUSE_EXISTING_SCOPED_PASS": 53,
+    "ACCEPTED_TASK_WITH_OPEN_CASE_REQUIRES_EVIDENCE_OR_SCOPE_RECONCILIATION": 13,
+    "COMPLETED_IMPLEMENTATION_OPEN_VALIDATION": 13
+  },
+  "availabilityCounts": {
+    "APPLICABLE_IMPLEMENTATION_DECISIONS_PENDING": 16,
+    "OPTIONAL_INACTIVE": 2,
+    "IMPLEMENTATION_DEPENDENCIES_PENDING": 16,
+    "EXTERNAL_DATA_INPUT_REQUIRED": 1,
+    "FINAL_CLOSURE_DEFERRED": 1
+  },
+  "readOnlyEnvironmentObservation": {
+    "existingFrontendTypeScript": "5.9.3",
+    "fakeIndexedDBPackageExists": false,
+    "noVersionOrProductCommandExecuted": true
+  },
+  "planArtifactHashes": {
+    "ACCEPTANCE_BINDINGS.csv": "d52002b6055a284a0d2d6cd928504a8325a0fa48fb4219593e906591e1945b52",
+    "ACCEPTANCE_DISPOSITION.csv": "66c57ce2eb34bfcdb1dc96153fddccc06cc16094ed2258f3b3b32d682006531f",
+    "CASE_REMAINDER.json": "003cb91a23d2fddc66049161c965cdd414c71b5da49b40696882134c6702cb52",
+    "COORDINATION.json": "0b611e54b7215476cdeb38fb8d53ac263d53bb7ad9d1292f9cb6c06cb973f0fc",
+    "DECISION_PACKETS.json": "c6f7ab14f0cec52527d8a9dc267c337866f425e315ea61f32f7f3bc89bb48647",
+    "DOMAIN_MAP.json": "c2e783bed0967579054e4334968e2666d1b6c9f49714e865b4ea5c0af1bbaef7",
+    "INITIAL_STATE.json": "e4d4affd1a3b3714db7c257817f85cbca19fcf17d532c45dc496e655a1e37aef",
+    "INPUT_MANIFEST.json": "42d7c6c74029fc33d46b58492dce5d1bb6c4df5fdeb91b64ed5136ac60ae883b",
+    "LUNA_IMPLEMENTATION_PROMPT.md": "3739e4c954ee9eb986db92996e49c55e380793a14f4119624ed0d7f3c032a38c",
+    "LUNA_PREPARATION_PROMPT.md": "97965835ef7a94eae540e4880b5cf3306ebea572802b7990682ca639172b98a7",
+    "PLAN.md": "2d700fdc8ba4f8e44cdffbdc80f8d74558ae9e7ec2c04f98c2121070a231c5d1",
+    "README.md": "cf091ceccea943e3b95679d0c401f5adbb1e407a04045dec7b47ff809d655218",
+    "REMAINING_TASKS.csv": "4c2eb78c4b73b132909389a10973411150a71f8c590ed6dc3d884bf8d46280f3",
+    "VALIDATION_BACKLOG.json": "3fa7e8b0b98a84b3a11dc45bcaa7bdb9c0e9711b5fea15a82dfa9de3006faca7",
+    "WORK_ITEMS.json": "96b3bb690ea1da4e9a3e5698c83ea9b2fb2683034c2866179fcdf4cf288ed310",
+    "scripts/generate-plan.py": "852d21cba405f17b64835c52fc2b3515ef4da707a4d6887a90bc8a9f6724a345",
+    "scripts/map-case-remainder.py": "1cc2b22bf7bcbe80cd1ceda4ec014555452b36fabc0be9e2b145a85758e139eb"
+  },
+  "excludedSelf": "PLANNING_CHECK.json",
+  "authoringNote": "An initially drafted C failure-point-matrix.csv ref did not exist; before finalization it was replaced with actual acceptance-draft.csv. Canonical RP00-T02 failure matrix remains independently pinned."
+}

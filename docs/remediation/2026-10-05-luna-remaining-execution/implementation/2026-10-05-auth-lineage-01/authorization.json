@@ -1,0 +1,41 @@
+{
+  "executor": "Codex primary single executor",
+  "continuousSerial": true,
+  "taskIds": [
+    "RP02-T02",
+    "RP03-T01"
+  ],
+  "businessPaths": [
+    "rdpms-system/backend/src/routes/auth.js",
+    "rdpms-system/frontend/src/api/http.ts",
+    "rdpms-system/frontend/src/auth/tokenStore.ts",
+    "rdpms-system/frontend/src/auth/AuthProvider.tsx"
+  ],
+  "conditionalPath": "rdpms-system/frontend/src/api/endpoints/auth.ts",
+  "testPaths": [
+    "rdpms-system/backend/tests/integration/rp02-t02-acceptance.integration.test.mjs",
+    "rdpms-system/frontend/tests/unit/rp03-t01-acceptance.test.ts"
+  ],
+  "supplementalValidationOwnedRoot": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01",
+  "resourceRules": "New random owned PG per suite; private synthetic env only; existing Chrome headless own unique profile if available. No shared resources adopted.",
+  "forbidden": [
+    "subagents/model switching",
+    "stage/commit/push/merge/deploy",
+    "dependency install/upgrade",
+    "schema/migration changes",
+    "real dotenv/SSH/production/shared DB/real accounts",
+    "unrelated policies/IDB/cache/outbox modification"
+  ],
+  "stopConditions": [
+    "Unknown resource ownership",
+    "Unexplained source drift",
+    "Scope expansion",
+    "Unsafe replay or last-copy loss"
+  ],
+  "conditionalPathActivated": {
+    "path": "rdpms-system/frontend/src/api/endpoints/auth.ts",
+    "reason": "authAPI.login/refresh currently pass through protected http interceptor; logout needs original captured Bearer after local generation invalidation. Scoped public-auth dispatch prevents old identity refresh/cleanup and fixes actual calls from AuthProvider."
+  },
+  "activeTask": null,
+  "executionStatus": "DELIVERED_LOCAL_SCOPED"
+}

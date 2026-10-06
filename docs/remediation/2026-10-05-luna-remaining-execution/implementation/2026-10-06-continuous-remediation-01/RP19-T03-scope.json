@@ -1,0 +1,5 @@
+{
+  "allowedFiles": ["rdpms-system/deploy/scripts/drill/release-gates.py", "rdpms-system/backend/tests/integration/rp19-release-gates.integration.test.mjs"],
+  "scope": "Read-only deterministic scoped candidate release evaluator; actual included and affected owner tasks, transitive implementation vs acceptance dependencies, exact stage/condition gates and shared contracts, manifest/source/evidence hashes, honest target/budgets/clientcatalog/containment deficits. Local controlled evaluator tests and real local candidate blockers; no release approval or deployment/data operation.",
+  "gateRefs": ["T-RP-13"], "contracts": {}
+}

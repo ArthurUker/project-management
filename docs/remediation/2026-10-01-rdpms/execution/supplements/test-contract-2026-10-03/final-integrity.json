@@ -1,0 +1,68 @@
+{
+  "sessionId": "test-contract-2026-10-03",
+  "date": "2026-10-03",
+  "executor": "CodeBuddy (local isolated)",
+  "integrityChecks": {
+    "businessSourceHashUnchanged": {
+      "metric": "sha256 of concatenated git hash-object of all tracked files under rdpms-system/backend/src and rdpms-system/frontend/src",
+      "baseline": "7564dcf2b4da343ed077b8e85a2ba8ba0b5e1da9af6e5fbf9da1770a4a88a0eb",
+      "current": "7564dcf2b4da343ed077b8e85a2ba8ba0b5e1da9af6e5fbf9da1770a4a88a0eb",
+      "match": true,
+      "note": "backend/src 与 frontend/src 全部跟踪文件相对启动基线零变化"
+    },
+    "actualDeltaScope": {
+      "whitelistTestFiles": [
+        "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs",
+        "rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs"
+      ],
+      "newSessionDir": "docs/remediation/2026-10-01-rdpms/execution/supplements/test-contract-2026-10-03/",
+      "recordFilesAppended": [
+        "execution/state.json",
+        "execution/IMPLEMENTATION_STATE.json",
+        "HANDOFF.md",
+        "execution/handoff.md",
+        "REVISION_HISTORY.json",
+        "EXECUTION_REVISION_HISTORY.json"
+      ],
+      "note": "除以上外，其他测试/helper/config/schema/guard/依赖零变化"
+    },
+    "otherTestsHelpersConfigSchemaGuardDepsUnchanged": true,
+    "frontendSrcUnchanged": true,
+    "backendDistAbsentAfterRun": true,
+    "noOrphanPostgres": true,
+    "frozenArtifactsUntouched": {
+      "oldAudits": true,
+      "v1Snapshot": true,
+      "oldRuns": true,
+      "oldReviews": true,
+      "historicalEvidence": true,
+      "note": "原审计、manifest、v1、三轮复核、既有 run 与独立审阅证据保持冻结"
+    },
+    "taskDefinitionStatsUnchanged": {
+      "task54Unchanged": true,
+      "acceptance306Unchanged": true,
+      "note": "原 54 项任务 / 306 条验收定义与统计未被本轮改写"
+    },
+    "packagesNotComplete": true,
+    "findingsNotClosed": true,
+    "releaseStatus": "NOT_EVALUATED"
+  },
+  "testSuites": {
+    "rp10-report-submit-snapshot": { "total": 19, "passed": 19, "failed": 0, "run": "SUP-01/runs/rp10-suite/attempt-04/" },
+    "rp08-sync-read-authorization": { "total": 12, "passed": 12, "failed": 0, "run": "SUP-02/runs/rp08-suite/attempt-02/" }
+  },
+  "versionSummaryReadback": {
+    "stateJsonHasSupplementalExecution": true,
+    "implementationStateHasSupplementalExecutions": true,
+    "revisionHistoryHasVersion": true,
+    "executionRevisionHistoryHasEntry": true,
+    "handoffChaptersAppended": true,
+    "consistent": true
+  },
+  "ownedResourcesCleaned": {
+    "clusterStopped": true,
+    "guardDropped": true,
+    "backendDistRemoved": true,
+    "tempRootRemoved": true
+  }
+}

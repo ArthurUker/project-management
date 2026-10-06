@@ -1,0 +1,17 @@
+[
+  {
+    "path": "rdpms-system/backend/src/routes/sync.js",
+    "beforeSha256": "5e25071cbfaff1437323f002e06fbb65e97c724da80034f310d8cb22e6c2310d",
+    "afterSha256": "46fa95355309ecd680b5aab8171bfc630b79ade3c74cb93abf8c293e9d43e170"
+  },
+  {
+    "path": "rdpms-system/backend/src/modules/sync/syncMutationCommands.ts",
+    "beforeSha256": "3d97e1d1dc313ff6462c373f3d4ec7c616e35f1acedbb9ddf59b7019fd7e72f6",
+    "afterSha256": "e7d9fb5008b92d9a2fb5b5cc2fb3e61e3991a04b297eae9a44b2d247c61eaca2"
+  },
+  {
+    "path": "rdpms-system/backend/tests/integration/rp09-receipt-recovery.integration.test.mjs",
+    "beforeSha256": null,
+    "afterSha256": "900b55263f53147e1dc16d61bdbbdd71ac993953978ca6be43f2c1afdc2e170e"
+  }
+]

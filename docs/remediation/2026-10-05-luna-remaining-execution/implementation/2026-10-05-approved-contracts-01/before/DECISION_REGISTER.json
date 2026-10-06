@@ -1,0 +1,641 @@
+{
+  "planVersion": "v2",
+  "decisionCount": 21,
+  "decisions": [
+    {
+      "id": "D-S01-01",
+      "kind": "BUSINESS",
+      "topic": "Administrative account hierarchy",
+      "status": "PENDING",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "ownerRoles": [
+        "Product owner",
+        "Security owner",
+        "System governance approver"
+      ],
+      "options": [
+        "Forbid reset/disable of equal or higher-ranked accounts; define separate emergency flow.",
+        "Allow only explicitly ranked superior roles, with approval and audit requirements.",
+        "Keep permission-only control as an intentional policy, with explicit scope."
+      ],
+      "origin": "S01",
+      "scope": "Reset, enable, disable and delete routes; SUPER_ADMIN recovery and account governance.",
+      "affectedTaskIds": [
+        "RP01-T02"
+      ],
+      "contractRefs": [
+        "PC02"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    },
+    {
+      "id": "D-S01-02",
+      "kind": "BUSINESS",
+      "topic": "Server-side boundary for forced password change",
+      "status": "PENDING",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "ownerRoles": [
+        "Security owner",
+        "Product owner"
+      ],
+      "options": [
+        "Restrict the session server-side to password change, logout and required self-service endpoints.",
+        "Restrict only sensitive operations with an explicit allowlist.",
+        "Intentionally retain current route-local enforcement and document rationale."
+      ],
+      "origin": "S01",
+      "scope": "First-login session permissions, account takeover containment, bootstrap UX.",
+      "affectedTaskIds": [
+        "RP01-T02"
+      ],
+      "contractRefs": [],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    },
+    {
+      "id": "D-S01-03",
+      "kind": "BUSINESS",
+      "topic": "Binding custom roles to users",
+      "status": "PENDING",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "ownerRoles": [
+        "IAM/security owner",
+        "Product owner"
+      ],
+      "options": [
+        "Custom roles cannot be assigned; constrain creation to its intended use.",
+        "Custom roles can be assigned; define permission grant, lifecycle and management policy.",
+        "Only specified administrative roles can assign custom roles."
+      ],
+      "origin": "S01",
+      "scope": "Role creation and assignment DTOs, permission administration and M-1 role contract.",
+      "affectedTaskIds": [
+        "RP01-T03"
+      ],
+      "contractRefs": [],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    },
+    {
+      "id": "D-S01-04",
+      "kind": "BUSINESS",
+      "topic": "Access JWT invalidation after password or privilege changes",
+      "status": "PENDING",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "ownerRoles": [
+        "Security owner",
+        "IAM owner",
+        "Product owner"
+      ],
+      "options": [
+        "Invalidate already-issued access JWTs immediately after password change/reset.",
+        "Allow a bounded grace period with a specified maximum duration.",
+        "Do not actively invalidate; rely on token expiry, with an explicitly approved maximum TTL."
+      ],
+      "origin": "S01",
+      "scope": "Authentication middleware, session/version/revocation design, password reset exposure window; separately specify disable and role downgrade behavior.",
+      "affectedTaskIds": [
+        "RP03-T02"
+      ],
+      "contractRefs": [
+        "PC01"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    },
+    {
+      "id": "D-S01-05",
+      "kind": "BUSINESS",
+      "topic": "Registration project visibility and write scope",
+      "status": "PENDING",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "ownerRoles": [
+        "Product owner",
+        "Data/privacy owner",
+        "M-1 governance approver"
+      ],
+      "options": [
+        "Apply the general project membership/capability boundary to all registration routes.",
+        "Allow global read for a defined field/statistics subset; keep writes membership-scoped.",
+        "Allow specified roles broader read/write, enumerating route and field scope."
+      ],
+      "origin": "S01",
+      "scope": "Registration list/stats/detail/update/stage/profile/export and linked profile, tasks, members and regulatory data; SUPER_ADMIN audit.",
+      "affectedTaskIds": [
+        "RP06-T01",
+        "RP08-T01"
+      ],
+      "contractRefs": [
+        "PC02"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    },
+    {
+      "id": "D-S01-06",
+      "kind": "BUSINESS",
+      "topic": "Project manager and ProjectMember consistency",
+      "status": "PENDING",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "ownerRoles": [
+        "Project governance owner",
+        "Product owner",
+        "Technical owner"
+      ],
+      "options": [
+        "managerId must identify an active ProjectMember with MANAGER role.",
+        "A manager may be a non-member; define whether managerId grants any visibility or capability (recommended explicit no implicit grant).",
+        "managerId is display metadata only; authorization derives exclusively from ProjectMember."
+      ],
+      "origin": "S01",
+      "scope": "Project and registration create/update, HTTP/sync behavior, membership roles, visibility and transfer atomicity.",
+      "affectedTaskIds": [
+        "RP06-T02",
+        "RP07-T02"
+      ],
+      "contractRefs": [
+        "PC02",
+        "PC07"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    },
+    {
+      "id": "D-S01-07",
+      "kind": "BUSINESS",
+      "topic": "Report submit and resubmit source states",
+      "status": "PENDING",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "ownerRoles": [
+        "Report workflow product owner",
+        "Audit/compliance owner"
+      ],
+      "options": [
+        "Allow submit only from DRAFT and NEEDS_REVISION.",
+        "Allow resubmit from SUBMITTED under a defined version/update rule; distinguish same-key replay from a new-key command.",
+        "Approve another explicit transition table and reviewer concurrency behavior."
+      ],
+      "origin": "S01",
+      "scope": "Report submit/version snapshots, resubmission UX, approval workflow and audit evidence.",
+      "affectedTaskIds": [
+        "RP10-T02",
+        "RP10-T03"
+      ],
+      "contractRefs": [],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    },
+    {
+      "id": "D-S01-08",
+      "kind": "BUSINESS",
+      "topic": "Task parent, phase, dependency DAG and soft-delete invariants",
+      "status": "PENDING",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "ownerRoles": [
+        "Project governance owner",
+        "Data architecture owner",
+        "Technical owner"
+      ],
+      "options": [
+        "Require task parent and phase same-project/live references, enforce an acyclic dependency DAG, and define aggregate tombstone/restore behavior.",
+        "Require same-project references, preserve/label existing cycle and soft-delete anomalies during staged cleanup, and define DAG enforcement scope.",
+        "Approve another explicit relation and tombstone contract, including physical delete and offline sync propagation."
+      ],
+      "origin": "S01",
+      "scope": "HTTP/sync commands, schema constraints, recursive deletion, restore, existing data migration and offline caches.",
+      "affectedTaskIds": [
+        "RP05-T02",
+        "RP05-T03",
+        "RP13-T03",
+        "RP15-T02",
+        "RP15-T03"
+      ],
+      "contractRefs": [
+        "PC07"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    },
+    {
+      "id": "T-RP-01",
+      "kind": "TECHNICAL_DESIGN",
+      "topic": "旧IDB行归属/保全",
+      "scope": "无可靠owner行隔离，认领不能从首个登录/内容猜测；导出和保留须获准。",
+      "ownerRoles": [
+        "产品/数据负责人",
+        "前端负责人"
+      ],
+      "status": "PROPOSED",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "origin": "REMEDIATION_PLAN_V2",
+      "affectedTaskIds": [
+        "RP11-T02"
+      ],
+      "contractRefs": [
+        "PC04",
+        "PC12"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    },
+    {
+      "id": "T-RP-02",
+      "kind": "TECHNICAL_DESIGN",
+      "topic": "作用域回执和保留窗",
+      "scope": "actor/resource/command/key/hash、device/hash版本、unknown/expired、replay查询和最大离线窗。",
+      "ownerRoles": [
+        "后端/产品/运维负责人"
+      ],
+      "status": "PROPOSED",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "origin": "REMEDIATION_PLAN_V2",
+      "affectedTaskIds": [
+        "RP09-T01",
+        "RP09-T02",
+        "RP12-T02"
+      ],
+      "contractRefs": [
+        "PC03"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    },
+    {
+      "id": "T-RP-03",
+      "kind": "TECHNICAL_DESIGN",
+      "topic": "客户端revision兼容",
+      "scope": "支持版本、missing base/409提示、字段/status/assignee链、升级截止。",
+      "ownerRoles": [
+        "产品/前后端负责人"
+      ],
+      "status": "PROPOSED",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "origin": "REMEDIATION_PLAN_V2",
+      "affectedTaskIds": [
+        "RP10-T01"
+      ],
+      "contractRefs": [],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    },
+    {
+      "id": "T-RP-04",
+      "kind": "TECHNICAL_DESIGN",
+      "topic": "提交可见水位和bootstrap",
+      "scope": "方案先用barrier证明；source revision/epoch、有序发布/ACL、snapshot边界和保留/RESET合同。",
+      "ownerRoles": [
+        "数据库/架构负责人"
+      ],
+      "status": "PROPOSED",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "origin": "REMEDIATION_PLAN_V2",
+      "affectedTaskIds": [
+        "RP08-T02",
+        "RP13-T02",
+        "RP13-T03"
+      ],
+      "contractRefs": [
+        "PC05"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    },
+    {
+      "id": "T-RP-05",
+      "kind": "TECHNICAL_DESIGN",
+      "topic": "文件扫描和elevated",
+      "scope": "INFECTED阻断固定；FAILED/SKIPPED、metadata/字节以及敏感/拒绝审计合同。",
+      "ownerRoles": [
+        "安全/文件负责人"
+      ],
+      "status": "PROPOSED",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "origin": "REMEDIATION_PLAN_V2",
+      "affectedTaskIds": [
+        "RP14-T02"
+      ],
+      "contractRefs": [
+        "PC02"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    },
+    {
+      "id": "T-RP-06",
+      "kind": "TECHNICAL_DESIGN",
+      "topic": "restore目标范围和冲突",
+      "scope": "JSON模块完整unique/FK、merge/replace、count和提交后核查失败状态；与整库/文件DR区分。",
+      "ownerRoles": [
+        "数据库/备份负责人"
+      ],
+      "status": "PROPOSED",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "origin": "REMEDIATION_PLAN_V2",
+      "affectedTaskIds": [
+        "RP16-T01",
+        "RP16-T02"
+      ],
+      "contractRefs": [
+        "PC06",
+        "PC07"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    },
+    {
+      "id": "T-RP-07",
+      "kind": "TECHNICAL_DESIGN",
+      "topic": "删除revision/墓碑",
+      "scope": "stale delete、同key重复、restore/移动scope和保留窗，不能漏sync适配。",
+      "ownerRoles": [
+        "产品/同步负责人"
+      ],
+      "status": "PROPOSED",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "origin": "REMEDIATION_PLAN_V2",
+      "affectedTaskIds": [
+        "RP05-T02",
+        "RP09-T01"
+      ],
+      "contractRefs": [
+        "PC03"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    },
+    {
+      "id": "T-RP-08",
+      "kind": "TECHNICAL_DESIGN",
+      "topic": "配置schema和有效行为",
+      "scope": "来源/冲突/弃用、CORS/export真实消费、编译config CLI和运行app一致。",
+      "ownerRoles": [
+        "安全/发布负责人"
+      ],
+      "status": "PROPOSED",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "origin": "REMEDIATION_PLAN_V2",
+      "affectedTaskIds": [
+        "RP18-T01",
+        "RP18-T03"
+      ],
+      "contractRefs": [
+        "PC09"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    },
+    {
+      "id": "T-RP-09",
+      "kind": "TECHNICAL_DESIGN",
+      "topic": "认证transport及跨身份响应",
+      "scope": "核对实际Bearer/body refresh；cookie旗标不证明已支持cookie。token generation、两tab成功/失败及原请求actor不越界。",
+      "ownerRoles": [
+        "安全/认证/前端负责人"
+      ],
+      "status": "PROPOSED",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "origin": "REMEDIATION_PLAN_V2",
+      "affectedTaskIds": [
+        "RP00-T04",
+        "RP02-T02",
+        "RP03-T01",
+        "RP03-T02",
+        "RP11-T01",
+        "RP18-T01"
+      ],
+      "contractRefs": [
+        "PC01",
+        "PC04",
+        "PC09"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    },
+    {
+      "id": "T-RP-10",
+      "kind": "TECHNICAL_DESIGN",
+      "topic": "恢复epoch与在线离线状态",
+      "scope": "dataset epoch、旧会话/receipt/cursor/family撤销或隔离、草稿保全及重新授权/数据迁移后的日志切点。",
+      "ownerRoles": [
+        "数据/安全/同步负责人"
+      ],
+      "status": "PROPOSED",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "origin": "REMEDIATION_PLAN_V2",
+      "affectedTaskIds": [
+        "RP13-T02",
+        "RP13-T03",
+        "RP16-T03",
+        "RP19-T02"
+      ],
+      "contractRefs": [
+        "PC05",
+        "PC06",
+        "PC08"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    },
+    {
+      "id": "T-RP-11",
+      "kind": "TECHNICAL_DESIGN",
+      "topic": "事务/容量/文件系统预算",
+      "scope": "DB锁/timeout/死锁重试、DAG递归、IDB quota、publisher lag/热水位、body预算、备份容量和目标FS。",
+      "ownerRoles": [
+        "数据库/前端/运维负责人"
+      ],
+      "status": "PROPOSED",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "origin": "REMEDIATION_PLAN_V2",
+      "affectedTaskIds": [
+        "RP00-T05",
+        "RP05-T03",
+        "RP12-T01",
+        "RP15-T02",
+        "RP15-T03",
+        "RP17-T02"
+      ],
+      "contractRefs": [
+        "PC07",
+        "PC08",
+        "PC11"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    },
+    {
+      "id": "T-RP-12",
+      "kind": "TECHNICAL_DESIGN",
+      "topic": "用户可恢复流程与保留",
+      "scope": "conflict/dead-letter/unknown/oversize/quarantine的查看、选择、导出和放弃；清理前最后副本不丢，当前授权检查。",
+      "ownerRoles": [
+        "产品/数据/前端负责人"
+      ],
+      "status": "PROPOSED",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "origin": "REMEDIATION_PLAN_V2",
+      "affectedTaskIds": [
+        "RP08-T02",
+        "RP11-T01",
+        "RP11-T03",
+        "RP12-T02"
+      ],
+      "contractRefs": [
+        "PC04",
+        "PC12"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    },
+    {
+      "id": "T-RP-13",
+      "kind": "TECHNICAL_DESIGN",
+      "topic": "发布观察与停止条件",
+      "scope": "trace/log去敏、授权拒绝、回执、队列、publisher、schema锁、完整恢复点、健康阈值、观察窗和rollback目标。",
+      "ownerRoles": [
+        "技术/安全/发布负责人"
+      ],
+      "status": "PROPOSED",
+      "approvedBy": null,
+      "approvedAt": null,
+      "evidenceRef": null,
+      "origin": "REMEDIATION_PLAN_V2",
+      "affectedTaskIds": [
+        "RP00-T05",
+        "RP18-T02",
+        "RP19-T03"
+      ],
+      "contractRefs": [
+        "PC10",
+        "PC11"
+      ],
+      "approvalEvidenceRequired": [
+        "chosen option / precise scope",
+        "named approver and date",
+        "compatible client/schema window",
+        "risk acceptance if any; not a fixed finding"
+      ]
+    }
+  ]
+}

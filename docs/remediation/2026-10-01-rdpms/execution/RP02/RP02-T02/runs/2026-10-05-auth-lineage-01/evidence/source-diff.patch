@@ -1,0 +1,293 @@
+--- before/rdpms-system/backend/src/routes/auth.js
++++ after/rdpms-system/backend/src/routes/auth.js
+@@ -12,6 +12,7 @@
+ } from '../kernel/rbac.js';
+ import { AUDIT_ACTIONS } from '../kernel/constants.js';
+ import { writeAudit, requestCtx } from '../kernel/audit.js';
++import { writeAuditStrict } from '../platform/audit/strictAudit.js';
+ import { badRequest, unauthorized } from '../kernel/http.js';
+ 
+ const auth = new Hono();
+@@ -28,13 +29,13 @@
+   return crypto.createHash('sha256').update(value).digest('hex');
+ }
+ 
+-async function issueRefreshToken(userId, c) {
++async function issueRefreshToken(userId, c, db = prisma, familyId = crypto.randomUUID()) {
+   const raw = crypto.randomBytes(48).toString('hex');
+-  await prisma.refreshToken.create({
++  await db.refreshToken.create({
+     data: {
+       userId,
+       tokenHash: sha256(raw),
+-      familyId: crypto.randomUUID(),
++      familyId,
+       userAgent: c.req.header('User-Agent')?.slice(0, 512) || null,
+       ip: requestCtx(c).ip,
+       expiresAt: new Date(Date.now() + REFRESH_TTL_SEC * 1000),
+@@ -278,28 +279,51 @@
+ 
+ // ── 刷新 ─────────────────────────────────────────────────────────────────────
+ auth.post('/refresh', async (c) => {
+-  const { refreshToken } = await c.req.json().catch(() => ({}));
+-  if (!refreshToken) throw badRequest('VALIDATION_ERROR', '缺少 refreshToken');
+-  const row = await prisma.refreshToken.findUnique({ where: { tokenHash: sha256(refreshToken) }, include: { user: true } });
+-  if (!row || row.revokedAt || row.expiresAt < new Date() || !row.user || row.user.status !== 'ACTIVE') {
+-    throw unauthorized('INVALID_REFRESH_TOKEN', '刷新令牌无效或已过期');
+-  }
+-  // 轮换：旧令牌立即吊销
+-  await prisma.refreshToken.update({ where: { id: row.id }, data: { revokedAt: new Date() } });
+-  const accessToken = signAccessToken(row.user);
+-  const newRefresh = await issueRefreshToken(row.user.id, c);
+-  await writeAudit(prisma, {
+-    c,
+-    actorId: row.user.id,
+-    actorRole: row.user.systemRole,
+-    action: AUDIT_ACTIONS.TOKEN_REFRESH,
+-    entityType: 'USER',
+-    entityId: row.user.id,
++  const body = await c.req.json().catch(() => null);
++  const refreshToken = body?.refreshToken;
++  if (typeof refreshToken !== 'string' || !refreshToken.trim()) {
++    throw badRequest('VALIDATION_ERROR', 'refreshToken 必须是非空字符串');
++  }
++  const row = await prisma.refreshToken.findUnique({ where: { tokenHash: sha256(refreshToken) } });
++  if (!row) throw unauthorized('INVALID_REFRESH_TOKEN', '刷新令牌无效或已过期');
++
++  const result = await prisma.$transaction(async (tx) => {
++    // Consistent lock order: current actor first, then conditional token consume.
++    // A committed disable/soft-delete before this boundary cannot issue a token;
++    // a concurrent actor update waits until this short transaction finishes.
++    await tx.$queryRaw`SELECT id FROM users WHERE id = ${row.userId} FOR UPDATE`;
++    const user = await tx.user.findUnique({ where: { id: row.userId } });
++    if (!user || user.deletedAt || user.status !== 'ACTIVE') {
++      throw unauthorized('INVALID_REFRESH_TOKEN', '刷新令牌无效或已过期');
++    }
++    const consumedAt = new Date();
++    const consumed = await tx.refreshToken.updateMany({
++      where: { id: row.id, revokedAt: null, expiresAt: { gt: consumedAt } },
++      data: { revokedAt: consumedAt },
++    });
++    if (consumed.count !== 1) {
++      const current = await tx.refreshToken.findUnique({ where: { id: row.id } });
++      if (current?.revokedAt) {
++        // A normal race is not proof of theft. Keep the winning family alive.
++        throw unauthorized('REFRESH_TOKEN_REPLAYED', '刷新令牌已被消费，请确认当前会话或重新登录');
++      }
++      throw unauthorized('INVALID_REFRESH_TOKEN', '刷新令牌无效或已过期');
++    }
++    const accessToken = signAccessToken(user);
++    const newRefresh = await issueRefreshToken(user.id, c, tx, row.familyId);
++    await writeAuditStrict(tx, {
++      c,
++      actorId: user.id,
++      actorRole: user.systemRole,
++      action: AUDIT_ACTIONS.TOKEN_REFRESH,
++      entityType: 'USER',
++      entityId: user.id,
++    });
++    return { accessToken, refreshToken: newRefresh };
+   });
+   return c.json({
+-    accessToken,
+-    refreshToken: newRefresh,
+-    expiresIn: accessTokenExpiresInSeconds(accessToken),
++    ...result,
++    expiresIn: accessTokenExpiresInSeconds(result.accessToken),
+   });
+ });
+ 
+--- before/rdpms-system/backend/tests/integration/rp02-t02-acceptance.integration.test.mjs
++++ after/rdpms-system/backend/tests/integration/rp02-t02-acceptance.integration.test.mjs
+@@ -0,0 +1,191 @@
++import { test, before, after } from 'node:test';
++import assert from 'node:assert/strict';
++import crypto from 'node:crypto';
++import bcrypt from 'bcryptjs';
++import jwt from 'jsonwebtoken';
++import { PrismaClient } from '@prisma/client';
++import { createApp } from '../../dist/bootstrap/createApp.js';
++
++const target = new URL(process.env.DATABASE_URL);
++assert.equal(target.hostname, '127.0.0.1');
++assert.equal(target.pathname.slice(1), process.env.RDPMS_EXEC_OWNED_DB);
++assert.match(target.pathname, /^\/rdpms_test_/);
++const db = new PrismaClient();
++const app = createApp({ db });
++const password = 'Rp02 synthetic refresh fixture 2026!';
++const hash = (raw) => crypto.createHash('sha256').update(raw).digest('hex');
++before(async () => { await db.$queryRaw`SELECT 1`; });
++after(async () => { await db.$disconnect(); }); // Audited actors survive until owned whole-DB drop.
++
++async function call(path, body, server = app, token) {
++  return server.request(`/api/auth/${path}`, { method: 'POST',
++    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
++    body: JSON.stringify(body) });
++}
++async function session() {
++  const user = await db.user.create({ data: { username: `rp02-refresh-${crypto.randomUUID()}`,
++    displayName: 'Synthetic refresh actor', passwordHash: await bcrypt.hash(password, 4),
++    status: 'ACTIVE', systemRole: 'MEMBER' } });
++  const response = await call('login', { username: user.username, password });
++  assert.equal(response.status, 200);
++  const tokens = await response.json(); assert.equal(tokens.user.id, user.id);
++  const me = await app.request('/api/auth/me', { headers: { Authorization: `Bearer ${tokens.accessToken}` } });
++  assert.equal(me.status, 200); assert.equal((await me.json()).id, user.id);
++  const row = await db.refreshToken.findUnique({ where: { tokenHash: hash(tokens.refreshToken) } });
++  assert.ok(row && !row.revokedAt); assert.equal(row.userId, user.id);
++  return { user, tokens, row };
++}
++async function state(s) {
++  return { tokens: await db.refreshToken.findMany({ where: { userId: s.user.id }, orderBy: { id: 'asc' } }),
++    audits: await db.auditLog.findMany({ where: { actorId: s.user.id, action: 'token.refresh' }, orderBy: { id: 'asc' } }) };
++}
++function txProxy(wrap) {
++  return new Proxy(db, { get(target, key) {
++    if (key === '$transaction') return (fn, options) => target.$transaction((tx) => fn(wrap(tx)), options);
++    const value = target[key]; return typeof value === 'function' ? value.bind(target) : value;
++  } });
++}
++function gate(actorId, count = 1, boundary = 'actor') {
++  let reached, release; let hits = 0;
++  const entered = new Promise((r) => { reached = r; }); const open = new Promise((r) => { release = r; });
++  const client = txProxy((tx) => new Proxy(tx, { get(target, key) {
++    if (boundary === 'actor' && key === '$queryRaw') return async (...args) => {
++      if (args[1] === actorId && String(args[0]).includes('FOR UPDATE') && hits < count) {
++        hits++; if (hits === count) reached(); await open;
++      }
++      return target.$queryRaw(...args);
++    };
++    if (boundary === 'consume' && key === 'refreshToken') return new Proxy(target.refreshToken, { get(model, method) {
++      if (method === 'updateMany') return async (args) => { hits++; reached(); await open; return model.updateMany(args); };
++      const value = model[method]; return typeof value === 'function' ? value.bind(model) : value;
++    } });
++    const value = target[key]; return typeof value === 'function' ? value.bind(target) : value;
++  } }));
++  return { app: createApp({ db: client }), entered, release, hits: () => hits };
++}
++async function reach(g) {
++  let timer;
++  try { await Promise.race([g.entered, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('REAL_REFRESH_BARRIER_NOT_REACHED')), 8000); })]); }
++  finally { clearTimeout(timer); }
++}
++
++test('AC-B15 legal full password login → refresh → Bearer/me inherits family and one strict audit', async () => {
++  const s = await session(); const response = await call('refresh', { refreshToken: s.tokens.refreshToken });
++  assert.equal(response.status, 200); const next = await response.json();
++  const rows = await state(s); assert.equal(rows.tokens.length, 2); assert.equal(rows.audits.length, 1);
++  assert.equal(rows.tokens.find((r) => r.id === s.row.id).revokedAt instanceof Date, true);
++  const successor = rows.tokens.find((r) => r.tokenHash === hash(next.refreshToken));
++  assert.equal(successor.familyId, s.row.familyId); assert.equal(successor.revokedAt, null);
++  assert.equal(jwt.verify(next.accessToken, process.env.JWT_SECRET).userId, s.user.id);
++  const me = await app.request('/api/auth/me', { headers: { Authorization: `Bearer ${next.accessToken}` } });
++  assert.equal(me.status, 200); assert.equal((await me.json()).id, s.user.id);
++  assert.doesNotMatch(JSON.stringify(rows.audits), new RegExp(s.tokens.refreshToken + '|' + next.refreshToken));
++});
++
++test('AC-B15-01 five requests at real actor-lock boundary create one successor; losers do not revoke family', async () => {
++  const s = await session(); const g = gate(s.user.id, 5);
++  const pending = Array.from({ length: 5 }, () => call('refresh', { refreshToken: s.tokens.refreshToken }, g.app));
++  try { await reach(g); assert.equal(g.hits(), 5); }
++  finally { g.release(); await Promise.allSettled(pending); }
++  const responses = await Promise.all(pending);
++  assert.deepEqual(responses.map((r) => r.status).sort(), [200, 401, 401, 401, 401]);
++  let winner;
++  for (const response of responses) { const body = await response.json(); if (response.status === 200) winner = body;
++    else assert.equal(body.code, 'REFRESH_TOKEN_REPLAYED'); }
++  const rows = await state(s); assert.equal(rows.tokens.length, 2); assert.equal(rows.audits.length, 1);
++  assert.equal(rows.tokens.filter((r) => !r.revokedAt).length, 1);
++  assert.ok(rows.tokens.every((r) => r.familyId === s.row.familyId));
++  assert.equal((await call('refresh', { refreshToken: winner.refreshToken })).status, 200);
++  console.log('refresh barrier evidence:', JSON.stringify({ boundary: 'user SELECT FOR UPDATE', hits: g.hits(), winners: 1, losers: 4 }));
++});
++
++test('AC-B15-02 repeated old token never creates branch or invalidates working successor', async () => {
++  const s = await session(); const first = await call('refresh', { refreshToken: s.tokens.refreshToken });
++  const winner = await first.json(); assert.equal(first.status, 200); const before = await state(s);
++  for (let i = 0; i < 3; i++) { const replay = await call('refresh', { refreshToken: s.tokens.refreshToken });
++    assert.equal(replay.status, 401); assert.equal((await replay.json()).code, 'REFRESH_TOKEN_REPLAYED'); }
++  assert.deepEqual(await state(s), before);
++  const second = await call('refresh', { refreshToken: winner.refreshToken }); assert.equal(second.status, 200);
++  assert.ok((await state(s)).tokens.every((r) => r.familyId === s.row.familyId));
++});
++
++for (const model of ['refreshToken', 'auditLog']) {
++  test(`AC-B15-03 injected ${model} create failure rolls back real consumption, successor and strict audit`, async () => {
++    const s = await session(); const before = await state(s);
++    const client = txProxy((tx) => new Proxy(tx, { get(target, key) {
++      if (key === model) return new Proxy(target[key], { get(m, method) {
++        if (method === 'create') return async () => { throw new Error('OWNED_REFRESH_FAULT'); };
++        const value = m[method]; return typeof value === 'function' ? value.bind(m) : value;
++      } });
++      const value = target[key]; return typeof value === 'function' ? value.bind(target) : value;
++    } }));
++    const failed = await call('refresh', { refreshToken: s.tokens.refreshToken }, createApp({ db: client }));
++    assert.equal(failed.status, 500); assert.deepEqual(await state(s), before);
++    assert.equal((await call('refresh', { refreshToken: s.tokens.refreshToken })).status, 200);
++  });
++}
++
++test('AC-B15-04 login and refresh expiresIn agree with verified JWT exp under configured TTL', async () => {
++  const s = await session(); const response = await call('refresh', { refreshToken: s.tokens.refreshToken });
++  assert.equal(response.status, 200); const next = await response.json();
++  for (const body of [s.tokens, next]) {
++    const claims = jwt.verify(body.accessToken, process.env.JWT_SECRET); const remaining = claims.exp - Math.floor(Date.now() / 1000);
++    assert.ok(Math.abs(body.expiresIn - remaining) <= 1); assert.equal(claims.exp - claims.iat, 900);
++  }
++});
++
++test('refresh raw array/object/number/null/empty reject 400 before hashing without durable changes', async () => {
++  const s = await session(); const before = await state(s);
++  for (const value of [[], {}, 1, true, null, '', '   ']) {
++    const response = await call('refresh', { refreshToken: value }); assert.equal(response.status, 400);
++    assert.equal((await response.json()).code, 'VALIDATION_ERROR');
++  }
++  assert.deepEqual(await state(s), before);
++});
++
++test('expired/nonexistent refresh reject while current revoked refresh uses explicit replay code', async () => {
++  const s = await session(); await db.refreshToken.update({ where: { id: s.row.id }, data: { expiresAt: new Date(0) } });
++  const before = await state(s);
++  for (const token of [s.tokens.refreshToken, 'synthetic-nonexistent']) {
++    const response = await call('refresh', { refreshToken: token }); assert.equal(response.status, 401);
++    assert.equal((await response.json()).code, 'INVALID_REFRESH_TOKEN');
++  }
++  assert.deepEqual(await state(s), before);
++  await db.refreshToken.update({ where: { id: s.row.id }, data: { revokedAt: new Date() } });
++  const revoked = await call('refresh', { refreshToken: s.tokens.refreshToken });
++  assert.equal(revoked.status, 401); assert.equal((await revoked.json()).code, 'REFRESH_TOKEN_REPLAYED');
++});
++
++test('committed disable/soft-delete/pending/manual-lock at real boundary reject without activation', async () => {
++  for (const data of [{ status: 'DISABLED' }, { deletedAt: new Date() }, { status: 'PENDING_ACTIVATION' }, { status: 'LOCKED', lockedUntil: null }]) {
++    const s = await session(); const before = await state(s); const g = gate(s.user.id);
++    const pending = call('refresh', { refreshToken: s.tokens.refreshToken }, g.app);
++    try { await reach(g); await db.user.update({ where: { id: s.user.id }, data }); }
++    finally { g.release(); await Promise.allSettled([pending]); }
++    assert.equal((await pending).status, 401); assert.deepEqual(await state(s), before);
++    const user = await db.user.findUnique({ where: { id: s.user.id } });
++    for (const [key, value] of Object.entries(data)) assert.deepEqual(user[key], value);
++  }
++});
++
++test('logout wins before conditional consume; no new successor or audit is committed', async () => {
++  // Before taking the user lock: logout's audit FK also needs that actor row.
++  // Waiting for logout while intentionally holding it would deadlock the fixture.
++  const s = await session(); const g = gate(s.user.id);
++  const pending = call('refresh', { refreshToken: s.tokens.refreshToken }, g.app);
++  try { await reach(g); const logout = await call('logout', { refreshToken: s.tokens.refreshToken }, app, s.tokens.accessToken);
++    assert.equal(logout.status, 200); }
++  finally { g.release(); await Promise.allSettled([pending]); }
++  const response = await pending; assert.equal(response.status, 401); assert.equal((await response.json()).code, 'REFRESH_TOKEN_REPLAYED');
++  const rows = await state(s); assert.equal(rows.tokens.length, 1); assert.equal(rows.audits.length, 0);
++});
++
++test('commit/response-loss model rejects old refresh; explicit new password login restores observable access', async () => {
++  const s = await session(); await call('refresh', { refreshToken: s.tokens.refreshToken }); // Commit, deliberately discard response.
++  const before = await state(s); const response = await call('refresh', { refreshToken: s.tokens.refreshToken });
++  assert.equal(response.status, 401); assert.equal((await response.json()).code, 'REFRESH_TOKEN_REPLAYED');
++  assert.deepEqual(await state(s), before);
++  const login = await call('login', { username: s.user.username, password }); assert.equal(login.status, 200);
++  const next = await login.json(); const me = await app.request('/api/auth/me', { headers: { Authorization: `Bearer ${next.accessToken}` } });
++  assert.equal(me.status, 200); assert.equal((await me.json()).id, s.user.id);
++});

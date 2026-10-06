@@ -1,0 +1,20 @@
+{
+  "pathBase": "REPOSITORY",
+  "generatedAt": "2026-10-05",
+  "batchId": "parallel-lr7-2026-10-04-p01",
+  "sealedPayloadManifest": {
+    "pathBase": "REPOSITORY",
+    "relativePath": "n/supplements/parallel-lr7-2026-10-04-p01/integration/seal-correction-2026-10-05-01/payload-manifest.json",
+    "sha256": "fd2c9e6d6b83e118e1d9a2238f226c54129623668d52b1d52c607fe9db366d09"
+  },
+  "sealedFileCount": 20,
+  "excludes": [
+    "payload-manifest.json",
+    "final-integrity.json",
+    "post-seal-readback.json",
+    "REVISION_HISTORY.json",
+    "EXECUTION_REVISION_HISTORY.json"
+  ],
+  "integrityNotes": "payload-manifest lists all sealed files with sha256; final-integrity and post-seal-readback are excluded from themselves and from the history registries. No self or cross-history final hash is embedded.",
+  "overall": "PENDING_INDEPENDENT_REVIEW"
+}

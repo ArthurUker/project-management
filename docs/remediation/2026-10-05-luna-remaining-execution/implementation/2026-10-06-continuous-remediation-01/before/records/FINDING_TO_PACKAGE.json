@@ -1,0 +1,2143 @@
+{
+  "totalRecords": 33,
+  "confirmedSupported": 32,
+  "p1Supported": 16,
+  "p2Supported": 16,
+  "pendingCandidates": 1,
+  "records": [
+    {
+      "id": "B01",
+      "title": "ADMIN可重置SUPER_ADMIN密码并取得其身份",
+      "severity": "P1",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP01",
+      "supportingPackages": [],
+      "implementationStatus": "NOT_STARTED",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "D-S01-01",
+        "D-S01-02"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/users.js",
+          "lineStart": 347,
+          "lineEnd": 385,
+          "symbol": "users.put reset-password"
+        },
+        {
+          "path": "rdpms-system/backend/src/kernel/rbac.js",
+          "lineStart": 49,
+          "lineEnd": 126,
+          "symbol": "authenticate / requirePermission"
+        },
+        {
+          "path": "rdpms-system/backend/src/kernel/constants.js",
+          "lineStart": 11,
+          "lineEnd": 15,
+          "symbol": "P0_PERMISSIONS"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/seed.js",
+          "lineStart": 258,
+          "lineEnd": 270,
+          "symbol": "ADMIN_EXCLUDE_CODES"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "D-S01-01",
+        "D-S01-02",
+        "D-S01-03"
+      ],
+      "primaryTaskRefs": [
+        "RP01-T02"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B01-01",
+        "AC-B01-02",
+        "AC-B01-03",
+        "AC-B01-04"
+      ]
+    },
+    {
+      "id": "B17",
+      "title": "Role create whitelist conflicts with global code blacklist",
+      "severity": "P2",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP01",
+      "supportingPackages": [],
+      "implementationStatus": "COMPLETE",
+      "fixAcceptance": "FIX_ACCEPTED",
+      "gates": [],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/roles.js",
+          "lineStart": 63,
+          "lineEnd": 84,
+          "symbol": "roles.post"
+        },
+        {
+          "path": "rdpms-system/backend/src/kernel/massAssign.js",
+          "lineStart": 20,
+          "lineEnd": 46,
+          "symbol": "pickAllowed"
+        },
+        {
+          "path": "rdpms-system/backend/src/kernel/constants.js",
+          "lineStart": 183,
+          "lineEnd": 201,
+          "symbol": "GLOBAL_FORBIDDEN_FIELDS"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "D-S01-01",
+        "D-S01-02",
+        "D-S01-03"
+      ],
+      "primaryTaskRefs": [
+        "RP01-T01"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "FIX_ACCEPTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B17-01",
+        "AC-B17-02",
+        "AC-B17-03"
+      ],
+      "localValidation": "PASS",
+      "fixEvidenceRef": "execution/RP01/RP01-T01/runs/2026-10-02-continuous-rework/acceptance.json"
+    },
+    {
+      "id": "B14",
+      "title": "临时登录锁定实际永久生效（到期不自动解锁）",
+      "severity": "P1",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP02",
+      "supportingPackages": [],
+      "implementationStatus": "COMPLETE",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/auth.js",
+          "lineStart": 110,
+          "lineEnd": 169,
+          "symbol": "login lookup, lock gate, failure update and success reset"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/users.js",
+          "lineStart": 261,
+          "lineEnd": 297,
+          "symbol": "manual status enable clears lock fields"
+        },
+        {
+          "path": "rdpms-system/backend/src/kernel/rbac.js",
+          "lineStart": 69,
+          "lineEnd": 87,
+          "symbol": "authenticate accepts only ACTIVE user"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/schema.prisma",
+          "lineStart": 30,
+          "lineEnd": 35,
+          "symbol": "UserStatus enum"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [],
+      "primaryTaskRefs": [
+        "RP02-T01"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "LOCAL_TASK_SCOPED_ACCEPTED_FINDING_WIDER_SCOPE_OPEN",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B14-01",
+        "AC-B14-02",
+        "AC-B14-03",
+        "AC-B14-04"
+      ],
+      "latestExecutionReviewRef": "execution/reviews/2026-10-03-codebuddy-followup/findings.json",
+      "localEvidenceBoundary": "Permanent C01 conditional-reset fence verified in source and executor 12/12, independently repeated after real bcrypt positive login. Protected admin actor injected; no full JWT-chain acceptance or session-policy change."
+    },
+    {
+      "id": "B15",
+      "title": "刷新令牌并发可双重消费，TTL响应也不准确",
+      "severity": "P2",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP02",
+      "supportingPackages": [],
+      "implementationStatus": "COMPLETE",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "T-RP-09"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/auth.js",
+          "lineStart": 30,
+          "lineEnd": 42,
+          "symbol": "refresh token issuance and familyId"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/auth.js",
+          "lineStart": 183,
+          "lineEnd": 216,
+          "symbol": "login and refresh token responses; refresh read/revoke/issue sequence"
+        },
+        {
+          "path": "rdpms-system/backend/src/kernel/rbac.js",
+          "lineStart": 20,
+          "lineEnd": 43,
+          "symbol": "access TTL parser and JWT signer"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/schema.prisma",
+          "lineStart": 505,
+          "lineEnd": 520,
+          "symbol": "RefreshToken schema"
+        },
+        {
+          "path": "rdpms-system/frontend/src/api/http.ts",
+          "lineStart": 78,
+          "lineEnd": 107,
+          "symbol": "per-module single-flight refresh"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [],
+      "primaryTaskRefs": [
+        "RP02-T02"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "LOCAL_TASK_SCOPED_ACCEPTED_FINDING_WIDER_SCOPE_OPEN",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B15-01",
+        "AC-B15-02",
+        "AC-B15-03",
+        "AC-B15-04"
+      ],
+      "localEvidenceBoundary": "Refresh input is checked before hashing. Conditional single-use consume, same-family successor and strict audit share one short transaction. Current actor row is locked before consume; disabled/deleted/pending/manual-locked actor never auto-activates. Concurrent losers explicitly rejected without revoking winner. Prior login threshold/TTL logic unchanged.",
+      "latestExecutionEvidence": "execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/acceptance.json",
+      "latestLocalJointEvidence": "execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/joint-validation/acceptance.json",
+      "localJointStatus": "PASS_CURRENT_REPO_SCOPED",
+      "independentReview": "PENDING"
+    },
+    {
+      "id": "N-R02-01",
+      "title": "跨tab刷新失败可清除已轮换的新会话",
+      "severity": "P2",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "NOT_NEEDED",
+      "primaryPackage": "RP03",
+      "supportingPackages": [],
+      "implementationStatus": "COMPLETE",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "T-RP-09",
+        "S02-OPEN-05"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/frontend/src/api/http.ts",
+          "lineStart": 78,
+          "lineEnd": 107,
+          "symbol": "module-scoped inflight refresh promise"
+        },
+        {
+          "path": "rdpms-system/frontend/src/api/http.ts",
+          "lineStart": 128,
+          "lineEnd": 151,
+          "symbol": "refresh failure clears token store and emits session expiry"
+        },
+        {
+          "path": "rdpms-system/frontend/src/auth/tokenStore.ts",
+          "lineStart": 10,
+          "lineEnd": 49,
+          "symbol": "shared localStorage token storage"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "D-S01-04",
+        "S02-OPEN-05",
+        "S03-OI-06"
+      ],
+      "primaryTaskRefs": [
+        "RP03-T01"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "LOCAL_TASK_SCOPED_ACCEPTED_FINDING_WIDER_SCOPE_OPEN",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-N-R02-01-01",
+        "AC-N-R02-01-02"
+      ],
+      "localEvidenceBoundary": "Protected requests capture initiating actor/loginGeneration/tokenRevision. Shared auth state uses a single versioned envelope and short write lock; per-login refresh lock holds network only outside write lock. Same-lineage successor permits one immutable replay; stale A login/refresh/profile/logout cannot apply B state/credentials. Definitive current invalid refresh conditional cleanup; replayed/unknown outcomes preserve work and require explicit relogin. No Web Locks/storage means isolated in-memory login and no shared writes/automatic refresh.",
+      "latestExecutionEvidence": "execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/acceptance.json",
+      "latestLocalJointEvidence": "execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/joint-validation/acceptance.json",
+      "localJointStatus": "PASS_CURRENT_REPO_SCOPED",
+      "independentReview": "PENDING"
+    },
+    {
+      "id": "N-R02-02",
+      "title": "改密或管理员重置未即时撤销已签发access JWT",
+      "severity": "P2",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "NOT_NEEDED",
+      "primaryPackage": "RP03",
+      "supportingPackages": [],
+      "implementationStatus": "NOT_STARTED",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "D-S01-04",
+        "T-RP-09",
+        "S03-OI-06"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/auth.js",
+          "lineStart": 261,
+          "lineEnd": 299,
+          "symbol": "self-service password update and refresh-token revocation"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/users.js",
+          "lineStart": 346,
+          "lineEnd": 385,
+          "symbol": "admin password reset and refresh-token revocation"
+        },
+        {
+          "path": "rdpms-system/backend/src/kernel/rbac.js",
+          "lineStart": 49,
+          "lineEnd": 107,
+          "symbol": "JWT authentication checks status but no password/session version"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/schema.prisma",
+          "lineStart": 404,
+          "lineEnd": 419,
+          "symbol": "passwordChangedAt and account security fields"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "D-S01-04",
+        "S02-OPEN-05",
+        "S03-OI-06"
+      ],
+      "primaryTaskRefs": [
+        "RP03-T02"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-N-R02-02-01",
+        "AC-N-R02-02-02"
+      ]
+    },
+    {
+      "id": "B02",
+      "title": "项目编辑通过嵌套数组替换绕过子实体删除权限并物理删除任务",
+      "severity": "P1",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP05",
+      "supportingPackages": [
+        "RP09",
+        "RP13"
+      ],
+      "implementationStatus": "COMPLETE",
+      "fixAcceptance": "ENV_BLOCKED",
+      "gates": [
+        "D-S01-08",
+        "T-RP-07",
+        "S03-OI-05"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/projects.js",
+          "lineStart": 307,
+          "lineEnd": 357,
+          "symbol": "project update and capability"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/projects.js",
+          "lineStart": 402,
+          "lineEnd": 455,
+          "symbol": "nested task/milestone deleteMany and recreate"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/seed.js",
+          "lineStart": 267,
+          "lineEnd": 300,
+          "symbol": "default manager permissions"
+        },
+        {
+          "path": "rdpms-system/backend/src/kernel/constants.js",
+          "lineStart": 48,
+          "lineEnd": 80,
+          "symbol": "frozen/unfrozen P1 delete permission"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "D-S01-08",
+        "S03-OI-05"
+      ],
+      "primaryTaskRefs": [
+        "RP05-T01",
+        "RP05-T02"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B02-01",
+        "AC-B02-02",
+        "AC-B02-03"
+      ]
+    },
+    {
+      "id": "B03",
+      "title": "项目状态与模板基准日期从未选取这些字段的授权投影读取",
+      "severity": "P1",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP04",
+      "supportingPackages": [],
+      "implementationStatus": "NOT_STARTED",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/kernel/projectAccess.js",
+          "lineStart": 21,
+          "lineEnd": 25,
+          "symbol": "select project access projection"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/projects.js",
+          "lineStart": 331,
+          "lineEnd": 342,
+          "symbol": "status transition current status read"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/projects.js",
+          "lineStart": 662,
+          "lineEnd": 673,
+          "symbol": "template start date fallback"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/projects.js",
+          "lineStart": 784,
+          "lineEnd": 795,
+          "symbol": "batch status current status read"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/schema.prisma",
+          "lineStart": 591,
+          "lineEnd": 607,
+          "symbol": "Project status and startDate fields"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [],
+      "primaryTaskRefs": [
+        "RP04-T01"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B03-01",
+        "AC-B03-02",
+        "AC-B03-03"
+      ]
+    },
+    {
+      "id": "B18",
+      "title": "创建项目及其阶段任务里程碑分步提交，失败可留下半成品",
+      "severity": "P1",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP04",
+      "supportingPackages": [],
+      "implementationStatus": "COMPLETE",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/projects.js",
+          "lineStart": 198,
+          "lineEnd": 241,
+          "symbol": "project and nested members create"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/projects.js",
+          "lineStart": 243,
+          "lineEnd": 303,
+          "symbol": "separate phase/task/milestone/audit writes"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [],
+      "primaryTaskRefs": [
+        "RP04-T02"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "LOCAL_SCOPED_EVIDENCE_NOT_TARGET_ACCEPTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B18-01",
+        "AC-B18-02",
+        "AC-B18-03"
+      ],
+      "latestExecutionReviewRef": "execution/reviews/2026-10-03-codebuddy/findings.json",
+      "localEvidenceBoundary": "CodeBuddy 5/5 plus independent invalid top-level type inverse acceptance passed; PC03 remains NOT_RUN. No business fix in review."
+    },
+    {
+      "id": "B20",
+      "title": "软删除项目仍进入普通项目列表和统计过滤范围",
+      "severity": "P2",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP04",
+      "supportingPackages": [
+        "RP15"
+      ],
+      "implementationStatus": "NOT_STARTED",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/projects.js",
+          "lineStart": 107,
+          "lineEnd": 161,
+          "symbol": "project list where"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/projects.js",
+          "lineStart": 633,
+          "lineEnd": 652,
+          "symbol": "project statistics where"
+        },
+        {
+          "path": "rdpms-system/backend/src/kernel/projectAccess.js",
+          "lineStart": 21,
+          "lineEnd": 28,
+          "symbol": "detail access rejects deleted project"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [],
+      "primaryTaskRefs": [
+        "RP04-T01"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B20-01",
+        "AC-B20-02",
+        "AC-B20-03"
+      ]
+    },
+    {
+      "id": "B21",
+      "title": "注册项目入口绕过项目成员边界",
+      "severity": "P1",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP06",
+      "supportingPackages": [],
+      "implementationStatus": "NOT_STARTED",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "D-S01-05",
+        "D-S01-06"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/registrations.js",
+          "lineStart": 38,
+          "lineEnd": 52,
+          "symbol": "registrations.use/authMiddleware; registrationProjectWhere"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/registrations.js",
+          "lineStart": 137,
+          "lineEnd": 186,
+          "symbol": "GET / list"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/registrations.js",
+          "lineStart": 189,
+          "lineEnd": 209,
+          "symbol": "GET /stats"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/registrations.js",
+          "lineStart": 222,
+          "lineEnd": 260,
+          "symbol": "GET /:id"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/registrations.js",
+          "lineStart": 325,
+          "lineEnd": 394,
+          "symbol": "PUT /:id"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/registrations.js",
+          "lineStart": 397,
+          "lineEnd": 485,
+          "symbol": "PATCH stage/profile"
+        },
+        {
+          "path": "rdpms-system/backend/src/kernel/projectAccess.js",
+          "lineStart": 1,
+          "lineEnd": 55,
+          "symbol": "resolveProjectAccess policy"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/projects.js",
+          "lineStart": 107,
+          "lineEnd": 125,
+          "symbol": "ordinary project list visibility"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/projects.js",
+          "lineStart": 164,
+          "lineEnd": 170,
+          "symbol": "ordinary project detail access"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/projects.js",
+          "lineStart": 306,
+          "lineEnd": 314,
+          "symbol": "ordinary project update access"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/seed.js",
+          "lineStart": 314,
+          "lineEnd": 323,
+          "symbol": "MANAGER registration permissions"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/seed.js",
+          "lineStart": 360,
+          "lineEnd": 413,
+          "symbol": "MEMBER/VIEWER registration view"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "D-S01-05",
+        "D-S01-06"
+      ],
+      "primaryTaskRefs": [
+        "RP06-T01",
+        "RP06-T02"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B21-01",
+        "AC-B21-02",
+        "AC-B21-03",
+        "AC-B21-04"
+      ]
+    },
+    {
+      "id": "B04",
+      "title": "同步拉取只按项目范围过滤，未实施实体查看权限",
+      "severity": "P1",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP08",
+      "supportingPackages": [
+        "RP11",
+        "RP13"
+      ],
+      "implementationStatus": "COMPLETE",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "D-S01-05"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/sync.js",
+          "lineStart": 41,
+          "lineEnd": 149,
+          "symbol": "SYNC_ENTITIES registry"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/sync.js",
+          "lineStart": 271,
+          "lineEnd": 335,
+          "symbol": "sync init query loop and ACL response"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/engine.ts",
+          "lineStart": 213,
+          "lineEnd": 239,
+          "symbol": "ACL change cache purge"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "D-S01-05",
+        "S02-OPEN-02"
+      ],
+      "primaryTaskRefs": [
+        "RP08-T01"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "LOCAL_TASK_SCOPED_ACCEPTED_FINDING_WIDER_SCOPE_OPEN",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B04-01",
+        "AC-B04-02",
+        "AC-B04-03"
+      ],
+      "latestExecutionReviewRef": "execution/reviews/2026-10-03-codebuddy-followup/findings.json",
+      "localEvidenceBoundary": "Current ordinary-API local comparison accepted using executor 11/11 plus independent exact-row key/value/permission contrast across all seven entities. Phase ordinary view returns deleted rows: contract erratum, not sync unauthorized leakage. Independent product/security field policy NOT_EVALUATED; cache/backfill/IDB remain NOT_RUN."
+    },
+    {
+      "id": "B07",
+      "title": "同步拉取受硬上限截断后仍推进时间游标",
+      "severity": "P1",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP13",
+      "supportingPackages": [],
+      "implementationStatus": "COMPLETE",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "T-RP-04",
+        "T-RP-10",
+        "S03-OI-01",
+        "S03-OI-04",
+        "D-S01-08"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/sync.js",
+          "lineStart": 289,
+          "lineEnd": 327,
+          "symbol": "bounded entity queries and serverTime cursor"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/engine.ts",
+          "lineStart": 189,
+          "lineEnd": 239,
+          "symbol": "apply response then save cursor"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "D-S01-08",
+        "S03-OI-01",
+        "S03-OI-04"
+      ],
+      "primaryTaskRefs": [
+        "RP13-T01",
+        "RP13-T02",
+        "RP13-T03"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "IN_PROGRESS",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B07-01",
+        "AC-B07-02",
+        "AC-B07-03"
+      ],
+      "executionEvidence": "execution/RP13/RP13-T01/"
+    },
+    {
+      "id": "B08",
+      "title": "新授权项目只更新同步 ACL，没有触发历史数据回填",
+      "severity": "P2",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP08",
+      "supportingPackages": [
+        "RP11",
+        "RP13"
+      ],
+      "implementationStatus": "NOT_STARTED",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "T-RP-04",
+        "T-RP-12",
+        "S02-OPEN-02"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/sync.js",
+          "lineStart": 262,
+          "lineEnd": 267,
+          "symbol": "ACL version calculation"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/sync.js",
+          "lineStart": 271,
+          "lineEnd": 335,
+          "symbol": "project ids and since-based queries"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/schema.prisma",
+          "lineStart": 634,
+          "lineEnd": 648,
+          "symbol": "ProjectMember has joinedAt/leftAt and no updatedAt"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/engine.ts",
+          "lineStart": 213,
+          "lineEnd": 239,
+          "symbol": "ACL purge and cursor handling"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "D-S01-05",
+        "S02-OPEN-02"
+      ],
+      "primaryTaskRefs": [
+        "RP08-T02"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B08-01",
+        "AC-B08-02",
+        "AC-B08-03"
+      ]
+    },
+    {
+      "id": "B05",
+      "title": "同步回执未绑定主体与载荷",
+      "severity": "P2",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP09",
+      "supportingPackages": [
+        "RP12"
+      ],
+      "implementationStatus": "COMPLETE",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "T-RP-02",
+        "T-RP-07",
+        "S03-OI-05"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/sync.js",
+          "lineStart": 340,
+          "lineEnd": 367,
+          "symbol": "push setup and global mutationId receipt prefetch"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/sync.js",
+          "lineStart": 379,
+          "lineEnd": 421,
+          "symbol": "successful receipt replay before per-entity authorization"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/schema.prisma",
+          "lineStart": 486,
+          "lineEnd": 503,
+          "symbol": "SyncMutation globally unique clientMutationId and no payload hash"
+        },
+        {
+          "path": "rdpms-system/backend/src/platform/idempotency/receipts.js",
+          "lineStart": 33,
+          "lineEnd": 58,
+          "symbol": "HTTP scoped receipt and payload mismatch contract"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/schema.prisma",
+          "lineStart": 1594,
+          "lineEnd": 1618,
+          "symbol": "MutationReceipt scope unique key and payloadHash"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "S03-OI-02",
+        "S03-OI-03",
+        "S03-OI-04"
+      ],
+      "primaryTaskRefs": [
+        "RP09-T01"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "LOCAL_TASK_SCOPED_ACCEPTED_FINDING_WIDER_SCOPE_OPEN",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B05-01",
+        "AC-B05-02",
+        "AC-B05-03"
+      ],
+      "localEvidenceBoundary": "RP09-T02 scoped backend recovery delivered:22/22 real owned DB/JWT formal cases, receipt-lock/unique/CAS concurrency,24h expiry,unknown without re-reserve,lastPushAt postcommit500,real HTTP loss,current-auth revocation order,repeat/delete/fixture-restore and write-disabled containment. Current RP09-T01 source revalidated30/30. CI old-wire incompatibility remains explicitly FAIL; complete client/target scope open.",
+      "latestExecutionEvidence": "execution/RP09/RP09-T02/runs/2026-10-05-sync-receipts-01/acceptance.json"
+    },
+    {
+      "id": "B06",
+      "title": "同步业务写入与成功回执非原子",
+      "severity": "P1",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP09",
+      "supportingPackages": [
+        "RP10",
+        "RP12",
+        "RP13"
+      ],
+      "implementationStatus": "COMPLETE",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "T-RP-02",
+        "T-RP-07",
+        "S03-OI-05",
+        "S03-OI-02",
+        "S03-OI-04"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/sync.js",
+          "lineStart": 457,
+          "lineEnd": 524,
+          "symbol": "business writes and task-only inner transaction"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/sync.js",
+          "lineStart": 543,
+          "lineEnd": 588,
+          "symbol": "receipt upsert, device update, and later aggregate audit"
+        },
+        {
+          "path": "rdpms-system/backend/src/platform/audit/strictAudit.js",
+          "lineStart": 17,
+          "lineEnd": 20,
+          "symbol": "strict audit requires transaction client"
+        },
+        {
+          "path": "rdpms-system/backend/src/platform/idempotency/receipts.js",
+          "lineStart": 106,
+          "lineEnd": 128,
+          "symbol": "HTTP receipt and execute in one transaction"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "S03-OI-02",
+        "S03-OI-03",
+        "S03-OI-04"
+      ],
+      "primaryTaskRefs": [
+        "RP09-T01",
+        "RP09-T02"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "LOCAL_TASK_SCOPED_ACCEPTED_FINDING_WIDER_SCOPE_OPEN",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B06-01",
+        "AC-B06-02",
+        "AC-B06-03"
+      ],
+      "localEvidenceBoundary": "RP09-T02 scoped backend recovery delivered:22/22 real owned DB/JWT formal cases, receipt-lock/unique/CAS concurrency,24h expiry,unknown without re-reserve,lastPushAt postcommit500,real HTTP loss,current-auth revocation order,repeat/delete/fixture-restore and write-disabled containment. Current RP09-T01 source revalidated30/30. CI old-wire incompatibility remains explicitly FAIL; complete client/target scope open.",
+      "latestExecutionEvidence": "execution/RP09/RP09-T02/runs/2026-10-05-sync-receipts-01/acceptance.json"
+    },
+    {
+      "id": "B09",
+      "title": "同步项目状态写入绕过归档权限与状态转换",
+      "severity": "P1",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP07",
+      "supportingPackages": [],
+      "implementationStatus": "COMPLETE",
+      "fixAcceptance": "ENV_BLOCKED",
+      "gates": [],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/sync.js",
+          "lineStart": 42,
+          "lineEnd": 53,
+          "symbol": "project writable field list includes status and managerId"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/sync.js",
+          "lineStart": 198,
+          "lineEnd": 215,
+          "symbol": "generic entity action guard only checks configured update permission"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/sync.js",
+          "lineStart": 424,
+          "lineEnd": 435,
+          "symbol": "generic stale-base check"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/sync.js",
+          "lineStart": 457,
+          "lineEnd": 515,
+          "symbol": "generic CAS update path"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/projects.js",
+          "lineStart": 331,
+          "lineEnd": 347,
+          "symbol": "HTTP project status transition and archive permission checks"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "D-S01-06",
+        "S03-OI-07"
+      ],
+      "primaryTaskRefs": [
+        "RP07-T01"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B09-01",
+        "AC-B09-02",
+        "AC-B09-03"
+      ]
+    },
+    {
+      "id": "R06-N01",
+      "title": "同步更新项目负责人时未同步负责人成员关系",
+      "severity": "P2",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "NOT_NEEDED",
+      "primaryPackage": "RP07",
+      "supportingPackages": [
+        "RP06",
+        "RP09"
+      ],
+      "implementationStatus": "NOT_STARTED",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "D-S01-06",
+        "S03-OI-07"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/sync.js",
+          "lineStart": 42,
+          "lineEnd": 53,
+          "symbol": "project managerId allowed field"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/sync.js",
+          "lineStart": 453,
+          "lineEnd": 515,
+          "symbol": "project generic update has no ProjectMember transfer"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/projects.js",
+          "lineStart": 355,
+          "lineEnd": 378,
+          "symbol": "HTTP project update transaction upserts new manager and demotes prior manager"
+        },
+        {
+          "path": "rdpms-system/backend/src/kernel/projectAccess.js",
+          "lineStart": 21,
+          "lineEnd": 55,
+          "symbol": "project capability resolution requires active ProjectMember except SUPER_ADMIN"
+        },
+        {
+          "path": "rdpms-system/backend/src/kernel/projectAccess.js",
+          "lineStart": 94,
+          "lineEnd": 101,
+          "symbol": "managerId contributes to list visibility"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "D-S01-06",
+        "S03-OI-07"
+      ],
+      "primaryTaskRefs": [
+        "RP07-T02"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-R06-N01-01",
+        "AC-R06-N01-02",
+        "AC-R06-N01-03"
+      ]
+    },
+    {
+      "id": "F01",
+      "title": "初始化身份时清理路径仍可能清空尚未同步的用户草稿",
+      "severity": "P1",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP11",
+      "supportingPackages": [],
+      "implementationStatus": "NOT_STARTED",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "T-RP-09",
+        "T-RP-12",
+        "S02-OPEN-01",
+        "S02-OPEN-02"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/frontend/src/App.tsx",
+          "lineStart": 183,
+          "lineEnd": 189,
+          "symbol": "AuthProvider 与 SyncProvider 嵌套"
+        },
+        {
+          "path": "rdpms-system/frontend/src/auth/AuthProvider.tsx",
+          "lineStart": 18,
+          "lineEnd": 19,
+          "symbol": "初始 bootstrapping 与 user=null"
+        },
+        {
+          "path": "rdpms-system/frontend/src/auth/AuthProvider.tsx",
+          "lineStart": 32,
+          "lineEnd": 57,
+          "symbol": "异步恢复 /me 身份"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/SyncProvider.tsx",
+          "lineStart": 30,
+          "lineEnd": 35,
+          "symbol": "null 身份走 resetOnLogout"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/engine.ts",
+          "lineStart": 473,
+          "lineEnd": 491,
+          "symbol": "按 uid 选择待保留 outbox"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/engine.ts",
+          "lineStart": 515,
+          "lineEnd": 541,
+          "symbol": "登出捕获主体、并清理 outbox"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/idb.ts",
+          "lineStart": 176,
+          "lineEnd": 188,
+          "symbol": "clearAll 全局清空 records/outbox"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "S02-OPEN-01",
+        "S02-OPEN-02",
+        "S02-OPEN-03",
+        "S02-OPEN-06",
+        "S02-OPEN-07"
+      ],
+      "primaryTaskRefs": [
+        "RP11-T01"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-F01-01",
+        "AC-F01-02",
+        "AC-F01-03"
+      ]
+    },
+    {
+      "id": "F03",
+      "title": "实体缓存没有账号命名空间，缓存 API 可跨账号读取",
+      "severity": "P2",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP11",
+      "supportingPackages": [
+        "RP08"
+      ],
+      "implementationStatus": "NOT_STARTED",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "T-RP-09",
+        "T-RP-12",
+        "S02-OPEN-01",
+        "S02-OPEN-02"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/frontend/src/offline/idb.ts",
+          "lineStart": 24,
+          "lineEnd": 30,
+          "symbol": "RecordRow 无主体字段"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/idb.ts",
+          "lineStart": 42,
+          "lineEnd": 47,
+          "symbol": "records 全局 store 与 entity:id 主键约定"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/idb.ts",
+          "lineStart": 88,
+          "lineEnd": 112,
+          "symbol": "records 写入及全库读取"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/engine.ts",
+          "lineStart": 140,
+          "lineEnd": 144,
+          "symbol": "readCachedRecords 仅按 entity 过滤"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/engine.ts",
+          "lineStart": 189,
+          "lineEnd": 210,
+          "symbol": "同步拉取写入全局 entity:id 键"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/engine.ts",
+          "lineStart": 213,
+          "lineEnd": 235,
+          "symbol": "ACL 按项目可见性清理缓存"
+        },
+        {
+          "path": "rdpms-system/frontend/src/pages/Tasks.tsx",
+          "lineStart": 427,
+          "lineEnd": 443,
+          "symbol": "任务 API 失败时读取任务缓存"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "S02-OPEN-01",
+        "S02-OPEN-02",
+        "S02-OPEN-03",
+        "S02-OPEN-06",
+        "S02-OPEN-07"
+      ],
+      "primaryTaskRefs": [
+        "RP11-T01"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-F03-01",
+        "AC-F03-02",
+        "AC-F03-03"
+      ]
+    },
+    {
+      "id": "F02",
+      "title": "冲突先从 outbox 删除，再批量持久化冲突，写入失败会丢失本地修改",
+      "severity": "P1",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP11",
+      "supportingPackages": [],
+      "implementationStatus": "NOT_STARTED",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "T-RP-12",
+        "S02-OPEN-03"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/frontend/src/offline/engine.ts",
+          "lineStart": 280,
+          "lineEnd": 304,
+          "symbol": "冲突结果先删除 outbox 后仅缓存在内存"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/engine.ts",
+          "lineStart": 334,
+          "lineEnd": 340,
+          "symbol": "轮末才写冲突快照"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/idb.ts",
+          "lineStart": 61,
+          "lineEnd": 79,
+          "symbol": "单 store transaction wrapper"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/idb.ts",
+          "lineStart": 125,
+          "lineEnd": 148,
+          "symbol": "rejected 使用跨 store 原子移动的对照"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "S02-OPEN-01",
+        "S02-OPEN-02",
+        "S02-OPEN-03",
+        "S02-OPEN-06",
+        "S02-OPEN-07"
+      ],
+      "primaryTaskRefs": [
+        "RP11-T03"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-F02-01",
+        "AC-F02-02"
+      ]
+    },
+    {
+      "id": "F04",
+      "title": "离线出队没有分批，超过服务端 500 条限制后队列无法推进",
+      "severity": "P2",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP12",
+      "supportingPackages": [],
+      "implementationStatus": "NOT_STARTED",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "S02-OPEN-04",
+        "T-RP-11",
+        "T-RP-02",
+        "T-RP-12"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/frontend/src/offline/engine.ts",
+          "lineStart": 264,
+          "lineEnd": 279,
+          "symbol": "读取全量 outbox 并构造单个 push 请求"
+        },
+        {
+          "path": "rdpms-system/frontend/src/api/endpoints/sync.ts",
+          "lineStart": 21,
+          "lineEnd": 28,
+          "symbol": "SyncChange DTO 无依赖/序号字段"
+        },
+        {
+          "path": "rdpms-system/frontend/src/api/endpoints/sync.ts",
+          "lineStart": 65,
+          "lineEnd": 67,
+          "symbol": "push 原样 POST 完整 payload"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/sync.js",
+          "lineStart": 340,
+          "lineEnd": 347,
+          "symbol": "服务端拒绝超过 500 条"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/idb.ts",
+          "lineStart": 114,
+          "lineEnd": 118,
+          "symbol": "outboxAll 基于 IndexedDB getAll"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "S02-OPEN-04",
+        "S03-OI-03"
+      ],
+      "primaryTaskRefs": [
+        "RP12-T01",
+        "RP12-T02"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-F04-01",
+        "AC-F04-02",
+        "AC-F04-03"
+      ]
+    },
+    {
+      "id": "B10",
+      "title": "汇报提交版本快照可能落后于最终正文",
+      "severity": "P1",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP10",
+      "supportingPackages": [],
+      "implementationStatus": "COMPLETE",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "D-S01-07",
+        "S03-OI-08"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/reports.js",
+          "lineStart": 391,
+          "lineEnd": 416,
+          "symbol": "事务外读取report并把捕获快照传入submitReport"
+        },
+        {
+          "path": "rdpms-system/backend/src/modules/reports/reportCommands.ts",
+          "lineStart": 147,
+          "lineEnd": 165,
+          "symbol": "快照取传入content，状态更新where仅含id"
+        },
+        {
+          "path": "rdpms-system/backend/src/platform/idempotency/receipts.js",
+          "lineStart": 106,
+          "lineEnd": 128,
+          "symbol": "版本/状态/审计/receipt在同一事务但不自动绑定外部读取revision"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "D-S01-07",
+        "S03-OI-05",
+        "S03-OI-08",
+        "S03-OI-09"
+      ],
+      "primaryTaskRefs": [
+        "RP10-T02",
+        "RP10-T03"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "LOCAL_TASK_SCOPED_ACCEPTED_FINDING_WIDER_SCOPE_OPEN",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B10-01",
+        "AC-B10-02",
+        "AC-B10-03"
+      ],
+      "latestExecutionReviewRef": "execution/reviews/2026-10-03-codebuddy-followup/findings.json",
+      "localEvidenceBoundary": "New report submission accepts only DRAFT/NEEDS_REVISION under transaction row lock and conditional status/version update. Existing same-key receipt replay remains before state validation and after current authorization. Approve/reject reread locked status/version and reject stale reviewers; review audit now shares transaction. A late review cannot overwrite a newer resubmitted version. No task CAS/client/session policy or migration changes.",
+      "latestExecutionEvidence": "execution/RP10/RP10-T03/runs/2026-10-05-approved-contracts-01/acceptance.json"
+    },
+    {
+      "id": "B16",
+      "title": "在线任务修改未应用客户端并发基线",
+      "severity": "P2",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP10",
+      "supportingPackages": [],
+      "implementationStatus": "NOT_STARTED",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "T-RP-03",
+        "S03-OI-05"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/tasks.js",
+          "lineStart": 231,
+          "lineEnd": 312,
+          "symbol": "HTTP PUT拆字段/状态/指派并调用commands但未传cas"
+        },
+        {
+          "path": "rdpms-system/backend/src/modules/tasks/taskCommands.ts",
+          "lineStart": 61,
+          "lineEnd": 74,
+          "symbol": "cas缺省时writeWithCas直接update"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/tasks.js",
+          "lineStart": 316,
+          "lineEnd": 347,
+          "symbol": "状态PATCH直接update且无revision谓词"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "D-S01-07",
+        "S03-OI-05",
+        "S03-OI-08",
+        "S03-OI-09"
+      ],
+      "primaryTaskRefs": [
+        "RP10-T01"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B16-01",
+        "AC-B16-02",
+        "AC-B16-03"
+      ]
+    },
+    {
+      "id": "B11",
+      "title": "法规原文读取别名绕过统一下载入口的感染状态阻断",
+      "severity": "P1",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP14",
+      "supportingPackages": [],
+      "implementationStatus": "COMPLETE",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/regulatory-documents.js",
+          "lineStart": 522,
+          "lineEnd": 552,
+          "symbol": "legacy original-file read route"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/files.js",
+          "lineStart": 182,
+          "lineEnd": 229,
+          "symbol": "shared file download and infection guard"
+        },
+        {
+          "path": "rdpms-system/backend/src/modules/files/fileAccessPolicy.ts",
+          "lineStart": 116,
+          "lineEnd": 192,
+          "symbol": "scope policy lacks scanStatus input"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [],
+      "primaryTaskRefs": [
+        "RP14-T01"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "LOCAL_TASK_SCOPED_ACCEPTED_FINDING_WIDER_SCOPE_OPEN",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B11-01",
+        "AC-B11-02",
+        "AC-B11-03"
+      ],
+      "executionEvidence": "execution/RP14/RP14-T01/",
+      "localEvidenceBoundary": "Only CLEAN exports bytes across both file aliases and regulatory original-file. Every other or absent scan outcome is refused and redacted denial audited. Legacy raw originals cannot bypass unknown scan. Current resolver elevated context is preserved only for SUPER_ADMIN and sensitive access audited; metadata/delete retain original system permission/resource capability contracts. No migration.",
+      "latestExecutionEvidence": "execution/RP14/RP14-T02/runs/2026-10-05-approved-contracts-01/acceptance.json"
+    },
+    {
+      "id": "B12",
+      "title": "项目文件策略丢失 elevated 上下文并拒绝超管非成员访问",
+      "severity": "P2",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP14",
+      "supportingPackages": [],
+      "implementationStatus": "COMPLETE",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "T-RP-05"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/files.js",
+          "lineStart": 43,
+          "lineEnd": 71,
+          "symbol": "projectContextFor/loadFileOrThrow"
+        },
+        {
+          "path": "rdpms-system/backend/src/kernel/projectAccess.js",
+          "lineStart": 21,
+          "lineEnd": 55,
+          "symbol": "resolver returns elevated for SUPER_ADMIN nonmember"
+        },
+        {
+          "path": "rdpms-system/backend/src/modules/files/fileAccessPolicy.ts",
+          "lineStart": 147,
+          "lineEnd": 159,
+          "symbol": "PROJECT scope requires isMember"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [],
+      "primaryTaskRefs": [
+        "RP14-T02"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "LOCAL_TASK_SCOPED_ACCEPTED_FINDING_WIDER_SCOPE_OPEN",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B12-01",
+        "AC-B12-02",
+        "AC-B12-03"
+      ],
+      "localEvidenceBoundary": "Only CLEAN exports bytes across both file aliases and regulatory original-file. Every other or absent scan outcome is refused and redacted denial audited. Legacy raw originals cannot bypass unknown scan. Current resolver elevated context is preserved only for SUPER_ADMIN and sensitive access audited; metadata/delete retain original system permission/resource capability contracts. No migration.",
+      "latestExecutionEvidence": "execution/RP14/RP14-T02/runs/2026-10-05-approved-contracts-01/acceptance.json"
+    },
+    {
+      "id": "B19",
+      "title": "任务父子关系允许跨项目",
+      "severity": "P2",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP05",
+      "supportingPackages": [
+        "RP15",
+        "RP09"
+      ],
+      "implementationStatus": "COMPLETE",
+      "fixAcceptance": "ENV_BLOCKED",
+      "gates": [],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/routes/sync.js",
+          "lineStart": 69,
+          "lineEnd": 82,
+          "symbol": "tasks sync entity schema permits parentId"
+        },
+        {
+          "path": "rdpms-system/backend/src/routes/sync.js",
+          "lineStart": 236,
+          "lineEnd": 248,
+          "symbol": "task-specific guard validates phase but not parent project or cycle"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/schema.prisma",
+          "lineStart": 818,
+          "lineEnd": 867,
+          "symbol": "Task parent relation is parentId-to-id only"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/migrations/20260902085743_init_postgres/migration.sql",
+          "lineStart": 1340,
+          "lineEnd": 1347,
+          "symbol": "task parent FK references id only"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "impactExtension": {
+        "packet": "S04",
+        "disposition": "SUPPORTED",
+        "severity": "P2",
+        "title": "任务父子关系允许跨项目，并可被项目内硬删除级联删除跨项目子任务",
+        "entrypoint": "POST /api/sync/push tasks parentId followed by PUT /api/projects/:projectAId with a task replacement array",
+        "preconditions": [
+          "A project-B sync writer can submit a task with projectId=B and parentId referencing a project-A task; historical B19 probe demonstrated the edge can be established.",
+          "A project-A editor with project write capability submits task replacement; historical B02 probe demonstrated the route physically deletes project-A task rows without a task.delete check.",
+          "The deployed database applies the current migration-defined task parent FK with ON DELETE CASCADE; production schema drift was not inspected."
+        ],
+        "callPath": [
+          "Project B sync writer creates a Project-B task with parentId pointing to Project A (historically accepted; source still permits it).",
+          "Project A edit route checks project write capability and processes tasksInput.",
+          "The route executes tx.task.deleteMany({where:{projectId:A}}), a physical delete of omitted A tasks.",
+          "The migration-defined parent_id FK cascades a physical delete to any child row referencing that parent, without a projectId predicate."
+        ],
+        "observedImpact": "The historical probes establish both preconditions separately, and current source/schema establish that, when both conditions hold and the target DB follows the checked migration, deleting the parent row physically deletes its cross-project child through FK cascade. The combined outcome was not dynamically observed.",
+        "verification": "HISTORICAL_ONLY",
+        "evidence": [
+          {
+            "level": "H",
+            "ref": "docs/audits/2026-09-29-rdpms/backend-results.json#B19_CROSS_PROJECT_PARENT_ACCEPTED",
+            "limitation": "Historical isolated probe demonstrated the cross-project parent edge can be established; this cross-project parent deletion sequence was not part of that probe."
+          },
+          {
+            "level": "H",
+            "ref": "docs/audits/2026-09-29-rdpms/backend-results.json#B02_PROJECT_NESTED_HARD_DELETE",
+            "limitation": "Historical isolated probe demonstrated project task replacement physically removes task rows without task.delete; cross-project child cascade was not measured."
+          },
+          {
+            "level": "S",
+            "ref": "execution/supplemental/S04/review.md#B19-impact-extension",
+            "limitation": "Current route, Prisma relation, and migration FK define the connected path. No single end-to-end DB reproduction or production DB schema inspection was run."
+          }
+        ],
+        "limitations": [
+          "Combined cross-project edge plus project-replacement physical delete not dynamically reproduced.",
+          "Deployed database constraint drift not inspected."
+        ],
+        "source": "execution/supplemental/S04/findings.json"
+      },
+      "v1PackageWideGates": [
+        "D-S01-08",
+        "S03-OI-05"
+      ],
+      "primaryTaskRefs": [
+        "RP05-T01"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B19-01",
+        "AC-B19-02",
+        "AC-B19-03",
+        "AC-B19-04"
+      ]
+    },
+    {
+      "id": "B13",
+      "title": "恢复接口跳过重复唯一键记录却虚报恢复成功数量",
+      "severity": "P1",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP16",
+      "supportingPackages": [
+        "RP19"
+      ],
+      "implementationStatus": "NOT_STARTED",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "T-RP-06",
+        "S05-OI-03",
+        "T-RP-10"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/src/kernel/backupRestore.js",
+          "lineStart": 19,
+          "lineEnd": 53,
+          "symbol": "RESTORE_TABLES unique/ref metadata"
+        },
+        {
+          "path": "rdpms-system/backend/src/kernel/backupRestore.js",
+          "lineStart": 176,
+          "lineEnd": 201,
+          "symbol": "payload primary-key-only duplicate validation"
+        },
+        {
+          "path": "rdpms-system/backend/src/kernel/backupRestore.js",
+          "lineStart": 203,
+          "lineEnd": 230,
+          "symbol": "partial target unique-key validation"
+        },
+        {
+          "path": "rdpms-system/backend/src/kernel/backupRestore.js",
+          "lineStart": 313,
+          "lineEnd": 349,
+          "symbol": "skipDuplicates and input-length counters"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/schema.prisma",
+          "lineStart": 399,
+          "lineEnd": 429,
+          "symbol": "User unique constraints"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/schema.prisma",
+          "lineStart": 634,
+          "lineEnd": 648,
+          "symbol": "ProjectMember composite unique"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/schema.prisma",
+          "lineStart": 681,
+          "lineEnd": 735,
+          "symbol": "template composite unique constraints"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/schema.prisma",
+          "lineStart": 741,
+          "lineEnd": 786,
+          "symbol": "project phase and transition unique constraints"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/schema.prisma",
+          "lineStart": 878,
+          "lineEnd": 891,
+          "symbol": "task dependency composite unique"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/schema.prisma",
+          "lineStart": 1040,
+          "lineEnd": 1109,
+          "symbol": "report/version/monthly progress composite unique constraints"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "S05-OI-03"
+      ],
+      "primaryTaskRefs": [
+        "RP16-T01",
+        "RP16-T02",
+        "RP16-T03"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-B13-01",
+        "AC-B13-02",
+        "AC-B13-03",
+        "AC-B13-04"
+      ]
+    },
+    {
+      "id": "D01",
+      "title": "文件备份将新快照做成旧快照软链并可能改写历史内容",
+      "severity": "P1",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP17",
+      "supportingPackages": [
+        "RP19"
+      ],
+      "implementationStatus": "NOT_STARTED",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "T-RP-11",
+        "S05-OI-01"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/deploy/scripts/backup-pg.sh",
+          "lineStart": 68,
+          "lineEnd": 77,
+          "symbol": "uploads snapshot cp/rsync/latest sequence"
+        },
+        {
+          "path": "docs/audits/2026-09-29-rdpms/verify-backup.py",
+          "lineStart": 1,
+          "lineEnd": 21,
+          "symbol": "historical disposable-file reproduction"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "S05-OI-01"
+      ],
+      "primaryTaskRefs": [
+        "RP17-T01",
+        "RP17-T02",
+        "RP17-T03"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-D01-01"
+      ]
+    },
+    {
+      "id": "R12-N01",
+      "title": "候选风险：数据库 dump 与 uploads 文件快照没有共同恢复点协调",
+      "severity": "P2",
+      "disposition": "PENDING",
+      "evidenceVerification": "PLANNED_NOT_RUN",
+      "primaryPackage": "RP19",
+      "supportingPackages": [],
+      "implementationStatus": "NOT_STARTED",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "S05-OI-02",
+        "T-RP-10"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/deploy/scripts/backup-pg.sh",
+          "lineStart": 52,
+          "lineEnd": 77,
+          "symbol": "sequential database and upload capture"
+        },
+        {
+          "path": "rdpms-system/backend/prisma/schema.prisma",
+          "lineStart": 1413,
+          "lineEnd": 1449,
+          "symbol": "file binaries external to database and relational FileObject metadata"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": true,
+      "v1PackageWideGates": [
+        "S05-OI-02",
+        "S05-OI-04",
+        "S05-OI-05"
+      ],
+      "primaryTaskRefs": [
+        "RP19-T01",
+        "RP19-T02"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-R12-N01-01"
+      ]
+    },
+    {
+      "id": "D02",
+      "title": "发布前检查校验旧版本而非候选版本",
+      "severity": "P2",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP18",
+      "supportingPackages": [
+        "RP19"
+      ],
+      "implementationStatus": "NOT_STARTED",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "T-RP-08",
+        "T-RP-09",
+        "T-RP-13",
+        "S05-OI-05"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/deploy/scripts/deploy.sh",
+          "lineStart": 94,
+          "lineEnd": 117,
+          "symbol": "preflight precedes clone and candidate path assertion"
+        },
+        {
+          "path": "rdpms-system/deploy/scripts/deploy.sh",
+          "lineStart": 119,
+          "lineEnd": 152,
+          "symbol": "candidate install/migration/build after preflight"
+        },
+        {
+          "path": "rdpms-system/deploy/scripts/preflight.sh",
+          "lineStart": 58,
+          "lineEnd": 61,
+          "symbol": "preflight default targets current"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "S05-OI-04",
+        "S05-OI-05"
+      ],
+      "primaryTaskRefs": [
+        "RP18-T01",
+        "RP18-T02"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-D02-01",
+        "AC-D02-02"
+      ]
+    },
+    {
+      "id": "D03",
+      "title": "部署配置检查与运行时配置不一致",
+      "severity": "P2",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "HISTORICAL_ONLY",
+      "primaryPackage": "RP18",
+      "supportingPackages": [
+        "RP19"
+      ],
+      "implementationStatus": "NOT_STARTED",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "T-RP-08",
+        "T-RP-09",
+        "S05-OI-04"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/backend/.env.example",
+          "lineStart": 29,
+          "lineEnd": 48,
+          "symbol": "template CORS and backup export variables"
+        },
+        {
+          "path": "rdpms-system/deploy/scripts/preflight.sh",
+          "lineStart": 120,
+          "lineEnd": 132,
+          "symbol": "checks ALLOWED_ORIGINS and ENABLE_BACKUP_EXPORT"
+        },
+        {
+          "path": "rdpms-system/deploy/systemd/rdpms-api.service",
+          "lineStart": 12,
+          "lineEnd": 15,
+          "symbol": "systemd loads runtime env file"
+        },
+        {
+          "path": "rdpms-system/backend/src/bootstrap/createApp.js",
+          "lineStart": 65,
+          "lineEnd": 69,
+          "symbol": "runtime consumes CORS_ORIGINS with wildcard fallback"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "S05-OI-04",
+        "S05-OI-05"
+      ],
+      "primaryTaskRefs": [
+        "RP18-T01",
+        "RP18-T03"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-D03-01",
+        "AC-D03-02",
+        "AC-D03-03"
+      ]
+    },
+    {
+      "id": "N-S02-01",
+      "title": "旧版无主体 outbox 在启动清理中被误归属，竞态时可能进入当前账号 push",
+      "severity": "P2",
+      "disposition": "SUPPORTED",
+      "evidenceVerification": "SOURCE_ONLY",
+      "primaryPackage": "RP11",
+      "supportingPackages": [],
+      "implementationStatus": "NOT_STARTED",
+      "fixAcceptance": "NOT_RUN",
+      "gates": [
+        "T-RP-09",
+        "T-RP-12",
+        "S02-OPEN-01",
+        "S02-OPEN-02",
+        "T-RP-01",
+        "S02-OPEN-06",
+        "S02-OPEN-07"
+      ],
+      "sourceAnchors": [
+        {
+          "path": "rdpms-system/frontend/src/offline/idb.ts",
+          "lineStart": 9,
+          "lineEnd": 10,
+          "symbol": "DB_VERSION=2"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/idb.ts",
+          "lineStart": 12,
+          "lineEnd": 22,
+          "symbol": "OutboxRecord.userId optional"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/idb.ts",
+          "lineStart": 42,
+          "lineEnd": 53,
+          "symbol": "upgrade 仅创建缺失 store/deadLetters，不迁移 outbox 行"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/engine.ts",
+          "lineStart": 433,
+          "lineEnd": 459,
+          "symbol": "start 隔离后启动同步"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/engine.ts",
+          "lineStart": 548,
+          "lineEnd": 564,
+          "symbol": "foreign filter 仅匹配 userId 已存在且与当前主体不同"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/engine.ts",
+          "lineStart": 241,
+          "lineEnd": 279,
+          "symbol": "syncNow 全量 outbox 映射并 push"
+        },
+        {
+          "path": "rdpms-system/frontend/src/api/http.ts",
+          "lineStart": 30,
+          "lineEnd": 37,
+          "symbol": "请求从当前 tokenStore 注入 Authorization"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/engine.ts",
+          "lineStart": 49,
+          "lineEnd": 60,
+          "symbol": "默认 transport 为 syncAPI"
+        },
+        {
+          "path": "rdpms-system/frontend/src/api/endpoints/sync.ts",
+          "lineStart": 71,
+          "lineEnd": 76,
+          "symbol": "syncAPI.push 调用 /sync/push"
+        },
+        {
+          "path": "rdpms-system/frontend/src/api/request.ts",
+          "lineStart": 1,
+          "lineEnd": 3,
+          "symbol": "endpoint request 使用 http 实例"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/engine.ts",
+          "lineStart": 473,
+          "lineEnd": 492,
+          "symbol": "anonymous reset 将未标主体行转入 anonymous dead-letter"
+        },
+        {
+          "path": "rdpms-system/frontend/src/offline/engine.ts",
+          "lineStart": 515,
+          "lineEnd": 541,
+          "symbol": "reset 在 preserve 全部结束后才检查代次并执行全局清理"
+        }
+      ],
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+      "candidateOnly": false,
+      "v1PackageWideGates": [
+        "S02-OPEN-01",
+        "S02-OPEN-02",
+        "S02-OPEN-03",
+        "S02-OPEN-06",
+        "S02-OPEN-07"
+      ],
+      "primaryTaskRefs": [
+        "RP11-T01",
+        "RP11-T02"
+      ],
+      "gateAuthority": "TASK_GRAPH.json conditional stage requirements; primary package is unique; support does not duplicate finding.",
+      "fixStatus": "NOT_STARTED",
+      "releaseStatus": "NOT_EVALUATED",
+      "acceptanceCaseIds": [
+        "AC-N-S02-01-01",
+        "AC-N-S02-01-02",
+        "AC-N-S02-01-03"
+      ]
+    }
+  ]
+}

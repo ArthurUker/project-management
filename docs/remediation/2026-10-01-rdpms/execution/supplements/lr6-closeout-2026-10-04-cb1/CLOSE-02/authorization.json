@@ -1,0 +1,13 @@
+{
+  "closeId": "CLOSE-02",
+  "finding": "LR6-02",
+  "kind": "RUNNER_ONLY_IN_NEW_SESSION",
+  "sessionId": "lr6-closeout-2026-10-04-cb1",
+  "executor": "CodeBuddy",
+  "userInstructionSource": "execution/CODEBUDDY_FINAL_SUP_REWORK_PROMPT_2026-10-04.md",
+  "authorityReviewRef": "execution/reviews/2026-10-04-codebuddy-supplement-rework/REVIEW.md",
+  "runnerPath": "execution/supplements/lr6-closeout-2026-10-04-cb1/run-suite.py",
+  "frozenOldRunnerTouched": false,
+  "controlsKind": "SIMULATED_CONTROL_ALL_SUBPROCESSES_STUBBED",
+  "realDatabaseUsedForFaultControls": false
+}

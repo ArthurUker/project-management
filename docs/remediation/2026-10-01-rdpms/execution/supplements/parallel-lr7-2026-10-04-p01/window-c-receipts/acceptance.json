@@ -1,0 +1,27 @@
+{
+  "windowId": "C",
+  "decisionId": "T-RP-02",
+  "mode": "PROPOSED_APPROVAL_PREPARATION_ONLY",
+  "preparationAcceptance": {
+    "materialDelivery": "PASS",
+    "sourceConsistency": "PASS",
+    "notes": "All required deliverables present in window-c-receipts/; each fact cites current file line + SHA256; reused evidence referenced by path; no source/test/ledger modified."
+  },
+  "businessAcceptance": {
+    "status": "NOT_RUN",
+    "note": "This window prepares the contract only. Dynamic acceptance (INT-PC03-01, B06 rerun, AC-TRP02-* in acceptance-draft.csv) remains NOT_RUN and is owned by implementation tasks RP09-T01/T02, RP12-T02 after T-RP-02 approval."
+  },
+  "cases": [
+    {"caseId": "PREP-MATERIAL", "result": "PASS", "evidence": "authorization.json, start-baseline.json, current-contract.md, decision-draft.md, decision-draft.json, acceptance-draft.csv, approval-request.md, interface-notes.md, evidence/source-fact-index.json, acceptance.json, rollback.md, task-state.json, handoff.md, REVIEW_ENTRY.md"},
+    {"caseId": "PREP-SOURCE-CONSISTENCY", "result": "PASS", "evidence": "evidence/source-fact-index.json (line+sha256 per claim); matches start-baseline.json"},
+    {"caseId": "INT-PC03-01", "result": "NOT_RUN", "evidence": null, "note": "Dynamic barrier/DB acceptance owned by implementation; not executed here."},
+    {"caseId": "AC-TRP02-01..13", "result": "NOT_RUN", "evidence": "acceptance-draft.csv", "note": "Future acceptance cases; dynamic, not executed in prep window."}
+  ],
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "limitations": [
+    "No real DB/build/browser/fault-injection executed.",
+    "DECISION_REGISTER.T-RP-02 remains PROPOSED with approvedBy/approvedAt/evidenceRef = null.",
+    "sync.js has pre-existing uncommitted working-tree modifications; read-only, not used as basis, not modified."
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "taskId": "RP11-T03",
+  "runs": [
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP11/RP11-T03/runs/2026-10-06-continuous-remediation-01/evidence/rp11-t03-recovery/attempt-04/run-results.json",
+      "sha256": "4f61580a14fa89b5c80f3eb78599e137abe4793caca15220099f3075868edf23",
+      "commandResults": [
+        {
+          "label": "frontend-typecheck",
+          "command": [
+            "/Users/renkang/.nvm/versions/node/v24.15.0/bin/node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/frontend/node_modules/typescript/bin/tsc",
+            "--project",
+            "/Users/renkang/VS Code/project-management/rdpms-system/frontend/tsconfig.app.json",
+            "--noEmit"
+          ],
+          "exitCode": 0
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0
+        }
+      ],
+      "cleanup": {
+        "chromeExit": {
+          "code": 0,
+          "signal": null
+        },
+        "ownedServerClosed": true,
+        "ownedProfileRootRemoved": true
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP11/RP11-T03/runs/2026-10-06-continuous-remediation-01/evidence/rp11-t03-owner-regression/attempt-01/run-results.json",
+      "sha256": "11e1451454949af7cdd9290bc0fc68a6842dc8adec11e1774b93d5adcbde8623",
+      "commandResults": [
+        {
+          "label": "frontend-typecheck",
+          "command": [
+            "/Users/renkang/.nvm/versions/node/v24.15.0/bin/node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/frontend/node_modules/typescript/bin/tsc",
+            "--project",
+            "/Users/renkang/VS Code/project-management/rdpms-system/frontend/tsconfig.app.json",
+            "--noEmit"
+          ],
+          "exitCode": 0
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0
+        }
+      ],
+      "cleanup": {
+        "chromeExit": {
+          "code": 0,
+          "signal": null
+        },
+        "ownedServerClosed": true,
+        "ownedProfileRootRemoved": true
+      }
+    }
+  ],
+  "limits": [
+    "Real Chrome/IDB production Tasks/dialog with synthetic HTTP auth/init/push; native JWT/backend/target joint NOT_RUN",
+    "Recovery validation5 PASS /1 ENV_BLOCKED;13 owner regression PASS; quota override accepted but actual native quota failure not produced, preserved exact evidence",
+    "Original server snapshots are never directly shown; comparison uses fresh authorized sync projection when available. Unknown legacy body/claim/export/discard prohibited",
+    "No commit/deploy/target environment/production snapshot or real user action"
+  ],
+  "earlierAttempts": "Preserved; only enumerated current attempts support acceptance"
+}

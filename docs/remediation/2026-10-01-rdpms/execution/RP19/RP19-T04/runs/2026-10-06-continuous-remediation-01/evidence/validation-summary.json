@@ -1,0 +1,10 @@
+{
+  "taskId": "RP19-T04",
+  "runs": [],
+  "limits": [
+    "No actualdeployedclientmatrix orowner historicalsnapshot, so strictrevision andRP15 cannot safely finish independently.",
+    "Optionalcustomroles/generalDAG notactivated. Allproductpackages retain scoped/joint/target/release gaps; no deploy/realrestore/sharedDB/dependency changes.",
+    "Localactualsuccessfulnegativefixture/failurecontrols distinguish fixevidence; not mocktarget or approverdelegation for missingfacts."
+  ],
+  "earlierAttempts": "Preserved; only enumerated current attempts support acceptance"
+}

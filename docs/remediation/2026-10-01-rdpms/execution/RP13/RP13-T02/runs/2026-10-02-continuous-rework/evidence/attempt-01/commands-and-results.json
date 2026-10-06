@@ -1,0 +1,192 @@
+[
+  {
+    "label": "initdb",
+    "command": [
+      "/opt/homebrew/bin/initdb",
+      "-D",
+      "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rp13-owned-64agr0f0/pg",
+      "-U",
+      "rdpms_exec",
+      "--auth=trust"
+    ],
+    "exitCode": 0,
+    "log": "initdb.log"
+  },
+  {
+    "label": "cluster-start",
+    "command": [
+      "/opt/homebrew/bin/pg_ctl",
+      "-D",
+      "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rp13-owned-64agr0f0/pg",
+      "-l",
+      "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rp13-owned-64agr0f0/postgres.log",
+      "-o",
+      "-h 127.0.0.1 -p 63782 -k /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rp13-owned-64agr0f0/socket",
+      "-w",
+      "start"
+    ],
+    "exitCode": 0,
+    "log": "cluster-start.log"
+  },
+  {
+    "label": "guard-check",
+    "command": [
+      "node",
+      "scripts/test-db.mjs",
+      "check"
+    ],
+    "exitCode": 2,
+    "log": "guard-check.log"
+  },
+  {
+    "label": "guard-reset",
+    "command": [
+      "node",
+      "scripts/test-db.mjs",
+      "reset"
+    ],
+    "exitCode": 0,
+    "log": "guard-reset.log"
+  },
+  {
+    "label": "schema-setup",
+    "command": [
+      "psql",
+      "-X",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-At",
+      "postgresql://rdpms_exec@127.0.0.1:63782/rdpms_test_rp13_exec_aa70c2099c"
+    ],
+    "exitCode": 0,
+    "log": "schema-setup.log"
+  },
+  {
+    "label": "pull-before-source-commit",
+    "command": [
+      "psql",
+      "-X",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-At",
+      "postgresql://rdpms_exec@127.0.0.1:63782/rdpms_test_rp13_exec_aa70c2099c"
+    ],
+    "exitCode": 0,
+    "log": "pull-before-source-commit.log"
+  },
+  {
+    "label": "publisher-one",
+    "command": [
+      "psql",
+      "-X",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-At",
+      "postgresql://rdpms_exec@127.0.0.1:63782/rdpms_test_rp13_exec_aa70c2099c"
+    ],
+    "exitCode": 0,
+    "log": "publisher-one.log"
+  },
+  {
+    "label": "pull-after-publish",
+    "command": [
+      "psql",
+      "-X",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-At",
+      "postgresql://rdpms_exec@127.0.0.1:63782/rdpms_test_rp13_exec_aa70c2099c"
+    ],
+    "exitCode": 0,
+    "log": "pull-after-publish.log"
+  },
+  {
+    "label": "unsafe-seq-b-allocate",
+    "command": [
+      "psql",
+      "-X",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-At",
+      "postgresql://rdpms_exec@127.0.0.1:63782/rdpms_test_rp13_exec_aa70c2099c"
+    ],
+    "exitCode": 0,
+    "log": "unsafe-seq-b-allocate.log"
+  },
+  {
+    "label": "unsafe-seq-b-commit",
+    "command": [
+      "psql",
+      "-X",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-At",
+      "postgresql://rdpms_exec@127.0.0.1:63782/rdpms_test_rp13_exec_aa70c2099c"
+    ],
+    "exitCode": 0,
+    "log": "unsafe-seq-b-commit.log"
+  },
+  {
+    "label": "unsafe-seq-cut",
+    "command": [
+      "psql",
+      "-X",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-At",
+      "postgresql://rdpms_exec@127.0.0.1:63782/rdpms_test_rp13_exec_aa70c2099c"
+    ],
+    "exitCode": 0,
+    "log": "unsafe-seq-cut.log"
+  },
+  {
+    "label": "unsafe-seq-a-commit",
+    "command": [
+      "psql",
+      "-X",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-At",
+      "postgresql://rdpms_exec@127.0.0.1:63782/rdpms_test_rp13_exec_aa70c2099c"
+    ],
+    "exitCode": 0,
+    "log": "unsafe-seq-a-commit.log"
+  },
+  {
+    "label": "unsafe-seq-after-cut",
+    "command": [
+      "psql",
+      "-X",
+      "-v",
+      "ON_ERROR_STOP=1",
+      "-At",
+      "postgresql://rdpms_exec@127.0.0.1:63782/rdpms_test_rp13_exec_aa70c2099c"
+    ],
+    "exitCode": 0,
+    "log": "unsafe-seq-after-cut.log"
+  },
+  {
+    "label": "guard-drop",
+    "command": [
+      "node",
+      "scripts/test-db.mjs",
+      "drop"
+    ],
+    "exitCode": 0,
+    "log": "guard-drop.log"
+  },
+  {
+    "label": "cluster-stop",
+    "command": [
+      "/opt/homebrew/bin/pg_ctl",
+      "-D",
+      "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rp13-owned-64agr0f0/pg",
+      "-m",
+      "fast",
+      "-w",
+      "stop"
+    ],
+    "exitCode": 0,
+    "log": "cluster-stop.log"
+  }
+]

@@ -1,0 +1,16 @@
+{
+  "taskId":"RP00-T05",
+  "baseline":"138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "taskArtifactStatus":"PASS",
+  "implementationStatus":"COMPLETE",
+  "validationStatus":"NOT_RUN",
+  "releaseStatus":"NOT_EVALUATED",
+  "cases":[
+    {"id":"TASK-RP00-T05","status":"PASS","scope":"Static register and candidate scope template delivered; does not assert target environment validation."},
+    {"id":"DECISION-T-RP-11","status":"NOT_RUN","scope":"No named approval or target budget values/baselines."},
+    {"id":"DECISION-T-RP-13","status":"NOT_RUN","scope":"No release owner, approved thresholds/observation window, stop decision or rollback/containment target."},
+    {"id":"INT-PC11-01","status":"NOT_RUN","scope":"No candidate, target-like owned load environment or approved thresholds; no stress/fault run."}
+  ],
+  "gates":{"T-RP-11":"PROPOSED; validation gate unmet","T-RP-13":"PROPOSED; validation gate unmet","PC11":"PROPOSED / NOT_RUN","PC10":"PROPOSED / NOT_RUN","candidate":"NOT_DEFINED"},
+  "release":"NOT_EVALUATED"
+}

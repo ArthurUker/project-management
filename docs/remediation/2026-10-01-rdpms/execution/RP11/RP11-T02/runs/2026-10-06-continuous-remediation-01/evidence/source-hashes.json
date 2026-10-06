@@ -1,0 +1,17 @@
+[
+  {
+    "path": "rdpms-system/frontend/src/offline/idb.ts",
+    "beforeSha256": "99ec682e4fa53cc07a03261ab5f8996cf6241762a057435b8eb615eb4483d56c",
+    "afterSha256": "f8681b2d3575ee120e10c031ec9b3f0db51c8d51df9a6705df3aea0fb7d9a033"
+  },
+  {
+    "path": "rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx",
+    "beforeSha256": "3eebd7639bfdfce16a6de851e62f5e08bbe63567c56918f5e91e8759bc2c4ad8",
+    "afterSha256": "30cefdbbf6ab03d4793dcfe094e4f2777e954bedf507c2b9de07521a0c6c6f7b"
+  },
+  {
+    "path": "rdpms-system/frontend/src/offline/engine.ts",
+    "beforeSha256": "527dd96096e56e0eed83337231fdce105ea701bd56761d82384661b591d1996f",
+    "afterSha256": "5da6b37b302f803ce749fd95878515bac284cd2317376992dcdbdd66c2c2a535"
+  }
+]

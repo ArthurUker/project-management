@@ -1,0 +1,251 @@
+{
+  "kind": "SIMULATED_CONTROL_ALL_SUBPROCESSES_STUBBED",
+  "mode": "suite-spawn-exception",
+  "realDatabaseOrServerAccess": false,
+  "runnerSha256": "718d760649934d3351c8e0071e12470cbba50f23861fefb45a94d83f818064ce",
+  "observedExitCode": 1,
+  "escapedException": null,
+  "expectedExitCode": "nonzero",
+  "exitNonzero": true,
+  "runResultsWritten": true,
+  "criticalFailures": [
+    "integration-suite raised FileNotFoundError",
+    "integration-suite did not succeed"
+  ],
+  "primaryExceptions": [
+    {
+      "label": "integration-suite",
+      "command": [
+        "node",
+        "--test",
+        "tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+      ],
+      "exceptionType": "FileNotFoundError",
+      "message": "injected primary suite spawn failure",
+      "exitCode": null,
+      "exitSemantics": "command could not be spawned",
+      "log": "integration-suite.log"
+    }
+  ],
+  "exitReason": "critical failures: integration-suite raised FileNotFoundError; integration-suite did not succeed",
+  "cleanup": {
+    "guardDropExit": 0,
+    "clusterStopExit": 0,
+    "ownedDistRemoved": true,
+    "ownedTempRootRemoved": true,
+    "ownershipVerification": {
+      "ownedDatabase": "rdpms_test_lr7_d4f9dda8d2",
+      "ownedPort": 58460,
+      "ownedTempRoot": "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/controls/_owned_tmp/rdpms-lr7-7ucu9oji",
+      "rootExistsAfterCleanup": false,
+      "postmasterPidExists": false,
+      "distExistsAfterCleanup": false,
+      "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+    }
+  },
+  "resultsPersistence": null,
+  "mainException": null,
+  "runnerCommands": [
+    {
+      "label": "initdb",
+      "command": [
+        "/opt/homebrew/bin/initdb",
+        "-D",
+        "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/controls/_owned_tmp/rdpms-lr7-7ucu9oji/pg",
+        "-U",
+        "rdpms_exec",
+        "--auth=trust"
+      ],
+      "exitCode": 0,
+      "log": "initdb.log"
+    },
+    {
+      "label": "cluster-start",
+      "command": [
+        "/opt/homebrew/bin/pg_ctl",
+        "-D",
+        "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/controls/_owned_tmp/rdpms-lr7-7ucu9oji/pg",
+        "-l",
+        "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/controls/_owned_tmp/rdpms-lr7-7ucu9oji/postgres.log",
+        "-o",
+        "-h 127.0.0.1 -p 58460 -k /Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/controls/_owned_tmp/rdpms-lr7-7ucu9oji/socket",
+        "-w",
+        "start"
+      ],
+      "exitCode": 0,
+      "log": "cluster-start.log"
+    },
+    {
+      "label": "guard-check",
+      "command": [
+        "node",
+        "scripts/test-db.mjs",
+        "check"
+      ],
+      "exitCode": 2,
+      "log": "guard-check.log"
+    },
+    {
+      "label": "guard-reset",
+      "command": [
+        "node",
+        "scripts/test-db.mjs",
+        "reset"
+      ],
+      "exitCode": 0,
+      "log": "guard-reset.log"
+    },
+    {
+      "label": "backend-build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "log": "backend-build.log"
+    },
+    {
+      "label": "integration-suite",
+      "command": [
+        "node",
+        "--test",
+        "tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+      ],
+      "exceptionType": "FileNotFoundError",
+      "message": "injected primary suite spawn failure",
+      "exitCode": null,
+      "exitSemantics": "command could not be spawned",
+      "log": "integration-suite.log"
+    },
+    {
+      "label": "backend-typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "log": "backend-typecheck.log"
+    },
+    {
+      "label": "undefined-check",
+      "command": [
+        "npm",
+        "run",
+        "lint:undefined"
+      ],
+      "exitCode": 0,
+      "log": "undefined-check.log"
+    },
+    {
+      "label": "git-diff-check",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "log": "git-diff-check.log"
+    },
+    {
+      "label": "guard-drop",
+      "command": [
+        "node",
+        "scripts/test-db.mjs",
+        "drop"
+      ],
+      "exitCode": 0,
+      "log": "guard-drop.log"
+    },
+    {
+      "label": "cluster-stop",
+      "command": [
+        "/opt/homebrew/bin/pg_ctl",
+        "-D",
+        "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/controls/_owned_tmp/rdpms-lr7-7ucu9oji/pg",
+        "-m",
+        "fast",
+        "-w",
+        "stop"
+      ],
+      "exitCode": 0,
+      "log": "cluster-stop.log"
+    }
+  ],
+  "commandsInvoked": [
+    [
+      "/opt/homebrew/bin/initdb",
+      "-D",
+      "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/controls/_owned_tmp/rdpms-lr7-7ucu9oji/pg",
+      "-U",
+      "rdpms_exec",
+      "--auth=trust"
+    ],
+    [
+      "/opt/homebrew/bin/pg_ctl",
+      "-D",
+      "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/controls/_owned_tmp/rdpms-lr7-7ucu9oji/pg",
+      "-l",
+      "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/controls/_owned_tmp/rdpms-lr7-7ucu9oji/postgres.log",
+      "-o",
+      "-h 127.0.0.1 -p 58460 -k /Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/controls/_owned_tmp/rdpms-lr7-7ucu9oji/socket",
+      "-w",
+      "start"
+    ],
+    [
+      "node",
+      "scripts/test-db.mjs",
+      "check"
+    ],
+    [
+      "node",
+      "scripts/test-db.mjs",
+      "reset"
+    ],
+    [
+      "npm",
+      "run",
+      "build"
+    ],
+    [
+      "node",
+      "--test",
+      "tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+    ],
+    [
+      "npm",
+      "run",
+      "typecheck"
+    ],
+    [
+      "npm",
+      "run",
+      "lint:undefined"
+    ],
+    [
+      "git",
+      "diff",
+      "--check"
+    ],
+    [
+      "node",
+      "scripts/test-db.mjs",
+      "drop"
+    ],
+    [
+      "/opt/homebrew/bin/pg_ctl",
+      "-D",
+      "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/controls/_owned_tmp/rdpms-lr7-7ucu9oji/pg",
+      "-m",
+      "fast",
+      "-w",
+      "stop"
+    ]
+  ],
+  "ownedTempRootsPreservedByRunner": [],
+  "fallbackLogWritten": false,
+  "distExistsAfter": false,
+  "ownedTempRootsReleasedAfterControl": [],
+  "ownedTempRootsRemaining": []
+}

@@ -1,0 +1,80 @@
+{
+  "validatedAt": "2026-10-01",
+  "type": "PLAN_DOCUMENT_INTEGRITY_ONLY",
+  "overall": "PASS",
+  "checks": [
+    {
+      "check": "20 package IDs",
+      "result": "PASS",
+      "detail": "20"
+    },
+    {
+      "check": "33 exact finding/candidate IDs",
+      "result": "PASS",
+      "detail": "33 IDs, one primary per record"
+    },
+    {
+      "check": "Unique primary package assignments",
+      "result": "PASS",
+      "detail": "No supporting-package double count"
+    },
+    {
+      "check": "31 exact open item IDs",
+      "result": "PASS",
+      "detail": "All retained OPEN"
+    },
+    {
+      "check": "Gate package refs",
+      "result": "PASS",
+      "detail": "All affected packages exist"
+    },
+    {
+      "check": "Plan-only execution state",
+      "result": "PASS",
+      "detail": "20 NOT_STARTED / NOT_RUN, no active executor"
+    },
+    {
+      "check": "Dependency graph acyclic",
+      "result": "PASS",
+      "detail": "acyclic"
+    },
+    {
+      "check": "97 planned acceptance cases",
+      "result": "PASS",
+      "detail": "97 NOT_RUN; no test execution"
+    },
+    {
+      "check": "Acceptance covers 33 records",
+      "result": "PASS",
+      "detail": "Every primary finding/candidate covered"
+    },
+    {
+      "check": "Frozen planning input hashes",
+      "result": "PASS",
+      "detail": "17 inputs; mismatches=[]"
+    },
+    {
+      "check": "Historical manifest unchanged",
+      "result": "PASS",
+      "detail": "11/11 match; bad=[]"
+    },
+    {
+      "check": "No business source changes",
+      "result": "PASS",
+      "detail": "clean"
+    },
+    {
+      "check": "Existing file scopes exist",
+      "result": "PASS",
+      "detail": "all existing scopes found"
+    },
+    {
+      "check": "Readme links resolve",
+      "result": "PASS",
+      "detail": "all resolve"
+    }
+  ],
+  "runtimeTests": "NOT_RUN",
+  "implementation": "NOT_STARTED",
+  "note": "This verifies plan coverage, references and frozen inputs only; it is not defect reproduction or repair acceptance."
+}

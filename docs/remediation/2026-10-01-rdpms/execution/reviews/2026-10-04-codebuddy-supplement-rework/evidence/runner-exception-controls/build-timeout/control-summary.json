@@ -1,0 +1,79 @@
+{
+  "kind": "SIMULATED_CONTROL_ALL_SUBPROCESSES_STUBBED",
+  "mode": "build-timeout",
+  "realDatabaseOrServerAccess": false,
+  "actualDatabaseTestAcceptance": "NOT_EVALUATED",
+  "observedExitCode": 0,
+  "escapedException": null,
+  "expectedExitCode": "nonzero",
+  "runResultsWritten": true,
+  "criticalFailures": [],
+  "exitReason": "no critical failures",
+  "cleanup": {
+    "guardDropExit": 0,
+    "clusterStopExit": 0,
+    "ownedDistRemoved": true,
+    "ownedTempRootRemoved": true,
+    "ownershipVerification": {
+      "ownedDatabase": "rdpms_test_rework_5031b43214",
+      "ownedPort": 55304,
+      "ownedTempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-zk65puut",
+      "rootExistsAfterCleanup": false,
+      "postmasterPidExists": false,
+      "distExistsAfterCleanup": false,
+      "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+    }
+  },
+  "commandsInvoked": [
+    [
+      "/opt/homebrew/bin/initdb",
+      "-D",
+      "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-zk65puut/pg",
+      "-U",
+      "rdpms_exec",
+      "--auth=trust"
+    ],
+    [
+      "/opt/homebrew/bin/pg_ctl",
+      "-D",
+      "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-zk65puut/pg",
+      "-l",
+      "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-zk65puut/postgres.log",
+      "-o",
+      "-h 127.0.0.1 -p 55304 -k /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-zk65puut/socket",
+      "-w",
+      "start"
+    ],
+    [
+      "node",
+      "scripts/test-db.mjs",
+      "check"
+    ],
+    [
+      "node",
+      "scripts/test-db.mjs",
+      "reset"
+    ],
+    [
+      "npm",
+      "run",
+      "build"
+    ],
+    [
+      "node",
+      "scripts/test-db.mjs",
+      "drop"
+    ],
+    [
+      "/opt/homebrew/bin/pg_ctl",
+      "-D",
+      "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-zk65puut/pg",
+      "-m",
+      "fast",
+      "-w",
+      "stop"
+    ]
+  ],
+  "ownedTempRootsRemaining": [],
+  "distExistsAfter": false
+}

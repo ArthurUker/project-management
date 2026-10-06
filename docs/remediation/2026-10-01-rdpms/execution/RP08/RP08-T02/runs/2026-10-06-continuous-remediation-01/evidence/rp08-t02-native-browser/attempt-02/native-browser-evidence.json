@@ -1,0 +1,1295 @@
+{
+  "layer": "REAL_CHROME_NATIVE_JWT_BACKEND_POSTGRES_INDEXEDDB_V1_RECEIPTS",
+  "cases": [
+    {
+      "name": "NATIVE_LEGAL_NONEMPTY",
+      "result": "PASS"
+    },
+    {
+      "name": "NATIVE_RESERVE_RESPONSE_LOSS",
+      "result": "PASS"
+    },
+    {
+      "name": "NATIVE_COMMITTED_RESPONSE_LOSS",
+      "result": "PASS"
+    },
+    {
+      "name": "NATIVE_PARTIAL_500_THREE_COMMANDS",
+      "result": "PASS"
+    },
+    {
+      "name": "NATIVE_UNKNOWN_EXPLICIT_SAME_BINDING_QUERY",
+      "result": "PASS"
+    },
+    {
+      "name": "NATIVE_A_RESERVE_B_LOGIN_FENCE",
+      "result": "PASS"
+    }
+  ],
+  "trace": [
+    {
+      "path": "/api/auth/login",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "path": "/api/projects",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/projects",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/receipts/reserve",
+      "status": 200,
+      "keys": [
+        "86f320ce-b52d-47d2-b7cc-6701d604305d"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/push",
+      "status": 200,
+      "keys": [
+        "86f320ce-b52d-47d2-b7cc-6701d604305d"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/receipts/reserve",
+      "status": 200,
+      "keys": [
+        "e12c6047-b9c0-47ac-8ecf-20661acb7292"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/receipts/reserve",
+      "status": 200,
+      "keys": [
+        "e12c6047-b9c0-47ac-8ecf-20661acb7292"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/push",
+      "status": 200,
+      "keys": [
+        "e12c6047-b9c0-47ac-8ecf-20661acb7292"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/receipts/reserve",
+      "status": 200,
+      "keys": [
+        "44f11bfe-52f6-4216-ad76-53e9e24a8659"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/push",
+      "status": 200,
+      "keys": [
+        "44f11bfe-52f6-4216-ad76-53e9e24a8659"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/receipts/query",
+      "status": 200,
+      "keys": [
+        "44f11bfe-52f6-4216-ad76-53e9e24a8659"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/receipts/reserve",
+      "status": 200,
+      "keys": [
+        "c17e6647-4c37-4e8c-97f9-3743039fa168"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/receipts/reserve",
+      "status": 200,
+      "keys": [
+        "8162e2a6-1713-4eda-a410-a1a1a72d8fda"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/receipts/reserve",
+      "status": 200,
+      "keys": [
+        "b76b3ff8-148a-4110-8761-f58f3c0fcf67"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/push",
+      "status": 500,
+      "keys": [
+        "c17e6647-4c37-4e8c-97f9-3743039fa168",
+        "8162e2a6-1713-4eda-a410-a1a1a72d8fda",
+        "b76b3ff8-148a-4110-8761-f58f3c0fcf67"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/receipts/query",
+      "status": 200,
+      "keys": [
+        "c17e6647-4c37-4e8c-97f9-3743039fa168"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/receipts/query",
+      "status": 200,
+      "keys": [
+        "8162e2a6-1713-4eda-a410-a1a1a72d8fda"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/receipts/query",
+      "status": 200,
+      "keys": [
+        "b76b3ff8-148a-4110-8761-f58f3c0fcf67"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/receipts/query",
+      "status": 200,
+      "keys": [
+        "8162e2a6-1713-4eda-a410-a1a1a72d8fda"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/receipts/query",
+      "status": 200,
+      "keys": [
+        "b76b3ff8-148a-4110-8761-f58f3c0fcf67"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/push",
+      "status": 200,
+      "keys": [
+        "8162e2a6-1713-4eda-a410-a1a1a72d8fda",
+        "b76b3ff8-148a-4110-8761-f58f3c0fcf67"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/receipts/reserve",
+      "status": 200,
+      "keys": [
+        "5952761f-f449-437f-9baf-64804ba1b0c7"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/push",
+      "status": 200,
+      "keys": [
+        "5952761f-f449-437f-9baf-64804ba1b0c7"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/receipts/query",
+      "status": 200,
+      "keys": [
+        "5952761f-f449-437f-9baf-64804ba1b0c7"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/receipts/query",
+      "status": 200,
+      "keys": [
+        "5952761f-f449-437f-9baf-64804ba1b0c7"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/receipts/reserve",
+      "status": 200,
+      "keys": [
+        "298f1d87-8042-4ea5-bbe3-aed672e08787"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/auth/login",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "path": "/api/projects",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/projects",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/login",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "path": "/api/projects",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/projects",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/receipts/reserve",
+      "status": 200,
+      "keys": [
+        "298f1d87-8042-4ea5-bbe3-aed672e08787"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/sync/push",
+      "status": 200,
+      "keys": [
+        "298f1d87-8042-4ea5-bbe3-aed672e08787"
+      ],
+      "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287"
+    },
+    {
+      "path": "/api/auth/login",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "path": "/api/projects",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/projects",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 403
+    }
+  ],
+  "cleanup": {
+    "chromeExit": {
+      "code": 0,
+      "signal": null
+    },
+    "ownedProfileRemoved": true,
+    "serverClosed": true
+  },
+  "limits": [
+    "Candidate local fixtures only; no deployed client/target/release acceptance",
+    "Test app wrapper controls responses and transaction faults; current production routes/commands/auth/permissions/IDB unchanged"
+  ],
+  "sourceBindings": [
+    {
+      "path": "rdpms-system/frontend/src/offline/idb.ts",
+      "sha256": "bb0b319f8207bed3f1d8cb5f702bbc14458579ba7dedcae053edf33bf216a56a"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/engine.ts",
+      "sha256": "9c18e46559dd51f756c4f0010bebf902e495fcf34ac085f0bca1cf2a58c1be8c"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/deadLetter.ts",
+      "sha256": "4877eed9ec1726fe68cf8b6dd99b953e39d0f5fc2d5964bbde312e0619b75bdf"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/SyncProvider.tsx",
+      "sha256": "32da897ff24846012a01b77ced8ecb42b866601cbf80d5cd2349d7fb0865f6e8"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/RecoveryPanel.tsx",
+      "sha256": "6abc0db06e02cd0d24bac194b62bad5d63d4a5d2fa6f641c52fab7f6f20b203a"
+    }
+  ],
+  "persistentState": {
+    "tasks": [
+      {
+        "id": "a860614d-3120-4a02-aa3e-69c11d91a3e1",
+        "projectId": "3d46e7e3-b904-4a73-9aab-ea92d150ce03",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "after-86f320ce-b52d-47d2-b7cc-6701d604305d",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:03:37.631Z",
+        "updatedAt": "2026-10-06T02:03:37.668Z",
+        "createdById": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "updatedById": "e2bfa870-9baa-434d-8063-2e7f039437b1"
+      },
+      {
+        "id": "3ecb0da3-a41a-4709-8d19-d44dd43c1948",
+        "projectId": "1019bbab-5ee2-40a2-a1bc-a3cfe8bcb198",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "after-e12c6047-b9c0-47ac-8ecf-20661acb7292",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:03:37.677Z",
+        "updatedAt": "2026-10-06T02:03:37.731Z",
+        "createdById": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "updatedById": "e2bfa870-9baa-434d-8063-2e7f039437b1"
+      },
+      {
+        "id": "2884497f-26b3-45a1-bbe6-ba52d78ff88f",
+        "projectId": "9a941bf6-0fa0-440e-9d61-48f16d23a7d7",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "after-44f11bfe-52f6-4216-ad76-53e9e24a8659",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:03:37.737Z",
+        "updatedAt": "2026-10-06T02:03:37.765Z",
+        "createdById": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "updatedById": "e2bfa870-9baa-434d-8063-2e7f039437b1"
+      },
+      {
+        "id": "65047160-7f91-4975-8ca1-db3cd1d31216",
+        "projectId": "21912cdb-db86-43dc-af34-d56ab6478f82",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "after-c17e6647-4c37-4e8c-97f9-3743039fa168",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:03:37.777Z",
+        "updatedAt": "2026-10-06T02:03:37.827Z",
+        "createdById": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "updatedById": "e2bfa870-9baa-434d-8063-2e7f039437b1"
+      },
+      {
+        "id": "8b571343-6e2f-4d76-af0f-235317c1172e",
+        "projectId": "e642ff98-c602-4f3a-8372-fc9eff80a4ca",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "after-8162e2a6-1713-4eda-a410-a1a1a72d8fda",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:03:37.778Z",
+        "updatedAt": "2026-10-06T02:03:37.879Z",
+        "createdById": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "updatedById": "e2bfa870-9baa-434d-8063-2e7f039437b1"
+      },
+      {
+        "id": "e4962832-37f8-475e-8d43-36b0e9ef032a",
+        "projectId": "7783bc1c-ad95-4b87-8648-3ab045a43303",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "after-b76b3ff8-148a-4110-8761-f58f3c0fcf67",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:03:37.778Z",
+        "updatedAt": "2026-10-06T02:03:37.882Z",
+        "createdById": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "updatedById": "e2bfa870-9baa-434d-8063-2e7f039437b1"
+      },
+      {
+        "id": "8ccfbdd8-5df7-45fa-8d5c-cf119a353dcf",
+        "projectId": "fc2787db-b25b-4c64-acfe-64413eb7d6b7",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "after-5952761f-f449-437f-9baf-64804ba1b0c7",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:03:37.890Z",
+        "updatedAt": "2026-10-06T02:03:37.915Z",
+        "createdById": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "updatedById": "e2bfa870-9baa-434d-8063-2e7f039437b1"
+      },
+      {
+        "id": "115a438a-032e-47ee-a27e-43ec29638375",
+        "projectId": "a993589c-880a-4c6a-b3d7-aa7a7277bcc7",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "after-298f1d87-8042-4ea5-bbe3-aed672e08787",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:03:37.972Z",
+        "updatedAt": "2026-10-06T02:03:38.073Z",
+        "createdById": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "updatedById": "e2bfa870-9baa-434d-8063-2e7f039437b1"
+      },
+      {
+        "id": "c996de9d-b12a-463e-a91e-51f92e0804a2",
+        "projectId": "ff2ca746-ebf8-46e6-a413-c9bb9c8f8920",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "before",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:03:38.095Z",
+        "updatedAt": "2026-10-06T02:03:38.095Z",
+        "createdById": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "updatedById": null
+      }
+    ],
+    "receipts": [
+      {
+        "id": "1505f193-7b8b-4b78-8824-94c13556e5bb",
+        "clientMutationId": "86f320ce-b52d-47d2-b7cc-6701d604305d",
+        "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287",
+        "userId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "entity": "tasks",
+        "entityId": "a860614d-3120-4a02-aa3e-69c11d91a3e1",
+        "op": "upsert",
+        "status": "applied",
+        "result": {
+          "response": {
+            "id": "a860614d-3120-4a02-aa3e-69c11d91a3e1",
+            "op": "upsert",
+            "action": "updated",
+            "entity": "tasks",
+            "status": "applied",
+            "payloadHash": "78dcb9ebd753f891b9a83334ec93f66fb5a1b5d3dd7d807b3ce93b554dfc262f",
+            "receiptHandle": "1505f193-7b8b-4b78-8824-94c13556e5bb",
+            "serverUpdatedAt": "2026-10-06T02:03:37.668Z",
+            "clientMutationId": "86f320ce-b52d-47d2-b7cc-6701d604305d"
+          },
+          "intendedAction": "updated",
+          "requiredPermissions": [
+            "tasks.update"
+          ],
+          "requiredCapabilities": [
+            "write"
+          ]
+        },
+        "receiptVersion": 1,
+        "resourceScope": "project:3d46e7e3-b904-4a73-9aab-ea92d150ce03",
+        "payloadHash": "78dcb9ebd753f891b9a83334ec93f66fb5a1b5d3dd7d807b3ce93b554dfc262f",
+        "expiresAt": "2026-10-07T02:03:37.661Z",
+        "createdAt": "2026-10-06T02:03:37.661Z"
+      },
+      {
+        "id": "afda23d6-459f-42eb-b98a-a428d44183ed",
+        "clientMutationId": "e12c6047-b9c0-47ac-8ecf-20661acb7292",
+        "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287",
+        "userId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "entity": "tasks",
+        "entityId": "3ecb0da3-a41a-4709-8d19-d44dd43c1948",
+        "op": "upsert",
+        "status": "applied",
+        "result": {
+          "response": {
+            "id": "3ecb0da3-a41a-4709-8d19-d44dd43c1948",
+            "op": "upsert",
+            "action": "updated",
+            "entity": "tasks",
+            "status": "applied",
+            "payloadHash": "3a8bf11bd1db8909b865d05efba33293ee616035f5628621099bbaad8c157f6e",
+            "receiptHandle": "afda23d6-459f-42eb-b98a-a428d44183ed",
+            "serverUpdatedAt": "2026-10-06T02:03:37.731Z",
+            "clientMutationId": "e12c6047-b9c0-47ac-8ecf-20661acb7292"
+          },
+          "intendedAction": "updated",
+          "requiredPermissions": [
+            "tasks.update"
+          ],
+          "requiredCapabilities": [
+            "write"
+          ]
+        },
+        "receiptVersion": 1,
+        "resourceScope": "project:1019bbab-5ee2-40a2-a1bc-a3cfe8bcb198",
+        "payloadHash": "3a8bf11bd1db8909b865d05efba33293ee616035f5628621099bbaad8c157f6e",
+        "expiresAt": "2026-10-07T02:03:37.704Z",
+        "createdAt": "2026-10-06T02:03:37.704Z"
+      },
+      {
+        "id": "b8b55f24-bca2-4963-8e47-fb61e7a7476d",
+        "clientMutationId": "44f11bfe-52f6-4216-ad76-53e9e24a8659",
+        "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287",
+        "userId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "entity": "tasks",
+        "entityId": "2884497f-26b3-45a1-bbe6-ba52d78ff88f",
+        "op": "upsert",
+        "status": "applied",
+        "result": {
+          "response": {
+            "id": "2884497f-26b3-45a1-bbe6-ba52d78ff88f",
+            "op": "upsert",
+            "action": "updated",
+            "entity": "tasks",
+            "status": "applied",
+            "payloadHash": "080806bf76f72c1a40520c713c583473653dbe1963acb734a3fb56cbee8895c7",
+            "receiptHandle": "b8b55f24-bca2-4963-8e47-fb61e7a7476d",
+            "serverUpdatedAt": "2026-10-06T02:03:37.765Z",
+            "clientMutationId": "44f11bfe-52f6-4216-ad76-53e9e24a8659"
+          },
+          "intendedAction": "updated",
+          "requiredPermissions": [
+            "tasks.update"
+          ],
+          "requiredCapabilities": [
+            "write"
+          ]
+        },
+        "receiptVersion": 1,
+        "resourceScope": "project:9a941bf6-0fa0-440e-9d61-48f16d23a7d7",
+        "payloadHash": "080806bf76f72c1a40520c713c583473653dbe1963acb734a3fb56cbee8895c7",
+        "expiresAt": "2026-10-07T02:03:37.758Z",
+        "createdAt": "2026-10-06T02:03:37.758Z"
+      },
+      {
+        "id": "52abf863-51db-479e-be18-7b4def34629b",
+        "clientMutationId": "c17e6647-4c37-4e8c-97f9-3743039fa168",
+        "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287",
+        "userId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "entity": "tasks",
+        "entityId": "65047160-7f91-4975-8ca1-db3cd1d31216",
+        "op": "upsert",
+        "status": "applied",
+        "result": {
+          "response": {
+            "id": "65047160-7f91-4975-8ca1-db3cd1d31216",
+            "op": "upsert",
+            "action": "updated",
+            "entity": "tasks",
+            "status": "applied",
+            "payloadHash": "77e6e9b5097b8552ef7459554f1dbed628854f343a972b1d621a5879c8ac265f",
+            "receiptHandle": "52abf863-51db-479e-be18-7b4def34629b",
+            "serverUpdatedAt": "2026-10-06T02:03:37.827Z",
+            "clientMutationId": "c17e6647-4c37-4e8c-97f9-3743039fa168"
+          },
+          "intendedAction": "updated",
+          "requiredPermissions": [
+            "tasks.update"
+          ],
+          "requiredCapabilities": [
+            "write"
+          ]
+        },
+        "receiptVersion": 1,
+        "resourceScope": "project:21912cdb-db86-43dc-af34-d56ab6478f82",
+        "payloadHash": "77e6e9b5097b8552ef7459554f1dbed628854f343a972b1d621a5879c8ac265f",
+        "expiresAt": "2026-10-07T02:03:37.807Z",
+        "createdAt": "2026-10-06T02:03:37.807Z"
+      },
+      {
+        "id": "b71642e1-0271-41d6-9724-9b7ea533b563",
+        "clientMutationId": "8162e2a6-1713-4eda-a410-a1a1a72d8fda",
+        "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287",
+        "userId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "entity": "tasks",
+        "entityId": "8b571343-6e2f-4d76-af0f-235317c1172e",
+        "op": "upsert",
+        "status": "applied",
+        "result": {
+          "response": {
+            "id": "8b571343-6e2f-4d76-af0f-235317c1172e",
+            "op": "upsert",
+            "action": "updated",
+            "entity": "tasks",
+            "status": "applied",
+            "payloadHash": "3c9520d636d701fe6866a367280f9b64a92f26de574dceb8822db2ceb82bdf1d",
+            "receiptHandle": "b71642e1-0271-41d6-9724-9b7ea533b563",
+            "serverUpdatedAt": "2026-10-06T02:03:37.879Z",
+            "clientMutationId": "8162e2a6-1713-4eda-a410-a1a1a72d8fda"
+          },
+          "intendedAction": "updated",
+          "requiredPermissions": [
+            "tasks.update"
+          ],
+          "requiredCapabilities": [
+            "write"
+          ]
+        },
+        "receiptVersion": 1,
+        "resourceScope": "project:e642ff98-c602-4f3a-8372-fc9eff80a4ca",
+        "payloadHash": "3c9520d636d701fe6866a367280f9b64a92f26de574dceb8822db2ceb82bdf1d",
+        "expiresAt": "2026-10-07T02:03:37.813Z",
+        "createdAt": "2026-10-06T02:03:37.813Z"
+      },
+      {
+        "id": "99e5edd6-186a-4f96-9b64-899f00d5f876",
+        "clientMutationId": "b76b3ff8-148a-4110-8761-f58f3c0fcf67",
+        "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287",
+        "userId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "entity": "tasks",
+        "entityId": "e4962832-37f8-475e-8d43-36b0e9ef032a",
+        "op": "upsert",
+        "status": "applied",
+        "result": {
+          "response": {
+            "id": "e4962832-37f8-475e-8d43-36b0e9ef032a",
+            "op": "upsert",
+            "action": "updated",
+            "entity": "tasks",
+            "status": "applied",
+            "payloadHash": "771803beaa04786fb41cc82d8dfd8edc118d9061a5d80ef1e12e4d6b08af2537",
+            "receiptHandle": "99e5edd6-186a-4f96-9b64-899f00d5f876",
+            "serverUpdatedAt": "2026-10-06T02:03:37.882Z",
+            "clientMutationId": "b76b3ff8-148a-4110-8761-f58f3c0fcf67"
+          },
+          "intendedAction": "updated",
+          "requiredPermissions": [
+            "tasks.update"
+          ],
+          "requiredCapabilities": [
+            "write"
+          ]
+        },
+        "receiptVersion": 1,
+        "resourceScope": "project:7783bc1c-ad95-4b87-8648-3ab045a43303",
+        "payloadHash": "771803beaa04786fb41cc82d8dfd8edc118d9061a5d80ef1e12e4d6b08af2537",
+        "expiresAt": "2026-10-07T02:03:37.820Z",
+        "createdAt": "2026-10-06T02:03:37.820Z"
+      },
+      {
+        "id": "be18fcfb-bbd6-4bd6-99dc-81a0f786eb4a",
+        "clientMutationId": "5952761f-f449-437f-9baf-64804ba1b0c7",
+        "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287",
+        "userId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "entity": "tasks",
+        "entityId": "8ccfbdd8-5df7-45fa-8d5c-cf119a353dcf",
+        "op": "upsert",
+        "status": "applied",
+        "result": {
+          "response": {
+            "id": "8ccfbdd8-5df7-45fa-8d5c-cf119a353dcf",
+            "op": "upsert",
+            "action": "updated",
+            "entity": "tasks",
+            "status": "applied",
+            "payloadHash": "e5b32c85297127123923672943c02c95f13f01f51dab1879bf0f15c8fdb2a2bb",
+            "receiptHandle": "be18fcfb-bbd6-4bd6-99dc-81a0f786eb4a",
+            "serverUpdatedAt": "2026-10-06T02:03:37.915Z",
+            "clientMutationId": "5952761f-f449-437f-9baf-64804ba1b0c7"
+          },
+          "intendedAction": "updated",
+          "requiredPermissions": [
+            "tasks.update"
+          ],
+          "requiredCapabilities": [
+            "write"
+          ]
+        },
+        "receiptVersion": 1,
+        "resourceScope": "project:fc2787db-b25b-4c64-acfe-64413eb7d6b7",
+        "payloadHash": "e5b32c85297127123923672943c02c95f13f01f51dab1879bf0f15c8fdb2a2bb",
+        "expiresAt": "2026-10-07T02:03:37.909Z",
+        "createdAt": "2026-10-06T02:03:37.909Z"
+      },
+      {
+        "id": "065836ee-fc5e-4b05-b4a7-136a1771cf53",
+        "clientMutationId": "298f1d87-8042-4ea5-bbe3-aed672e08787",
+        "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287",
+        "userId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "entity": "tasks",
+        "entityId": "115a438a-032e-47ee-a27e-43ec29638375",
+        "op": "upsert",
+        "status": "applied",
+        "result": {
+          "response": {
+            "id": "115a438a-032e-47ee-a27e-43ec29638375",
+            "op": "upsert",
+            "action": "updated",
+            "entity": "tasks",
+            "status": "applied",
+            "payloadHash": "0779f719c36f3459803177bbb9f4d7e55fcefdb6f3967bb089dc39e91333a843",
+            "receiptHandle": "065836ee-fc5e-4b05-b4a7-136a1771cf53",
+            "serverUpdatedAt": "2026-10-06T02:03:38.073Z",
+            "clientMutationId": "298f1d87-8042-4ea5-bbe3-aed672e08787"
+          },
+          "intendedAction": "updated",
+          "requiredPermissions": [
+            "tasks.update"
+          ],
+          "requiredCapabilities": [
+            "write"
+          ]
+        },
+        "receiptVersion": 1,
+        "resourceScope": "project:a993589c-880a-4c6a-b3d7-aa7a7277bcc7",
+        "payloadHash": "0779f719c36f3459803177bbb9f4d7e55fcefdb6f3967bb089dc39e91333a843",
+        "expiresAt": "2026-10-07T02:03:37.992Z",
+        "createdAt": "2026-10-06T02:03:37.992Z"
+      }
+    ],
+    "audits": [
+      {
+        "id": "914cac61-b761-40c8-a4a9-41f97bfa00b1",
+        "actorId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "login",
+        "entityType": "USER",
+        "entityId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "entityLabel": "rp12-a-e831c7c9-fa8d-4d19-a219-75295097eca5",
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": null,
+        "ip": null,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "requestId": null,
+        "createdAt": "2026-10-06T02:03:37.600Z"
+      },
+      {
+        "id": "fbef86df-185b-403a-bbe4-4f29605113a0",
+        "actorId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "update",
+        "entityType": null,
+        "entityId": "a860614d-3120-4a02-aa3e-69c11d91a3e1",
+        "entityLabel": "sync:tasks",
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": {
+          "op": "upsert",
+          "action": "updated",
+          "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287",
+          "elevated": true,
+          "payloadHash": "78dcb9ebd753f891b9a83334ec93f66fb5a1b5d3dd7d807b3ce93b554dfc262f",
+          "resourceScope": "project:3d46e7e3-b904-4a73-9aab-ea92d150ce03",
+          "clientMutationId": "86f320ce-b52d-47d2-b7cc-6701d604305d"
+        },
+        "ip": null,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "requestId": null,
+        "createdAt": "2026-10-06T02:03:37.669Z"
+      },
+      {
+        "id": "eac2208e-5485-45b4-95ed-de4eb4f61757",
+        "actorId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "update",
+        "entityType": null,
+        "entityId": "3ecb0da3-a41a-4709-8d19-d44dd43c1948",
+        "entityLabel": "sync:tasks",
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": {
+          "op": "upsert",
+          "action": "updated",
+          "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287",
+          "elevated": true,
+          "payloadHash": "3a8bf11bd1db8909b865d05efba33293ee616035f5628621099bbaad8c157f6e",
+          "resourceScope": "project:1019bbab-5ee2-40a2-a1bc-a3cfe8bcb198",
+          "clientMutationId": "e12c6047-b9c0-47ac-8ecf-20661acb7292"
+        },
+        "ip": null,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "requestId": null,
+        "createdAt": "2026-10-06T02:03:37.732Z"
+      },
+      {
+        "id": "0abf3c1d-612b-49c1-bf80-9ca604ff10c7",
+        "actorId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "update",
+        "entityType": null,
+        "entityId": "2884497f-26b3-45a1-bbe6-ba52d78ff88f",
+        "entityLabel": "sync:tasks",
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": {
+          "op": "upsert",
+          "action": "updated",
+          "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287",
+          "elevated": true,
+          "payloadHash": "080806bf76f72c1a40520c713c583473653dbe1963acb734a3fb56cbee8895c7",
+          "resourceScope": "project:9a941bf6-0fa0-440e-9d61-48f16d23a7d7",
+          "clientMutationId": "44f11bfe-52f6-4216-ad76-53e9e24a8659"
+        },
+        "ip": null,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "requestId": null,
+        "createdAt": "2026-10-06T02:03:37.766Z"
+      },
+      {
+        "id": "25c9b193-832d-4d80-8768-0dff1b6dddb0",
+        "actorId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "update",
+        "entityType": null,
+        "entityId": "65047160-7f91-4975-8ca1-db3cd1d31216",
+        "entityLabel": "sync:tasks",
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": {
+          "op": "upsert",
+          "action": "updated",
+          "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287",
+          "elevated": true,
+          "payloadHash": "77e6e9b5097b8552ef7459554f1dbed628854f343a972b1d621a5879c8ac265f",
+          "resourceScope": "project:21912cdb-db86-43dc-af34-d56ab6478f82",
+          "clientMutationId": "c17e6647-4c37-4e8c-97f9-3743039fa168"
+        },
+        "ip": null,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "requestId": null,
+        "createdAt": "2026-10-06T02:03:37.828Z"
+      },
+      {
+        "id": "a4f37603-80ef-4372-9173-5f75273f76d2",
+        "actorId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "update",
+        "entityType": null,
+        "entityId": "8b571343-6e2f-4d76-af0f-235317c1172e",
+        "entityLabel": "sync:tasks",
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": {
+          "op": "upsert",
+          "action": "updated",
+          "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287",
+          "elevated": true,
+          "payloadHash": "3c9520d636d701fe6866a367280f9b64a92f26de574dceb8822db2ceb82bdf1d",
+          "resourceScope": "project:e642ff98-c602-4f3a-8372-fc9eff80a4ca",
+          "clientMutationId": "8162e2a6-1713-4eda-a410-a1a1a72d8fda"
+        },
+        "ip": null,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "requestId": null,
+        "createdAt": "2026-10-06T02:03:37.880Z"
+      },
+      {
+        "id": "376f7be6-5409-42b0-bfb9-3d2b8a25dbd8",
+        "actorId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "update",
+        "entityType": null,
+        "entityId": "e4962832-37f8-475e-8d43-36b0e9ef032a",
+        "entityLabel": "sync:tasks",
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": {
+          "op": "upsert",
+          "action": "updated",
+          "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287",
+          "elevated": true,
+          "payloadHash": "771803beaa04786fb41cc82d8dfd8edc118d9061a5d80ef1e12e4d6b08af2537",
+          "resourceScope": "project:7783bc1c-ad95-4b87-8648-3ab045a43303",
+          "clientMutationId": "b76b3ff8-148a-4110-8761-f58f3c0fcf67"
+        },
+        "ip": null,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "requestId": null,
+        "createdAt": "2026-10-06T02:03:37.884Z"
+      },
+      {
+        "id": "86d0bbc4-6c9d-480d-a9e6-623788f8247b",
+        "actorId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "update",
+        "entityType": null,
+        "entityId": "8ccfbdd8-5df7-45fa-8d5c-cf119a353dcf",
+        "entityLabel": "sync:tasks",
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": {
+          "op": "upsert",
+          "action": "updated",
+          "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287",
+          "elevated": true,
+          "payloadHash": "e5b32c85297127123923672943c02c95f13f01f51dab1879bf0f15c8fdb2a2bb",
+          "resourceScope": "project:fc2787db-b25b-4c64-acfe-64413eb7d6b7",
+          "clientMutationId": "5952761f-f449-437f-9baf-64804ba1b0c7"
+        },
+        "ip": null,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "requestId": null,
+        "createdAt": "2026-10-06T02:03:37.916Z"
+      },
+      {
+        "id": "8e5fc875-8792-4aae-81a0-905944d07206",
+        "actorId": "83664640-375f-4d6c-a15f-f80d1424770a",
+        "actorName": "Synthetic B",
+        "actorRole": "SUPER_ADMIN",
+        "action": "login",
+        "entityType": "USER",
+        "entityId": "83664640-375f-4d6c-a15f-f80d1424770a",
+        "entityLabel": "rp12-b-b0100ca0-29e2-4754-bc47-cfa2c0e291c1",
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": null,
+        "ip": null,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "requestId": null,
+        "createdAt": "2026-10-06T02:03:38.002Z"
+      },
+      {
+        "id": "c8203d4c-b234-41f3-b3a5-e2331e26b044",
+        "actorId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "login",
+        "entityType": "USER",
+        "entityId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "entityLabel": "rp12-a-e831c7c9-fa8d-4d19-a219-75295097eca5",
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": null,
+        "ip": null,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "requestId": null,
+        "createdAt": "2026-10-06T02:03:38.027Z"
+      },
+      {
+        "id": "229609dc-7cce-411a-a876-869c80827069",
+        "actorId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "update",
+        "entityType": null,
+        "entityId": "115a438a-032e-47ee-a27e-43ec29638375",
+        "entityLabel": "sync:tasks",
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": {
+          "op": "upsert",
+          "action": "updated",
+          "deviceId": "eb013c13-fb88-4d51-a363-9e970ae8e287",
+          "elevated": true,
+          "payloadHash": "0779f719c36f3459803177bbb9f4d7e55fcefdb6f3967bb089dc39e91333a843",
+          "resourceScope": "project:a993589c-880a-4c6a-b3d7-aa7a7277bcc7",
+          "clientMutationId": "298f1d87-8042-4ea5-bbe3-aed672e08787"
+        },
+        "ip": null,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "requestId": null,
+        "createdAt": "2026-10-06T02:03:38.074Z"
+      },
+      {
+        "id": "05fe4042-594d-4370-a980-a364c8884286",
+        "actorId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "login",
+        "entityType": "USER",
+        "entityId": "e2bfa870-9baa-434d-8063-2e7f039437b1",
+        "entityLabel": "rp12-a-e831c7c9-fa8d-4d19-a219-75295097eca5",
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": null,
+        "ip": null,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "requestId": null,
+        "createdAt": "2026-10-06T02:03:38.084Z"
+      }
+    ]
+  }
+}

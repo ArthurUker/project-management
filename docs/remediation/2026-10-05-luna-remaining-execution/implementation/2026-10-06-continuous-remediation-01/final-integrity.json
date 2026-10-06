@@ -1,0 +1,31 @@
+{
+  "sessionId": "2026-10-06-continuous-remediation-01",
+  "payloadManifest": {
+    "pathBase": "REPOSITORY",
+    "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/payload-manifest.json",
+    "sha256": "77456d6557757ec9f2f85bc500fe0e8a9a4abea6f9e4d3e15ff5d0d58cf17e44"
+  },
+  "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "protectedFrozenFiles": 3283,
+  "protectedDrift": [],
+  "existingSourceDeltasAuthorized": 49,
+  "unownedChanges": [],
+  "release": "NOT_EVALUATED",
+  "programme": "NOT_CLOSED",
+  "metadataSourceProof": {
+    "pathBase": "REPOSITORY",
+    "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/final-source-and-freeze.json",
+    "sha256": "eb18bfe52b0b46e234016b78b8a06a7fdc76038eca875448f699b9b97ff04385"
+  },
+  "cleanupProof": {
+    "pathBase": "REPOSITORY",
+    "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/cleanup-final.json",
+    "sha256": "cb08b98c80121227bdaa781acecae333757345dea981f373bfb034f815bc04c5"
+  },
+  "finalReconciliation": {
+    "pathBase": "REPOSITORY",
+    "path": "docs/remediation/2026-10-01-rdpms/execution/RP19/RP19-T04/runs/2026-10-06-continuous-remediation-01/evidence/programme-reconciliation.json",
+    "sha256": "0057ee04cc0889dce4b29c563950b4c060d5349089be525bcae615f8b6a1ec3f"
+  },
+  "sealingRule": "Payload→integrity→appendhistory→postreadback→READY; no self/hashcycle"
+}

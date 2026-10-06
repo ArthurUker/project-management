@@ -1,0 +1,37 @@
+[
+  {
+    "path": "rdpms-system/frontend/src/offline/idb.ts",
+    "beforeSha256": "82898e79c5e89849ef8db288c3aa2157a8aee006e5a9916578ea667cca382020",
+    "afterSha256": "99ec682e4fa53cc07a03261ab5f8996cf6241762a057435b8eb615eb4483d56c"
+  },
+  {
+    "path": "rdpms-system/frontend/src/offline/engine.ts",
+    "beforeSha256": "83f86f613d23e657e6f0de95a149399cbd4d82abb15362337a234811203c7f11",
+    "afterSha256": "527dd96096e56e0eed83337231fdce105ea701bd56761d82384661b591d1996f"
+  },
+  {
+    "path": "rdpms-system/frontend/src/offline/SyncProvider.tsx",
+    "beforeSha256": "033343978f31167fd4ce275afadd070c33719dc4e87a54c6edcfb3399fb85cd7",
+    "afterSha256": "13a247f7d20882a2e81ed01cfe7f06da4b7c40dd2eb8657ed7320f722a81d4a8"
+  },
+  {
+    "path": "rdpms-system/frontend/src/pages/Tasks.tsx",
+    "beforeSha256": "227de13df99e848fb4ba99e01e1905c65d88423ddc0e56dbeca53392a5c6d22f",
+    "afterSha256": "598498505a02be301a06581ea36dd814855f5c99e182cc5f2736dc8cdb2cc6b0"
+  },
+  {
+    "path": "rdpms-system/frontend/src/offline/deadLetter.ts",
+    "beforeSha256": "41487936202ca2e2d1e26b013116d307a1b9bcdc177f5df5a3feeb7837f107a7",
+    "afterSha256": "41487936202ca2e2d1e26b013116d307a1b9bcdc177f5df5a3feeb7837f107a7"
+  },
+  {
+    "path": "rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx",
+    "beforeSha256": null,
+    "afterSha256": "3eebd7639bfdfce16a6de851e62f5e08bbe63567c56918f5e91e8759bc2c4ad8"
+  },
+  {
+    "path": "rdpms-system/frontend/src/offline/pendingDraft.ts",
+    "beforeSha256": "e4687e0397d0a6fa5c2410d759dc0f3840996b982db2b5f83eb9d4571785a49e",
+    "afterSha256": "0ccc3adcfc1fb352d438f9d77404ec2d03d82c2632d4e1cfb0129baf16cf8a92"
+  }
+]

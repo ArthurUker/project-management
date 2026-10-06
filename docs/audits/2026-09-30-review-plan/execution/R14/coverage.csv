@@ -1,0 +1,6 @@
+packet,file,symbol_or_route,question,review_status,evidence_ref,unreviewed_reason
+R14,CURRENT_FINDINGS.json,legacyFindings,All historical IDs mapped to owner packet current disposition,REVIEWED,R01-R13/findings.json,
+R14,FINAL_REVIEW.md,architecture/dataflow,Current architecture and key data flow synthesized,REVIEWED,R01-R13/review.md,
+R14,ARCHITECTURE_ROADMAP.md,phases 0-5,"Dependencies, risks, compatibility and exits",REVIEWED,R01-R13/review.md,
+R14,REMEDIATION_CARDS.md,C01-C08,"Scope, exclusions, invariants, acceptance and rollback",REVIEWED,R01-R13/findings.json,
+R14,R12-N01,paired backup recovery point,Whether runtime writes/external barriers make this a defect,PENDING,R12/findings.json#R12-N01,Requires operations evidence and isolated paired restore

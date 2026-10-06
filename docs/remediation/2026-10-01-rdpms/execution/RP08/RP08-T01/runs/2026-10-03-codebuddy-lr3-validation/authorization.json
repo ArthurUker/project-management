@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-03 (session 2)",
+  "executor": "CodeBuddy",
+  "taskId": "RP08-T01",
+  "run": "2026-10-03-codebuddy-lr3-validation",
+  "kind": "VALIDATION_ONLY",
+  "authorizationSource": "execution/authorization-2026-10-03b-codebuddy.json; user message 2026-10-03; execution/CODEBUDDY_NEXT_EXECUTOR_PROMPT_2026-10-03.md",
+  "baselineCommit": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "reviewFindings": ["LR3-02"],
+  "historicalFinding": "B04",
+  "allowedTestFiles": [
+    "rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs",
+    "rdpms-system/backend/tests/integration/rp08-*.integration.test.mjs"
+  ],
+  "allowedArtifacts": ["read-contract-matrix.csv", "read-contract-matrix.md (this run directory)"],
+  "businessCodeChanges": "none (sync.js, ordinary API routes and frontend are out of scope this round)",
+  "gateD-S01-05": "NOT_APPLICABLE (ordinary scope condition=false; no registration global exception)",
+  "outOfScope": ["RP08-T02 cache eviction, historical backfill, watermark/pagination production policy", "frontend IndexedDB policy", "T-RP-04 / T-RP-12 approvals"],
+  "prohibited": [
+    "modifying sync.js, ordinary API routes or frontend business code",
+    "commit/stage/push/merge/deploy",
+    "production or shared database, real accounts, real restore data",
+    "dependency install or upgrade",
+    "worktree reset/clean/stash",
+    "approving D-S01-05, T-RP-04 or T-RP-12"
+  ],
+  "runner": "execution/codebuddy-run-2026-10-03b/owned-suite-runner.py",
+  "cleanup": "guard drop -> cluster stop -> owned dist removal -> temp root removal (exit codes in evidence/attempt-XX/run-results.json)"
+}

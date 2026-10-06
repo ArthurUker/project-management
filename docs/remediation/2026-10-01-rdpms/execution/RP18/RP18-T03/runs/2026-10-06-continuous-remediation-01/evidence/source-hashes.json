@@ -1,0 +1,12 @@
+[
+  {
+    "path": "rdpms-system/backend/tests/integration/rp18-runtime-candidate.integration.test.mjs",
+    "beforeSha256": null,
+    "afterSha256": "37b5ee842adfb98e8952dfa04eb9880f8dae1594dfff5df603a8c4318974a6c5"
+  },
+  {
+    "path": "rdpms-system/backend/src/platform/config/configCli.ts",
+    "beforeSha256": "b6a3b27f445428d0e6e7c0087dd6c83cb58d152ca686195a032a073236d15835",
+    "afterSha256": "823435d8b33a2b39600bae4cb8432a387c6d200548bcac884ac98d30fed3c73e"
+  }
+]

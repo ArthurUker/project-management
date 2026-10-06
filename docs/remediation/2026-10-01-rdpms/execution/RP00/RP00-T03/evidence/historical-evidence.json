@@ -1,0 +1,13 @@
+{
+  "findingId": "B16_TASK_HTTP_IGNORES_BASELINE",
+  "severity": "P2",
+  "status": "SUPPORTED",
+  "source": "docs/audits/2026-09-29-rdpms/backend-results.json#B16_TASK_HTTP_IGNORES_BASELINE; docs/audits/2026-09-29-rdpms/verify-backend.mjs:259-263",
+  "observed": {
+    "status": 200,
+    "submittedBaseline": "2026-01-01T00:00:00.000Z",
+    "serverBaseline": "2026-09-29T06:51:04.888Z",
+    "staleOverwriteAccepted": true
+  },
+  "rerun": "No. Inherited evidence only."
+}

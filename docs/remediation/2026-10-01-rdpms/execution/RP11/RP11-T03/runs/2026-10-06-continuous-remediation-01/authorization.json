@@ -1,0 +1,14 @@
+{
+  "taskId": "RP11-T03",
+  "allowedFiles": [
+    "rdpms-system/frontend/src/offline/idb.ts",
+    "rdpms-system/frontend/src/offline/engine.ts",
+    "rdpms-system/frontend/src/offline/deadLetter.ts",
+    "rdpms-system/frontend/src/offline/SyncProvider.tsx",
+    "rdpms-system/frontend/src/offline/RecoveryPanel.tsx",
+    "rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx"
+  ],
+  "authority": "USER_DELEGATED_OPTION_SELECTION",
+  "sessionAuthorization": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/authorization.json",
+  "release": "NOT_EVALUATED"
+}

@@ -1,0 +1,77 @@
+{
+  "createdAt": "2026-10-05T22:51:20.320226+08:00",
+  "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "selectedRecommendation": {
+    "T-RP-02": {
+      "proposalId": "T-RP-02-SCOPED-RESERVATION-V1",
+      "basis": "C OPT-A additive SyncMutation, resolved scope/window plus reservation to meet missing-receipt-is-not-execution-permission rule",
+      "approvedScopeCandidate": [
+        "RP09-T01",
+        "RP09-T02"
+      ],
+      "rules": {
+        "R01_scope": "Keep existing globally unique clientMutationId. Reuse userId as actor; bind immutable actor/device/projectScope/entity/op/entityId/key/hash/version. No new actor column or unique-key removal. A device row owned by another actor cannot be used or relabelled; IDs are validated scalars, never sliced into key collisions.",
+        "R02_hash": "Server canonical JSON SHA256 v1 of validated semantic command {entity,id,op,projectId,data,baseUpdatedAt}; include submitted business intent before allowed-field filtering and exclude only transport label/platform, optional declared hash, handle. Sort own keys, preserve array order and JSON scalar types, safe own-property handling including __proto__; reject non-JSON/malformed types. Absent base represented by omission; null distinct. Do not invent historical hashes. Optional declared client hash must match, but server computation is mandatory even without it.",
+        "R03_reserve": "Before a truly fresh v1 command first attempt, POST /api/sync/receipts/reserve creates one bound status=pending SyncMutation with nullable result, version/hash/scope and expiresAt. Separate short transaction, no business mutation. Return receiptHandle=id and fixed hash/window. Existing same binding returns the same handle/state; different actor/device/scope gets generic unavailable, same actor/device/command differing payload gets 409. Never mutate ownership/result to satisfy collision. Handles are correlation IDs, not authorization capabilities.",
+        "R04_push": "v1 POST /api/sync/push supplies receiptHandle for each item. No valid bound reservation => unknown/UPGRADE_REQUIRED, no business write and no implicit reservation/re-key. Lock reservation, reauthorize current actor/resource/own-only/entity actions, apply CAS/shared tx commands, required strict audit and pending->applied receipt in one item transaction. Applied replay is read-only after current authorization. Stale or denied mutations write no business effects. Rejected/conflict are not success; identical retry may re-evaluate only with the same unexpired bound reservation, never overwrite an applied result. Changed payload requires explicit new-intent recovery, never silent conversion.",
+        "R05_concurrency": "Retain global unique key and use reservation row lock to serialize same-key writers. Winner atomic; loser reads committed state after transaction failure, never query from aborted PostgreSQL transaction. Different hash/scope is rejected; no nested root-client commit in task branch. Current ACL reads must be revalidated at write boundary; gate membership/permission changes with proven transaction ordering rather than trusting stale prefetch. Shared command acceptance remains preserved.",
+        "R06_lookup": "POST /api/sync/receipts/query, bounded list with full binding/hash/handle. Authenticate, validate owned device, scope and current resource authorization. Unknown/cross-actor/cross-device/currently denied indistinguishable generic unavailable with no body/timestamp from hidden row. Same authorized binding returns pending/applied/conflict/rejected; expired returns expired without replay body or execution. Lookup performs no reservation, audit business write or metadata overwrite.",
+        "R07_window": "24h from reservation creation, not from later retries and not extended on replay. This is attempted-command recovery window; never-sent offline editing has no queue age limit here. Expired applied remains recorded but is not re-executed. Expired pending requires explicit user/owner recovery, no auto renewed reservation or new key.",
+        "R08_retention": "No delete/GC of SyncMutation in this local scope, including expired records; preserve legacy rows and ownership. Lifetime is intentionally unbounded for this candidate; real retention/volume/backup/cleanup ownership and restore epochs still S03-OI-04/PC06 target release gates, not claimed approved or measured. No cascade/account purge execution in this task.",
+        "R09_failures": "Business/audit/receipt fault rolls back only that item to its prior receipt state; earlier committed items remain. Commit response loss preserves original key/hash/handle and queries/replays authorized applied. lastPushAt or telemetry fault after commit does not imply business rollback. Pending can safely retry only when bound reservation is present, unexpired and protected in current database; missing or legacy receipt alone never licenses execution.",
+        "R10_legacy": "Legacy rows with null v1 columns are UNVERIFIED_LEGACY and never retro-hashed or replayed as trusted v1. Old push without reservation is rejected without business effects in new local candidate, not silently routed to unsafe path. Do not automatically reserve pre-upgrade queues whose previous-send history is ambiguous. Frontend engine currently lacks reservation support; rollout and full IDB/UI integration remain blocked until separately approved/client matrix supplied. Backend validation uses owned explicit v1 clients only.",
+        "R11_schema": "Only additive nullable SyncMutation columns receiptVersion:Int?, resourceScope:VarChar(200)?, payloadHash:Char(64)?, expiresAt:Timestamptz(3)?. Existing user/device/key/status/result unchanged; new pending status is existing String type. Proposed migration 20261005_sync_receipt_v1_scope/migration.sql, no historical backfill/index removal/table drop. Future local owned migration only if this exact proposal is approved; no target/shared DDL authorization.",
+        "R12_rollback": "Retain columns/records. A safe rollback can stop candidate sync writes and allow validated authorized read/query plus preserve client copies. Never revert to global replay/separate receipt upsert. Existing old binary is NOT a validated rollback target. Do not delete columns or audit rows to undo local code.",
+        "R05b_current_auth": "Use caller transaction to resolve current User ACTIVE/system role, role bindings/grants, visible project, member/leftAt and own-only actions from authoritative DB; do not rely on request-start auth.permissions or root prisma for authorization-dependent checks. Use SERIALIZABLE item transaction and existing resource CAS, with bounded same-key/hash retry of serialization failure, never new key. Authorization revocation committed before transaction authorization snapshot must deny; overlapping operations follow proven serial ordering, not a promise that every revoke finishing before response retroactively cancels an already ordered command. No access TTL/security-version/family policy change. Validate controlled revoke-before-snapshot and overlap ordering cases."
+      },
+      "residualRisks": [
+        "Legacy business-committed/receipt-absent writes cannot be reconstructed from absence; ambiguous queues require classification before activation.",
+        "Server cannot independently prove a newly chosen key represents truly fresh intent; candidate requires compliant fresh-intent producer and no automatic re-key; full client controls still pending.",
+        "Receipt loss from restore/admin purge cannot be safely recovered by new reservation; PC06 reset/epoch contract and rollback target evidence still required.",
+        "24h expiration can require manual recovery despite retained last copy; queue is not automatically purged.",
+        "No GC bounds database growth; production retention/budget remains unmeasured.",
+        "Old frontend cannot use new protocol; local backend success does not prove deployable compatibility."
+      ],
+      "status": "PROPOSED",
+      "approvedBy": null,
+      "approvedRole": null,
+      "approvedAt": null,
+      "dynamicAcceptance": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "independentReview": "PENDING"
+    },
+    "T-RP-07": {
+      "proposalId": "T-RP-07-SYNC-DELETE-WINS-V1",
+      "approvedScopeCandidate": [
+        "RP09-T01 sync delete adapter only"
+      ],
+      "rules": {
+        "D01_policy": "Preserve current authorized delete-wins semantics: delete does not require client baseUpdatedAt or reject merely because stale. This expressly accepts that an authorized delayed delete can tombstone a newer edited row; do not label it strict revision protection.",
+        "D02_idempotence": "Use the same v1 bound receipt and item atomic transaction. Same key/hash replays original authorized outcome, no second update/audit. Different key on already tombstoned/left row is applied noop, stable tombstone timestamp; missing row is authorized-scope noop. Revalidate project/resource actions before every replay/noop. Noop is permitted only when existing entity guards can establish authorized scope; never relax report author/state constraints to make a missing-row fixture pass. Unprovable ownership/scope returns generic unknown/rejected, not trusted applied.",
+        "D03_race": "Conditional tombstone update only when tombstone/leftAt is null; concurrent repeated delete must not advance original timestamp. Include required per-command audit/receipt in transaction; tombstone update failure rolls all item effects back. Explicitly test restore-vs-delete ordering, while no restore route is newly implemented.",
+        "D04_exclusions": "Do not change task parent/dependency recursion, cross-project child protection, reference validation, physical deletion, aggregate restore, move-scope, HTTP deletes or RP05-T02/T03. No D-S01-08 DAG/aggregate approval inferred. If actual adapter/helper change would affect those rules, stop that sub-scope and request exact contract.",
+        "D05_gate": "This exact scoped decision is proposed evidence for T-RP-07 and S03-OI-05 only in RP09-T01. It does not mark either gate PASS before real fixture/DB validation or approve wider RP05 task."
+      },
+      "residualRisks": [
+        "Delete-wins intentionally permits stale authorized offline delete of a newer server row; strict revision delete is a separate future approved policy.",
+        "Membership role changes are not revisioned by joinedAt; this proposal does not claim that timestamp is a full entity revision.",
+        "Tombstone lifetime, restore/new authorization and offline purge not fully accepted under this scoped backend contract."
+      ],
+      "status": "PROPOSED",
+      "approvedBy": null,
+      "approvedRole": null,
+      "approvedAt": null,
+      "dynamicAcceptance": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "independentReview": "PENDING"
+    }
+  },
+  "activation": "Only after exact named approval; no approvals recorded by this preparation",
+  "excluded": [
+    "RP12 implementation",
+    "T-RP-03/04/10/12",
+    "D-S01-04/08",
+    "target migration/deploy/restore",
+    "all other remaining policies"
+  ]
+}

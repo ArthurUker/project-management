@@ -1,0 +1,57 @@
+{
+  "taskId": "RP18-T02",
+  "authority": "USER_DELEGATED_OPTION_SELECTION",
+  "contracts": {
+    "T-RP-13": {
+      "proposal": "LEASED_FINGERPRINT_CUTOVER_WITH_FIRSTSAFE_CONTAINMENT_V1",
+      "approvalMode": "USER_DELEGATED_OPTION_SELECTION",
+      "rules": "Kernel process lease serializes deploy/baseline/CAS/cleanup; no live lock stealing. Prepared candidate source/output/config/migration hash verified again; each migration exact compatibility entry and newapp post-DDL compatibility required, unknown denies before effects. Existing current baseline compared under lock, atomic sameFS temp pointer replace; build identity immutable health/ready/smoke. Mandatory stopWrites/pairedBackup before DDL; migration invoked means schemaMayHaveChanged even failure, never fakepreDDLrollback. Firstsafe no certified securityFloorSafe compatible old manifest => maintenance/stopWrites+stopService preserves candidate/current/schema/backups; never dangerous old release. Certified rollback requires exact artifact+allnewmigration backwardscompatible, restart/health matching that build; failedrollback staysmaintenance and nonzero. No migrate down/seed/destructive cleanup. Observe3 exact readiness/health plus1 smoke; latency/lag/queue/capacity operational budget and realtarget probes external; release input required before --apply. Local FS fixture hooks are SIMULATED_CONTROL not target production evidence. Preserve failure artifacts/releases; no cleanupautomatic. Secretfree phase metadata, all statesdurable and terminalfailure nonzero."
+    }
+  },
+  "dependenciesAndCases": {
+    "id": "RP18-T02",
+    "packageId": "RP18",
+    "title": "部署锁/原子切流/first-safe rollback",
+    "implementationDependencies": [
+      "RP18-T01"
+    ],
+    "gateRequirements": [
+      {
+        "ref": "T-RP-13",
+        "before": "IMPLEMENTATION",
+        "condition": "always"
+      },
+      {
+        "ref": "S05-OI-05",
+        "before": "RELEASE",
+        "condition": "always"
+      }
+    ],
+    "acceptanceDependencies": [],
+    "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+    "requiredForPackageCompletion": true,
+    "status": "NOT_STARTED",
+    "validation": "NOT_RUN",
+    "owner": null,
+    "deliverable": "design/implementation/evidence per approved scope",
+    "implementationStatus": "NOT_STARTED",
+    "validationStatus": "NOT_RUN",
+    "releaseStatus": "NOT_EVALUATED",
+    "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+    "acceptanceCaseIds": [
+      "AC-D02-01",
+      "AC-D02-02",
+      "PAC-RP18-03",
+      "PAC-RP18-04",
+      "PAC-RP18-05",
+      "TASK-RP18-T02",
+      "INT-PC10-01",
+      "GATE-S05-OI-05",
+      "DECISION-T-RP-13"
+    ],
+    "contractRefs": [
+      "PC10"
+    ]
+  },
+  "boundary": "RP18-T02 actual OS deployment lock/baseline compare/atomic symlink and explicit recorded phase effects. Candidate/config/output/migration bindings immutable; exact schema compatibility and approved safe rollback or default firstsafe stop/maintenance, no known-vulnerable old app. Hook/target release proof supplied operator; local tests synthetic service/DDL hooks transparently, no actual deployment/DDL/systemd/proxy. Start no src fallback, current manifest/compiled config exact, literal env exec shared schema."
+}

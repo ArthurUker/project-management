@@ -1,0 +1,87 @@
+{
+  "purpose": "Precise evidence binding for A's nine simulated control paths, transcribed from amendment-review-01/readback.json. Distinguishes controls records (controls/ summary+log+run-results matched by ownedTempRoot identity) from evidenceCopy run-results of DIFFERENT historical attempts. No rerun occurred this review or this integration.",
+  "evidenceLevel": "READBACK_OF_EXECUTOR_SIMULATED_EVIDENCE_NOT_RERUN",
+  "fullLR7RunnerIndependentAcceptance": "NOT_EVALUATED",
+  "dynamicRuns": 0,
+  "globalLimitations": [
+    "No full dynamic fault-control acceptance performed in this review or integration.",
+    "Evidence-copy and controls entries are distinct historical attempts; they are NOT the same execution result.",
+    "Matching is by recorded ownedTempRoot identity, NOT by mtime or highest attempt number."
+  ],
+  "paths": [
+    {
+      "mode": "normal", "executorObservedExitCode": 0, "expectedExitMatches": true,
+      "controlsSummary": { "path": "window-a-runner/controls/normal/control-summary.json", "sha256": "3059604f0b6244146b2b916e8e368aef8fa6b75dada46f27a546ea46d8260a9b" },
+      "controlsLog": { "path": "window-a-runner/controls/normal/control-output.log", "sha256": "35592b7ae6602c326ef32e565b92c42c2216846a9ccfad6a68c472bc65af87cb" },
+      "controlsRunResultsMatchedByOwnedResourceIdentity": { "path": "window-a-runner/controls/normal/attempt-17/run-results.json", "sha256": "f2737a157c23f8b60b3a882c52f7123c031f7a1a49efba2690110778de4984ed" },
+      "evidenceCopySameAttemptAsControlsSummary": false,
+      "evidenceCopyRunResultsMatchedByOwnedResourceIdentity": { "path": "window-a-runner/controls/normal/attempt-16/run-results.json", "sha256": "02e3a517b453f755703ce6201975a88cc208253608a71aedfe8599a19f36325e" }
+    },
+    {
+      "mode": "build-nonzero", "executorObservedExitCode": 1, "expectedExitMatches": true,
+      "controlsSummary": { "path": "window-a-runner/controls/build-nonzero/control-summary.json", "sha256": "6c71cd7d4af602831904cb925167b9da2d881ce33ea14a5b5a2d0a9b1d92aeec" },
+      "controlsLog": { "path": "window-a-runner/controls/build-nonzero/control-output.log", "sha256": "529d33f58fb54f5d9694c67d9e2935d2fee07cd073d212611007613b7fb6d328" },
+      "controlsRunResultsMatchedByOwnedResourceIdentity": { "path": "window-a-runner/controls/build-nonzero/attempt-08/run-results.json", "sha256": "79fd58b4b9faff3f2299723bec3173599d8db9d454a077e06ffd7cce86aa3047" },
+      "evidenceCopySameAttemptAsControlsSummary": false,
+      "evidenceCopyRunResultsMatchedByOwnedResourceIdentity": { "path": "window-a-runner/controls/build-nonzero/attempt-07/run-results.json", "sha256": "9517eb6451389a2dc93253b302857880e7778822ddee04bab650bd1d0876413c" }
+    },
+    {
+      "mode": "drop-exception", "executorObservedExitCode": 1, "expectedExitMatches": true,
+      "controlsSummary": { "path": "window-a-runner/controls/drop-exception/control-summary.json", "sha256": "799ea561121ab77f6d3bb779240d34b0f761960d98a80ae964cf4249b89a0d5e" },
+      "controlsLog": { "path": "window-a-runner/controls/drop-exception/control-output.log", "sha256": "494bca935a4e4f432fcfc92419d7dc6f897d9694112e26d5034d793dc3b4319a" },
+      "controlsRunResultsMatchedByOwnedResourceIdentity": { "path": "window-a-runner/controls/drop-exception/attempt-08/run-results.json", "sha256": "c8b9e077d96995dac15be9d3009f4af8b5fd187b822b85655f97f82501d0488a" },
+      "evidenceCopySameAttemptAsControlsSummary": false,
+      "evidenceCopyRunResultsMatchedByOwnedResourceIdentity": { "path": "window-a-runner/controls/drop-exception/attempt-07/run-results.json", "sha256": "894b456d002b412937c7bf89fcc7498e0d2bd3833ff20e4fb05f9fc57432b9c1" }
+    },
+    {
+      "mode": "stop-nonzero", "executorObservedExitCode": 1, "expectedExitMatches": true,
+      "controlsSummary": { "path": "window-a-runner/controls/stop-nonzero/control-summary.json", "sha256": "93fb7a2f5ee786e49df06788d63c7bfb3c9977670b826ef99fd61e0adabfd6f5" },
+      "controlsLog": { "path": "window-a-runner/controls/stop-nonzero/control-output.log", "sha256": "37c4f5dda8397ea0690c60e1fcc29b70ebb1cc5b8a517082efea38efdfa7225f" },
+      "controlsRunResultsMatchedByOwnedResourceIdentity": { "path": "window-a-runner/controls/stop-nonzero/attempt-08/run-results.json", "sha256": "8d2c1c655156f8c8ab97148d500d90fbba7c681d37f7bc3d70253748cd820bc6" },
+      "evidenceCopySameAttemptAsControlsSummary": false,
+      "evidenceCopyRunResultsMatchedByOwnedResourceIdentity": { "path": "window-a-runner/controls/stop-nonzero/attempt-07/run-results.json", "sha256": "83072682b26bcec5a575d479bb8bc524382f12506b42350f4b88118d86eaa519" }
+    },
+    {
+      "mode": "build-timeout", "executorObservedExitCode": 1, "expectedExitMatches": true,
+      "controlsSummary": { "path": "window-a-runner/controls/build-timeout/control-summary.json", "sha256": "8ca5f7237f7a11d14dfda990e737ea04a99de23c5d62f1ac5936086bde9065af" },
+      "controlsLog": { "path": "window-a-runner/controls/build-timeout/control-output.log", "sha256": "fe1b9e211562bebe725b0dd5394619c24ec29c8477d1950c70d52711564f2b9b" },
+      "controlsRunResultsMatchedByOwnedResourceIdentity": { "path": "window-a-runner/controls/build-timeout/attempt-08/run-results.json", "sha256": "da62f795e86f3659d4b79728e4b284f2b7b62d000dc1586a5c9a435d522fbe0c" },
+      "evidenceCopySameAttemptAsControlsSummary": false,
+      "evidenceCopyRunResultsMatchedByOwnedResourceIdentity": { "path": "window-a-runner/controls/build-timeout/attempt-07/run-results.json", "sha256": "e4c0c6e94e0c14450d5b4a59862596f0952585d9e3ca361c2bbd74df4758d961" }
+    },
+    {
+      "mode": "suite-spawn-exception", "executorObservedExitCode": 1, "expectedExitMatches": true,
+      "controlsSummary": { "path": "window-a-runner/controls/suite-spawn-exception/control-summary.json", "sha256": "d28d50bc0d78761bd3a7a796924f74257acbd9058d22d8e8b739196c80b0273b" },
+      "controlsLog": { "path": "window-a-runner/controls/suite-spawn-exception/control-output.log", "sha256": "9b0f2501258f343364bbb08233d2dbc19ebec1b247156600ae51c76cc755c112" },
+      "controlsRunResultsMatchedByOwnedResourceIdentity": { "path": "window-a-runner/controls/suite-spawn-exception/attempt-08/run-results.json", "sha256": "0bc4d6d8ef59fdcbf30ce682ad8d6ca51c1b17848169fb50f1c9a8a6a9fc6471" },
+      "evidenceCopySameAttemptAsControlsSummary": false,
+      "evidenceCopyRunResultsMatchedByOwnedResourceIdentity": { "path": "window-a-runner/controls/suite-spawn-exception/attempt-07/run-results.json", "sha256": "3601c640ad07f74c9425cab9ff38f8117d59f2d50f025035af78cc5528c3de0d" }
+    },
+    {
+      "mode": "result-write-oserror", "executorObservedExitCode": 1, "expectedExitMatches": true,
+      "controlsSummary": { "path": "window-a-runner/controls/result-write-oserror/control-summary.json", "sha256": "c89766cb1dd74e94608188d71bac810991e29742062a67def5e9013d92644bf3" },
+      "controlsLog": { "path": "window-a-runner/controls/result-write-oserror/control-output.log", "sha256": "7eba97bf095e782cfa9c2d9eb46b5b99fdd5d3ae8526cf34358d5ba176eda9b2" },
+      "controlsRunResultsMatchedByOwnedResourceIdentity": [],
+      "evidenceCopySameAttemptAsControlsSummary": false,
+      "evidenceCopyRunResultsMatchedByOwnedResourceIdentity": [],
+      "missingMainRunResultsNote": "Expected for injected result-write-oserror; no successful primary persistence claimed; bound control summary/log retain executor failure and fallback report. Not upgraded to dynamic acceptance."
+    },
+    {
+      "mode": "normal-log-ioerror", "executorObservedExitCode": 1, "expectedExitMatches": true,
+      "controlsSummary": { "path": "window-a-runner/controls/normal-log-ioerror/control-summary.json", "sha256": "542215530ceb916ea4dfbb6a383dfdc84969f63672e6f566af3cfc8a4e7ffef9" },
+      "controlsLog": { "path": "window-a-runner/controls/normal-log-ioerror/control-output.log", "sha256": "a560e9318c3b4eba3978adc790aa2ca63781e67fe00247a7efe228d091e6f08e" },
+      "controlsRunResultsMatchedByOwnedResourceIdentity": { "path": "window-a-runner/controls/normal-log-ioerror/attempt-08/run-results.json", "sha256": "726675c172c55de11aae7542eeb69be1f332312be7f838e4bbf8bfffeb588804" },
+      "evidenceCopySameAttemptAsControlsSummary": false,
+      "evidenceCopyRunResultsMatchedByOwnedResourceIdentity": { "path": "window-a-runner/controls/normal-log-ioerror/attempt-07/run-results.json", "sha256": "686262f9cc345bf2d2aabd91728978a224902e5898d0cf0732300cbd7091336f" }
+    },
+    {
+      "mode": "timeout-log-ioerror", "executorObservedExitCode": 1, "expectedExitMatches": true,
+      "controlsSummary": { "path": "window-a-runner/controls/timeout-log-ioerror/control-summary.json", "sha256": "487eda89db024b21a3a5c9c08d36b1eb594b6660f132fe99ff906c4447d4c43b" },
+      "controlsLog": { "path": "window-a-runner/controls/timeout-log-ioerror/control-output.log", "sha256": "01026d374221ce8fde34afc224478d9d8d128f7ce24d2023620495dcf0daf1d1" },
+      "controlsRunResultsMatchedByOwnedResourceIdentity": { "path": "window-a-runner/controls/timeout-log-ioerror/attempt-08/run-results.json", "sha256": "a92580f869dfaf52b19008d35ac5ad258965dc92c422c28f22d3fa8cd1be2ce8" },
+      "evidenceCopySameAttemptAsControlsSummary": false,
+      "evidenceCopyRunResultsMatchedByOwnedResourceIdentity": { "path": "window-a-runner/controls/timeout-log-ioerror/attempt-07/run-results.json", "sha256": "9b3a920fa841e183f8999766d725a083223d49bf9c3f1de56e84e5ce170b6ddc" }
+    }
+  ],
+  "summary": "9/9 paths: normal exit 0; 8 failure paths each hit their specific injected fault (predetermined controls). All controls summaries/logs and run-results matched by ownedTempRoot identity. Evidence-copy files belong to distinct historical attempts and are NOT substituted for controls results. result-write-oserror correctly reports no primary run-results. Reused executor simulated evidence only; full dynamic acceptance NOT_EVALUATED."
+}

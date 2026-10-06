@@ -1,0 +1,6 @@
+command,scope,atomicity,applicable_gate,outside_scope
+reserve,actor/device/project/entity/op/id/key/hash/v1,receipt-only short tx; no business write,T-RP-02,frontend auto-upgrade/legacy resend
+upsert,same immutable binding plus current permission,one item tx includes CAS/business/strict audit/applied receipt,T-RP-02,strict-client-revision and seed/new policies
+delete,same binding/current delete permission; delete-wins/noop,one item tx; tombstone only once,T-RP-02+T-RP-07+S03-OI-05,DAG/recursive delete/restore/HTTP policy
+query/replay,current auth and exact binding,read-only; applied no extra business audit,T-RP-02,cross actor/device/expired body disclosure
+retention,all receipts incl expired/null legacy,no GC local; expiry is protocol state only,T-RP-02; S03-OI-04 before RELEASE,production GC cadence/data deletion

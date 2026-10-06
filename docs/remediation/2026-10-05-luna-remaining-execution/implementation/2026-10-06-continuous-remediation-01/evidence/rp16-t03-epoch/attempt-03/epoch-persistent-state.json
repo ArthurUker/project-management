@@ -1,0 +1,2607 @@
+{
+  "trace": [
+    {
+      "method": "GET",
+      "endpoint": "/auth/me",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/backup/restore",
+      "status": 200,
+      "body": {
+        "success": true,
+        "summary": {
+          "runId": "f41514a2-5059-4726-9266-f596d97b74e5",
+          "mode": "merge",
+          "tables": [
+            {
+              "key": "roles",
+              "planned": 1,
+              "totalBefore": 6,
+              "inserted": 1,
+              "created": 1,
+              "updated": 0,
+              "deleted": 0,
+              "unchanged": 0
+            }
+          ],
+          "created": 1,
+          "inserted": 1,
+          "updated": 0,
+          "deleted": 0,
+          "unchanged": 0,
+          "durationMs": 6,
+          "scope": {
+            "kind": "APPLICATION_MODULE_JSON",
+            "binaryFilesIncluded": false,
+            "supportedKeys": [
+              "users",
+              "roles",
+              "permissions",
+              "docCategories",
+              "taskTemplates",
+              "taskTemplateSteps",
+              "reagentMaterials",
+              "reagentLots",
+              "reagentFormulas",
+              "formulaComponents",
+              "prepRecords",
+              "projectTemplates",
+              "projects",
+              "projectMembers",
+              "tasks",
+              "taskDependencies",
+              "milestones",
+              "phaseTransitions",
+              "reports",
+              "reportVersions",
+              "monthlyProgress",
+              "docDocuments",
+              "docVersions",
+              "primers",
+              "sampleMaterials",
+              "rolePermissions",
+              "systemLogs"
+            ],
+            "unsupportedModels": [
+              "syncDevice",
+              "syncMutation",
+              "refreshToken",
+              "userRole",
+              "templateRole",
+              "templatePhase",
+              "templateTask",
+              "projectPhase",
+              "taskDocRef",
+              "regulatoryDocument",
+              "taskRegulatoryDocument",
+              "registrationProfile",
+              "detectionTarget",
+              "fileObject",
+              "attachment",
+              "auditLog",
+              "enumMeta",
+              "codeSequence",
+              "systemSetting",
+              "mutationReceipt",
+              "dataRecoveryState"
+            ],
+            "note": "Module JSON is not a complete database or file backup; external targets are only resolved against current DB state."
+          },
+          "datasetEpoch": "4fac55c0-d386-46a7-a4cd-237e4de486e4",
+          "ignoredSecurityFields": [],
+          "securityEffects": {
+            "updatedUsers": 3,
+            "revokedRefreshTokens": 1,
+            "initiatingVersion": 1,
+            "note": "Security housekeeping is separate from module input row changes"
+          },
+          "reconciled": true,
+          "status": "READY",
+          "binaryFilesVerified": false
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/auth/me",
+      "status": 401,
+      "code": "DATASET_EPOCH_CHANGED"
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/refresh",
+      "status": 401,
+      "code": "INVALID_REFRESH_TOKEN"
+    },
+    {
+      "method": "GET",
+      "endpoint": "/auth/me",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/refresh",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/backup/restore",
+      "status": 200,
+      "body": {
+        "success": true,
+        "summary": {
+          "runId": "a104bfd9-2965-4993-a20e-22ed846eec57",
+          "mode": "merge",
+          "tables": [
+            {
+              "key": "users",
+              "planned": 2,
+              "totalBefore": 5,
+              "inserted": 0,
+              "created": 0,
+              "updated": 2,
+              "deleted": 0,
+              "unchanged": 0
+            }
+          ],
+          "created": 0,
+          "inserted": 0,
+          "updated": 2,
+          "deleted": 0,
+          "unchanged": 0,
+          "durationMs": 6,
+          "scope": {
+            "kind": "APPLICATION_MODULE_JSON",
+            "binaryFilesIncluded": false,
+            "supportedKeys": [
+              "users",
+              "roles",
+              "permissions",
+              "docCategories",
+              "taskTemplates",
+              "taskTemplateSteps",
+              "reagentMaterials",
+              "reagentLots",
+              "reagentFormulas",
+              "formulaComponents",
+              "prepRecords",
+              "projectTemplates",
+              "projects",
+              "projectMembers",
+              "tasks",
+              "taskDependencies",
+              "milestones",
+              "phaseTransitions",
+              "reports",
+              "reportVersions",
+              "monthlyProgress",
+              "docDocuments",
+              "docVersions",
+              "primers",
+              "sampleMaterials",
+              "rolePermissions",
+              "systemLogs"
+            ],
+            "unsupportedModels": [
+              "syncDevice",
+              "syncMutation",
+              "refreshToken",
+              "userRole",
+              "templateRole",
+              "templatePhase",
+              "templateTask",
+              "projectPhase",
+              "taskDocRef",
+              "regulatoryDocument",
+              "taskRegulatoryDocument",
+              "registrationProfile",
+              "detectionTarget",
+              "fileObject",
+              "attachment",
+              "auditLog",
+              "enumMeta",
+              "codeSequence",
+              "systemSetting",
+              "mutationReceipt",
+              "dataRecoveryState"
+            ],
+            "note": "Module JSON is not a complete database or file backup; external targets are only resolved against current DB state."
+          },
+          "datasetEpoch": "bd137490-0d1a-45a3-89c2-c9d5d619cae1",
+          "ignoredSecurityFields": [
+            {
+              "userId": "79fc3fe9-9298-419d-8de2-2be27b605671",
+              "field": "username"
+            },
+            {
+              "userId": "79fc3fe9-9298-419d-8de2-2be27b605671",
+              "field": "passwordHash"
+            },
+            {
+              "userId": "79fc3fe9-9298-419d-8de2-2be27b605671",
+              "field": "mustChangePassword"
+            },
+            {
+              "userId": "79fc3fe9-9298-419d-8de2-2be27b605671",
+              "field": "systemRole"
+            },
+            {
+              "userId": "79fc3fe9-9298-419d-8de2-2be27b605671",
+              "field": "securityVersion"
+            },
+            {
+              "userId": "79fc3fe9-9298-419d-8de2-2be27b605671",
+              "field": "failedLoginAttempts"
+            },
+            {
+              "userId": "b37f40b1-f831-4bc4-9518-da37e14f8089",
+              "field": "username"
+            },
+            {
+              "userId": "b37f40b1-f831-4bc4-9518-da37e14f8089",
+              "field": "passwordHash"
+            },
+            {
+              "userId": "b37f40b1-f831-4bc4-9518-da37e14f8089",
+              "field": "systemRole"
+            },
+            {
+              "userId": "b37f40b1-f831-4bc4-9518-da37e14f8089",
+              "field": "status"
+            },
+            {
+              "userId": "b37f40b1-f831-4bc4-9518-da37e14f8089",
+              "field": "deletedAt"
+            },
+            {
+              "userId": "b37f40b1-f831-4bc4-9518-da37e14f8089",
+              "field": "securityVersion"
+            },
+            {
+              "userId": "b37f40b1-f831-4bc4-9518-da37e14f8089",
+              "field": "failedLoginAttempts"
+            }
+          ],
+          "securityEffects": {
+            "updatedUsers": 5,
+            "revokedRefreshTokens": 1,
+            "initiatingVersion": 2,
+            "note": "Security housekeeping is separate from module input row changes"
+          },
+          "reconciled": true,
+          "status": "READY",
+          "binaryFilesVerified": false
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/backup/restore",
+      "status": 200,
+      "body": {
+        "success": true,
+        "summary": {
+          "runId": "70eff1cd-28b2-4a57-8212-2cd563e56261",
+          "mode": "merge",
+          "tables": [
+            {
+              "key": "users",
+              "planned": 1,
+              "totalBefore": 5,
+              "inserted": 1,
+              "created": 1,
+              "updated": 0,
+              "deleted": 0,
+              "unchanged": 0
+            }
+          ],
+          "created": 1,
+          "inserted": 1,
+          "updated": 0,
+          "deleted": 0,
+          "unchanged": 0,
+          "durationMs": 62,
+          "scope": {
+            "kind": "APPLICATION_MODULE_JSON",
+            "binaryFilesIncluded": false,
+            "supportedKeys": [
+              "users",
+              "roles",
+              "permissions",
+              "docCategories",
+              "taskTemplates",
+              "taskTemplateSteps",
+              "reagentMaterials",
+              "reagentLots",
+              "reagentFormulas",
+              "formulaComponents",
+              "prepRecords",
+              "projectTemplates",
+              "projects",
+              "projectMembers",
+              "tasks",
+              "taskDependencies",
+              "milestones",
+              "phaseTransitions",
+              "reports",
+              "reportVersions",
+              "monthlyProgress",
+              "docDocuments",
+              "docVersions",
+              "primers",
+              "sampleMaterials",
+              "rolePermissions",
+              "systemLogs"
+            ],
+            "unsupportedModels": [
+              "syncDevice",
+              "syncMutation",
+              "refreshToken",
+              "userRole",
+              "templateRole",
+              "templatePhase",
+              "templateTask",
+              "projectPhase",
+              "taskDocRef",
+              "regulatoryDocument",
+              "taskRegulatoryDocument",
+              "registrationProfile",
+              "detectionTarget",
+              "fileObject",
+              "attachment",
+              "auditLog",
+              "enumMeta",
+              "codeSequence",
+              "systemSetting",
+              "mutationReceipt",
+              "dataRecoveryState"
+            ],
+            "note": "Module JSON is not a complete database or file backup; external targets are only resolved against current DB state."
+          },
+          "datasetEpoch": "45944ed8-7a74-4dbb-8f42-c767ff4139c8",
+          "ignoredSecurityFields": [
+            {
+              "userId": "2c8b56c0-6097-4eb7-9bd1-9796310c0054",
+              "field": "IMPORTED_AUTHENTICATION_DISABLED"
+            }
+          ],
+          "securityEffects": {
+            "updatedUsers": 6,
+            "revokedRefreshTokens": 1,
+            "initiatingVersion": 3,
+            "note": "Security housekeeping is separate from module input row changes"
+          },
+          "reconciled": true,
+          "status": "READY",
+          "binaryFilesVerified": false
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/reports",
+      "status": 201,
+      "body": {
+        "id": "0cbd95ce-9c30-481f-93f3-e1bc24a20f94",
+        "projectId": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+        "authorId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+        "reviewerId": null,
+        "reportType": "DAILY",
+        "periodKey": "2026-10-06",
+        "periodStart": null,
+        "periodEnd": null,
+        "content": {
+          "text": "Owned receipt epoch"
+        },
+        "status": "DRAFT",
+        "currentVersion": 1,
+        "submittedAt": null,
+        "reviewedAt": null,
+        "reviewNote": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T03:32:03.006Z",
+        "updatedAt": "2026-10-06T03:32:03.006Z",
+        "createdById": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+        "updatedById": null,
+        "author": {
+          "id": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+          "displayName": "Owned epoch admin"
+        },
+        "project": {
+          "id": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+          "name": "Owned epoch project"
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/reports",
+      "status": 201,
+      "body": {
+        "id": "0cbd95ce-9c30-481f-93f3-e1bc24a20f94",
+        "author": {
+          "id": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+          "displayName": "Owned epoch admin"
+        },
+        "status": "DRAFT",
+        "content": {
+          "text": "Owned receipt epoch"
+        },
+        "project": {
+          "id": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+          "name": "Owned epoch project"
+        },
+        "authorId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+        "createdAt": "2026-10-06T03:32:03.006Z",
+        "deletedAt": null,
+        "periodEnd": null,
+        "periodKey": "2026-10-06",
+        "projectId": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+        "updatedAt": "2026-10-06T03:32:03.006Z",
+        "reportType": "DAILY",
+        "reviewNote": null,
+        "reviewedAt": null,
+        "reviewerId": null,
+        "createdById": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+        "periodStart": null,
+        "submittedAt": null,
+        "updatedById": null,
+        "currentVersion": 1
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/backup/restore",
+      "status": 200,
+      "body": {
+        "success": true,
+        "summary": {
+          "runId": "817e64dd-9bd3-4b84-9c88-5d070a82ef01",
+          "mode": "merge",
+          "tables": [
+            {
+              "key": "roles",
+              "planned": 0,
+              "totalBefore": 7,
+              "inserted": 0,
+              "created": 0,
+              "updated": 0,
+              "deleted": 0,
+              "unchanged": 0
+            }
+          ],
+          "created": 0,
+          "inserted": 0,
+          "updated": 0,
+          "deleted": 0,
+          "unchanged": 0,
+          "durationMs": 2,
+          "scope": {
+            "kind": "APPLICATION_MODULE_JSON",
+            "binaryFilesIncluded": false,
+            "supportedKeys": [
+              "users",
+              "roles",
+              "permissions",
+              "docCategories",
+              "taskTemplates",
+              "taskTemplateSteps",
+              "reagentMaterials",
+              "reagentLots",
+              "reagentFormulas",
+              "formulaComponents",
+              "prepRecords",
+              "projectTemplates",
+              "projects",
+              "projectMembers",
+              "tasks",
+              "taskDependencies",
+              "milestones",
+              "phaseTransitions",
+              "reports",
+              "reportVersions",
+              "monthlyProgress",
+              "docDocuments",
+              "docVersions",
+              "primers",
+              "sampleMaterials",
+              "rolePermissions",
+              "systemLogs"
+            ],
+            "unsupportedModels": [
+              "syncDevice",
+              "syncMutation",
+              "refreshToken",
+              "userRole",
+              "templateRole",
+              "templatePhase",
+              "templateTask",
+              "projectPhase",
+              "taskDocRef",
+              "regulatoryDocument",
+              "taskRegulatoryDocument",
+              "registrationProfile",
+              "detectionTarget",
+              "fileObject",
+              "attachment",
+              "auditLog",
+              "enumMeta",
+              "codeSequence",
+              "systemSetting",
+              "mutationReceipt",
+              "dataRecoveryState"
+            ],
+            "note": "Module JSON is not a complete database or file backup; external targets are only resolved against current DB state."
+          },
+          "datasetEpoch": "f219e6c9-1b50-4dac-94cd-f5b978d68cc4",
+          "ignoredSecurityFields": [],
+          "securityEffects": {
+            "updatedUsers": 6,
+            "revokedRefreshTokens": 1,
+            "initiatingVersion": 4,
+            "note": "Security housekeeping is separate from module input row changes"
+          },
+          "reconciled": true,
+          "status": "READY",
+          "binaryFilesVerified": false
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/reports",
+      "status": 409,
+      "code": "DATASET_EPOCH_CHANGED",
+      "body": {
+        "error": "Old dataset receipt retained; no replay or implicit new key",
+        "code": "DATASET_EPOCH_CHANGED"
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/sync/receipts/reserve",
+      "status": 200,
+      "body": {
+        "protocolVersion": 1,
+        "results": [
+          {
+            "clientMutationId": "b0b0caf7-bbd3-4c5e-9d86-b861e58b4505",
+            "entity": "tasks",
+            "id": "64d55764-ae41-4cc1-b87c-c4a96069c2fa",
+            "op": "upsert",
+            "status": "pending",
+            "receiptHandle": "c218a3fc-7183-455c-a594-6b8d95df1531",
+            "payloadHash": "935c4be9e4b3bb5252529f85607a870155b89df01111d28e84f6f228e567a75e",
+            "expiresAt": "2026-10-07T03:32:03.051Z"
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/sync/push",
+      "status": 200,
+      "body": {
+        "protocolVersion": 1,
+        "serverTime": "2026-10-06T03:32:03.063Z",
+        "results": [
+          {
+            "clientMutationId": "b0b0caf7-bbd3-4c5e-9d86-b861e58b4505",
+            "entity": "tasks",
+            "id": "64d55764-ae41-4cc1-b87c-c4a96069c2fa",
+            "op": "upsert",
+            "status": "applied",
+            "action": "updated",
+            "serverUpdatedAt": "2026-10-06T03:32:03.061Z",
+            "receiptHandle": "c218a3fc-7183-455c-a594-6b8d95df1531",
+            "payloadHash": "935c4be9e4b3bb5252529f85607a870155b89df01111d28e84f6f228e567a75e"
+          }
+        ],
+        "conflictCount": 0
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/sync/receipts/reserve",
+      "status": 200,
+      "body": {
+        "protocolVersion": 1,
+        "results": [
+          {
+            "clientMutationId": "5226f5cc-a006-41b5-abe1-b9c58d43e3fc",
+            "entity": "tasks",
+            "id": "64d55764-ae41-4cc1-b87c-c4a96069c2fa",
+            "op": "upsert",
+            "status": "pending",
+            "receiptHandle": "ed10f581-fecd-4759-a2bc-8e2f35347ca0",
+            "payloadHash": "9324abaabf7ebddc1bae59fcd05d5b12ff70a6976ac3bf6052d8090aa91ffe52",
+            "expiresAt": "2026-10-07T03:32:03.072Z"
+          }
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/backup/restore",
+      "status": 200,
+      "body": {
+        "success": true,
+        "summary": {
+          "runId": "149e43d5-7c9e-4b83-91bc-cb19b1bcee94",
+          "mode": "merge",
+          "tables": [
+            {
+              "key": "roles",
+              "planned": 0,
+              "totalBefore": 7,
+              "inserted": 0,
+              "created": 0,
+              "updated": 0,
+              "deleted": 0,
+              "unchanged": 0
+            }
+          ],
+          "created": 0,
+          "inserted": 0,
+          "updated": 0,
+          "deleted": 0,
+          "unchanged": 0,
+          "durationMs": 2,
+          "scope": {
+            "kind": "APPLICATION_MODULE_JSON",
+            "binaryFilesIncluded": false,
+            "supportedKeys": [
+              "users",
+              "roles",
+              "permissions",
+              "docCategories",
+              "taskTemplates",
+              "taskTemplateSteps",
+              "reagentMaterials",
+              "reagentLots",
+              "reagentFormulas",
+              "formulaComponents",
+              "prepRecords",
+              "projectTemplates",
+              "projects",
+              "projectMembers",
+              "tasks",
+              "taskDependencies",
+              "milestones",
+              "phaseTransitions",
+              "reports",
+              "reportVersions",
+              "monthlyProgress",
+              "docDocuments",
+              "docVersions",
+              "primers",
+              "sampleMaterials",
+              "rolePermissions",
+              "systemLogs"
+            ],
+            "unsupportedModels": [
+              "syncDevice",
+              "syncMutation",
+              "refreshToken",
+              "userRole",
+              "templateRole",
+              "templatePhase",
+              "templateTask",
+              "projectPhase",
+              "taskDocRef",
+              "regulatoryDocument",
+              "taskRegulatoryDocument",
+              "registrationProfile",
+              "detectionTarget",
+              "fileObject",
+              "attachment",
+              "auditLog",
+              "enumMeta",
+              "codeSequence",
+              "systemSetting",
+              "mutationReceipt",
+              "dataRecoveryState"
+            ],
+            "note": "Module JSON is not a complete database or file backup; external targets are only resolved against current DB state."
+          },
+          "datasetEpoch": "4f8b24b7-3bdb-443a-ae77-8bb833286904",
+          "ignoredSecurityFields": [],
+          "securityEffects": {
+            "updatedUsers": 6,
+            "revokedRefreshTokens": 1,
+            "initiatingVersion": 5,
+            "note": "Security housekeeping is separate from module input row changes"
+          },
+          "reconciled": true,
+          "status": "READY",
+          "binaryFilesVerified": false
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/sync/receipts/query",
+      "status": 409,
+      "code": "DATASET_EPOCH_CHANGED",
+      "body": {
+        "error": "Old device/binding retained; cannot replay in new dataset",
+        "code": "DATASET_EPOCH_CHANGED"
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/sync/receipts/reserve",
+      "status": 409,
+      "code": "DATASET_EPOCH_CHANGED",
+      "body": {
+        "error": "Old device/binding retained; cannot replay in new dataset",
+        "code": "DATASET_EPOCH_CHANGED"
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/sync/push",
+      "status": 409,
+      "body": {
+        "protocolVersion": 1,
+        "serverTime": "2026-10-06T03:32:03.111Z",
+        "results": [
+          {
+            "clientMutationId": "b0b0caf7-bbd3-4c5e-9d86-b861e58b4505",
+            "entity": "tasks",
+            "id": "64d55764-ae41-4cc1-b87c-c4a96069c2fa",
+            "op": "upsert",
+            "status": "rejected",
+            "code": "DATASET_EPOCH_CHANGED",
+            "httpStatus": 409
+          }
+        ],
+        "conflictCount": 0
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/sync/init?deviceId=7bf18fd2-fdca-4ef2-b841-d97001a4eec7&limit=1&paginationVersion=1",
+      "status": 200,
+      "body": {
+        "datasetEpoch": "4f8b24b7-3bdb-443a-ae77-8bb833286904",
+        "serverTime": "2026-10-06T03:32:03.120Z",
+        "cursor": "2026-10-06T03:32:03.120Z",
+        "full": true,
+        "pagination": {
+          "hasMore": false,
+          "nextPageToken": null
+        },
+        "acl": {
+          "datasetEpoch": "4f8b24b7-3bdb-443a-ae77-8bb833286904",
+          "projectIds": [
+            "6d426b13-cb20-4cee-bbd0-519d2b0421f9"
+          ],
+          "projects": [
+            {
+              "id": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+              "managerId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+              "role": "OWNER",
+              "joinedAt": "2026-10-06T03:32:02.724Z",
+              "capabilities": [
+                "read",
+                "write",
+                "delete",
+                "transition",
+                "assign",
+                "manage_members"
+              ]
+            }
+          ],
+          "permissions": [
+            "users.view",
+            "users.create",
+            "users.update",
+            "users.enable",
+            "users.disable",
+            "users.reset_password",
+            "users.delete",
+            "roles.view",
+            "roles.create",
+            "roles.update",
+            "roles.delete",
+            "roles.assign_permissions",
+            "roles.assign_user",
+            "projects.view",
+            "projects.create",
+            "projects.update",
+            "projects.archive",
+            "projects.manage_members",
+            "project_phases.view",
+            "project_phases.create",
+            "project_phases.update",
+            "project_phases.change_status",
+            "tasks.view",
+            "tasks.create",
+            "tasks.update",
+            "tasks.change_status",
+            "tasks.assign",
+            "milestones.view",
+            "milestones.create",
+            "milestones.update",
+            "reports.view",
+            "reports.create",
+            "reports.update",
+            "reports.submit",
+            "reports.review",
+            "reports.export",
+            "progress.view",
+            "progress.create",
+            "progress.update",
+            "docs.view",
+            "docs.create",
+            "docs.update",
+            "docs.review",
+            "docs.categories.manage",
+            "regulatory_documents.view",
+            "regulatory_documents.create",
+            "regulatory_documents.update",
+            "regulatory_documents.delete",
+            "registrations.view",
+            "registrations.create",
+            "registrations.update",
+            "registrations.change_stage",
+            "registrations.export",
+            "project_templates.view",
+            "project_templates.create",
+            "project_templates.update",
+            "project_templates.delete",
+            "task_templates.view",
+            "task_templates.create",
+            "task_templates.update",
+            "task_templates.delete",
+            "primers.view",
+            "primers.create",
+            "primers.update",
+            "primers.export",
+            "samples.view",
+            "samples.create",
+            "samples.update",
+            "reagent_materials.view",
+            "reagent_materials.create",
+            "reagent_materials.update",
+            "reagents.view",
+            "reagents.create",
+            "reagents.update",
+            "reagents.export",
+            "formulas.view",
+            "formulas.create",
+            "formulas.update",
+            "prep_records.view",
+            "prep_records.create",
+            "files.upload",
+            "files.download",
+            "files.delete",
+            "audit.view",
+            "audit.export",
+            "settings.view",
+            "settings.update",
+            "dashboard.view",
+            "data.export",
+            "system.logs.view",
+            "projects.delete",
+            "tasks.delete",
+            "milestones.delete",
+            "reports.delete",
+            "docs.delete",
+            "project_templates.copy",
+            "primers.import",
+            "primers.delete",
+            "reagent_materials.delete"
+          ],
+          "aclVersion": "c022720f4a1fba170ab9a729a339679613457847e9fe819aa6734256b7699778",
+          "projectionVersion": 1,
+          "writePolicy": {
+            "projects": {
+              "read": "projects.view",
+              "update": "projects.update",
+              "create": null,
+              "delete": "projects.delete",
+              "status": "projects.change_status",
+              "assign": null,
+              "capability": "write"
+            },
+            "projectPhases": {
+              "read": "project_phases.view",
+              "update": "project_phases.update",
+              "create": "project_phases.create",
+              "delete": "project_phases.delete",
+              "status": "project_phases.change_status",
+              "assign": null,
+              "capability": "write"
+            },
+            "tasks": {
+              "read": "tasks.view",
+              "update": "tasks.update",
+              "create": "tasks.create",
+              "delete": "tasks.delete",
+              "status": "tasks.change_status",
+              "assign": "tasks.assign",
+              "capability": "write"
+            },
+            "milestones": {
+              "read": "milestones.view",
+              "update": "milestones.update",
+              "create": "milestones.create",
+              "delete": "milestones.delete",
+              "status": null,
+              "assign": null,
+              "capability": "write"
+            },
+            "monthlyProgress": {
+              "read": "progress.view",
+              "update": "progress.update",
+              "create": "progress.create",
+              "delete": "progress.delete",
+              "status": null,
+              "assign": null,
+              "capability": "manage_members"
+            },
+            "reports": {
+              "read": "reports.view",
+              "update": "reports.update",
+              "create": "reports.create",
+              "delete": "reports.delete",
+              "status": null,
+              "assign": null,
+              "capability": "write"
+            },
+            "projectMembers": {
+              "read": "projects.view",
+              "update": "projects.manage_members",
+              "create": null,
+              "delete": "projects.manage_members",
+              "status": null,
+              "assign": null,
+              "capability": "manage_members"
+            }
+          }
+        },
+        "entities": [
+          "projects",
+          "projectPhases",
+          "tasks",
+          "milestones",
+          "monthlyProgress",
+          "reports",
+          "projectMembers"
+        ],
+        "changes": {
+          "projects": {
+            "upserts": [
+              {
+                "id": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+                "code": "EPOCH-28431e14-a5e3-4516-b43c-61c1c0dee66d",
+                "name": "Owned epoch project",
+                "type": "TESTING",
+                "subtype": null,
+                "status": "PLANNING",
+                "isDraft": false,
+                "positioning": null,
+                "managerId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+                "templateId": null,
+                "startDate": null,
+                "endDate": null,
+                "actualEndDate": null,
+                "createdAt": "2026-10-06T03:32:02.724Z",
+                "updatedAt": "2026-10-06T03:32:02.724Z",
+                "manager": {
+                  "id": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+                  "displayName": "Owned epoch admin"
+                }
+              }
+            ],
+            "tombstones": []
+          },
+          "projectPhases": {
+            "upserts": [],
+            "tombstones": []
+          },
+          "tasks": {
+            "upserts": [
+              {
+                "id": "64d55764-ae41-4cc1-b87c-c4a96069c2fa",
+                "projectId": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+                "phaseId": null,
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "after epoch",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T03:32:03.040Z",
+                "updatedAt": "2026-10-06T03:32:03.061Z"
+              },
+              {
+                "id": "203e7c71-3fff-4a6b-99d9-4af725403303",
+                "projectId": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+                "phaseId": null,
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "epoch page 0",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T03:32:03.113Z",
+                "updatedAt": "2026-10-06T03:32:03.113Z"
+              },
+              {
+                "id": "00ccb8c3-5c86-43a2-8092-4b9d3804835a",
+                "projectId": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+                "phaseId": null,
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "epoch page 1",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T03:32:03.114Z",
+                "updatedAt": "2026-10-06T03:32:03.114Z"
+              },
+              {
+                "id": "ad285207-1d3c-49a3-b0f0-eb2bb86ec3db",
+                "projectId": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+                "phaseId": null,
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "epoch page 2",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T03:32:03.114Z",
+                "updatedAt": "2026-10-06T03:32:03.114Z"
+              },
+              {
+                "id": "8850ded4-f5f2-4232-8f84-6572dee19e47",
+                "projectId": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+                "phaseId": null,
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "epoch page 3",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T03:32:03.115Z",
+                "updatedAt": "2026-10-06T03:32:03.115Z"
+              }
+            ],
+            "tombstones": []
+          },
+          "milestones": {
+            "upserts": [],
+            "tombstones": []
+          },
+          "monthlyProgress": {
+            "upserts": [],
+            "tombstones": []
+          },
+          "reports": {
+            "upserts": [
+              {
+                "id": "0cbd95ce-9c30-481f-93f3-e1bc24a20f94",
+                "projectId": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+                "authorId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+                "reportType": "DAILY",
+                "periodKey": "2026-10-06",
+                "periodStart": null,
+                "periodEnd": null,
+                "content": {
+                  "text": "Owned receipt epoch"
+                },
+                "status": "DRAFT",
+                "currentVersion": 1,
+                "submittedAt": null,
+                "reviewedAt": null,
+                "reviewNote": null,
+                "createdAt": "2026-10-06T03:32:03.006Z",
+                "updatedAt": "2026-10-06T03:32:03.006Z"
+              }
+            ],
+            "tombstones": []
+          },
+          "projectMembers": {
+            "upserts": [
+              {
+                "id": "ff8c3b0f-c2eb-497c-b542-619e6a569f1f",
+                "projectId": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+                "userId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+                "role": "OWNER",
+                "joinedAt": "2026-10-06T03:32:02.724Z"
+              }
+            ],
+            "tombstones": []
+          }
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/backup/restore",
+      "status": 200,
+      "body": {
+        "success": true,
+        "summary": {
+          "runId": "b59b6e36-c350-462f-86a6-e64df9dbc152",
+          "mode": "merge",
+          "tables": [
+            {
+              "key": "roles",
+              "planned": 0,
+              "totalBefore": 7,
+              "inserted": 0,
+              "created": 0,
+              "updated": 0,
+              "deleted": 0,
+              "unchanged": 0
+            }
+          ],
+          "created": 0,
+          "inserted": 0,
+          "updated": 0,
+          "deleted": 0,
+          "unchanged": 0,
+          "durationMs": 2,
+          "scope": {
+            "kind": "APPLICATION_MODULE_JSON",
+            "binaryFilesIncluded": false,
+            "supportedKeys": [
+              "users",
+              "roles",
+              "permissions",
+              "docCategories",
+              "taskTemplates",
+              "taskTemplateSteps",
+              "reagentMaterials",
+              "reagentLots",
+              "reagentFormulas",
+              "formulaComponents",
+              "prepRecords",
+              "projectTemplates",
+              "projects",
+              "projectMembers",
+              "tasks",
+              "taskDependencies",
+              "milestones",
+              "phaseTransitions",
+              "reports",
+              "reportVersions",
+              "monthlyProgress",
+              "docDocuments",
+              "docVersions",
+              "primers",
+              "sampleMaterials",
+              "rolePermissions",
+              "systemLogs"
+            ],
+            "unsupportedModels": [
+              "syncDevice",
+              "syncMutation",
+              "refreshToken",
+              "userRole",
+              "templateRole",
+              "templatePhase",
+              "templateTask",
+              "projectPhase",
+              "taskDocRef",
+              "regulatoryDocument",
+              "taskRegulatoryDocument",
+              "registrationProfile",
+              "detectionTarget",
+              "fileObject",
+              "attachment",
+              "auditLog",
+              "enumMeta",
+              "codeSequence",
+              "systemSetting",
+              "mutationReceipt",
+              "dataRecoveryState"
+            ],
+            "note": "Module JSON is not a complete database or file backup; external targets are only resolved against current DB state."
+          },
+          "datasetEpoch": "21b136b6-7e9b-4385-a57b-3f85fd9ea8a0",
+          "ignoredSecurityFields": [],
+          "securityEffects": {
+            "updatedUsers": 6,
+            "revokedRefreshTokens": 1,
+            "initiatingVersion": 6,
+            "note": "Security housekeeping is separate from module input row changes"
+          },
+          "reconciled": true,
+          "status": "READY",
+          "binaryFilesVerified": false
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/sync/init?deviceId=8715b819-dab2-4de8-adf9-2525c9d0d4ee&since=2026-10-06T03%3A32%3A03.120Z&aclFingerprint=undefined&datasetEpoch=4f8b24b7-3bdb-443a-ae77-8bb833286904",
+      "status": 200,
+      "body": {
+        "datasetEpoch": "21b136b6-7e9b-4385-a57b-3f85fd9ea8a0",
+        "serverTime": "2026-10-06T03:32:03.149Z",
+        "cursor": "2026-10-06T03:32:03.149Z",
+        "full": true,
+        "pagination": {
+          "hasMore": false,
+          "nextPageToken": null
+        },
+        "acl": {
+          "datasetEpoch": "21b136b6-7e9b-4385-a57b-3f85fd9ea8a0",
+          "projectIds": [
+            "6d426b13-cb20-4cee-bbd0-519d2b0421f9"
+          ],
+          "projects": [
+            {
+              "id": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+              "managerId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+              "role": "OWNER",
+              "joinedAt": "2026-10-06T03:32:02.724Z",
+              "capabilities": [
+                "read",
+                "write",
+                "delete",
+                "transition",
+                "assign",
+                "manage_members"
+              ]
+            }
+          ],
+          "permissions": [
+            "users.view",
+            "users.create",
+            "users.update",
+            "users.enable",
+            "users.disable",
+            "users.reset_password",
+            "users.delete",
+            "roles.view",
+            "roles.create",
+            "roles.update",
+            "roles.delete",
+            "roles.assign_permissions",
+            "roles.assign_user",
+            "projects.view",
+            "projects.create",
+            "projects.update",
+            "projects.archive",
+            "projects.manage_members",
+            "project_phases.view",
+            "project_phases.create",
+            "project_phases.update",
+            "project_phases.change_status",
+            "tasks.view",
+            "tasks.create",
+            "tasks.update",
+            "tasks.change_status",
+            "tasks.assign",
+            "milestones.view",
+            "milestones.create",
+            "milestones.update",
+            "reports.view",
+            "reports.create",
+            "reports.update",
+            "reports.submit",
+            "reports.review",
+            "reports.export",
+            "progress.view",
+            "progress.create",
+            "progress.update",
+            "docs.view",
+            "docs.create",
+            "docs.update",
+            "docs.review",
+            "docs.categories.manage",
+            "regulatory_documents.view",
+            "regulatory_documents.create",
+            "regulatory_documents.update",
+            "regulatory_documents.delete",
+            "registrations.view",
+            "registrations.create",
+            "registrations.update",
+            "registrations.change_stage",
+            "registrations.export",
+            "project_templates.view",
+            "project_templates.create",
+            "project_templates.update",
+            "project_templates.delete",
+            "task_templates.view",
+            "task_templates.create",
+            "task_templates.update",
+            "task_templates.delete",
+            "primers.view",
+            "primers.create",
+            "primers.update",
+            "primers.export",
+            "samples.view",
+            "samples.create",
+            "samples.update",
+            "reagent_materials.view",
+            "reagent_materials.create",
+            "reagent_materials.update",
+            "reagents.view",
+            "reagents.create",
+            "reagents.update",
+            "reagents.export",
+            "formulas.view",
+            "formulas.create",
+            "formulas.update",
+            "prep_records.view",
+            "prep_records.create",
+            "files.upload",
+            "files.download",
+            "files.delete",
+            "audit.view",
+            "audit.export",
+            "settings.view",
+            "settings.update",
+            "dashboard.view",
+            "data.export",
+            "system.logs.view",
+            "projects.delete",
+            "tasks.delete",
+            "milestones.delete",
+            "reports.delete",
+            "docs.delete",
+            "project_templates.copy",
+            "primers.import",
+            "primers.delete",
+            "reagent_materials.delete"
+          ],
+          "aclVersion": "75a294f2f01c82fc7f3a42768e958e0f827357f636b6246a762e791946e08d36",
+          "projectionVersion": 1,
+          "writePolicy": {
+            "projects": {
+              "read": "projects.view",
+              "update": "projects.update",
+              "create": null,
+              "delete": "projects.delete",
+              "status": "projects.change_status",
+              "assign": null,
+              "capability": "write"
+            },
+            "projectPhases": {
+              "read": "project_phases.view",
+              "update": "project_phases.update",
+              "create": "project_phases.create",
+              "delete": "project_phases.delete",
+              "status": "project_phases.change_status",
+              "assign": null,
+              "capability": "write"
+            },
+            "tasks": {
+              "read": "tasks.view",
+              "update": "tasks.update",
+              "create": "tasks.create",
+              "delete": "tasks.delete",
+              "status": "tasks.change_status",
+              "assign": "tasks.assign",
+              "capability": "write"
+            },
+            "milestones": {
+              "read": "milestones.view",
+              "update": "milestones.update",
+              "create": "milestones.create",
+              "delete": "milestones.delete",
+              "status": null,
+              "assign": null,
+              "capability": "write"
+            },
+            "monthlyProgress": {
+              "read": "progress.view",
+              "update": "progress.update",
+              "create": "progress.create",
+              "delete": "progress.delete",
+              "status": null,
+              "assign": null,
+              "capability": "manage_members"
+            },
+            "reports": {
+              "read": "reports.view",
+              "update": "reports.update",
+              "create": "reports.create",
+              "delete": "reports.delete",
+              "status": null,
+              "assign": null,
+              "capability": "write"
+            },
+            "projectMembers": {
+              "read": "projects.view",
+              "update": "projects.manage_members",
+              "create": null,
+              "delete": "projects.manage_members",
+              "status": null,
+              "assign": null,
+              "capability": "manage_members"
+            }
+          }
+        },
+        "entities": [
+          "projects",
+          "projectPhases",
+          "tasks",
+          "milestones",
+          "monthlyProgress",
+          "reports",
+          "projectMembers"
+        ],
+        "changes": {
+          "projects": {
+            "upserts": [
+              {
+                "id": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+                "code": "EPOCH-28431e14-a5e3-4516-b43c-61c1c0dee66d",
+                "name": "Owned epoch project",
+                "type": "TESTING",
+                "subtype": null,
+                "status": "PLANNING",
+                "isDraft": false,
+                "positioning": null,
+                "managerId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+                "templateId": null,
+                "startDate": null,
+                "endDate": null,
+                "actualEndDate": null,
+                "createdAt": "2026-10-06T03:32:02.724Z",
+                "updatedAt": "2026-10-06T03:32:02.724Z",
+                "manager": {
+                  "id": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+                  "displayName": "Owned epoch admin"
+                }
+              }
+            ],
+            "tombstones": []
+          },
+          "projectPhases": {
+            "upserts": [],
+            "tombstones": []
+          },
+          "tasks": {
+            "upserts": [
+              {
+                "id": "64d55764-ae41-4cc1-b87c-c4a96069c2fa",
+                "projectId": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+                "phaseId": null,
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "after epoch",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T03:32:03.040Z",
+                "updatedAt": "2026-10-06T03:32:03.061Z"
+              },
+              {
+                "id": "203e7c71-3fff-4a6b-99d9-4af725403303",
+                "projectId": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+                "phaseId": null,
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "epoch page 0",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T03:32:03.113Z",
+                "updatedAt": "2026-10-06T03:32:03.113Z"
+              },
+              {
+                "id": "00ccb8c3-5c86-43a2-8092-4b9d3804835a",
+                "projectId": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+                "phaseId": null,
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "epoch page 1",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T03:32:03.114Z",
+                "updatedAt": "2026-10-06T03:32:03.114Z"
+              },
+              {
+                "id": "ad285207-1d3c-49a3-b0f0-eb2bb86ec3db",
+                "projectId": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+                "phaseId": null,
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "epoch page 2",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T03:32:03.114Z",
+                "updatedAt": "2026-10-06T03:32:03.114Z"
+              },
+              {
+                "id": "8850ded4-f5f2-4232-8f84-6572dee19e47",
+                "projectId": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+                "phaseId": null,
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "epoch page 3",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T03:32:03.115Z",
+                "updatedAt": "2026-10-06T03:32:03.115Z"
+              }
+            ],
+            "tombstones": []
+          },
+          "milestones": {
+            "upserts": [],
+            "tombstones": []
+          },
+          "monthlyProgress": {
+            "upserts": [],
+            "tombstones": []
+          },
+          "reports": {
+            "upserts": [
+              {
+                "id": "0cbd95ce-9c30-481f-93f3-e1bc24a20f94",
+                "projectId": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+                "authorId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+                "reportType": "DAILY",
+                "periodKey": "2026-10-06",
+                "periodStart": null,
+                "periodEnd": null,
+                "content": {
+                  "text": "Owned receipt epoch"
+                },
+                "status": "DRAFT",
+                "currentVersion": 1,
+                "submittedAt": null,
+                "reviewedAt": null,
+                "reviewNote": null,
+                "createdAt": "2026-10-06T03:32:03.006Z",
+                "updatedAt": "2026-10-06T03:32:03.006Z"
+              }
+            ],
+            "tombstones": []
+          },
+          "projectMembers": {
+            "upserts": [
+              {
+                "id": "ff8c3b0f-c2eb-497c-b542-619e6a569f1f",
+                "projectId": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+                "userId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+                "role": "OWNER",
+                "joinedAt": "2026-10-06T03:32:02.724Z"
+              }
+            ],
+            "tombstones": []
+          }
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/roles/df0ee5dc-7c6e-4d6b-ad9d-c6785ca8e574/permissions",
+      "status": 200,
+      "body": {
+        "id": "df0ee5dc-7c6e-4d6b-ad9d-c6785ca8e574",
+        "permissionCodes": [
+          "tasks.view",
+          "tasks.update"
+        ]
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/roles/df0ee5dc-7c6e-4d6b-ad9d-c6785ca8e574/permissions",
+      "status": 500,
+      "code": 500,
+      "body": {
+        "error": "OWNED_PUBLIC_BATCH_FAULT",
+        "code": 500
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/backup/restore",
+      "status": 200,
+      "body": {
+        "success": true,
+        "summary": {
+          "runId": "f7e42fb1-298b-4ba4-bb69-82f99cc49bd0",
+          "mode": "merge",
+          "tables": [
+            {
+              "key": "roles",
+              "planned": 0,
+              "totalBefore": 8,
+              "inserted": 0,
+              "created": 0,
+              "updated": 0,
+              "deleted": 0,
+              "unchanged": 0
+            }
+          ],
+          "created": 0,
+          "inserted": 0,
+          "updated": 0,
+          "deleted": 0,
+          "unchanged": 0,
+          "durationMs": 4,
+          "scope": {
+            "kind": "APPLICATION_MODULE_JSON",
+            "binaryFilesIncluded": false,
+            "supportedKeys": [
+              "users",
+              "roles",
+              "permissions",
+              "docCategories",
+              "taskTemplates",
+              "taskTemplateSteps",
+              "reagentMaterials",
+              "reagentLots",
+              "reagentFormulas",
+              "formulaComponents",
+              "prepRecords",
+              "projectTemplates",
+              "projects",
+              "projectMembers",
+              "tasks",
+              "taskDependencies",
+              "milestones",
+              "phaseTransitions",
+              "reports",
+              "reportVersions",
+              "monthlyProgress",
+              "docDocuments",
+              "docVersions",
+              "primers",
+              "sampleMaterials",
+              "rolePermissions",
+              "systemLogs"
+            ],
+            "unsupportedModels": [
+              "syncDevice",
+              "syncMutation",
+              "refreshToken",
+              "userRole",
+              "templateRole",
+              "templatePhase",
+              "templateTask",
+              "projectPhase",
+              "taskDocRef",
+              "regulatoryDocument",
+              "taskRegulatoryDocument",
+              "registrationProfile",
+              "detectionTarget",
+              "fileObject",
+              "attachment",
+              "auditLog",
+              "enumMeta",
+              "codeSequence",
+              "systemSetting",
+              "mutationReceipt",
+              "dataRecoveryState"
+            ],
+            "note": "Module JSON is not a complete database or file backup; external targets are only resolved against current DB state."
+          },
+          "datasetEpoch": "e1f58e09-7a08-47e1-b991-b12c1f03f83a",
+          "ignoredSecurityFields": [],
+          "securityEffects": {
+            "updatedUsers": 6,
+            "revokedRefreshTokens": 1,
+            "initiatingVersion": 7,
+            "note": "Security housekeeping is separate from module input row changes"
+          },
+          "reconciled": true,
+          "status": "READY",
+          "binaryFilesVerified": false
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/tasks",
+      "status": 409,
+      "code": "DATASET_EPOCH_CHANGED",
+      "body": {
+        "error": "Dataset changed; preserve original commands and reauthenticate",
+        "code": "DATASET_EPOCH_CHANGED"
+      }
+    },
+    {
+      "realBarrier": "public transaction SELECT dataset epoch FOR SHARE before native DB query",
+      "fired": true
+    },
+    {
+      "method": "POST",
+      "endpoint": "/backup/restore",
+      "status": 503,
+      "code": "RESTORE_NEEDS_RECONCILIATION",
+      "body": {
+        "success": false,
+        "code": "RESTORE_NEEDS_RECONCILIATION",
+        "committed": true,
+        "rolledBack": false,
+        "runId": "2332aa92-8a50-4dce-8874-a19c1ade25e1"
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/auth/me",
+      "status": 401,
+      "code": "DATASET_EPOCH_CHANGED"
+    },
+    {
+      "method": "GET",
+      "endpoint": "/backup/restore/status",
+      "status": 401,
+      "code": "DATASET_EPOCH_CHANGED",
+      "body": {
+        "error": "数据已恢复，请重新登录；原草稿必须保留",
+        "code": "DATASET_EPOCH_CHANGED"
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/backup/restore/status",
+      "status": 200,
+      "body": {
+        "previousEpoch": "e1f58e09-7a08-47e1-b991-b12c1f03f83a",
+        "initiatorId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+        "initiatorVersion": 7,
+        "id": 1,
+        "epoch": "1ea8e60b-6372-4c43-901e-4a7f061bd47e",
+        "status": "RESTORE_NEEDS_RECONCILIATION",
+        "activeRunId": "2332aa92-8a50-4dce-8874-a19c1ade25e1",
+        "payloadHash": "b4d700c5a8d5347f6b487b136863da63002b9ae873e23aed8e54acd390c1a35a",
+        "manifest": {
+          "kind": "MODULE_JSON_METADATA_ONLY",
+          "tables": [
+            {
+              "pk": [
+                "id"
+              ],
+              "key": "roles",
+              "rows": [
+                {
+                  "sha256": "45de77dc7db71f7f673ee96edfbdb2bef08bd782e7838d666b170547d90b37cf",
+                  "primaryKey": {
+                    "id": "41d5a9f1-09bd-4ec2-9381-a4df8b612da1"
+                  }
+                }
+              ],
+              "model": "role",
+              "totalAfter": 9
+            }
+          ],
+          "attachments": [],
+          "fileMetadata": [],
+          "binaryFilesVerified": false
+        },
+        "summary": {
+          "mode": "merge",
+          "runId": "2332aa92-8a50-4dce-8874-a19c1ade25e1",
+          "scope": {
+            "kind": "APPLICATION_MODULE_JSON",
+            "note": "Module JSON is not a complete database or file backup; external targets are only resolved against current DB state.",
+            "supportedKeys": [
+              "users",
+              "roles",
+              "permissions",
+              "docCategories",
+              "taskTemplates",
+              "taskTemplateSteps",
+              "reagentMaterials",
+              "reagentLots",
+              "reagentFormulas",
+              "formulaComponents",
+              "prepRecords",
+              "projectTemplates",
+              "projects",
+              "projectMembers",
+              "tasks",
+              "taskDependencies",
+              "milestones",
+              "phaseTransitions",
+              "reports",
+              "reportVersions",
+              "monthlyProgress",
+              "docDocuments",
+              "docVersions",
+              "primers",
+              "sampleMaterials",
+              "rolePermissions",
+              "systemLogs"
+            ],
+            "unsupportedModels": [
+              "syncDevice",
+              "syncMutation",
+              "refreshToken",
+              "userRole",
+              "templateRole",
+              "templatePhase",
+              "templateTask",
+              "projectPhase",
+              "taskDocRef",
+              "regulatoryDocument",
+              "taskRegulatoryDocument",
+              "registrationProfile",
+              "detectionTarget",
+              "fileObject",
+              "attachment",
+              "auditLog",
+              "enumMeta",
+              "codeSequence",
+              "systemSetting",
+              "mutationReceipt",
+              "dataRecoveryState"
+            ],
+            "binaryFilesIncluded": false
+          },
+          "tables": [
+            {
+              "key": "roles",
+              "created": 1,
+              "deleted": 0,
+              "planned": 1,
+              "updated": 0,
+              "inserted": 1,
+              "unchanged": 0,
+              "totalBefore": 8
+            }
+          ],
+          "created": 1,
+          "deleted": 0,
+          "updated": 0,
+          "inserted": 1,
+          "unchanged": 0,
+          "durationMs": 3,
+          "datasetEpoch": "1ea8e60b-6372-4c43-901e-4a7f061bd47e",
+          "securityEffects": {
+            "note": "Security housekeeping is separate from module input row changes",
+            "updatedUsers": 7,
+            "initiatingVersion": 8,
+            "revokedRefreshTokens": 2
+          },
+          "ignoredSecurityFields": []
+        },
+        "failureCode": "POST_COMMIT_RECONCILIATION_FAILED",
+        "updatedAt": "2026-10-06T03:32:03.217Z"
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/backup/restore/reconcile",
+      "status": 503,
+      "code": "RESTORE_NEEDS_RECONCILIATION",
+      "body": {
+        "code": "RESTORE_NEEDS_RECONCILIATION",
+        "committed": true,
+        "rolledBack": false,
+        "runId": "50205735-e60b-4ef3-88ef-e6aa5f721809"
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/backup/restore/reconcile",
+      "status": 200,
+      "body": {
+        "runId": "2332aa92-8a50-4dce-8874-a19c1ade25e1",
+        "status": "READY",
+        "summary": {
+          "mode": "merge",
+          "runId": "2332aa92-8a50-4dce-8874-a19c1ade25e1",
+          "scope": {
+            "kind": "APPLICATION_MODULE_JSON",
+            "note": "Module JSON is not a complete database or file backup; external targets are only resolved against current DB state.",
+            "supportedKeys": [
+              "users",
+              "roles",
+              "permissions",
+              "docCategories",
+              "taskTemplates",
+              "taskTemplateSteps",
+              "reagentMaterials",
+              "reagentLots",
+              "reagentFormulas",
+              "formulaComponents",
+              "prepRecords",
+              "projectTemplates",
+              "projects",
+              "projectMembers",
+              "tasks",
+              "taskDependencies",
+              "milestones",
+              "phaseTransitions",
+              "reports",
+              "reportVersions",
+              "monthlyProgress",
+              "docDocuments",
+              "docVersions",
+              "primers",
+              "sampleMaterials",
+              "rolePermissions",
+              "systemLogs"
+            ],
+            "unsupportedModels": [
+              "syncDevice",
+              "syncMutation",
+              "refreshToken",
+              "userRole",
+              "templateRole",
+              "templatePhase",
+              "templateTask",
+              "projectPhase",
+              "taskDocRef",
+              "regulatoryDocument",
+              "taskRegulatoryDocument",
+              "registrationProfile",
+              "detectionTarget",
+              "fileObject",
+              "attachment",
+              "auditLog",
+              "enumMeta",
+              "codeSequence",
+              "systemSetting",
+              "mutationReceipt",
+              "dataRecoveryState"
+            ],
+            "binaryFilesIncluded": false
+          },
+          "tables": [
+            {
+              "key": "roles",
+              "created": 1,
+              "deleted": 0,
+              "planned": 1,
+              "updated": 0,
+              "inserted": 1,
+              "unchanged": 0,
+              "totalBefore": 8
+            }
+          ],
+          "created": 1,
+          "deleted": 0,
+          "updated": 0,
+          "inserted": 1,
+          "unchanged": 0,
+          "durationMs": 3,
+          "datasetEpoch": "1ea8e60b-6372-4c43-901e-4a7f061bd47e",
+          "securityEffects": {
+            "note": "Security housekeeping is separate from module input row changes",
+            "updatedUsers": 7,
+            "initiatingVersion": 8,
+            "revokedRefreshTokens": 2
+          },
+          "ignoredSecurityFields": []
+        },
+        "scope": "MODULE_JSON_METADATA_ONLY",
+        "binaryFilesVerified": false
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/backup/restore/status",
+      "status": 401,
+      "code": "DATASET_EPOCH_CHANGED",
+      "body": {
+        "error": "数据已恢复，请重新登录；原草稿必须保留",
+        "code": "DATASET_EPOCH_CHANGED"
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/backup/restore",
+      "status": 500,
+      "body": {
+        "error": "恢复失败，事务已回滚：OWNED_EPOCH_PRECOMMIT_FAULT",
+        "rolledBack": true
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/auth/me",
+      "status": 200
+    }
+  ],
+  "state": {
+    "previousEpoch": "1ea8e60b-6372-4c43-901e-4a7f061bd47e",
+    "initiatorId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+    "initiatorVersion": 8,
+    "id": 1,
+    "epoch": "1ea8e60b-6372-4c43-901e-4a7f061bd47e",
+    "status": "READY",
+    "activeRunId": "485c332f-e18d-45bc-b553-3c1c5863701c",
+    "payloadHash": "9cd95ef6b09c8a90c39f267320fddd31f8af05658bbb54450c7bb7d029dfe386",
+    "manifest": null,
+    "summary": null,
+    "failureCode": "PRE_COMMIT_ROLLBACK",
+    "updatedAt": "2026-10-06T03:32:03.248Z"
+  },
+  "users": [
+    {
+      "id": "841a7b20-0f31-4c98-9ff4-95742f6747fe",
+      "username": "other-admin-fad00749-ba90-44a9-a0ea-53cd6974edbe",
+      "email": null,
+      "mustChangePassword": false,
+      "securityVersion": 1,
+      "passwordChangedAt": null,
+      "displayName": "Other current admin",
+      "position": null,
+      "department": null,
+      "phone": null,
+      "systemRole": "SUPER_ADMIN",
+      "status": "ACTIVE",
+      "avatarFileId": null,
+      "lastLoginAt": "2026-10-06T03:32:03.199Z",
+      "lastLoginIp": null,
+      "failedLoginAttempts": 0,
+      "lockedUntil": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T03:32:03.196Z",
+      "updatedAt": "2026-10-06T03:32:03.213Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "f1ea14a7-41ee-4feb-9f71-8f1c777ef142",
+      "username": "superadmin",
+      "email": null,
+      "mustChangePassword": true,
+      "securityVersion": 8,
+      "passwordChangedAt": null,
+      "displayName": "系统超级管理员",
+      "position": null,
+      "department": null,
+      "phone": null,
+      "systemRole": "SUPER_ADMIN",
+      "status": "ACTIVE",
+      "avatarFileId": null,
+      "lastLoginAt": null,
+      "lastLoginIp": null,
+      "failedLoginAttempts": 0,
+      "lockedUntil": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T03:32:00.745Z",
+      "updatedAt": "2026-10-06T03:32:03.213Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "5012939b-a2a6-4992-a96c-81ebde002f8d",
+      "username": "admin",
+      "email": null,
+      "mustChangePassword": true,
+      "securityVersion": 8,
+      "passwordChangedAt": null,
+      "displayName": "系统管理员",
+      "position": null,
+      "department": null,
+      "phone": null,
+      "systemRole": "ADMIN",
+      "status": "ACTIVE",
+      "avatarFileId": null,
+      "lastLoginAt": null,
+      "lastLoginIp": null,
+      "failedLoginAttempts": 0,
+      "lockedUntil": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T03:32:00.966Z",
+      "updatedAt": "2026-10-06T03:32:03.213Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "b37f40b1-f831-4bc4-9518-da37e14f8089",
+      "username": "disabled-6487d8aa-b273-4745-ba30-df05ddc41150",
+      "email": null,
+      "mustChangePassword": false,
+      "securityVersion": 24,
+      "passwordChangedAt": null,
+      "displayName": "restored profile",
+      "position": null,
+      "department": null,
+      "phone": null,
+      "systemRole": "VIEWER",
+      "status": "DISABLED",
+      "avatarFileId": null,
+      "lastLoginAt": null,
+      "lastLoginIp": null,
+      "failedLoginAttempts": 0,
+      "lockedUntil": null,
+      "deletedAt": "2026-10-06T03:32:02.768Z",
+      "createdAt": "2026-10-06T03:32:02.768Z",
+      "updatedAt": "2026-10-06T03:32:03.213Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "79fc3fe9-9298-419d-8de2-2be27b605671",
+      "username": "changed-ecc7ef12-8702-4baf-b5b5-38d091217000",
+      "email": null,
+      "mustChangePassword": true,
+      "securityVersion": 16,
+      "passwordChangedAt": null,
+      "displayName": "restored profile",
+      "position": null,
+      "department": null,
+      "phone": null,
+      "systemRole": "MEMBER",
+      "status": "ACTIVE",
+      "avatarFileId": null,
+      "lastLoginAt": null,
+      "lastLoginIp": null,
+      "failedLoginAttempts": 1,
+      "lockedUntil": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T03:32:02.767Z",
+      "updatedAt": "2026-10-06T03:32:03.213Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "2c8b56c0-6097-4eb7-9bd1-9796310c0054",
+      "username": "imported-617ad085-b2b8-4496-acd8-eb2bb255416a",
+      "email": null,
+      "mustChangePassword": true,
+      "securityVersion": 6,
+      "passwordChangedAt": null,
+      "displayName": "Owned imported",
+      "position": null,
+      "department": null,
+      "phone": null,
+      "systemRole": "MEMBER",
+      "status": "PENDING_ACTIVATION",
+      "avatarFileId": null,
+      "lastLoginAt": null,
+      "lastLoginIp": null,
+      "failedLoginAttempts": 1,
+      "lockedUntil": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T03:32:02.865Z",
+      "updatedAt": "2026-10-06T03:32:03.213Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+      "username": "epoch-973c6879-d123-4d46-b3a2-c6aada683d11",
+      "email": null,
+      "mustChangePassword": false,
+      "securityVersion": 8,
+      "passwordChangedAt": null,
+      "displayName": "Owned epoch admin",
+      "position": null,
+      "department": null,
+      "phone": null,
+      "systemRole": "SUPER_ADMIN",
+      "status": "ACTIVE",
+      "avatarFileId": null,
+      "lastLoginAt": "2026-10-06T03:32:03.230Z",
+      "lastLoginIp": null,
+      "failedLoginAttempts": 0,
+      "lockedUntil": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T03:32:02.685Z",
+      "updatedAt": "2026-10-06T03:32:03.231Z",
+      "createdById": null,
+      "updatedById": null
+    }
+  ],
+  "receipts": [
+    {
+      "datasetEpoch": "45944ed8-7a74-4dbb-8f42-c767ff4139c8",
+      "id": "9b86f687-4f51-4ce5-9eea-c0eb213302ce",
+      "actorId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+      "command": "POST /api/reports",
+      "resourceScope": "report:6d426b13-cb20-4cee-bbd0-519d2b0421f9:DAILY:2026-10-06",
+      "idempotencyKey": "2201ed6e-f198-4607-9adf-909335af3050",
+      "payloadHash": "27e7c7afaba0550d4194404c04f0065613fbce6bf6d5f9568d60eb8fcb225a64",
+      "status": "COMPLETED",
+      "responseStatus": 201,
+      "responseBody": {
+        "id": "0cbd95ce-9c30-481f-93f3-e1bc24a20f94",
+        "author": {
+          "id": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+          "displayName": "Owned epoch admin"
+        },
+        "status": "DRAFT",
+        "content": {
+          "text": "Owned receipt epoch"
+        },
+        "project": {
+          "id": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+          "name": "Owned epoch project"
+        },
+        "authorId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+        "createdAt": "2026-10-06T03:32:03.006Z",
+        "deletedAt": null,
+        "periodEnd": null,
+        "periodKey": "2026-10-06",
+        "projectId": "6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+        "updatedAt": "2026-10-06T03:32:03.006Z",
+        "reportType": "DAILY",
+        "reviewNote": null,
+        "reviewedAt": null,
+        "reviewerId": null,
+        "createdById": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+        "periodStart": null,
+        "submittedAt": null,
+        "updatedById": null,
+        "currentVersion": 1
+      },
+      "createdAt": "2026-10-06T03:32:03.001Z",
+      "expiresAt": "2026-10-07T03:32:03.000Z"
+    }
+  ],
+  "syncDevices": [
+    {
+      "datasetEpoch": "f219e6c9-1b50-4dac-94cd-f5b978d68cc4",
+      "id": "5523aab8-0ee4-4a94-8703-436bc3cc4b42",
+      "userId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+      "label": null,
+      "platform": null,
+      "lastSyncAt": null,
+      "lastPushAt": "2026-10-06T03:32:03.110Z",
+      "createdAt": "2026-10-06T03:32:03.050Z",
+      "updatedAt": "2026-10-06T03:32:03.111Z"
+    },
+    {
+      "datasetEpoch": "4f8b24b7-3bdb-443a-ae77-8bb833286904",
+      "id": "7bf18fd2-fdca-4ef2-b841-d97001a4eec7",
+      "userId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+      "label": null,
+      "platform": null,
+      "lastSyncAt": "2026-10-06T03:32:03.128Z",
+      "lastPushAt": null,
+      "createdAt": "2026-10-06T03:32:03.128Z",
+      "updatedAt": "2026-10-06T03:32:03.128Z"
+    },
+    {
+      "datasetEpoch": "21b136b6-7e9b-4385-a57b-3f85fd9ea8a0",
+      "id": "8715b819-dab2-4de8-adf9-2525c9d0d4ee",
+      "userId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+      "label": null,
+      "platform": null,
+      "lastSyncAt": "2026-10-06T03:32:03.155Z",
+      "lastPushAt": null,
+      "createdAt": "2026-10-06T03:32:03.155Z",
+      "updatedAt": "2026-10-06T03:32:03.155Z"
+    }
+  ],
+  "syncReceipts": [
+    {
+      "id": "c218a3fc-7183-455c-a594-6b8d95df1531",
+      "clientMutationId": "b0b0caf7-bbd3-4c5e-9d86-b861e58b4505",
+      "deviceId": "5523aab8-0ee4-4a94-8703-436bc3cc4b42",
+      "userId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+      "entity": "tasks",
+      "entityId": "64d55764-ae41-4cc1-b87c-c4a96069c2fa",
+      "op": "upsert",
+      "status": "applied",
+      "result": {
+        "response": {
+          "id": "64d55764-ae41-4cc1-b87c-c4a96069c2fa",
+          "op": "upsert",
+          "action": "updated",
+          "entity": "tasks",
+          "status": "applied",
+          "payloadHash": "935c4be9e4b3bb5252529f85607a870155b89df01111d28e84f6f228e567a75e",
+          "receiptHandle": "c218a3fc-7183-455c-a594-6b8d95df1531",
+          "serverUpdatedAt": "2026-10-06T03:32:03.061Z",
+          "clientMutationId": "b0b0caf7-bbd3-4c5e-9d86-b861e58b4505"
+        },
+        "intendedAction": "updated",
+        "requiredPermissions": [
+          "tasks.update"
+        ],
+        "requiredCapabilities": [
+          "write"
+        ]
+      },
+      "receiptVersion": 1,
+      "resourceScope": "project:6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+      "payloadHash": "935c4be9e4b3bb5252529f85607a870155b89df01111d28e84f6f228e567a75e",
+      "expiresAt": "2026-10-07T03:32:03.051Z",
+      "createdAt": "2026-10-06T03:32:03.051Z"
+    },
+    {
+      "id": "ed10f581-fecd-4759-a2bc-8e2f35347ca0",
+      "clientMutationId": "5226f5cc-a006-41b5-abe1-b9c58d43e3fc",
+      "deviceId": "5523aab8-0ee4-4a94-8703-436bc3cc4b42",
+      "userId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+      "entity": "tasks",
+      "entityId": "64d55764-ae41-4cc1-b87c-c4a96069c2fa",
+      "op": "upsert",
+      "status": "pending",
+      "result": {
+        "intendedAction": "updated",
+        "requiredPermissions": [
+          "tasks.update"
+        ],
+        "requiredCapabilities": [
+          "write"
+        ]
+      },
+      "receiptVersion": 1,
+      "resourceScope": "project:6d426b13-cb20-4cee-bbd0-519d2b0421f9",
+      "payloadHash": "9324abaabf7ebddc1bae59fcd05d5b12ff70a6976ac3bf6052d8090aa91ffe52",
+      "expiresAt": "2026-10-07T03:32:03.072Z",
+      "createdAt": "2026-10-06T03:32:03.072Z"
+    }
+  ],
+  "refresh": [
+    {
+      "datasetEpoch": "11e3ed87-77e3-49f1-8d87-8a2514aa1bbf",
+      "id": "09e702eb-726f-4b51-a39b-90b18b3d2dd1",
+      "userId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+      "familyId": "70e46d89-13c2-4cce-af25-18c573fde8af",
+      "userAgent": null,
+      "ip": null,
+      "expiresAt": "2026-10-13T03:32:02.714Z",
+      "revokedAt": "2026-10-06T03:32:02.741Z",
+      "createdAt": "2026-10-06T03:32:02.714Z"
+    },
+    {
+      "datasetEpoch": "4fac55c0-d386-46a7-a4cd-237e4de486e4",
+      "id": "3008a174-3eab-4514-9d9b-fadb8b35a5f6",
+      "userId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+      "familyId": "9d548e0d-a5d2-4740-8378-eb7e74e3067a",
+      "userAgent": null,
+      "ip": null,
+      "expiresAt": "2026-10-13T03:32:02.752Z",
+      "revokedAt": "2026-10-06T03:32:02.763Z",
+      "createdAt": "2026-10-06T03:32:02.753Z"
+    },
+    {
+      "datasetEpoch": "4fac55c0-d386-46a7-a4cd-237e4de486e4",
+      "id": "6851e968-986a-44e4-a16a-5235cff19289",
+      "userId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+      "familyId": "9d548e0d-a5d2-4740-8378-eb7e74e3067a",
+      "userAgent": null,
+      "ip": null,
+      "expiresAt": "2026-10-13T03:32:02.764Z",
+      "revokedAt": "2026-10-06T03:32:02.779Z",
+      "createdAt": "2026-10-06T03:32:02.764Z"
+    },
+    {
+      "datasetEpoch": "bd137490-0d1a-45a3-89c2-c9d5d619cae1",
+      "id": "07756989-0cb7-4084-a7c5-144e090591f6",
+      "userId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+      "familyId": "0896228c-63d0-4001-b09f-339e47133913",
+      "userAgent": null,
+      "ip": null,
+      "expiresAt": "2026-10-13T03:32:02.789Z",
+      "revokedAt": "2026-10-06T03:32:02.866Z",
+      "createdAt": "2026-10-06T03:32:02.790Z"
+    },
+    {
+      "datasetEpoch": "45944ed8-7a74-4dbb-8f42-c767ff4139c8",
+      "id": "00435279-2eaf-4b55-82c9-b23dc78a7d7b",
+      "userId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+      "familyId": "a71d9ba5-ed8d-43ce-a67c-922ce3cfa712",
+      "userAgent": null,
+      "ip": null,
+      "expiresAt": "2026-10-13T03:32:02.875Z",
+      "revokedAt": "2026-10-06T03:32:03.020Z",
+      "createdAt": "2026-10-06T03:32:02.876Z"
+    },
+    {
+      "datasetEpoch": "f219e6c9-1b50-4dac-94cd-f5b978d68cc4",
+      "id": "d2d2ad8b-13bc-4797-a138-ec36e2cc84e0",
+      "userId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+      "familyId": "4a94786c-b016-4472-84ef-3054c564c311",
+      "userAgent": null,
+      "ip": null,
+      "expiresAt": "2026-10-13T03:32:03.029Z",
+      "revokedAt": "2026-10-06T03:32:03.078Z",
+      "createdAt": "2026-10-06T03:32:03.030Z"
+    },
+    {
+      "datasetEpoch": "4f8b24b7-3bdb-443a-ae77-8bb833286904",
+      "id": "38073566-1666-4687-9c10-66e444cbe84f",
+      "userId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+      "familyId": "582e2b98-8ab8-4695-894c-fafaee85757f",
+      "userAgent": null,
+      "ip": null,
+      "expiresAt": "2026-10-13T03:32:03.086Z",
+      "revokedAt": "2026-10-06T03:32:03.134Z",
+      "createdAt": "2026-10-06T03:32:03.086Z"
+    },
+    {
+      "datasetEpoch": "21b136b6-7e9b-4385-a57b-3f85fd9ea8a0",
+      "id": "73544a5b-c3f0-4430-ab3d-0bbfc986149b",
+      "userId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+      "familyId": "68461b3a-15c3-438a-b917-48f98976a918",
+      "userAgent": null,
+      "ip": null,
+      "expiresAt": "2026-10-13T03:32:03.142Z",
+      "revokedAt": "2026-10-06T03:32:03.180Z",
+      "createdAt": "2026-10-06T03:32:03.142Z"
+    },
+    {
+      "datasetEpoch": "e1f58e09-7a08-47e1-b991-b12c1f03f83a",
+      "id": "249b5b38-1204-4299-b213-ffd97bf46ff9",
+      "userId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+      "familyId": "f75cb814-6df9-4222-b67d-22603e30e523",
+      "userAgent": null,
+      "ip": null,
+      "expiresAt": "2026-10-13T03:32:03.189Z",
+      "revokedAt": "2026-10-06T03:32:03.212Z",
+      "createdAt": "2026-10-06T03:32:03.190Z"
+    },
+    {
+      "datasetEpoch": "e1f58e09-7a08-47e1-b991-b12c1f03f83a",
+      "id": "6c7b7f8f-4b2e-4cfc-831d-20a99ce9f7b9",
+      "userId": "841a7b20-0f31-4c98-9ff4-95742f6747fe",
+      "familyId": "90af93b8-1788-4a89-9124-cb6d87e6e143",
+      "userAgent": null,
+      "ip": null,
+      "expiresAt": "2026-10-13T03:32:03.201Z",
+      "revokedAt": "2026-10-06T03:32:03.212Z",
+      "createdAt": "2026-10-06T03:32:03.201Z"
+    },
+    {
+      "datasetEpoch": "1ea8e60b-6372-4c43-901e-4a7f061bd47e",
+      "id": "4fd30696-2f2b-4bf8-9532-b3c52683cda3",
+      "userId": "91fe24b7-6eb7-4bfe-9802-aedbd1547fe3",
+      "familyId": "eef91d37-9915-4cc2-ac58-1de8cbc23386",
+      "userAgent": null,
+      "ip": null,
+      "expiresAt": "2026-10-13T03:32:03.232Z",
+      "revokedAt": null,
+      "createdAt": "2026-10-06T03:32:03.232Z"
+    }
+  ]
+}

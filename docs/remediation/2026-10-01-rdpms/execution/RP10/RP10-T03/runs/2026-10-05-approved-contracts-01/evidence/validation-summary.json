@@ -1,0 +1,889 @@
+{
+  "taskId": "RP10-T03",
+  "runs": [
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP10/RP10-T03/runs/2026-10-05-approved-contracts-01/evidence/policy-suite/attempt-02/run-results.json",
+      "sha256": "3f1389de45be0d9672a4ef4c071a23339f12db24409e403b913488f7b3d088ec",
+      "commandResults": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-gh8a9wv0/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-gh8a9wv0/pg",
+            "-l",
+            "/tmp/rdpms-ac-gh8a9wv0/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 50317 -k /tmp/rdpms-ac-gh8a9wv0/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "guard-reset",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "reset"
+          ],
+          "exitCode": 0,
+          "log": "guard-reset.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rp10-submit-state-policy.integration.test.mjs"
+          ],
+          "exitCode": 0,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-gh8a9wv0/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_bc0faa7970",
+          "ownedPort": 50317,
+          "ownedTempRoot": "/tmp/rdpms-ac-gh8a9wv0",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP10/RP10-T03/runs/2026-10-05-approved-contracts-01/evidence/regression-snapshot/attempt-01/run-results.json",
+      "sha256": "5ce6f77cfe9b287caf8e0531bae13de8429511771c2687f181f5a6693a04831d",
+      "commandResults": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-jet648z4/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-jet648z4/pg",
+            "-l",
+            "/tmp/rdpms-ac-jet648z4/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 50412 -k /tmp/rdpms-ac-jet648z4/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "guard-reset",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "reset"
+          ],
+          "exitCode": 0,
+          "log": "guard-reset.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+          ],
+          "exitCode": 0,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-jet648z4/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_0134a46c49",
+          "ownedPort": 50412,
+          "ownedTempRoot": "/tmp/rdpms-ac-jet648z4",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP10/RP10-T03/runs/2026-10-05-approved-contracts-01/evidence/regression-idempotency/attempt-01/run-results.json",
+      "sha256": "cad027af8174260382af80ac190412f64d22bdc34615a648f1b75f9cb6385190",
+      "commandResults": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-0zytcxc8/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-0zytcxc8/pg",
+            "-l",
+            "/tmp/rdpms-ac-0zytcxc8/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 50539 -k /tmp/rdpms-ac-0zytcxc8/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "guard-reset",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "reset"
+          ],
+          "exitCode": 0,
+          "log": "guard-reset.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rf02-idempotency.integration.test.mjs"
+          ],
+          "exitCode": 0,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-0zytcxc8/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_6c8e32336c",
+          "ownedPort": 50539,
+          "ownedTempRoot": "/tmp/rdpms-ac-0zytcxc8",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP10/RP10-T03/runs/2026-10-05-approved-contracts-01/evidence/regression-write-authority/attempt-01/run-results.json",
+      "sha256": "d3fd8078bd2309786270d548741bfa32b1f2b831db92709e8310d02e72af6db6",
+      "commandResults": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-h3qirsve/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-h3qirsve/pg",
+            "-l",
+            "/tmp/rdpms-ac-h3qirsve/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 50643 -k /tmp/rdpms-ac-h3qirsve/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "guard-reset",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "reset"
+          ],
+          "exitCode": 0,
+          "log": "guard-reset.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rf04-write-authorization.integration.test.mjs"
+          ],
+          "exitCode": 0,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-h3qirsve/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_79fab8bc44",
+          "ownedPort": 50643,
+          "ownedTempRoot": "/tmp/rdpms-ac-h3qirsve",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP10/RP10-T03/runs/2026-10-05-approved-contracts-01/evidence/regression-versions-access/attempt-01/run-results.json",
+      "sha256": "52079b266f83d39d1d60e8de8d3a180ac5c26425de7e49d083dbe9faedbb8758",
+      "commandResults": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-mpc4x6vm/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-mpc4x6vm/pg",
+            "-l",
+            "/tmp/rdpms-ac-mpc4x6vm/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 50757 -k /tmp/rdpms-ac-mpc4x6vm/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "guard-reset",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "reset"
+          ],
+          "exitCode": 0,
+          "log": "guard-reset.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rf04-versions-access.integration.test.mjs"
+          ],
+          "exitCode": 0,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-mpc4x6vm/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_fea741010f",
+          "ownedPort": 50757,
+          "ownedTempRoot": "/tmp/rdpms-ac-mpc4x6vm",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP10/RP10-T03/runs/2026-10-05-approved-contracts-01/evidence/backend-unit-contract/attempt-01/run-results.json",
+      "sha256": "8386c514ad0a02148ea6e40e809a0a6e4a0e4da29411add47a928d79234be61f",
+      "commandResults": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-x1c1q1e8/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-x1c1q1e8/pg",
+            "-l",
+            "/tmp/rdpms-ac-x1c1q1e8/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 50850 -k /tmp/rdpms-ac-x1c1q1e8/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "guard-reset",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "reset"
+          ],
+          "exitCode": 0,
+          "log": "guard-reset.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/unit/rf01-bootstrap.test.mjs",
+            "tests/unit/rf01-reports-routes.test.mjs",
+            "tests/unit/rf01-undefined-check.test.mjs",
+            "tests/unit/rf02-idempotency.test.mjs",
+            "tests/unit/rf03-report-period.test.mjs",
+            "tests/unit/rf03-super-admin-permissions.test.mjs",
+            "tests/unit/rf04-authz-before-replay.test.mjs",
+            "tests/unit/rf04-entry-matrix.test.mjs",
+            "tests/unit/rf04-post-upsert-authz.test.mjs",
+            "tests/unit/rf04-versions-access.test.mjs",
+            "tests/unit/rf04-write-authorization.test.mjs",
+            "tests/unit/rf05-file-access-policy.test.mjs",
+            "tests/contract/rf01-bootstrap-contract.test.mjs"
+          ],
+          "exitCode": 0,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-x1c1q1e8/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_a0a85dcbbe",
+          "ownedPort": 50850,
+          "ownedTempRoot": "/tmp/rdpms-ac-x1c1q1e8",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    }
+  ],
+  "limits": [
+    "New 13-case suite exercises real Bearer verification, active account lookup and permission DB; tokens minted by server signer for synthetic accounts. Password-login/refresh full chain not tested.",
+    "ORM barriers pause at real transaction SQL invocation and then execute unchanged real PostgreSQL; failure-injected audit case is explicitly labeled, not a mock acceptance.",
+    "Original 25-case snapshot suite preserves 24 cases; only old repeat-submit expectation changed to approved source-state rule and strengthened receipt/audit assertions.",
+    "RP09/PC03 joint recovery, supported client task revision matrix, full budgets, target/browser/release NOT_RUN.",
+    "Independent review PENDING; B10 remains SUPPORTED with scoped local evidence, not whole finding FIX_ACCEPTED."
+  ],
+  "earlierAttempts": "Preserved; only enumerated current attempts support acceptance"
+}

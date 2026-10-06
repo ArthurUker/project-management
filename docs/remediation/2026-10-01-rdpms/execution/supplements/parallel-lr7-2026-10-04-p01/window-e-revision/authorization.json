@@ -1,0 +1,39 @@
+{
+  "windowId": "E",
+  "batchId": "parallel-lr7-2026-10-04-p01",
+  "taskRefs": ["RP00-T03", "RP10-T01"],
+  "decisionRefs": ["T-RP-03"],
+  "openItemRefs": ["S03-OI-09"],
+  "mode": "SOURCE_CLIENT_MATRIX_AND_PROPOSED_POLICY_ONLY",
+  "executor": "RDPMS parallel-window E worker (CodeBuddy)",
+  "authorizedAt": "2026-10-04",
+  "allowedWritePrefix": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/",
+  "allowances": [
+    "Read-only source tracing of current client/server revision chain",
+    "Produce source-client-matrix (csv+md), support-evidence-register, decision-draft, acceptance-draft, external-client-evidence-request",
+    "Produce the seven common delivery categories plus WORKER_MANIFEST/READY"
+  ],
+  "prohibited": [
+    "Strict CAS enablement (RP10-T01 implementation)",
+    "Any modification to frontend/backend/sync code, schema, tests, config, deploy scripts, root ledgers",
+    "Updating original RP00-T03 artifact or any root gate ledger (S03-OI-09 / T-RP-03 / IMPLEMENTATION_STATE)",
+    "Installing dependencies, running build/DB/browser/JWT/IndexedDB tests",
+    "Accessing real servers, SSH, credentials, dotenv, production/deployed clients"
+  ],
+  "resources": {
+    "repository": "/Users/renkang/VS Code/project-management",
+    "frozenHead": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "instructionDir": "docs/remediation/2026-10-01-rdpms/execution/parallel-2026-10-04/",
+    "priorMatrix": "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T03/evidence/revision-support-matrix.json"
+  },
+  "driftNotice": {
+    "observed": "git status at session start shows UNCOMMITTED modifications to business source files this window must read: rdpms-system/frontend/src/api/endpoints/sync.ts, rdpms-system/frontend/src/offline/engine.ts, rdpms-system/backend/src/routes/sync.js, rdpms-system/backend/src/routes/tasks.js, rdpms-system/backend/src/routes/reports.js, rdpms-system/backend/src/modules/reports/reportCommands.ts. These differ (DIFF) from frozen HEAD 138cf2da.",
+    "handling": "Window E is read-only on source; it does not modify these files. All citations record the WORKING-TREE sha256 at execution time and the committed HEAD sha256, with a DIFF flag (see evidence/source-hashes.json). This is disclosed drift, not silent change. No affected work is blocked because this window only produces documentation/evidence, not code.",
+    "explainable": "Modifications pre-exist the session (not produced by this window); they are not part of the frozen baseline and were not authored here. Treated as inherited uncommitted work; integrator should reconcile against committed baseline before any gate change."
+  },
+  "stopConditions": [
+    "External evidence (deployed versions, support statements, upgrade cutoff) is required by downstream gate but is OUT OF SCOPE for this window; it is recorded as OPEN_INPUT, not a blocker for producing these materials.",
+    "If a root ledger or protected business file were modified by this window it would stop immediately — it did not."
+  ],
+  "writerStopped": false
+}

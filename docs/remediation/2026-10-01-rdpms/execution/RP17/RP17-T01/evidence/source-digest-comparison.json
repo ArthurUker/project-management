@@ -1,0 +1,8 @@
+{
+  "originalAuditBaseline": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "taskStartHead": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "path": "rdpms-system/deploy/scripts/backup-pg.sh",
+  "startSha256": "275b2e0f4f1a0e3cd42a8301758567ddf7d730ce0f5f08a85b7c556dc776ec63",
+  "endSha256": "74c033bccf7d5684dea0a66ac91f5b552af2e406d59ff8882e760ec616034101",
+  "notes": "Source unchanged at task start; no unrelated file changes included."
+}

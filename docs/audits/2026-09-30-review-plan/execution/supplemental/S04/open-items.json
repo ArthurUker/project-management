@@ -1,0 +1,25 @@
+[
+  {
+    "id": "S04-OI-01",
+    "relatedPackets": [
+      "R11",
+      "R03",
+      "R06"
+    ],
+    "relatedFindings": [
+      "B19",
+      "B02"
+    ],
+    "question": "How many existing cross-project parent edges, orphans, cycles, and references to tombstoned parents exist, and what remediation policy applies?",
+    "type": "ENVIRONMENT",
+    "currentEvidence": [
+      "Current schema and initial migration permit a parent FK on task id only and define ON DELETE CASCADE.",
+      "No business database was queried; no anomaly count is known."
+    ],
+    "missingInput": "A specifically authorized read-only database or isolated copy plus a product-approved disposition policy.",
+    "responsibleRole": "Database owner and product owner",
+    "resolutionCondition": "Run reviewed read-only counts on a verified permitted data source; approve data repair policy before any write or constraint migration.",
+    "status": "OPEN",
+    "reason": "No live or business data access was performed."
+  }
+]

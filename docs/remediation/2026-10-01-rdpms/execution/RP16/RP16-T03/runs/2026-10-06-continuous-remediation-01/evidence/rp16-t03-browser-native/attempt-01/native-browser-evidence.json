@@ -1,0 +1,658 @@
+{
+  "layer": "REAL_CHROME_NATIVE_JWT_POSTGRES_RESTORE_EPOCH_LAST_COPY",
+  "cases": [
+    {
+      "name": "ACTUAL_JWT_DB_CHROME_RESTORE_OLD_LAST_COPY_NO_REPLAY_NEW_INTENT_SUCCESS",
+      "result": "PASS"
+    }
+  ],
+  "trace": [
+    {
+      "path": "/api/auth/login",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "path": "/api/projects",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/projects",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/receipts/reserve",
+      "status": 200,
+      "keys": [
+        "eeb110a3-1c53-40f2-8472-7178fc5b44e5"
+      ],
+      "deviceId": "9cf29e3c-6e85-44a1-a054-d687c089a1d4"
+    },
+    {
+      "path": "/api/sync/push",
+      "status": 200,
+      "keys": [
+        "eeb110a3-1c53-40f2-8472-7178fc5b44e5"
+      ],
+      "deviceId": "9cf29e3c-6e85-44a1-a054-d687c089a1d4"
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/receipts/reserve",
+      "status": 200,
+      "keys": [
+        "ecf898de-22ee-4e86-a76e-c02155c79787"
+      ],
+      "deviceId": "9cf29e3c-6e85-44a1-a054-d687c089a1d4"
+    },
+    {
+      "path": "/api/sync/push",
+      "status": 200,
+      "keys": [
+        "ecf898de-22ee-4e86-a76e-c02155c79787"
+      ],
+      "deviceId": "9cf29e3c-6e85-44a1-a054-d687c089a1d4"
+    },
+    {
+      "path": "/api/sync/receipts/query",
+      "status": 200,
+      "keys": [
+        "ecf898de-22ee-4e86-a76e-c02155c79787"
+      ],
+      "deviceId": "9cf29e3c-6e85-44a1-a054-d687c089a1d4"
+    },
+    {
+      "path": "/api/auth/login",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "path": "/api/projects",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/projects",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/receipts/reserve",
+      "status": 200,
+      "keys": [
+        "1fb1dfc5-1a87-4976-aeb5-08035daf1e2e"
+      ],
+      "deviceId": "55e900c6-b7cb-4418-b243-e542108e6847"
+    },
+    {
+      "path": "/api/sync/push",
+      "status": 200,
+      "keys": [
+        "1fb1dfc5-1a87-4976-aeb5-08035daf1e2e"
+      ],
+      "deviceId": "55e900c6-b7cb-4418-b243-e542108e6847"
+    }
+  ],
+  "cleanup": {
+    "chromeExit": {
+      "code": 0,
+      "signal": null
+    },
+    "ownedProfileRemoved": true,
+    "serverClosed": true
+  },
+  "limits": [
+    "Candidate local fixtures only; no deployed client/target/release acceptance",
+    "Test app wrapper controls responses and transaction faults; current production routes/commands/auth/permissions/IDB unchanged"
+  ],
+  "sourceBindings": [
+    {
+      "path": "rdpms-system/frontend/src/offline/idb.ts",
+      "sha256": "4973866ee9dc03fa6c6a653ebcbb0127dbdc15aa466a085815ede6f218ea56fd"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/engine.ts",
+      "sha256": "8591e4c2a1add01f7ba4c49bb7e613884aba93cef37747ac0d6275f44216ce9a"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/deadLetter.ts",
+      "sha256": "4877eed9ec1726fe68cf8b6dd99b953e39d0f5fc2d5964bbde312e0619b75bdf"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/SyncProvider.tsx",
+      "sha256": "32da897ff24846012a01b77ced8ecb42b866601cbf80d5cd2349d7fb0865f6e8"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/RecoveryPanel.tsx",
+      "sha256": "6abc0db06e02cd0d24bac194b62bad5d63d4a5d2fa6f641c52fab7f6f20b203a"
+    }
+  ],
+  "persistentState": {
+    "tasks": [
+      {
+        "id": "c793a74a-36f7-4991-8a80-7c2631dd04be",
+        "projectId": "a68d2859-5eca-4230-b960-b431f5626cab",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "after-eeb110a3-1c53-40f2-8472-7178fc5b44e5",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T03:36:00.665Z",
+        "updatedAt": "2026-10-06T03:36:00.717Z",
+        "createdById": "0c229a30-c35c-4733-bdca-a512fbb130c2",
+        "updatedById": "0c229a30-c35c-4733-bdca-a512fbb130c2"
+      },
+      {
+        "id": "10f878e0-70ba-4041-b1f1-bb7fd4ffa42d",
+        "projectId": "ec94f54a-2c8b-4a9b-80c5-7d9c97b5352b",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "after-ecf898de-22ee-4e86-a76e-c02155c79787",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T03:36:00.726Z",
+        "updatedAt": "2026-10-06T03:36:00.774Z",
+        "createdById": "0c229a30-c35c-4733-bdca-a512fbb130c2",
+        "updatedById": "0c229a30-c35c-4733-bdca-a512fbb130c2"
+      },
+      {
+        "id": "0dc3e4c0-ee99-4b22-b156-910911b77103",
+        "projectId": "74ef1b00-157f-449b-a9ca-8a2a720b30f6",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "after-1fb1dfc5-1a87-4976-aeb5-08035daf1e2e",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T03:36:00.877Z",
+        "updatedAt": "2026-10-06T03:36:00.923Z",
+        "createdById": "0c229a30-c35c-4733-bdca-a512fbb130c2",
+        "updatedById": "0c229a30-c35c-4733-bdca-a512fbb130c2"
+      }
+    ],
+    "receipts": [
+      {
+        "id": "3854596d-7849-4683-88dc-e2842798e269",
+        "clientMutationId": "eeb110a3-1c53-40f2-8472-7178fc5b44e5",
+        "deviceId": "9cf29e3c-6e85-44a1-a054-d687c089a1d4",
+        "userId": "0c229a30-c35c-4733-bdca-a512fbb130c2",
+        "entity": "tasks",
+        "entityId": "c793a74a-36f7-4991-8a80-7c2631dd04be",
+        "op": "upsert",
+        "status": "applied",
+        "result": {
+          "response": {
+            "id": "c793a74a-36f7-4991-8a80-7c2631dd04be",
+            "op": "upsert",
+            "action": "updated",
+            "entity": "tasks",
+            "status": "applied",
+            "payloadHash": "4508767ff2a9834ceeaa3b8e44d702dfd0ec275419757a8b64ba21a903894c5d",
+            "receiptHandle": "3854596d-7849-4683-88dc-e2842798e269",
+            "serverUpdatedAt": "2026-10-06T03:36:00.717Z",
+            "clientMutationId": "eeb110a3-1c53-40f2-8472-7178fc5b44e5"
+          },
+          "intendedAction": "updated",
+          "requiredPermissions": [
+            "tasks.update"
+          ],
+          "requiredCapabilities": [
+            "write"
+          ]
+        },
+        "receiptVersion": 1,
+        "resourceScope": "project:a68d2859-5eca-4230-b960-b431f5626cab",
+        "payloadHash": "4508767ff2a9834ceeaa3b8e44d702dfd0ec275419757a8b64ba21a903894c5d",
+        "expiresAt": "2026-10-07T03:36:00.703Z",
+        "createdAt": "2026-10-06T03:36:00.703Z"
+      },
+      {
+        "id": "cb673ad2-07a8-4a86-b079-7ed643d9bb1a",
+        "clientMutationId": "ecf898de-22ee-4e86-a76e-c02155c79787",
+        "deviceId": "9cf29e3c-6e85-44a1-a054-d687c089a1d4",
+        "userId": "0c229a30-c35c-4733-bdca-a512fbb130c2",
+        "entity": "tasks",
+        "entityId": "10f878e0-70ba-4041-b1f1-bb7fd4ffa42d",
+        "op": "upsert",
+        "status": "applied",
+        "result": {
+          "response": {
+            "id": "10f878e0-70ba-4041-b1f1-bb7fd4ffa42d",
+            "op": "upsert",
+            "action": "updated",
+            "entity": "tasks",
+            "status": "applied",
+            "payloadHash": "7e7dc5a663a1f97ee089a2ac637d599f2eb4bed81db40c8d8fd82ff593aa3147",
+            "receiptHandle": "cb673ad2-07a8-4a86-b079-7ed643d9bb1a",
+            "serverUpdatedAt": "2026-10-06T03:36:00.774Z",
+            "clientMutationId": "ecf898de-22ee-4e86-a76e-c02155c79787"
+          },
+          "intendedAction": "updated",
+          "requiredPermissions": [
+            "tasks.update"
+          ],
+          "requiredCapabilities": [
+            "write"
+          ]
+        },
+        "receiptVersion": 1,
+        "resourceScope": "project:ec94f54a-2c8b-4a9b-80c5-7d9c97b5352b",
+        "payloadHash": "7e7dc5a663a1f97ee089a2ac637d599f2eb4bed81db40c8d8fd82ff593aa3147",
+        "expiresAt": "2026-10-07T03:36:00.762Z",
+        "createdAt": "2026-10-06T03:36:00.762Z"
+      },
+      {
+        "id": "af01ad6e-7143-4f59-9efe-459014b7b102",
+        "clientMutationId": "1fb1dfc5-1a87-4976-aeb5-08035daf1e2e",
+        "deviceId": "55e900c6-b7cb-4418-b243-e542108e6847",
+        "userId": "0c229a30-c35c-4733-bdca-a512fbb130c2",
+        "entity": "tasks",
+        "entityId": "0dc3e4c0-ee99-4b22-b156-910911b77103",
+        "op": "upsert",
+        "status": "applied",
+        "result": {
+          "response": {
+            "id": "0dc3e4c0-ee99-4b22-b156-910911b77103",
+            "op": "upsert",
+            "action": "updated",
+            "entity": "tasks",
+            "status": "applied",
+            "payloadHash": "2603db24cbef63c929ba75806a215dfc9e3e3e80d2ffa21d2f633e35f319a3b5",
+            "receiptHandle": "af01ad6e-7143-4f59-9efe-459014b7b102",
+            "serverUpdatedAt": "2026-10-06T03:36:00.923Z",
+            "clientMutationId": "1fb1dfc5-1a87-4976-aeb5-08035daf1e2e"
+          },
+          "intendedAction": "updated",
+          "requiredPermissions": [
+            "tasks.update"
+          ],
+          "requiredCapabilities": [
+            "write"
+          ]
+        },
+        "receiptVersion": 1,
+        "resourceScope": "project:74ef1b00-157f-449b-a9ca-8a2a720b30f6",
+        "payloadHash": "2603db24cbef63c929ba75806a215dfc9e3e3e80d2ffa21d2f633e35f319a3b5",
+        "expiresAt": "2026-10-07T03:36:00.908Z",
+        "createdAt": "2026-10-06T03:36:00.908Z"
+      }
+    ],
+    "audits": [
+      {
+        "id": "00da82d6-57dc-4f17-b39a-4fd14eff9e9d",
+        "actorId": "0c229a30-c35c-4733-bdca-a512fbb130c2",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "login",
+        "entityType": "USER",
+        "entityId": "0c229a30-c35c-4733-bdca-a512fbb130c2",
+        "entityLabel": "rp12-a-60f88299-d734-4276-9522-bf24d3e05b56",
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": null,
+        "ip": null,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "requestId": null,
+        "createdAt": "2026-10-06T03:36:00.625Z"
+      },
+      {
+        "id": "7121f4dc-0ce1-4235-8506-536e520044f6",
+        "actorId": "0c229a30-c35c-4733-bdca-a512fbb130c2",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "update",
+        "entityType": null,
+        "entityId": "c793a74a-36f7-4991-8a80-7c2631dd04be",
+        "entityLabel": "sync:tasks",
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": {
+          "op": "upsert",
+          "action": "updated",
+          "deviceId": "9cf29e3c-6e85-44a1-a054-d687c089a1d4",
+          "elevated": true,
+          "payloadHash": "4508767ff2a9834ceeaa3b8e44d702dfd0ec275419757a8b64ba21a903894c5d",
+          "resourceScope": "project:a68d2859-5eca-4230-b960-b431f5626cab",
+          "clientMutationId": "eeb110a3-1c53-40f2-8472-7178fc5b44e5"
+        },
+        "ip": null,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "requestId": null,
+        "createdAt": "2026-10-06T03:36:00.718Z"
+      },
+      {
+        "id": "90136348-2c50-4544-8595-9afc4e9ce5a6",
+        "actorId": "0c229a30-c35c-4733-bdca-a512fbb130c2",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "update",
+        "entityType": null,
+        "entityId": "10f878e0-70ba-4041-b1f1-bb7fd4ffa42d",
+        "entityLabel": "sync:tasks",
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": {
+          "op": "upsert",
+          "action": "updated",
+          "deviceId": "9cf29e3c-6e85-44a1-a054-d687c089a1d4",
+          "elevated": true,
+          "payloadHash": "7e7dc5a663a1f97ee089a2ac637d599f2eb4bed81db40c8d8fd82ff593aa3147",
+          "resourceScope": "project:ec94f54a-2c8b-4a9b-80c5-7d9c97b5352b",
+          "clientMutationId": "ecf898de-22ee-4e86-a76e-c02155c79787"
+        },
+        "ip": null,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "requestId": null,
+        "createdAt": "2026-10-06T03:36:00.774Z"
+      },
+      {
+        "id": "f07e41e4-64a4-4d10-8567-059e5f5750f5",
+        "actorId": "0c229a30-c35c-4733-bdca-a512fbb130c2",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "login",
+        "entityType": "USER",
+        "entityId": "0c229a30-c35c-4733-bdca-a512fbb130c2",
+        "entityLabel": "rp12-a-60f88299-d734-4276-9522-bf24d3e05b56",
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": null,
+        "ip": null,
+        "userAgent": null,
+        "requestId": null,
+        "createdAt": "2026-10-06T03:36:00.801Z"
+      },
+      {
+        "id": "1451e669-6088-475e-89dd-a87573abda66",
+        "actorId": "0c229a30-c35c-4733-bdca-a512fbb130c2",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "restore",
+        "entityType": "BACKUP",
+        "entityId": "d4f5ca28-dd5b-46ff-8b5d-216786680013",
+        "entityLabel": null,
+        "before": null,
+        "after": {
+          "mode": "merge",
+          "runId": "d4f5ca28-dd5b-46ff-8b5d-216786680013",
+          "scope": {
+            "kind": "APPLICATION_MODULE_JSON",
+            "note": "Module JSON is not a complete database or file backup; external targets are only resolved against current DB state.",
+            "supportedKeys": [
+              "users",
+              "roles",
+              "permissions",
+              "docCategories",
+              "taskTemplates",
+              "taskTemplateSteps",
+              "reagentMaterials",
+              "reagentLots",
+              "reagentFormulas",
+              "formulaComponents",
+              "prepRecords",
+              "projectTemplates",
+              "projects",
+              "projectMembers",
+              "tasks",
+              "taskDependencies",
+              "milestones",
+              "phaseTransitions",
+              "reports",
+              "reportVersions",
+              "monthlyProgress",
+              "docDocuments",
+              "docVersions",
+              "primers",
+              "sampleMaterials",
+              "rolePermissions",
+              "systemLogs"
+            ],
+            "unsupportedModels": [
+              "syncDevice",
+              "syncMutation",
+              "refreshToken",
+              "userRole",
+              "templateRole",
+              "templatePhase",
+              "templateTask",
+              "projectPhase",
+              "taskDocRef",
+              "regulatoryDocument",
+              "taskRegulatoryDocument",
+              "registrationProfile",
+              "detectionTarget",
+              "fileObject",
+              "attachment",
+              "auditLog",
+              "enumMeta",
+              "codeSequence",
+              "systemSetting",
+              "mutationReceipt",
+              "dataRecoveryState"
+            ],
+            "binaryFilesIncluded": false
+          },
+          "tables": [
+            {
+              "key": "roles",
+              "created": 0,
+              "deleted": 0,
+              "planned": 0,
+              "updated": 0,
+              "inserted": 0,
+              "unchanged": 0,
+              "totalBefore": 6
+            }
+          ],
+          "created": 0,
+          "deleted": 0,
+          "updated": 0,
+          "inserted": 0,
+          "unchanged": 0,
+          "durationMs": 4,
+          "datasetEpoch": "b50c04ad-0f0c-4c34-bcd2-10b70e87b710",
+          "securityEffects": {
+            "note": "Security housekeeping is separate from module input row changes",
+            "updatedUsers": 4,
+            "initiatingVersion": 1,
+            "revokedRefreshTokens": 2
+          },
+          "ignoredSecurityFields": []
+        },
+        "changedFields": [],
+        "metadata": {
+          "operation": "backup.restore.apply",
+          "payloadHash": "3f04188e0401fdf3f9b5fea10f2393ce8416db3d2104408eef771f2867265ad1",
+          "permissionCode": "data.restore",
+          "integrityManifest": {
+            "kind": "MODULE_JSON_METADATA_ONLY",
+            "tables": [
+              {
+                "pk": [
+                  "id"
+                ],
+                "key": "roles",
+                "rows": [],
+                "model": "role",
+                "totalAfter": 6
+              }
+            ],
+            "attachments": [],
+            "fileMetadata": [],
+            "binaryFilesVerified": false
+          }
+        },
+        "ip": null,
+        "userAgent": null,
+        "requestId": null,
+        "createdAt": "2026-10-06T03:36:00.813Z"
+      },
+      {
+        "id": "aa97a97a-7925-4ebf-ac2b-5b9eb9944fb4",
+        "actorId": "0c229a30-c35c-4733-bdca-a512fbb130c2",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "restore",
+        "entityType": "BACKUP",
+        "entityId": "d4f5ca28-dd5b-46ff-8b5d-216786680013",
+        "entityLabel": null,
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": {
+          "operation": "backup.restore.reconcile",
+          "manifestHash": "23f2f0933d3f618e0dbf58bd95bd5ce28f442e01edbd6e8679be3c8effb47e5a",
+          "permissionCode": "data.restore"
+        },
+        "ip": null,
+        "userAgent": null,
+        "requestId": null,
+        "createdAt": "2026-10-06T03:36:00.816Z"
+      },
+      {
+        "id": "ab49a00b-e7c1-4d75-81a2-b426cb44c789",
+        "actorId": "0c229a30-c35c-4733-bdca-a512fbb130c2",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "login",
+        "entityType": "USER",
+        "entityId": "0c229a30-c35c-4733-bdca-a512fbb130c2",
+        "entityLabel": "rp12-a-60f88299-d734-4276-9522-bf24d3e05b56",
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": null,
+        "ip": null,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "requestId": null,
+        "createdAt": "2026-10-06T03:36:00.828Z"
+      },
+      {
+        "id": "9579ce54-fc0e-46df-8eb1-e36addcdf922",
+        "actorId": "0c229a30-c35c-4733-bdca-a512fbb130c2",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "update",
+        "entityType": null,
+        "entityId": "0dc3e4c0-ee99-4b22-b156-910911b77103",
+        "entityLabel": "sync:tasks",
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": {
+          "op": "upsert",
+          "action": "updated",
+          "deviceId": "55e900c6-b7cb-4418-b243-e542108e6847",
+          "elevated": true,
+          "payloadHash": "2603db24cbef63c929ba75806a215dfc9e3e3e80d2ffa21d2f633e35f319a3b5",
+          "resourceScope": "project:74ef1b00-157f-449b-a9ca-8a2a720b30f6",
+          "clientMutationId": "1fb1dfc5-1a87-4976-aeb5-08035daf1e2e"
+        },
+        "ip": null,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "requestId": null,
+        "createdAt": "2026-10-06T03:36:00.924Z"
+      }
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "path": "rdpms-system/deploy/scripts/drill/release-gates.py",
+    "beforeSha256": null,
+    "afterSha256": "fa4b9fc5cd5e41835353ffaeb353e85f882c13d0268c57963c45d27cc08ffd6d"
+  },
+  {
+    "path": "rdpms-system/backend/tests/integration/rp19-release-gates.integration.test.mjs",
+    "beforeSha256": null,
+    "afterSha256": "94051c38e2da37b7fdda109ed6e2e30e7fb6501837f61bbd7ac1bfaec0d0e5d9"
+  }
+]

@@ -1,0 +1,4 @@
+Reviewer tooling only; no executor or product result was changed.
+attempt-01: check-delivery.py exit 1, KeyError sha256. Some old review refs contain no hash; corrected to explicitly record absence. No readback file written.
+attempt-02: check-delivery.py exit 1, KeyError path. Old payload uses relativePath; corrected schema reading. No readback file written.
+attempt-03: check-delivery.py exit 0; readback written once. A zero tool exit means evidence capture completed, not that the executor seal passed.

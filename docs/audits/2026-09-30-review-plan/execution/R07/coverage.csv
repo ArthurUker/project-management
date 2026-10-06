@@ -1,0 +1,13 @@
+packet,file,symbol_or_route,question,review_status,evidence_ref,unreviewed_reason
+R07,rdpms-system/frontend/src/App.tsx,App/AuthProvider/SyncProvider nesting,Provider mount topology,REVIEWED,execution/R07/review.md#身份及同步时序,
+R07,rdpms-system/frontend/src/auth/AuthProvider.tsx,initial state and bootstrap effect,Does identity start as null before /me resolves,REVIEWED,execution/R07/review.md#身份及同步时序,
+R07,rdpms-system/frontend/src/auth/AuthProvider.tsx,login/logout/applyUser,How explicit login/logout changes user identity,REVIEWED,execution/R07/review.md#身份及同步时序,
+R07,rdpms-system/frontend/src/offline/SyncProvider.tsx,user?.id effect,Does null user invoke resetOnLogout and cleanup stop,REVIEWED,execution/R07/review.md#f01,
+R07,rdpms-system/frontend/src/offline/engine.ts,start/resetOnLogout/preservePendingForUser,Does bootstrap cleanup retain attributed queues and protect new sessions,REVIEWED,execution/R07/review.md#f01,
+R07,rdpms-system/frontend/src/offline/engine.ts,sessionGen/applyPull/syncNow,Are in-flight callbacks scoped to captured subject/generation,REVIEWED,execution/R07/review.md#身份及同步时序,
+R07,rdpms-system/frontend/src/offline/idb.ts,kv/records/outbox/deadLetters,Principal key/field/read/cleanup asymmetry,REVIEWED,execution/R07/review.md#本地存储主体隔离矩阵,
+R07,rdpms-system/frontend/src/offline/engine.ts,readCachedRecords/applyPull/ACL purge,Does entity cache enforce account namespace,REVIEWED,execution/R07/review.md#f03,
+R07,rdpms-system/frontend/src/pages/Tasks.tsx,loadTasks cache fallback,Which actual UI code consumes readCachedRecords,REVIEWED,execution/R07/review.md#f03,UI cross-account display not dynamically verified
+R07,rdpms-system/frontend/src/pages/Reports.tsx,report data loading,Does report UI consume readCachedRecords,REVIEWED,execution/R07/review.md#f03,No consumer found by targeted rg; report UI rendering claim remains unsupported
+R07,offline-results.json,F01/F03 historical isolated engine evidence,What is inherited and its evidence ceiling,REVIEWED,docs/audits/2026-09-29-rdpms/offline-results.json,F01 browser rendering absent; F03 page display absent
+R07,IndexedDB v1-to-v2 upgrade path,existing persisted-record migration behavior,Is interrupted upgrade and legacy data preservation safe,PENDING,execution/R07/review.md#未覆盖和pending,Legacy IndexedDB v1-to-v2 data migration and interrupted-upgrade behavior were outside R07; S02 will perform the bounded follow-up.

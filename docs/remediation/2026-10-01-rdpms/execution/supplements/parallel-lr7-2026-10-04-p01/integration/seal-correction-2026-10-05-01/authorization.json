@@ -1,0 +1,23 @@
+{
+  "sessionId": "parallel-lr7-2026-10-05-seal-correction-01",
+  "window": "integration",
+  "subDir": "seal-correction-2026-10-05-01",
+  "batchId": "parallel-lr7-2026-10-04-p01",
+  "executor": "CodeBuddy (local bounded seal-correction executor)",
+  "date": "2026-10-05",
+  "authorizedBy": "docs/remediation/2026-10-05-parallel-aggregation-review/SEAL_CORRECTION_PROMPT.md",
+  "independentReviewContext": "MATERIAL_PRESERVED_FINAL_SEAL_REQUIRES_CORRECTION (REVIEW.md 2026-10-05)",
+  "authorityMeaning": "Bounded metadata seal-correction only. Does NOT approve any business decision, re-open workers, rerun control/build/test/DB, or change 54/306 axes, packages, 31 open items, gates or approvals.",
+  "allowedNewWritePrefix": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-correction-2026-10-05-01/",
+  "rootRecordsAllowedAppend": [
+    "REVISION_HISTORY.json versions[] (one unique version=parallel-lr7-2026-10-05-seal-correction-01)",
+    "EXECUTION_REVISION_HISTORY.json entries[] (one unique id=EXEC-parallel-lr7-2026-10-05-seal-correction-01)"
+  ],
+  "prohibited": [
+    "modify A-F, old READY/manifest/logs, old J deliverables, Q instruction dir, two state, two handoff, plans/decisions/task-graph/acceptance/findings/memory",
+    "reopen worker, fix business code, rerun control/build/test/DB/JWT/IDB/browser",
+    "install/upgrade, stage/commit/push/merge/deploy/reset/clean/stash, subagent, model switch, memory writes"
+  ],
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED"
+}

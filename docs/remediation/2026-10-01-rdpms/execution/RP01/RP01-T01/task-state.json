@@ -1,0 +1,31 @@
+{
+  "taskId": "RP01-T01",
+  "packageId": "RP01",
+  "findingIds": [
+    "B17"
+  ],
+  "implementation": "COMPLETE",
+  "validation": "PASS",
+  "localFixAcceptance": "FIX_ACCEPTED",
+  "targetEnvironmentAcceptance": "NOT_RUN",
+  "release": "NOT_EVALUATED",
+  "owner": "Codex executor",
+  "authorization": "execution/authorization.json",
+  "evidence": [
+    "change-summary.md",
+    "acceptance.json",
+    "evidence/candidate-baseline.json",
+    "evidence/b17-test.log",
+    "evidence/database-after-test-summary.json",
+    "evidence/build.log",
+    "evidence/prisma-generate.log",
+    "evidence/reviewer-scope.md",
+    "../../RP00/RP00-T01/evidence/isolated-environment.json"
+  ],
+  "notCovered": [
+    "B01 account reset/role policy and RP01-T02/T03",
+    "full backend TypeScript build and dist/createApp candidate",
+    "target/production acceptance, merge and deployment"
+  ],
+  "cleanup": "owned DB dropped; exact temporary PG stopped; private env/temp files deleted"
+}

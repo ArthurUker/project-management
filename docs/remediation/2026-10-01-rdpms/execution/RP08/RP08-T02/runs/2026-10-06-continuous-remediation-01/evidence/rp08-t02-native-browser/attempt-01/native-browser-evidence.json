@@ -1,0 +1,442 @@
+{
+  "layer": "REAL_CHROME_NATIVE_JWT_BACKEND_POSTGRES_INDEXEDDB_V1_RECEIPTS",
+  "cases": [],
+  "trace": [
+    {
+      "path": "/api/auth/login",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "path": "/api/projects",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/projects",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 500
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 500
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 500
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 500
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 500
+    },
+    {
+      "path": "/api/sync/init",
+      "status": 500
+    },
+    {
+      "path": "/api/auth/login",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "path": "/api/projects",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/tasks",
+      "status": 200
+    },
+    {
+      "path": "/api/projects",
+      "status": 200
+    }
+  ],
+  "cleanup": {
+    "chromeExit": {
+      "code": 0,
+      "signal": null
+    },
+    "ownedProfileRemoved": true,
+    "serverClosed": true
+  },
+  "limits": [
+    "Candidate local fixtures only; no deployed client/target/release acceptance",
+    "Test app wrapper controls responses and transaction faults; current production routes/commands/auth/permissions/IDB unchanged"
+  ],
+  "sourceBindings": [
+    {
+      "path": "rdpms-system/frontend/src/offline/idb.ts",
+      "sha256": "bb0b319f8207bed3f1d8cb5f702bbc14458579ba7dedcae053edf33bf216a56a"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/engine.ts",
+      "sha256": "9c18e46559dd51f756c4f0010bebf902e495fcf34ac085f0bca1cf2a58c1be8c"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/deadLetter.ts",
+      "sha256": "4877eed9ec1726fe68cf8b6dd99b953e39d0f5fc2d5964bbde312e0619b75bdf"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/SyncProvider.tsx",
+      "sha256": "32da897ff24846012a01b77ced8ecb42b866601cbf80d5cd2349d7fb0865f6e8"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/RecoveryPanel.tsx",
+      "sha256": "6abc0db06e02cd0d24bac194b62bad5d63d4a5d2fa6f641c52fab7f6f20b203a"
+    }
+  ],
+  "persistentState": {
+    "tasks": [
+      {
+        "id": "33d6e025-08b5-4f75-820b-ca5a69cc2b94",
+        "projectId": "5c087523-c3df-492d-add0-5dbba8388322",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "before",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:02:23.853Z",
+        "updatedAt": "2026-10-06T02:02:23.853Z",
+        "createdById": "9e8ca1ab-4cfd-4989-89d3-377cf8ac9c3d",
+        "updatedById": null
+      },
+      {
+        "id": "0d936683-0ca2-4548-8a69-af28a084ae74",
+        "projectId": "32349fe8-bb6f-4165-9b29-7931abd5db21",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "before",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:02:23.883Z",
+        "updatedAt": "2026-10-06T02:02:23.883Z",
+        "createdById": "9e8ca1ab-4cfd-4989-89d3-377cf8ac9c3d",
+        "updatedById": null
+      },
+      {
+        "id": "33ad17c9-26a2-486d-86ae-452f35743691",
+        "projectId": "f6bedb35-6597-4852-b876-b039b66e10f6",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "before",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:02:35.894Z",
+        "updatedAt": "2026-10-06T02:02:35.894Z",
+        "createdById": "9e8ca1ab-4cfd-4989-89d3-377cf8ac9c3d",
+        "updatedById": null
+      },
+      {
+        "id": "abb47624-3d3e-4f11-95dc-624c1deb6042",
+        "projectId": "d309ccbc-a2a0-4414-b89d-ed9e0e788bc5",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "before",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:02:47.914Z",
+        "updatedAt": "2026-10-06T02:02:47.914Z",
+        "createdById": "9e8ca1ab-4cfd-4989-89d3-377cf8ac9c3d",
+        "updatedById": null
+      },
+      {
+        "id": "75777457-0d0d-421e-b523-55ed1e1002c9",
+        "projectId": "8573c7ba-9223-4f6e-a58d-722b95e34fa2",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "before",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:02:47.916Z",
+        "updatedAt": "2026-10-06T02:02:47.916Z",
+        "createdById": "9e8ca1ab-4cfd-4989-89d3-377cf8ac9c3d",
+        "updatedById": null
+      },
+      {
+        "id": "10eecc4d-bd1d-43f8-80cf-a39346e612c0",
+        "projectId": "8f4aa685-c75f-46a0-a2f2-7636565f435b",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "before",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:02:47.917Z",
+        "updatedAt": "2026-10-06T02:02:47.917Z",
+        "createdById": "9e8ca1ab-4cfd-4989-89d3-377cf8ac9c3d",
+        "updatedById": null
+      },
+      {
+        "id": "3f729279-b202-4a5b-839d-9af44ec4958f",
+        "projectId": "1c3e0f9d-c331-4528-8c06-ac8dcb0de0ee",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "before",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:02:47.955Z",
+        "updatedAt": "2026-10-06T02:02:47.955Z",
+        "createdById": "9e8ca1ab-4cfd-4989-89d3-377cf8ac9c3d",
+        "updatedById": null
+      },
+      {
+        "id": "2a8d5524-0d23-4f88-ad8e-8591a71cacaf",
+        "projectId": "18aa9827-d522-48dc-be79-553252a31939",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "before",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:02:47.978Z",
+        "updatedAt": "2026-10-06T02:02:47.978Z",
+        "createdById": "9e8ca1ab-4cfd-4989-89d3-377cf8ac9c3d",
+        "updatedById": null
+      },
+      {
+        "id": "c00759b9-77d5-4c7e-9fc2-b98bad6c6219",
+        "projectId": "0ea91d4e-b762-4641-9e8b-ea984b676734",
+        "phaseId": null,
+        "parentId": null,
+        "templateTaskId": null,
+        "code": null,
+        "title": "before",
+        "description": null,
+        "assigneeId": null,
+        "status": "NOT_STARTED",
+        "priority": "MEDIUM",
+        "taskType": null,
+        "applicability": "REQUIRED",
+        "regulatoryPriority": null,
+        "expectedDeliverable": null,
+        "regulatoryNotes": null,
+        "sortOrder": 0,
+        "estimatedHours": null,
+        "actualHours": null,
+        "progressPercent": 0,
+        "startDate": null,
+        "dueDate": null,
+        "startedAt": null,
+        "completedAt": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:03:00.023Z",
+        "updatedAt": "2026-10-06T02:03:00.023Z",
+        "createdById": "9e8ca1ab-4cfd-4989-89d3-377cf8ac9c3d",
+        "updatedById": null
+      }
+    ],
+    "receipts": [],
+    "audits": [
+      {
+        "id": "05c00f62-e2fc-49f3-9c6f-67daccd10c60",
+        "actorId": "9e8ca1ab-4cfd-4989-89d3-377cf8ac9c3d",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "login",
+        "entityType": "USER",
+        "entityId": "9e8ca1ab-4cfd-4989-89d3-377cf8ac9c3d",
+        "entityLabel": "rp12-a-437b31e5-5175-4483-9fe3-159e4139031b",
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": null,
+        "ip": null,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "requestId": null,
+        "createdAt": "2026-10-06T02:02:23.819Z"
+      },
+      {
+        "id": "5e1a9e89-3d18-427c-8abc-28550ec6652e",
+        "actorId": "9e8ca1ab-4cfd-4989-89d3-377cf8ac9c3d",
+        "actorName": "Synthetic A",
+        "actorRole": "SUPER_ADMIN",
+        "action": "login",
+        "entityType": "USER",
+        "entityId": "9e8ca1ab-4cfd-4989-89d3-377cf8ac9c3d",
+        "entityLabel": "rp12-a-437b31e5-5175-4483-9fe3-159e4139031b",
+        "before": null,
+        "after": null,
+        "changedFields": [],
+        "metadata": null,
+        "ip": null,
+        "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36",
+        "requestId": null,
+        "createdAt": "2026-10-06T02:03:00.002Z"
+      }
+    ]
+  }
+}

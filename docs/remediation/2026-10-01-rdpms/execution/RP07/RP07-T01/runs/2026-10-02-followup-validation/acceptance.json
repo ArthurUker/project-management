@@ -1,0 +1,51 @@
+{
+  "taskId": "RP07-T01",
+  "implementationStatus": "COMPLETE",
+  "validationStatus": "PASS",
+  "releaseStatus": "NOT_EVALUATED",
+  "cases": [
+    {
+      "id": "AC-B09-01",
+      "status": "PASS",
+      "evidence": "../final-regression-2026-10-02/RP07/rp07-project-status-shared/attempt-01/integration-suite.log",
+      "scope": "projects.update单独不能经HTTP/sync归档"
+    },
+    {
+      "id": "AC-B09-02",
+      "status": "PASS",
+      "evidence": "../final-regression-2026-10-02/RP07/rp07-project-status-shared/attempt-01/integration-suite.log",
+      "scope": "archive权限不能绕过共享非法状态边"
+    },
+    {
+      "id": "AC-B09-03",
+      "status": "PASS",
+      "evidence": "../final-regression-2026-10-02/RP07/rp07-project-status-shared/attempt-01/integration-suite.log",
+      "scope": "HTTP与sync共享合法状态转换"
+    },
+    {
+      "id": "PAC-RP07-01",
+      "status": "PASS",
+      "evidence": "../final-regression-2026-10-02/RP07/rp07-project-status-shared/attempt-01/integration-suite.log",
+      "scope": "本地归档权限/状态子范围"
+    },
+    {
+      "id": "PAC-RP07-02",
+      "status": "PASS",
+      "evidence": "../final-regression-2026-10-02/RP07/rp07-project-status-shared/attempt-01/integration-suite.log",
+      "scope": "RP07-T01状态路径部分通过；T02成员转移仍受门禁"
+    },
+    {
+      "id": "TASK-RP07-T01",
+      "status": "PASS",
+      "evidence": "../final-regression-2026-10-02/RP07/rp07-project-status-shared/attempt-01/integration-suite.log",
+      "scope": "本任务真实API/DB子范围通过"
+    },
+    {
+      "id": "INT-PC03-01",
+      "status": "NOT_RUN",
+      "evidence": "../final-regression-2026-10-02/RP07/rp07-project-status-shared/attempt-01/integration-suite.log",
+      "scope": "PC03联合幂等回执合同未运行"
+    }
+  ],
+  "overallBoundary": "Task-local validation only; no deployment/release acceptance."
+}

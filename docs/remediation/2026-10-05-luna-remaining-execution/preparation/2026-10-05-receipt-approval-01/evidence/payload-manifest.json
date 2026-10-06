@@ -1,0 +1,106 @@
+{
+  "pathBase": "REPOSITORY",
+  "excludes": [
+    "evidence/payload-manifest.json",
+    "READY_FOR_REVIEW.json"
+  ],
+  "files": [
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/APPROVAL_REQUEST.md",
+      "sha256": "75d1d0c0281609369c1e4ff575cea1507575ceb4dddd56f1c1b5f91abd37cb48"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/REVIEW_ENTRY.md",
+      "sha256": "8f7f722806c6030823c5ed55c53ee15f4af2f1fa082355f13fe2868d9dd47f0b"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/SESSION_SUMMARY.md",
+      "sha256": "a3f8d7e768d41a17861b1e348593adae76ba07923b79d95c1b39cbe09338aae1"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/acceptance-spec.json",
+      "sha256": "b33aa41a7008830745435f24383fff3c14976415ff646c9475a5617a1d25f8ac"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/acceptance.json",
+      "sha256": "dbde73e4a389e68cb83dda25f98b2198ad5e3566b046938d85fa8bb87382d3cc"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/authorization.json",
+      "sha256": "bfde9c6f854ad6044955dfbde0472d8113d9ceeabd3feef87dc76a69abb1f7ad"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/change-summary.md",
+      "sha256": "b01aeaa4e7c21b081d223d51fc31c3df0ba87a871e326630cf46d19316dfd660"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/command-scope-matrix.csv",
+      "sha256": "1ecd954d49d0e8524791fdb5b3981f234dbfcb13462420d31251b48b37ecaf7c"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/compatibility-and-recovery.md",
+      "sha256": "34a11a7168d2318e6c9ff69960bb0b56f9d09dce626559294382b5114ca12750"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/current-progress.json",
+      "sha256": "bf3c4a849e4600a7d67cd61387b5a1cdfec535e52a1ce70e5e64d4888f4cde6a"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/decision-proposal.json",
+      "sha256": "eeb95df22294dfd39235af26091b0c88aba2d0e1c2b44cd4c12d4038e12146ea"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/evidence/final-readback.json",
+      "sha256": "0fe77d719c30868ddc492419f157647a9cb08af57142edf6936ada50ad51e209"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/execution-boundary.json",
+      "sha256": "56b1ee3066b690aeab092aed97aed4612d90aacb90813153797614d91e1af897"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/failure-recovery-matrix.csv",
+      "sha256": "94eb1d41bffda64a80995f23e6a532deb24b1c3953490160af6cd8c32b85155a"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/handoff.md",
+      "sha256": "1864844545c9a63a89205fc3b97a16fbe1278554ef6fa7d4d7b586fed2715d08"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/original-acceptance-rows.json",
+      "sha256": "6f6fad75d407c67e2bca218a7d41ac1c7a11ed78544b18d32a80638f378df73d"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/remaining-task-readiness.csv",
+      "sha256": "2ada8ef3fc734827afcf52340e187671129089721dbb4f04cd3bafdfdd7e0e5b"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/rollback.md",
+      "sha256": "0594f5b01bd3b8657d8cf798dc4f379f9dfbb2ee77f07de4a4bc2cdd8661b4be"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/rollout-and-rollback.md",
+      "sha256": "1e81f82b8263f239f33de355b597fc2fead6011d10f9806eab18d3210030e9db"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/schema-proposal.md",
+      "sha256": "bee220679cba189625801edac9592058c6177d56f1643b8a2413bbf3b45bd946"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/source-bindings.json",
+      "sha256": "15c0f5a887623979acea46425d001f27075ff9b3ede7faa0aa4b4690f083a17c"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/source-delta-review.md",
+      "sha256": "840717ea00aea5f2aaae4805e0d823240d107515d2b02c64c3a9230f4f4beec3"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/start-baseline.json",
+      "sha256": "95833ea6e0855196a862a6a3a27ef9fe78bdeaeab6ab8f9089be780e01da4a87"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/task-state.json",
+      "sha256": "7522b73736b79dcf3c675138774a585441c812baac095ac835a802773a69711c"
+    }
+  ],
+  "meaning": "This preparation payload only; no circular self-hash"
+}

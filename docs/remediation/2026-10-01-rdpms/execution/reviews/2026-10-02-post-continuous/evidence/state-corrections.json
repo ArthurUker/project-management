@@ -1,0 +1,83 @@
+{
+  "taskOverrides": [
+    {
+      "taskId": "RP10-T02",
+      "previous": {
+        "implementation": "COMPLETE",
+        "validation": "PASS",
+        "release": "NOT_EVALUATED"
+      },
+      "current": {
+        "implementation": "IN_PROGRESS",
+        "validation": "FAIL",
+        "release": "NOT_EVALUATED"
+      },
+      "findings": [
+        "LR2-01",
+        "LR2-03"
+      ]
+    },
+    {
+      "taskId": "RP04-T02",
+      "previous": {
+        "implementation": "COMPLETE",
+        "validation": "PASS",
+        "release": "NOT_EVALUATED"
+      },
+      "current": {
+        "implementation": "IN_PROGRESS",
+        "validation": "FAIL",
+        "release": "NOT_EVALUATED"
+      },
+      "findings": [
+        "LR2-02"
+      ]
+    },
+    {
+      "taskId": "RP02-T01",
+      "previous": {
+        "implementation": "COMPLETE",
+        "validation": "PASS",
+        "release": "NOT_EVALUATED"
+      },
+      "current": {
+        "implementation": "COMPLETE",
+        "validation": "NOT_RUN",
+        "release": "NOT_EVALUATED"
+      },
+      "findings": [
+        "LR2-04"
+      ]
+    },
+    {
+      "taskId": "RP08-T01",
+      "previous": {
+        "implementation": "COMPLETE",
+        "validation": "PASS",
+        "release": "NOT_EVALUATED"
+      },
+      "current": {
+        "implementation": "COMPLETE",
+        "validation": "NOT_RUN",
+        "release": "NOT_EVALUATED"
+      },
+      "findings": [
+        "LR2-04"
+      ]
+    }
+  ],
+  "caseResultsCorrected": {
+    "AC-B10-01": "FAIL",
+    "AC-B10-02": "NOT_RUN",
+    "PAC-RP10-02": "FAIL",
+    "TASK-RP10-T02": "FAIL",
+    "TASK-RP04-T02": "FAIL",
+    "TASK-RP02-T01": "NOT_RUN",
+    "AC-B04-01": "NOT_RUN",
+    "AC-B04-02": "NOT_RUN",
+    "PAC-RP08-01": "NOT_RUN",
+    "TASK-RP08-T01": "NOT_RUN"
+  },
+  "frozenHistoricalInputs": "previous-current-ledgers/",
+  "sourceUnchanged": true
+}

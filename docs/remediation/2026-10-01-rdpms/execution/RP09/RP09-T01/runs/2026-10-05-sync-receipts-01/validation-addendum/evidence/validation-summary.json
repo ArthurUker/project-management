@@ -1,0 +1,6 @@
+{
+  "finalSourceHashesRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/final-source-hashes.json",
+  "currentValidationIndexRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/final-validation-index.json",
+  "regressionClassificationRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/regression-classification.json",
+  "sourceBoundAt": "2026-10-05T23:45:23.665117+08:00"
+}

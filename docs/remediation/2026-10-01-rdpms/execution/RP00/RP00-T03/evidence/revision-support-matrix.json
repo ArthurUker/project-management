@@ -1,0 +1,422 @@
+{
+  "taskId": "RP00-T03",
+  "packageId": "RP00",
+  "findingId": "B16",
+  "historicalDisposition": "SUPPORTED / P2 (unchanged; historical evidence reused, not rerun)",
+  "baseline": {
+    "originalAudit": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "currentHead": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "workingTreeRelevantDiff": "None in the task/client/route/command/schema paths. Existing roles.js/B17 test/docs changes preserved."
+  },
+  "scope": "Static support-chain matrix for current checked-in web client and server: ordinary fields, status, assignee, mixed PUT, sync offline DTO/route/commands and legacy coverage boundary. No implementation or dynamic run.",
+  "clientInventory": {
+    "checkedInFrontendArtifact": {
+      "name": "rdpms-frontend",
+      "packageVersion": "1.0.0",
+      "source": "rdpms-system/frontend/package.json:2-5"
+    },
+    "backendArtifact": {
+      "name": "rdpms-backend",
+      "packageVersion": "2.0.0",
+      "meaning": "server package version only; not a supported-client compatibility declaration"
+    },
+    "supportedDeployedClientVersions": "UNKNOWN / not enumerated by current checkout or found support/deployment policy search. package.json version does not prove deployed or supported versions.",
+    "legacyCompatibilityWindow": "No owner-approved legacy client allowlist, minimum version, sunset or compatibility window found. Cannot infer all supported clients from current source."
+  },
+  "revisionModel": {
+    "checkedInRuntimeRevision": "Task.updatedAt timestamp in Prisma Task schema; there is no Task.version column.",
+    "frontendTypeMismatch": "frontend Task extends Versioned with required version:number and UpdateTaskDto allows version?:number; API/server use updatedAt/baseUpdatedAt. The task PUT whitelist does not include version or expectedUpdatedAt. pickAllowed copies only whitelisted keys; unknown ordinary fields are dropped if another allowed field remains.",
+    "wireTokens": [
+      "HTTP task routes: no client revision token accepted or forwarded.",
+      "Sync DTO: optional top-level baseUpdatedAt; not inside data."
+    ],
+    "findingBoundary": "This is supporting B16 static contract evidence, not a new finding ID."
+  },
+  "entrypointMatrix": [
+    {
+      "entry": "Tasks page / Kanban task editor save",
+      "method": "PUT /api/tasks/:id via taskAPI.update",
+      "payloadRevision": "No expectedUpdatedAt/baseUpdatedAt included; editor passes data only.",
+      "serverPath": "tasks.js:231-312: task read then whitelist; fields/status/assignee split; transaction invokes three task commands without cas; ordinary audit after transaction.",
+      "staleSemantics": "No client-baseline rejection; history confirms stale title PUT can return 200 and overwrite newer value.",
+      "evidence": [
+        "rdpms-system/frontend/src/pages/Tasks.tsx:508-512",
+        "rdpms-system/frontend/src/components/KanbanBoard.tsx:554-559",
+        "rdpms-system/frontend/src/api/endpoints/tasks.ts:11-12",
+        "rdpms-system/backend/src/routes/tasks.js:231-312",
+        "rdpms-system/backend/src/modules/tasks/taskCommands.ts:57-74"
+      ]
+    },
+    {
+      "entry": "Tasks page online status action / Kanban online drag",
+      "method": "PATCH /api/tasks/:id/status via taskAPI.updateStatus",
+      "payloadRevision": "Only {status}; no revision.",
+      "serverPath": "tasks.js:316-347: reads task for authorization/status side effects then direct prisma.task.update by id; no conditional updatedAt predicate.",
+      "offlineCounterpart": "Both current UI paths enqueue status with task.updatedAt as baseUpdatedAt.",
+      "staleSemantics": "Online and offline status actions have different revision contracts; per-status concurrency result was not dynamically tested.",
+      "evidence": [
+        "rdpms-system/frontend/src/pages/Tasks.tsx:489-501",
+        "rdpms-system/frontend/src/components/KanbanBoard.tsx:520-533",
+        "rdpms-system/frontend/src/api/endpoints/tasks.ts:13",
+        "rdpms-system/backend/src/routes/tasks.js:315-347"
+      ]
+    },
+    {
+      "entry": "Generic offline task upsert: ordinary fields",
+      "method": "POST /api/sync/push with entity=tasks, op=upsert",
+      "payloadRevision": "SyncChange has optional baseUpdatedAt; current first-party offline task queue call sites found only status actions, not ordinary editor fields.",
+      "serverPath": "sync.js:69-87 task registry field list; 424-435 stale precheck; 464-490 task commands inside transaction.",
+      "staleSemantics": "When base is absent, server CAS compares against the timestamp it just read, which protects the read-to-write race but does not detect that the client edited an already-stale cached revision. When base is present and stale, returns conflict; subsequent CAS protects concurrent change after read.",
+      "evidence": [
+        "rdpms-system/frontend/src/api/endpoints/sync.ts:19-29",
+        "rdpms-system/frontend/src/pages/Tasks.tsx:491-498",
+        "rdpms-system/frontend/src/components/KanbanBoard.tsx:523-530",
+        "rdpms-system/backend/src/routes/sync.js:69-87,424-435,464-490"
+      ]
+    },
+    {
+      "entry": "Generic offline task upsert: assigneeId",
+      "method": "HTTP PUT field or generic sync tasks upsert",
+      "payloadRevision": "HTTP PUT no baseline. Generic sync can carry baseUpdatedAt, but no first-party offline enqueueChange assignment caller was found.",
+      "serverPath": "tasks.js:251-252,291-293 calls assignTask without cas; sync.js:467-488 passes observed CAS on first transaction write when there is a task update and supplied base is not stale.",
+      "staleSemantics": "Route-level action authorization exists; revision parity absent online. Generic sync conditional on optional client base. Supported external/legacy sender set unknown.",
+      "evidence": [
+        "rdpms-system/backend/src/routes/tasks.js:251-252,291-293",
+        "rdpms-system/backend/src/routes/sync.js:75-82,467-488",
+        "rdpms-system/backend/src/modules/tasks/taskCommands.ts:114-123"
+      ]
+    },
+    {
+      "entry": "Mixed ordinary fields + status + assignee in one PUT",
+      "method": "PUT /api/tasks/:id",
+      "payloadRevision": "No client baseline in DTO or route.",
+      "serverPath": "All effective subcommands share one Prisma transaction (tasks.js:282-295), but none receives cas; transaction gives all-or-none composition, not stale-client rejection.",
+      "staleSemantics": "A mixed stale body can still be applied as a transaction; historical B16 evidence proves title path, not every mixed field combination.",
+      "evidence": [
+        "rdpms-system/backend/src/routes/tasks.js:247-295",
+        "rdpms-system/backend/src/modules/tasks/taskCommands.ts:61-123",
+        "docs/audits/2026-09-29-rdpms/backend-results.json#B16_TASK_HTTP_IGNORES_BASELINE"
+      ]
+    },
+    {
+      "entry": "Mixed ordinary fields + status + assignee in sync task upsert",
+      "method": "POST /api/sync/push",
+      "payloadRevision": "One optional baseUpdatedAt applies to whole command; not per-field.",
+      "serverPath": "Task update decomposes fields/status/assignee and passes cas once on the first actual command within one Prisma transaction.",
+      "staleSemantics": "When a base is present and stale before write, returns conflict. No base retains old-client stale overwrite exposure. A midflight race after read is guarded by observed timestamp CAS.",
+      "evidence": [
+        "rdpms-system/backend/src/routes/sync.js:424-435,464-490",
+        "rdpms-system/backend/src/modules/tasks/taskCommands.ts:57-74"
+      ]
+    },
+    {
+      "entry": "Task delete (adjacent boundary)",
+      "method": "HTTP DELETE /api/tasks/:id or sync op=delete",
+      "payloadRevision": "Neither route accepts/enforces client revision; sync explicitly excludes delete from stale-base precheck.",
+      "serverPath": "sync.js:429-448 updates tombstone by id; HTTP delete is separate cascade/soft-delete path.",
+      "staleSemantics": "Not resolved here; stale-delete/delete-wins policy is S03-OI-05 and only gates work changing that behavior. No dynamic stale-delete test run.",
+      "evidence": [
+        "rdpms-system/backend/src/routes/sync.js:429-448",
+        "rdpms-system/backend/src/routes/tasks.js:350-388",
+        "docs/remediation/2026-10-01-rdpms/OPEN_ITEM_GATES.json#S03-OI-05"
+      ]
+    }
+  ],
+  "ordinaryFieldMatrix": [
+    {
+      "field": "title",
+      "onlineUpdateTaskDto": true,
+      "onlinePutWhitelist": true,
+      "currentOnlineUiRevision": "No expectedUpdatedAt/baseUpdatedAt is passed in PUT; route does not pass cas.",
+      "currentFirstPartyOfflineProducer": "No enqueueChange call for this ordinary task field found in Tasks/Kanban source.",
+      "syncTaskWhitelist": true,
+      "syncRevision": "SyncChange.baseUpdatedAt is optional and is not a per-field value; stale precheck only applies when existing row + base provided, then task command first actual write uses observed-updatedAt CAS.",
+      "coverage": "Static only; no field-level interleaving run."
+    },
+    {
+      "field": "description",
+      "onlineUpdateTaskDto": true,
+      "onlinePutWhitelist": true,
+      "currentOnlineUiRevision": "No expectedUpdatedAt/baseUpdatedAt is passed in PUT; route does not pass cas.",
+      "currentFirstPartyOfflineProducer": "No enqueueChange call for this ordinary task field found in Tasks/Kanban source.",
+      "syncTaskWhitelist": true,
+      "syncRevision": "SyncChange.baseUpdatedAt is optional and is not a per-field value; stale precheck only applies when existing row + base provided, then task command first actual write uses observed-updatedAt CAS.",
+      "coverage": "Static only; no field-level interleaving run."
+    },
+    {
+      "field": "priority",
+      "onlineUpdateTaskDto": true,
+      "onlinePutWhitelist": true,
+      "currentOnlineUiRevision": "No expectedUpdatedAt/baseUpdatedAt is passed in PUT; route does not pass cas.",
+      "currentFirstPartyOfflineProducer": "No enqueueChange call for this ordinary task field found in Tasks/Kanban source.",
+      "syncTaskWhitelist": true,
+      "syncRevision": "SyncChange.baseUpdatedAt is optional and is not a per-field value; stale precheck only applies when existing row + base provided, then task command first actual write uses observed-updatedAt CAS.",
+      "coverage": "Static only; no field-level interleaving run."
+    },
+    {
+      "field": "taskType",
+      "onlineUpdateTaskDto": true,
+      "onlinePutWhitelist": true,
+      "currentOnlineUiRevision": "No expectedUpdatedAt/baseUpdatedAt is passed in PUT; route does not pass cas.",
+      "currentFirstPartyOfflineProducer": "No enqueueChange call for this ordinary task field found in Tasks/Kanban source.",
+      "syncTaskWhitelist": true,
+      "syncRevision": "SyncChange.baseUpdatedAt is optional and is not a per-field value; stale precheck only applies when existing row + base provided, then task command first actual write uses observed-updatedAt CAS.",
+      "coverage": "Static only; no field-level interleaving run."
+    },
+    {
+      "field": "applicability",
+      "onlineUpdateTaskDto": false,
+      "onlinePutWhitelist": true,
+      "currentOnlineUiRevision": "No expectedUpdatedAt/baseUpdatedAt is passed in PUT; route does not pass cas.",
+      "currentFirstPartyOfflineProducer": "No enqueueChange call for this ordinary task field found in Tasks/Kanban source.",
+      "syncTaskWhitelist": true,
+      "syncRevision": "SyncChange.baseUpdatedAt is optional and is not a per-field value; stale precheck only applies when existing row + base provided, then task command first actual write uses observed-updatedAt CAS.",
+      "coverage": "Static only; no field-level interleaving run."
+    },
+    {
+      "field": "applicabilityStatus",
+      "onlineUpdateTaskDto": false,
+      "onlinePutWhitelist": true,
+      "currentOnlineUiRevision": "No expectedUpdatedAt/baseUpdatedAt is passed in PUT; route does not pass cas.",
+      "currentFirstPartyOfflineProducer": "No enqueueChange call for this ordinary task field found in Tasks/Kanban source.",
+      "syncTaskWhitelist": false,
+      "syncRevision": "SyncChange.baseUpdatedAt is optional and is not a per-field value; stale precheck only applies when existing row + base provided, then task command first actual write uses observed-updatedAt CAS.",
+      "coverage": "Static only; no field-level interleaving run."
+    },
+    {
+      "field": "regulatoryPriority",
+      "onlineUpdateTaskDto": false,
+      "onlinePutWhitelist": true,
+      "currentOnlineUiRevision": "No expectedUpdatedAt/baseUpdatedAt is passed in PUT; route does not pass cas.",
+      "currentFirstPartyOfflineProducer": "No enqueueChange call for this ordinary task field found in Tasks/Kanban source.",
+      "syncTaskWhitelist": true,
+      "syncRevision": "SyncChange.baseUpdatedAt is optional and is not a per-field value; stale precheck only applies when existing row + base provided, then task command first actual write uses observed-updatedAt CAS.",
+      "coverage": "Static only; no field-level interleaving run."
+    },
+    {
+      "field": "expectedDeliverable",
+      "onlineUpdateTaskDto": false,
+      "onlinePutWhitelist": true,
+      "currentOnlineUiRevision": "No expectedUpdatedAt/baseUpdatedAt is passed in PUT; route does not pass cas.",
+      "currentFirstPartyOfflineProducer": "No enqueueChange call for this ordinary task field found in Tasks/Kanban source.",
+      "syncTaskWhitelist": true,
+      "syncRevision": "SyncChange.baseUpdatedAt is optional and is not a per-field value; stale precheck only applies when existing row + base provided, then task command first actual write uses observed-updatedAt CAS.",
+      "coverage": "Static only; no field-level interleaving run."
+    },
+    {
+      "field": "regulatoryNotes",
+      "onlineUpdateTaskDto": false,
+      "onlinePutWhitelist": true,
+      "currentOnlineUiRevision": "No expectedUpdatedAt/baseUpdatedAt is passed in PUT; route does not pass cas.",
+      "currentFirstPartyOfflineProducer": "No enqueueChange call for this ordinary task field found in Tasks/Kanban source.",
+      "syncTaskWhitelist": true,
+      "syncRevision": "SyncChange.baseUpdatedAt is optional and is not a per-field value; stale precheck only applies when existing row + base provided, then task command first actual write uses observed-updatedAt CAS.",
+      "coverage": "Static only; no field-level interleaving run."
+    },
+    {
+      "field": "sortOrder",
+      "onlineUpdateTaskDto": false,
+      "onlinePutWhitelist": true,
+      "currentOnlineUiRevision": "No expectedUpdatedAt/baseUpdatedAt is passed in PUT; route does not pass cas.",
+      "currentFirstPartyOfflineProducer": "No enqueueChange call for this ordinary task field found in Tasks/Kanban source.",
+      "syncTaskWhitelist": true,
+      "syncRevision": "SyncChange.baseUpdatedAt is optional and is not a per-field value; stale precheck only applies when existing row + base provided, then task command first actual write uses observed-updatedAt CAS.",
+      "coverage": "Static only; no field-level interleaving run."
+    },
+    {
+      "field": "estimatedHours",
+      "onlineUpdateTaskDto": false,
+      "onlinePutWhitelist": true,
+      "currentOnlineUiRevision": "No expectedUpdatedAt/baseUpdatedAt is passed in PUT; route does not pass cas.",
+      "currentFirstPartyOfflineProducer": "No enqueueChange call for this ordinary task field found in Tasks/Kanban source.",
+      "syncTaskWhitelist": true,
+      "syncRevision": "SyncChange.baseUpdatedAt is optional and is not a per-field value; stale precheck only applies when existing row + base provided, then task command first actual write uses observed-updatedAt CAS.",
+      "coverage": "Static only; no field-level interleaving run."
+    },
+    {
+      "field": "actualHours",
+      "onlineUpdateTaskDto": false,
+      "onlinePutWhitelist": true,
+      "currentOnlineUiRevision": "No expectedUpdatedAt/baseUpdatedAt is passed in PUT; route does not pass cas.",
+      "currentFirstPartyOfflineProducer": "No enqueueChange call for this ordinary task field found in Tasks/Kanban source.",
+      "syncTaskWhitelist": true,
+      "syncRevision": "SyncChange.baseUpdatedAt is optional and is not a per-field value; stale precheck only applies when existing row + base provided, then task command first actual write uses observed-updatedAt CAS.",
+      "coverage": "Static only; no field-level interleaving run."
+    },
+    {
+      "field": "progressPercent",
+      "onlineUpdateTaskDto": false,
+      "onlinePutWhitelist": true,
+      "currentOnlineUiRevision": "No expectedUpdatedAt/baseUpdatedAt is passed in PUT; route does not pass cas.",
+      "currentFirstPartyOfflineProducer": "No enqueueChange call for this ordinary task field found in Tasks/Kanban source.",
+      "syncTaskWhitelist": true,
+      "syncRevision": "SyncChange.baseUpdatedAt is optional and is not a per-field value; stale precheck only applies when existing row + base provided, then task command first actual write uses observed-updatedAt CAS.",
+      "coverage": "Static only; no field-level interleaving run."
+    },
+    {
+      "field": "startDate",
+      "onlineUpdateTaskDto": true,
+      "onlinePutWhitelist": true,
+      "currentOnlineUiRevision": "No expectedUpdatedAt/baseUpdatedAt is passed in PUT; route does not pass cas.",
+      "currentFirstPartyOfflineProducer": "No enqueueChange call for this ordinary task field found in Tasks/Kanban source.",
+      "syncTaskWhitelist": true,
+      "syncRevision": "SyncChange.baseUpdatedAt is optional and is not a per-field value; stale precheck only applies when existing row + base provided, then task command first actual write uses observed-updatedAt CAS.",
+      "coverage": "Static only; no field-level interleaving run."
+    },
+    {
+      "field": "dueDate",
+      "onlineUpdateTaskDto": true,
+      "onlinePutWhitelist": true,
+      "currentOnlineUiRevision": "No expectedUpdatedAt/baseUpdatedAt is passed in PUT; route does not pass cas.",
+      "currentFirstPartyOfflineProducer": "No enqueueChange call for this ordinary task field found in Tasks/Kanban source.",
+      "syncTaskWhitelist": true,
+      "syncRevision": "SyncChange.baseUpdatedAt is optional and is not a per-field value; stale precheck only applies when existing row + base provided, then task command first actual write uses observed-updatedAt CAS.",
+      "coverage": "Static only; no field-level interleaving run."
+    },
+    {
+      "field": "phaseId",
+      "onlineUpdateTaskDto": false,
+      "onlinePutWhitelist": true,
+      "currentOnlineUiRevision": "No expectedUpdatedAt/baseUpdatedAt is passed in PUT; route does not pass cas.",
+      "currentFirstPartyOfflineProducer": "No enqueueChange call for this ordinary task field found in Tasks/Kanban source.",
+      "syncTaskWhitelist": true,
+      "syncRevision": "SyncChange.baseUpdatedAt is optional and is not a per-field value; stale precheck only applies when existing row + base provided, then task command first actual write uses observed-updatedAt CAS.",
+      "coverage": "Static only; no field-level interleaving run."
+    },
+    {
+      "field": "templateTaskId",
+      "onlineUpdateTaskDto": false,
+      "onlinePutWhitelist": true,
+      "currentOnlineUiRevision": "No expectedUpdatedAt/baseUpdatedAt is passed in PUT; route does not pass cas.",
+      "currentFirstPartyOfflineProducer": "No enqueueChange call for this ordinary task field found in Tasks/Kanban source.",
+      "syncTaskWhitelist": false,
+      "syncRevision": "SyncChange.baseUpdatedAt is optional and is not a per-field value; stale precheck only applies when existing row + base provided, then task command first actual write uses observed-updatedAt CAS.",
+      "coverage": "Static only; no field-level interleaving run."
+    }
+  ],
+  "revisionCarrierComparison": [
+    {
+      "source": "Frontend types",
+      "evidence": [
+        "rdpms-system/frontend/src/types/task.ts:9-25,41",
+        "rdpms-system/frontend/src/types/common.ts:23-26"
+      ],
+      "declared": "Task requires version:number; UpdateTaskDto has optional version:number.",
+      "observedSupport": "No backend Task.version column; current checked-in runtime routes use updatedAt/baseUpdatedAt instead. No found UI caller uses task.version for writes."
+    },
+    {
+      "source": "Online HTTP DTO/route",
+      "evidence": [
+        "rdpms-system/frontend/src/api/endpoints/tasks.ts:11-13",
+        "rdpms-system/backend/src/routes/tasks.js:231-240,316-332",
+        "rdpms-system/backend/src/kernel/massAssign.js:20-46"
+      ],
+      "declared": "UpdateTaskDto does not declare expectedUpdatedAt; route allowlists do not include expectedUpdatedAt/version and do not forward cas. Unknown non-forbidden keys are ignored by allowlist if a valid field is present.",
+      "observedSupport": "Historical request included stale expectedUpdatedAt plus title and received HTTP 200 with stale title persisted."
+    },
+    {
+      "source": "Sync protocol",
+      "evidence": [
+        "rdpms-system/frontend/src/api/endpoints/sync.ts:19-29",
+        "rdpms-system/frontend/src/offline/idb.ts:12-21",
+        "rdpms-system/backend/src/routes/sync.js:424-490"
+      ],
+      "declared": "optional ISO baseUpdatedAt per mutation, persisted in IDB outbox and sent unchanged by engine.",
+      "observedSupport": "Only current UI status queue call sites found; ordinary editor and assignment offline producers not found."
+    },
+    {
+      "source": "Database row",
+      "evidence": [
+        "rdpms-system/backend/prisma/schema.prisma:818-848"
+      ],
+      "declared": "updatedAt timestamp, no integer version column.",
+      "observedSupport": "Commands implement optional timestamp CAS only when caller passes cas."
+    }
+  ],
+  "historicalEvidence": {
+    "findingId": "B16_TASK_HTTP_IGNORES_BASELINE",
+    "severity": "P2",
+    "status": "SUPPORTED",
+    "source": "docs/audits/2026-09-29-rdpms/backend-results.json#B16_TASK_HTTP_IGNORES_BASELINE; docs/audits/2026-09-29-rdpms/verify-backend.mjs:259-263",
+    "observed": {
+      "status": 200,
+      "submittedBaseline": "2026-01-01T00:00:00.000Z",
+      "serverBaseline": "2026-09-29T06:51:04.888Z",
+      "staleOverwriteAccepted": true
+    },
+    "rerun": "No. Inherited evidence only."
+  },
+  "supportedClientVersionCoverage": {
+    "knownCheckedInSource": "rdpms-frontend@1.0.0",
+    "knownDeployedVersions": null,
+    "legacyVersions": "UNKNOWN",
+    "ownerApprovedCompatibilityWindow": null,
+    "effect": "S03-OI-09 gate cannot be marked PASS from this repository alone; RP10-T01 strict CAS remains gated."
+  },
+  "jointContracts": [
+    {
+      "ref": "PC01",
+      "applicability": "No authentication/session behavior changed or dynamically checked; actor-generation scenario not covered."
+    },
+    {
+      "ref": "PC02",
+      "applicability": "No authorization behavior changed; existing permission gates are noted only."
+    },
+    {
+      "ref": "PC03",
+      "applicability": "No receipt/idempotency implementation touched; RP00-T02 matrix remains separately proposed."
+    },
+    {
+      "ref": "PC04",
+      "applicability": "No IDB schema/multi-tab behavior changed; only outbox baseUpdatedAt field provenance read."
+    },
+    {
+      "ref": "PC05",
+      "applicability": "No pull pagination/snapshot/ACL cursor contract changed."
+    },
+    {
+      "ref": "PC06",
+      "applicability": "No restore epoch/session/cursor protocol changed."
+    },
+    {
+      "ref": "PC07",
+      "applicability": "Task row observed timestamp/CAS path traced; no DB interleaving or migration budget test."
+    },
+    {
+      "ref": "PC08",
+      "applicability": "Not applicable: no backup change."
+    },
+    {
+      "ref": "PC09",
+      "applicability": "No candidate build/config parity run this static task."
+    },
+    {
+      "ref": "PC10",
+      "applicability": "No release or rollback was attempted."
+    },
+    {
+      "ref": "PC11",
+      "applicability": "No load/monitoring test."
+    },
+    {
+      "ref": "PC12",
+      "applicability": "No user recovery/cleanup action."
+    }
+  ],
+  "limitations": [
+    "No approved inventory of supported deployed client versions was found. Current package version is not proof of deployment or support range.",
+    "No current UI call site was found for offline task ordinary-field or assignee enqueue; this does not rule out external/legacy clients.",
+    "Historical B16 covers online PUT/title only. Other fields/status/assignment/mixed/PATCH paths are static call-chain evidence, not per-field dynamic proof.",
+    "No tests, build, browser, database, or concurrent barrier were run.",
+    "No product/API owner has approved a legacy compatibility window or revision token contract.",
+    "S03-OI-05 stale-delete semantics are out of scope and remain open."
+  ],
+  "statusBoundary": {
+    "matrixArtifact": "COMPLETE for all current checked-in source paths found",
+    "taskDeliveryCase": "PASS for attributable bounded static matrix artifact",
+    "taskValidation": "NOT_RUN because supported deployed-client inventory is absent and full gate scope cannot be certified",
+    "GATE-S03-OI-09": "NOT_RUN / OPEN",
+    "PAC-RP00-02": "NOT_RUN until both static gates are satisfied",
+    "B16": "SUPPORTED / P2; no fix acceptance"
+  }
+}

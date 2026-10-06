@@ -1,0 +1,31 @@
+{
+  "taskId": "RP02-T02",
+  "kind": "APPENDED_JOINT_VALIDATION",
+  "cases": [
+    {
+      "caseId": "PAC-RP02-04",
+      "result": "PASS",
+      "scope": "Actual JWT exp/expiresIn backend verified and same-origin real Chrome winner/loser preserves successor",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/frontend-and-browser-bindings.json"
+    },
+    {
+      "caseId": "PAC-RP02-05",
+      "result": "PASS",
+      "scope": "Single-use family loser retains winner; DB insert/audit failures roll back; real committed response loss does not clear newer identities and explicit password recovery works",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/frontend-and-browser-bindings.json"
+    },
+    {
+      "caseId": "TASK-RP02-T02",
+      "result": "PASS",
+      "scope": "RP03-T01 acceptance dependency implemented and real scoped joint auth evidence passed; full PC01/target/release not evaluated",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/frontend-and-browser-bindings.json"
+    }
+  ],
+  "localValidation": "PASS",
+  "validation": "PASS",
+  "targetValidation": "NOT_RUN",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "originalTaskStateRef": "execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/task-state.json",
+  "scope": "Only approved current repo auth lineage and frontend acceptance dependency; not wider PC01/RP11/RP18/access JWT invalidation or deployed client matrix."
+}

@@ -1,0 +1,6 @@
+{
+  "file": "coverage.csv",
+  "beforeSha256": "d59e29415dee6700bd8360564d0235b05564cf0de55528ebcaf5c0764d7bef19",
+  "afterSha256": "472fbebee010dd82b686c61a0d29817310b803ce046baaf59d1cdf316f9bf337",
+  "reason": "Normalize S01 coverage to the supplemental plan required 7-column contract while preserving the original 9-column detail as before/coverage.csv and maintaining every row’s detail in standardized columns."
+}

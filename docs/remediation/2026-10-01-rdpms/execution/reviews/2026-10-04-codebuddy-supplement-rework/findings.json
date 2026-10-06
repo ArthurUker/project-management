@@ -1,0 +1,154 @@
+{
+  "reviewId": "CODEBUDDY-SUPPLEMENT-REWORK-REVIEW-2026-10-04",
+  "date": "2026-10-04",
+  "subjectSession": "execution/supplements/test-contract-rework-2026-10-03-cb1",
+  "verdict": "SCOPED_PASSES_WITH_REQUIRED_REWORK",
+  "findings": [
+    {
+      "id": "LR6-01",
+      "severity": "P2",
+      "kind": "TEST_REQUIREMENT_INCOMPLETE",
+      "supplements": [
+        "SUP-01"
+      ],
+      "locations": [
+        {
+          "file": "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs",
+          "line": 106
+        },
+        {
+          "file": "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs",
+          "line": 211
+        },
+        {
+          "file": "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs",
+          "line": 256
+        },
+        {
+          "file": "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs",
+          "line": 294
+        },
+        {
+          "file": "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs",
+          "line": 329
+        }
+      ],
+      "provenImpact": "matchReportWrite ignores projectId/authorId/reportType, accepting a different full business key with the same period and payload. draftWriteBarrier advertises upsert but only reads data.content, so an upsert with where.id/create/update bypasses the barrier. Three migrated draft race cases retain no try/finally release and no timeout cleanup. Passing current updateMany path and four standalone matrix calls cannot prove these required branches.",
+      "existingProtection": "All original19 tests retained, current22 independently pass. A02/A03/A03b/A04b/A06b and new create/restore races release in finally; four real primitives reach; restore+submit is a true DB pass.",
+      "evidence": [
+        "evidence/helper-controls.json",
+        "evidence/independent-validation.json"
+      ],
+      "evidenceLevel": "CURRENT_SOURCE_AND_STATIC_HELPER_CONTROL; independent normal DB suites separately PASS",
+      "status": "SUPPORTED",
+      "recommendation": "Only the formal report test: match full business identity or target id plus payload, reuse that matcher for draftWriteBarrier upsert create/update shape, add try/finally/clearTimeout/settle to the three existing draft races, retain current assertions and real-DB successes.",
+      "acceptance": "Wrong full identity does not fire; designated draft upsert does fire; all three existing draft races release/settle even on an intermediate exception, timers cleared; entire report suite passes in a new owned DB."
+    },
+    {
+      "id": "LR6-02",
+      "severity": "P2",
+      "kind": "RUNNER_PRIMARY_EXCEPTION_FALSE_SUCCESS",
+      "supplements": [
+        "shared runner",
+        "SUP-01",
+        "SUP-02"
+      ],
+      "locations": [
+        {
+          "file": "execution/supplements/test-contract-rework-2026-10-03-cb1/run-suite.py",
+          "line": 146
+        },
+        {
+          "file": "execution/supplements/test-contract-rework-2026-10-03-cb1/run-suite.py",
+          "line": 247
+        },
+        {
+          "file": "execution/supplements/test-contract-rework-2026-10-03-cb1/run-suite.py",
+          "line": 317
+        }
+      ],
+      "provenImpact": "Frozen runner has no catch for primary subprocess exceptions, and finally sys.exit(0) suppresses the pending exception if cleanup succeeds. Safe all-subprocess-stubbed controls observed build TimeoutExpired and suite FileNotFoundError exit0/no critical failures. write_results returnsFalse on an injected write error, but its result is ignored and exit0 persists without run-results.json.",
+      "existingProtection": "Executor normal final attempts and independent normal suites truly pass and clean. Earlier drop-raise/stop-fail/nonzero-build controls work for their covered branches. Filesystem-based dist absence check is correct in that branch.",
+      "evidence": [
+        "evidence/runner-exception-controls.json",
+        "evidence/runner-exception-controls.py",
+        "evidence/independent-validation.json"
+      ],
+      "evidenceLevel": "SIMULATED_CONTROL_ALL_SUBPROCESSES_STUBBED; not a real database fault injection",
+      "status": "SUPPORTED",
+      "recommendation": "Copy/fix a new-session runner only: record primary execution exceptions and interrupted commands, propagate nonzero status after cleanup, make result persistence failure nonzero with durable error evidence, keep cleanup isolation and owned-root retention.",
+      "acceptance": "Build timeout and suite spawn exception both clean/record/nonzero; result write failure returns nonzero; existing drop/stop/failed-build controls preserved; normal real-DB runs still pass."
+    },
+    {
+      "id": "LR6-03",
+      "severity": "P2",
+      "kind": "SEALING_DIGEST_AND_REVISION_ID_INCONSISTENCY",
+      "supplements": [
+        "shared delivery"
+      ],
+      "locations": [
+        {
+          "file": "execution/supplements/test-contract-rework-2026-10-03-cb1/final-integrity.json",
+          "line": 199
+        },
+        {
+          "file": "execution/supplements/test-contract-rework-2026-10-03-cb1/final-integrity.json",
+          "line": 205
+        },
+        {
+          "file": "docs/remediation/2026-10-01-rdpms/REVISION_HISTORY.json",
+          "line": 1684
+        }
+      ],
+      "provenImpact": "Final-integrity embeds two postAppendSha256 values that differ from current final histories while declaring the histories excluded from hashing. REVISION_HISTORY appends a new executor entry with the same version id as the preceding independent review. Final histories correctly seal current tests and the cf2d8e... artifact, but the nested stale hash and duplicate id prevent an unambiguous final-state readback.",
+      "existingProtection": "Old history prefixes/entries and handoff prefixes are preserved. Two state files differ only by the allowed continuation. Final source/test/sealed-artifact hashes in newest entries match current bytes. No history evidence overwrite was proved.",
+      "evidence": [
+        "evidence/record-integrity-analysis.json"
+      ],
+      "evidenceLevel": "REAL_FILE_HASH_AND_STRUCTURAL_READBACK",
+      "status": "SUPPORTED",
+      "recommendation": "Freeze this session. New corrective delivery uses a unique version/session id and explicit corrected-entry reference. Exclude both history files from final-integrity digests or label a preseal snapshot clearly as historical. Append a correcting entry, never rewrite frozen previous entries. Explicit path bases and no self/cross-history hash cycles.",
+      "acceptance": "Latest corrective id is unique; prior entries stay unchanged; all current sealed path hashes match; history digests are outside artifacts sealed by those histories, or explicitly historical snapshots, with no claim of final-current equality."
+    },
+    {
+      "id": "LR6-04",
+      "severity": "P3",
+      "kind": "STATIC_CONTRACT_SUMMARY_OVERSTATEMENT",
+      "supplements": [
+        "SUP-03"
+      ],
+      "locations": [
+        {
+          "file": "execution/supplements/test-contract-rework-2026-10-03-cb1/SUP-03/deliverables/phase-read-contract.md",
+          "line": 32
+        },
+        {
+          "file": "execution/supplements/test-contract-rework-2026-10-03-cb1/SUP-03/deliverables/scope-assessment.md",
+          "line": 20
+        },
+        {
+          "file": "rdpms-system/backend/src/routes/phases.js",
+          "line": 42
+        },
+        {
+          "file": "rdpms-system/backend/src/kernel/projectAccess.js",
+          "line": 97
+        }
+      ],
+      "provenImpact": "Summary claims all phase reads call resolveProjectAccess and deleted/nonmember projects yield404. The no-projectId list instead uses projectVisibilityFilter; that filter admits manager or active member and returnsnull for SUPER_ADMIN, without checking project.deletedAt. The entry table already distinguishes this branch, but the all-entry summary is inaccurate.",
+      "existingProtection": "Required read entries/client trace/B20 scope/UI NOT_RUN/policy unresolved are now present. This is a document erratum, not a confirmed new business regression or approval to alter phase/project access.",
+      "evidence": [
+        "evidence/phase-contract-check.json"
+      ],
+      "evidenceLevel": "STATIC_SOURCE_REVIEW_ONLY; phase API/UI not rerun",
+      "status": "SUPPORTED",
+      "recommendation": "New document erratum only: describe single-project404 behavior separately from global list visibility filtering. Do not assert all-entry404; do not implement deletion filters or reopen B20.",
+      "acceptance": "Summary and entry table agree; manager/member/elevated/global list scope explicitly recorded, dynamic/UI remainsNOT_RUN and phase policy remainsCONTRACT_UNRESOLVED."
+    }
+  ],
+  "newBusinessRegressionConfirmed": false,
+  "original54TaskAxesUnchanged": true,
+  "original306CaseResultsUnchanged": true,
+  "approvalsGranted": false,
+  "release": "NOT_EVALUATED"
+}

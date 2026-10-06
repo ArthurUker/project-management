@@ -1,0 +1,6 @@
+{
+  "findingId": "B07",
+  "disposition": "SUPPORTED; historical evidence frozen",
+  "source": "docs/audits/2026-09-29-rdpms/REPORT.md",
+  "scope": "fixed-page truncation and tie-safe continuation only; timestamp watermark is not commit-safe and remains RP13-T02."
+}

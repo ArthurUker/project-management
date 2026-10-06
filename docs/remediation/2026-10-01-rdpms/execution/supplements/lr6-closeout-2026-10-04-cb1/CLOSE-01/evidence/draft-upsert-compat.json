@@ -1,0 +1,18 @@
+{
+  "kind": "REAL_OWNED_DB_TRACE",
+  "case": "SUP-01-06",
+  "database": "rdpms_test_lr6_a01e4c4281",
+  "logRef": "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/integration-suite.log",
+  "trace": {
+    "case": "SUP-01-06",
+    "reportId": "rp10-s0106-1b8719e7-bae9-46e0-9eac-9f67b19c5bcf",
+    "firedMethod": "upsert",
+    "fired": true,
+    "persistedAfterRelease": {
+      "revision": "upsert-proof"
+    },
+    "wrongIdFired": false,
+    "wrongMarkerFired": false
+  },
+  "meaning": "draftWriteBarrier 对真实 upsert(where.id, create/update) 命中并按 firedMethod 记录；两个负例不命中"
+}

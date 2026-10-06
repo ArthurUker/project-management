@@ -1,0 +1,52 @@
+{
+  "snapshot": "evidence/previous-current-ledgers/",
+  "axes": {
+    "RP02-T01": {
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED"
+    },
+    "RP04-T02": {
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED"
+    },
+    "RP08-T01": {
+      "implementation": "COMPLETE",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED"
+    },
+    "RP10-T02": {
+      "implementation": "IN_PROGRESS",
+      "validation": "FAIL",
+      "release": "NOT_EVALUATED"
+    }
+  },
+  "casesChanged": {
+    "AC-B04-01": {
+      "before": "PASS",
+      "after": "NOT_RUN"
+    },
+    "AC-B10-01": {
+      "before": "PASS",
+      "after": "FAIL"
+    },
+    "PAC-RP08-01": {
+      "before": "PASS",
+      "after": "NOT_RUN"
+    },
+    "PAC-RP10-02": {
+      "before": "PASS",
+      "after": "FAIL"
+    },
+    "TASK-RP08-T01": {
+      "before": "PASS",
+      "after": "NOT_RUN"
+    },
+    "TASK-RP10-T02": {
+      "before": "PASS",
+      "after": "FAIL"
+    }
+  },
+  "recordMeaning": "Independent adjudication; old executor/frozen logs unchanged; no product implementation; no approval changes"
+}

@@ -1,0 +1,20 @@
+packet,file,symbol_or_route,question,review_status,evidence_ref,unreviewed_reason
+R06,rdpms-system/backend/src/routes/sync.js,POST /push setup and receipt replay,Authentication and ordering of visible project query receipt lookup and per-item authorization,REVIEWED,review.md#执行路径,
+R06,rdpms-system/backend/src/routes/sync.js,SYNC_ENTITIES,Allowed fields per entity create/update/delete permission and server-owned fields,REVIEWED,review.md#写路径矩阵,
+R06,rdpms-system/backend/src/routes/sync.js,assertSyncEntityActions,Entity action permissions status and reference guards,REVIEWED,review.md#写路径矩阵,
+R06,rdpms-system/backend/src/routes/sync.js,POST /push business write loop,Base timestamp CAS mutations outcome and batch atomicity,REVIEWED,review.md#写路径矩阵,
+R06,rdpms-system/backend/src/platform/idempotency/receipts.js,withIdempotency,HTTP receipt scope hash transaction and replay comparison,REVIEWED,review.md#回执协议对照,
+R06,rdpms-system/backend/src/platform/idempotency/payloadHash.js,canonicalize/hashPayload,Canonical payload hashing for HTTP receipt comparison,REVIEWED,review.md#回执协议对照,
+R06,rdpms-system/backend/src/platform/audit/strictAudit.js,writeAuditStrict,Strict transactional audit properties and sync usage,REVIEWED,review.md#回执协议对照,
+R06,rdpms-system/backend/src/modules/access/writeGuards.ts,task/report/phase action guards,Shared action capabilities and report author/status constraints,REVIEWED,review.md#写路径矩阵,
+R06,rdpms-system/backend/src/modules/tasks/taskCommands.ts,updateTaskFields/changeTaskStatus/assignTask,Shared task mutation commands and CAS behavior,REVIEWED,review.md#写路径矩阵,
+R06,rdpms-system/backend/src/modules/reports/reportCommands.ts,saveReportDraft,Shared draft helper and CAS behavior used by sync,REVIEWED,review.md#写路径矩阵,SubmitReport was outside enabled sync push command path; only route availability boundary noted
+R06,rdpms-system/backend/prisma/schema.prisma,SyncMutation,Sync receipt scope fields and uniqueness,REVIEWED,review.md#回执协议对照,
+R06,rdpms-system/backend/prisma/schema.prisma,MutationReceipt,HTTP receipt scope hash and unique index,REVIEWED,review.md#回执协议对照,
+R06,rdpms-system/backend/src/routes/reports.js,report save/update/submit HTTP routes,Concrete HTTP receipt strict-audit and shared command comparison,REVIEWED,review.md#回执协议对照,Representative direct comparison only; remaining report route behavior belongs to R09
+R06,rdpms-system/backend/src/routes/tasks.js,task update HTTP route,Shared task transaction contrasted with post-transaction best-effort audit,REVIEWED,review.md#回执协议对照,
+R06,rdpms-system/backend/src/routes/projects.js,PUT /:id,HTTP project status guard and manager membership transfer compared with sync,REVIEWED,review.md#B09;review.md#R06-N01,
+R06,rdpms-system/backend/src/kernel/projectAccess.js,resolveProjectAccess/projectVisibilityFilter,Manager member/capability and visibility semantics for new static finding,REVIEWED,review.md#R06-N01,
+R06,docs/audits/2026-09-29-rdpms/backend-results.json,B05/B06/B09 historical probes,Inherit original defect reproductions without rerunning,REVIEWED,review.md#历史发现核对,Historical-only evidence; no current dynamic verification
+R06,docs/audits/2026-09-29-rdpms/findings.json,B05/B06/B09 baseline descriptions,Preserve original IDs severity and impact boundaries,REVIEWED,review.md#历史发现核对,
+R06,docs/audits/2026-09-30-review-plan/execution/R05/findings.json,R05 prerequisites and inherited sync context,Use R05 sync boundary summary without repeating pull review,REVIEWED,review.md#范围与执行路径,

@@ -1,0 +1,119 @@
+{
+  "inspectedNotRerun": true,
+  "runs": [
+    {
+      "path": "execution/RP10/RP10-T02/runs/2026-10-03-codebuddy-lr3-rework/evidence/regression/rf02-idempotency/attempt-01/run-results.json",
+      "commands": {
+        "initdb": 0,
+        "cluster-start": 0,
+        "guard-check": 2,
+        "guard-reset": 0,
+        "backend-build": 0,
+        "integration-suite": 0,
+        "guard-drop": 0,
+        "cluster-stop": 0
+      },
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true
+      }
+    },
+    {
+      "path": "execution/RP10/RP10-T02/runs/2026-10-03-codebuddy-lr3-rework/evidence/regression/rf02-post-concurrency/attempt-01/run-results.json",
+      "commands": {
+        "initdb": 0,
+        "cluster-start": 0,
+        "guard-check": 2,
+        "guard-reset": 0,
+        "backend-build": 0,
+        "integration-suite": 0,
+        "guard-drop": 0,
+        "cluster-stop": 0
+      },
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true
+      }
+    },
+    {
+      "path": "execution/RP10/RP10-T02/runs/2026-10-03-codebuddy-lr3-rework/evidence/regression/rf02-sync-rejection-retry/attempt-01/run-results.json",
+      "commands": {
+        "initdb": 0,
+        "cluster-start": 0,
+        "guard-check": 2,
+        "guard-reset": 0,
+        "backend-build": 0,
+        "integration-suite": 0,
+        "guard-drop": 0,
+        "cluster-stop": 0
+      },
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true
+      }
+    },
+    {
+      "path": "execution/RP10/RP10-T02/runs/2026-10-03-codebuddy-lr3-rework/evidence/regression/rf03-report-period/attempt-01/run-results.json",
+      "commands": {
+        "initdb": 0,
+        "cluster-start": 0,
+        "guard-check": 2,
+        "guard-reset": 0,
+        "backend-build": 0,
+        "integration-suite": 0,
+        "guard-drop": 0,
+        "cluster-stop": 0
+      },
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true
+      }
+    },
+    {
+      "path": "execution/RP10/RP10-T02/runs/2026-10-03-codebuddy-lr3-rework/evidence/regression/rf04-versions-access/attempt-01/run-results.json",
+      "commands": {
+        "initdb": 0,
+        "cluster-start": 0,
+        "guard-check": 2,
+        "guard-reset": 0,
+        "backend-build": 0,
+        "integration-suite": 0,
+        "guard-drop": 0,
+        "cluster-stop": 0
+      },
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true
+      }
+    },
+    {
+      "path": "execution/RP10/RP10-T02/runs/2026-10-03-codebuddy-lr3-rework/evidence/regression/rf04-write-authorization/attempt-01/run-results.json",
+      "commands": {
+        "initdb": 0,
+        "cluster-start": 0,
+        "guard-check": 2,
+        "guard-reset": 0,
+        "backend-build": 0,
+        "integration-suite": 0,
+        "guard-drop": 0,
+        "cluster-stop": 0
+      },
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "id": "S00-OI-01",
+    "relatedPackets": [
+      "R09"
+    ],
+    "relatedFindings": [
+      "B10",
+      "B16"
+    ],
+    "question": "Can the original R09 start HEAD be recovered from retained contemporaneous execution records?",
+    "type": "ARTIFACT",
+    "currentEvidence": [
+      "R09 findings and source-digests identify baseline HEAD as the reviewed end state; state.json did not record startHead."
+    ],
+    "missingInput": "A contemporaneous R09 start checkpoint or log that names the actual start commit.",
+    "responsibleRole": "Audit record owner",
+    "resolutionCondition": "Locate a verifiable contemporaneous start-HEAD record; otherwise preserve UNKNOWN_NOT_RECORDED permanently.",
+    "status": "OPEN",
+    "reason": "Do not infer the start state from the unchanged end HEAD."
+  }
+]

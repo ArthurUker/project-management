@@ -1,0 +1,18 @@
+{
+  "taskId":"RP05-T01","run":"2026-10-02-continuous-rework","implementationStatus":"COMPLETE","validationStatus":"PASS","releaseStatus":"NOT_EVALUATED",
+  "cases":[
+    {"id":"AC-B02-01","status":"PASS","evidence":["evidence/attempt-01/integration-suite.log","evidence/attempt-01/run-results.json"],"scope":"合法可达PUT无tasks.delete返回403，原任务数据库行保留。"},
+    {"id":"AC-B02-02","status":"NOT_RUN","evidence":[],"scope":"保留ID差量更新属于RP05-T02。"},
+    {"id":"AC-B02-03","status":"NOT_RUN","evidence":[],"scope":"墓碑合同仍待D-S01-08/T-RP-07批准。"},
+    {"id":"AC-B19-01","status":"PASS","evidence":["evidence/attempt-01/integration-suite.log"],"scope":"在线任务create/update及sync push拒绝跨项目parent；合法同项目parent仍成功。"},
+    {"id":"AC-B19-03","status":"PASS","evidence":["evidence/attempt-01/integration-suite.log"],"scope":"有tasks.delete权限时，跨项目子任务仍使项目数组替换返回CROSS_PROJECT_CHILD_EXISTS；父子真实行均保留。"},
+    {"id":"PAC-RP05-01","status":"PASS","evidence":["evidence/attempt-01/integration-suite.log"],"scope":"物理移除权限拒绝与持久任务行检查通过。"},
+    {"id":"PAC-RP05-02","status":"PASS","evidence":["evidence/attempt-01/integration-suite.log"],"scope":"在线及同步same/cross-project parent paths实际HTTP/DB断言通过。"},
+    {"id":"PAC-RP05-03","status":"PASS","evidence":["evidence/attempt-01/integration-suite.log"],"scope":"跨项目FK cascade containment negative真实运行通过。"},
+    {"id":"TASK-RP05-T01","status":"PASS","evidence":["change-summary.md","evidence/attempt-01/run-results.json"],"scope":"task-specific suite全4条通过；仅修复fixture。"},
+    {"id":"INT-PC07-01","status":"NOT_RUN","evidence":[],"scope":"并发屏障、迁移恢复、完整unique/FK和真实历史异常统计未在此fixture任务执行。"}
+  ],
+  "reviewerIssueDisposition":{"LR-06":"TEST_FIXTURE_CORRECTED_AND_TESTED_LOCAL"},
+  "oldFindingDisposition":{"B02":"SUPPORTED; this one AC path passed, remaining package/task evidence still open","B19":"SUPPORTED; tested same/cross project paths passed, broad/legacy and concurrent claims not accepted"},
+  "cleanup":"PASS; owned DB guard-drop/cluster-stop and temp cleanup confirmed."
+}

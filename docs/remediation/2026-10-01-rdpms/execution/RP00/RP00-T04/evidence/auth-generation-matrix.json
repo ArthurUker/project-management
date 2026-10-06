@@ -1,0 +1,94 @@
+{
+  "taskId": "RP00-T04",
+  "status": "STATIC_CONTRACT_DRAFT_DELIVERED; approval and dynamic validation pending",
+  "baseline": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "transport": {
+    "access": "Bearer Authorization header injected from tokenStore localStorage on each http request.",
+    "refresh": "POST /auth/refresh JSON body {refreshToken}; raw axios against API_BASE_URL, bypassing the shared response interceptor.",
+    "cookieEvidence": "No auth Set-Cookie or withCredentials usage found in bounded frontend/backend source. Backend CORS credentials:true and any cookie-related deployment flags alone do not establish cookie auth support.",
+    "config": "VITE_API_BASE_URL, default /api, configures frontend API root. JWT_ACCESS_TTL/JWT_ACCESS_TTL_SEC and JWT_REFRESH_TTL configure server token lifetimes; response expiresIn is separate and historical R02 reports fixed 7200 values. This TTL matter is adjacent, not decided by RP00-T04."
+  },
+  "observedCurrentBehavior": [
+    {
+      "id": "OBS-01",
+      "scenario": "same-tab parallel access 401s",
+      "behavior": "Module-local inflight Promise coalesces refresh in one JS module instance; each original request is replayed once after success.",
+      "evidence": ["rdpms-system/frontend/src/api/http.ts:78-107", "rdpms-system/frontend/src/api/http.ts:128-134"]
+    },
+    {
+      "id": "OBS-02",
+      "scenario": "two tabs refresh the same family/token concurrently",
+      "behavior": "Each tab has its own inflight Promise. Server reads an unrevoked token then unconditionally updates revokedAt and independently creates a random-family successor. Historical R02 recorded two successful successors under the controlled interleaving; no current dynamic rerun.",
+      "evidence": ["rdpms-system/frontend/src/api/http.ts:78-107", "rdpms-system/backend/src/routes/auth.js:197-216", "docs/audits/2026-09-30-review-plan/execution/R02/review.md:29-42", "docs/audits/2026-09-30-review-plan/execution/R02/review.md:60-73"]
+    },
+    {
+      "id": "OBS-03",
+      "scenario": "old refresh failure after another tab wrote a successor",
+      "behavior": "Refreshing tab's catch unconditionally clears shared localStorage tokens and broadcasts expiry; it does not compare the failed refresh token or generation to the currently stored session.",
+      "evidence": ["rdpms-system/frontend/src/api/http.ts:128-150", "rdpms-system/frontend/src/auth/tokenStore.ts:42-65", "docs/audits/2026-09-30-review-plan/execution/R02/review.md:66-73"]
+    },
+    {
+      "id": "OBS-04",
+      "scenario": "old refresh success after login/session switch to user B",
+      "behavior": "refreshAccessToken writes the response to global tokenStore without checking who initiated it; a late response can replace B's shared token pair.",
+      "evidence": ["rdpms-system/frontend/src/api/http.ts:85-101", "rdpms-system/frontend/src/auth/tokenStore.ts:33-49", "rdpms-system/frontend/src/auth/AuthProvider.tsx:80-99"]
+    },
+    {
+      "id": "OBS-05",
+      "scenario": "A's original request replay after session changes to B",
+      "behavior": "On replay, request interceptor reads the current global access token. If B's token is current, the original Axios config can be sent with B's Bearer token; no initiating actor/session generation is attached to the request config.",
+      "evidence": ["rdpms-system/frontend/src/api/http.ts:30-37", "rdpms-system/frontend/src/api/http.ts:128-134", "rdpms-system/frontend/src/auth/tokenStore.ts:16-31"]
+    },
+    {
+      "id": "OBS-06",
+      "scenario": "401, 403, network/offline handling",
+      "behavior": "Only 401 with AUTH_EXPIRED or INVALID_TOKEN enters refresh. Other 401 clears global token state; 403 is thrown without clearing/refreshing; no-response network errors return NETWORK_ERROR without clearing tokens. No offline authorization fallback is in this HTTP client path.",
+      "evidence": ["rdpms-system/frontend/src/api/http.ts:73-76", "rdpms-system/frontend/src/api/http.ts:118-155"]
+    },
+    {
+      "id": "OBS-07",
+      "scenario": "server actor binding and access-token invalidation",
+      "behavior": "Refresh row determines user and signs access token for that row.user. Bearer middleware verifies JWT and current user status, but does not consume passwordChangedAt or a session generation/version. D-S01-04 remains a separate pending policy gate.",
+      "evidence": ["rdpms-system/backend/src/routes/auth.js:200-216", "rdpms-system/backend/src/kernel/rbac.js:59-107", "docs/audits/2026-09-30-review-plan/execution/R02/review.md:48-52", "docs/remediation/2026-10-01-rdpms/DECISIONS_AND_GATES.md:D-S01-04"]
+    }
+  ],
+  "proposedContractForNamedApproval": {
+    "decisionRef": "T-RP-09",
+    "status": "PROPOSED; not approved",
+    "requirements": [
+      "Capture immutable initiating actor and session generation for every protected request and its refresh operation.",
+      "Accept a refresh success only if its originating session lineage is still current; an old success must never overwrite a later login or account switch.",
+      "Apply refresh failure cleanup only if the failed lineage still owns current storage; stale failures must not erase a successor session.",
+      "Replay only under the initiating actor/session lineage. If that identity changed, fail closed and do not send the original request with the new user's credential.",
+      "Coordinate concurrent refresh across tabs or use an equivalent approved protocol; define server-side single-consumer CAS/family replay behavior and loser response jointly with the client.",
+      "An expired-access 401 may trigger one bounded refresh; 403 must remain authorization denial; network/offline errors must not be represented as auth failure or clear valid tokens.",
+      "Define supported transport and compatibility window from evidence. Do not treat CORS credential flags as cookie transport support."
+    ],
+    "designChoiceStillRequired": [
+      "Named security/auth/frontend owners select cross-tab coordination and fallback behavior.",
+      "Named security/auth owner selects refresh token single-consumption, family replay/theft response, rotation retry/idempotency window, and failure recovery semantics.",
+      "Named approver records exact supported clients/transport, compatibility window, residual risks and approval date/evidence.",
+      "D-S01-04 separately decides access JWT invalidation after password/reset/privilege changes; RP00-T04 does not choose it."
+    ]
+  },
+  "dynamicValidationPlan": {
+    "caseId": "INT-PC01-01",
+    "status": "NOT_RUN",
+    "preconditions": ["named approval for T-RP-09 and relevant D-S01-04/T-RP-12/T-RP-08 scope", "owned isolated DB and synthetic accounts A/B", "browser profile ownership and barrier-control harness", "valid login/success path established before negative cases", "candidate build/config identity recorded"],
+    "scenarios": [
+      "same-family two-tab simultaneous refresh: one current lineage remains, loser response per approved policy",
+      "old refresh failure arriving after new successor is stored: successor remains unchanged",
+      "old refresh success arriving after logout and B login: B session remains unchanged",
+      "A's original mutation 401 arriving after B login: request is not replayed with B credential and server actor remains A or request is safely aborted",
+      "current genuinely invalid refresh: only that current generation is cleared and session expiry surfaced",
+      "403 and offline/network failure: no refresh, no cross-identity replay, no clearing of a valid generation",
+      "inspect DB refresh rows/family/session lineage and server-side actual request actor; redact all credentials from logs"
+    ]
+  },
+  "nonClaims": [
+    "This static matrix does not approve T-RP-09 or PC01.",
+    "It does not implement or validate RP02/RP03 behavior.",
+    "It does not close N-R02-01, N-R02-02, B15, S02-OPEN-05 or D-S01-04.",
+    "No browser, database, barrier, test, build or target environment execution occurred in this task."
+  ]
+}

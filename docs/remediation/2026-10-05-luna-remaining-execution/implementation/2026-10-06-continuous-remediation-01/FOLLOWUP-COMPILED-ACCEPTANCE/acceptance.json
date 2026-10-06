@@ -1,0 +1,43 @@
+{
+  "kind": "TEST_ONLY_CURRENT_COMPILED_HTTP_ACCEPTANCE",
+  "cases": [
+    {
+      "caseId": "AC-B17-01",
+      "result": "PASS",
+      "scope": "Actual compiled current auth/roles HTTP, mandatory seed forcepassword flow and fresh login then exact legal/duplicate/type/forbidden DTO rows/links/audit assertions",
+      "evidence": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/evidence/final-regression/b17/attempt-04/integration-suite.log"
+    },
+    {
+      "caseId": "AC-B17-02",
+      "result": "PASS",
+      "scope": "Actual compiled current auth/roles HTTP, mandatory seed forcepassword flow and fresh login then exact legal/duplicate/type/forbidden DTO rows/links/audit assertions",
+      "evidence": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/evidence/final-regression/b17/attempt-04/integration-suite.log"
+    },
+    {
+      "caseId": "AC-B17-03",
+      "result": "PASS",
+      "scope": "Actual compiled current auth/roles HTTP, mandatory seed forcepassword flow and fresh login then exact legal/duplicate/type/forbidden DTO rows/links/audit assertions",
+      "evidence": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/evidence/final-regression/b17/attempt-04/integration-suite.log"
+    },
+    {
+      "caseId": "PAC-RP01-03",
+      "result": "PASS",
+      "scope": "Actual compiled current auth/roles HTTP, mandatory seed forcepassword flow and fresh login then exact legal/duplicate/type/forbidden DTO rows/links/audit assertions",
+      "evidence": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/evidence/final-regression/b17/attempt-04/integration-suite.log"
+    },
+    {
+      "caseId": "TASK-RP01-T01",
+      "result": "PASS",
+      "scope": "Actual compiled current auth/roles HTTP, mandatory seed forcepassword flow and fresh login then exact legal/duplicate/type/forbidden DTO rows/links/audit assertions",
+      "evidence": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/evidence/final-regression/b17/attempt-04/integration-suite.log"
+    }
+  ],
+  "localValidation": "PASS",
+  "targetValidation": "NOT_RUN",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "limits": [
+    "No businesspolicy changed;3 distimports + realforcepassword successfixture. Failedattempts1/2/3 preserved.",
+    "Oldrole/audit/auth actor retained untilownedwholeDBdrop."
+  ]
+}

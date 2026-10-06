@@ -1,0 +1,39 @@
+{
+  "baseline": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "commands": [
+    {
+      "command": "bash -n rdpms-system/deploy/scripts/backup-pg.sh",
+      "exitCode": 0,
+      "result": "PASS"
+    },
+    {
+      "command": "bash -n docs/remediation/2026-10-01-rdpms/execution/RP17/RP17-T01/evidence/rp17-owned-fs-validation.sh",
+      "exitCode": 0,
+      "result": "PASS"
+    },
+    {
+      "command": "bash docs/remediation/2026-10-01-rdpms/execution/RP17/RP17-T01/evidence/rp17-owned-fs-validation.sh",
+      "exitCode": 0,
+      "result": "PASS; see evidence/owned-fs-validation.log"
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0,
+      "result": "PASS"
+    },
+    {
+      "command": "npm run build",
+      "cwd": "rdpms-system/backend",
+      "exitCode": 127,
+      "result": "ENV_BLOCKED: tsc missing"
+    }
+  ],
+  "testDesign": "Harness creates a fresh mktemp-owned source/PG/uploads tree. sudo wrapper avoids privileges; fake pg_dump/pg_restore never connect a DB; actual rsync is used. mv wrapper calls Python os.replace on task-owned temporary paths to emulate same-filesystem atomic rename. An rsync wrapper injects exit 23. Harness deletes the temporary root on exit.",
+  "preflight": {
+    "productionPaths": "not used; all paths point inside temporary root",
+    "environmentFiles": "not loaded",
+    "database": "none; no PostgreSQL connection",
+    "resourcesCreated": "only temporary local files/directories; cleaned by trap",
+    "targetLinux": "not available"
+  }
+}

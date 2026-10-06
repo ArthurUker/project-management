@@ -1,0 +1,22 @@
+{
+  "sessionId": "parallel-lr7-2026-10-05-seal-overlay-02",
+  "staticPreChecks": {
+    "headMatch": true,
+    "inputsNoDrift": true,
+    "precheckPass": true,
+    "mStaticCount": 18,
+    "manifestZeroHashMismatch": true,
+    "allTypedRefsResolve": true,
+    "newHistoryIdsUnique": true
+  },
+  "finalSealReadback": {
+    "overall": "PASS",
+    "manifestEntries": 18,
+    "errors": []
+  },
+  "productAcceptance": "NOT_RUN",
+  "runnerDynamicAcceptance": "NOT_EVALUATED",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "note": "Static pre-checks and final readback recorded separately; final PASS only given when overall==PASS (no pre-given PASS). SC-01..04 overlay only; not product/business/release acceptance."
+}

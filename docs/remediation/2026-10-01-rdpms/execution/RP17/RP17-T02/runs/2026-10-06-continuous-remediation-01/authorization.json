@@ -1,0 +1,14 @@
+{
+  "taskId": "RP17-T02",
+  "authorizationRef": "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/authorization.json",
+  "authority": "User approved subsequent local STANDARD repairs; delegated concrete option selection",
+  "allowedFiles": [
+    "rdpms-system/deploy/scripts/backup-pg.sh",
+    "rdpms-system/deploy/scripts/backup-pair.py",
+    "rdpms-system/backend/tests/integration/rp17-backup-pair.integration.test.mjs"
+  ],
+  "approvedBy": "郭仁康",
+  "approvedRole": "研发副总监",
+  "scope": "Unique pair runId, single filesystem-bound process lease, immutable dump/file manifests, two-path completed pair publication markers, pointer CAS/atomic latest, conservative pair-level retention preserving latest/last validated/pinned and all unknown historical backups. Local owned filesystem/native PG only; targetLinux/filesystem/RPO/RTO/consistent live write-point excluded until RP19. No scheduled job or deploy.",
+  "noProductionOrRelease": true
+}

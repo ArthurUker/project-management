@@ -1,0 +1,36 @@
+{
+  "layer": "LOCAL_SYNTHETIC_FILE_CONTROL",
+  "cases": [
+    {
+      "name": "legal_base_path_hash_pass",
+      "result": "PASS",
+      "passed": true
+    },
+    {
+      "name": "error_base_rejected",
+      "result": "PathBaseError",
+      "passed": true
+    },
+    {
+      "name": "missing_file_rejected",
+      "result": "FileNotFoundUnderBaseError",
+      "passed": true
+    },
+    {
+      "name": "wrong_hash_rejected",
+      "result": "HashMismatchError",
+      "passed": true
+    },
+    {
+      "name": "traversal_rejected",
+      "result": "BoundaryEscapeError",
+      "passed": true
+    },
+    {
+      "name": "old_mislabel_rejected",
+      "result": "FileNotFoundUnderBaseError",
+      "passed": true
+    }
+  ],
+  "verdict": "PASS"
+}

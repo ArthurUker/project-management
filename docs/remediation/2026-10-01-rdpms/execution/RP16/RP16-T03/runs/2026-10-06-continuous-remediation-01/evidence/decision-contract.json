@@ -1,0 +1,52 @@
+{
+  "taskId": "RP16-T03",
+  "authority": "USER_DELEGATED_OPTION_SELECTION",
+  "contracts": {
+    "T-RP-10": {
+      "proposal": "NEW_DATASET_EPOCH_CURRENT_SECURITY_FLOOR_AND_PRESERVED_ORIGINALS_V1",
+      "rules": "Any successful module restore atomically creates new UUID epoch, increments current users securityVersion floor and revokes all existing refresh rows (no deletion). JSON existing users retain current authentication fields/passwordHash/status/rank/forced/deleted/lock/version; profile data can restore. New imported users use unguessable disabled login secret, PENDING_ACTIVATION/MEMBER/forcedchange and no bindings, never copied credentials. Existing RBAC module restoration remains explicit SUPER intent but all old sessions revoked/re-auth authorized. JWT/refresh/SyncDevice/MutationReceipt bind epoch; old keys/receipt records retained and rejected cross-epoch, never moved/new-key retried. Cursor/ACL binds epoch, stale old dataset rejects/reset candidate client. DB statement shared gate blocks restore against prior writers; request-scoped expected epoch fence at every public ORM query/transaction prevents late previously authenticated request from writing postrestore. Callback and public batch tx preserve atomicity; descriptors not private Prisma APIs. Worker directDB without HTTPsession is trusted producer guarded by DB restore-state triggers. Only exact initiating pre-restore SUPER token may perform GETrestore/status or POSTrestore/reconcile during known pending own run and original version/epoch; no business/login/refresh bypass, no new credential revival. Automatic reconcile uses known postrestore initiating version. Gate not cleared on epoch/security/receipt failure. Frontend actor-owned queue original payload/key/device/binding retained; old/unproven dataset original isolated even manual sync, current cache/ACL/cursor reset atomically with dataset metadata, device namespace rotates for newepoch only, no anonymous cleanup or rebase. Native and Chrome prove actual states; no quota/target/wholeDR assertion.",
+      "approvalMode": "USER_DELEGATED_OPTION_SELECTION",
+      "compatibility": "Existing JWT missing epoch must reauthenticate; candidate frontend can carry new signed epoch. Native v1 receipts remain same format, reject olddataset binding. Existing deployed client catalog remains unknown and cannot certify release compatibility. Additive schema and security fields retained on rollback, no unsafe old binary activation."
+    }
+  },
+  "dependenciesAndCases": {
+    "id": "RP16-T03",
+    "packageId": "RP16",
+    "title": "恢复epoch/session/receipt/sync写入影响",
+    "implementationDependencies": [
+      "RP16-T02"
+    ],
+    "gateRequirements": [
+      {
+        "ref": "T-RP-10",
+        "before": "IMPLEMENTATION",
+        "condition": "always"
+      }
+    ],
+    "acceptanceDependencies": [],
+    "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+    "requiredForPackageCompletion": true,
+    "status": "NOT_STARTED",
+    "validation": "NOT_RUN",
+    "owner": null,
+    "deliverable": "design/implementation/evidence per approved scope",
+    "implementationStatus": "NOT_STARTED",
+    "validationStatus": "NOT_RUN",
+    "releaseStatus": "NOT_EVALUATED",
+    "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+    "acceptanceCaseIds": [
+      "AC-B13-01",
+      "AC-B13-02",
+      "AC-B13-03",
+      "AC-B13-04",
+      "PAC-RP16-05",
+      "TASK-RP16-T03",
+      "INT-PC06-01",
+      "DECISION-T-RP-10"
+    ],
+    "contractRefs": [
+      "PC06"
+    ]
+  },
+  "boundary": "RP16-T03 local dataset epoch and restored security/session/receipt/cursor/owner-queue fence, with additive perrecord epochs, exact initiating recovery credential exception, necessary request-scoped DB public-query facade transaction fences. No optional roles/DAG/realrestore/deploy/clientcatalog claim. Necessary fixture-only authentication lifecycle rebinding and native/browser epoch tests."
+}

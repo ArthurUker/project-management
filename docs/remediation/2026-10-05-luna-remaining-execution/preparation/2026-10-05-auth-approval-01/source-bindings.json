@@ -1,0 +1,157 @@
+{
+  "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "capturedAt": "2026-10-05T17:45:54.423520+08:00",
+  "files": [
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/EXECUTOR_PROMPT.md",
+      "sha256": "ee5c23eeee93850d95349aba2b1b1c1f5f82589a8b695692d0f627f8f154ea8b"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+      "sha256": "0a4d58eb3cf031a08464e06002ffe3496864e7b5ae5b2e4d0d9ddf5c8d08026d"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/IMPLEMENTATION_STATE.json",
+      "sha256": "f322779e1fd3d0d113ce8aefe067b43123eacfeeae1a75a901e93254d23908cd"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+      "sha256": "28c5a0c67705a6c0a8ce88b5a7a61872893b2b6cb5d07927470608ffbc1d319f"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/OPEN_ITEM_GATES.json",
+      "sha256": "28f175147fe0267da465a4d26f0779039c0fad4545d558d0705ec66015ff5dee"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/PACKAGES.json",
+      "sha256": "0d1ca51ab969d75f81ecc6b3fe813759a42df3652a15edb6f61f87e0aedafcd8"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/PACKAGES.md",
+      "sha256": "a297027d871c3cdfbefd3bc27634ef645c4cebd5bd5904a74a09e7a5859d7222"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/CROSS_PACKAGE_CONTRACTS.md",
+      "sha256": "574f2c6782e5e0b7a77a1b7423ff9cc81af1dc34d3cbb67f4a0c61408e87eed1"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/ACCEPTANCE_MATRIX.csv",
+      "sha256": "60d47fec5b71bfcba4284f5a500e77f729d9e5273039ecb1af45523b1ce36542"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/REVISION_HISTORY.json",
+      "sha256": "d7ae1d2385a65c91541c2ba0a323b04772aa0a9126dc57c5d6ed26761e40cc50"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/EXECUTION_REVISION_HISTORY.json",
+      "sha256": "d474bd8cb3b7cd712f766d21f57beb9bc1036e93a3a77bf66edfc2d28333f916"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/HANDOFF.md",
+      "sha256": "b08a619c86b66eeff07bf715abd12cec24a5d85570fcbaff67867cc8dfc82ece"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/execution/handoff.md",
+      "sha256": "059b028fda7d07e3de7b111ea35c3d7e5bbfa47adf34b18280ff3cd1a5007b2e"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-approved-contracts-01/task-state.json",
+      "sha256": "820994cda08ba8ae3aac379cff5b0f1c00034b75d59cc52f5bdbe87395aa3c3e"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-approved-contracts-01/approval.json",
+      "sha256": "0cd45f9b890be5c765b95a6b1defa39eab60eb761b5d2401ab65903a25a0c7e5"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-approved-contracts-01/task-readiness.json",
+      "sha256": "853eb15dbe39e3bf67645d9baceb3d6bbd80c9d764c1f740f97751538441d75a"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-remaining-rework-01/task-allowlist-addendum.json",
+      "sha256": "022cc917e4430061f514b661c0b194f0b56abf6ec83dbec208df519732cd7053"
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-remaining-rework-01/identity-response-addendum.csv",
+      "sha256": "7ec61ca71f06bcdf8ac0154141697bf9d7c708e6a122aa2b0e2d48dbe09ecee5"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-d-auth/decision-draft.json",
+      "sha256": "ae87041b859acbfbd715cfbaeeba1074d8d66bfd787f70fa2d2d214b8c62aece"
+    },
+    {
+      "path": "docs/audits/2026-09-30-review-plan/execution/R02/review.md",
+      "sha256": "57a2938b4ec8450467211620492730691e3da5b0a4516130d119a2ec1e9659b1"
+    },
+    {
+      "path": "rdpms-system/backend/prisma/schema.prisma",
+      "sha256": "fac40301f61926686ae1466b83e6b71b9c4bf8be9f519bf11dde32a04d967f22"
+    },
+    {
+      "path": "rdpms-system/backend/src/routes/auth.js",
+      "sha256": "8f736619a1526247073697865490a6fef67053f92c501fbe65f617b29b3f12b4"
+    },
+    {
+      "path": "rdpms-system/frontend/src/api/http.ts",
+      "sha256": "ddc1df339ee119566375a32e36c94d6cae7c89b05aea4142749a20e80882d9a7"
+    },
+    {
+      "path": "rdpms-system/frontend/src/auth/tokenStore.ts",
+      "sha256": "ee009d10b1225d799d5adfc41ffde972e628961ab776028944d9dffac3782266"
+    },
+    {
+      "path": "rdpms-system/frontend/src/auth/AuthProvider.tsx",
+      "sha256": "b16e610ddc4367fb6f8bf1b0c5531ea6c507db9b1f630012d47b21eeb2cf7617"
+    },
+    {
+      "path": "rdpms-system/frontend/src/api/endpoints/auth.ts",
+      "sha256": "5e719ae5c81a5643698b5d23cb799bb0d27c51568e4baeeaa9851e81a5f12531"
+    }
+  ],
+  "startingDecision": {
+    "id": "T-RP-09",
+    "kind": "TECHNICAL_DESIGN",
+    "topic": "认证transport及跨身份响应",
+    "scope": "核对实际Bearer/body refresh；cookie旗标不证明已支持cookie。token generation、两tab成功/失败及原请求actor不越界。",
+    "ownerRoles": [
+      "安全/认证/前端负责人"
+    ],
+    "status": "PROPOSED",
+    "approvedBy": null,
+    "approvedAt": null,
+    "evidenceRef": null,
+    "origin": "REMEDIATION_PLAN_V2",
+    "affectedTaskIds": [
+      "RP00-T04",
+      "RP02-T02",
+      "RP03-T01",
+      "RP03-T02",
+      "RP11-T01",
+      "RP18-T01"
+    ],
+    "contractRefs": [
+      "PC01",
+      "PC04",
+      "PC09"
+    ],
+    "approvalEvidenceRequired": [
+      "chosen option / precise scope",
+      "named approver and date",
+      "compatible client/schema window",
+      "risk acceptance if any; not a fixed finding"
+    ]
+  },
+  "counts": {
+    "implementation": {
+      "COMPLETE": 20,
+      "NOT_STARTED": 32,
+      "IN_PROGRESS": 2
+    },
+    "validation": {
+      "ENV_BLOCKED": 7,
+      "PASS": 12,
+      "NOT_RUN": 35
+    }
+  },
+  "trackedDiffSha256": "af476a9e570989cc689349ae31b3a3efbb0ddd86afa890c7fd4dc77b5a172975",
+  "gitStatusSha256": "e0065af1dc675ee96b7cec847ce6f414341c256b4a58a73b4fb5257cf1682497"
+}

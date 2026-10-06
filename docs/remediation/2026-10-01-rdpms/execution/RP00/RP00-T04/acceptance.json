@@ -1,0 +1,16 @@
+{
+  "taskId": "RP00-T04",
+  "baseline": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "taskArtifactStatus": "PASS",
+  "implementationStatus": "COMPLETE",
+  "validationStatus": "NOT_RUN",
+  "releaseStatus": "NOT_EVALUATED",
+  "cases": [
+    {"id":"TASK-RP00-T04","applicability":"APPLICABLE","status":"PASS","evidence":["change-summary.md","evidence/auth-generation-matrix.json","evidence/source-digest-comparison.json","evidence/historical-evidence.json"],"scope":"Static transport/call-chain matrix and draft joint contract delivered. This PASS is artifact completeness only; not technical approval or product validation."},
+    {"id":"DECISION-T-RP-09","applicability":"APPLICABLE","status":"NOT_RUN","evidence":["evidence/auth-generation-matrix.json"],"scope":"No named approver, selected design option, compatibility window, approval date/evidence or risk acceptance exists. T-RP-09 remains PROPOSED."},
+    {"id":"INT-PC01-01","applicability":"APPLICABLE","status":"NOT_RUN","evidence":["evidence/auth-generation-matrix.json","evidence/commands-and-results.json"],"scope":"No isolated DB/browser/barrier test was run. Requires approval and owned synthetic fixtures; token generations, DB rows and actual request actor remain unobserved dynamically."}
+  ],
+  "gateDisposition": {"T-RP-09":"PROPOSED; blocks validation per TASK_GRAPH", "PC01":"PROPOSED / validation NOT_RUN", "D-S01-04":"PENDING; separate RP03-T02 implementation gate", "S02-OPEN-05":"OPEN; RP03-T01 validation prerequisite"},
+  "notClosed": ["B15","N-R02-01","N-R02-02","S02-OPEN-05","D-S01-04","PC01","T-RP-09"],
+  "release": "NOT_EVALUATED; no commit, merge, deployment or target environment verification."
+}

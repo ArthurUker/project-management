@@ -1,0 +1,194 @@
+{
+  "layer": "REAL_CHROME_INDEXEDDB_IMMUTABLE_BATCH_SYNTHETIC_TRANSPORT",
+  "cases": [
+    {
+      "name": "COUNT_501_BOUNDED_BATCHES",
+      "result": "PASS",
+      "persistentItems": 501,
+      "actualBatchCounts": [
+        500,
+        1
+      ],
+      "maxSerializedBodyBytes": 67022,
+      "duplicateFixtureApplications": 0
+    },
+    {
+      "name": "COUNT_1001_BOUNDED_BATCHES",
+      "result": "PASS",
+      "persistentItems": 1001,
+      "actualBatchCounts": [
+        500,
+        500,
+        1
+      ],
+      "maxSerializedBodyBytes": 67242,
+      "duplicateFixtureApplications": 0
+    },
+    {
+      "name": "UTF8_BODY_SPLITS_BEFORE_COUNT_LIMIT",
+      "result": "PASS",
+      "utf8Measured": true,
+      "bodyBytes": [
+        257302,
+        257322,
+        257362
+      ],
+      "countLimitNotReached": true
+    },
+    {
+      "name": "OVERSIZE_AND_LEGACY_RETAINED_WITHOUT_SEND",
+      "result": "PASS",
+      "singleOversizePreserved": true,
+      "oversizeSent": 0,
+      "legacyAmbiguousSent": 0
+    },
+    {
+      "name": "DEPENDENCY_FAILURE_AND_CYCLE_PRESERVE_CHILD",
+      "result": "PASS",
+      "rejectedParentSentOnce": true,
+      "dependentChildNotSent": true,
+      "cycleItemsPreserved": 2
+    },
+    {
+      "name": "SECOND_BATCH_FAULT_RELOAD_ONLY_UNCONFIRMED",
+      "result": "PASS",
+      "firstBatchConfirmed500": true,
+      "reopenedOnlyOneUnconfirmedSent": true
+    },
+    {
+      "name": "IN_FLIGHT_EDIT_NEW_KEY_NOT_DELETED_BY_OLD_ACK",
+      "result": "PASS",
+      "frozenFirstBodyKey": "first-intent",
+      "newEditKey": "second-intent",
+      "explicitSameResourceOrder": true
+    }
+  ],
+  "commands": [
+    {
+      "label": "frontend-typecheck",
+      "command": [
+        "/Users/renkang/.nvm/versions/node/v24.15.0/bin/node",
+        "/Users/renkang/VS Code/project-management/rdpms-system/frontend/node_modules/typescript/bin/tsc",
+        "--project",
+        "/Users/renkang/VS Code/project-management/rdpms-system/frontend/tsconfig.app.json",
+        "--noEmit"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "git-diff-check",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "cleanup": {
+    "chromeExit": {
+      "code": 0,
+      "signal": null
+    },
+    "ownedServerClosed": true,
+    "ownedProfileRootRemoved": true
+  },
+  "limits": [
+    "Native JWT/backend DB/production release NOT_RUN",
+    "Actual current AuthProvider, SyncProvider, Tasks, tokenStore, engine and IDB; synthetic auth/pull/push fixtures explicitly identified",
+    "No dependency installation, target profile, real dotenv or SSH"
+  ],
+  "startSourceBindings": [
+    {
+      "path": "rdpms-system/frontend/src/offline/idb.ts",
+      "sha256": "1d3f93b28a1b0add486b7587362cfd200b08b26bd08339c9d9d5a1952573ea0f"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/engine.ts",
+      "sha256": "ee02a413dd25f98c6f964cfbcb00fffcb688b4ec7c1bf917129e50a487b62d9a"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/SyncProvider.tsx",
+      "sha256": "13a247f7d20882a2e81ed01cfe7f06da4b7c40dd2eb8657ed7320f722a81d4a8"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/pendingDraft.ts",
+      "sha256": "0ccc3adcfc1fb352d438f9d77404ec2d03d82c2632d4e1cfb0129baf16cf8a92"
+    },
+    {
+      "path": "rdpms-system/frontend/src/pages/Tasks.tsx",
+      "sha256": "598498505a02be301a06581ea36dd814855f5c99e182cc5f2736dc8cdb2cc6b0"
+    },
+    {
+      "path": "rdpms-system/frontend/src/auth/AuthProvider.tsx",
+      "sha256": "5f5656325c39217d5a497bf9e8a583ae85b76e1720acc79793f57e4dc22462f7"
+    },
+    {
+      "path": "rdpms-system/frontend/src/auth/tokenStore.ts",
+      "sha256": "e8e207bff432c0dd08956e778206152c055b9b38a7d2d6b06f4c80825beea6a6"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx",
+      "sha256": "2c4b115c379356501ae414284fb2c6454ef8bf93d2c634efd5a1fe861544297b"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/RecoveryPanel.tsx",
+      "sha256": "6abc0db06e02cd0d24bac194b62bad5d63d4a5d2fa6f641c52fab7f6f20b203a"
+    },
+    {
+      "path": "rdpms-system/frontend/src/components/SyncConflictDialog.tsx",
+      "sha256": "8834b78e54eead86f2218c55ec055b61f8aa8667dcef17500cbf2e330a732728"
+    }
+  ],
+  "mainCommand": [
+    "/Users/renkang/.nvm/versions/node/v24.15.0/bin/node",
+    "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/run-offline-browser.mjs",
+    "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/evidence/rp12-t01-batch",
+    "batch"
+  ],
+  "lastEvaluation": "bridge.rows()",
+  "result": "PASS",
+  "sourceBindings": [
+    {
+      "path": "rdpms-system/frontend/src/offline/idb.ts",
+      "sha256": "1d3f93b28a1b0add486b7587362cfd200b08b26bd08339c9d9d5a1952573ea0f"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/engine.ts",
+      "sha256": "ee02a413dd25f98c6f964cfbcb00fffcb688b4ec7c1bf917129e50a487b62d9a"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/SyncProvider.tsx",
+      "sha256": "13a247f7d20882a2e81ed01cfe7f06da4b7c40dd2eb8657ed7320f722a81d4a8"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/pendingDraft.ts",
+      "sha256": "0ccc3adcfc1fb352d438f9d77404ec2d03d82c2632d4e1cfb0129baf16cf8a92"
+    },
+    {
+      "path": "rdpms-system/frontend/src/pages/Tasks.tsx",
+      "sha256": "598498505a02be301a06581ea36dd814855f5c99e182cc5f2736dc8cdb2cc6b0"
+    },
+    {
+      "path": "rdpms-system/frontend/src/auth/AuthProvider.tsx",
+      "sha256": "5f5656325c39217d5a497bf9e8a583ae85b76e1720acc79793f57e4dc22462f7"
+    },
+    {
+      "path": "rdpms-system/frontend/src/auth/tokenStore.ts",
+      "sha256": "e8e207bff432c0dd08956e778206152c055b9b38a7d2d6b06f4c80825beea6a6"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx",
+      "sha256": "2c4b115c379356501ae414284fb2c6454ef8bf93d2c634efd5a1fe861544297b"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/RecoveryPanel.tsx",
+      "sha256": "6abc0db06e02cd0d24bac194b62bad5d63d4a5d2fa6f641c52fab7f6f20b203a"
+    },
+    {
+      "path": "rdpms-system/frontend/src/components/SyncConflictDialog.tsx",
+      "sha256": "8834b78e54eead86f2218c55ec055b61f8aa8667dcef17500cbf2e330a732728"
+    }
+  ],
+  "sourceDrift": []
+}

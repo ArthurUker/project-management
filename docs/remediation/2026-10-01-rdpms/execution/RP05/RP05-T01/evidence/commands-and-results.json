@@ -1,0 +1,18 @@
+{
+  "head":"138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "commands":[
+    {"command":"node --check src/routes/projects.js","cwd":"rdpms-system/backend","exitCode":0,"result":"PASS; JavaScript syntax only"},
+    {"command":"node --check src/routes/tasks.js","cwd":"rdpms-system/backend","exitCode":0,"result":"PASS; JavaScript syntax only"},
+    {"command":"node --check src/routes/sync.js","cwd":"rdpms-system/backend","exitCode":0,"result":"PASS; JavaScript syntax only"},
+    {"command":"node --check tests/integration/rp05-parent-delete-guard.integration.test.mjs","cwd":"rdpms-system/backend","exitCode":0,"result":"PASS; test source syntax only"},
+    {"command":"git diff --check","cwd":"repository root","exitCode":0,"result":"PASS; no whitespace errors"},
+    {"command":"npm run build","cwd":"rdpms-system/backend","exitCode":127,"result":"ENV_BLOCKED: sh: tsc: command not found; no build output produced"},
+    {"command":"node -e environment presence check (print only presence, never values)","cwd":"rdpms-system/backend","exitCode":0,"result":"backend .env present; backend .env.test.local absent; repository root .env.test.local absent; DATABASE_URL and TEST_DATABASE_URL process variables absent; backend node_modules/.bin/tsc absent"}
+  ],
+  "notRun":[
+    {"command":"npm run test:integration","status":"NOT_RUN","reason":"No owned disposable test DB is registered and build output does not exist; the runner would fail its guard/build before executing its test subprocess."},
+    {"command":"RP05-T01 integration test","status":"ENV_BLOCKED","reason":"No task-owned disposable PostgreSQL; no connection, fixture, HTTP/sync request or cleanup occurred."}
+  ],
+  "dotenvSafety":"The existing backend .env was not read or passed to any test. Test guard defaults to repository-root .env.test.local or RDPMS_TEST_ENV_FILE and restricts database URL host/name.",
+  "runtimeResources":{"database":"none created or connected","syntheticAccounts":"none created","server":"none started","cleanup":"not applicable"}
+}

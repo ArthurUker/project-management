@@ -1,0 +1,31 @@
+{
+  "implementation": "COMPLETE_AUTHORIZED_LOCAL_SCOPE",
+  "taskIds": [
+    "RP02-T02",
+    "RP03-T01"
+  ],
+  "activeTask": null,
+  "nextReadyTask": null,
+  "validation": "PASS_CURRENT_REPO_LOCAL",
+  "independentReview": "PENDING",
+  "targetValidation": "NOT_RUN",
+  "release": "NOT_EVALUATED",
+  "planCounts": {
+    "tasks": 54,
+    "implementation": {
+      "COMPLETE": 22,
+      "NOT_STARTED": 30,
+      "IN_PROGRESS": 2
+    },
+    "validation": {
+      "ENV_BLOCKED": 7,
+      "PASS": 14,
+      "NOT_RUN": 33
+    },
+    "incompleteImplementation": 32,
+    "release": "NOT_EVALUATED for all tasks",
+    "note": "22 local implementations complete; validation/target/release separate;2 inactive optional tasks not activated."
+  },
+  "fullPlanComplete": false,
+  "remaining": 32
+}

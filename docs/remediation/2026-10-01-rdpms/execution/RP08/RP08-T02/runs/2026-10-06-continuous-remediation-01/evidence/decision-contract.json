@@ -1,0 +1,69 @@
+{
+  "taskId": "RP08-T02",
+  "authority": "USER_DELEGATED_OPTION_SELECTION",
+  "contracts": {
+    "T-RP-04-RP08": {
+      "proposal": "CURRENT_ROLE_ACL_FULL_REBUILD_V1",
+      "rule": "Repeatable-read current-auth DB snapshot ACL sha256 binds actor/systemRole/securityVersion, sorted permissions, project membership role/joinedAt/manager and projectionVersion. Missing/stale client aclVersion forces current-scope full snapshot; signed pagination fingerprint rejects after ACL change. Client invalidates old authorization before changed-snapshot writes, atomically publishes mirror+ACL+cursor at final page; partial snapshot cannot authorize fallback. Five minute offline authorization lease. Safe watermark/epoch provided later by RP13, not proven here."
+    },
+    "T-RP-12-RP08": {
+      "proposal": "ACL_REVOKE_PRESERVE_NO_AUTOSEND_V1",
+      "rule": "Preserve original queue/conflict/dead copies. Check current fresh write project/entity/action/capability before any reserve/query/push. Denied items retain scopeBlocked marker; original payload/key/binding untouched. Returning grant never auto-sends a previously isolated item; explicit same-binding recheck required. No projection leaks or guessed owner assignment."
+    }
+  },
+  "dependenciesAndCases": {
+    "id": "RP08-T02",
+    "packageId": "RP08",
+    "title": "ACL角色版本/回填/撤权及outbox隔离",
+    "implementationDependencies": [
+      "RP08-T01"
+    ],
+    "gateRequirements": [
+      {
+        "ref": "T-RP-04",
+        "before": "IMPLEMENTATION",
+        "condition": "always"
+      },
+      {
+        "ref": "T-RP-12",
+        "before": "IMPLEMENTATION",
+        "condition": "always"
+      },
+      {
+        "ref": "S02-OPEN-02",
+        "before": "VALIDATION",
+        "condition": "joint authorized cache/page fallback acceptance"
+      }
+    ],
+    "acceptanceDependencies": [
+      "RP11-T01"
+    ],
+    "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+    "requiredForPackageCompletion": true,
+    "status": "NOT_STARTED",
+    "validation": "NOT_RUN",
+    "owner": null,
+    "deliverable": "design/implementation/evidence per approved scope",
+    "implementationStatus": "NOT_STARTED",
+    "validationStatus": "NOT_RUN",
+    "releaseStatus": "NOT_EVALUATED",
+    "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+    "acceptanceCaseIds": [
+      "AC-B08-01",
+      "AC-B08-02",
+      "AC-B08-03",
+      "PAC-RP08-02",
+      "PAC-RP08-03",
+      "PAC-RP08-04",
+      "TASK-RP08-T02",
+      "INT-PC05-01",
+      "GATE-S02-OPEN-02",
+      "DECISION-T-RP-04",
+      "DECISION-T-RP-12"
+    ],
+    "contractRefs": [
+      "PC05"
+    ]
+  },
+  "boundary": "Only current role ACL/backfill/page authorization and owner mirror/queue isolation; no safe commit watermark/epoch claim (RP13-T03 later), no business migrations or role binding feature."
+}

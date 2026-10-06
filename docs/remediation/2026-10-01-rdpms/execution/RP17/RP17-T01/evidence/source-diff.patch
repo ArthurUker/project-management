@@ -1,0 +1,80 @@
+diff --git a/rdpms-system/deploy/scripts/backup-pg.sh b/rdpms-system/deploy/scripts/backup-pg.sh
+index 0b4b671..a713c26 100755
+--- a/rdpms-system/deploy/scripts/backup-pg.sh
++++ b/rdpms-system/deploy/scripts/backup-pg.sh
+@@ -48,6 +48,13 @@ command -v pg_restore >/dev/null 2>&1 || fail "未找到 pg_restore"
+ command -v rsync     >/dev/null 2>&1 || fail "未找到 rsync"
+ 
+ TS="$(date +%Y%m%d-%H%M%S)"
++STAGING=""
++cleanup_staging() {
++  if [ -n "$STAGING" ] && [ -d "$STAGING" ]; then
++    sudo rm -rf "$STAGING"
++  fi
++}
++trap cleanup_staging EXIT
+ 
+ # ── 1) 数据库逻辑备份 ─────────────────────────────────────
+ # 文件名带库名，staging / production 备份可共存于同一目录
+@@ -65,15 +72,55 @@ fi
+ sha256sum "$DUMP" | sudo tee "$DUMP.sha256" >/dev/null
+ log "dump 校验通过（pg_restore -l OK，已生成 sha256）"
+ 
+-# ── 3) uploads 备份（硬链快照 + rsync）────────────────────
++# ── 3) uploads 备份（staging → manifest → 同FS原子发布）────────
+ SNAP="$UP_DIR/$TS"
+-if [ -d "$UP_DIR/latest" ]; then
+-  sudo cp -al "$UP_DIR/latest" "$SNAP" 2>/dev/null || sudo mkdir -p "$SNAP"
++if [ -e "$SNAP" ] || [ -L "$SNAP" ]; then
++  fail "uploads 快照目标已存在（时间戳冲突），拒绝覆盖: $SNAP"
++fi
++UP_DIR_REAL="$(cd "$UP_DIR" && pwd -P)"
++if [ -L "$UP_DIR/latest" ]; then
++  LINK_TARGET="$(readlink "$UP_DIR/latest" 2>/dev/null || true)"
++  case "$LINK_TARGET" in
++    /*) PREVIOUS_CANDIDATE="$LINK_TARGET" ;;
++    *) PREVIOUS_CANDIDATE="$UP_DIR/$LINK_TARGET" ;;
++  esac
++  PREVIOUS="$(cd "$PREVIOUS_CANDIDATE" 2>/dev/null && pwd -P || true)"
++  [ -n "$PREVIOUS" ] && [ -d "$PREVIOUS" ] || fail "latest 指向的快照不存在或不是目录"
++  case "$PREVIOUS" in
++    "$UP_DIR_REAL"/*) ;;
++    *) fail "latest 指向 UP_DIR 之外，拒绝用作 link-dest: $PREVIOUS" ;;
++  esac
++elif [ -e "$UP_DIR/latest" ]; then
++  fail "latest 存在但不是软链接，拒绝覆盖"
++else
++  PREVIOUS=""
++fi
++
++# staging 位于 UP_DIR 内，确保最终目录改名和 latest 软链替换都发生在同一文件系统。
++STAGING="$(sudo mktemp -d "$UP_DIR/.staging-$TS.XXXXXX")"
++if [ -n "$PREVIOUS" ]; then
++  sudo rsync -a --delete --link-dest="$PREVIOUS" "$UPLOAD_SRC/" "$STAGING/"
+ else
+-  sudo mkdir -p "$SNAP"
++  sudo rsync -a --delete "$UPLOAD_SRC/" "$STAGING/"
++fi
++
++# Reserved metadata filename; refuse a source collision instead of silently replacing user data.
++MANIFEST_NAME=".rdpms-snapshot-manifest.sha256"
++if [ -e "$STAGING/$MANIFEST_NAME" ]; then
++  fail "uploads 源包含保留清单名 $MANIFEST_NAME，拒绝覆盖"
++fi
++sudo bash -c 'cd "$1" && find . -type f ! -name "$2" -print0 | sort -z | xargs -0 -r sha256sum > "$1/$2"' _ "$STAGING" "$MANIFEST_NAME"
++sudo test -f "$STAGING/$MANIFEST_NAME" || fail "uploads 文件清单未生成"
++
++# Rename staged snapshot only after rsync and manifest succeed. Existing published data is immutable.
++sudo mv -T "$STAGING" "$SNAP"
++STAGING=""
++LATEST_TMP="$UP_DIR/.latest-$TS-$$"
++sudo ln -s "$SNAP" "$LATEST_TMP"
++if ! sudo mv -Tf "$LATEST_TMP" "$UP_DIR/latest"; then
++  sudo rm -f -- "$LATEST_TMP"
++  fail "快照已发布但 latest 原子更新失败；保留已发布快照和原 latest"
+ fi
+-sudo rsync -a --delete "$UPLOAD_SRC/" "$SNAP/"
+-sudo ln -sfn "$SNAP" "$UP_DIR/latest"
+ log "uploads 备份完成: $SNAP"
+ 
+ # ── 4) 保留策略 ──────────────────────────────────────────

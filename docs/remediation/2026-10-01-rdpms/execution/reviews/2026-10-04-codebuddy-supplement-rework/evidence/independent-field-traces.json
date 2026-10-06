@@ -1,0 +1,817 @@
+[
+  {
+    "entity": "projects",
+    "ordinaryEntrypoint": "/api/projects/f50a3085-4748-4357-bce0-e869ce23def5",
+    "responseShape": "single-object",
+    "permission": "projects.view",
+    "targetId": "f50a3085-4748-4357-bce0-e869ce23def5",
+    "syncFieldCount": 16,
+    "syncFields": [
+      "actualEndDate",
+      "code",
+      "createdAt",
+      "endDate",
+      "id",
+      "isDraft",
+      "manager",
+      "managerId",
+      "name",
+      "positioning",
+      "startDate",
+      "status",
+      "subtype",
+      "templateId",
+      "type",
+      "updatedAt"
+    ],
+    "compared": [
+      {
+        "key": "id",
+        "syncValue": "f50a3085-4748-4357-bce0-e869ce23def5",
+        "onlineValue": "f50a3085-4748-4357-bce0-e869ce23def5"
+      },
+      {
+        "key": "code",
+        "syncValue": "RP08M-b21de6e2-a4c8-4d57-8724-e76c37041338",
+        "onlineValue": "RP08M-b21de6e2-a4c8-4d57-8724-e76c37041338"
+      },
+      {
+        "key": "name",
+        "syncValue": "RP08 matrix project",
+        "onlineValue": "RP08 matrix project"
+      },
+      {
+        "key": "type",
+        "syncValue": "TESTING",
+        "onlineValue": "TESTING"
+      },
+      {
+        "key": "subtype",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "status",
+        "syncValue": "PLANNING",
+        "onlineValue": "PLANNING"
+      },
+      {
+        "key": "isDraft",
+        "syncValue": false,
+        "onlineValue": false
+      },
+      {
+        "key": "positioning",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "managerId",
+        "syncValue": "rp08m-member-b21de6e2-a4c8-4d57-8724-e76c37041338",
+        "onlineValue": "rp08m-member-b21de6e2-a4c8-4d57-8724-e76c37041338"
+      },
+      {
+        "key": "templateId",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "startDate",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "endDate",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "actualEndDate",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "createdAt",
+        "syncValue": "2026-10-03T16:33:52.572Z",
+        "onlineValue": "2026-10-03T16:33:52.572Z"
+      },
+      {
+        "key": "updatedAt",
+        "syncValue": "2026-10-03T16:33:52.572Z",
+        "onlineValue": "2026-10-03T16:33:52.572Z"
+      },
+      {
+        "key": "manager.id",
+        "syncValue": "rp08m-member-b21de6e2-a4c8-4d57-8724-e76c37041338",
+        "onlineValue": "rp08m-member-b21de6e2-a4c8-4d57-8724-e76c37041338"
+      },
+      {
+        "key": "manager.displayName",
+        "syncValue": "RP08 matrix member",
+        "onlineValue": "RP08 matrix member"
+      }
+    ],
+    "forbiddenChecked": [
+      "metadata",
+      "createdById",
+      "deletedAt",
+      "updatedById",
+      "description"
+    ],
+    "syncSource": "rdpms-system/backend/src/routes/sync.js:53",
+    "ordinarySource": "rdpms-system/backend/src/routes/projects.js:328",
+    "denial": {
+      "sameActor": true,
+      "removedPermissions": [
+        "projects.view"
+      ],
+      "ordinaryStatus": 403,
+      "syncUpserts": 0,
+      "syncTombstones": 0
+    },
+    "source": "CURRENT_IMPLEMENTATION_COMPARISON"
+  },
+  {
+    "entity": "projectPhases",
+    "ordinaryEntrypoint": "/api/projects/f50a3085-4748-4357-bce0-e869ce23def5/phases",
+    "responseShape": "list-object",
+    "permission": "project_phases.view",
+    "targetId": "2bc7f008-d70b-43d2-abc8-0e04b0fc5d89",
+    "syncFieldCount": 16,
+    "syncFields": [
+      "actualEnd",
+      "actualStart",
+      "code",
+      "createdAt",
+      "id",
+      "isMilestone",
+      "name",
+      "notes",
+      "plannedEnd",
+      "plannedStart",
+      "progressPercent",
+      "projectId",
+      "sortOrder",
+      "status",
+      "templatePhaseId",
+      "updatedAt"
+    ],
+    "compared": [
+      {
+        "key": "id",
+        "syncValue": "2bc7f008-d70b-43d2-abc8-0e04b0fc5d89",
+        "onlineValue": "2bc7f008-d70b-43d2-abc8-0e04b0fc5d89"
+      },
+      {
+        "key": "projectId",
+        "syncValue": "f50a3085-4748-4357-bce0-e869ce23def5",
+        "onlineValue": "f50a3085-4748-4357-bce0-e869ce23def5"
+      },
+      {
+        "key": "templatePhaseId",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "code",
+        "syncValue": "P1",
+        "onlineValue": "P1"
+      },
+      {
+        "key": "name",
+        "syncValue": "Matrix phase",
+        "onlineValue": "Matrix phase"
+      },
+      {
+        "key": "sortOrder",
+        "syncValue": 1,
+        "onlineValue": 1
+      },
+      {
+        "key": "status",
+        "syncValue": "NOT_STARTED",
+        "onlineValue": "NOT_STARTED"
+      },
+      {
+        "key": "plannedStart",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "plannedEnd",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "actualStart",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "actualEnd",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "progressPercent",
+        "syncValue": 0,
+        "onlineValue": 0
+      },
+      {
+        "key": "isMilestone",
+        "syncValue": false,
+        "onlineValue": false
+      },
+      {
+        "key": "notes",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "createdAt",
+        "syncValue": "2026-10-03T16:33:52.573Z",
+        "onlineValue": "2026-10-03T16:33:52.573Z"
+      },
+      {
+        "key": "updatedAt",
+        "syncValue": "2026-10-03T16:33:52.573Z",
+        "onlineValue": "2026-10-03T16:33:52.573Z"
+      }
+    ],
+    "forbiddenChecked": [
+      "createdById",
+      "deletedAt",
+      "updatedById"
+    ],
+    "syncSource": "rdpms-system/backend/src/routes/sync.js:68",
+    "ordinarySource": "rdpms-system/backend/src/routes/projects.js:814",
+    "denial": {
+      "sameActor": true,
+      "removedPermissions": [
+        "project_phases.view"
+      ],
+      "ordinaryStatus": 403,
+      "syncUpserts": 0,
+      "syncTombstones": 0
+    },
+    "source": "CURRENT_IMPLEMENTATION_COMPARISON"
+  },
+  {
+    "entity": "tasks",
+    "ordinaryEntrypoint": "/api/projects/f50a3085-4748-4357-bce0-e869ce23def5/tasks",
+    "responseShape": "list-object",
+    "permission": "tasks.view",
+    "targetId": "rp08m-task-b21de6e2-a4c8-4d57-8724-e76c37041338",
+    "syncFieldCount": 26,
+    "syncFields": [
+      "actualHours",
+      "applicability",
+      "assigneeId",
+      "code",
+      "completedAt",
+      "createdAt",
+      "description",
+      "dueDate",
+      "estimatedHours",
+      "expectedDeliverable",
+      "id",
+      "parentId",
+      "phaseId",
+      "priority",
+      "progressPercent",
+      "projectId",
+      "regulatoryNotes",
+      "regulatoryPriority",
+      "sortOrder",
+      "startDate",
+      "startedAt",
+      "status",
+      "taskType",
+      "templateTaskId",
+      "title",
+      "updatedAt"
+    ],
+    "compared": [
+      {
+        "key": "id",
+        "syncValue": "rp08m-task-b21de6e2-a4c8-4d57-8724-e76c37041338",
+        "onlineValue": "rp08m-task-b21de6e2-a4c8-4d57-8724-e76c37041338"
+      },
+      {
+        "key": "projectId",
+        "syncValue": "f50a3085-4748-4357-bce0-e869ce23def5",
+        "onlineValue": "f50a3085-4748-4357-bce0-e869ce23def5"
+      },
+      {
+        "key": "phaseId",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "parentId",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "templateTaskId",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "code",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "title",
+        "syncValue": "incremental task title",
+        "onlineValue": "incremental task title"
+      },
+      {
+        "key": "description",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "assigneeId",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "status",
+        "syncValue": "NOT_STARTED",
+        "onlineValue": "NOT_STARTED"
+      },
+      {
+        "key": "priority",
+        "syncValue": "MEDIUM",
+        "onlineValue": "MEDIUM"
+      },
+      {
+        "key": "taskType",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "applicability",
+        "syncValue": "REQUIRED",
+        "onlineValue": "REQUIRED"
+      },
+      {
+        "key": "regulatoryPriority",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "expectedDeliverable",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "regulatoryNotes",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "sortOrder",
+        "syncValue": 0,
+        "onlineValue": 0
+      },
+      {
+        "key": "estimatedHours",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "actualHours",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "progressPercent",
+        "syncValue": 0,
+        "onlineValue": 0
+      },
+      {
+        "key": "startDate",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "dueDate",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "startedAt",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "completedAt",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "createdAt",
+        "syncValue": "2026-10-03T16:33:52.572Z",
+        "onlineValue": "2026-10-03T16:33:52.572Z"
+      },
+      {
+        "key": "updatedAt",
+        "syncValue": "2026-10-03T16:33:52.757Z",
+        "onlineValue": "2026-10-03T16:33:52.757Z"
+      }
+    ],
+    "forbiddenChecked": [
+      "createdById",
+      "deletedAt",
+      "updatedById"
+    ],
+    "syncSource": "rdpms-system/backend/src/routes/sync.js:84",
+    "ordinarySource": "rdpms-system/backend/src/routes/projects.js:767",
+    "denial": {
+      "sameActor": true,
+      "removedPermissions": [
+        "tasks.view"
+      ],
+      "ordinaryStatus": 403,
+      "syncUpserts": 0,
+      "syncTombstones": 0
+    },
+    "source": "CURRENT_IMPLEMENTATION_COMPARISON"
+  },
+  {
+    "entity": "milestones",
+    "ordinaryEntrypoint": "/api/projects/f50a3085-4748-4357-bce0-e869ce23def5/milestones",
+    "responseShape": "list-object",
+    "permission": "milestones.view",
+    "targetId": "d0c38d25-15bd-4382-a7c6-8fc9f72aa5e7",
+    "syncFieldCount": 10,
+    "syncFields": [
+      "completedAt",
+      "createdAt",
+      "description",
+      "dueDate",
+      "id",
+      "name",
+      "phaseId",
+      "projectId",
+      "status",
+      "updatedAt"
+    ],
+    "compared": [
+      {
+        "key": "id",
+        "syncValue": "d0c38d25-15bd-4382-a7c6-8fc9f72aa5e7",
+        "onlineValue": "d0c38d25-15bd-4382-a7c6-8fc9f72aa5e7"
+      },
+      {
+        "key": "projectId",
+        "syncValue": "f50a3085-4748-4357-bce0-e869ce23def5",
+        "onlineValue": "f50a3085-4748-4357-bce0-e869ce23def5"
+      },
+      {
+        "key": "phaseId",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "name",
+        "syncValue": "Matrix milestone",
+        "onlineValue": "Matrix milestone"
+      },
+      {
+        "key": "description",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "dueDate",
+        "syncValue": "2026-10-31T00:00:00.000Z",
+        "onlineValue": "2026-10-31T00:00:00.000Z"
+      },
+      {
+        "key": "status",
+        "syncValue": "NOT_STARTED",
+        "onlineValue": "NOT_STARTED"
+      },
+      {
+        "key": "completedAt",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "createdAt",
+        "syncValue": "2026-10-03T16:33:52.574Z",
+        "onlineValue": "2026-10-03T16:33:52.574Z"
+      },
+      {
+        "key": "updatedAt",
+        "syncValue": "2026-10-03T16:33:52.574Z",
+        "onlineValue": "2026-10-03T16:33:52.574Z"
+      }
+    ],
+    "forbiddenChecked": [
+      "createdById",
+      "deletedAt",
+      "updatedById"
+    ],
+    "syncSource": "rdpms-system/backend/src/routes/sync.js:106",
+    "ordinarySource": "rdpms-system/backend/src/routes/projects.js:801",
+    "denial": {
+      "sameActor": true,
+      "removedPermissions": [
+        "milestones.view"
+      ],
+      "ordinaryStatus": 403,
+      "syncUpserts": 0,
+      "syncTombstones": 0
+    },
+    "source": "CURRENT_IMPLEMENTATION_COMPARISON"
+  },
+  {
+    "entity": "monthlyProgress",
+    "ordinaryEntrypoint": "/api/progress?projectId=f50a3085-4748-4357-bce0-e869ce23def5",
+    "responseShape": "list-object",
+    "permission": "progress.view",
+    "targetId": "396b77ed-07e8-4c84-9943-f86ab1856cf7",
+    "syncFieldCount": 12,
+    "syncFields": [
+      "actualWork",
+      "completionPercent",
+      "createdAt",
+      "id",
+      "nextPlan",
+      "periodKey",
+      "projectId",
+      "projectStatus",
+      "risks",
+      "submittedAt",
+      "submittedById",
+      "updatedAt"
+    ],
+    "compared": [
+      {
+        "key": "id",
+        "syncValue": "396b77ed-07e8-4c84-9943-f86ab1856cf7",
+        "onlineValue": "396b77ed-07e8-4c84-9943-f86ab1856cf7"
+      },
+      {
+        "key": "projectId",
+        "syncValue": "f50a3085-4748-4357-bce0-e869ce23def5",
+        "onlineValue": "f50a3085-4748-4357-bce0-e869ce23def5"
+      },
+      {
+        "key": "periodKey",
+        "syncValue": "2026-10",
+        "onlineValue": "2026-10"
+      },
+      {
+        "key": "actualWork",
+        "syncValue": "matrix progress",
+        "onlineValue": "matrix progress"
+      },
+      {
+        "key": "completionPercent",
+        "syncValue": 0,
+        "onlineValue": 0
+      },
+      {
+        "key": "nextPlan",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "risks",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "projectStatus",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "submittedById",
+        "syncValue": "rp08m-member-b21de6e2-a4c8-4d57-8724-e76c37041338",
+        "onlineValue": "rp08m-member-b21de6e2-a4c8-4d57-8724-e76c37041338"
+      },
+      {
+        "key": "submittedAt",
+        "syncValue": "2026-10-03T16:33:52.574Z",
+        "onlineValue": "2026-10-03T16:33:52.574Z"
+      },
+      {
+        "key": "createdAt",
+        "syncValue": "2026-10-03T16:33:52.574Z",
+        "onlineValue": "2026-10-03T16:33:52.574Z"
+      },
+      {
+        "key": "updatedAt",
+        "syncValue": "2026-10-03T16:33:52.574Z",
+        "onlineValue": "2026-10-03T16:33:52.574Z"
+      }
+    ],
+    "forbiddenChecked": [
+      "createdById",
+      "deletedAt",
+      "updatedById"
+    ],
+    "syncSource": "rdpms-system/backend/src/routes/sync.js:124",
+    "ordinarySource": "rdpms-system/backend/src/routes/progress.js:159",
+    "denial": {
+      "sameActor": true,
+      "removedPermissions": [
+        "progress.view"
+      ],
+      "ordinaryStatus": 403,
+      "syncUpserts": 0,
+      "syncTombstones": 0
+    },
+    "source": "CURRENT_IMPLEMENTATION_COMPARISON"
+  },
+  {
+    "entity": "reports",
+    "ordinaryEntrypoint": "/api/projects/f50a3085-4748-4357-bce0-e869ce23def5/reports",
+    "responseShape": "list-object",
+    "permission": "reports.view",
+    "targetId": "rp08m-report-member-b21de6e2-a4c8-4d57-8724-e76c37041338",
+    "syncFieldCount": 15,
+    "syncFields": [
+      "authorId",
+      "content",
+      "createdAt",
+      "currentVersion",
+      "id",
+      "periodEnd",
+      "periodKey",
+      "periodStart",
+      "projectId",
+      "reportType",
+      "reviewNote",
+      "reviewedAt",
+      "status",
+      "submittedAt",
+      "updatedAt"
+    ],
+    "compared": [
+      {
+        "key": "id",
+        "syncValue": "rp08m-report-member-b21de6e2-a4c8-4d57-8724-e76c37041338",
+        "onlineValue": "rp08m-report-member-b21de6e2-a4c8-4d57-8724-e76c37041338"
+      },
+      {
+        "key": "projectId",
+        "syncValue": "f50a3085-4748-4357-bce0-e869ce23def5",
+        "onlineValue": "f50a3085-4748-4357-bce0-e869ce23def5"
+      },
+      {
+        "key": "authorId",
+        "syncValue": "rp08m-member-b21de6e2-a4c8-4d57-8724-e76c37041338",
+        "onlineValue": "rp08m-member-b21de6e2-a4c8-4d57-8724-e76c37041338"
+      },
+      {
+        "key": "reportType",
+        "syncValue": "MONTHLY",
+        "onlineValue": "MONTHLY"
+      },
+      {
+        "key": "periodKey",
+        "syncValue": "2026-10",
+        "onlineValue": "2026-10"
+      },
+      {
+        "key": "periodStart",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "periodEnd",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "content",
+        "syncValue": {
+          "body": "member"
+        },
+        "onlineValue": {
+          "body": "member"
+        }
+      },
+      {
+        "key": "status",
+        "syncValue": "DRAFT",
+        "onlineValue": "DRAFT"
+      },
+      {
+        "key": "currentVersion",
+        "syncValue": 1,
+        "onlineValue": 1
+      },
+      {
+        "key": "submittedAt",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "reviewedAt",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "reviewNote",
+        "syncValue": null,
+        "onlineValue": null
+      },
+      {
+        "key": "createdAt",
+        "syncValue": "2026-10-03T16:33:52.572Z",
+        "onlineValue": "2026-10-03T16:33:52.572Z"
+      },
+      {
+        "key": "updatedAt",
+        "syncValue": "2026-10-03T16:33:52.572Z",
+        "onlineValue": "2026-10-03T16:33:52.572Z"
+      }
+    ],
+    "forbiddenChecked": [
+      "deletedAt",
+      "reviewerId",
+      "updatedById",
+      "createdById"
+    ],
+    "syncSource": "rdpms-system/backend/src/routes/sync.js:141",
+    "ordinarySource": "rdpms-system/backend/src/routes/projects.js:787",
+    "denial": {
+      "sameActor": true,
+      "removedPermissions": [
+        "reports.view"
+      ],
+      "ordinaryStatus": 403,
+      "syncUpserts": 0,
+      "syncTombstones": 0
+    },
+    "source": "CURRENT_IMPLEMENTATION_COMPARISON"
+  },
+  {
+    "entity": "projectMembers",
+    "ordinaryEntrypoint": "/api/projects/f50a3085-4748-4357-bce0-e869ce23def5/members",
+    "responseShape": "bare-array",
+    "permission": "projects.view",
+    "targetId": "4f1a8c1c-19dc-4e5c-8df5-e555810fcab1",
+    "syncFieldCount": 5,
+    "syncFields": [
+      "id",
+      "joinedAt",
+      "projectId",
+      "role",
+      "userId"
+    ],
+    "compared": [
+      {
+        "key": "id",
+        "syncValue": "4f1a8c1c-19dc-4e5c-8df5-e555810fcab1",
+        "onlineValue": "4f1a8c1c-19dc-4e5c-8df5-e555810fcab1"
+      },
+      {
+        "key": "projectId",
+        "syncValue": "f50a3085-4748-4357-bce0-e869ce23def5",
+        "onlineValue": "f50a3085-4748-4357-bce0-e869ce23def5"
+      },
+      {
+        "key": "userId",
+        "syncValue": "rp08m-member-b21de6e2-a4c8-4d57-8724-e76c37041338",
+        "onlineValue": "rp08m-member-b21de6e2-a4c8-4d57-8724-e76c37041338"
+      },
+      {
+        "key": "role",
+        "syncValue": "OWNER",
+        "onlineValue": "OWNER"
+      },
+      {
+        "key": "joinedAt",
+        "syncValue": "2026-10-03T16:33:52.572Z",
+        "onlineValue": "2026-10-03T16:33:52.572Z"
+      }
+    ],
+    "forbiddenChecked": [
+      "leftAt",
+      "createdById",
+      "updatedById"
+    ],
+    "syncSource": "rdpms-system/backend/src/routes/sync.js:158",
+    "ordinarySource": "rdpms-system/backend/src/routes/projects.js:703",
+    "denial": {
+      "sameActor": true,
+      "removedPermissions": [
+        "projects.view"
+      ],
+      "ordinaryStatus": 403,
+      "syncUpserts": 0,
+      "syncTombstones": 0
+    },
+    "source": "CURRENT_IMPLEMENTATION_COMPARISON"
+  }
+]

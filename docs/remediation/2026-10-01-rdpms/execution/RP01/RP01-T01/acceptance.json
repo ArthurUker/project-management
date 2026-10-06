@@ -1,0 +1,46 @@
+{
+  "taskId": "RP01-T01",
+  "findingIds": [
+    "B17"
+  ],
+  "implementation": "COMPLETE",
+  "validation": "PASS",
+  "localFixAcceptance": "FIX_ACCEPTED",
+  "targetEnvironmentAcceptance": "NOT_RUN",
+  "release": "NOT_EVALUATED",
+  "cases": [
+    {
+      "caseId": "AC-B17-01",
+      "result": "PASS",
+      "evidence": "evidence/b17-test.log; evidence/candidate-baseline.json",
+      "asserted": "Authenticated SUPER_ADMIN with roles.create received 201; new PostgreSQL row was isSystem=false with server-resolved createdById; no permission links; ROLE create audit persisted."
+    },
+    {
+      "caseId": "AC-B17-02",
+      "result": "PASS",
+      "evidence": "evidence/b17-test.log",
+      "asserted": "Duplicate code returned 400 CODE_EXISTS; lowercase invalid code returned 400 VALIDATION_ERROR; no extra row persisted."
+    },
+    {
+      "caseId": "AC-B17-03",
+      "result": "PASS",
+      "evidence": "evidence/b17-test.log",
+      "asserted": "id, permissions, permissionIds, permissionCodes, rolePermissions, created/updated/deleted timestamps and actor IDs, isSystem, systemRole and sortOrder were each rejected; no injected role or permission relation persisted."
+    },
+    {
+      "caseId": "PAC-RP01-03",
+      "result": "PASS",
+      "evidence": "evidence/b17-test.log; evidence/database-after-test-summary.json",
+      "asserted": "Positive create, forbidden injections, duplicate/invalid behavior and actual DB rows/links verified together."
+    },
+    {
+      "caseId": "TASK-RP01-T01",
+      "result": "PASS",
+      "evidence": "change-summary.md; evidence/candidate-baseline.json; evidence/b17-test.log",
+      "asserted": "Only the B17 role-create DTO was modified; no schema, seed, role-binding policy, auth/session policy, or global mass-assignment helper change."
+    }
+  ],
+  "limitations": [
+    "npm build exit 127 because TypeScript is missing from the existing dependency tree. The acceptance used actual auth/roles route modules, HTTP, JWT, and isolated PostgreSQL; full createApp/dist wiring remains unverified."
+  ]
+}

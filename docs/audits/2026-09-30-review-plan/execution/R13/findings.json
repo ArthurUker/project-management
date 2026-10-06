@@ -1,0 +1,155 @@
+[
+  {
+    "id": "D02",
+    "packet": "R13",
+    "origin": "BASELINE",
+    "baselineSeverity": "P2",
+    "currentSeverity": "P2",
+    "disposition": "SUPPORTED",
+    "title": "发布前检查校验旧版本而非候选版本",
+    "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "workingTreeDigestRefs": [
+      "execution/R13/source-digests.json"
+    ],
+    "entrypoint": "deploy/scripts/deploy.sh Step 1 preflight",
+    "preconditions": [
+      "Candidate differs from current release in a contract checked by preflight.",
+      "Deploy invokes preflight without candidate REPO_ROOT/APP_DIR/WEB_DIR and does not repeat the same contract gate after clone/build."
+    ],
+    "source": [
+      {
+        "path": "rdpms-system/deploy/scripts/deploy.sh",
+        "lineStart": 94,
+        "lineEnd": 117,
+        "symbol": "preflight precedes clone and candidate path assertion"
+      },
+      {
+        "path": "rdpms-system/deploy/scripts/deploy.sh",
+        "lineStart": 119,
+        "lineEnd": 152,
+        "symbol": "candidate install/migration/build after preflight"
+      },
+      {
+        "path": "rdpms-system/deploy/scripts/preflight.sh",
+        "lineStart": 58,
+        "lineEnd": 61,
+        "symbol": "preflight default targets current"
+      }
+    ],
+    "callPath": [
+      "deploy Step 1",
+      "rdpms-preflight.sh defaults to current",
+      "clone candidate",
+      "install/migrate/build candidate",
+      "switch current"
+    ],
+    "evidence": [
+      {
+        "level": "S",
+        "ref": "rdpms-system/deploy/scripts/deploy.sh:94-152; deploy/scripts/preflight.sh:58-61",
+        "limitation": "Static review of unchanged baseline; no deployment/preflight command was run."
+      },
+      {
+        "level": "H",
+        "ref": "docs/audits/2026-09-29-rdpms/REPORT.md#d02",
+        "limitation": "Historical static finding; no evidence that a production candidate was incorrectly released."
+      }
+    ],
+    "counterevidenceChecked": [
+      "Candidate directory, npm install, Prisma migration status and build output are checked later.",
+      "These later gates do not run the complete preflight contract against the candidate before migration/cutover."
+    ],
+    "observedImpact": "The configured preflight gate examines current by default rather than the release candidate; therefore its pass cannot establish that the candidate satisfies the inspected source/schema/seed contracts.",
+    "potentialImpact": "A candidate-only contract defect can pass the pre-release gate; actual production failure or data impact is not established.",
+    "verification": "HISTORICAL_ONLY",
+    "recommendation": "Separate host checks from artifact checks. After clone and before migration, pass candidate REPO_ROOT/APP_DIR/WEB_DIR to a candidate contract gate and bind its result to an immutable release/build manifest.",
+    "acceptanceCriteria": [
+      "An isolated candidate-only contract failure blocks before database migration and symlink cutover while current remains healthy.",
+      "Successful gate records the same candidate commit/build identity later served by health/readiness and smoke."
+    ],
+    "pendingQuestions": [
+      "No candidate-gate failure-injection run was performed in this read-only package."
+    ],
+    "supersedesOrRelated": []
+  },
+  {
+    "id": "D03",
+    "packet": "R13",
+    "origin": "BASELINE",
+    "baselineSeverity": "P2",
+    "currentSeverity": "P2",
+    "disposition": "SUPPORTED",
+    "title": "部署配置检查与运行时配置不一致",
+    "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "workingTreeDigestRefs": [
+      "execution/R13/source-digests.json"
+    ],
+    "entrypoint": "systemd EnvironmentFile to backend createApp CORS setup; preflight checks deployment variables",
+    "preconditions": [
+      "Operator configures ALLOWED_ORIGINS as shown in template and checked by preflight but does not separately set CORS_ORIGINS.",
+      "Operator assumes ENABLE_BACKUP_EXPORT=false is enforced by application code."
+    ],
+    "source": [
+      {
+        "path": "rdpms-system/backend/.env.example",
+        "lineStart": 29,
+        "lineEnd": 48,
+        "symbol": "template CORS and backup export variables"
+      },
+      {
+        "path": "rdpms-system/deploy/scripts/preflight.sh",
+        "lineStart": 120,
+        "lineEnd": 132,
+        "symbol": "checks ALLOWED_ORIGINS and ENABLE_BACKUP_EXPORT"
+      },
+      {
+        "path": "rdpms-system/deploy/systemd/rdpms-api.service",
+        "lineStart": 12,
+        "lineEnd": 15,
+        "symbol": "systemd loads runtime env file"
+      },
+      {
+        "path": "rdpms-system/backend/src/bootstrap/createApp.js",
+        "lineStart": 65,
+        "lineEnd": 69,
+        "symbol": "runtime consumes CORS_ORIGINS with wildcard fallback"
+      }
+    ],
+    "callPath": [
+      ".env.example",
+      "preflight sources .env and validates ALLOWED_ORIGINS/ENABLE_BACKUP_EXPORT",
+      "systemd injects EnvironmentFile",
+      "createApp reads CORS_ORIGINS only for CORS"
+    ],
+    "evidence": [
+      {
+        "level": "S",
+        "ref": "backend/.env.example:29-48; deploy/scripts/preflight.sh:120-132; deploy/systemd/rdpms-api.service:12-15; backend/src/bootstrap/createApp.js:65-69",
+        "limitation": "Static current-source review only; real .env and runtime headers/settings were deliberately not inspected."
+      },
+      {
+        "level": "H",
+        "ref": "docs/audits/2026-09-29-rdpms/REPORT.md#d03",
+        "limitation": "Historical static finding; production configuration and behavior were not observed."
+      }
+    ],
+    "counterevidenceChecked": [
+      "Preflight rejects ALLOWED_ORIGINS='*' in production.",
+      "Backup export endpoint has separate authorization controls; this finding does not establish unauthenticated access or direct data exfiltration."
+    ],
+    "observedImpact": "Configuration names differ between the deployment check/template and runtime CORS consumer; backend/src does not consume ENABLE_BACKUP_EXPORT, so passing that preflight check alone does not demonstrate an application behavior change.",
+    "potentialImpact": "If only the documented variable is configured, runtime CORS falls back to '*'; actual production configuration and browser impact remain unverified. The export flag may provide a false assurance but no unauthenticated export is established.",
+    "verification": "HISTORICAL_ONLY",
+    "recommendation": "Use one typed configuration schema shared by application and preflight. Remove unused flags or connect them to a defined authorized behavior and test the effective runtime behavior.",
+    "acceptanceCriteria": [
+      "Isolated configuration with only documented names yields the documented CORS allowlist and rejects unlisted origins.",
+      "Preflight and runtime reject missing/invalid production config consistently.",
+      "If export control is retained, authorized requests demonstrate matching behavior for enabled and disabled modes."
+    ],
+    "pendingQuestions": [
+      "Actual production variables are unknown because the live .env was not read.",
+      "No runtime CORS or export request was executed."
+    ],
+    "supersedesOrRelated": []
+  }
+]

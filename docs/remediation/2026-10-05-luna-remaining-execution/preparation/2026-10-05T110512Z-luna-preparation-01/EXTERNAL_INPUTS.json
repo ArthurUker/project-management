@@ -1,0 +1,249 @@
+{
+  "status": "INPUTS_REQUIRED_NOT_RECEIVED",
+  "requests": [
+    {
+      "id": "S03-OI-09 / T-RP-03",
+      "ownerRoles": [
+        "Deployment owner",
+        "Product owner"
+      ],
+      "required": [
+        "Live frontend/backend build version and deploy date per instance",
+        "product supported minimum/allowlist",
+        "baseline capability for field/status/assignee/batch/offline paths",
+        "legacy population/last seen/action",
+        "upgrade cutoff/grace/comms"
+      ],
+      "unblocks": [
+        "RP10-T01"
+      ],
+      "source": "window-e-revision/evidence/external-client-evidence-request.md",
+      "cannotSubstitute": "package.json/source matrix"
+    },
+    {
+      "id": "T-RP-02 receipt policy",
+      "ownerRoles": [
+        "Backend owner",
+        "Product owner",
+        "Operations owner"
+      ],
+      "required": [
+        "Exact key scope and canonical hash/version",
+        "legacy missing-hash compatibility cutoff",
+        "maximum supported offline interval vs retention",
+        "cleanup job owner/frequency",
+        "unknown/expired and partial-batch contract"
+      ],
+      "unblocks": [
+        "RP09-T01/T02",
+        "RP12-T02"
+      ],
+      "cannotSubstitute": "HTTP receipt TTL for sync retention"
+    },
+    {
+      "id": "T-RP-09 / D-S01-04",
+      "ownerRoles": [
+        "Security",
+        "Auth/IAM",
+        "Frontend",
+        "Product"
+      ],
+      "required": [
+        "single-use vs family replay choice/window",
+        "generation/cross-tab and failure-cleanup rule",
+        "per-event access JWT expiry/revocation policy",
+        "supported clients and compatibility/risk acceptance"
+      ],
+      "unblocks": [
+        "RP02-T02",
+        "RP03-T01/T02",
+        "RP11-T01"
+      ],
+      "cannotSubstitute": "T-RP-09 approval for D-S01-04; CORS credentials for cookie support"
+    },
+    {
+      "id": "T-RP-04 / S03-OI-01",
+      "ownerRoles": [
+        "Database/architecture",
+        "Sync"
+      ],
+      "required": [
+        "approved watermark/bootstrap/epoch option and full producer scope",
+        "owned local PostgreSQL dual-session barrier log including commit-visible ordering, rollback and retry",
+        "snapshot cut/page ACL/reset/retention/client compatibility"
+      ],
+      "unblocks": [
+        "RP08-T02",
+        "RP13-T02 signoff",
+        "RP13-T03"
+      ],
+      "cannotSubstitute": "model SQL or sequence increment for production safe-watermark"
+    },
+    {
+      "id": "T-RP-12 user recovery",
+      "ownerRoles": [
+        "Product/Data/Frontend"
+      ],
+      "required": [
+        "owner namespaces/unknown owner behavior",
+        "conflict/dead-letter/unknown/oversize/quarantine states/actions",
+        "retention and last-copy rules",
+        "current authorization for view/export/abandon",
+        "IDB/client compatibility window"
+      ],
+      "unblocks": [
+        "RP08-T02",
+        "RP11-T01/T03",
+        "RP12-T02"
+      ],
+      "cannotSubstitute": "actor-injection tests for JWT/browser/IDB"
+    },
+    {
+      "id": "T-RP-11 budgets",
+      "ownerRoles": [
+        "DB/Backend/Operations/Frontend"
+      ],
+      "required": [
+        "effective proxy/API body max",
+        "DB lock/tx/deadlock/retry ceilings",
+        "IDB quota and last-copy reserve",
+        "recursive graph/publisher lag ceiling",
+        "receipt/offline window, backup bytes/inodes, schema lock",
+        "baseline evidence and stop thresholds"
+      ],
+      "unblocks": [
+        "RP00-T05 validation",
+        "RP17-T02",
+        "RP15-T02/T03",
+        "RP05-T03 if later activated"
+      ],
+      "cannotSubstitute": "invented numeric defaults"
+    },
+    {
+      "id": "T-RP-13 release limits",
+      "ownerRoles": [
+        "Technical/Security/Release"
+      ],
+      "required": [
+        "candidate ID/build/config hashes",
+        "observation window/stop actions",
+        "safe rollback artifact or signed containment",
+        "monitoring threshold/runbook/owner"
+      ],
+      "unblocks": [
+        "RP18-T02",
+        "RP19-T03",
+        "RP00-T05 validation"
+      ],
+      "cannotSubstitute": "static planning PASS for release acceptance"
+    },
+    {
+      "id": "S04-OI-01 read-only snapshot",
+      "ownerRoles": [
+        "Data owner/DB owner"
+      ],
+      "required": [
+        "written read-only snapshot authorization",
+        "snapshot provenance/time/schema",
+        "aggregate-only anomaly counts and approved disposition",
+        "query timeout/lock budget"
+      ],
+      "unblocks": [
+        "RP15-T01 and downstream data disposition"
+      ],
+      "cannotSubstitute": "synthetic fixture counts for real legacy anomaly inventory"
+    },
+    {
+      "id": "S05-OI-01 target Linux filesystem",
+      "ownerRoles": [
+        "Operations/DB owner"
+      ],
+      "required": [
+        "target OS/filesystem/mount/ownership facts",
+        "bytes/inodes/staging/retention limits",
+        "target backup/upload tool semantics and failure evidence"
+      ],
+      "unblocks": [
+        "RP17-T03 validation",
+        "RP17-T02 budget confirmation"
+      ],
+      "cannotSubstitute": "macOS/stub results for target FS"
+    },
+    {
+      "id": "S05-OI-04/05 candidate and runbook",
+      "ownerRoles": [
+        "Release/Security/Operations"
+      ],
+      "required": [
+        "candidate artifact/config hashes",
+        "real config source and compiled CLI behavior",
+        "isolated candidate-compatible environment",
+        "approved first-safe rollback/containment/runbook"
+      ],
+      "unblocks": [
+        "RP18-T01/T03",
+        "RP19-T03"
+      ],
+      "cannotSubstitute": "source or CLI mock for actual candidate"
+    },
+    {
+      "id": "S05-OI-02 paired restore coordination",
+      "ownerRoles": [
+        "Operations/DB owner"
+      ],
+      "required": [
+        "attributable backup/write barrier or snapshot coordination",
+        "owned synthetic DB/files paired restore",
+        "manifest/time/schema consistency proof",
+        "candidate evidence disposition"
+      ],
+      "unblocks": [
+        "RP19-T01/T02"
+      ],
+      "cannotSubstitute": "same labels/time without consistency proof"
+    },
+    {
+      "id": "T-RP-08 configuration precedence",
+      "ownerRoles": [
+        "Product owner",
+        "Operations owner",
+        "Technical owner"
+      ],
+      "required": [
+        "Authoritative configuration sources and precedence for each deployment mode",
+        "Conflict behavior when source files/environment/runtime values disagree",
+        "Deprecation and migration window for legacy keys",
+        "Effective compiled and runtime configuration evidence for candidate and target",
+        "Named owner and approval date for selected precedence contract"
+      ],
+      "unblocks": [
+        "RP15-T02"
+      ],
+      "cannotSubstitute": "checked-in sample config alone; runtime effective config and candidate/target parity must be evidenced"
+    },
+    {
+      "id": "T-RP-10 restore epoch and stale-work policy",
+      "ownerRoles": [
+        "Data owner",
+        "Operations owner",
+        "Product owner",
+        "Security owner"
+      ],
+      "required": [
+        "Restore epoch/source of truth and when it increments",
+        "Stale cursor/session/receipt/family/outbox behavior after restore",
+        "Last-copy and concurrent restore constraints",
+        "Pre-commit/post-commit failure boundaries and recovery ownership",
+        "Client notification/re-auth/reconciliation behavior",
+        "Named approvers and compatibility window"
+      ],
+      "unblocks": [
+        "RP13-T02",
+        "RP19-T02",
+        "RP19-T03"
+      ],
+      "cannotSubstitute": "local barrier experiment or unsigned ADR; those provide technical evidence, not policy approval"
+    }
+  ],
+  "requestCount": 13
+}

@@ -1,0 +1,38 @@
+{
+  "IMPLEMENTATION_STATE.json": {
+    "level": "START_OF_THIS_BATCH_SNAPSHOT_MATCHING_OLD_SEAL",
+    "oldSealSha256": "5ca6dbbc11b532bcbf6fd9cab2e524f82a066c7ebd7b19c03d13523df5a8a659",
+    "snapshotSha256": "5ca6dbbc11b532bcbf6fd9cab2e524f82a066c7ebd7b19c03d13523df5a8a659",
+    "matchesOldSeal": true,
+    "declaredPathBase": "PLAN",
+    "snapshotPath": "IMPLEMENTATION_STATE.json",
+    "note": "byte snapshot at batch start; NOT the post-batch final seal (re-sealed by integrator)"
+  },
+  "execution/state.json": {
+    "level": "START_OF_THIS_BATCH_SNAPSHOT_MATCHING_OLD_SEAL",
+    "oldSealSha256": "2c9e559e71fa2439ce8c714721bf74f167a0f9ca54787c9fb860cfd8076fc4fb",
+    "snapshotSha256": "2c9e559e71fa2439ce8c714721bf74f167a0f9ca54787c9fb860cfd8076fc4fb",
+    "matchesOldSeal": true,
+    "declaredPathBase": "PLAN",
+    "snapshotPath": "execution__state.json",
+    "note": "byte snapshot at batch start; NOT the post-batch final seal (re-sealed by integrator)"
+  },
+  "HANDOFF.md": {
+    "level": "START_OF_THIS_BATCH_SNAPSHOT_MATCHING_OLD_SEAL",
+    "oldSealSha256": "13dcd82a15a3055b1aecb5fefd8143d688598b05950257847a71ae85a7ea91ae",
+    "snapshotSha256": "13dcd82a15a3055b1aecb5fefd8143d688598b05950257847a71ae85a7ea91ae",
+    "matchesOldSeal": true,
+    "declaredPathBase": "PLAN",
+    "snapshotPath": "HANDOFF.md",
+    "note": "byte snapshot at batch start; NOT the post-batch final seal (re-sealed by integrator)"
+  },
+  "execution/handoff.md": {
+    "level": "START_OF_THIS_BATCH_SNAPSHOT_MATCHING_OLD_SEAL",
+    "oldSealSha256": "5a349c30f9bc86b3e21d5d975bb12aa5dd06aa1854f5289f211a4281c610e077",
+    "snapshotSha256": "5a349c30f9bc86b3e21d5d975bb12aa5dd06aa1854f5289f211a4281c610e077",
+    "matchesOldSeal": true,
+    "declaredPathBase": "PLAN",
+    "snapshotPath": "execution__handoff.md",
+    "note": "byte snapshot at batch start; NOT the post-batch final seal (re-sealed by integrator)"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "closeId": "CLOSE-01",
+  "finding": "LR6-01",
+  "kind": "TEST_ONLY",
+  "parentTask": "RP10-T02",
+  "parentTaskStatusChanged": false,
+  "implementation": "DELIVERED",
+  "validation": {
+    "status": "LOCAL_REAL_DB_PASS",
+    "suite": {
+      "tests": 25,
+      "pass": 25,
+      "fail": 0
+    },
+    "meaning": "测试精度补正通过；不是业务修复验收"
+  },
+  "businessSourceChanges": 0,
+  "testFileChanges": 1,
+  "testsBefore": 22,
+  "testsAfter": 25,
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "evidence": [
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/evidence/matcher-identity-control.json",
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/evidence/draft-upsert-compat.json",
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/evidence/draft-race-settle-control.json",
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/evidence/suite-run.json"
+  ]
+}

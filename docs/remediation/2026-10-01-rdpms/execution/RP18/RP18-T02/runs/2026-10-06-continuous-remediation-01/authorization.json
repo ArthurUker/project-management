@@ -1,0 +1,18 @@
+{
+  "taskId": "RP18-T02",
+  "authorizationRef": "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/authorization.json",
+  "authority": "User approved subsequent local STANDARD repairs; delegated concrete option selection",
+  "allowedFiles": [
+    "rdpms-system/deploy/scripts/deploy-control.py",
+    "rdpms-system/deploy/scripts/deploy.sh",
+    "rdpms-system/deploy/scripts/rdpms-start.sh",
+    "rdpms-system/deploy/scripts/rdpms-env",
+    "rdpms-system/backend/src/platform/config/configExec.ts",
+    "rdpms-system/backend/tests/integration/rp18-deploy-control.integration.test.mjs",
+    "rdpms-system/backend/src/platform/config/configCli.ts"
+  ],
+  "approvedBy": "郭仁康",
+  "approvedRole": "研发副总监",
+  "scope": "RP18-T02 actual OS deployment lock/baseline compare/atomic symlink and explicit recorded phase effects. Candidate/config/output/migration bindings immutable; exact schema compatibility and approved safe rollback or default firstsafe stop/maintenance, no known-vulnerable old app. Hook/target release proof supplied operator; local tests synthetic service/DDL hooks transparently, no actual deployment/DDL/systemd/proxy. Start no src fallback, current manifest/compiled config exact, literal env exec shared schema.",
+  "noProductionOrRelease": true
+}

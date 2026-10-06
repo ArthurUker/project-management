@@ -1,0 +1,38 @@
+{
+  "files": [
+    "rdpms-system/backend/src/kernel/backupRestore.js",
+    "rdpms-system/backend/src/kernel/restoreSchemaRegistry.js",
+    "rdpms-system/backend/src/routes/backup.js",
+    "rdpms-system/backend/tests/integration/rp16-restore-registry.integration.test.mjs"
+  ],
+  "beforeDirectory": "before-RP16-T01",
+  "runs": [
+    "rp16-t01-registry"
+  ],
+  "summary": "Schema-derived registry covers all PK/single/composite unique and FK relations of the existing27 supported JSON tables; scalar/nested input validation, effective merge references, complete500-chunk target queries, conservative partial replace retained references. Native JWT/PG5/5, exhaustive supported unique duplicates and 500/501 conflict proof. Readonly previews leave business tables unchanged; route audit remains append-only.",
+  "compatibility": "Existing module JSON version2.0/export scope. Unknown modules excluded explicitly, files/binaries unsupported. Stricter validation; no apply count/epoch changes claimed.",
+  "rollback": "Do not reinstate partial unique/FK checks; temporarily disable restore writes if required. No migration/source overwrite of unrelated tasks.",
+  "casePass": {
+    "AC-B13-02": "All supported schema unique constraints payload duplicate rejection before writes, native read-only proof; apply-time races separate T02.",
+    "PAC-RP16-01": "Schema-complete PK/unique/FK registry; native nullable/required FK, composite target conflict, 500/501; generated registry bound in evidence.",
+    "PAC-RP16-04": "Response declares supported modules and unsupported models/no filebytes; no wholeDB restoration assertion.",
+    "TASK-RP16-T01": "Native JWT/PG5/5 schema registry/read-only validation.",
+    "DECISION-T-RP-06": "User delegated scoped failclosed module registry design; exact task contract."
+  },
+  "notRun": {
+    "AC-B13-01": "Actual apply counts scheduled T02.",
+    "AC-B13-03": "501 preview proof only, apply concurrent target changes scheduled T02.",
+    "AC-B13-04": "Apply reconciliation/attachments boundaries scheduled T02/T03; binaries excluded."
+  },
+  "limits": [
+    "All schema unique constraints exercised with synthetic negative row tuples; legal native success fixture project preview. Runtime FK positive/negative cases representative; all registry FK mappings checked against DMMF, not every model restore executed.",
+    "Preview not wholeDB/file DR, apply counters and postcommit containment not implemented by T01.",
+    "Historical finding B13 wider apply/epoch/target remains SUPPORTED and open. No target/real data access."
+  ],
+  "findings": [
+    "B13"
+  ],
+  "validation": "PASS",
+  "next": "RP16-T02 transactional apply actual counts and failclosed postcommit reconciliation state",
+  "nextTask": "RP16-T02"
+}

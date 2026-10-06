@@ -1,0 +1,15 @@
+{
+  "layer": "REAL_CHROME_SHARED_ORIGIN_HTTP_JWT_POSTGRES",
+  "cases": [],
+  "resources": {},
+  "cleanup": {
+    "serverClosed": true
+  },
+  "limits": [
+    "Own minimal React harness mounts current candidate AuthProvider; not full product pages or release UI.",
+    "Expiry token endpoint and protected mutation probe are owned test endpoints; use real signer/authenticate/current DB permissions. Not production routes.",
+    "One stale-response test uses an explicit uncoordinated competing real HTTP caller to represent old/legacy traffic; normal two-tab locking is a separate test.",
+    "No IndexedDB acceptance, no target/legacy deployment matrix, no D-S01-04 security-version policy acceptance."
+  ],
+  "actualMutationActors": []
+}

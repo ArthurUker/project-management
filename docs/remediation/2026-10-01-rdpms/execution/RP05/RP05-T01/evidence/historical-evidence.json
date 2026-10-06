@@ -1,0 +1,21 @@
+{
+  "findings": {
+    "B02": {
+      "severity":"P1",
+      "status":"SUPPORTED",
+      "reference":"docs/audits/2026-09-29-rdpms/backend-results.json#B02_PROJECT_NESTED_HARD_DELETE",
+      "observed":"Dedicated tasks.delete returned 403 while nested project edit returned 200 and the task row was physically absent.",
+      "limitation":"Historical probe evidence reused; not rerun against this implementation."
+    },
+    "B19": {
+      "severity":"P2",
+      "status":"SUPPORTED",
+      "reference":"docs/audits/2026-09-29-rdpms/backend-results.json#B19_CROSS_PROJECT_PARENT_ACCEPTED",
+      "observed":"Historical sync probe accepted a Project B task whose parent belongs to Project A.",
+      "combinedImpactReference":"docs/audits/2026-09-30-review-plan/execution/supplemental/S04/review.md#B19-impact-extension",
+      "limitation":"The combined cross-project cascade was source/schema-derived, not dynamically reproduced."
+    }
+  },
+  "auditArtifactsFrozen":true,
+  "fullRepositoryRescan":false
+}

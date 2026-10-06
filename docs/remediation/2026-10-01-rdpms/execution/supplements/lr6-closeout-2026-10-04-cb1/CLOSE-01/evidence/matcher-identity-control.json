@@ -1,0 +1,106 @@
+{
+  "kind": "STATIC_HELPER_CONTROL_WITH_IN_MEMORY_ARGUMENTS",
+  "case": "SUP-01-05",
+  "databaseAccess": false,
+  "productAcceptance": "NOT_EVALUATED",
+  "logRef": "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/integration-suite.log",
+  "cases": [
+    {
+      "label": "full key + marker (create)",
+      "method": "create",
+      "expected": true,
+      "hit": true
+    },
+    {
+      "label": "wrong projectId",
+      "method": "create",
+      "expected": false,
+      "hit": false
+    },
+    {
+      "label": "wrong authorId",
+      "method": "create",
+      "expected": false,
+      "hit": false
+    },
+    {
+      "label": "wrong reportType",
+      "method": "create",
+      "expected": false,
+      "hit": false
+    },
+    {
+      "label": "wrong periodKey",
+      "method": "create",
+      "expected": false,
+      "hit": false
+    },
+    {
+      "label": "wrong marker",
+      "method": "create",
+      "expected": false,
+      "hit": false
+    },
+    {
+      "label": "missing authorId in write",
+      "method": "create",
+      "expected": false,
+      "hit": false
+    },
+    {
+      "label": "missing periodKey in write",
+      "method": "create",
+      "expected": false,
+      "hit": false
+    },
+    {
+      "label": "partial selector (periodKey only) must not fire",
+      "method": "create",
+      "expected": false,
+      "hit": false
+    },
+    {
+      "label": "selector without marker must not fire",
+      "method": "create",
+      "expected": false,
+      "hit": false
+    },
+    {
+      "label": "target id + marker (updateMany where.id)",
+      "method": "updateMany",
+      "expected": true,
+      "hit": true
+    },
+    {
+      "label": "target id + wrong marker",
+      "method": "updateMany",
+      "expected": false,
+      "hit": false
+    },
+    {
+      "label": "different id + same marker",
+      "method": "updateMany",
+      "expected": false,
+      "hit": false
+    },
+    {
+      "label": "upsert compound key + update payload marker",
+      "method": "upsert",
+      "expected": true,
+      "hit": true
+    },
+    {
+      "label": "upsert compound key with wrong authorId",
+      "method": "upsert",
+      "expected": false,
+      "hit": false
+    },
+    {
+      "label": "upsert where.id + update payload marker",
+      "method": "upsert",
+      "expected": true,
+      "hit": true
+    }
+  ],
+  "meaning": "纯 helper 控制；证明错误完整键/marker/部分键/缺失字段不命中，不代表产品或数据库验收"
+}

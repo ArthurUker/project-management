@@ -1,0 +1,7 @@
+[
+  {
+    "path": "rdpms-system/backend/tests/integration/rp06-registration-manager-adapter.integration.test.mjs",
+    "beforeSha256": null,
+    "afterSha256": "ab7977de5d72bef9a0afd1424bc6db90a13c8356a5cd94e1cf50888677740002"
+  }
+]

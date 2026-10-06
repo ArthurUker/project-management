@@ -1,0 +1,14 @@
+{
+  "kind": "DECISION_PREPARATION",
+  "preparation": "COMPLETE",
+  "decision": "PROPOSED",
+  "candidateTasks": [
+    "RP02-T02",
+    "RP03-T01"
+  ],
+  "businessImplementation": "NOT_STARTED_BY_THIS_RUN",
+  "dynamicValidation": "NOT_RUN",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "originalLedgerChange": false
+}

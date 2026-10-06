@@ -1,0 +1,11 @@
+{
+  "taskId": "RP19-T04",
+  "packageId": "RP19",
+  "implementation": "IN_PROGRESS",
+  "validation": "ENV_BLOCKED",
+  "release": "NOT_EVALUATED",
+  "owner": "Codex executor",
+  "allowedTaskIds": ["RP19-T04"],
+  "evidence": ["authorization.json", "change-summary.md", "acceptance.json", "rollback.md", "evidence/programme-reconciliation.json", "evidence/programme-reconciliation.csv"],
+  "remaining": ["Resolve applicable 31 open items and package validations", "Record accepted risks only with authorized owner decision and residual-risk statement", "Obtain target and release acceptance for included candidates", "Close candidate disposition only with S05-OI-02 evidence"]
+}

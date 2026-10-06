@@ -1,0 +1,142 @@
+{
+  "sealedAt": "2026-10-05T23:55:02.451820+08:00",
+  "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "payloadManifest": {
+    "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/payload-manifest.json",
+    "sha256": "a8ffd65ad01e76e1afa47b6cc9f92b46b2be74a13bc71a614a8283e7c2b4c82d"
+  },
+  "payloadCount": 550,
+  "runtimeRecordSnapshot": [
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/ACCEPTANCE_MATRIX.csv",
+      "sha256": "86a1979416f5fd7e2798d390f45ffcda72dab56d5c481b621f950844b484fd25"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+      "sha256": "b4eb42b9ef83cddfef18858b413f5afeb26dacc277576b216b9858f7d9418606"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/EXECUTION_REVISION_HISTORY.json",
+      "sha256": "b6c713bf2c6f2554a2195bc3a0ffa697a431931c3039a4f3b355921e5c6c26ce"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/FINDING_TO_PACKAGE.json",
+      "sha256": "c9304f1dfffa97619c52cb67b73fb14e3d16d407a21b1dd5e2c28178468a1390"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/HANDOFF.md",
+      "sha256": "361d0c9daf47bbc05704cb2eeef1c28c276373ce134ea38e258b458c84f0264e"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/IMPLEMENTATION_STATE.json",
+      "sha256": "31face8103de26df7468834c73a0c210aa8962b44bda9a0584f61478e07ba566"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/OPEN_ITEM_GATES.json",
+      "sha256": "cec6690199f9ae7a6420ccedf570ce0266e4c14ed01f95ac02bb1958ee98a436"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/PACKAGES.json",
+      "sha256": "94c36bc8b1b2d93176dc2b46751242e67570c752c8e7bae9969cd982cc0a2c17"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/REVISION_HISTORY.json",
+      "sha256": "5ac365a3cccca5a551bb81ee8703c3b5158d82663217a04a36ebefaed0466f54"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+      "sha256": "0bd6ec854f741de302827592ddf9b1a9ae3e5ab07d2f14a0eb9938ad3d44f3f5"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/execution/all54-task-status.csv",
+      "sha256": "64f8c857b1321a38aced2f2c2f931c942587d5812401031e6cc0ecd07c4b4d2e"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/execution/handoff.md",
+      "sha256": "fdfcd84171855fd509a08ffefdbf0f499c161c2a5173715aac2594eb134134f7"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/execution/remaining-task-gates.csv",
+      "sha256": "187ccc30fad4561c386291280b35e900e132412bb2bb1df4054560187dbf1163"
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/execution/state.json",
+      "sha256": "16a4c60744e93533eecf8c3af09fb671deb072890517563681bcb617a82cba94"
+    }
+  ],
+  "sourceBindings": [
+    {
+      "path": "rdpms-system/backend/prisma/migrations/20261005_sync_receipt_v1_scope/migration.sql",
+      "sessionBeforeSha256": null,
+      "finalSha256": "49ce6f3501ed99ae39dc9dc94386f4842c6af8a08a8468bd4ad1808d840cca55"
+    },
+    {
+      "path": "rdpms-system/backend/prisma/schema.prisma",
+      "sessionBeforeSha256": "fac40301f61926686ae1466b83e6b71b9c4bf8be9f519bf11dde32a04d967f22",
+      "finalSha256": "38da845f7272a201551d473939e79f673f3ccc7a6fb9f4b3cb534a102fd7d269"
+    },
+    {
+      "path": "rdpms-system/backend/src/modules/sync/syncMutationCommands.ts",
+      "sessionBeforeSha256": null,
+      "finalSha256": "e7d9fb5008b92d9a2fb5b5cc2fb3e61e3991a04b297eae9a44b2d247c61eaca2"
+    },
+    {
+      "path": "rdpms-system/backend/src/routes/sync.js",
+      "sessionBeforeSha256": "ad41610a6036f054533e663089f1584a9c9730a8264c2a62f39448add7672c7f",
+      "finalSha256": "46fa95355309ecd680b5aab8171bfc630b79ade3c74cb93abf8c293e9d43e170"
+    },
+    {
+      "path": "rdpms-system/backend/tests/integration/rp09-receipt-recovery.integration.test.mjs",
+      "sessionBeforeSha256": null,
+      "finalSha256": "900b55263f53147e1dc16d61bdbbdd71ac993953978ca6be43f2c1afdc2e170e"
+    },
+    {
+      "path": "rdpms-system/backend/tests/integration/rp09-scoped-receipt.integration.test.mjs",
+      "sessionBeforeSha256": null,
+      "finalSha256": "93b20ea14158da393ad6f50b4498ef6cf37960d14acc169619cdb6025559736d"
+    }
+  ],
+  "consistencyEvidence": {
+    "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/final-consistency-check.json",
+    "sha256": "7dbbe3b6fa0cc2fa103d3952712c74fdbe3b9bed417f00bd1c92b7848b6728f3"
+  },
+  "validationIndex": {
+    "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/final-validation-index.json",
+    "sha256": "247a3ba0cdbef8708a41af8153fc09ee6c994c145fa3922f006181b1a8389081"
+  },
+  "counts": {
+    "tasks": {
+      "tasks": 54,
+      "implementation": {
+        "COMPLETE": 24,
+        "NOT_STARTED": 28,
+        "IN_PROGRESS": 2
+      },
+      "validation": {
+        "ENV_BLOCKED": 7,
+        "PASS": 16,
+        "NOT_RUN": 31
+      },
+      "incompleteImplementation": 30,
+      "release": "NOT_EVALUATED for all tasks",
+      "note": "24 implementations/16 locally scoped validation PASS; this is not CI or joint/target acceptance.2 inactive optional tasks; current legacy harness CI FAIL separately recorded."
+    },
+    "cases": {
+      "NOT_RUN": 181,
+      "PASS": 100,
+      "ENV_BLOCKED": 25
+    },
+    "remainingRequired": 28,
+    "optionalInactive": 2,
+    "decisionCounts": {
+      "PENDING": 7,
+      "APPROVED": 5,
+      "PROPOSED": 9
+    },
+    "ciRegression": "FAIL"
+  },
+  "ciRegression": "FAIL",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "hashBoundary": "This file not in payload; READY binds this file; readback not in immutable payload. Live plan record hashes describe seal checkpoint, not perpetual freeze."
+}

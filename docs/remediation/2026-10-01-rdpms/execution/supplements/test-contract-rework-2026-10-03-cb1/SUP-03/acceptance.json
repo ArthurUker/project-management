@@ -1,0 +1,54 @@
+{
+  "supplementId": "SUP-03",
+  "parentTaskIds": [
+    "RP04-T01",
+    "RP08-T01"
+  ],
+  "kind": "REVIEW_ONLY",
+  "originalFinding": "LR4-02",
+  "currentFindings": [
+    "LR5-03",
+    "LR5-04"
+  ],
+  "cases": [
+    {
+      "id": "SUP-03-01",
+      "meaning": "入口与写入链覆盖",
+      "status": "PASS",
+      "kind": "STATIC_REVIEW",
+      "evidence": "SUP-03/deliverables/phase-read-contract.md; SUP-03/evidence/phase-read-trace.json"
+    },
+    {
+      "id": "SUP-03-02",
+      "meaning": "直接客户端 / B20 合同范围",
+      "status": "PASS",
+      "kind": "STATIC_REVIEW",
+      "evidence": "SUP-03/deliverables/scope-assessment.md; SUP-03/evidence/phase-read-trace.json",
+      "detail": "直接调用者 NOT_FOUND；B20 原文为项目级范围"
+    },
+    {
+      "id": "SUP-03-03",
+      "meaning": "证据层次与未覆盖",
+      "status": "PASS",
+      "kind": "STATIC_REVIEW",
+      "evidence": "SUP-03/deliverables/coverage.csv",
+      "detail": "静态项 PASS；动态/API/UI 项 NOT_RUN；阶段政策 CONTRACT_UNRESOLVED"
+    },
+    {
+      "id": "SUP-03-04",
+      "meaning": "具体建议且业务源码零变化",
+      "status": "PASS",
+      "kind": "STATIC_REVIEW",
+      "evidence": "SUP-03/deliverables/next-action.md",
+      "detail": "只给 KEEP_CURRENT/SCOPED_FIX/CONTRACT_CLARIFICATION 有证据选项；源码改动数 0"
+    }
+  ],
+  "meaning": "COMPLETE 仅表示本次只读核对交付完整，不是阶段政策批准、业务修复或 UI 验收",
+  "notRun": [
+    "阶段 API 动态探针",
+    "浏览器 / 实际 UI",
+    "项目级 B20 验收重跑",
+    "完整 JWT 链"
+  ],
+  "businessAcceptanceImpact": "none; B20/RP04/RP08 原状态不变"
+}

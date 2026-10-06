@@ -1,0 +1,11 @@
+{
+  "phase": "AWAITING_TASK_DECISIONS_OR_EXTERNAL_INPUTS",
+  "preparationRework": "COMPLETE",
+  "standardImplementationAdmitted": 0,
+  "remainingIncompleteTasks": 36,
+  "allRepairsComplete": false,
+  "validation": "NOT_RUN_BY_THIS_SESSION",
+  "release": "NOT_EVALUATED",
+  "approvalRequestStatus": "PENDING_USER_REPLY",
+  "writerStopped": true
+}

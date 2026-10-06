@@ -1,0 +1,102 @@
+{
+  "asOf": "2026-10-02",
+  "originalBaseline": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "compiler": "existing frontend TypeScript 5.9.3",
+  "database": "rdpms_test_rp01_review_0cfb4f1f",
+  "bindHost": "127.0.0.1",
+  "port": 56707,
+  "databaseOwnerRole": "rdpms_review",
+  "dotenv": "private temp file only; real env files not read",
+  "commands": [
+    {
+      "label": "initdb",
+      "command": [
+        "/opt/homebrew/bin/initdb",
+        "-D",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-luna-review-2jminztb/pg",
+        "-U",
+        "rdpms_review",
+        "--auth=trust"
+      ],
+      "exitCode": 0,
+      "log": "initdb.log"
+    },
+    {
+      "label": "cluster-start",
+      "command": [
+        "/opt/homebrew/bin/pg_ctl",
+        "-D",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-luna-review-2jminztb/pg",
+        "-l",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-luna-review-2jminztb/postgres.log",
+        "-o",
+        "-h 127.0.0.1 -p 56707 -k /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-luna-review-2jminztb/socket",
+        "-w",
+        "start"
+      ],
+      "exitCode": 0,
+      "log": "cluster-start.log"
+    },
+    {
+      "label": "guarded-reset",
+      "command": [
+        "node",
+        "scripts/test-db.mjs",
+        "reset"
+      ],
+      "exitCode": 0,
+      "log": "guarded-reset.log"
+    },
+    {
+      "label": "backend-build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "log": "backend-build.log"
+    },
+    {
+      "label": "route-spotchecks",
+      "command": [
+        "node",
+        "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-02-luna/evidence/route-spotchecks.mjs",
+        "/Users/renkang/VS Code/project-management/rdpms-system/backend",
+        "--supplemental"
+      ],
+      "exitCode": 0,
+      "log": "route-spotchecks.log"
+    },
+    {
+      "label": "guarded-drop",
+      "command": [
+        "node",
+        "scripts/test-db.mjs",
+        "drop"
+      ],
+      "exitCode": 0,
+      "log": "guarded-drop.log"
+    },
+    {
+      "label": "cluster-stop",
+      "command": [
+        "/opt/homebrew/bin/pg_ctl",
+        "-D",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-luna-review-2jminztb/pg",
+        "-m",
+        "fast",
+        "-w",
+        "stop"
+      ],
+      "exitCode": 0,
+      "log": "cluster-stop.log"
+    }
+  ],
+  "cleanup": {
+    "guardedDatabaseDropExit": 0,
+    "clusterStopExit": 0,
+    "ownedDistRemoved": true,
+    "ownedTempRootRemoved": true
+  }
+}

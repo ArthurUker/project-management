@@ -1,0 +1,18 @@
+{
+  "closeId": "CLOSE-03",
+  "finding": "LR6-03",
+  "kind": "NEW_CORRECTION_DELIVERY_AND_SEALING",
+  "implementation": "DELIVERED",
+  "validation": {
+    "status": "SEAL_READBACK_PASS",
+    "meaning": "封存与读回一致；不代表独立审阅接受"
+  },
+  "businessSourceChanges": 0,
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "artifacts": [
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/evidence/payload-manifest.json",
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/final-integrity.json",
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/post-seal-readback.json"
+  ]
+}

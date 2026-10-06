@@ -1,0 +1,12 @@
+entity,dimension,entry,deletedAt_behavior,status,note
+ProjectPhase,read-ordinary-api,GET /api/projects/:id/phases (projects.js:820),no filter - soft-deleted returned,COVERED_LEAK,CURRENT_IMPLEMENTATION - CONTRACT_UNRESOLVED
+ProjectPhase,read-ordinary-api,GET /api/phases/ (phases.js:39),no filter - soft-deleted returned,COVERED_LEAK,CURRENT_IMPLEMENTATION - CONTRACT_UNRESOLVED
+ProjectPhase,read-ordinary-api,GET /api/phases/:id (phases.js:94),findUnique - no filter,COVERED_LEAK,CURRENT_IMPLEMENTATION - CONTRACT_UNRESOLVED
+ProjectPhase,read-ordinary-api-contrast,GET /api/projects/:id/milestones (projects.js:808),deletedAt: null - filtered,COVERED_OK,approved pattern; phases inconsistent
+ProjectPhase,read-sync,sync init aliveFilter (sync.js:428-430),deletedAt: null,COVERED_OK,approved soft-delete contract
+ProjectPhase,read-sync,sync init tombstones (sync.js:453),deletedAt not null,COVERED_OK,approved soft-delete contract
+ProjectPhase,write-ordinary-api,phases.js DELETE route,NONE - no delete route,COVERED_OK_BY_ABSENCE,ordinary API cannot soft-delete phase
+ProjectPhase,write-sync-push,op:delete (sync.js:596-609),set deletedAt,COVERED_OK,requires project_phases.delete
+ProjectPhase,recover,phases API restore,NONE,COVERED_ABSENT,CONTRACT_UNRESOLVED - no API path
+ProjectPhase,recover,sync upsert (sync.js:617+),does not clear deletedAt,COVERED_ABSENT,CONTRACT_UNRESOLVED - no API path
+ProjectPhase,client,projects.ts:39 phases(),consumes leaky list,COVERED_LEAK,CURRENT_IMPLEMENTATION - no client dedup

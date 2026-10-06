@@ -1,0 +1,5 @@
+{
+  "path": "rdpms-system/backend/tests/integration/b17-role-create.integration.test.mjs",
+  "before": "164d8cd5b2e425d0dc7b9f89d326476fbe7aeabe7087c76b2567271a4600288d",
+  "after": "ddab029177df7961dc6f8acdaa86c5a91debe8dc6230b46259831c5c870cf327"
+}

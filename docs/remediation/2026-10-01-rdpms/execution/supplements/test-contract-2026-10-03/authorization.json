@@ -1,0 +1,23 @@
+{
+  "sessionId": "test-contract-2026-10-03",
+  "executor": "CodeBuddy (local isolated)",
+  "authorityRef": "CODEBUDDY_TEST_CONTRACT_EXECUTOR_PROMPT_2026-10-03.md + CODEBUDDY_TEST_CONTRACT_PROMPT_MANIFEST_2026-10-03.json + execution/reviews/2026-10-03-codebuddy-followup/",
+  "date": "2026-10-03",
+  "scope": "SUP-01 (RP10-T02 TEST_ONLY) / SUP-02 (RP08-T01 TEST_ONLY) / SUP-03 (phase soft-delete REVIEW_ONLY)",
+  "whitelistTestFiles": [
+    "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs",
+    "rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs"
+  ],
+  "newSessionDir": "docs/remediation/2026-10-01-rdpms/execution/supplements/test-contract-2026-10-03/",
+  "recordFilesUpdated": [
+    "state.json",
+    "IMPLEMENTATION_STATE.json",
+    "HANDOFF.md",
+    "execution/handoff.md",
+    "REVISION_HISTORY.json",
+    "EXECUTION_REVISION_HISTORY.json"
+  ],
+  "isolation": "own loopback PostgreSQL (127.0.0.1), unique guard-approved test DB, synthetic accounts, private mode-0600 env, fresh temp root; backend/dist built transiently then removed",
+  "release": "NOT_EVALUATED",
+  "note": "不修改业务源码/handler/前端/schema/helper/依赖；不部署；不 commit/push/merge；本轮未扩大为其他 STANDARD 任务。"
+}

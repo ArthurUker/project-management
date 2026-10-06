@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-03",
+  "executor": "CodeBuddy",
+  "taskId": "RP08-T01",
+  "run": "2026-10-03-codebuddy-b04-validation",
+  "authorizationSource": "User message 2026-10-03 (CODEBUDDY_EXECUTOR_PROMPT.md); session scope file execution/authorization-2026-10-03-codebuddy.json",
+  "baselineCommit": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "kind": "VALIDATION_ONLY",
+  "reviewFindings": ["LR2-04"],
+  "historicalFinding": "B04",
+  "allowedSourceFiles": [],
+  "allowedTestFile": "rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs",
+  "businessRule": "no new failure evidence found, therefore tests only; no sync projection change, no cache/revocation/backfill work (RP08-T02 / T-RP-04 / T-RP-12), no D-S01-05 registration global exception",
+  "applicableImplementationGates": [],
+  "gateD-S01-05": "NOT_APPLICABLE (condition=false: no registration global exception requested)",
+  "prohibited": [
+    "commit/stage/push/merge/deploy",
+    "real or shared database, real accounts, real restore data",
+    "dependency install or upgrade",
+    "worktree reset/clean/stash",
+    "approving T-RP-04 / T-RP-12 / D-S01-05"
+  ],
+  "runner": "execution/codebuddy-run-2026-10-03/owned-suite-runner.py",
+  "cleanup": "guard drop -> cluster stop -> owned dist removed -> temp root removed (exit codes in evidence/attempt-XX/run-results.json)"
+}

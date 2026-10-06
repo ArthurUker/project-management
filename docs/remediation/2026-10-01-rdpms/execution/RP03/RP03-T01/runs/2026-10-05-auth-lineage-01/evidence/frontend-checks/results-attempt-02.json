@@ -1,0 +1,41 @@
+[
+  {
+    "label": "unit-bundle",
+    "command": [
+      "/Users/renkang/VS Code/project-management/rdpms-system/frontend/node_modules/.bin/esbuild",
+      "tests/unit/rp03-t01-acceptance.test.ts",
+      "--bundle",
+      "--format=esm",
+      "--platform=node",
+      "--target=node20",
+      "--tsconfig=tsconfig.app.json",
+      "--define:import.meta.env={}",
+      "--banner:js=import {createRequire} from \"node:module\"; const require=createRequire(import.meta.url);",
+      "--outfile=/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/frontend-checks/rp03-unit-attempt-02.bundle.mjs",
+      "--log-level=warning"
+    ],
+    "exitCode": 0,
+    "log": "unit-bundle-attempt-02.log"
+  },
+  {
+    "label": "unit-suite",
+    "command": [
+      "node",
+      "--test",
+      "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/frontend-checks/rp03-unit-attempt-02.bundle.mjs"
+    ],
+    "exitCode": 0,
+    "log": "unit-suite-attempt-02.log"
+  },
+  {
+    "label": "frontend-typecheck",
+    "command": [
+      "/Users/renkang/VS Code/project-management/rdpms-system/frontend/node_modules/.bin/tsc",
+      "-p",
+      "tsconfig.app.json",
+      "--noEmit"
+    ],
+    "exitCode": 0,
+    "log": "frontend-typecheck-attempt-02.log"
+  }
+]

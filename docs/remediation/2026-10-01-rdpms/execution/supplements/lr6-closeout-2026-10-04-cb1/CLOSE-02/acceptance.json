@@ -1,0 +1,57 @@
+{
+  "closeId": "CLOSE-02",
+  "finding": "LR6-02",
+  "cases": [
+    {
+      "caseId": "LR6-02-a",
+      "meaning": "主流程异常逐命令记录（TimeoutExpired / spawn 异常）",
+      "layer": "SIMULATED_CONTROL",
+      "applicability": "APPLICABLE",
+      "status": "PASS",
+      "evidenceRef": "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-02/evidence/runner-controls-summary.json",
+      "finalHash": "36551b9281bc45209bdfb03f9912cba9e264b158c0b9599a4e0aacf3cb2a81a7",
+      "detail": "build-timeout 与 suite-spawn-exception 均记录 primaryExceptions"
+    },
+    {
+      "caseId": "LR6-02-b",
+      "meaning": "主异常进入 criticalFailures 且 cleanup 后仍非零",
+      "layer": "SIMULATED_CONTROL",
+      "applicability": "APPLICABLE",
+      "status": "PASS",
+      "evidenceRef": "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-02/evidence/runner-controls-summary.json",
+      "finalHash": "36551b9281bc45209bdfb03f9912cba9e264b158c0b9599a4e0aacf3cb2a81a7",
+      "detail": "六项控制退出码均为 1，且 cleanup 完整"
+    },
+    {
+      "caseId": "LR6-02-c",
+      "meaning": "run-results 写盘失败 → 非零 + fallback 不同目标",
+      "layer": "SIMULATED_CONTROL",
+      "applicability": "APPLICABLE",
+      "status": "PASS",
+      "evidenceRef": "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/control-summary.json",
+      "finalHash": "36551b9281bc45209bdfb03f9912cba9e264b158c0b9599a4e0aacf3cb2a81a7"
+    },
+    {
+      "caseId": "LR6-02-d",
+      "meaning": "drop/stop/dist/temp 清理隔离与 stop 失败保留自有根",
+      "layer": "SIMULATED_CONTROL",
+      "applicability": "APPLICABLE",
+      "status": "PASS",
+      "evidenceRef": "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/control-summary.json; execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/control-summary.json",
+      "finalHash": "36551b9281bc45209bdfb03f9912cba9e264b158c0b9599a4e0aacf3cb2a81a7"
+    }
+  ],
+  "requiredChecks": {
+    "realReportSuiteWithThisRunner": "PASS (25/25)",
+    "build": 0,
+    "typecheck": 0,
+    "lint:undefined": 0,
+    "git diff --check": 0
+  },
+  "uncovered": [
+    "真实数据库故障注入（控制全部为 subprocess 模拟）",
+    "部署/目标环境"
+  ],
+  "release": "NOT_EVALUATED",
+  "independentReview": "PENDING"
+}

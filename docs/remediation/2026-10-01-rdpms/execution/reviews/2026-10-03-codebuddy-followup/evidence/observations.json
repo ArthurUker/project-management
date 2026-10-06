@@ -1,0 +1,154 @@
+{
+  "run": "4cb99c03-0c45-42e2-a400-21f69216e7ac",
+  "database": "unique owned real PostgreSQL",
+  "authentication": "injected actor for protected endpoints; real bcrypt successful login and conditional reset; not full JWT acceptance",
+  "source": "unchanged worktree source compiled by owned runner",
+  "negativeControl": "Only one matching test DB adapter create is converted into real unconditional upsert to emulate the removed write primitive; source and old artifacts are untouched",
+  "observations": [
+    {
+      "case": "positive-real-POST-create",
+      "status": 201,
+      "persistedStatus": "DRAFT"
+    },
+    {
+      "case": "fixed-absent-row-POST-race",
+      "createStatus": 201,
+      "submitStatus": 200,
+      "lateStatus": 409,
+      "code": "DUPLICATE_PERIOD_KEY",
+      "persistedStatus": "SUBMITTED",
+      "currentVersion": 1,
+      "currentContent": {
+        "revision": "winner-source"
+      },
+      "versionContent": {
+        "revision": "winner-source"
+      },
+      "lateReceiptCount": 0,
+      "createAuditCount": 1,
+      "controlBoundary": "Unchanged current source/Prisma SQL"
+    },
+    {
+      "case": "semantic-negative-control-unconditional-upsert",
+      "createStatus": 201,
+      "submitStatus": 200,
+      "lateStatus": 201,
+      "persistedStatus": "SUBMITTED",
+      "currentVersion": 1,
+      "currentContent": {
+        "revision": "control-late"
+      },
+      "versionContent": {
+        "revision": "winner-source"
+      },
+      "lateReceiptCount": 1,
+      "createAuditCount": 2,
+      "controlBoundary": "Only matching delayed create is adapted to real unconditional Prisma upsert; no source edit; actual PostgreSQL transaction/audit/receipt retained"
+    },
+    {
+      "case": "tombstone-restored-and-submitted-before-late-restore",
+      "winnerStatus": 201,
+      "submitStatus": 200,
+      "lateStatus": 409,
+      "persistedStatus": "SUBMITTED",
+      "currentContent": {
+        "revision": "winner-restored"
+      },
+      "versionContent": {
+        "revision": "winner-restored"
+      },
+      "lateReceiptCount": 0,
+      "restoreAuditCount": 1
+    },
+    {
+      "case": "same-actor-online-sync-fields-and-permission-projects",
+      "onlineStatus": 200,
+      "deniedOnlineStatus": 403,
+      "fieldCount": 16,
+      "sameRowId": "bb301673-1a5e-426e-9640-0ba8d11ef354",
+      "allScalarValuesCompared": true,
+      "permission": "projects.view"
+    },
+    {
+      "case": "same-actor-online-sync-fields-and-permission-projectPhases",
+      "onlineStatus": 200,
+      "deniedOnlineStatus": 403,
+      "fieldCount": 16,
+      "sameRowId": "16e1d1d3-7801-4a5b-9228-0c5545f8a5be",
+      "allScalarValuesCompared": true,
+      "permission": "project_phases.view"
+    },
+    {
+      "case": "same-actor-online-sync-fields-and-permission-tasks",
+      "onlineStatus": 200,
+      "deniedOnlineStatus": 403,
+      "fieldCount": 26,
+      "sameRowId": "85abebf3-60dd-460d-b3f0-e431e7f1043d",
+      "allScalarValuesCompared": true,
+      "permission": "tasks.view"
+    },
+    {
+      "case": "same-actor-online-sync-fields-and-permission-milestones",
+      "onlineStatus": 200,
+      "deniedOnlineStatus": 403,
+      "fieldCount": 10,
+      "sameRowId": "57f63e7b-cb86-4bd6-9d28-08dd81f9c744",
+      "allScalarValuesCompared": true,
+      "permission": "milestones.view"
+    },
+    {
+      "case": "same-actor-online-sync-fields-and-permission-monthlyProgress",
+      "onlineStatus": 200,
+      "deniedOnlineStatus": 403,
+      "fieldCount": 12,
+      "sameRowId": "d835e36a-9139-4b8e-a96e-52c3c63b54ba",
+      "allScalarValuesCompared": true,
+      "permission": "progress.view"
+    },
+    {
+      "case": "same-actor-online-sync-fields-and-permission-reports",
+      "onlineStatus": 200,
+      "deniedOnlineStatus": 403,
+      "fieldCount": 15,
+      "sameRowId": "cfa58274-7937-42b3-97c6-f0d3679c3df3",
+      "allScalarValuesCompared": true,
+      "permission": "reports.view"
+    },
+    {
+      "case": "same-actor-online-sync-fields-and-permission-projectMembers",
+      "onlineStatus": 200,
+      "deniedOnlineStatus": 403,
+      "fieldCount": 5,
+      "sameRowId": "28c63c14-5dcb-41a2-b898-c3d1e0058052",
+      "allScalarValuesCompared": true,
+      "permission": "projects.view"
+    },
+    {
+      "case": "ordinary-phase-tombstone-contract-fact",
+      "onlineStatus": 200,
+      "onlineReturnsDeleted": true,
+      "deletedAt": "2026-10-03T09:40:25.899Z",
+      "syncReturnsAs": "tombstone only",
+      "meaning": "Supplied matrix says all ordinary active views exclude tombstones; phases route is an existing exception. Not a sync unauthorized data leak."
+    },
+    {
+      "case": "nonmember-phase-tombstone-not-leaked",
+      "status": 200,
+      "tombstonePresent": false
+    },
+    {
+      "case": "permanent-login-fence-recheck",
+      "positiveLoginStatus": 200,
+      "disableStatus": 200,
+      "loginStatus": 403,
+      "code": "ACCOUNT_DISABLED",
+      "persistedStatus": "DISABLED",
+      "lastLoginAt": null,
+      "failedLoginAttempts": 0,
+      "lockedUntil": null,
+      "refreshCount": 0,
+      "successLoginAuditCount": 0,
+      "accessTokenPresent": false
+    }
+  ]
+}

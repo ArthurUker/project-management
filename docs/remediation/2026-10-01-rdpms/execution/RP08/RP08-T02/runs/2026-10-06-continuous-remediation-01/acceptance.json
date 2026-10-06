@@ -1,0 +1,82 @@
+{
+  "taskId": "RP08-T02",
+  "approvalRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/approval.json",
+  "cases": [
+    {
+      "caseId": "AC-B04-02",
+      "result": "PASS",
+      "scope": "Current role/current-grant read6 DB cases,5 native IDB ACL/rebuild/abort cases,7 JWT+DB+browser+actualTasks positive/403/marker-purge and12 ordinary projection pairs. Independent scoped native resources; exact decided ACL contract. Full commit-watermark/epoch/release excluded.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP08/RP08-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-B08-01",
+      "result": "PASS",
+      "scope": "Current role/current-grant read6 DB cases,5 native IDB ACL/rebuild/abort cases,7 JWT+DB+browser+actualTasks positive/403/marker-purge and12 ordinary projection pairs. Independent scoped native resources; exact decided ACL contract. Full commit-watermark/epoch/release excluded.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP08/RP08-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-B08-02",
+      "result": "PASS",
+      "scope": "Current role/current-grant read6 DB cases,5 native IDB ACL/rebuild/abort cases,7 JWT+DB+browser+actualTasks positive/403/marker-purge and12 ordinary projection pairs. Independent scoped native resources; exact decided ACL contract. Full commit-watermark/epoch/release excluded.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP08/RP08-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-B08-03",
+      "result": "PASS",
+      "scope": "Current role/current-grant read6 DB cases,5 native IDB ACL/rebuild/abort cases,7 JWT+DB+browser+actualTasks positive/403/marker-purge and12 ordinary projection pairs. Independent scoped native resources; exact decided ACL contract. Full commit-watermark/epoch/release excluded.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP08/RP08-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP08-02",
+      "result": "PASS",
+      "scope": "Current role/current-grant read6 DB cases,5 native IDB ACL/rebuild/abort cases,7 JWT+DB+browser+actualTasks positive/403/marker-purge and12 ordinary projection pairs. Independent scoped native resources; exact decided ACL contract. Full commit-watermark/epoch/release excluded.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP08/RP08-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP08-03",
+      "result": "PASS",
+      "scope": "Current role/current-grant read6 DB cases,5 native IDB ACL/rebuild/abort cases,7 JWT+DB+browser+actualTasks positive/403/marker-purge and12 ordinary projection pairs. Independent scoped native resources; exact decided ACL contract. Full commit-watermark/epoch/release excluded.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP08/RP08-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP08-04",
+      "result": "PASS",
+      "scope": "Current role/current-grant read6 DB cases,5 native IDB ACL/rebuild/abort cases,7 JWT+DB+browser+actualTasks positive/403/marker-purge and12 ordinary projection pairs. Independent scoped native resources; exact decided ACL contract. Full commit-watermark/epoch/release excluded.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP08/RP08-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "TASK-RP08-T02",
+      "result": "PASS",
+      "scope": "Current role/current-grant read6 DB cases,5 native IDB ACL/rebuild/abort cases,7 JWT+DB+browser+actualTasks positive/403/marker-purge and12 ordinary projection pairs. Independent scoped native resources; exact decided ACL contract. Full commit-watermark/epoch/release excluded.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP08/RP08-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "GATE-S02-OPEN-02",
+      "result": "PASS",
+      "scope": "Current role/current-grant read6 DB cases,5 native IDB ACL/rebuild/abort cases,7 JWT+DB+browser+actualTasks positive/403/marker-purge and12 ordinary projection pairs. Independent scoped native resources; exact decided ACL contract. Full commit-watermark/epoch/release excluded.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP08/RP08-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "INT-PC05-01",
+      "result": "NOT_RUN",
+      "reason": "Role/backfill/page ACL/current owner subset passes; commit-visible publication/source revision/epoch producer coverage and restore reset require RP13-T03/RP19 and are not implied."
+    },
+    {
+      "caseId": "INT-PC12-01",
+      "result": "NOT_RUN",
+      "reason": "Recovery/owner/unknown subsets pass; native actual quota, epoch/target release not fully verified."
+    }
+  ],
+  "localValidation": "PASS",
+  "jointValidation": "NOT_RUN",
+  "targetValidation": "NOT_RUN",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "limits": [
+    "Candidate local only; no deployed client or target/production acceptance.",
+    "Read snapshot is internally repeatable-read, but old updatedAt commit-order miss remains for RP13-T03; not closed B07.",
+    "Five minute approved offline lease cannot know remote revocation during genuine network outage. Fresh definitive denial/ACL change immediately hides mirrors.",
+    "Existing12 source tests changed only fingerprintformat and acknowledgedACL query parameter; all case names/field/value/denial invariants retained.",
+    "Earlier tx connection failure and wrong UI error-text expectation preserved; finalnative7/7 verifies nonempty marker, actual403 and marker purge. Native quota priorENV not convertedPASS."
+  ]
+}

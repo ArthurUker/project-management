@@ -1,0 +1,104 @@
+{
+  "createdAt": "2026-10-05T19:41:21.811145+08:00",
+  "payloadManifest": {
+    "pathBase": "REPOSITORY",
+    "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/payload-manifest.json",
+    "sha256": "ddeeef66e45185ec94b01d72417c9a3a75775036fdcf38478ef500c739537003",
+    "files": 344
+  },
+  "runtimeRecordSnapshot": [
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/IMPLEMENTATION_STATE.json",
+      "sha256": "4b4a23d5ccf9d5f0c4418ffe9ad6a7831666bcea6b725eb3c4f0823e1e15f92e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/state.json",
+      "sha256": "5cdeece7c95fbd774a17a7cea681641da44245ae347478fc4501b018393b2866"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json",
+      "sha256": "19e0c373439d22925541f84e0f29b0c3ca4cedf358ee04932fedcf1f92a6858e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+      "sha256": "6b16302d92deb8ad1ab7c030a8a4002a47c456be5034b9d6f3b4b27a51be2b67"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/PACKAGES.json",
+      "sha256": "971ad6dda7d447f8d27afa70bea5df108f06e1c743d34f95d776aa34410bb442"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/ACCEPTANCE_MATRIX.csv",
+      "sha256": "26ee1745793bf6adf55f721eef673dd8db108b56b95b8106653c884b801af44d"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/OPEN_ITEM_GATES.json",
+      "sha256": "6eb09f53e13b0e1e07a930c96831d998736b2dcfc33be0f88c7392147db30735"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/FINDING_TO_PACKAGE.json",
+      "sha256": "0a5f680bb7eaca2ca61ade61cda3f704c0aa37885f55888f8441993f207c1f36"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/HANDOFF.md",
+      "sha256": "0596a0d6d0867005efd0241c116b0a7ca080fa7a383b868f3822d7de05c6384e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/handoff.md",
+      "sha256": "7813eaead85805668cb6485aeb9f528d0b180db7cec7929b662a8b5c91fb71b0"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/REVISION_HISTORY.json",
+      "sha256": "83829b8d0f793debc78ea6dee5b11056212e395b391bf508cd7a0dbdb42d9efa"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/EXECUTION_REVISION_HISTORY.json",
+      "sha256": "cdb98febeffa0cf6cfd1d9de15979ccce7a23a3a219956aaaf93cc69d2b9e1b9"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/all54-task-status.csv",
+      "sha256": "02666d75ff38887239256fb266407281352e372cbdccccbfe6a062cdc3d5482f"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/remaining-task-gates.csv",
+      "sha256": "29890a8f9fd4a7777928c2392db5f2cea24de7de4a1d552cc53677949ea900b9"
+    }
+  ],
+  "frozenFilesChecked": 2364,
+  "frozenDrift": 0,
+  "cleanupEvidenceRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/final-scope-and-cleanup.json",
+  "consistencyEvidenceRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/final-record-consistency.json",
+  "state": {
+    "tasks": 54,
+    "implementation": {
+      "COMPLETE": 22,
+      "NOT_STARTED": 30,
+      "IN_PROGRESS": 2
+    },
+    "validation": {
+      "ENV_BLOCKED": 7,
+      "PASS": 14,
+      "NOT_RUN": 33
+    },
+    "incompleteImplementation": 32,
+    "release": "NOT_EVALUATED for all tasks",
+    "note": "22 local implementations complete; validation/target/release separate;2 inactive optional tasks not activated."
+  },
+  "release": "NOT_EVALUATED",
+  "independentReview": "PENDING",
+  "limitsRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/historical-fixture-limit.md"
+}

@@ -1,0 +1,45 @@
+{
+  "files": [
+    "rdpms-system/backend/src/routes/users.js",
+    "rdpms-system/backend/src/routes/auth.js",
+    "rdpms-system/backend/src/kernel/rbac.js",
+    "rdpms-system/backend/src/modules/auth/accountPolicy.ts",
+    "rdpms-system/backend/tests/integration/rp01-account-policy.integration.test.mjs"
+  ],
+  "runs": [
+    "rp01-t02",
+    "rp01-regression-unit"
+  ],
+  "casePass": {
+    "AC-B01-01": "Current true DB/JWT,144 hierarchy actions, legal nonempty users success, forced allowlist, transactional audit/refresh failure and promotion/actor revoke barriers",
+    "AC-B01-02": "Current true DB/JWT,144 hierarchy actions, legal nonempty users success, forced allowlist, transactional audit/refresh failure and promotion/actor revoke barriers",
+    "AC-B01-03": "Current true DB/JWT,144 hierarchy actions, legal nonempty users success, forced allowlist, transactional audit/refresh failure and promotion/actor revoke barriers",
+    "AC-B01-04": "Current true DB/JWT,144 hierarchy actions, legal nonempty users success, forced allowlist, transactional audit/refresh failure and promotion/actor revoke barriers",
+    "PAC-RP01-01": "Current true DB/JWT,144 hierarchy actions, legal nonempty users success, forced allowlist, transactional audit/refresh failure and promotion/actor revoke barriers",
+    "PAC-RP01-02": "Current true DB/JWT,144 hierarchy actions, legal nonempty users success, forced allowlist, transactional audit/refresh failure and promotion/actor revoke barriers",
+    "PAC-RP01-04": "Current true DB/JWT,144 hierarchy actions, legal nonempty users success, forced allowlist, transactional audit/refresh failure and promotion/actor revoke barriers",
+    "PAC-RP01-05": "Current true DB/JWT,144 hierarchy actions, legal nonempty users success, forced allowlist, transactional audit/refresh failure and promotion/actor revoke barriers",
+    "TASK-RP01-T02": "Current true DB/JWT,144 hierarchy actions, legal nonempty users success, forced allowlist, transactional audit/refresh failure and promotion/actor revoke barriers",
+    "GATE-D-S01-01": "User delegated selection of precise D-S01-01/D-S01-02 contracts; approval.json sourceQuote and named prior owner attribution, no separate signatures invented",
+    "GATE-D-S01-02": "User delegated selection of precise D-S01-01/D-S01-02 contracts; approval.json sourceQuote and named prior owner attribution, no separate signatures invented",
+    "DECISION-D-S01-01": "User delegated selection of precise D-S01-01/D-S01-02 contracts; approval.json sourceQuote and named prior owner attribution, no separate signatures invented",
+    "DECISION-D-S01-02": "User delegated selection of precise D-S01-01/D-S01-02 contracts; approval.json sourceQuote and named prior owner attribution, no separate signatures invented"
+  },
+  "notRun": {
+    "INT-PC02-01": "Account command/current permissions covered; complete HTTP/sync/registration/file joint matrix remains open"
+  },
+  "limits": [
+    "Local candidate only; no deploy, target rollback, shared/production resources",
+    "D-S01-04 JWT version is not part of this task; next task will add exact approved version contract",
+    "Real JWT six actor roles and DB;144 command combinations, fault rollback and actual lock-boundary barriers; no browser/UI acceptance"
+  ],
+  "summary": "RP01-T02: superior-only current account policy, no peer/higher/self operations or peer/higher grants; exact forced-password allowlist; resets/status/delete/system role binding and self-password have tx-local current checks, refresh revocation and strict audit. Final formal8 cases include144 matrix combinations. Current93 unit/contract regression passed.",
+  "compatibility": "Existing account URLs/body retained, unsafe peer/higher requests403; force-change ordinary requests403. No schema/seed/custom-role binding change.",
+  "rollback": "Keep account protection and strict audit; do not restore unsafe admin→SUPER reset. Target containment/rollback not run.",
+  "next": "RP03-T02 immediate access JWT security version under current delegated approval",
+  "nextTask": "RP03-T02",
+  "findings": [
+    "B01"
+  ],
+  "validation": "PASS"
+}

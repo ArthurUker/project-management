@@ -1,0 +1,25 @@
+{
+  "createdAt": "2026-10-02",
+  "executor": "Codex executor",
+  "authorizationSource": "Continuation authorized by user message “继续严格执行计划做”; bounded execution authorization and stop rules from docs/remediation/2026-10-01-rdpms/EXECUTOR_PROMPT.md.",
+  "baselineCommit": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "allowedTaskIds": [
+    "RP00-T03"
+  ],
+  "allowedActivities": [
+    "read-only task/client/server revision source review",
+    "write RP00-T03 static execution artifacts and runtime status mirrors"
+  ],
+  "prohibited": [
+    "business-code changes",
+    "commit/stage/push/merge/deploy",
+    "production/shared DB",
+    "real data restore",
+    "dependency upgrade",
+    "real accounts",
+    "tests/build/runtime barriers for this static-only task",
+    "subagents/model switch"
+  ],
+  "owner": "Codex executor",
+  "decisionBoundary": "No client support-window or legacy-compatibility approval found; executor does not approve one."
+}

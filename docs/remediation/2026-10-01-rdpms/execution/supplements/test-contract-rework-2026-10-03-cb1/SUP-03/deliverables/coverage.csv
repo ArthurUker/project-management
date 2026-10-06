@@ -1,0 +1,22 @@
+item,kind,scopeOrPath,status,evidenceRef,coverageReason
+"GET /api/projects/:id embedded phases (no deletedAt filter)",STATIC_REVIEW,rdpms-system/backend/src/routes/projects.js:328/341,COVERED,SUP-03/deliverables/phase-read-contract.md,本轮补齐复核指定遗漏的详情内嵌阶段入口
+"GET /api/projects/:id/phases",STATIC_REVIEW,rdpms-system/backend/src/routes/projects.js:814/820-823,COVERED,SUP-03/deliverables/phase-read-contract.md,阶段列表入口已登记权限/scope/where/deletedAt
+"GET /api/phases?projectId=",STATIC_REVIEW,rdpms-system/backend/src/routes/phases.js:32/39,COVERED,SUP-03/deliverables/phase-read-contract.md,带 projectId 的阶段列表
+"GET /api/phases (no projectId global list)",STATIC_REVIEW,rdpms-system/backend/src/routes/phases.js:42-50 (line45),COVERED,SUP-03/deliverables/phase-read-contract.md,本轮补齐复核指定遗漏的全局阶段列表入口
+"GET /api/phases/:id",STATIC_REVIEW,rdpms-system/backend/src/routes/phases.js:92-99,COVERED,SUP-03/deliverables/phase-read-contract.md,阶段详情无 deletedAt 过滤且无 capability 断言
+"sync live upserts (aliveFilter deletedAt null)",STATIC_REVIEW,rdpms-system/backend/src/routes/sync.js:428-436/442,COVERED,SUP-03/deliverables/phase-read-contract.md,同步活跃行读取
+"sync tombstones (id-only)",STATIC_REVIEW,rdpms-system/backend/src/routes/sync.js:452-457/469,COVERED,SUP-03/deliverables/phase-read-contract.md,同步墓碑只下发 id
+"API-reachable phase soft delete (sync push op=delete)",STATIC_REVIEW,rdpms-system/backend/src/routes/sync.js:217-225/596-609,COVERED,SUP-03/deliverables/phase-read-contract.md,独立删除权限 project_phases.delete；写 deletedAt
+"Phase-resource DELETE endpoint",STATIC_REVIEW,rdpms-system/backend/src/routes/phases.js (route list),NOT_FOUND,SUP-03/deliverables/phase-read-contract.md,文件内无 delete('/:id')；不得笼统称文件无 DELETE 路由
+"Phase restore endpoint / sync upsert restore",STATIC_REVIEW,rdpms-system/backend/src/routes/sync.js:653-673,NOT_FOUND,SUP-03/deliverables/phase-read-contract.md,通用 upsert 更新不清 deletedAt，无恢复语义
+"PhaseTransition edge DELETE (distinction)",STATIC_REVIEW,rdpms-system/backend/src/routes/phases.js:194,COVERED,SUP-03/deliverables/phase-read-contract.md,与阶段资源 DELETE 区分登记
+"Direct caller of projectAPI.phases",STATIC_REVIEW,rdpms-system/frontend/src (targeted search),NOT_FOUND,SUP-03/deliverables/phase-read-contract.md,"检索 projectAPI.phases / .phases( 命中 0；封装存在不等于实际调用"
+"ProjectDetail actual data source",STATIC_REVIEW,rdpms-system/frontend/src/pages/ProjectDetail.tsx:51/198,COVERED,SUP-03/deliverables/phase-read-contract.md,调用 projectAPI.get；传 template/tasks 给 PhaseProgressBar
+"PhaseProgressBar phase source",STATIC_REVIEW,rdpms-system/frontend/src/components/PhaseProgressBar.tsx:32-40,COVERED,SUP-03/deliverables/phase-read-contract.md,读取 template.content.phases（模板阶段），不是 ProjectPhase 实例列表
+"ProjectDetail consumption of embedded phases",STATIC_REVIEW,rdpms-system/frontend/src/pages/ProjectDetail.tsx (grep phases),NOT_FOUND,SUP-03/deliverables/phase-read-contract.md,页面内未出现 phases 字段引用
+"Original B20 project-level scope",STATIC_REVIEW,ACCEPTANCE_MATRIX.csv AC-B20-01/02/03; PACKAGES.json PAC-RP04-03,COVERED,SUP-03/deliverables/scope-assessment.md,逐字引用原项目级定义
+"Phase filter policy approval source",STATIC_REVIEW,plan inputs targeted read,CONTRACT_UNRESOLVED,SUP-03/deliverables/phase-read-contract.md,未发现具名批准来源；不自行决定默认过滤政策
+"Phase API dynamic probes",DYNAMIC,not executed,NOT_RUN,SUP-03/deliverables/scope-assessment.md,本轮不新增阶段端点动态探针、浏览器或数据调查
+"Browser / actual UI phase display",DYNAMIC,not executed,NOT_RUN,SUP-03/deliverables/phase-read-contract.md,本轮不启动浏览器或 UI 验收；静态不能代动态
+"Project-level B20 acceptance re-run",DYNAMIC,not executed,NOT_RUN,SUP-03/deliverables/scope-assessment.md,本轮不重跑项目级验收、不重开 B20
+"phase-read source edits",CHANGE_CONTROL,rdpms-system/backend/src + frontend/src,NO_CHANGE,evidence/start-baseline.json (session root),本项 REVIEW_ONLY；业务源码零改动由 final-integrity 核对

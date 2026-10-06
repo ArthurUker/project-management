@@ -1,0 +1,51 @@
+{
+  "taskId": "RP17-T03",
+  "approvalRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/approval.json",
+  "cases": [
+    {
+      "caseId": "AC-D01-01",
+      "result": "ENV_BLOCKED",
+      "reason": "Owned macOS actual filesystem five cases pass and cleanup verified. Required target Linux/filesystem/mount/tool/metadata/space/genuine interrupted backup publication evidence absent. Standalone target harness delivered, must run only newly owned disposable parent with --require-linux; not target acceptance.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP17/RP17-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP17-03",
+      "result": "ENV_BLOCKED",
+      "reason": "Owned macOS actual filesystem five cases pass and cleanup verified. Required target Linux/filesystem/mount/tool/metadata/space/genuine interrupted backup publication evidence absent. Standalone target harness delivered, must run only newly owned disposable parent with --require-linux; not target acceptance.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP17/RP17-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP17-04",
+      "result": "ENV_BLOCKED",
+      "reason": "Owned macOS actual filesystem five cases pass and cleanup verified. Required target Linux/filesystem/mount/tool/metadata/space/genuine interrupted backup publication evidence absent. Standalone target harness delivered, must run only newly owned disposable parent with --require-linux; not target acceptance.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP17/RP17-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "TASK-RP17-T03",
+      "result": "ENV_BLOCKED",
+      "reason": "Owned macOS actual filesystem five cases pass and cleanup verified. Required target Linux/filesystem/mount/tool/metadata/space/genuine interrupted backup publication evidence absent. Standalone target harness delivered, must run only newly owned disposable parent with --require-linux; not target acceptance.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP17/RP17-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "GATE-S05-OI-01",
+      "result": "ENV_BLOCKED",
+      "reason": "Owned macOS actual filesystem five cases pass and cleanup verified. Required target Linux/filesystem/mount/tool/metadata/space/genuine interrupted backup publication evidence absent. Standalone target harness delivered, must run only newly owned disposable parent with --require-linux; not target acceptance.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP17/RP17-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "INT-PC08-01",
+      "result": "NOT_RUN",
+      "reason": "No Linux/common-point physical restore; local subset only."
+    }
+  ],
+  "localValidation": "ENV_BLOCKED",
+  "jointValidation": "NOT_RUN",
+  "targetValidation": "NOT_RUN",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "limits": [
+    "No target Linux resource/access provided; no actual target fs inode/metadata/xattr/ACL/capacity/operator result.",
+    "Five local owned filesystem checks prove stated local mechanics only; standalone failures use real missing-parent rename/collision OS errors, not target proxy.",
+    "Required physical restore moves to RP19; dump list/hash not restore or consistency."
+  ]
+}

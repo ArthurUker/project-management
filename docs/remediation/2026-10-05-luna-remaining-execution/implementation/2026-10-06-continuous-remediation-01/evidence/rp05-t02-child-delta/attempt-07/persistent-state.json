@@ -1,0 +1,3411 @@
+{
+  "trace": [
+    {
+      "endpoint": "/projects/5c363031-7a22-416a-8113-f75e730573b0",
+      "method": "PUT",
+      "body": {
+        "baseUpdatedAt": "2026-10-06T02:43:31.096Z",
+        "tasks": [
+          {
+            "id": "ae58b89f-b4ef-44e4-bf9d-e01269fe7327",
+            "baseUpdatedAt": "2026-10-06T02:43:31.099Z",
+            "title": "Edited A"
+          }
+        ],
+        "milestones": [],
+        "deletedTaskIds": [],
+        "deletedMilestoneIds": []
+      },
+      "status": 200,
+      "response": {
+        "id": "5c363031-7a22-416a-8113-f75e730573b0",
+        "code": "DELTA-cb8c51a0-2302-430f-b369-712fbcf23587",
+        "name": "Owned original project",
+        "type": "TESTING",
+        "subtype": null,
+        "status": "PLANNING",
+        "isDraft": false,
+        "positioning": null,
+        "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+        "templateId": null,
+        "startDate": null,
+        "endDate": null,
+        "actualEndDate": null,
+        "metadata": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:43:31.096Z",
+        "updatedAt": "2026-10-06T02:43:31.114Z",
+        "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+        "updatedById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+        "manager": {
+          "id": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+          "displayName": "Synthetic delta owner",
+          "position": null,
+          "avatarFileId": null
+        },
+        "members": [
+          {
+            "id": "2cc44208-1e47-4248-a44b-d09ecbc5d8f0",
+            "projectId": "5c363031-7a22-416a-8113-f75e730573b0",
+            "userId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+            "role": "OWNER",
+            "joinedAt": "2026-10-06T02:43:31.096Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+              "displayName": "Synthetic delta owner",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "endpoint": "/projects/618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+      "method": "PUT",
+      "body": {
+        "name": "safe legacy edit",
+        "tasks": []
+      },
+      "status": 200,
+      "response": {
+        "id": "618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+        "code": "DELTA-109745e4-70cc-4f0a-b4b2-48ae6211f266",
+        "name": "safe legacy edit",
+        "type": "TESTING",
+        "subtype": null,
+        "status": "PLANNING",
+        "isDraft": false,
+        "positioning": null,
+        "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+        "templateId": null,
+        "startDate": null,
+        "endDate": null,
+        "actualEndDate": null,
+        "metadata": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:43:31.118Z",
+        "updatedAt": "2026-10-06T02:43:31.130Z",
+        "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+        "updatedById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+        "manager": {
+          "id": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+          "displayName": "Synthetic delta owner",
+          "position": null,
+          "avatarFileId": null
+        },
+        "members": [
+          {
+            "id": "6757af89-513c-4460-8b41-69072b3af408",
+            "projectId": "618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+            "userId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+            "role": "OWNER",
+            "joinedAt": "2026-10-06T02:43:31.118Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+              "displayName": "Synthetic delta owner",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "endpoint": "/projects/618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+      "method": "PUT",
+      "body": {
+        "name": "safe omission"
+      },
+      "status": 200,
+      "response": {
+        "id": "618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+        "code": "DELTA-109745e4-70cc-4f0a-b4b2-48ae6211f266",
+        "name": "safe omission",
+        "type": "TESTING",
+        "subtype": null,
+        "status": "PLANNING",
+        "isDraft": false,
+        "positioning": null,
+        "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+        "templateId": null,
+        "startDate": null,
+        "endDate": null,
+        "actualEndDate": null,
+        "metadata": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:43:31.118Z",
+        "updatedAt": "2026-10-06T02:43:31.134Z",
+        "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+        "updatedById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+        "manager": {
+          "id": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+          "displayName": "Synthetic delta owner",
+          "position": null,
+          "avatarFileId": null
+        },
+        "members": [
+          {
+            "id": "6757af89-513c-4460-8b41-69072b3af408",
+            "projectId": "618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+            "userId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+            "role": "OWNER",
+            "joinedAt": "2026-10-06T02:43:31.118Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+              "displayName": "Synthetic delta owner",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "endpoint": "/projects/618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+      "method": "PUT",
+      "body": {
+        "baseUpdatedAt": "2026-10-06T02:43:31.134Z",
+        "deletedTaskIds": [
+          "0fccc1d0-3707-428e-b167-9c8f836b91ee"
+        ]
+      },
+      "status": 403,
+      "response": {
+        "error": "缺少权限 tasks.delete",
+        "code": "PERMISSION_DENIED"
+      }
+    },
+    {
+      "endpoint": "/projects/68ea5276-409b-4459-b853-5a271535bfc0",
+      "method": "PUT",
+      "body": {
+        "tasks": [
+          {
+            "title": "missing project base"
+          }
+        ]
+      },
+      "status": 409,
+      "response": {
+        "error": "子项修改需要原读取项目基线",
+        "code": "CHILD_BASELINE_REQUIRED"
+      }
+    },
+    {
+      "endpoint": "/projects/68ea5276-409b-4459-b853-5a271535bfc0",
+      "method": "PUT",
+      "body": {
+        "baseUpdatedAt": "2000-01-01",
+        "tasks": [
+          {
+            "title": "stale"
+          }
+        ]
+      },
+      "status": 409,
+      "response": {
+        "error": "子项修改需要原读取项目基线",
+        "code": "CHILD_BASELINE_REQUIRED"
+      }
+    },
+    {
+      "endpoint": "/projects/68ea5276-409b-4459-b853-5a271535bfc0",
+      "method": "PUT",
+      "body": {
+        "baseUpdatedAt": "2026-10-06T02:43:31.148Z",
+        "tasks": [
+          {
+            "id": "049480fa-c174-4b9f-9543-9d33543fc9a2",
+            "title": "missing child base"
+          }
+        ]
+      },
+      "status": 409,
+      "response": {
+        "error": "子项已变化或缺少原基线",
+        "code": "CHILD_CONFLICT"
+      }
+    },
+    {
+      "endpoint": "/projects/68ea5276-409b-4459-b853-5a271535bfc0",
+      "method": "PUT",
+      "body": {
+        "baseUpdatedAt": "2026-10-06T02:43:31.148Z",
+        "tasks": [
+          {
+            "id": "3d4f85bd-9f3b-4da6-8b50-09f03a0bfbf2",
+            "baseUpdatedAt": "2026-10-06T02:43:31.152Z",
+            "title": "cross"
+          }
+        ]
+      },
+      "status": 400,
+      "response": {
+        "error": "子项必须为本项目当前有效记录",
+        "code": "INVALID_REFERENCE"
+      }
+    },
+    {
+      "endpoint": "/projects/68ea5276-409b-4459-b853-5a271535bfc0",
+      "method": "PUT",
+      "body": {
+        "baseUpdatedAt": "2026-10-06T02:43:31.148Z",
+        "tasks": [
+          {
+            "id": "ce6eb56c-b5e8-473b-849e-d33ac397e620",
+            "baseUpdatedAt": "2026-10-06T02:43:31.149Z",
+            "title": "unknown"
+          }
+        ]
+      },
+      "status": 400,
+      "response": {
+        "error": "子项必须为本项目当前有效记录",
+        "code": "INVALID_REFERENCE"
+      }
+    },
+    {
+      "endpoint": "/projects/68ea5276-409b-4459-b853-5a271535bfc0",
+      "method": "PUT",
+      "body": {
+        "baseUpdatedAt": "2026-10-06T02:43:31.148Z",
+        "tasks": [
+          {
+            "title": "New legal task",
+            "phaseId": "901d63a4-3d08-4a9f-b623-bb25bff56617"
+          }
+        ],
+        "milestones": [
+          {
+            "name": "New legal milestone",
+            "dueDate": "2026-10-12"
+          }
+        ]
+      },
+      "status": 200,
+      "response": {
+        "id": "68ea5276-409b-4459-b853-5a271535bfc0",
+        "code": "DELTA-47d1a5aa-8788-4426-9d06-82280af9b7a9",
+        "name": "Owned original project",
+        "type": "TESTING",
+        "subtype": null,
+        "status": "PLANNING",
+        "isDraft": false,
+        "positioning": null,
+        "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+        "templateId": null,
+        "startDate": null,
+        "endDate": null,
+        "actualEndDate": null,
+        "metadata": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:43:31.148Z",
+        "updatedAt": "2026-10-06T02:43:31.190Z",
+        "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+        "updatedById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+        "manager": {
+          "id": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+          "displayName": "Synthetic delta owner",
+          "position": null,
+          "avatarFileId": null
+        },
+        "members": [
+          {
+            "id": "a6a4e8ed-3047-4a08-a20c-34aa41295847",
+            "projectId": "68ea5276-409b-4459-b853-5a271535bfc0",
+            "userId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+            "role": "OWNER",
+            "joinedAt": "2026-10-06T02:43:31.148Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+              "displayName": "Synthetic delta owner",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "endpoint": "/projects/ef244790-bd5b-4e9f-8b88-117b9cb42370",
+      "method": "PUT",
+      "body": {
+        "baseUpdatedAt": "2026-10-06T02:43:31.192Z",
+        "tasks": [
+          {
+            "title": {}
+          }
+        ]
+      },
+      "status": 400,
+      "response": {
+        "error": "title必须为字符串",
+        "code": "INVALID_CHILD_TYPE"
+      }
+    },
+    {
+      "endpoint": "/projects/ef244790-bd5b-4e9f-8b88-117b9cb42370",
+      "method": "PUT",
+      "body": {
+        "baseUpdatedAt": "2026-10-06T02:43:31.192Z",
+        "tasks": [
+          {
+            "title": "bad status",
+            "status": {}
+          }
+        ]
+      },
+      "status": 400,
+      "response": {
+        "error": "status必须为字符串",
+        "code": "INVALID_CHILD_TYPE"
+      }
+    },
+    {
+      "endpoint": "/projects/ef244790-bd5b-4e9f-8b88-117b9cb42370",
+      "method": "PUT",
+      "body": {
+        "baseUpdatedAt": "2026-10-06T02:43:31.192Z",
+        "tasks": [
+          {
+            "title": "bad priority",
+            "priority": "BAD"
+          }
+        ]
+      },
+      "status": 400,
+      "response": {
+        "error": "priority枚举无效",
+        "code": "INVALID_CHILD_ENUM"
+      }
+    },
+    {
+      "endpoint": "/projects/ef244790-bd5b-4e9f-8b88-117b9cb42370",
+      "method": "PUT",
+      "body": {
+        "baseUpdatedAt": "2026-10-06T02:43:31.192Z",
+        "tasks": [
+          {
+            "title": "bad date",
+            "dueDate": 12
+          }
+        ]
+      },
+      "status": 400,
+      "response": {
+        "error": "日期必须为有效字符串",
+        "code": "INVALID_DATE"
+      }
+    },
+    {
+      "endpoint": "/projects/ef244790-bd5b-4e9f-8b88-117b9cb42370",
+      "method": "PUT",
+      "body": {
+        "baseUpdatedAt": "2026-10-06T02:43:31.192Z",
+        "tasks": [
+          {
+            "title": "system inject",
+            "code": "SERVER-CODE"
+          }
+        ]
+      },
+      "status": 400,
+      "response": {
+        "error": "子项包含服务端字段",
+        "code": "INVALID_CHILD_DELTA"
+      }
+    },
+    {
+      "endpoint": "/projects/ef244790-bd5b-4e9f-8b88-117b9cb42370",
+      "method": "PUT",
+      "body": {
+        "baseUpdatedAt": "2026-10-06T02:43:31.192Z",
+        "tasks": [
+          {
+            "title": "bad phase",
+            "phaseId": []
+          }
+        ]
+      },
+      "status": 400,
+      "response": {
+        "error": "phaseId必须为字符串",
+        "code": "INVALID_CHILD_TYPE"
+      }
+    },
+    {
+      "endpoint": "/projects/ef244790-bd5b-4e9f-8b88-117b9cb42370",
+      "method": "PUT",
+      "body": {
+        "baseUpdatedAt": "2026-10-06T02:43:31.192Z",
+        "name": "must roll back",
+        "tasks": [
+          {
+            "id": "c4b5ef26-6aa7-44a8-9fc7-b196ba00a4d9",
+            "baseUpdatedAt": "2026-10-06T02:43:31.193Z",
+            "title": "must roll back"
+          }
+        ]
+      },
+      "status": 500,
+      "response": {
+        "error": "OWNED_CHILD_AUDIT_FAULT",
+        "code": 500
+      }
+    },
+    {
+      "endpoint": "/projects/88985486-9783-4f6b-9603-34e561c1e1a1",
+      "method": "PUT",
+      "body": {
+        "baseUpdatedAt": "2026-10-06T02:43:31.240Z",
+        "deletedTaskIds": [
+          "f88fa05f-86e4-4f8f-b870-9c6d8e2dc85b"
+        ]
+      },
+      "status": 409,
+      "response": {
+        "error": "任务仍被有效任务依赖；须显式处理后删除",
+        "code": "LIVE_TASK_REFERENCE"
+      }
+    },
+    {
+      "endpoint": "/projects/88985486-9783-4f6b-9603-34e561c1e1a1",
+      "method": "PUT",
+      "body": {
+        "baseUpdatedAt": "2026-10-06T02:43:31.240Z",
+        "deletedTaskIds": [
+          "f88fa05f-86e4-4f8f-b870-9c6d8e2dc85b",
+          "5f218aeb-e3e8-4321-88f8-6ebd5d1eb21a"
+        ],
+        "deletedMilestoneIds": [
+          "d236962b-3508-4431-9fd4-15f028d79da9"
+        ]
+      },
+      "status": 200,
+      "response": {
+        "id": "88985486-9783-4f6b-9603-34e561c1e1a1",
+        "code": "DELTA-73185ed3-c434-4b25-afec-75c405c77647",
+        "name": "Owned original project",
+        "type": "TESTING",
+        "subtype": null,
+        "status": "PLANNING",
+        "isDraft": false,
+        "positioning": null,
+        "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+        "templateId": null,
+        "startDate": null,
+        "endDate": null,
+        "actualEndDate": null,
+        "metadata": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:43:31.240Z",
+        "updatedAt": "2026-10-06T02:43:31.256Z",
+        "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+        "updatedById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+        "manager": {
+          "id": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+          "displayName": "Synthetic delta owner",
+          "position": null,
+          "avatarFileId": null
+        },
+        "members": [
+          {
+            "id": "b0f3bf75-d9e0-4bdd-ac48-44ac125dba94",
+            "projectId": "88985486-9783-4f6b-9603-34e561c1e1a1",
+            "userId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+            "role": "OWNER",
+            "joinedAt": "2026-10-06T02:43:31.240Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+              "displayName": "Synthetic delta owner",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "endpoint": "/sync/init",
+      "method": "GET",
+      "status": 200,
+      "response": {
+        "serverTime": "2026-10-06T02:43:31.267Z",
+        "cursor": "2026-10-06T02:43:31.267Z",
+        "full": true,
+        "pagination": {
+          "hasMore": false,
+          "nextPageToken": null
+        },
+        "acl": {
+          "projectIds": [
+            "5c363031-7a22-416a-8113-f75e730573b0",
+            "618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+            "68ea5276-409b-4459-b853-5a271535bfc0",
+            "88985486-9783-4f6b-9603-34e561c1e1a1",
+            "9131e623-4cfa-4edc-b421-3ce2bccb5a95",
+            "ef244790-bd5b-4e9f-8b88-117b9cb42370"
+          ],
+          "projects": [
+            {
+              "id": "5c363031-7a22-416a-8113-f75e730573b0",
+              "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+              "role": "OWNER",
+              "joinedAt": "2026-10-06T02:43:31.096Z",
+              "capabilities": [
+                "read",
+                "write",
+                "delete",
+                "transition",
+                "assign",
+                "manage_members"
+              ]
+            },
+            {
+              "id": "618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+              "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+              "role": "OWNER",
+              "joinedAt": "2026-10-06T02:43:31.118Z",
+              "capabilities": [
+                "read",
+                "write",
+                "delete",
+                "transition",
+                "assign",
+                "manage_members"
+              ]
+            },
+            {
+              "id": "68ea5276-409b-4459-b853-5a271535bfc0",
+              "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+              "role": "OWNER",
+              "joinedAt": "2026-10-06T02:43:31.148Z",
+              "capabilities": [
+                "read",
+                "write",
+                "delete",
+                "transition",
+                "assign",
+                "manage_members"
+              ]
+            },
+            {
+              "id": "88985486-9783-4f6b-9603-34e561c1e1a1",
+              "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+              "role": "OWNER",
+              "joinedAt": "2026-10-06T02:43:31.240Z",
+              "capabilities": [
+                "read",
+                "write",
+                "delete",
+                "transition",
+                "assign",
+                "manage_members"
+              ]
+            },
+            {
+              "id": "9131e623-4cfa-4edc-b421-3ce2bccb5a95",
+              "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+              "role": "OWNER",
+              "joinedAt": "2026-10-06T02:43:31.151Z",
+              "capabilities": [
+                "read",
+                "write",
+                "delete",
+                "transition",
+                "assign",
+                "manage_members"
+              ]
+            },
+            {
+              "id": "ef244790-bd5b-4e9f-8b88-117b9cb42370",
+              "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+              "role": "OWNER",
+              "joinedAt": "2026-10-06T02:43:31.192Z",
+              "capabilities": [
+                "read",
+                "write",
+                "delete",
+                "transition",
+                "assign",
+                "manage_members"
+              ]
+            }
+          ],
+          "permissions": [
+            "projects.view",
+            "projects.update",
+            "projects.manage_members",
+            "tasks.view",
+            "tasks.create",
+            "tasks.update",
+            "tasks.delete",
+            "tasks.change_status",
+            "tasks.assign",
+            "milestones.view",
+            "milestones.create",
+            "milestones.update",
+            "milestones.delete",
+            "project_phases.view"
+          ],
+          "aclVersion": "07ea191a30df4bc643b05785964da4fc7f589784ed2418833279920a5aec6760",
+          "projectionVersion": 1,
+          "writePolicy": {
+            "projects": {
+              "read": "projects.view",
+              "update": "projects.update",
+              "create": null,
+              "delete": "projects.delete",
+              "status": "projects.change_status",
+              "assign": null,
+              "capability": "write"
+            },
+            "projectPhases": {
+              "read": "project_phases.view",
+              "update": "project_phases.update",
+              "create": "project_phases.create",
+              "delete": "project_phases.delete",
+              "status": "project_phases.change_status",
+              "assign": null,
+              "capability": "write"
+            },
+            "tasks": {
+              "read": "tasks.view",
+              "update": "tasks.update",
+              "create": "tasks.create",
+              "delete": "tasks.delete",
+              "status": "tasks.change_status",
+              "assign": "tasks.assign",
+              "capability": "write"
+            },
+            "milestones": {
+              "read": "milestones.view",
+              "update": "milestones.update",
+              "create": "milestones.create",
+              "delete": "milestones.delete",
+              "status": null,
+              "assign": null,
+              "capability": "write"
+            },
+            "monthlyProgress": {
+              "read": "progress.view",
+              "update": "progress.update",
+              "create": "progress.create",
+              "delete": "progress.delete",
+              "status": null,
+              "assign": null,
+              "capability": "manage_members"
+            },
+            "reports": {
+              "read": "reports.view",
+              "update": "reports.update",
+              "create": "reports.create",
+              "delete": "reports.delete",
+              "status": null,
+              "assign": null,
+              "capability": "write"
+            },
+            "projectMembers": {
+              "read": "projects.view",
+              "update": "projects.manage_members",
+              "create": null,
+              "delete": "projects.manage_members",
+              "status": null,
+              "assign": null,
+              "capability": "manage_members"
+            }
+          }
+        },
+        "entities": [
+          "projects",
+          "projectPhases",
+          "tasks",
+          "milestones",
+          "monthlyProgress",
+          "reports",
+          "projectMembers"
+        ],
+        "changes": {
+          "projects": {
+            "upserts": [
+              {
+                "id": "5c363031-7a22-416a-8113-f75e730573b0",
+                "code": "DELTA-cb8c51a0-2302-430f-b369-712fbcf23587",
+                "name": "Owned original project",
+                "type": "TESTING",
+                "subtype": null,
+                "status": "PLANNING",
+                "isDraft": false,
+                "positioning": null,
+                "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+                "templateId": null,
+                "startDate": null,
+                "endDate": null,
+                "actualEndDate": null,
+                "createdAt": "2026-10-06T02:43:31.096Z",
+                "updatedAt": "2026-10-06T02:43:31.114Z",
+                "manager": {
+                  "id": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+                  "displayName": "Synthetic delta owner"
+                }
+              },
+              {
+                "id": "618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+                "code": "DELTA-109745e4-70cc-4f0a-b4b2-48ae6211f266",
+                "name": "safe omission",
+                "type": "TESTING",
+                "subtype": null,
+                "status": "PLANNING",
+                "isDraft": false,
+                "positioning": null,
+                "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+                "templateId": null,
+                "startDate": null,
+                "endDate": null,
+                "actualEndDate": null,
+                "createdAt": "2026-10-06T02:43:31.118Z",
+                "updatedAt": "2026-10-06T02:43:31.134Z",
+                "manager": {
+                  "id": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+                  "displayName": "Synthetic delta owner"
+                }
+              },
+              {
+                "id": "9131e623-4cfa-4edc-b421-3ce2bccb5a95",
+                "code": "DELTA-e24b775f-ae72-440b-91d2-01c1a8c168c3",
+                "name": "Owned original project",
+                "type": "TESTING",
+                "subtype": null,
+                "status": "PLANNING",
+                "isDraft": false,
+                "positioning": null,
+                "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+                "templateId": null,
+                "startDate": null,
+                "endDate": null,
+                "actualEndDate": null,
+                "createdAt": "2026-10-06T02:43:31.151Z",
+                "updatedAt": "2026-10-06T02:43:31.151Z",
+                "manager": {
+                  "id": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+                  "displayName": "Synthetic delta owner"
+                }
+              },
+              {
+                "id": "68ea5276-409b-4459-b853-5a271535bfc0",
+                "code": "DELTA-47d1a5aa-8788-4426-9d06-82280af9b7a9",
+                "name": "Owned original project",
+                "type": "TESTING",
+                "subtype": null,
+                "status": "PLANNING",
+                "isDraft": false,
+                "positioning": null,
+                "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+                "templateId": null,
+                "startDate": null,
+                "endDate": null,
+                "actualEndDate": null,
+                "createdAt": "2026-10-06T02:43:31.148Z",
+                "updatedAt": "2026-10-06T02:43:31.190Z",
+                "manager": {
+                  "id": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+                  "displayName": "Synthetic delta owner"
+                }
+              },
+              {
+                "id": "ef244790-bd5b-4e9f-8b88-117b9cb42370",
+                "code": "DELTA-7e6a0dd0-5cfe-4edc-84ed-bbb26d1b3343",
+                "name": "Owned original project",
+                "type": "TESTING",
+                "subtype": null,
+                "status": "PLANNING",
+                "isDraft": false,
+                "positioning": null,
+                "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+                "templateId": null,
+                "startDate": null,
+                "endDate": null,
+                "actualEndDate": null,
+                "createdAt": "2026-10-06T02:43:31.192Z",
+                "updatedAt": "2026-10-06T02:43:31.192Z",
+                "manager": {
+                  "id": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+                  "displayName": "Synthetic delta owner"
+                }
+              },
+              {
+                "id": "88985486-9783-4f6b-9603-34e561c1e1a1",
+                "code": "DELTA-73185ed3-c434-4b25-afec-75c405c77647",
+                "name": "Owned original project",
+                "type": "TESTING",
+                "subtype": null,
+                "status": "PLANNING",
+                "isDraft": false,
+                "positioning": null,
+                "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+                "templateId": null,
+                "startDate": null,
+                "endDate": null,
+                "actualEndDate": null,
+                "createdAt": "2026-10-06T02:43:31.240Z",
+                "updatedAt": "2026-10-06T02:43:31.256Z",
+                "manager": {
+                  "id": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+                  "displayName": "Synthetic delta owner"
+                }
+              }
+            ],
+            "tombstones": []
+          },
+          "projectPhases": {
+            "upserts": [
+              {
+                "id": "c8924134-36e3-4633-ad3c-a557a97424a3",
+                "projectId": "5c363031-7a22-416a-8113-f75e730573b0",
+                "templatePhaseId": null,
+                "code": "P1",
+                "name": "Original phase",
+                "sortOrder": 1,
+                "status": "NOT_STARTED",
+                "plannedStart": null,
+                "plannedEnd": null,
+                "actualStart": null,
+                "actualEnd": null,
+                "progressPercent": 0,
+                "isMilestone": false,
+                "notes": null,
+                "createdAt": "2026-10-06T02:43:31.098Z",
+                "updatedAt": "2026-10-06T02:43:31.098Z"
+              },
+              {
+                "id": "55d26696-0265-4790-8f4b-e31722bc24ee",
+                "projectId": "618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+                "templatePhaseId": null,
+                "code": "P1",
+                "name": "Original phase",
+                "sortOrder": 1,
+                "status": "NOT_STARTED",
+                "plannedStart": null,
+                "plannedEnd": null,
+                "actualStart": null,
+                "actualEnd": null,
+                "progressPercent": 0,
+                "isMilestone": false,
+                "notes": null,
+                "createdAt": "2026-10-06T02:43:31.119Z",
+                "updatedAt": "2026-10-06T02:43:31.119Z"
+              },
+              {
+                "id": "901d63a4-3d08-4a9f-b623-bb25bff56617",
+                "projectId": "68ea5276-409b-4459-b853-5a271535bfc0",
+                "templatePhaseId": null,
+                "code": "P1",
+                "name": "Original phase",
+                "sortOrder": 1,
+                "status": "NOT_STARTED",
+                "plannedStart": null,
+                "plannedEnd": null,
+                "actualStart": null,
+                "actualEnd": null,
+                "progressPercent": 0,
+                "isMilestone": false,
+                "notes": null,
+                "createdAt": "2026-10-06T02:43:31.149Z",
+                "updatedAt": "2026-10-06T02:43:31.149Z"
+              },
+              {
+                "id": "6cd9f625-63ae-4b44-881a-7ee15d2275c2",
+                "projectId": "9131e623-4cfa-4edc-b421-3ce2bccb5a95",
+                "templatePhaseId": null,
+                "code": "P1",
+                "name": "Original phase",
+                "sortOrder": 1,
+                "status": "NOT_STARTED",
+                "plannedStart": null,
+                "plannedEnd": null,
+                "actualStart": null,
+                "actualEnd": null,
+                "progressPercent": 0,
+                "isMilestone": false,
+                "notes": null,
+                "createdAt": "2026-10-06T02:43:31.152Z",
+                "updatedAt": "2026-10-06T02:43:31.152Z"
+              },
+              {
+                "id": "2da6552b-3448-402d-bc08-348f0fb53a68",
+                "projectId": "ef244790-bd5b-4e9f-8b88-117b9cb42370",
+                "templatePhaseId": null,
+                "code": "P1",
+                "name": "Original phase",
+                "sortOrder": 1,
+                "status": "NOT_STARTED",
+                "plannedStart": null,
+                "plannedEnd": null,
+                "actualStart": null,
+                "actualEnd": null,
+                "progressPercent": 0,
+                "isMilestone": false,
+                "notes": null,
+                "createdAt": "2026-10-06T02:43:31.193Z",
+                "updatedAt": "2026-10-06T02:43:31.193Z"
+              },
+              {
+                "id": "a66e3a49-e015-4e64-bee5-1dde63b1b637",
+                "projectId": "88985486-9783-4f6b-9603-34e561c1e1a1",
+                "templatePhaseId": null,
+                "code": "P1",
+                "name": "Original phase",
+                "sortOrder": 1,
+                "status": "NOT_STARTED",
+                "plannedStart": null,
+                "plannedEnd": null,
+                "actualStart": null,
+                "actualEnd": null,
+                "progressPercent": 0,
+                "isMilestone": false,
+                "notes": null,
+                "createdAt": "2026-10-06T02:43:31.241Z",
+                "updatedAt": "2026-10-06T02:43:31.241Z"
+              }
+            ],
+            "tombstones": []
+          },
+          "tasks": {
+            "upserts": [
+              {
+                "id": "da69d9de-9239-466d-9351-78ec1ba8b0de",
+                "projectId": "5c363031-7a22-416a-8113-f75e730573b0",
+                "phaseId": null,
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "Original B",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T02:43:31.100Z",
+                "updatedAt": "2026-10-06T02:43:31.100Z"
+              },
+              {
+                "id": "ae58b89f-b4ef-44e4-bf9d-e01269fe7327",
+                "projectId": "5c363031-7a22-416a-8113-f75e730573b0",
+                "phaseId": "c8924134-36e3-4633-ad3c-a557a97424a3",
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "Edited A",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T02:43:31.099Z",
+                "updatedAt": "2026-10-06T02:43:31.113Z"
+              },
+              {
+                "id": "0fccc1d0-3707-428e-b167-9c8f836b91ee",
+                "projectId": "618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+                "phaseId": null,
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "Original B",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T02:43:31.119Z",
+                "updatedAt": "2026-10-06T02:43:31.119Z"
+              },
+              {
+                "id": "cc25d30a-71de-40ca-a51b-f35890dce294",
+                "projectId": "618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+                "phaseId": "55d26696-0265-4790-8f4b-e31722bc24ee",
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "Original A",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T02:43:31.119Z",
+                "updatedAt": "2026-10-06T02:43:31.119Z"
+              },
+              {
+                "id": "049480fa-c174-4b9f-9543-9d33543fc9a2",
+                "projectId": "68ea5276-409b-4459-b853-5a271535bfc0",
+                "phaseId": "901d63a4-3d08-4a9f-b623-bb25bff56617",
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "Original A",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T02:43:31.149Z",
+                "updatedAt": "2026-10-06T02:43:31.149Z"
+              },
+              {
+                "id": "3aa0a370-f993-4e71-ad24-706f53449b4f",
+                "projectId": "68ea5276-409b-4459-b853-5a271535bfc0",
+                "phaseId": null,
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "Original B",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T02:43:31.150Z",
+                "updatedAt": "2026-10-06T02:43:31.150Z"
+              },
+              {
+                "id": "3d4f85bd-9f3b-4da6-8b50-09f03a0bfbf2",
+                "projectId": "9131e623-4cfa-4edc-b421-3ce2bccb5a95",
+                "phaseId": "6cd9f625-63ae-4b44-881a-7ee15d2275c2",
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "Original A",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T02:43:31.152Z",
+                "updatedAt": "2026-10-06T02:43:31.152Z"
+              },
+              {
+                "id": "3da2b4c3-364b-4150-bdb9-76ed63db060b",
+                "projectId": "9131e623-4cfa-4edc-b421-3ce2bccb5a95",
+                "phaseId": null,
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "Original B",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T02:43:31.152Z",
+                "updatedAt": "2026-10-06T02:43:31.152Z"
+              },
+              {
+                "id": "a654770d-c006-4cbb-9179-bb316e7e4995",
+                "projectId": "68ea5276-409b-4459-b853-5a271535bfc0",
+                "phaseId": "901d63a4-3d08-4a9f-b623-bb25bff56617",
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "New legal task",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T02:43:31.189Z",
+                "updatedAt": "2026-10-06T02:43:31.189Z"
+              },
+              {
+                "id": "c4b5ef26-6aa7-44a8-9fc7-b196ba00a4d9",
+                "projectId": "ef244790-bd5b-4e9f-8b88-117b9cb42370",
+                "phaseId": "2da6552b-3448-402d-bc08-348f0fb53a68",
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "Original A",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T02:43:31.193Z",
+                "updatedAt": "2026-10-06T02:43:31.193Z"
+              },
+              {
+                "id": "00e17c6c-9628-4bd2-96a0-9c28b2cd0f8e",
+                "projectId": "ef244790-bd5b-4e9f-8b88-117b9cb42370",
+                "phaseId": null,
+                "parentId": null,
+                "templateTaskId": null,
+                "code": null,
+                "title": "Original B",
+                "description": null,
+                "assigneeId": null,
+                "status": "NOT_STARTED",
+                "priority": "MEDIUM",
+                "taskType": null,
+                "applicability": "REQUIRED",
+                "regulatoryPriority": null,
+                "expectedDeliverable": null,
+                "regulatoryNotes": null,
+                "sortOrder": 0,
+                "estimatedHours": null,
+                "actualHours": null,
+                "progressPercent": 0,
+                "startDate": null,
+                "dueDate": null,
+                "startedAt": null,
+                "completedAt": null,
+                "createdAt": "2026-10-06T02:43:31.194Z",
+                "updatedAt": "2026-10-06T02:43:31.194Z"
+              }
+            ],
+            "tombstones": [
+              "5f218aeb-e3e8-4321-88f8-6ebd5d1eb21a",
+              "f88fa05f-86e4-4f8f-b870-9c6d8e2dc85b"
+            ]
+          },
+          "milestones": {
+            "upserts": [
+              {
+                "id": "2f7fab17-eb77-4e5b-8296-239fd63c1c38",
+                "projectId": "5c363031-7a22-416a-8113-f75e730573b0",
+                "phaseId": null,
+                "name": "Original milestone",
+                "description": null,
+                "dueDate": "2026-10-10T00:00:00.000Z",
+                "status": "NOT_STARTED",
+                "completedAt": null,
+                "createdAt": "2026-10-06T02:43:31.101Z",
+                "updatedAt": "2026-10-06T02:43:31.101Z"
+              },
+              {
+                "id": "795a0da5-09a7-4197-9073-171bcd75fb8e",
+                "projectId": "618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+                "phaseId": null,
+                "name": "Original milestone",
+                "description": null,
+                "dueDate": "2026-10-10T00:00:00.000Z",
+                "status": "NOT_STARTED",
+                "completedAt": null,
+                "createdAt": "2026-10-06T02:43:31.120Z",
+                "updatedAt": "2026-10-06T02:43:31.120Z"
+              },
+              {
+                "id": "a6f682d6-7792-4de0-9724-d81dc34e18bd",
+                "projectId": "68ea5276-409b-4459-b853-5a271535bfc0",
+                "phaseId": null,
+                "name": "Original milestone",
+                "description": null,
+                "dueDate": "2026-10-10T00:00:00.000Z",
+                "status": "NOT_STARTED",
+                "completedAt": null,
+                "createdAt": "2026-10-06T02:43:31.150Z",
+                "updatedAt": "2026-10-06T02:43:31.150Z"
+              },
+              {
+                "id": "decd56bc-f6cc-4509-b4ab-9f7b6cd2cdc9",
+                "projectId": "9131e623-4cfa-4edc-b421-3ce2bccb5a95",
+                "phaseId": null,
+                "name": "Original milestone",
+                "description": null,
+                "dueDate": "2026-10-10T00:00:00.000Z",
+                "status": "NOT_STARTED",
+                "completedAt": null,
+                "createdAt": "2026-10-06T02:43:31.153Z",
+                "updatedAt": "2026-10-06T02:43:31.153Z"
+              },
+              {
+                "id": "b69bf46d-6b46-436a-89ba-40bb1f3dd8b1",
+                "projectId": "68ea5276-409b-4459-b853-5a271535bfc0",
+                "phaseId": null,
+                "name": "New legal milestone",
+                "description": null,
+                "dueDate": "2026-10-12T00:00:00.000Z",
+                "status": "NOT_STARTED",
+                "completedAt": null,
+                "createdAt": "2026-10-06T02:43:31.189Z",
+                "updatedAt": "2026-10-06T02:43:31.189Z"
+              },
+              {
+                "id": "fbb2b407-d9d4-47b3-a31e-9b5610de8fc0",
+                "projectId": "ef244790-bd5b-4e9f-8b88-117b9cb42370",
+                "phaseId": null,
+                "name": "Original milestone",
+                "description": null,
+                "dueDate": "2026-10-10T00:00:00.000Z",
+                "status": "NOT_STARTED",
+                "completedAt": null,
+                "createdAt": "2026-10-06T02:43:31.194Z",
+                "updatedAt": "2026-10-06T02:43:31.194Z"
+              }
+            ],
+            "tombstones": [
+              "d236962b-3508-4431-9fd4-15f028d79da9"
+            ]
+          },
+          "monthlyProgress": {
+            "upserts": [],
+            "tombstones": []
+          },
+          "reports": {
+            "upserts": [],
+            "tombstones": []
+          },
+          "projectMembers": {
+            "upserts": [
+              {
+                "id": "2cc44208-1e47-4248-a44b-d09ecbc5d8f0",
+                "projectId": "5c363031-7a22-416a-8113-f75e730573b0",
+                "userId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+                "role": "OWNER",
+                "joinedAt": "2026-10-06T02:43:31.096Z"
+              },
+              {
+                "id": "6757af89-513c-4460-8b41-69072b3af408",
+                "projectId": "618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+                "userId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+                "role": "OWNER",
+                "joinedAt": "2026-10-06T02:43:31.118Z"
+              },
+              {
+                "id": "a6a4e8ed-3047-4a08-a20c-34aa41295847",
+                "projectId": "68ea5276-409b-4459-b853-5a271535bfc0",
+                "userId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+                "role": "OWNER",
+                "joinedAt": "2026-10-06T02:43:31.148Z"
+              },
+              {
+                "id": "401fef81-2644-4e80-889f-00b46375dd35",
+                "projectId": "9131e623-4cfa-4edc-b421-3ce2bccb5a95",
+                "userId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+                "role": "OWNER",
+                "joinedAt": "2026-10-06T02:43:31.151Z"
+              },
+              {
+                "id": "ee2b7b8b-0066-45da-9ff2-db57aa245305",
+                "projectId": "ef244790-bd5b-4e9f-8b88-117b9cb42370",
+                "userId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+                "role": "OWNER",
+                "joinedAt": "2026-10-06T02:43:31.192Z"
+              },
+              {
+                "id": "b0f3bf75-d9e0-4bdd-ac48-44ac125dba94",
+                "projectId": "88985486-9783-4f6b-9603-34e561c1e1a1",
+                "userId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+                "role": "OWNER",
+                "joinedAt": "2026-10-06T02:43:31.240Z"
+              }
+            ],
+            "tombstones": []
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/tasks/21000894-6bd3-4d20-982c-52f77008100f",
+      "method": "DELETE",
+      "status": 409,
+      "response": {
+        "error": "任务仍有有效子任务；须显式处理子任务后删除",
+        "code": "LIVE_TASK_REFERENCE"
+      }
+    },
+    {
+      "endpoint": "/tasks/21000894-6bd3-4d20-982c-52f77008100f",
+      "method": "DELETE",
+      "status": 200,
+      "response": {
+        "success": true,
+        "id": "21000894-6bd3-4d20-982c-52f77008100f",
+        "softDeleted": true,
+        "cascaded": 1,
+        "noop": false
+      }
+    },
+    {
+      "endpoint": "/tasks/21000894-6bd3-4d20-982c-52f77008100f",
+      "method": "DELETE",
+      "status": 200,
+      "response": {
+        "success": true,
+        "id": "21000894-6bd3-4d20-982c-52f77008100f",
+        "softDeleted": true,
+        "cascaded": 0,
+        "noop": true
+      }
+    },
+    {
+      "endpoint": "/tasks/2531b111-69d6-430a-a85d-d9972ab80fe7",
+      "method": "PUT",
+      "body": {
+        "parentId": "54850243-2998-44d7-90f9-b7e1e9db313a"
+      },
+      "status": 400,
+      "response": {
+        "error": "父任务必须为本项目有效任务",
+        "code": "INVALID_REFERENCE"
+      }
+    },
+    {
+      "endpoint": "/tasks/2531b111-69d6-430a-a85d-d9972ab80fe7",
+      "method": "PUT",
+      "body": {
+        "phaseId": "815abd42-b37c-4e96-8cac-6699c84d1920"
+      },
+      "status": 400,
+      "response": {
+        "error": "阶段必须为本项目有效阶段",
+        "code": "INVALID_REFERENCE"
+      }
+    },
+    {
+      "endpoint": "/tasks/b9e13966-e6e7-4000-8ffb-f4815fc741fe",
+      "method": "DELETE",
+      "status": 200,
+      "response": {
+        "success": true,
+        "id": "b9e13966-e6e7-4000-8ffb-f4815fc741fe",
+        "softDeleted": true,
+        "cascaded": 1,
+        "noop": false
+      }
+    },
+    {
+      "endpoint": "/tasks",
+      "method": "POST",
+      "body": {
+        "projectId": "baba9039-3d58-4ca0-ac90-82b3a237ba39",
+        "parentId": "b9e13966-e6e7-4000-8ffb-f4815fc741fe",
+        "title": "late child cannot attach"
+      },
+      "status": 400,
+      "response": {
+        "error": "父任务必须为本项目有效任务",
+        "code": "INVALID_REFERENCE"
+      }
+    },
+    {
+      "endpoint": "/tasks/8fb1fac8-bdfc-4ef7-8413-6ae44d6279cf/prerequisites",
+      "method": "POST",
+      "body": {
+        "prerequisiteId": "28d6531d-ecb1-4553-9c22-40fbf67115c9"
+      },
+      "status": 404,
+      "response": {
+        "error": "任务不存在",
+        "code": "TASK_NOT_FOUND"
+      }
+    }
+  ],
+  "projects": [
+    {
+      "id": "5c363031-7a22-416a-8113-f75e730573b0",
+      "code": "DELTA-cb8c51a0-2302-430f-b369-712fbcf23587",
+      "name": "Owned original project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.096Z",
+      "updatedAt": "2026-10-06T02:43:31.114Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45"
+    },
+    {
+      "id": "618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+      "code": "DELTA-109745e4-70cc-4f0a-b4b2-48ae6211f266",
+      "name": "safe omission",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.118Z",
+      "updatedAt": "2026-10-06T02:43:31.134Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45"
+    },
+    {
+      "id": "9131e623-4cfa-4edc-b421-3ce2bccb5a95",
+      "code": "DELTA-e24b775f-ae72-440b-91d2-01c1a8c168c3",
+      "name": "Owned original project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.151Z",
+      "updatedAt": "2026-10-06T02:43:31.151Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "68ea5276-409b-4459-b853-5a271535bfc0",
+      "code": "DELTA-47d1a5aa-8788-4426-9d06-82280af9b7a9",
+      "name": "Owned original project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.148Z",
+      "updatedAt": "2026-10-06T02:43:31.190Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45"
+    },
+    {
+      "id": "ef244790-bd5b-4e9f-8b88-117b9cb42370",
+      "code": "DELTA-7e6a0dd0-5cfe-4edc-84ed-bbb26d1b3343",
+      "name": "Owned original project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.192Z",
+      "updatedAt": "2026-10-06T02:43:31.192Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "88985486-9783-4f6b-9603-34e561c1e1a1",
+      "code": "DELTA-73185ed3-c434-4b25-afec-75c405c77647",
+      "name": "Owned original project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.240Z",
+      "updatedAt": "2026-10-06T02:43:31.256Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45"
+    },
+    {
+      "id": "30d9af95-3369-428e-afbf-509ae08b0c7f",
+      "code": "DELTA-e2cd94f0-80cb-41eb-bb55-f19999018824",
+      "name": "Owned original project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.273Z",
+      "updatedAt": "2026-10-06T02:43:31.273Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "6ba93a9f-f4bd-4b78-81d3-04d20959e878",
+      "code": "DELTA-555dc3a1-8cc3-4d54-9b88-9e99be8e1d11",
+      "name": "Owned original project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.276Z",
+      "updatedAt": "2026-10-06T02:43:31.276Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "a70a7d7a-6d93-4ddf-9e36-b8b8581c2dcf",
+      "code": "DELTA-0e91039d-8d35-43e0-aa94-b83753dbb77b",
+      "name": "Owned original project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.295Z",
+      "updatedAt": "2026-10-06T02:43:31.295Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "28b0c3fb-51c6-4ea4-b72e-ce36a23de665",
+      "code": "DELTA-dfc384ac-80e8-45a8-9bb7-9a1a4b2a6cd0",
+      "name": "Owned original project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.323Z",
+      "updatedAt": "2026-10-06T02:43:31.323Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "baba9039-3d58-4ca0-ac90-82b3a237ba39",
+      "code": "DELTA-0b1b5145-6664-4989-8614-a20f50022d4d",
+      "name": "Owned original project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.357Z",
+      "updatedAt": "2026-10-06T02:43:31.357Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "4db02d50-059e-43d0-9cb4-a1fa160a1c28",
+      "code": "DELTA-1b820163-1441-4aae-b6ee-e21b3e6fe822",
+      "name": "Owned original project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.375Z",
+      "updatedAt": "2026-10-06T02:43:31.375Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    }
+  ],
+  "tasks": [
+    {
+      "id": "da69d9de-9239-466d-9351-78ec1ba8b0de",
+      "projectId": "5c363031-7a22-416a-8113-f75e730573b0",
+      "phaseId": null,
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original B",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.100Z",
+      "updatedAt": "2026-10-06T02:43:31.100Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "ae58b89f-b4ef-44e4-bf9d-e01269fe7327",
+      "projectId": "5c363031-7a22-416a-8113-f75e730573b0",
+      "phaseId": "c8924134-36e3-4633-ad3c-a557a97424a3",
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Edited A",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.099Z",
+      "updatedAt": "2026-10-06T02:43:31.113Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45"
+    },
+    {
+      "id": "cc25d30a-71de-40ca-a51b-f35890dce294",
+      "projectId": "618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+      "phaseId": "55d26696-0265-4790-8f4b-e31722bc24ee",
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original A",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.119Z",
+      "updatedAt": "2026-10-06T02:43:31.119Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "0fccc1d0-3707-428e-b167-9c8f836b91ee",
+      "projectId": "618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+      "phaseId": null,
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original B",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.119Z",
+      "updatedAt": "2026-10-06T02:43:31.119Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "049480fa-c174-4b9f-9543-9d33543fc9a2",
+      "projectId": "68ea5276-409b-4459-b853-5a271535bfc0",
+      "phaseId": "901d63a4-3d08-4a9f-b623-bb25bff56617",
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original A",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.149Z",
+      "updatedAt": "2026-10-06T02:43:31.149Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "3aa0a370-f993-4e71-ad24-706f53449b4f",
+      "projectId": "68ea5276-409b-4459-b853-5a271535bfc0",
+      "phaseId": null,
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original B",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.150Z",
+      "updatedAt": "2026-10-06T02:43:31.150Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "3d4f85bd-9f3b-4da6-8b50-09f03a0bfbf2",
+      "projectId": "9131e623-4cfa-4edc-b421-3ce2bccb5a95",
+      "phaseId": "6cd9f625-63ae-4b44-881a-7ee15d2275c2",
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original A",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.152Z",
+      "updatedAt": "2026-10-06T02:43:31.152Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "3da2b4c3-364b-4150-bdb9-76ed63db060b",
+      "projectId": "9131e623-4cfa-4edc-b421-3ce2bccb5a95",
+      "phaseId": null,
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original B",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.152Z",
+      "updatedAt": "2026-10-06T02:43:31.152Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "a654770d-c006-4cbb-9179-bb316e7e4995",
+      "projectId": "68ea5276-409b-4459-b853-5a271535bfc0",
+      "phaseId": "901d63a4-3d08-4a9f-b623-bb25bff56617",
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "New legal task",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.189Z",
+      "updatedAt": "2026-10-06T02:43:31.189Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "c4b5ef26-6aa7-44a8-9fc7-b196ba00a4d9",
+      "projectId": "ef244790-bd5b-4e9f-8b88-117b9cb42370",
+      "phaseId": "2da6552b-3448-402d-bc08-348f0fb53a68",
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original A",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.193Z",
+      "updatedAt": "2026-10-06T02:43:31.193Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "00e17c6c-9628-4bd2-96a0-9c28b2cd0f8e",
+      "projectId": "ef244790-bd5b-4e9f-8b88-117b9cb42370",
+      "phaseId": null,
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original B",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.194Z",
+      "updatedAt": "2026-10-06T02:43:31.194Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "b9e13966-e6e7-4000-8ffb-f4815fc741fe",
+      "projectId": "baba9039-3d58-4ca0-ac90-82b3a237ba39",
+      "phaseId": null,
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original B",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": "2026-10-06T02:43:31.372Z",
+      "createdAt": "2026-10-06T02:43:31.358Z",
+      "updatedAt": "2026-10-06T02:43:31.373Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45"
+    },
+    {
+      "id": "f88fa05f-86e4-4f8f-b870-9c6d8e2dc85b",
+      "projectId": "88985486-9783-4f6b-9603-34e561c1e1a1",
+      "phaseId": "a66e3a49-e015-4e64-bee5-1dde63b1b637",
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original A",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": "2026-10-06T02:43:31.254Z",
+      "createdAt": "2026-10-06T02:43:31.242Z",
+      "updatedAt": "2026-10-06T02:43:31.255Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45"
+    },
+    {
+      "id": "5f218aeb-e3e8-4321-88f8-6ebd5d1eb21a",
+      "projectId": "88985486-9783-4f6b-9603-34e561c1e1a1",
+      "phaseId": null,
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original B",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": "2026-10-06T02:43:31.254Z",
+      "createdAt": "2026-10-06T02:43:31.242Z",
+      "updatedAt": "2026-10-06T02:43:31.255Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45"
+    },
+    {
+      "id": "c88d6476-79e8-4ddb-a865-6d7aa0ca035c",
+      "projectId": "30d9af95-3369-428e-afbf-509ae08b0c7f",
+      "phaseId": "96b4cf23-1190-4ef1-a51f-eb168876f42b",
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original A",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.274Z",
+      "updatedAt": "2026-10-06T02:43:31.274Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "880ac121-463a-46c3-9f67-907b5539ab0d",
+      "projectId": "6ba93a9f-f4bd-4b78-81d3-04d20959e878",
+      "phaseId": "e7bb1833-f522-4101-adaf-eff6376fecba",
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original A",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.277Z",
+      "updatedAt": "2026-10-06T02:43:31.277Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "259efe85-e661-4fae-9dde-a248b6e67b25",
+      "projectId": "6ba93a9f-f4bd-4b78-81d3-04d20959e878",
+      "phaseId": null,
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original B",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.277Z",
+      "updatedAt": "2026-10-06T02:43:31.286Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "21000894-6bd3-4d20-982c-52f77008100f",
+      "projectId": "30d9af95-3369-428e-afbf-509ae08b0c7f",
+      "phaseId": null,
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original B",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": "2026-10-06T02:43:31.290Z",
+      "createdAt": "2026-10-06T02:43:31.274Z",
+      "updatedAt": "2026-10-06T02:43:31.290Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45"
+    },
+    {
+      "id": "1cf484ca-4a5e-4aff-b51e-9de0614cc310",
+      "projectId": "a70a7d7a-6d93-4ddf-9e36-b8b8581c2dcf",
+      "phaseId": "6560c510-4b51-48f2-acd6-8bfabedfbb21",
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original A",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.296Z",
+      "updatedAt": "2026-10-06T02:43:31.296Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "d8783e7c-c46c-4080-8b38-36369deeeda5",
+      "projectId": "a70a7d7a-6d93-4ddf-9e36-b8b8581c2dcf",
+      "phaseId": null,
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original B",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": "2026-10-06T02:43:31.311Z",
+      "createdAt": "2026-10-06T02:43:31.297Z",
+      "updatedAt": "2026-10-06T02:43:31.311Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45"
+    },
+    {
+      "id": "2531b111-69d6-430a-a85d-d9972ab80fe7",
+      "projectId": "28b0c3fb-51c6-4ea4-b72e-ce36a23de665",
+      "phaseId": null,
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original B",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.325Z",
+      "updatedAt": "2026-10-06T02:43:31.325Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "54850243-2998-44d7-90f9-b7e1e9db313a",
+      "projectId": "28b0c3fb-51c6-4ea4-b72e-ce36a23de665",
+      "phaseId": "815abd42-b37c-4e96-8cac-6699c84d1920",
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original A",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": "2026-10-06T02:43:31.326Z",
+      "createdAt": "2026-10-06T02:43:31.324Z",
+      "updatedAt": "2026-10-06T02:43:31.327Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "26d0a9c6-6171-49a6-ab16-8cc7ae167e54",
+      "projectId": "baba9039-3d58-4ca0-ac90-82b3a237ba39",
+      "phaseId": "cd25db59-f9ad-49d2-b15a-7e28c1b85196",
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original A",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.358Z",
+      "updatedAt": "2026-10-06T02:43:31.358Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "8fb1fac8-bdfc-4ef7-8413-6ae44d6279cf",
+      "projectId": "4db02d50-059e-43d0-9cb4-a1fa160a1c28",
+      "phaseId": null,
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original B",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.377Z",
+      "updatedAt": "2026-10-06T02:43:31.377Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "28d6531d-ecb1-4553-9c22-40fbf67115c9",
+      "projectId": "4db02d50-059e-43d0-9cb4-a1fa160a1c28",
+      "phaseId": "0ab2c27c-373e-4935-b978-e0f3f5065a76",
+      "parentId": null,
+      "templateTaskId": null,
+      "code": null,
+      "title": "Original A",
+      "description": null,
+      "assigneeId": null,
+      "status": "NOT_STARTED",
+      "priority": "MEDIUM",
+      "taskType": null,
+      "applicability": "REQUIRED",
+      "regulatoryPriority": null,
+      "expectedDeliverable": null,
+      "regulatoryNotes": null,
+      "sortOrder": 0,
+      "estimatedHours": null,
+      "actualHours": null,
+      "progressPercent": 0,
+      "startDate": null,
+      "dueDate": null,
+      "startedAt": null,
+      "completedAt": null,
+      "deletedAt": "2026-10-06T02:43:31.379Z",
+      "createdAt": "2026-10-06T02:43:31.376Z",
+      "updatedAt": "2026-10-06T02:43:31.379Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    }
+  ],
+  "milestones": [
+    {
+      "id": "2f7fab17-eb77-4e5b-8296-239fd63c1c38",
+      "projectId": "5c363031-7a22-416a-8113-f75e730573b0",
+      "phaseId": null,
+      "name": "Original milestone",
+      "description": null,
+      "dueDate": "2026-10-10T00:00:00.000Z",
+      "status": "NOT_STARTED",
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.101Z",
+      "updatedAt": "2026-10-06T02:43:31.101Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "795a0da5-09a7-4197-9073-171bcd75fb8e",
+      "projectId": "618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+      "phaseId": null,
+      "name": "Original milestone",
+      "description": null,
+      "dueDate": "2026-10-10T00:00:00.000Z",
+      "status": "NOT_STARTED",
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.120Z",
+      "updatedAt": "2026-10-06T02:43:31.120Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "a6f682d6-7792-4de0-9724-d81dc34e18bd",
+      "projectId": "68ea5276-409b-4459-b853-5a271535bfc0",
+      "phaseId": null,
+      "name": "Original milestone",
+      "description": null,
+      "dueDate": "2026-10-10T00:00:00.000Z",
+      "status": "NOT_STARTED",
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.150Z",
+      "updatedAt": "2026-10-06T02:43:31.150Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "decd56bc-f6cc-4509-b4ab-9f7b6cd2cdc9",
+      "projectId": "9131e623-4cfa-4edc-b421-3ce2bccb5a95",
+      "phaseId": null,
+      "name": "Original milestone",
+      "description": null,
+      "dueDate": "2026-10-10T00:00:00.000Z",
+      "status": "NOT_STARTED",
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.153Z",
+      "updatedAt": "2026-10-06T02:43:31.153Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "b69bf46d-6b46-436a-89ba-40bb1f3dd8b1",
+      "projectId": "68ea5276-409b-4459-b853-5a271535bfc0",
+      "phaseId": null,
+      "name": "New legal milestone",
+      "description": null,
+      "dueDate": "2026-10-12T00:00:00.000Z",
+      "status": "NOT_STARTED",
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.189Z",
+      "updatedAt": "2026-10-06T02:43:31.189Z",
+      "createdById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "updatedById": null
+    },
+    {
+      "id": "fbb2b407-d9d4-47b3-a31e-9b5610de8fc0",
+      "projectId": "ef244790-bd5b-4e9f-8b88-117b9cb42370",
+      "phaseId": null,
+      "name": "Original milestone",
+      "description": null,
+      "dueDate": "2026-10-10T00:00:00.000Z",
+      "status": "NOT_STARTED",
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.194Z",
+      "updatedAt": "2026-10-06T02:43:31.194Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "d236962b-3508-4431-9fd4-15f028d79da9",
+      "projectId": "88985486-9783-4f6b-9603-34e561c1e1a1",
+      "phaseId": null,
+      "name": "Original milestone",
+      "description": null,
+      "dueDate": "2026-10-10T00:00:00.000Z",
+      "status": "NOT_STARTED",
+      "completedAt": null,
+      "deletedAt": "2026-10-06T02:43:31.255Z",
+      "createdAt": "2026-10-06T02:43:31.242Z",
+      "updatedAt": "2026-10-06T02:43:31.256Z",
+      "createdById": null,
+      "updatedById": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45"
+    },
+    {
+      "id": "0933eb65-8454-4c48-9cf8-52c8e791e685",
+      "projectId": "30d9af95-3369-428e-afbf-509ae08b0c7f",
+      "phaseId": null,
+      "name": "Original milestone",
+      "description": null,
+      "dueDate": "2026-10-10T00:00:00.000Z",
+      "status": "NOT_STARTED",
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.275Z",
+      "updatedAt": "2026-10-06T02:43:31.275Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "92c73394-dd5b-43dd-b971-70e1ddcc677a",
+      "projectId": "6ba93a9f-f4bd-4b78-81d3-04d20959e878",
+      "phaseId": null,
+      "name": "Original milestone",
+      "description": null,
+      "dueDate": "2026-10-10T00:00:00.000Z",
+      "status": "NOT_STARTED",
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.277Z",
+      "updatedAt": "2026-10-06T02:43:31.277Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "06890fdd-086f-48a3-b7ed-4469e1f8d4ab",
+      "projectId": "a70a7d7a-6d93-4ddf-9e36-b8b8581c2dcf",
+      "phaseId": null,
+      "name": "Original milestone",
+      "description": null,
+      "dueDate": "2026-10-10T00:00:00.000Z",
+      "status": "NOT_STARTED",
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.297Z",
+      "updatedAt": "2026-10-06T02:43:31.297Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "6929bfcb-c902-44c4-8ead-a1d9120da0ff",
+      "projectId": "28b0c3fb-51c6-4ea4-b72e-ce36a23de665",
+      "phaseId": null,
+      "name": "Original milestone",
+      "description": null,
+      "dueDate": "2026-10-10T00:00:00.000Z",
+      "status": "NOT_STARTED",
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.326Z",
+      "updatedAt": "2026-10-06T02:43:31.326Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "84e1fa0a-ca8d-4e3c-9b8a-4a9d4b50f803",
+      "projectId": "baba9039-3d58-4ca0-ac90-82b3a237ba39",
+      "phaseId": null,
+      "name": "Original milestone",
+      "description": null,
+      "dueDate": "2026-10-10T00:00:00.000Z",
+      "status": "NOT_STARTED",
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.358Z",
+      "updatedAt": "2026-10-06T02:43:31.358Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "dcec72f1-960f-4e52-a18c-3180607dbd9d",
+      "projectId": "4db02d50-059e-43d0-9cb4-a1fa160a1c28",
+      "phaseId": null,
+      "name": "Original milestone",
+      "description": null,
+      "dueDate": "2026-10-10T00:00:00.000Z",
+      "status": "NOT_STARTED",
+      "completedAt": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.377Z",
+      "updatedAt": "2026-10-06T02:43:31.377Z",
+      "createdById": null,
+      "updatedById": null
+    }
+  ],
+  "attachments": [
+    {
+      "id": "3f3deb77-9d22-4448-84c6-c5657b7a3494",
+      "fileId": "70d5d129-5a8a-4ff3-8119-fba83100732f",
+      "entityType": "TASK",
+      "entityId": "ae58b89f-b4ef-44e4-bf9d-e01269fe7327",
+      "label": null,
+      "sortOrder": 0,
+      "uploadedById": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.102Z"
+    },
+    {
+      "id": "9e5382f9-d81c-4ab4-b002-09345f5e26c4",
+      "fileId": "562fac46-0abc-4dab-90db-0d493a56303c",
+      "entityType": "TASK",
+      "entityId": "cc25d30a-71de-40ca-a51b-f35890dce294",
+      "label": null,
+      "sortOrder": 0,
+      "uploadedById": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.120Z"
+    },
+    {
+      "id": "a4bfd4b5-5898-4b2d-97e3-38383da05a1a",
+      "fileId": "e372b9c4-4e0d-4214-99f4-88559eadd5bc",
+      "entityType": "TASK",
+      "entityId": "049480fa-c174-4b9f-9543-9d33543fc9a2",
+      "label": null,
+      "sortOrder": 0,
+      "uploadedById": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.151Z"
+    },
+    {
+      "id": "b84f2a29-b233-4ee4-badb-6004ffb3eeff",
+      "fileId": "cf860d25-7abc-40d4-a7a7-ac360f20fb8f",
+      "entityType": "TASK",
+      "entityId": "3d4f85bd-9f3b-4da6-8b50-09f03a0bfbf2",
+      "label": null,
+      "sortOrder": 0,
+      "uploadedById": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.153Z"
+    },
+    {
+      "id": "34d0afc4-b2e1-4ba4-8c1d-c19c6f3ba53b",
+      "fileId": "aabb7be6-bd72-45ac-a9b3-77322bbfe6d4",
+      "entityType": "TASK",
+      "entityId": "c4b5ef26-6aa7-44a8-9fc7-b196ba00a4d9",
+      "label": null,
+      "sortOrder": 0,
+      "uploadedById": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.194Z"
+    },
+    {
+      "id": "0ce5d902-60fc-4764-9d28-06f5cca2e911",
+      "fileId": "8fff96e6-a35e-4e50-a28c-639e313238e5",
+      "entityType": "TASK",
+      "entityId": "f88fa05f-86e4-4f8f-b870-9c6d8e2dc85b",
+      "label": null,
+      "sortOrder": 0,
+      "uploadedById": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.243Z"
+    },
+    {
+      "id": "0ae0fdb8-66bd-4845-9106-2ad3f5ebf2da",
+      "fileId": "6d549386-2495-4f44-9f81-ba0e9557ff66",
+      "entityType": "TASK",
+      "entityId": "c88d6476-79e8-4ddb-a865-6d7aa0ca035c",
+      "label": null,
+      "sortOrder": 0,
+      "uploadedById": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.275Z"
+    },
+    {
+      "id": "5dc3298d-ef48-4351-8bb0-e767b7327a41",
+      "fileId": "506c1775-e946-48b3-9ef6-88950036ce6f",
+      "entityType": "TASK",
+      "entityId": "880ac121-463a-46c3-9f67-907b5539ab0d",
+      "label": null,
+      "sortOrder": 0,
+      "uploadedById": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.278Z"
+    },
+    {
+      "id": "0baf505d-6f87-486f-b26c-f2c1f2c56882",
+      "fileId": "49e273ab-9dcb-4953-952a-07281e45f58c",
+      "entityType": "TASK",
+      "entityId": "1cf484ca-4a5e-4aff-b51e-9de0614cc310",
+      "label": null,
+      "sortOrder": 0,
+      "uploadedById": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.298Z"
+    },
+    {
+      "id": "7643e6c2-3a08-47d9-a81e-1f0a9367d519",
+      "fileId": "1b63be32-fe5a-4943-941f-ea5ba36bba96",
+      "entityType": "TASK",
+      "entityId": "54850243-2998-44d7-90f9-b7e1e9db313a",
+      "label": null,
+      "sortOrder": 0,
+      "uploadedById": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.326Z"
+    },
+    {
+      "id": "ddbbdc56-a941-4a00-a7af-47e1914e8403",
+      "fileId": "8b978880-47eb-408c-828c-64c4df11c45a",
+      "entityType": "TASK",
+      "entityId": "26d0a9c6-6171-49a6-ab16-8cc7ae167e54",
+      "label": null,
+      "sortOrder": 0,
+      "uploadedById": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.359Z"
+    },
+    {
+      "id": "a45fff91-a41d-4d12-a5c2-c5ff78e11b35",
+      "fileId": "e3c8a1cf-b1d1-4952-8df0-043c87a588de",
+      "entityType": "TASK",
+      "entityId": "28d6531d-ecb1-4553-9c22-40fbf67115c9",
+      "label": null,
+      "sortOrder": 0,
+      "uploadedById": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:43:31.378Z"
+    }
+  ],
+  "dependencies": [
+    {
+      "id": "b8521c61-340f-4c11-9e17-29a83496bcfa",
+      "taskId": "da69d9de-9239-466d-9351-78ec1ba8b0de",
+      "prerequisiteId": "ae58b89f-b4ef-44e4-bf9d-e01269fe7327",
+      "dependencyType": "FS",
+      "lagDays": 0,
+      "createdAt": "2026-10-06T02:43:31.103Z"
+    },
+    {
+      "id": "42cfd13f-d2f7-4533-91f9-42103963240a",
+      "taskId": "0fccc1d0-3707-428e-b167-9c8f836b91ee",
+      "prerequisiteId": "cc25d30a-71de-40ca-a51b-f35890dce294",
+      "dependencyType": "FS",
+      "lagDays": 0,
+      "createdAt": "2026-10-06T02:43:31.121Z"
+    },
+    {
+      "id": "6323de2c-d689-4a86-a493-9a4dec06b2a1",
+      "taskId": "3aa0a370-f993-4e71-ad24-706f53449b4f",
+      "prerequisiteId": "049480fa-c174-4b9f-9543-9d33543fc9a2",
+      "dependencyType": "FS",
+      "lagDays": 0,
+      "createdAt": "2026-10-06T02:43:31.151Z"
+    },
+    {
+      "id": "5dd14f7a-9f73-4ab0-9cc1-95f020c29100",
+      "taskId": "3da2b4c3-364b-4150-bdb9-76ed63db060b",
+      "prerequisiteId": "3d4f85bd-9f3b-4da6-8b50-09f03a0bfbf2",
+      "dependencyType": "FS",
+      "lagDays": 0,
+      "createdAt": "2026-10-06T02:43:31.153Z"
+    },
+    {
+      "id": "b8cf35f4-0c08-42f4-b5e6-183ab67810c8",
+      "taskId": "00e17c6c-9628-4bd2-96a0-9c28b2cd0f8e",
+      "prerequisiteId": "c4b5ef26-6aa7-44a8-9fc7-b196ba00a4d9",
+      "dependencyType": "FS",
+      "lagDays": 0,
+      "createdAt": "2026-10-06T02:43:31.195Z"
+    },
+    {
+      "id": "bf4e9391-ff96-4fd9-95f1-ab30fe8f4c41",
+      "taskId": "5f218aeb-e3e8-4321-88f8-6ebd5d1eb21a",
+      "prerequisiteId": "f88fa05f-86e4-4f8f-b870-9c6d8e2dc85b",
+      "dependencyType": "FS",
+      "lagDays": 0,
+      "createdAt": "2026-10-06T02:43:31.243Z"
+    },
+    {
+      "id": "81e9cb7e-348a-46d9-8500-84d2421c426b",
+      "taskId": "21000894-6bd3-4d20-982c-52f77008100f",
+      "prerequisiteId": "c88d6476-79e8-4ddb-a865-6d7aa0ca035c",
+      "dependencyType": "FS",
+      "lagDays": 0,
+      "createdAt": "2026-10-06T02:43:31.276Z"
+    },
+    {
+      "id": "dabd3b88-2da2-4c0f-8913-6655e673b217",
+      "taskId": "259efe85-e661-4fae-9dde-a248b6e67b25",
+      "prerequisiteId": "880ac121-463a-46c3-9f67-907b5539ab0d",
+      "dependencyType": "FS",
+      "lagDays": 0,
+      "createdAt": "2026-10-06T02:43:31.278Z"
+    },
+    {
+      "id": "c4aa64da-385f-40f6-8b93-651a98fcb788",
+      "taskId": "d8783e7c-c46c-4080-8b38-36369deeeda5",
+      "prerequisiteId": "1cf484ca-4a5e-4aff-b51e-9de0614cc310",
+      "dependencyType": "FS",
+      "lagDays": 0,
+      "createdAt": "2026-10-06T02:43:31.298Z"
+    },
+    {
+      "id": "9ddeb2b2-6297-48bf-a20f-027f290dff83",
+      "taskId": "2531b111-69d6-430a-a85d-d9972ab80fe7",
+      "prerequisiteId": "54850243-2998-44d7-90f9-b7e1e9db313a",
+      "dependencyType": "FS",
+      "lagDays": 0,
+      "createdAt": "2026-10-06T02:43:31.327Z"
+    },
+    {
+      "id": "7871a5fd-38cf-40cf-b089-d56fd119fc32",
+      "taskId": "b9e13966-e6e7-4000-8ffb-f4815fc741fe",
+      "prerequisiteId": "26d0a9c6-6171-49a6-ab16-8cc7ae167e54",
+      "dependencyType": "FS",
+      "lagDays": 0,
+      "createdAt": "2026-10-06T02:43:31.359Z"
+    },
+    {
+      "id": "fa8348b5-9b85-49b0-84fb-7b05409c4570",
+      "taskId": "8fb1fac8-bdfc-4ef7-8413-6ae44d6279cf",
+      "prerequisiteId": "28d6531d-ecb1-4553-9c22-40fbf67115c9",
+      "dependencyType": "FS",
+      "lagDays": 0,
+      "createdAt": "2026-10-06T02:43:31.379Z"
+    }
+  ],
+  "receipts": [
+    {
+      "id": "a7194945-c365-4c53-9d54-c385cc7c2fb2",
+      "clientMutationId": "2a802603-8941-4efc-9a49-00339502d7a5",
+      "deviceId": "delta-device-d408c9a6-c342-41d8-8f32-d097d67ddb02",
+      "userId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "entity": "tasks",
+      "entityId": "d8783e7c-c46c-4080-8b38-36369deeeda5",
+      "op": "delete",
+      "status": "applied",
+      "result": {
+        "response": {
+          "id": "d8783e7c-c46c-4080-8b38-36369deeeda5",
+          "op": "delete",
+          "action": "deleted",
+          "entity": "tasks",
+          "status": "applied",
+          "payloadHash": "6a130ec8fb7361e60dd2337d43c183d490bd82fff22a900eea78580c971d97b7",
+          "receiptHandle": "a7194945-c365-4c53-9d54-c385cc7c2fb2",
+          "serverUpdatedAt": "2026-10-06T02:43:31.311Z",
+          "clientMutationId": "2a802603-8941-4efc-9a49-00339502d7a5"
+        },
+        "intendedAction": "deleted",
+        "requiredPermissions": [
+          "tasks.delete"
+        ],
+        "requiredCapabilities": [
+          "write",
+          "delete"
+        ]
+      },
+      "receiptVersion": 1,
+      "resourceScope": "project:a70a7d7a-6d93-4ddf-9e36-b8b8581c2dcf",
+      "payloadHash": "6a130ec8fb7361e60dd2337d43c183d490bd82fff22a900eea78580c971d97b7",
+      "expiresAt": "2026-10-07T02:43:31.304Z",
+      "createdAt": "2026-10-06T02:43:31.304Z"
+    },
+    {
+      "id": "22ad0a02-00be-4337-b899-6f2aaadfad23",
+      "clientMutationId": "4a31615c-2cb6-4520-9f67-4e9833e2a07f",
+      "deviceId": "live-ref-b5c568e2-6ad5-4894-a02c-0ef16ef5f52b",
+      "userId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "entity": "tasks",
+      "entityId": "329fe644-aa99-4448-bbb0-ff8f20d8b2bc",
+      "op": "upsert",
+      "status": "pending",
+      "result": {
+        "intendedAction": "created",
+        "requiredPermissions": [
+          "tasks.create"
+        ],
+        "requiredCapabilities": [
+          "write"
+        ]
+      },
+      "receiptVersion": 1,
+      "resourceScope": "project:28b0c3fb-51c6-4ea4-b72e-ce36a23de665",
+      "payloadHash": "f11d1fac2ae1a99e88cbf5dba77526c4da2184de52bc4360f6e9d8b0ecf778b3",
+      "expiresAt": "2026-10-07T02:43:31.335Z",
+      "createdAt": "2026-10-06T02:43:31.335Z"
+    },
+    {
+      "id": "bc759015-4d1c-4cb4-87c9-b67cf0c3a054",
+      "clientMutationId": "c74426db-e063-486b-b235-78073fe80b5d",
+      "deviceId": "live-ref-6dd390cc-9c53-47a8-8613-d4dab1c80c01",
+      "userId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "entity": "tasks",
+      "entityId": "e59181b8-01b6-4f39-8813-3ad070ca9aa5",
+      "op": "upsert",
+      "status": "pending",
+      "result": {
+        "intendedAction": "created",
+        "requiredPermissions": [
+          "tasks.create"
+        ],
+        "requiredCapabilities": [
+          "write"
+        ]
+      },
+      "receiptVersion": 1,
+      "resourceScope": "project:28b0c3fb-51c6-4ea4-b72e-ce36a23de665",
+      "payloadHash": "4f2f4a5a1aec327b48072e4133bbd5d6e815042c272023f887a5796f2fc94c1b",
+      "expiresAt": "2026-10-07T02:43:31.349Z",
+      "createdAt": "2026-10-06T02:43:31.349Z"
+    }
+  ],
+  "audits": [
+    {
+      "id": "8fd7bbb4-992c-45b6-aad2-a900b686aef1",
+      "actorId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "actorName": "Synthetic delta owner",
+      "actorRole": "MEMBER",
+      "action": "login",
+      "entityType": "USER",
+      "entityId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "entityLabel": "rp05delta-b47d9a2c-8521-4fcc-b261-6d55ccb734fc",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": null,
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:43:31.057Z"
+    },
+    {
+      "id": "820feb30-065c-423a-a0f8-9d300e89d2f6",
+      "actorId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "actorName": "Synthetic delta owner",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "PROJECT",
+      "entityId": "5c363031-7a22-416a-8113-f75e730573b0",
+      "entityLabel": null,
+      "before": null,
+      "after": null,
+      "changedFields": [
+        "childDelta"
+      ],
+      "metadata": {
+        "command": "PROJECT_CHILD_DELTA_V1",
+        "taskIds": [
+          "ae58b89f-b4ef-44e4-bf9d-e01269fe7327"
+        ],
+        "elevated": false,
+        "milestoneIds": [],
+        "deletedTaskIds": [],
+        "deletedMilestoneIds": []
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:43:31.114Z"
+    },
+    {
+      "id": "4e77bc55-6451-4f46-a1bf-f9346100e592",
+      "actorId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "actorName": "Synthetic delta owner",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "PROJECT",
+      "entityId": "5c363031-7a22-416a-8113-f75e730573b0",
+      "entityLabel": "Owned original project",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": {
+        "permissionCode": "projects.update"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:43:31.116Z"
+    },
+    {
+      "id": "64b6235f-2bd4-4727-a172-85979ac9d433",
+      "actorId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "actorName": "Synthetic delta owner",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "PROJECT",
+      "entityId": "618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+      "entityLabel": "safe legacy edit",
+      "before": null,
+      "after": null,
+      "changedFields": [
+        "name"
+      ],
+      "metadata": {
+        "permissionCode": "projects.update"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:43:31.131Z"
+    },
+    {
+      "id": "e2caee77-34f0-493a-8af7-6cf5bbd04143",
+      "actorId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "actorName": "Synthetic delta owner",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "PROJECT",
+      "entityId": "618cee43-f9dd-40ab-8f02-fcd15e7aa18b",
+      "entityLabel": "safe omission",
+      "before": null,
+      "after": null,
+      "changedFields": [
+        "name"
+      ],
+      "metadata": {
+        "permissionCode": "projects.update"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:43:31.135Z"
+    },
+    {
+      "id": "62cfee9c-d538-4e0f-82c4-3c4f62a181d3",
+      "actorId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "actorName": "Synthetic delta owner",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "PROJECT",
+      "entityId": "68ea5276-409b-4459-b853-5a271535bfc0",
+      "entityLabel": null,
+      "before": null,
+      "after": null,
+      "changedFields": [
+        "childDelta"
+      ],
+      "metadata": {
+        "command": "PROJECT_CHILD_DELTA_V1",
+        "taskIds": [
+          null
+        ],
+        "elevated": false,
+        "milestoneIds": [
+          null
+        ],
+        "deletedTaskIds": [],
+        "deletedMilestoneIds": []
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:43:31.190Z"
+    },
+    {
+      "id": "59f60852-4c71-41e4-a5e1-893a79c40806",
+      "actorId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "actorName": "Synthetic delta owner",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "PROJECT",
+      "entityId": "68ea5276-409b-4459-b853-5a271535bfc0",
+      "entityLabel": "Owned original project",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": {
+        "permissionCode": "projects.update"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:43:31.191Z"
+    },
+    {
+      "id": "a5fa3628-b43f-4a08-ad12-bd070d85bf9e",
+      "actorId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "actorName": "Synthetic delta owner",
+      "actorRole": "MEMBER",
+      "action": "delete",
+      "entityType": "TASK",
+      "entityId": "f88fa05f-86e4-4f8f-b870-9c6d8e2dc85b",
+      "entityLabel": null,
+      "before": null,
+      "after": null,
+      "changedFields": [
+        "deletedAt"
+      ],
+      "metadata": {
+        "ids": [
+          "f88fa05f-86e4-4f8f-b870-9c6d8e2dc85b",
+          "5f218aeb-e3e8-4321-88f8-6ebd5d1eb21a"
+        ],
+        "command": "EXPLICIT_TASK_TOMBSTONE_V1",
+        "elevated": false,
+        "projectId": "88985486-9783-4f6b-9603-34e561c1e1a1",
+        "permissionCode": "tasks.delete"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:43:31.255Z"
+    },
+    {
+      "id": "f58e4b57-0835-4fc5-9f93-150987933152",
+      "actorId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "actorName": "Synthetic delta owner",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "PROJECT",
+      "entityId": "88985486-9783-4f6b-9603-34e561c1e1a1",
+      "entityLabel": null,
+      "before": null,
+      "after": null,
+      "changedFields": [
+        "childDelta"
+      ],
+      "metadata": {
+        "command": "PROJECT_CHILD_DELTA_V1",
+        "taskIds": [],
+        "elevated": false,
+        "milestoneIds": [],
+        "deletedTaskIds": [
+          "f88fa05f-86e4-4f8f-b870-9c6d8e2dc85b",
+          "5f218aeb-e3e8-4321-88f8-6ebd5d1eb21a"
+        ],
+        "deletedMilestoneIds": [
+          "d236962b-3508-4431-9fd4-15f028d79da9"
+        ]
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:43:31.256Z"
+    },
+    {
+      "id": "c3619664-20be-4bd2-91b6-41bcbd27112e",
+      "actorId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "actorName": "Synthetic delta owner",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "PROJECT",
+      "entityId": "88985486-9783-4f6b-9603-34e561c1e1a1",
+      "entityLabel": "Owned original project",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": {
+        "permissionCode": "projects.update"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:43:31.257Z"
+    },
+    {
+      "id": "94e2e743-5dc6-41e5-a319-cb56655248dc",
+      "actorId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "actorName": "Synthetic delta owner",
+      "actorRole": "MEMBER",
+      "action": "delete",
+      "entityType": "TASK",
+      "entityId": "21000894-6bd3-4d20-982c-52f77008100f",
+      "entityLabel": null,
+      "before": null,
+      "after": null,
+      "changedFields": [
+        "deletedAt"
+      ],
+      "metadata": {
+        "ids": [
+          "21000894-6bd3-4d20-982c-52f77008100f"
+        ],
+        "command": "EXPLICIT_TASK_TOMBSTONE_V1",
+        "elevated": false,
+        "projectId": "30d9af95-3369-428e-afbf-509ae08b0c7f",
+        "permissionCode": "tasks.delete"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:43:31.290Z"
+    },
+    {
+      "id": "fe69bebb-3635-4fad-bef5-48d03f2451bb",
+      "actorId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "actorName": "Synthetic delta owner",
+      "actorRole": "MEMBER",
+      "action": "delete",
+      "entityType": null,
+      "entityId": "d8783e7c-c46c-4080-8b38-36369deeeda5",
+      "entityLabel": "sync:tasks",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": {
+        "op": "delete",
+        "action": "deleted",
+        "deviceId": "delta-device-d408c9a6-c342-41d8-8f32-d097d67ddb02",
+        "elevated": false,
+        "payloadHash": "6a130ec8fb7361e60dd2337d43c183d490bd82fff22a900eea78580c971d97b7",
+        "resourceScope": "project:a70a7d7a-6d93-4ddf-9e36-b8b8581c2dcf",
+        "clientMutationId": "2a802603-8941-4efc-9a49-00339502d7a5"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:43:31.312Z"
+    },
+    {
+      "id": "b27dd578-bfe2-4bfa-ad5e-f1b937b01a6d",
+      "actorId": "1be88367-a4a6-4fd8-baa6-4a9d0f484a45",
+      "actorName": "Synthetic delta owner",
+      "actorRole": "MEMBER",
+      "action": "delete",
+      "entityType": "TASK",
+      "entityId": "b9e13966-e6e7-4000-8ffb-f4815fc741fe",
+      "entityLabel": null,
+      "before": null,
+      "after": null,
+      "changedFields": [
+        "deletedAt"
+      ],
+      "metadata": {
+        "ids": [
+          "b9e13966-e6e7-4000-8ffb-f4815fc741fe"
+        ],
+        "command": "EXPLICIT_TASK_TOMBSTONE_V1",
+        "elevated": false,
+        "projectId": "baba9039-3d58-4ca0-ac90-82b3a237ba39",
+        "permissionCode": "tasks.delete"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:43:31.373Z"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "preparation": "DELIVERED_PENDING_REVIEW",
+  "codeImplementation": "NOT_STARTED",
+  "dynamic": "NOT_RUN",
+  "originalFindings": {
+    "B05": "SUPPORTED",
+    "B06": "SUPPORTED"
+  },
+  "originalTasks": {
+    "RP09-T01": {
+      "packageId": "RP09",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": null,
+      "evidence": []
+    },
+    "RP09-T02": {
+      "packageId": "RP09",
+      "implementation": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED",
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "owner": null,
+      "evidence": []
+    }
+  },
+  "newDecisionApproval": "PROPOSED",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "checkEvidence": "evidence/final-readback.json after document completion"
+}

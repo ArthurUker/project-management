@@ -1,0 +1,209 @@
+{
+  "taskId": "RP16-T01",
+  "runs": [
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP16/RP16-T01/runs/2026-10-06-continuous-remediation-01/evidence/rp16-t01-registry/attempt-04/run-results.json",
+      "sha256": "675cda3cabc216502d36a7b520a44f8c4713bc55a89e103a03dc787e349388fe",
+      "commandResults": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-fl5s1018/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-fl5s1018/pg",
+            "-l",
+            "/tmp/rdpms-ac-fl5s1018/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 55041 -k /tmp/rdpms-ac-fl5s1018/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-fl5s1018/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "55041",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_approved_9c01cf618e\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-fl5s1018/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rp16-restore-registry.integration.test.mjs"
+          ],
+          "exitCode": 0,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-fl5s1018/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_9c01cf618e",
+          "ownedPort": 55041,
+          "ownedTempRoot": "/tmp/rdpms-ac-fl5s1018",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    }
+  ],
+  "limits": [
+    "All schema unique constraints exercised with synthetic negative row tuples; legal native success fixture project preview. Runtime FK positive/negative cases representative; all registry FK mappings checked against DMMF, not every model restore executed.",
+    "Preview not wholeDB/file DR, apply counters and postcommit containment not implemented by T01.",
+    "Historical finding B13 wider apply/epoch/target remains SUPPORTED and open. No target/real data access."
+  ],
+  "earlierAttempts": "Preserved; only enumerated current attempts support acceptance"
+}

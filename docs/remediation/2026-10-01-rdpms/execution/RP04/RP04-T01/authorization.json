@@ -1,0 +1,8 @@
+{
+ "createdAt":"2026-10-02","executor":"Codex executor",
+ "authorizationSource":"User's explicit bounded local remediation authorization, continued by latest instruction to proceed through tasks; RP04-T01 is next ready standard task.",
+ "baselineCommit":"138cf2da1b63195cef7e884f69bdf8ded6ed3c21","allowedTaskIds":["RP04-T01"],
+ "allowedActivities":["modify allowed project route for business snapshot and live list/stat scope","add task-specific owned integration acceptance file","run relevant source/build/database validation if safe owned environment is available"],
+ "prohibited":["RP04-T02 creation aggregate transaction/idempotency","project delete authorization or nested collection semantics (RP05 scope)","global projectVisibilityFilter behavior changes to sync/reports/files","schema/migration/dependency changes","production/shared DB","real data","commit/stage/push/merge/deploy"],
+ "decisionBoundary":"Only current project status/startDate lookup and ordinary project list/statistics live-row scope are changed."
+}

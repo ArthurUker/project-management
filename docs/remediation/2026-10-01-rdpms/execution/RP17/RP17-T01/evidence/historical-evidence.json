@@ -1,0 +1,6 @@
+{
+  "findingId": "D01",
+  "auditDisposition": "preserved; not closed",
+  "scope": "uploads snapshot publication only",
+  "boundary": "Concurrent run protection, retention, target Linux validation and paired restore remain outside this task."
+}

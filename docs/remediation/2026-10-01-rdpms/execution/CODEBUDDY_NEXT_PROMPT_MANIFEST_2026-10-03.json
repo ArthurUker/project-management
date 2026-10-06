@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-03",
+  "prompt": "docs/remediation/2026-10-01-rdpms/execution/CODEBUDDY_NEXT_EXECUTOR_PROMPT_2026-10-03.md",
+  "sha256": "b76da868dc1033f6a810cce4f5e712373be00e4522c5d8db6b6ffae32b7c1a07",
+  "purpose": "Bounded next CodeBuddy handoff only; no implementation or product approval performed",
+  "executionStarted": false,
+  "stateChanged": false,
+  "tasks": [
+    {
+      "taskId": "RP10-T02",
+      "kind": "REWORK"
+    },
+    {
+      "taskId": "RP08-T01",
+      "kind": "VALIDATION_ONLY"
+    },
+    {
+      "taskId": "RP02-T01",
+      "kind": "TEST_ONLY"
+    }
+  ],
+  "latestReview": "execution/reviews/2026-10-03-codebuddy/REVIEW.md",
+  "reviewEntryRequired": "new session REVIEW_ENTRY.md",
+  "scopeEnd": "Complete these three scopes or record attributable blockers, then stop for independent review"
+}

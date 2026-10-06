@@ -1,0 +1,12 @@
+{
+  "taskId": "RP19-T01",
+  "packageId": "RP19",
+  "implementation": "COMPLETE",
+  "validation": "ENV_BLOCKED",
+  "release": "NOT_EVALUATED",
+  "owner": "Codex executor",
+  "allowedTaskIds": ["RP19-T01"],
+  "evidence": ["authorization.json", "change-summary.md", "acceptance.json", "rollback.md", "evidence/evidence-inventory.json"],
+  "findingDisposition": {"R12-N01": "PENDING"},
+  "stillOpen": ["S05-OI-02 external scheduler/write barrier/common snapshot evidence", "Operations/database owner attestation", "Owned synthetic DB/uploads paired restore and mismatch rejection", "RP19-T02 remains blocked by RP17-T02, RP18-T01 and T-RP-10"]
+}

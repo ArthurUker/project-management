@@ -1,0 +1,19 @@
+{
+  "taskId": "RP16-T02",
+  "authorizationRef": "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/authorization.json",
+  "authority": "User approved subsequent local STANDARD repairs; delegated concrete option selection",
+  "allowedFiles": [
+    "rdpms-system/backend/src/kernel/backupRestore.js",
+    "rdpms-system/backend/src/kernel/restoreSchemaRegistry.js",
+    "rdpms-system/backend/src/routes/backup.js",
+    "rdpms-system/backend/src/kernel/rbac.js",
+    "rdpms-system/backend/src/platform/recovery/dataEpoch.ts",
+    "rdpms-system/backend/prisma/schema.prisma",
+    "rdpms-system/backend/prisma/migrations/20261006_restore_operation_gate/migration.sql",
+    "rdpms-system/backend/tests/integration/rp16-restore-apply.integration.test.mjs"
+  ],
+  "approvedBy": "郭仁康",
+  "approvedRole": "研发副总监",
+  "scope": "RP16-T02 actual atomic module apply/counts/commit-vs-postcommit reconciliation. Additive singleton operation gate and write-guard triggers on current application tables; necessary auth write containment and restore status/reconciliation APIs. No epoch invalidation semantics until T03, no data/target restore or wholeDB/binary claim.",
+  "noProductionOrRelease": true
+}

@@ -1,0 +1,100 @@
+[
+  {
+    "id": "B19",
+    "packet": "S04",
+    "origin": "BASELINE_SUPPLEMENTAL_REVIEW",
+    "baselineSeverity": "P2",
+    "currentSeverity": "P2",
+    "disposition": "SUPPORTED",
+    "title": "任务父子关系允许跨项目，并可被项目内硬删除级联删除跨项目子任务",
+    "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "workingTreeDigestRefs": [
+      "execution/supplemental/S04/source-digests.json"
+    ],
+    "entrypoint": "POST /api/sync/push tasks parentId followed by PUT /api/projects/:projectAId with a task replacement array",
+    "preconditions": [
+      "A project-B sync writer can submit a task with projectId=B and parentId referencing a project-A task; historical B19 probe demonstrated the edge can be established.",
+      "A project-A editor with project write capability submits task replacement; historical B02 probe demonstrated the route physically deletes project-A task rows without a task.delete check.",
+      "The deployed database applies the current migration-defined task parent FK with ON DELETE CASCADE; production schema drift was not inspected."
+    ],
+    "source": [
+      {
+        "path": "rdpms-system/backend/src/routes/sync.js",
+        "lineStart": 69,
+        "lineEnd": 82,
+        "symbol": "sync tasks permit parentId"
+      },
+      {
+        "path": "rdpms-system/backend/src/routes/sync.js",
+        "lineStart": 236,
+        "lineEnd": 248,
+        "symbol": "task guard validates phase, not parent project"
+      },
+      {
+        "path": "rdpms-system/backend/src/routes/projects.js",
+        "lineStart": 402,
+        "lineEnd": 406,
+        "symbol": "task replacement runs project-scoped physical deleteMany"
+      },
+      {
+        "path": "rdpms-system/backend/prisma/schema.prisma",
+        "lineStart": 850,
+        "lineEnd": 853,
+        "symbol": "parent relation cascades on delete"
+      },
+      {
+        "path": "rdpms-system/backend/prisma/migrations/20260902085743_init_postgres/migration.sql",
+        "lineStart": 1346,
+        "lineEnd": 1346,
+        "symbol": "database FK parent_id references tasks.id ON DELETE CASCADE"
+      }
+    ],
+    "callPath": [
+      "Project B sync writer creates a Project-B task with parentId pointing to Project A (historically accepted; source still permits it).",
+      "Project A edit route checks project write capability and processes tasksInput.",
+      "The route executes tx.task.deleteMany({where:{projectId:A}}), a physical delete of omitted A tasks.",
+      "The migration-defined parent_id FK cascades a physical delete to any child row referencing that parent, without a projectId predicate."
+    ],
+    "evidence": [
+      {
+        "level": "H",
+        "ref": "docs/audits/2026-09-29-rdpms/backend-results.json#B19_CROSS_PROJECT_PARENT_ACCEPTED",
+        "limitation": "Historical isolated probe demonstrated the cross-project parent edge can be established; this cross-project parent deletion sequence was not part of that probe."
+      },
+      {
+        "level": "H",
+        "ref": "docs/audits/2026-09-29-rdpms/backend-results.json#B02_PROJECT_NESTED_HARD_DELETE",
+        "limitation": "Historical isolated probe demonstrated project task replacement physically removes task rows without task.delete; cross-project child cascade was not measured."
+      },
+      {
+        "level": "S",
+        "ref": "execution/supplemental/S04/review.md#B19-impact-extension",
+        "limitation": "Current route, Prisma relation, and migration FK define the connected path. No single end-to-end DB reproduction or production DB schema inspection was run."
+      }
+    ],
+    "counterevidenceChecked": [
+      "The operation still requires the actor to edit Project A; it does not grant read access to Project B.",
+      "Project capability/system permission checks remain before replacement, but the nested deletion does not check tasks.delete.",
+      "The FK cascade is on physical parent deletion; soft deletion alone does not fire this FK.",
+      "Current production database constraint drift is unknown."
+    ],
+    "observedImpact": "The historical probes establish both preconditions separately, and current source/schema establish that, when both conditions hold and the target DB follows the checked migration, deleting the parent row physically deletes its cross-project child through FK cascade. The combined outcome was not dynamically observed.",
+    "potentialImpact": "A Project-A editor may unintentionally or deliberately remove a task row owned by Project B by replacing Project-A tasks after a cross-project edge was inserted. Trigger requires the cross-project edge and physical deletion; actual deployed schema and combined runtime are not verified.",
+    "verification": "HISTORICAL_ONLY",
+    "recommendation": "Validate parentId project ownership and acyclicity at every write entry; prevent project task replacement from physically deleting protected child rows; scope recursive/cascade behavior by project and move deletion to authorized tombstone commands. Before changes, read-only inventory cross-project edges and review any cascade-dependent behavior.",
+    "acceptanceCriteria": [
+      "Cross-project parent creation is rejected in sync and any future HTTP path.",
+      "A Project-A editor cannot cause a Project-B task to be physically removed through a Project-A replacement payload.",
+      "Approved deletion semantics preserve project isolation, tombstone propagation and dependent records.",
+      "Historical anomaly inventory is reviewed before adding stricter FK constraints."
+    ],
+    "pendingQuestions": [
+      "Confirm deployed database constraint matches the initial migration.",
+      "Count cross-project edges on an authorized read-only data source; decide repair before migration."
+    ],
+    "supersedesOrRelated": [
+      "B02"
+    ],
+    "supplementalChange": "Impact extension based on combined historical B02/B19 evidence and current source/FK contract; ID and severity unchanged."
+  }
+]

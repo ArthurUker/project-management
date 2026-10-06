@@ -1,0 +1,17 @@
+[
+  {
+    "path": "rdpms-system/backend/src/routes/registrations.js",
+    "beforeSha256": "bd5b8a8337bc344b66d7bf10cffaa59af851c0487fc830004e572d0b81084826",
+    "afterSha256": "394c0e298ab73618c0bc40b9cf7e0a158cd290d092a015d683acccd5d2e19190"
+  },
+  {
+    "path": "rdpms-system/backend/src/modules/projects/registrationAccess.ts",
+    "beforeSha256": null,
+    "afterSha256": "8778e8b18f58f24c13f07b080ac1d54eedd1eaae762c49c6f1790ecff67e9b1b"
+  },
+  {
+    "path": "rdpms-system/backend/tests/integration/rp06-registration-scope.integration.test.mjs",
+    "beforeSha256": null,
+    "afterSha256": "f099549455b1159f7b0359667d77da9b790f2b5a0c6847c0a4fbd66ffefb9490"
+  }
+]

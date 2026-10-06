@@ -1,0 +1,99 @@
+{
+  "taskId": "RP01-T02",
+  "approvalRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/approval.json",
+  "cases": [
+    {
+      "caseId": "AC-B01-01",
+      "result": "PASS",
+      "scope": "Current true DB/JWT,144 hierarchy actions, legal nonempty users success, forced allowlist, transactional audit/refresh failure and promotion/actor revoke barriers",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP01/RP01-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-B01-02",
+      "result": "PASS",
+      "scope": "Current true DB/JWT,144 hierarchy actions, legal nonempty users success, forced allowlist, transactional audit/refresh failure and promotion/actor revoke barriers",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP01/RP01-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-B01-03",
+      "result": "PASS",
+      "scope": "Current true DB/JWT,144 hierarchy actions, legal nonempty users success, forced allowlist, transactional audit/refresh failure and promotion/actor revoke barriers",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP01/RP01-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-B01-04",
+      "result": "PASS",
+      "scope": "Current true DB/JWT,144 hierarchy actions, legal nonempty users success, forced allowlist, transactional audit/refresh failure and promotion/actor revoke barriers",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP01/RP01-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP01-01",
+      "result": "PASS",
+      "scope": "Current true DB/JWT,144 hierarchy actions, legal nonempty users success, forced allowlist, transactional audit/refresh failure and promotion/actor revoke barriers",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP01/RP01-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP01-02",
+      "result": "PASS",
+      "scope": "Current true DB/JWT,144 hierarchy actions, legal nonempty users success, forced allowlist, transactional audit/refresh failure and promotion/actor revoke barriers",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP01/RP01-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP01-04",
+      "result": "PASS",
+      "scope": "Current true DB/JWT,144 hierarchy actions, legal nonempty users success, forced allowlist, transactional audit/refresh failure and promotion/actor revoke barriers",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP01/RP01-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP01-05",
+      "result": "PASS",
+      "scope": "Current true DB/JWT,144 hierarchy actions, legal nonempty users success, forced allowlist, transactional audit/refresh failure and promotion/actor revoke barriers",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP01/RP01-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "TASK-RP01-T02",
+      "result": "PASS",
+      "scope": "Current true DB/JWT,144 hierarchy actions, legal nonempty users success, forced allowlist, transactional audit/refresh failure and promotion/actor revoke barriers",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP01/RP01-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "GATE-D-S01-01",
+      "result": "PASS",
+      "scope": "User delegated selection of precise D-S01-01/D-S01-02 contracts; approval.json sourceQuote and named prior owner attribution, no separate signatures invented",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP01/RP01-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "GATE-D-S01-02",
+      "result": "PASS",
+      "scope": "User delegated selection of precise D-S01-01/D-S01-02 contracts; approval.json sourceQuote and named prior owner attribution, no separate signatures invented",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP01/RP01-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "DECISION-D-S01-01",
+      "result": "PASS",
+      "scope": "User delegated selection of precise D-S01-01/D-S01-02 contracts; approval.json sourceQuote and named prior owner attribution, no separate signatures invented",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP01/RP01-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "DECISION-D-S01-02",
+      "result": "PASS",
+      "scope": "User delegated selection of precise D-S01-01/D-S01-02 contracts; approval.json sourceQuote and named prior owner attribution, no separate signatures invented",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP01/RP01-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "INT-PC02-01",
+      "result": "NOT_RUN",
+      "reason": "Account command/current permissions covered; complete HTTP/sync/registration/file joint matrix remains open"
+    }
+  ],
+  "localValidation": "PASS",
+  "jointValidation": "NOT_RUN",
+  "targetValidation": "NOT_RUN",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "limits": [
+    "Local candidate only; no deploy, target rollback, shared/production resources",
+    "D-S01-04 JWT version is not part of this task; next task will add exact approved version contract",
+    "Real JWT six actor roles and DB;144 command combinations, fault rollback and actual lock-boundary barriers; no browser/UI acceptance"
+  ]
+}

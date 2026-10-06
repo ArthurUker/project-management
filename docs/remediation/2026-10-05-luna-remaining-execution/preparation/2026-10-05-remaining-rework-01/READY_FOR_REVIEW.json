@@ -1,0 +1,12 @@
+{
+  "scope": "RV-LP-01..05 differential preparation",
+  "ready": true,
+  "writerStopped": true,
+  "independentReview": "PENDING",
+  "preparationDelivery": "COMPLETE",
+  "dynamicValidation": "NOT_RUN",
+  "businessImplementationByPreparation": false,
+  "release": "NOT_EVALUATED",
+  "readbackRef": "evidence/preparation-readback.json",
+  "sourceBindingsRef": "source-bindings.json"
+}

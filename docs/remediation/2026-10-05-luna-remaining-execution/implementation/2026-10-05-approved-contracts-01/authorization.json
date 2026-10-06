@@ -1,0 +1,50 @@
+{
+  "executor": "Codex current single executor",
+  "source": "User continuous execution instruction + named approval",
+  "taskIds": [
+    "RP14-T02",
+    "RP10-T03"
+  ],
+  "allowedFiles": [
+    "rdpms-system/backend/src/modules/files/fileReadService.ts",
+    "rdpms-system/backend/src/modules/files/fileAccessPolicy.ts",
+    "rdpms-system/backend/src/routes/files.js",
+    "rdpms-system/backend/src/routes/regulatory-documents.js",
+    "rdpms-system/backend/src/routes/reports.js",
+    "rdpms-system/backend/src/modules/reports/reportCommands.ts",
+    "rdpms-system/backend/tests/integration/rp14-scan-elevated-policy.integration.test.mjs",
+    "rdpms-system/backend/tests/integration/rp10-submit-state-policy.integration.test.mjs",
+    "rdpms-system/backend/tests/integration/rf05-file-scope.integration.test.mjs",
+    "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+  ],
+  "runtimeResources": "New random local PostgreSQL clusters/databases, synthetic actors and own temp upload root; serial suites",
+  "prohibited": [
+    "subagents",
+    "model switching",
+    "stage/commit/push/merge/deploy",
+    "production/shared DB",
+    "real accounts",
+    "dependency installation/upgrades",
+    "business migration",
+    "reset/clean/stash"
+  ],
+  "approvalRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-approved-contracts-01/approval.json",
+  "stops": [
+    "unexplained source drift",
+    "outside-scope code change",
+    "resource ownership unknown",
+    "unexpected irreversible effect"
+  ],
+  "scopeAddendum": {
+    "taskId": "RP14-T02",
+    "file": "rdpms-system/backend/tests/integration/rf05-file-scope.integration.test.mjs",
+    "reason": "Existing file-scope success fixture must explicitly be CLEAN after approved deny-by-default scan policy; no scope assertion weakened"
+  },
+  "scopeAddenda": [
+    {
+      "taskId": "RP10-T03",
+      "file": "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs",
+      "reason": "Replace exactly one historical 5-success SUBMITTED-resubmit assertion with approved one-winner/four-409 policy and stronger version/audit/receipt assertions; preserve other 24 cases and barrier helpers"
+    }
+  ]
+}

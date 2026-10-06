@@ -1,0 +1,114 @@
+{
+  "reviewId": "CODEBUDDY-REVIEW-2026-10-03",
+  "tasks": {
+    "RP10-T02": {
+      "implementation": "IN_PROGRESS",
+      "validation": "FAIL",
+      "release": "NOT_EVALUATED"
+    },
+    "RP04-T02": {
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED"
+    },
+    "RP02-T01": {
+      "implementation": "COMPLETE",
+      "validation": "PASS",
+      "release": "NOT_EVALUATED"
+    },
+    "RP08-T01": {
+      "implementation": "COMPLETE",
+      "validation": "NOT_RUN",
+      "release": "NOT_EVALUATED"
+    }
+  },
+  "cases": {
+    "AC-B10-01": {
+      "status": "FAIL",
+      "finding": "LR3-01",
+      "evidence": "evidence/observations.json#late-POST-after-absent-row-validation"
+    },
+    "PAC-RP10-02": {
+      "status": "FAIL",
+      "finding": "LR3-01",
+      "evidence": "evidence/observations.json#late-POST-after-absent-row-validation"
+    },
+    "TASK-RP10-T02": {
+      "status": "FAIL",
+      "finding": "LR3-01",
+      "evidence": "evidence/observations.json#late-POST-after-absent-row-validation"
+    },
+    "AC-B04-01": {
+      "status": "NOT_RUN",
+      "finding": "LR3-02",
+      "reason": "Required equivalent ordinary-API contrast and nonempty positive coverage absent; frozen executed subcases retained."
+    },
+    "PAC-RP08-01": {
+      "status": "NOT_RUN",
+      "finding": "LR3-02",
+      "reason": "Required equivalent ordinary-API contrast and nonempty positive coverage absent; frozen executed subcases retained."
+    },
+    "TASK-RP08-T01": {
+      "status": "NOT_RUN",
+      "finding": "LR3-02",
+      "reason": "Required equivalent ordinary-API contrast and nonempty positive coverage absent; frozen executed subcases retained."
+    }
+  },
+  "retainedCases": {
+    "AC-B10-02": "NOT_RUN pending D-S01-07",
+    "AC-B10-03": "PASS locally for distinct-key version allocation",
+    "AC-B04-03": "PASS locally for persisted member/viewer own-only; elevated positive gap recorded separately",
+    "TASK-RP02-T01": "PASS with independent conditional-reset fence supplemental evidence",
+    "TASK-RP04-T02": "PASS local scalar/atomicity scope; PC03 joint NOT_RUN"
+  },
+  "independentRun": {
+    "command": "python3 execution/reviews/2026-10-03-codebuddy/evidence/owned-review-runner.py execution/reviews/2026-10-03-codebuddy/evidence/dynamic-probes independent-probes",
+    "exitCode": 0,
+    "meaning": "Final nine probes matched assertions, including confirmation of unresolved defect; NOT overall product PASS",
+    "runResults": "evidence/dynamic-probes/attempt-02/run-results.json",
+    "observations": "evidence/observations.json",
+    "authentication": "Injected actor for protected endpoints, real bcrypt login; not JWT chain acceptance",
+    "cleanup": "guard drop0, cluster stop0, owned dist/temp root removed",
+    "priorRun": "evidence/dynamic-probes/attempt-01/run-results.json",
+    "ownedRuns": 2
+  },
+  "executorLogsInspectedNotRerun": {
+    "RP10-T02": "8/8",
+    "RP04-T02": "5/5",
+    "RP02-T01": "11/11",
+    "RP08-T01": "5/5",
+    "unitSuite": "87/87",
+    "ref": "evidence/delivery-check.json; evidence/executor-regression-inspection.json"
+  },
+  "notRun": [
+    "full JWT chain",
+    "frontend IndexedDB",
+    "candidate/target environment",
+    "PC03 joint acceptance",
+    "deployment/release",
+    "full historic acceptance matrix"
+  ],
+  "counts": {
+    "tasks": 54,
+    "implementation": {
+      "COMPLETE": 17,
+      "NOT_STARTED": 34,
+      "IN_PROGRESS": 3
+    },
+    "validation": {
+      "ENV_BLOCKED": 7,
+      "PASS": 8,
+      "NOT_RUN": 38,
+      "FAIL": 1
+    },
+    "release": "NOT_EVALUATED for all tasks",
+    "incompleteImplementation": 37,
+    "note": "Run-state mirror only; planning checkpoints (PLAN_VALIDATION) remain as recorded and are not product acceptance."
+  },
+  "acceptanceCounts": {
+    "PASS": 47,
+    "FAIL": 3,
+    "NOT_RUN": 231,
+    "ENV_BLOCKED": 25
+  }
+}

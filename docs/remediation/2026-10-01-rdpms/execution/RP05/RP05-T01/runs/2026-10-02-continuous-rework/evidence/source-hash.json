@@ -1,0 +1,11 @@
+{
+  "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "capturedAt": "2026-10-02 final worktree after implementation and regression",
+  "files": [
+    {
+      "path": "rdpms-system/backend/tests/integration/rp05-parent-delete-guard.integration.test.mjs",
+      "sha256": "b0a1ade6041308d2d23f46ef32a67e69da82dc255e3bdf196624415817a2457a",
+      "bytes": 6115
+    }
+  ]
+}

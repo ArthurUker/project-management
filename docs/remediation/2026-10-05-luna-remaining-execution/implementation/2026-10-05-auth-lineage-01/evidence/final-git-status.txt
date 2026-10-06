@@ -1,0 +1,39 @@
+ M rdpms-system/backend/src/kernel/rbac.js
+ M rdpms-system/backend/src/modules/files/fileAccessPolicy.ts
+ M rdpms-system/backend/src/modules/reports/reportCommands.ts
+ M rdpms-system/backend/src/routes/auth.js
+ M rdpms-system/backend/src/routes/files.js
+ M rdpms-system/backend/src/routes/projects.js
+ M rdpms-system/backend/src/routes/regulatory-documents.js
+ M rdpms-system/backend/src/routes/reports.js
+ M rdpms-system/backend/src/routes/roles.js
+ M rdpms-system/backend/src/routes/sync.js
+ M rdpms-system/backend/src/routes/tasks.js
+ M rdpms-system/backend/tests/helpers/stubDeps.mjs
+ M rdpms-system/backend/tests/integration/rf05-file-scope.integration.test.mjs
+ M rdpms-system/deploy/scripts/backup-pg.sh
+ M rdpms-system/frontend/src/api/endpoints/auth.ts
+ M rdpms-system/frontend/src/api/endpoints/sync.ts
+ M rdpms-system/frontend/src/api/http.ts
+ M rdpms-system/frontend/src/auth/AuthProvider.tsx
+ M rdpms-system/frontend/src/auth/tokenStore.ts
+ M rdpms-system/frontend/src/offline/engine.ts
+ M rdpms-system/frontend/tests/unit/offlineAccountSwitch.test.ts
+?? docs/audits/
+?? docs/remediation/
+?? rdpms-system/backend/src/modules/files/fileReadService.ts
+?? rdpms-system/backend/src/modules/projects/
+?? rdpms-system/backend/tests/integration/b17-role-create.integration.test.mjs
+?? rdpms-system/backend/tests/integration/rp02-login-lock-ttl.integration.test.mjs
+?? rdpms-system/backend/tests/integration/rp02-t02-acceptance.integration.test.mjs
+?? rdpms-system/backend/tests/integration/rp04-project-create-aggregate.integration.test.mjs
+?? rdpms-system/backend/tests/integration/rp04-project-snapshot-active.integration.test.mjs
+?? rdpms-system/backend/tests/integration/rp05-parent-delete-guard.integration.test.mjs
+?? rdpms-system/backend/tests/integration/rp07-project-status-shared.integration.test.mjs
+?? rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs
+?? rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs
+?? rdpms-system/backend/tests/integration/rp10-submit-state-policy.integration.test.mjs
+?? rdpms-system/backend/tests/integration/rp13-stable-pull-pagination.integration.test.mjs
+?? rdpms-system/backend/tests/integration/rp14-infected-file-read.integration.test.mjs
+?? rdpms-system/backend/tests/integration/rp14-scan-elevated-policy.integration.test.mjs
+?? rdpms-system/frontend/tests/unit/rp03-t01-acceptance.test.ts

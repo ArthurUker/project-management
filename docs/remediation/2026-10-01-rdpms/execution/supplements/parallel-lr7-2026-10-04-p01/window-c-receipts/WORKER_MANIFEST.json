@@ -1,0 +1,33 @@
+{
+  "windowId": "C",
+  "partition": "window-c-receipts",
+  "batchId": "parallel-lr7-2026-10-04-p01",
+  "decisionId": "T-RP-02",
+  "mode": "PROPOSED_APPROVAL_PREPARATION_ONLY",
+  "generatedAt": "2026-10-04",
+  "pathBase": "REPOSITORY",
+  "repository": "/Users/renkang/VS Code/project-management",
+  "sealedBy": "window C executor (CodeBuddy); no source/test/ledger modified",
+  "files": [
+    {"relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/authorization.json", "sha256": "b4be5c963ed2ed5f5c9e075c7244cb8a3e5b4c95a68295a076cb4eb7af9b83d7"},
+    {"relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/start-baseline.json", "sha256": "db91700a4349f2868c152984e843b24849a19b2aea0a3c50d2b37ed7ac249a7f"},
+    {"relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/current-contract.md", "sha256": "988beee86e7bf2e71b5e78865458a6f9ea5b4bce6ef70f8c284d71868f6ee9a2"},
+    {"relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/decision-draft.md", "sha256": "ceded4f5ec4da0cbf110252851ba1818f2f0e743dacb55e4c4ebd4a11fe729e0"},
+    {"relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/decision-draft.json", "sha256": "13a48fb7f595120b6d51c7aadfb6dd95339ca8de9bc16d6fc668597336b13194"},
+    {"relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/acceptance-draft.csv", "sha256": "1288d0e73e121278f92bdfa00ebe08452bb8cecc3a8fbe571e15769a94837729"},
+    {"relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/approval-request.md", "sha256": "21dcf4f3cfe20d3aa19dca27c8659e90c2d238e7e784c816fbbfee822c46b953"},
+    {"relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/interface-notes.md", "sha256": "ddd6d48de68f3d964c8dcbfbb1ef3a9386c34664dc6d31f7e47bbecd1306b157"},
+    {"relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/evidence/source-fact-index.json", "sha256": "8b55b07e0e0c75cf005f845b85cae14701b2fd954bfaa45f39950039dbf929ef"},
+    {"relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/acceptance.json", "sha256": "978d9301326cb56524e885fee9f3b5b15e36eef0228581a238e12abde41a6ed3"},
+    {"relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/rollback.md", "sha256": "a141f35ed6b1a089817f0367e5986940d5d186850030256b07c11983167caddf"},
+    {"relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/task-state.json", "sha256": "1f758319fb1ec81edfc05a600c48e6abc05eaa8fb1667c1b50ff58a5d3dab057"},
+    {"relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/handoff.md", "sha256": "9cb207582b60fc06b898d6ddeee2df298881adb16e75cc1f34fe8ace7a112d80"},
+    {"relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/REVIEW_ENTRY.md", "sha256": "933c9a8265298927abaf996c4d6da7c1e0be4629ace2fb3f6761455b0e680ad5"}
+  ],
+  "excluded": [
+    {"relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/WORKER_MANIFEST.json", "reason": "self; manifest does not include its own hash"},
+    {"relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/READY.json", "reason": "excluded per COMMON_RULES §5 (not part of sealed payload, written last)"}
+  ],
+  "scopeBoundary": "Only window-c-receipts/ partition written. No other window directory, root ledger, source, test, or shared helper was created or modified.",
+  "status": "PREPARATION_READY; decision T-RP-02 remains PROPOSED; approvedBy/approvedAt/evidenceRef null; independentReview PENDING; release NOT_EVALUATED"
+}

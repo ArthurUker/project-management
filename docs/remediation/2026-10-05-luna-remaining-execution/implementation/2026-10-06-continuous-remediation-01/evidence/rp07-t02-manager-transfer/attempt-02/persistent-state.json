@@ -1,0 +1,1646 @@
+{
+  "trace": [
+    {
+      "endpoint": "/api/projects/b8d4b6a0-1c9d-41be-9d93-f49532175a71",
+      "body": {
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "baseUpdatedAt": "2026-10-06T02:17:28.467Z"
+      },
+      "status": 200,
+      "response": {
+        "id": "b8d4b6a0-1c9d-41be-9d93-f49532175a71",
+        "code": "RP07-12d28c19-1d4f-45ac-998b-0cefa2e59da0",
+        "name": "Owned transfer project",
+        "type": "TESTING",
+        "subtype": null,
+        "status": "PLANNING",
+        "isDraft": false,
+        "positioning": null,
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "templateId": null,
+        "startDate": null,
+        "endDate": null,
+        "actualEndDate": null,
+        "metadata": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:17:28.467Z",
+        "updatedAt": "2026-10-06T02:17:28.483Z",
+        "createdById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+        "updatedById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+        "manager": {
+          "id": "29b3937f-a08e-4526-8636-6e419dc98145",
+          "displayName": "Synthetic target",
+          "position": null,
+          "avatarFileId": null
+        },
+        "members": [
+          {
+            "id": "f2e623b5-cd1a-42e2-ae85-7dabc6e1fc8e",
+            "projectId": "b8d4b6a0-1c9d-41be-9d93-f49532175a71",
+            "userId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+            "role": "OWNER",
+            "joinedAt": "2026-10-06T02:17:28.467Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+              "displayName": "Synthetic owner",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "4560e13d-7b09-4f2a-b02f-194e4c052622",
+            "projectId": "b8d4b6a0-1c9d-41be-9d93-f49532175a71",
+            "userId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+            "role": "MEMBER",
+            "joinedAt": "2026-10-06T02:17:28.467Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+              "displayName": "Synthetic old",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "d144bec1-16ce-4bbb-93e6-3c4be0e3cec8",
+            "projectId": "b8d4b6a0-1c9d-41be-9d93-f49532175a71",
+            "userId": "29b3937f-a08e-4526-8636-6e419dc98145",
+            "role": "MANAGER",
+            "joinedAt": "2026-10-06T02:17:28.467Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "29b3937f-a08e-4526-8636-6e419dc98145",
+              "displayName": "Synthetic target",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "endpoint": "sync",
+      "change": {
+        "clientMutationId": "1c00b991-be27-40b4-882f-832812e46d25",
+        "entity": "projects",
+        "op": "upsert",
+        "id": "8a1fec03-1390-4e31-8911-5f41c3d7feb1",
+        "projectId": "8a1fec03-1390-4e31-8911-5f41c3d7feb1",
+        "baseUpdatedAt": "2026-10-06T02:17:28.493Z",
+        "data": {
+          "managerId": "29b3937f-a08e-4526-8636-6e419dc98145"
+        },
+        "receiptHandle": "30e234b1-2d7b-471c-8c39-27851b6a4b0d",
+        "payloadHash": "9753e361626e1a8e924a12d8e44d42cf7932754e8b43af836e05dd73cc423c60"
+      },
+      "status": 500,
+      "outcome": {
+        "error": "Cannot read properties of undefined (reading 'header')",
+        "code": 500
+      }
+    },
+    {
+      "endpoint": "/api/projects/4f0854b7-2651-4b7a-8931-94f9d3e556a5",
+      "body": {
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "baseUpdatedAt": "2026-10-06T02:17:28.523Z"
+      },
+      "status": 200,
+      "response": {
+        "id": "4f0854b7-2651-4b7a-8931-94f9d3e556a5",
+        "code": "RP07-e50d93e1-373b-4654-b062-5e0e42b8f050",
+        "name": "Owned transfer project",
+        "type": "TESTING",
+        "subtype": null,
+        "status": "PLANNING",
+        "isDraft": false,
+        "positioning": null,
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "templateId": null,
+        "startDate": null,
+        "endDate": null,
+        "actualEndDate": null,
+        "metadata": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:17:28.522Z",
+        "updatedAt": "2026-10-06T02:17:28.529Z",
+        "createdById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+        "updatedById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+        "manager": {
+          "id": "29b3937f-a08e-4526-8636-6e419dc98145",
+          "displayName": "Synthetic target",
+          "position": null,
+          "avatarFileId": null
+        },
+        "members": [
+          {
+            "id": "91df9294-df28-4ca6-bb64-5442d299e49f",
+            "projectId": "4f0854b7-2651-4b7a-8931-94f9d3e556a5",
+            "userId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+            "role": "OWNER",
+            "joinedAt": "2026-10-06T02:17:28.522Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+              "displayName": "Synthetic owner",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "cf95e8d7-4239-4536-86bd-20819f85cadf",
+            "projectId": "4f0854b7-2651-4b7a-8931-94f9d3e556a5",
+            "userId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+            "role": "MANAGER",
+            "joinedAt": "2026-10-06T02:17:28.522Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+              "displayName": "Synthetic old",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "8e551b7b-a35a-4bbd-be6e-f581a94cf5e3",
+            "projectId": "4f0854b7-2651-4b7a-8931-94f9d3e556a5",
+            "userId": "29b3937f-a08e-4526-8636-6e419dc98145",
+            "role": "MANAGER",
+            "joinedAt": "2026-10-06T02:17:28.522Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "29b3937f-a08e-4526-8636-6e419dc98145",
+              "displayName": "Synthetic target",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "endpoint": "/api/projects/4f0854b7-2651-4b7a-8931-94f9d3e556a5",
+      "body": {
+        "managerId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+        "baseUpdatedAt": "2026-10-06T02:17:28.529Z"
+      },
+      "status": 200,
+      "response": {
+        "id": "4f0854b7-2651-4b7a-8931-94f9d3e556a5",
+        "code": "RP07-e50d93e1-373b-4654-b062-5e0e42b8f050",
+        "name": "Owned transfer project",
+        "type": "TESTING",
+        "subtype": null,
+        "status": "PLANNING",
+        "isDraft": false,
+        "positioning": null,
+        "managerId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+        "templateId": null,
+        "startDate": null,
+        "endDate": null,
+        "actualEndDate": null,
+        "metadata": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:17:28.522Z",
+        "updatedAt": "2026-10-06T02:17:28.536Z",
+        "createdById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+        "updatedById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+        "manager": {
+          "id": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+          "displayName": "Synthetic owner",
+          "position": null,
+          "avatarFileId": null
+        },
+        "members": [
+          {
+            "id": "91df9294-df28-4ca6-bb64-5442d299e49f",
+            "projectId": "4f0854b7-2651-4b7a-8931-94f9d3e556a5",
+            "userId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+            "role": "OWNER",
+            "joinedAt": "2026-10-06T02:17:28.522Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+              "displayName": "Synthetic owner",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "cf95e8d7-4239-4536-86bd-20819f85cadf",
+            "projectId": "4f0854b7-2651-4b7a-8931-94f9d3e556a5",
+            "userId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+            "role": "MANAGER",
+            "joinedAt": "2026-10-06T02:17:28.522Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+              "displayName": "Synthetic old",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "8e551b7b-a35a-4bbd-be6e-f581a94cf5e3",
+            "projectId": "4f0854b7-2651-4b7a-8931-94f9d3e556a5",
+            "userId": "29b3937f-a08e-4526-8636-6e419dc98145",
+            "role": "MEMBER",
+            "joinedAt": "2026-10-06T02:17:28.522Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "29b3937f-a08e-4526-8636-6e419dc98145",
+              "displayName": "Synthetic target",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "endpoint": "/api/projects/c03da3e6-e9ed-4a4e-91cd-caa5f9314c74",
+      "body": {
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145"
+      },
+      "status": 409,
+      "response": {
+        "error": "负责人转移需要当前项目时间基线",
+        "code": "MANAGER_BASELINE_REQUIRED"
+      }
+    },
+    {
+      "endpoint": "/api/projects/c03da3e6-e9ed-4a4e-91cd-caa5f9314c74",
+      "body": {
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "baseUpdatedAt": "2000-01-01"
+      },
+      "status": 409,
+      "response": {
+        "error": "项目已变化，请重新核对负责人",
+        "code": "MANAGER_CONCURRENT_CHANGE"
+      }
+    },
+    {
+      "endpoint": "/api/projects/c03da3e6-e9ed-4a4e-91cd-caa5f9314c74",
+      "body": {
+        "managerId": []
+      },
+      "status": 400,
+      "response": {
+        "error": "负责人必须是有效账号ID",
+        "code": "INVALID_MANAGER"
+      }
+    },
+    {
+      "endpoint": "/api/projects/c03da3e6-e9ed-4a4e-91cd-caa5f9314c74",
+      "body": {
+        "managerId": "3aceeeb3-d380-4bcb-b6bb-fed82b187ad3",
+        "baseUpdatedAt": "2026-10-06T02:17:28.539Z"
+      },
+      "status": 400,
+      "response": {
+        "error": "负责人必须为本项目当前有效成员",
+        "code": "MANAGER_NOT_MEMBER"
+      }
+    },
+    {
+      "endpoint": "/api/projects/c03da3e6-e9ed-4a4e-91cd-caa5f9314c74",
+      "body": {
+        "managerId": "4e648a56-1258-495b-8ce5-cf379a3ae0c0",
+        "baseUpdatedAt": "2026-10-06T02:17:28.539Z"
+      },
+      "status": 400,
+      "response": {
+        "error": "负责人必须为当前有效账号",
+        "code": "MANAGER_NOT_ACTIVE"
+      }
+    },
+    {
+      "endpoint": "/api/projects/c03da3e6-e9ed-4a4e-91cd-caa5f9314c74",
+      "body": {
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "baseUpdatedAt": "2026-10-06T02:17:28.539Z"
+      },
+      "status": 400,
+      "response": {
+        "error": "负责人必须为本项目当前有效成员",
+        "code": "MANAGER_NOT_MEMBER"
+      }
+    },
+    {
+      "endpoint": "/api/projects/c03da3e6-e9ed-4a4e-91cd-caa5f9314c74",
+      "body": {
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "baseUpdatedAt": "2026-10-06T02:17:28.539Z"
+      },
+      "status": 400,
+      "response": {
+        "error": "负责人必须为当前有效账号",
+        "code": "MANAGER_NOT_ACTIVE"
+      }
+    },
+    {
+      "endpoint": "/api/projects/c03da3e6-e9ed-4a4e-91cd-caa5f9314c74",
+      "body": {
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "baseUpdatedAt": "2026-10-06T02:17:28.539Z"
+      },
+      "status": 400,
+      "response": {
+        "error": "负责人必须为当前有效账号",
+        "code": "MANAGER_NOT_ACTIVE"
+      }
+    },
+    {
+      "endpoint": "/api/projects/7a2898ba-9897-4437-a665-2f097631c2af",
+      "body": {
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "baseUpdatedAt": "2026-10-06T02:17:28.577Z"
+      },
+      "status": 403,
+      "response": {
+        "error": "缺少权限 projects.update",
+        "code": "PERMISSION_DENIED"
+      }
+    },
+    {
+      "endpoint": "/api/projects/7a2898ba-9897-4437-a665-2f097631c2af",
+      "body": {
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "baseUpdatedAt": "2026-10-06T02:17:28.577Z"
+      },
+      "status": 403,
+      "response": {
+        "error": "缺少权限 projects.update",
+        "code": "PERMISSION_DENIED"
+      }
+    },
+    {
+      "endpoint": "/api/projects/2f7cf923-a936-41ef-a90d-0a5221c9acf6",
+      "body": {
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "baseUpdatedAt": "2026-10-06T02:17:28.586Z"
+      },
+      "status": 500,
+      "response": {
+        "error": "OWNED_TRANSFER_projectMember_update",
+        "code": 500
+      }
+    },
+    {
+      "endpoint": "/api/projects/84d3e6a7-1a7d-4dab-a41e-5dd7709c7496",
+      "body": {
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "baseUpdatedAt": "2026-10-06T02:17:28.595Z"
+      },
+      "status": 500,
+      "response": {
+        "error": "OWNED_TRANSFER_projectMember_updateMany",
+        "code": 500
+      }
+    },
+    {
+      "endpoint": "/api/projects/00357f80-d83c-4612-9cf1-b1f7fd739f1f",
+      "body": {
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "baseUpdatedAt": "2026-10-06T02:17:28.603Z"
+      },
+      "status": 500,
+      "response": {
+        "error": "OWNED_TRANSFER_project_update",
+        "code": 500
+      }
+    },
+    {
+      "endpoint": "/api/projects/83c028fb-e451-4282-a5ee-4c13d592893b",
+      "body": {
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "baseUpdatedAt": "2026-10-06T02:17:28.610Z"
+      },
+      "status": 500,
+      "response": {
+        "error": "OWNED_TRANSFER_auditLog_create",
+        "code": 500
+      }
+    },
+    {
+      "endpoint": "/api/projects/83d4caa5-ee52-4c60-9df3-b34f5f9e5aff",
+      "body": {
+        "managerId": "3aceeeb3-d380-4bcb-b6bb-fed82b187ad3",
+        "baseUpdatedAt": "2026-10-06T02:17:28.619Z"
+      },
+      "status": 409,
+      "response": {
+        "error": "项目已变化，请重新核对负责人",
+        "code": "MANAGER_CONCURRENT_CHANGE"
+      }
+    },
+    {
+      "endpoint": "/api/projects/83d4caa5-ee52-4c60-9df3-b34f5f9e5aff",
+      "body": {
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "baseUpdatedAt": "2026-10-06T02:17:28.619Z"
+      },
+      "status": 200,
+      "response": {
+        "id": "83d4caa5-ee52-4c60-9df3-b34f5f9e5aff",
+        "code": "RP07-e6e127c6-50a0-4195-b7ff-b93ab6b5eedf",
+        "name": "Owned transfer project",
+        "type": "TESTING",
+        "subtype": null,
+        "status": "PLANNING",
+        "isDraft": false,
+        "positioning": null,
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "templateId": null,
+        "startDate": null,
+        "endDate": null,
+        "actualEndDate": null,
+        "metadata": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:17:28.619Z",
+        "updatedAt": "2026-10-06T02:17:28.625Z",
+        "createdById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+        "updatedById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+        "manager": {
+          "id": "29b3937f-a08e-4526-8636-6e419dc98145",
+          "displayName": "Synthetic target",
+          "position": null,
+          "avatarFileId": null
+        },
+        "members": [
+          {
+            "id": "a935519b-9b90-4d62-96b9-1019a443e758",
+            "projectId": "83d4caa5-ee52-4c60-9df3-b34f5f9e5aff",
+            "userId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+            "role": "OWNER",
+            "joinedAt": "2026-10-06T02:17:28.619Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+              "displayName": "Synthetic owner",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "c2fa3cdd-47f3-4ee2-81ef-1bc366378d82",
+            "projectId": "83d4caa5-ee52-4c60-9df3-b34f5f9e5aff",
+            "userId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+            "role": "MEMBER",
+            "joinedAt": "2026-10-06T02:17:28.619Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+              "displayName": "Synthetic old",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "5d0239fb-838a-40be-afd8-b9905241b7a5",
+            "projectId": "83d4caa5-ee52-4c60-9df3-b34f5f9e5aff",
+            "userId": "29b3937f-a08e-4526-8636-6e419dc98145",
+            "role": "MANAGER",
+            "joinedAt": "2026-10-06T02:17:28.619Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "29b3937f-a08e-4526-8636-6e419dc98145",
+              "displayName": "Synthetic target",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "b1362e52-3a42-4ae9-afca-0f540bd35570",
+            "projectId": "83d4caa5-ee52-4c60-9df3-b34f5f9e5aff",
+            "userId": "3aceeeb3-d380-4bcb-b6bb-fed82b187ad3",
+            "role": "MEMBER",
+            "joinedAt": "2026-10-06T02:17:28.620Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "3aceeeb3-d380-4bcb-b6bb-fed82b187ad3",
+              "displayName": "Synthetic outside",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "endpoint": "/api/projects/9358034d-4fc1-4280-a2b2-aee6d291ca7f",
+      "body": {
+        "name": "safe unrelated edit"
+      },
+      "status": 200,
+      "response": {
+        "id": "9358034d-4fc1-4280-a2b2-aee6d291ca7f",
+        "code": "RP07-3682b910-e815-4c6f-ad35-8aa9f7001b28",
+        "name": "safe unrelated edit",
+        "type": "TESTING",
+        "subtype": null,
+        "status": "PLANNING",
+        "isDraft": false,
+        "positioning": null,
+        "managerId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+        "templateId": null,
+        "startDate": null,
+        "endDate": null,
+        "actualEndDate": null,
+        "metadata": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:17:28.630Z",
+        "updatedAt": "2026-10-06T02:17:28.633Z",
+        "createdById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+        "updatedById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+        "manager": {
+          "id": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+          "displayName": "Synthetic old",
+          "position": null,
+          "avatarFileId": null
+        },
+        "members": [
+          {
+            "id": "3a423e63-de11-4395-bbd4-ff9f6faaccb8",
+            "projectId": "9358034d-4fc1-4280-a2b2-aee6d291ca7f",
+            "userId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+            "role": "OWNER",
+            "joinedAt": "2026-10-06T02:17:28.630Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+              "displayName": "Synthetic owner",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "f380f784-37ae-4589-97bf-3d9f12375783",
+            "projectId": "9358034d-4fc1-4280-a2b2-aee6d291ca7f",
+            "userId": "29b3937f-a08e-4526-8636-6e419dc98145",
+            "role": "VIEWER",
+            "joinedAt": "2026-10-06T02:17:28.630Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "29b3937f-a08e-4526-8636-6e419dc98145",
+              "displayName": "Synthetic target",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "26a619ee-7f8e-4fc6-9ed5-3c8412a7fd98",
+            "projectId": "9358034d-4fc1-4280-a2b2-aee6d291ca7f",
+            "userId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+            "role": "MANAGER",
+            "joinedAt": "2026-10-06T02:17:28.630Z",
+            "leftAt": "2026-10-06T02:17:28.630Z",
+            "createdById": null,
+            "user": {
+              "id": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+              "displayName": "Synthetic old",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          }
+        ]
+      }
+    },
+    {
+      "endpoint": "/api/projects/40bb25c4-12d6-4983-9bc1-880c146642a6",
+      "body": {
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "participantIds": [],
+        "baseUpdatedAt": "2026-10-06T02:17:28.635Z"
+      },
+      "status": 200,
+      "response": {
+        "id": "40bb25c4-12d6-4983-9bc1-880c146642a6",
+        "code": "RP07-4bb6b780-0a93-49de-9fc1-b60eed2352e1",
+        "name": "Owned transfer project",
+        "type": "TESTING",
+        "subtype": null,
+        "status": "PLANNING",
+        "isDraft": false,
+        "positioning": null,
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "templateId": null,
+        "startDate": null,
+        "endDate": null,
+        "actualEndDate": null,
+        "metadata": null,
+        "deletedAt": null,
+        "createdAt": "2026-10-06T02:17:28.635Z",
+        "updatedAt": "2026-10-06T02:17:28.640Z",
+        "createdById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+        "updatedById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+        "manager": {
+          "id": "29b3937f-a08e-4526-8636-6e419dc98145",
+          "displayName": "Synthetic target",
+          "position": null,
+          "avatarFileId": null
+        },
+        "members": [
+          {
+            "id": "269d2216-aab9-40a2-b67f-bb3595c238c5",
+            "projectId": "40bb25c4-12d6-4983-9bc1-880c146642a6",
+            "userId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+            "role": "OWNER",
+            "joinedAt": "2026-10-06T02:17:28.635Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+              "displayName": "Synthetic owner",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "0f8621da-3697-4346-87f5-4de9d5b98c90",
+            "projectId": "40bb25c4-12d6-4983-9bc1-880c146642a6",
+            "userId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+            "role": "MEMBER",
+            "joinedAt": "2026-10-06T02:17:28.635Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+              "displayName": "Synthetic old",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          },
+          {
+            "id": "923ad88e-9d20-43fe-b9e2-2fc7480954c8",
+            "projectId": "40bb25c4-12d6-4983-9bc1-880c146642a6",
+            "userId": "29b3937f-a08e-4526-8636-6e419dc98145",
+            "role": "MANAGER",
+            "joinedAt": "2026-10-06T02:17:28.635Z",
+            "leftAt": null,
+            "createdById": null,
+            "user": {
+              "id": "29b3937f-a08e-4526-8636-6e419dc98145",
+              "displayName": "Synthetic target",
+              "position": null,
+              "department": null,
+              "avatarFileId": null
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "projects": [
+    {
+      "id": "b8d4b6a0-1c9d-41be-9d93-f49532175a71",
+      "code": "RP07-12d28c19-1d4f-45ac-998b-0cefa2e59da0",
+      "name": "Owned transfer project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:17:28.467Z",
+      "updatedAt": "2026-10-06T02:17:28.483Z",
+      "createdById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "updatedById": "137f866c-3f26-4b20-8d4a-a8a015f74c20"
+    },
+    {
+      "id": "8a1fec03-1390-4e31-8911-5f41c3d7feb1",
+      "code": "RP07-9562b805-5f44-4e22-b9da-a7b536f43af3",
+      "name": "Owned transfer project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:17:28.493Z",
+      "updatedAt": "2026-10-06T02:17:28.493Z",
+      "createdById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "updatedById": null
+    },
+    {
+      "id": "4f0854b7-2651-4b7a-8931-94f9d3e556a5",
+      "code": "RP07-e50d93e1-373b-4654-b062-5e0e42b8f050",
+      "name": "Owned transfer project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:17:28.522Z",
+      "updatedAt": "2026-10-06T02:17:28.536Z",
+      "createdById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "updatedById": "137f866c-3f26-4b20-8d4a-a8a015f74c20"
+    },
+    {
+      "id": "c03da3e6-e9ed-4a4e-91cd-caa5f9314c74",
+      "code": "RP07-03efc384-8dba-4e69-9013-d6aea18f9daf",
+      "name": "Owned transfer project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:17:28.539Z",
+      "updatedAt": "2026-10-06T02:17:28.539Z",
+      "createdById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "updatedById": null
+    },
+    {
+      "id": "7a2898ba-9897-4437-a665-2f097631c2af",
+      "code": "RP07-064a25a5-476f-4235-a9a6-a1da26944d1b",
+      "name": "Owned transfer project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:17:28.577Z",
+      "updatedAt": "2026-10-06T02:17:28.577Z",
+      "createdById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "updatedById": null
+    },
+    {
+      "id": "2f7cf923-a936-41ef-a90d-0a5221c9acf6",
+      "code": "RP07-88e99b71-8206-4d2d-81b8-8f10b9637696",
+      "name": "Owned transfer project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:17:28.586Z",
+      "updatedAt": "2026-10-06T02:17:28.586Z",
+      "createdById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "updatedById": null
+    },
+    {
+      "id": "84d3e6a7-1a7d-4dab-a41e-5dd7709c7496",
+      "code": "RP07-b75c3db0-a251-483a-a8de-d577a7450112",
+      "name": "Owned transfer project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:17:28.595Z",
+      "updatedAt": "2026-10-06T02:17:28.595Z",
+      "createdById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "updatedById": null
+    },
+    {
+      "id": "00357f80-d83c-4612-9cf1-b1f7fd739f1f",
+      "code": "RP07-63972d09-726d-4cde-885c-260bc38fcc81",
+      "name": "Owned transfer project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:17:28.603Z",
+      "updatedAt": "2026-10-06T02:17:28.603Z",
+      "createdById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "updatedById": null
+    },
+    {
+      "id": "83c028fb-e451-4282-a5ee-4c13d592893b",
+      "code": "RP07-7ff005a4-4caa-4c78-8477-df7dd2ed3ece",
+      "name": "Owned transfer project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:17:28.610Z",
+      "updatedAt": "2026-10-06T02:17:28.610Z",
+      "createdById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "updatedById": null
+    },
+    {
+      "id": "83d4caa5-ee52-4c60-9df3-b34f5f9e5aff",
+      "code": "RP07-e6e127c6-50a0-4195-b7ff-b93ab6b5eedf",
+      "name": "Owned transfer project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:17:28.619Z",
+      "updatedAt": "2026-10-06T02:17:28.625Z",
+      "createdById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "updatedById": "137f866c-3f26-4b20-8d4a-a8a015f74c20"
+    },
+    {
+      "id": "9358034d-4fc1-4280-a2b2-aee6d291ca7f",
+      "code": "RP07-3682b910-e815-4c6f-ad35-8aa9f7001b28",
+      "name": "safe unrelated edit",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:17:28.630Z",
+      "updatedAt": "2026-10-06T02:17:28.633Z",
+      "createdById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "updatedById": "137f866c-3f26-4b20-8d4a-a8a015f74c20"
+    },
+    {
+      "id": "40bb25c4-12d6-4983-9bc1-880c146642a6",
+      "code": "RP07-4bb6b780-0a93-49de-9fc1-b60eed2352e1",
+      "name": "Owned transfer project",
+      "type": "TESTING",
+      "subtype": null,
+      "status": "PLANNING",
+      "isDraft": false,
+      "positioning": null,
+      "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+      "templateId": null,
+      "startDate": null,
+      "endDate": null,
+      "actualEndDate": null,
+      "metadata": null,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T02:17:28.635Z",
+      "updatedAt": "2026-10-06T02:17:28.640Z",
+      "createdById": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "updatedById": "137f866c-3f26-4b20-8d4a-a8a015f74c20"
+    }
+  ],
+  "members": [
+    {
+      "id": "f2e623b5-cd1a-42e2-ae85-7dabc6e1fc8e",
+      "projectId": "b8d4b6a0-1c9d-41be-9d93-f49532175a71",
+      "userId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:17:28.467Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "d144bec1-16ce-4bbb-93e6-3c4be0e3cec8",
+      "projectId": "b8d4b6a0-1c9d-41be-9d93-f49532175a71",
+      "userId": "29b3937f-a08e-4526-8636-6e419dc98145",
+      "role": "MANAGER",
+      "joinedAt": "2026-10-06T02:17:28.467Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "4560e13d-7b09-4f2a-b02f-194e4c052622",
+      "projectId": "b8d4b6a0-1c9d-41be-9d93-f49532175a71",
+      "userId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:17:28.467Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "d94905b3-354c-4c97-8e00-7d38204ec304",
+      "projectId": "8a1fec03-1390-4e31-8911-5f41c3d7feb1",
+      "userId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:17:28.493Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "c44f374d-d98c-4ee5-ac81-b1b12bd15dbd",
+      "projectId": "8a1fec03-1390-4e31-8911-5f41c3d7feb1",
+      "userId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+      "role": "MANAGER",
+      "joinedAt": "2026-10-06T02:17:28.493Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "578e499f-8092-49b0-81bd-833106fa6ecc",
+      "projectId": "8a1fec03-1390-4e31-8911-5f41c3d7feb1",
+      "userId": "29b3937f-a08e-4526-8636-6e419dc98145",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:17:28.493Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "c2fa3cdd-47f3-4ee2-81ef-1bc366378d82",
+      "projectId": "83d4caa5-ee52-4c60-9df3-b34f5f9e5aff",
+      "userId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:17:28.619Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "3a423e63-de11-4395-bbd4-ff9f6faaccb8",
+      "projectId": "9358034d-4fc1-4280-a2b2-aee6d291ca7f",
+      "userId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:17:28.630Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "cf95e8d7-4239-4536-86bd-20819f85cadf",
+      "projectId": "4f0854b7-2651-4b7a-8931-94f9d3e556a5",
+      "userId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+      "role": "MANAGER",
+      "joinedAt": "2026-10-06T02:17:28.522Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "91df9294-df28-4ca6-bb64-5442d299e49f",
+      "projectId": "4f0854b7-2651-4b7a-8931-94f9d3e556a5",
+      "userId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:17:28.522Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "8e551b7b-a35a-4bbd-be6e-f581a94cf5e3",
+      "projectId": "4f0854b7-2651-4b7a-8931-94f9d3e556a5",
+      "userId": "29b3937f-a08e-4526-8636-6e419dc98145",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:17:28.522Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "87e3c81d-2ccb-4e3a-901a-fb29e2462b8e",
+      "projectId": "c03da3e6-e9ed-4a4e-91cd-caa5f9314c74",
+      "userId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:17:28.539Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "36fcfcd0-4ac5-4754-bea8-1153559ec122",
+      "projectId": "c03da3e6-e9ed-4a4e-91cd-caa5f9314c74",
+      "userId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+      "role": "MANAGER",
+      "joinedAt": "2026-10-06T02:17:28.539Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "f380f784-37ae-4589-97bf-3d9f12375783",
+      "projectId": "9358034d-4fc1-4280-a2b2-aee6d291ca7f",
+      "userId": "29b3937f-a08e-4526-8636-6e419dc98145",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:17:28.630Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "ddf892ef-378a-49b7-abb0-6afd3e186407",
+      "projectId": "c03da3e6-e9ed-4a4e-91cd-caa5f9314c74",
+      "userId": "29b3937f-a08e-4526-8636-6e419dc98145",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:17:28.539Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "906284d2-fbb5-404f-b57a-bd1dba16bc91",
+      "projectId": "7a2898ba-9897-4437-a665-2f097631c2af",
+      "userId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:17:28.577Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "ad59313a-1c56-4e15-9edc-424ff2b7aafb",
+      "projectId": "7a2898ba-9897-4437-a665-2f097631c2af",
+      "userId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+      "role": "MANAGER",
+      "joinedAt": "2026-10-06T02:17:28.577Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "dc8c21e7-3b0a-4297-850a-f08b34c0f8e1",
+      "projectId": "7a2898ba-9897-4437-a665-2f097631c2af",
+      "userId": "29b3937f-a08e-4526-8636-6e419dc98145",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:17:28.577Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "5be88ba7-a113-4075-8b39-61651f41d5c8",
+      "projectId": "2f7cf923-a936-41ef-a90d-0a5221c9acf6",
+      "userId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:17:28.586Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "31664e0e-8ca2-4a3f-a61d-204f15ff95d3",
+      "projectId": "2f7cf923-a936-41ef-a90d-0a5221c9acf6",
+      "userId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+      "role": "MANAGER",
+      "joinedAt": "2026-10-06T02:17:28.586Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "e772dfd2-eb42-473a-b4ce-08e7cb2828c0",
+      "projectId": "2f7cf923-a936-41ef-a90d-0a5221c9acf6",
+      "userId": "29b3937f-a08e-4526-8636-6e419dc98145",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:17:28.586Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "7efcf577-2ac4-440f-bf51-df9eeeaf32c5",
+      "projectId": "84d3e6a7-1a7d-4dab-a41e-5dd7709c7496",
+      "userId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:17:28.595Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "1f613f29-225b-421d-afb6-6a475933cfc7",
+      "projectId": "84d3e6a7-1a7d-4dab-a41e-5dd7709c7496",
+      "userId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+      "role": "MANAGER",
+      "joinedAt": "2026-10-06T02:17:28.595Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "c12d4d36-405f-4ae9-9c57-1cef04a8739d",
+      "projectId": "84d3e6a7-1a7d-4dab-a41e-5dd7709c7496",
+      "userId": "29b3937f-a08e-4526-8636-6e419dc98145",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:17:28.595Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "26a619ee-7f8e-4fc6-9ed5-3c8412a7fd98",
+      "projectId": "9358034d-4fc1-4280-a2b2-aee6d291ca7f",
+      "userId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+      "role": "MANAGER",
+      "joinedAt": "2026-10-06T02:17:28.630Z",
+      "leftAt": "2026-10-06T02:17:28.630Z",
+      "createdById": null
+    },
+    {
+      "id": "350feba2-3a59-41d2-a634-562726811ede",
+      "projectId": "00357f80-d83c-4612-9cf1-b1f7fd739f1f",
+      "userId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:17:28.603Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "d0996601-e399-412b-a201-b1093293c018",
+      "projectId": "00357f80-d83c-4612-9cf1-b1f7fd739f1f",
+      "userId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+      "role": "MANAGER",
+      "joinedAt": "2026-10-06T02:17:28.603Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "249ceeac-bf4c-4441-a133-9da2f3711ef9",
+      "projectId": "00357f80-d83c-4612-9cf1-b1f7fd739f1f",
+      "userId": "29b3937f-a08e-4526-8636-6e419dc98145",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:17:28.603Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "269d2216-aab9-40a2-b67f-bb3595c238c5",
+      "projectId": "40bb25c4-12d6-4983-9bc1-880c146642a6",
+      "userId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:17:28.635Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "5e64ef2b-b60d-4c39-99c1-b8c41e798f1d",
+      "projectId": "83c028fb-e451-4282-a5ee-4c13d592893b",
+      "userId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:17:28.610Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "1b1476ff-fd6f-433c-957e-95c595442db6",
+      "projectId": "83c028fb-e451-4282-a5ee-4c13d592893b",
+      "userId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+      "role": "MANAGER",
+      "joinedAt": "2026-10-06T02:17:28.610Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "2e66ab14-2beb-4dd5-bfc1-03cc7f6a682c",
+      "projectId": "83c028fb-e451-4282-a5ee-4c13d592893b",
+      "userId": "29b3937f-a08e-4526-8636-6e419dc98145",
+      "role": "VIEWER",
+      "joinedAt": "2026-10-06T02:17:28.610Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "923ad88e-9d20-43fe-b9e2-2fc7480954c8",
+      "projectId": "40bb25c4-12d6-4983-9bc1-880c146642a6",
+      "userId": "29b3937f-a08e-4526-8636-6e419dc98145",
+      "role": "MANAGER",
+      "joinedAt": "2026-10-06T02:17:28.635Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "a935519b-9b90-4d62-96b9-1019a443e758",
+      "projectId": "83d4caa5-ee52-4c60-9df3-b34f5f9e5aff",
+      "userId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "role": "OWNER",
+      "joinedAt": "2026-10-06T02:17:28.619Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "b1362e52-3a42-4ae9-afca-0f540bd35570",
+      "projectId": "83d4caa5-ee52-4c60-9df3-b34f5f9e5aff",
+      "userId": "3aceeeb3-d380-4bcb-b6bb-fed82b187ad3",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:17:28.620Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "5d0239fb-838a-40be-afd8-b9905241b7a5",
+      "projectId": "83d4caa5-ee52-4c60-9df3-b34f5f9e5aff",
+      "userId": "29b3937f-a08e-4526-8636-6e419dc98145",
+      "role": "MANAGER",
+      "joinedAt": "2026-10-06T02:17:28.619Z",
+      "leftAt": null,
+      "createdById": null
+    },
+    {
+      "id": "0f8621da-3697-4346-87f5-4de9d5b98c90",
+      "projectId": "40bb25c4-12d6-4983-9bc1-880c146642a6",
+      "userId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60",
+      "role": "MEMBER",
+      "joinedAt": "2026-10-06T02:17:28.635Z",
+      "leftAt": null,
+      "createdById": null
+    }
+  ],
+  "receipts": [
+    {
+      "id": "30e234b1-2d7b-471c-8c39-27851b6a4b0d",
+      "clientMutationId": "1c00b991-be27-40b4-882f-832812e46d25",
+      "deviceId": "rp07-device-8ab88a2b-cf5c-4e95-abbd-2372695f6652",
+      "userId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "entity": "projects",
+      "entityId": "8a1fec03-1390-4e31-8911-5f41c3d7feb1",
+      "op": "upsert",
+      "status": "pending",
+      "result": {
+        "intendedAction": "updated",
+        "requiredPermissions": [
+          "projects.update",
+          "projects.manage_members"
+        ],
+        "requiredCapabilities": [
+          "write",
+          "manage_members"
+        ]
+      },
+      "receiptVersion": 1,
+      "resourceScope": "project:8a1fec03-1390-4e31-8911-5f41c3d7feb1",
+      "payloadHash": "9753e361626e1a8e924a12d8e44d42cf7932754e8b43af836e05dd73cc423c60",
+      "expiresAt": "2026-10-07T02:17:28.511Z",
+      "createdAt": "2026-10-06T02:17:28.511Z"
+    }
+  ],
+  "audits": [
+    {
+      "id": "19ad9ee4-b9d1-4907-90c9-71d0d0efaa36",
+      "actorId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "actorName": "Synthetic owner",
+      "actorRole": "MEMBER",
+      "action": "login",
+      "entityType": "USER",
+      "entityId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "entityLabel": "rp07-owner-f0f45d43-e11d-4c5e-b878-b7004ab32959",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": null,
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:17:28.463Z"
+    },
+    {
+      "id": "93eb4d9a-7231-4edd-92cd-da899de41f60",
+      "actorId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "actorName": "Synthetic owner",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "PROJECT",
+      "entityId": "b8d4b6a0-1c9d-41be-9d93-f49532175a71",
+      "entityLabel": "Owned transfer project",
+      "before": null,
+      "after": null,
+      "changedFields": [
+        "managerId",
+        "memberRoles"
+      ],
+      "metadata": {
+        "command": "TRANSFER_MANAGER_V1",
+        "elevated": false,
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "targetRole": "MANAGER",
+        "entryPermission": "projects.update",
+        "previousManagerId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:17:28.484Z"
+    },
+    {
+      "id": "e829c0a4-42dd-4b60-aaac-cc999617b4e8",
+      "actorId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "actorName": "Synthetic owner",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "PROJECT",
+      "entityId": "b8d4b6a0-1c9d-41be-9d93-f49532175a71",
+      "entityLabel": "Owned transfer project",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": {
+        "permissionCode": "projects.update"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:17:28.485Z"
+    },
+    {
+      "id": "2780b487-3018-4a6f-bbc8-a0a5ef5d5d9d",
+      "actorId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "actorName": "Synthetic owner",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "PROJECT",
+      "entityId": "4f0854b7-2651-4b7a-8931-94f9d3e556a5",
+      "entityLabel": "Owned transfer project",
+      "before": null,
+      "after": null,
+      "changedFields": [
+        "managerId",
+        "memberRoles"
+      ],
+      "metadata": {
+        "command": "TRANSFER_MANAGER_V1",
+        "elevated": false,
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "targetRole": "MANAGER",
+        "entryPermission": "projects.update",
+        "previousManagerId": "137f866c-3f26-4b20-8d4a-a8a015f74c20"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:17:28.529Z"
+    },
+    {
+      "id": "809d962e-bf57-4c9e-a242-5aff266dc4e1",
+      "actorId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "actorName": "Synthetic owner",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "PROJECT",
+      "entityId": "4f0854b7-2651-4b7a-8931-94f9d3e556a5",
+      "entityLabel": "Owned transfer project",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": {
+        "permissionCode": "projects.update"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:17:28.530Z"
+    },
+    {
+      "id": "d6049604-8d2c-4401-82e1-4adcd31a3403",
+      "actorId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "actorName": "Synthetic owner",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "PROJECT",
+      "entityId": "4f0854b7-2651-4b7a-8931-94f9d3e556a5",
+      "entityLabel": "Owned transfer project",
+      "before": null,
+      "after": null,
+      "changedFields": [
+        "managerId",
+        "memberRoles"
+      ],
+      "metadata": {
+        "command": "TRANSFER_MANAGER_V1",
+        "elevated": false,
+        "managerId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+        "targetRole": "OWNER",
+        "entryPermission": "projects.update",
+        "previousManagerId": "29b3937f-a08e-4526-8636-6e419dc98145"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:17:28.536Z"
+    },
+    {
+      "id": "64d688c7-584a-41d1-a528-ae0a8b51be62",
+      "actorId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "actorName": "Synthetic owner",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "PROJECT",
+      "entityId": "4f0854b7-2651-4b7a-8931-94f9d3e556a5",
+      "entityLabel": "Owned transfer project",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": {
+        "permissionCode": "projects.update"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:17:28.538Z"
+    },
+    {
+      "id": "0044dd05-26dd-41d4-9bec-97eb4352d32d",
+      "actorId": "29b3937f-a08e-4526-8636-6e419dc98145",
+      "actorName": "Synthetic target",
+      "actorRole": "MEMBER",
+      "action": "login",
+      "entityType": "USER",
+      "entityId": "29b3937f-a08e-4526-8636-6e419dc98145",
+      "entityLabel": "rp07-target-d19899ce-72c2-4ade-bcbd-e46d8d38378c",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": null,
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:17:28.581Z"
+    },
+    {
+      "id": "04123504-9b21-430b-b8dd-b12b6c8fd1c9",
+      "actorId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "actorName": "Synthetic owner",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "PROJECT",
+      "entityId": "83d4caa5-ee52-4c60-9df3-b34f5f9e5aff",
+      "entityLabel": "Owned transfer project",
+      "before": null,
+      "after": null,
+      "changedFields": [
+        "managerId",
+        "memberRoles"
+      ],
+      "metadata": {
+        "command": "TRANSFER_MANAGER_V1",
+        "elevated": false,
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "targetRole": "MANAGER",
+        "entryPermission": "projects.update",
+        "previousManagerId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:17:28.625Z"
+    },
+    {
+      "id": "9b9075c2-f55c-4abb-a9bb-20b762fe431e",
+      "actorId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "actorName": "Synthetic owner",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "PROJECT",
+      "entityId": "83d4caa5-ee52-4c60-9df3-b34f5f9e5aff",
+      "entityLabel": "Owned transfer project",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": {
+        "permissionCode": "projects.update"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:17:28.627Z"
+    },
+    {
+      "id": "ec960765-ea87-4b43-b16e-c7c1368f1d40",
+      "actorId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "actorName": "Synthetic owner",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "PROJECT",
+      "entityId": "9358034d-4fc1-4280-a2b2-aee6d291ca7f",
+      "entityLabel": "safe unrelated edit",
+      "before": null,
+      "after": null,
+      "changedFields": [
+        "name"
+      ],
+      "metadata": {
+        "permissionCode": "projects.update"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:17:28.634Z"
+    },
+    {
+      "id": "bd489720-8ee6-4426-803b-09e5190447ef",
+      "actorId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "actorName": "Synthetic owner",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "PROJECT",
+      "entityId": "40bb25c4-12d6-4983-9bc1-880c146642a6",
+      "entityLabel": "Owned transfer project",
+      "before": null,
+      "after": null,
+      "changedFields": [
+        "managerId",
+        "memberRoles"
+      ],
+      "metadata": {
+        "command": "TRANSFER_MANAGER_V1",
+        "elevated": false,
+        "managerId": "29b3937f-a08e-4526-8636-6e419dc98145",
+        "targetRole": "MANAGER",
+        "entryPermission": "projects.update",
+        "previousManagerId": "c34eda03-bce0-45f1-9b1d-c77a9a560f60"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:17:28.640Z"
+    },
+    {
+      "id": "a6d0d946-0b43-41ca-b992-32a6e56fd738",
+      "actorId": "137f866c-3f26-4b20-8d4a-a8a015f74c20",
+      "actorName": "Synthetic owner",
+      "actorRole": "MEMBER",
+      "action": "update",
+      "entityType": "PROJECT",
+      "entityId": "40bb25c4-12d6-4983-9bc1-880c146642a6",
+      "entityLabel": "Owned transfer project",
+      "before": null,
+      "after": null,
+      "changedFields": [],
+      "metadata": {
+        "permissionCode": "projects.update"
+      },
+      "ip": null,
+      "userAgent": null,
+      "requestId": null,
+      "createdAt": "2026-10-06T02:17:28.641Z"
+    }
+  ]
+}

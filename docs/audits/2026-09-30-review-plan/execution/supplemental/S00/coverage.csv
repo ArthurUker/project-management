@@ -1,0 +1,7 @@
+packet,file,symbol_or_route,question,review_status,evidence_ref,unreviewed_reason
+S00,docs/audits/2026-09-30-review-plan/REVIEW_PLAN.md,unified artifact contract,All R00-R14 package artifacts match required shape and statuses,REVIEWED,contract-checklist.csv,
+S00,execution/R00/baseline.md + baseline.json,baseline record,Readable and machine-readable baseline records reconcile,REVIEWED,execution/R00/baseline.md,
+S00,execution/R14/findings.json + CURRENT_FINDINGS.json,finding ledger,All owned findings are aggregated and aliases preserve earlier IDs,REVIEWED,execution/R14/findings.json,
+S00,execution/R09/state metadata,startHead,Original start HEAD cannot be recovered from retained checkpoint,PENDING,open-items.json#S00-OI-01,Await contemporaneous start checkpoint; do not infer from end HEAD
+S00,execution/Rxx/findings.json,verification/source anchors,Verification enums and all source spans checked,REVIEWED,contract-checklist.csv,
+S00,execution/R14/REMEDIATION_CARDS.md,C01-C08 required fields,Every card carries required planning and reporting fields,REVIEWED,contract-checklist.csv,

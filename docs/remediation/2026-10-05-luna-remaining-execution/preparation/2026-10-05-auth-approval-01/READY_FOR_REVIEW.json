@@ -1,0 +1,51 @@
+{
+  "kind": "UNSIGNED_DECISION_PREPARATION",
+  "writerStopped": true,
+  "proposalId": "T-RP-09-STRICT-LINEAGE-V1",
+  "approvedBy": null,
+  "businessImplementationAuthorizedByArtifact": false,
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "pathBase": "THIS_RUN",
+  "files": [
+    {
+      "path": "APPROVAL_REQUEST.md",
+      "sha256": "28b11021d71f2f75a391a4eba8cadc975b139de1f3b520e863b370a90e6d6690"
+    },
+    {
+      "path": "SESSION_SUMMARY.md",
+      "sha256": "87bd9aaabf6d795fd35800e3c5747dcc9e574126527b6887eff12c86c066fd27"
+    },
+    {
+      "path": "authorization.json",
+      "sha256": "9350d42df59ebce1a6060e7dc41c43c0417c9c0e0bf9ca6afb3bc03b3523d8ec"
+    },
+    {
+      "path": "decision-proposal.json",
+      "sha256": "3937f5b10502a52d15ffd3033883b0d90966bb6afae53ebaa6ae1a70e6f74091"
+    },
+    {
+      "path": "execution-boundary.json",
+      "sha256": "3a95a64581540df17297fd744e39c19eb5bbf64fc7cded3d00b305dacdc00635"
+    },
+    {
+      "path": "handoff.md",
+      "sha256": "58b379f59339eab10b13c18d90dbb0e857b390406692f2cfbb3c8421d0f5f564"
+    },
+    {
+      "path": "preparation-readback.json",
+      "sha256": "47b6415c313e44b25fadd78d215d4a149bbac98eecdcaff5d9e5e8f700ff1563"
+    },
+    {
+      "path": "source-bindings.json",
+      "sha256": "cc208b6f82cc52a235d5b226a5957d2557696c1dcd5d74a6bbda4184a6784bf5"
+    },
+    {
+      "path": "task-state.json",
+      "sha256": "0fca8a09dcf31338c263977ecc33029cbda1f39da4cc309050ef2a821d425bbc"
+    }
+  ],
+  "excluded": [
+    "READY_FOR_REVIEW.json itself"
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "taskId": "RP02-T01",
+  "packageId": "RP02",
+  "run": "2026-10-03-codebuddy-b14-validation",
+  "kind": "VALIDATION_ONLY",
+  "implementation": "COMPLETE",
+  "validation": "PASS",
+  "release": "NOT_EVALUATED",
+  "sourceChanges": "none (tests only)",
+  "fixAcceptance": {
+    "localScoped": "PASS",
+    "targetEnvironment": "NOT_RUN",
+    "B14": "SUPPORTED; required concurrent-disable and in-lock password coverage now executed; not FIX_ACCEPTED at target/release level"
+  },
+  "reviewFindingDisposition": {
+    "LR2-04 (RP02 side)": "COVERAGE_COMPLETED (two-direction deterministic disable/login barriers, response/DB/refreshToken/audit checks, in-lock correct+wrong password persistence assertions, linearization points recorded)"
+  },
+  "oldFindingDisposition": {
+    "B14": "SUPPORTED / not FIX_ACCEPTED at target or release level; 31 frozen audit open items unchanged",
+    "B15": "SUPPORTED; RP02-T02 remains gated by T-RP-09"
+  },
+  "decisionBoundary": "No decision approved or signed; T-RP-09 remains PROPOSED; refresh/family, account level and forced password change untouched.",
+  "stateMapping": {
+    "implementation": "COMPLETE (unchanged)",
+    "validation": "PASS (previous NOT_RUN for the required coverage now executed locally; still not target acceptance)",
+    "release": "NOT_EVALUATED (unchanged)"
+  },
+  "evidence": {
+    "suite": "evidence/attempt-02/integration-suite.log",
+    "runResults": "evidence/attempt-02/run-results.json",
+    "firstAttemptFailure": "evidence/attempt-01/integration-suite.log",
+    "firstAttemptReason": "the injected admin actor had no persisted user, so the disable audit row failed its foreign key; fixed by using a real synthetic admin row"
+  },
+  "notRun": [
+    "target/candidate environment acceptance",
+    "full JWT-chain requests",
+    "frontend IndexedDB",
+    "RP02-T02 refresh family scenarios (T-RP-09)"
+  ]
+}

@@ -1,0 +1,188 @@
+{
+  "reviewDate": "2026-10-02",
+  "scope": "PLANNING_GAPS_ONLY",
+  "gapCount": 18,
+  "productFindingCountUnchanged": 33,
+  "gaps": [
+    {
+      "id": "PG01",
+      "type": "CONTRACT_MISMATCH",
+      "title": "验收矩阵漏包及漏包内要求",
+      "beforeEvidence": "v1 ACCEPTANCE_MATRIX仅97条继承行，RP00/RP15为0；PACKAGES.acceptanceCases未入矩阵",
+      "planCorrection": "全20包的包完成、门禁和联合场景进入矩阵，并保持原97个case_id",
+      "outputs": "ACCEPTANCE_MATRIX.csv",
+      "planningStatus": "ADDRESSED",
+      "implementationStatus": "NOT_STARTED"
+    },
+    {
+      "id": "PG02",
+      "type": "MISSING_SPECIFICATION",
+      "title": "未裁定目标没有机器条件",
+      "beforeEvidence": "v1矩阵无decision/task/expectation字段；AC-B10-02规定拒绝SUBMITTED，但D-S01-07仍可选择允许复提",
+      "planCorrection": "验收目标关联决定、条件子任务与批准状态；未批准目标不产生PASS",
+      "outputs": "DECISION_REGISTER.json; ACCEPTANCE_MATRIX.csv",
+      "planningStatus": "ADDRESSED",
+      "implementationStatus": "NOT_STARTED"
+    },
+    {
+      "id": "PG03",
+      "type": "CONTRACT_MISMATCH",
+      "title": "整包依赖阻塞独立子任务且存在隐含循环",
+      "beforeEvidence": "RP02要求RP03方案定稿而RP03依赖RP02；RP10/RP13/RP19整包依赖与局部推进正文不一致",
+      "planCorrection": "明确子任务实施DAG与验证/发布依赖，设计合同前置不等同实现完成",
+      "outputs": "TASK_GRAPH.json",
+      "planningStatus": "ADDRESSED",
+      "implementationStatus": "NOT_STARTED"
+    },
+    {
+      "id": "PG04",
+      "type": "CONTRACT_MISMATCH",
+      "title": "门禁文本与机器范围未统一",
+      "beforeEvidence": "v1 T-RP-01..08只有Markdown；S03-OI-05遗漏实际sync写入所属RP09；state只有自然语言gates",
+      "planCorrection": "统一决定registry、每项门禁的affectedTaskIds和执行阶段；旧31项不关闭",
+      "outputs": "OPEN_ITEM_GATES.json; DECISION_REGISTER.json",
+      "planningStatus": "ADDRESSED",
+      "implementationStatus": "NOT_STARTED"
+    },
+    {
+      "id": "PG05",
+      "type": "MISSING_SPECIFICATION",
+      "title": "IDB多标签升级和事务生命周期未展开",
+      "beforeEvidence": "RP11写中止可重入，但未规定blocked/versionchange、旧tab写入和跨owner升级互斥",
+      "planCorrection": "定义升级协调、关闭旧连接、租约/代次及IDB事务内禁止不受控外部await",
+      "outputs": "CROSS_PACKAGE_CONTRACTS.md PC04",
+      "planningStatus": "ADDRESSED",
+      "implementationStatus": "NOT_STARTED"
+    },
+    {
+      "id": "PG06",
+      "type": "MISSING_SPECIFICATION",
+      "title": "成功旧响应及原请求主体绑定未展开",
+      "beforeEvidence": "RP03仅强调旧失败不能清较新token；缺旧成功响应、原请求A在B会话下重放目标",
+      "planCorrection": "请求与token generation/actor绑定，成功和失败过期响应都不污染新身份；403不绕cache",
+      "outputs": "CROSS_PACKAGE_CONTRACTS.md PC01",
+      "planningStatus": "ADDRESSED",
+      "implementationStatus": "NOT_STARTED"
+    },
+    {
+      "id": "PG07",
+      "type": "MISSING_SPECIFICATION",
+      "title": "同资源离线后续编辑和过期回执策略不足",
+      "beforeEvidence": "RP12依赖排序，RP09保留窗均未规定发送中本地再编辑、同key payload变化和key过期处置",
+      "planCorrection": "已发送mutation不可变，后续编辑新key并保留版本链；过期unknown回执不自动二次执行",
+      "outputs": "CROSS_PACKAGE_CONTRACTS.md PC03/PC12",
+      "planningStatus": "ADDRESSED",
+      "implementationStatus": "NOT_STARTED"
+    },
+    {
+      "id": "PG08",
+      "type": "DESIGN_RISK",
+      "title": "发布水位安全不等于同资源版本有序",
+      "beforeEvidence": "RP13持锁publication序列未规定已提交outbox扫描次序、同资源revision排序及恢复epoch",
+      "planCorrection": "定义event source revision/epoch、同资源序、去重与故障恢复；不能以发布时间号覆盖较新资源",
+      "outputs": "CROSS_PACKAGE_CONTRACTS.md PC05",
+      "planningStatus": "ADDRESSED",
+      "implementationStatus": "NOT_STARTED"
+    },
+    {
+      "id": "PG09",
+      "type": "MISSING_SPECIFICATION",
+      "title": "snapshot与log、ACL重校验和过期cursor合同不足",
+      "beforeEvidence": "RP08/RP13要求snapshot和version，却缺bootstrap切点、旧event覆盖snapshot、分页间撤权和RESET_REQUIRED",
+      "planCorrection": "定义一致bootstrap/去重应用、页级授权和投影、撤权outbox隔离、过期cursor保全重建",
+      "outputs": "CROSS_PACKAGE_CONTRACTS.md PC05",
+      "planningStatus": "ADDRESSED",
+      "implementationStatus": "NOT_STARTED"
+    },
+    {
+      "id": "PG10",
+      "type": "MISSING_SPECIFICATION",
+      "title": "restore对会话、回执、同步和草稿影响不足",
+      "beforeEvidence": "RP16仅registry/count，RP19paired restore；未覆盖恢复旧security状态、旧receipt/cursor和post-commit核查失败",
+      "planCorrection": "批准dataset epoch与会话/receipt策略；reset保全owner outbox；区分提交前rollback及提交后needs-reconciliation",
+      "outputs": "CROSS_PACKAGE_CONTRACTS.md PC06",
+      "planningStatus": "ADDRESSED",
+      "implementationStatus": "NOT_STARTED"
+    },
+    {
+      "id": "PG11",
+      "type": "MISSING_SPECIFICATION",
+      "title": "备份并发、硬链约束和配对清理不足",
+      "beforeEvidence": "RP17只有runId及published清理原则；无两任务并发、runId碰撞、shared inode/metadata及pair保留测试",
+      "planCorrection": "唯一run/mutex、硬链修改选项约束、完整对的保留/孤儿处置与目标文件系统实证",
+      "outputs": "CROSS_PACKAGE_CONTRACTS.md PC08",
+      "planningStatus": "ADDRESSED",
+      "implementationStatus": "NOT_STARTED"
+    },
+    {
+      "id": "PG12",
+      "type": "MISSING_SPECIFICATION",
+      "title": "关系/DAG并发和迁移预算缺具体合同",
+      "beforeEvidence": "RP05/RP15同项目与DAG描述缺相向并发边、锁顺序、递归预算及超限处理",
+      "planCorrection": "批准DAG时验证两个并发边不能合成环；登记锁/递归预算、cancel和补偿",
+      "outputs": "CROSS_PACKAGE_CONTRACTS.md PC07/PC11",
+      "planningStatus": "ADDRESSED",
+      "implementationStatus": "NOT_STARTED"
+    },
+    {
+      "id": "PG13",
+      "type": "CONTRACT_MISMATCH",
+      "title": "candidate构建次序和配置运行入口不完整",
+      "beforeEvidence": "RP18要求gate在DDL前，但新typed config/build入口未明；backend package start为dist，deploy写VITE_AUTH_MODE=cookie不证明cookie实现",
+      "planCorrection": "先建立candidate编译产物并校验后DDL，确认config CLI加载dist；核对auth配置真实消费",
+      "outputs": "CROSS_PACKAGE_CONTRACTS.md PC09",
+      "planningStatus": "ADDRESSED",
+      "implementationStatus": "NOT_STARTED"
+    },
+    {
+      "id": "PG14",
+      "type": "MISSING_SPECIFICATION",
+      "title": "首个安全版本失败时没有可用回退路径",
+      "beforeEvidence": "多个rollback只说不能回旧漏洞版本；尚无首个safe版本失败时的具体可恢复目标",
+      "planCorrection": "每candidate登记兼容且安全的rollback或局部维护/停写方案、负责人及解除条件，未具备不发布",
+      "outputs": "RELEASE_GATES.json; PC10",
+      "planningStatus": "ADDRESSED",
+      "implementationStatus": "NOT_STARTED"
+    },
+    {
+      "id": "PG15",
+      "type": "CONTRACT_MISMATCH",
+      "title": "描述步骤与可改文件不完全吻合",
+      "beforeEvidence": "RP04/07的strict audit、RP08/13的IDB/DTO、RP10的types、RP13发布器生命周期不在原scope",
+      "planCorrection": "补明确文件范围与共享owner/联合合同；新增路径仍是提案",
+      "outputs": "PACKAGES.json; CROSS_PACKAGE_CONTRACTS.json",
+      "planningStatus": "ADDRESSED",
+      "implementationStatus": "NOT_STARTED"
+    },
+    {
+      "id": "PG16",
+      "type": "MISSING_SPECIFICATION",
+      "title": "用户冲突恢复与隔离数据处置未具体定义",
+      "beforeEvidence": "RP11提认领/导出但无当前权限校验、恢复选择、容量/保留与最后副本目标",
+      "planCorrection": "定义冲突对比、保持副本、重新授权重试、过期/无owner隔离和安全导出/放弃，禁止首个账号自动认领",
+      "outputs": "CROSS_PACKAGE_CONTRACTS.md PC12",
+      "planningStatus": "ADDRESSED",
+      "implementationStatus": "NOT_STARTED"
+    },
+    {
+      "id": "PG17",
+      "type": "MISSING_SPECIFICATION",
+      "title": "可观察性、性能门槛和负例前提不足",
+      "beforeEvidence": "v1日志要求没有publisher lag/DB lock/storage quota/last verified backup门槛，也没规定鉴权成功/夹具存在前提",
+      "planCorrection": "登记预算及owner、遥测/停止阈值，负例先验证合法主体和持久夹具，避免把401/空结果当权限PASS",
+      "outputs": "RELEASE_GATES.json; PC11",
+      "planningStatus": "ADDRESSED",
+      "implementationStatus": "NOT_STARTED"
+    },
+    {
+      "id": "PG18",
+      "type": "CONTRACT_MISMATCH",
+      "title": "项目收尾只明确16个P1",
+      "beforeEvidence": "v1计划只写16个P1总体验收，未明确P2/候选及支持迁移剩余的总体状态",
+      "planCorrection": "全部32confirmed和1candidate逐条处置，risk accepted不记FIXED，local/target/deployed独立登记",
+      "outputs": "IMPLEMENTATION_STATE.json; RELEASE_GATES.json",
+      "planningStatus": "ADDRESSED",
+      "implementationStatus": "NOT_STARTED"
+    }
+  ]
+}

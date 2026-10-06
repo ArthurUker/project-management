@@ -1,0 +1,12 @@
+{
+  "kind": "RUNNER_CLEANUP_CONTROL_FLOW_SIMULATION_ONLY",
+  "source": "execution/supplements/test-contract-2026-10-03/run-suite.py",
+  "sourceSha256": "6c038034dcc96de7bf3635966cf849ce483a64cdad31cf5676c0d17a32b18cb8",
+  "injectedFailure": "guard-drop invocation raises before returning",
+  "observedCalls": [
+    "guard-drop"
+  ],
+  "clusterStopCalled": false,
+  "result": "Exception exits finally before cluster-stop/results write; source cleanup path lacks isolation between cleanup steps",
+  "limits": "No real database failure injected; does not replace PostgreSQL acceptance or prove every historical cleanup failed"
+}

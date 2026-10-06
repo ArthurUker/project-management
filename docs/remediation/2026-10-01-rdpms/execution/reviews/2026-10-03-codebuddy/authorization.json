@@ -1,0 +1,28 @@
+{
+  "reviewId": "CODEBUDDY-REVIEW-2026-10-03",
+  "actor": "Codex independent reviewer",
+  "scope": "Independent review of user-reported four-task CodeBuddy delivery under prior handoff agreement; narrow owned local verification and documentation/state reconciliation only",
+  "taskIds": [
+    "RP10-T02",
+    "RP04-T02",
+    "RP02-T01",
+    "RP08-T01"
+  ],
+  "implementationAuthorizedInThisReview": false,
+  "protected": "Business source, existing formal tests, all prior/frozen evidence, production/shared systems, dependencies, migrations, credentials",
+  "ownership": "New unique loopback initdb cluster, guard-confirmed throwaway DB, synthetic users, private temporary 0600 environment and build output absent before run; runner final cleanup records ownership and deletion",
+  "prohibited": [
+    "stage",
+    "commit",
+    "push",
+    "merge",
+    "deploy",
+    "production/shared database access",
+    "real accounts",
+    "dependency changes",
+    "business migrations",
+    "subagents",
+    "model switching",
+    "approval signing"
+  ]
+}

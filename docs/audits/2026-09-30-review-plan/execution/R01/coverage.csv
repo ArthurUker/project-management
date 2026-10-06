@@ -1,0 +1,12 @@
+packet,file,symbol_or_route,question,review_status,evidence_ref,unreviewed_reason
+R01,rdpms-system/backend/src/routes/users.js,authenticate; user create/profile/status/role/reset routes,"Role checks, target checks, password/reset/disable flows",REVIEWED,B01/B17 review,
+R01,rdpms-system/backend/src/routes/roles.js,catalog/create/update/delete/assign permissions,Role create and grant paths,REVIEWED,B17 review,
+R01,rdpms-system/backend/src/kernel/rbac.js,authenticate/requirePermission,"JWT user lookup, mustChange enforcement scope",REVIEWED,B01 review,
+R01,rdpms-system/backend/src/platform/identity/actorResolver.js,getActorResolver,Injected actor vs production JWT distinction,REVIEWED,H/S evidence labeling,
+R01,rdpms-system/backend/src/kernel/constants.js,SYSTEM_ROLES/P0/P1/GLOBAL_FORBIDDEN_FIELDS,Role and mass-assign contracts,REVIEWED,B01/B17 review,
+R01,rdpms-system/backend/prisma/seed.js,ADMIN_EXCLUDE_CODES/ROLE_DEFS,Default ADMIN/SUPER_ADMIN permissions,REVIEWED,B01 review,
+R01,rdpms-system/backend/src/kernel/massAssign.js,pickAllowed,Global forbidden check before route whitelist,REVIEWED,B17 review,
+R01,rdpms-system/backend/src/routes/auth.js,current user/password/force password,Server-side mustChange mode check,REVIEWED,B01 review,
+R01,rdpms-system/backend/src/kernel/audit.js,writeAudit,Password reset audit failure policy,REVIEWED,B01 review,
+R01,docs/rbac/M-1-RBAC-v1.0-SIGNED.md,signed RBAC policy,Custom role binding and rank protections,PENDING,,Not read in this package; confirm explicit account governance policy before expanding findings.
+R01,frontend role management UI,not reviewed,Custom role binding UI behavior,NOT_APPLICABLE,R01 server audit,Backend user-binding route is explicitly restricted; requirement needs confirmation first.

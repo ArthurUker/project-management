@@ -1,0 +1,16 @@
+{
+  "closeId": "CLOSE-04",
+  "finding": "LR6-04",
+  "supplement": "SUP-03",
+  "parentTasks": [
+    "RP04-T01",
+    "RP08-T01"
+  ],
+  "kind": "DOCUMENT_ERRATUM_ONLY",
+  "sessionId": "lr6-closeout-2026-10-04-cb1",
+  "executor": "CodeBuddy",
+  "userInstructionSource": "execution/CODEBUDDY_FINAL_SUP_REWORK_PROMPT_2026-10-04.md",
+  "authorityReviewRef": "execution/reviews/2026-10-04-codebuddy-supplement-rework/REVIEW.md",
+  "businessSourceChangesAuthorized": false,
+  "phaseFilterImplementationAuthorized": false
+}

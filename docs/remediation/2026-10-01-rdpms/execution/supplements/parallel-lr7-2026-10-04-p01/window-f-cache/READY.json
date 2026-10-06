@@ -1,0 +1,33 @@
+{
+  "batchId": "parallel-lr7-2026-10-04-p01",
+  "windowId": "F",
+  "status": "READY_FOR_AGGREGATION",
+  "scope": "PREPARATION_ONLY: T-RP-04 (commit-visible watermark/bootstrap) and T-RP-12 (user-recoverable flow & retention) PROPOSED approval material, reusing RP13-T02 barrier evidence.",
+  "workerManifest": {
+    "path": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/WORKER_MANIFEST.json",
+    "sha256": "75475cb23d1a3ecacef720560dc6b7331a1b46ab91f55000efa124a711b25e50"
+  },
+  "actualResults": {
+    "decisionIds": ["T-RP-04", "T-RP-12"],
+    "allMaterialFilesDelivered": true,
+    "recommendedOptionStatus": "PROPOSED (no production scheme selected)",
+    "signatures": "null (approvedBy/approvedAt/evidenceRef)",
+    "reusedEvidence": "RP13-T02 WATERMARK_ADR_DRAFT.md + barrier-summary.json (REUSED_VERIFIED_EVIDENCE, not rerun)"
+  },
+  "notRun": [
+    "real DB transaction barrier test (S03-OI-01)",
+    "IDB multi-tab runtime acceptance",
+    "non-empty ACL revoke / role change runtime acceptance",
+    "publisher/ACL/IDB migration/cache deletion/epoch implementation",
+    "RP13-T03 activation"
+  ],
+  "notApproved": [
+    "T-RP-04 (PROPOSED)",
+    "T-RP-12 (PROPOSED)",
+    "T-RP-10 (PROPOSED, coupled epoch/reset)"
+  ],
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "writerStopped": true,
+  "notes": "Local barrier/seq not treated as production safe-watermark. Cross-window rulings (C/D/E) summarized in interface-notes.md for integrator; this window did not modify other windows or root ledgers."
+}

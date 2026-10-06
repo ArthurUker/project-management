@@ -1,0 +1,69 @@
+{
+  "taskId": "RP12-T01",
+  "approvalRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/approval.json",
+  "cases": [
+    {
+      "caseId": "AC-F04-01",
+      "result": "PASS",
+      "scope": "Current real Chrome/IDB7 batch cases +13 owner/product Tasks regression; synthetic transport explicitly identified.501/1001 serialized/count budgets, UTF8 split, parent/cycle blocking, oversize/legacy retention, batch2 fault/reload and in-flight new-key edit. Entire protocolVersion/device/metadata/command JSON measured. Native receipt lifecycle/full HTTP chain belongs next task.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP12/RP12-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-F04-02",
+      "result": "PASS",
+      "scope": "Current real Chrome/IDB7 batch cases +13 owner/product Tasks regression; synthetic transport explicitly identified.501/1001 serialized/count budgets, UTF8 split, parent/cycle blocking, oversize/legacy retention, batch2 fault/reload and in-flight new-key edit. Entire protocolVersion/device/metadata/command JSON measured. Native receipt lifecycle/full HTTP chain belongs next task.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP12/RP12-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP12-01",
+      "result": "PASS",
+      "scope": "Current real Chrome/IDB7 batch cases +13 owner/product Tasks regression; synthetic transport explicitly identified.501/1001 serialized/count budgets, UTF8 split, parent/cycle blocking, oversize/legacy retention, batch2 fault/reload and in-flight new-key edit. Entire protocolVersion/device/metadata/command JSON measured. Native receipt lifecycle/full HTTP chain belongs next task.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP12/RP12-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP12-04",
+      "result": "PASS",
+      "scope": "Current real Chrome/IDB7 batch cases +13 owner/product Tasks regression; synthetic transport explicitly identified.501/1001 serialized/count budgets, UTF8 split, parent/cycle blocking, oversize/legacy retention, batch2 fault/reload and in-flight new-key edit. Entire protocolVersion/device/metadata/command JSON measured. Native receipt lifecycle/full HTTP chain belongs next task.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP12/RP12-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "DECISION-T-RP-11",
+      "result": "PASS",
+      "scope": "Current real Chrome/IDB7 batch cases +13 owner/product Tasks regression; synthetic transport explicitly identified.501/1001 serialized/count budgets, UTF8 split, parent/cycle blocking, oversize/legacy retention, batch2 fault/reload and in-flight new-key edit. Entire protocolVersion/device/metadata/command JSON measured. Native receipt lifecycle/full HTTP chain belongs next task.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP12/RP12-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "GATE-S02-OPEN-04",
+      "result": "ENV_BLOCKED",
+      "reason": "Candidate proactive256KiB budget proven with exact JSON UTF8 bytes; actual deployed application/proxy effective limit/version not supplied or accessed. No claim of actual target HTTP chain budget approval/acceptance.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP12/RP12-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "TASK-RP12-T01",
+      "result": "ENV_BLOCKED",
+      "reason": "Implementation and7 batch+13 owner browser cases complete locally; target effective HTTP chain maximum/version remains ENV_BLOCKED, candidate budget not inferred as deployed configuration.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP12/RP12-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-F04-03",
+      "result": "NOT_RUN",
+      "reason": "Malformed result safeguards installed before any deletion, dedicated response matrix/query recovery follows RP12-T02."
+    },
+    {
+      "caseId": "INT-PC04-01",
+      "result": "NOT_RUN",
+      "reason": "Current native quota remains ENV_BLOCKED in RP11-T03 frozen evidence; full joint replay not rerun in this task."
+    }
+  ],
+  "localValidation": "ENV_BLOCKED",
+  "jointValidation": "NOT_RUN",
+  "targetValidation": "NOT_RUN",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "limits": [
+    "Current7 real-browser IDB batch cases use synthetic transport response; not real backend receipt/native JWT acceptance",
+    "New local producer rows marked fresh-v1 with immutable project/sequence/dependency metadata; old ambiguous/imported queues retained and never automatic fresh reservation",
+    "Only candidate256KiB proactive budget; effective deployed app/proxy upper limit and gateway version unavailable",
+    "Candidate push hasprotocolVersion1, but reservation/handle integration not yet delivered; current native backend correctly denies missing handles without deleting local copies"
+  ]
+}

@@ -1,0 +1,47 @@
+[
+  {
+    "path": "rdpms-system/backend/src/platform/config/configSchema.ts",
+    "beforeSha256": null,
+    "afterSha256": "3669161895bd51d14724de5eb69f9fd2467810b3d684995749032a145bd7a4f7"
+  },
+  {
+    "path": "rdpms-system/backend/src/platform/config/configCli.ts",
+    "beforeSha256": null,
+    "afterSha256": "7d1e6a0074132965cb51f09aaa39fc4809ad5b3d7e5cc350e57eab1dcafaebe8"
+  },
+  {
+    "path": "rdpms-system/backend/src/bootstrap/createApp.js",
+    "beforeSha256": "78aaeaf543649f712d51fe1782069026533d7e166ce5a04ab3b38c414ca3f894",
+    "afterSha256": "65f96c355d4f99ac72eae4aa3ce0a03a19efda02d0585ef5e04443f43269f8df"
+  },
+  {
+    "path": "rdpms-system/backend/src/bootstrap/server.js",
+    "beforeSha256": "259af96c2ac92b669a74f5b32a51ba5995409d70f4609c0595bccd52dd41919e",
+    "afterSha256": "4b5b1cd3956b96429f240b50af8f526def504657d1c1b285994dac07c656629f"
+  },
+  {
+    "path": "rdpms-system/backend/.env.example",
+    "beforeSha256": "e4295d8872b17db057ff85024ae222045405caa089a85c782b913ebb5ac2719a",
+    "afterSha256": "85b6f589345a04a07d22da6ebbcbe00e7c6c9628286d7d56c3d3cae536ec7c7c"
+  },
+  {
+    "path": "rdpms-system/deploy/scripts/preflight.sh",
+    "beforeSha256": "007232105af56d7993e0570b5a09a921e60a32ab86c6c70b156bfc73ee1ddfba",
+    "afterSha256": "a616f57bdf049acabd99ee6f3a76f3baeeec47789fd077e403231cf1d0ffe44d"
+  },
+  {
+    "path": "rdpms-system/deploy/scripts/deploy.sh",
+    "beforeSha256": "098b598f34275ffc8ab28895570693a8e24add5640e132dbf5c5db78efb05f05",
+    "afterSha256": "4e359b6d56cf8cfddfd53110735f95dd9794eae3cd10296c9ce78804d7119bca"
+  },
+  {
+    "path": "rdpms-system/deploy/scripts/candidate-gate.py",
+    "beforeSha256": null,
+    "afterSha256": "4ae5a576e7856cabd9f04841d92fe3e582494ef87f51f9178741a5b7953ad0ee"
+  },
+  {
+    "path": "rdpms-system/backend/tests/integration/rp18-candidate-config.integration.test.mjs",
+    "beforeSha256": null,
+    "afterSha256": "d83d39a9789aacdca9d7c51e27b7426ec4f8782fd4cf4976e65045acd94e10a6"
+  }
+]

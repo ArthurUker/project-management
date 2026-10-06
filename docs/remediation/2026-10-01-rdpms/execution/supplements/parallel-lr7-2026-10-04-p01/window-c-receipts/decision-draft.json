@@ -1,0 +1,118 @@
+{
+  "decisionId": "T-RP-02",
+  "kind": "TECHNICAL_DESIGN",
+  "topic": "作用域回执和保留窗",
+  "status": "PROPOSED",
+  "approvedBy": null,
+  "approvedAt": null,
+  "evidenceRef": null,
+  "ownerRoles": ["后端负责人", "产品负责人", "运维负责人"],
+  "contractRefs": ["PC03"],
+  "affectedTaskIds": ["RP09-T01", "RP09-T02", "RP12-T02"],
+  "recommendedOption": "OPT-A",
+  "options": {
+    "OPT-A": {
+      "name": "扩展 SyncMutation 为作用域回执，对齐 mutationReceipt 模型",
+      "summary": "在原 SyncMutation 表增加 actor/resource 作用域字段与 payloadHash、expiresAt；将业务写与回执 upsert 合并为单事务；新增按 key 的授权结果查询。不新建独立表，复用现有设备/用户关系。",
+      "rationale": "HTTP 通道 mutationReceipt 已证明该模型可行（receipts.js L33-145），同步通道仅需补齐同等保证；改动 additive（加列），回退成本低。",
+      "recommended": true
+    },
+    "OPT-B": {
+      "name": "同步上行复用 withIdempotency/mutationReceipt",
+      "summary": "将 sync push 的每项变更映射为一条带 actor+command+resourceScope+key+payloadHash 的 HTTP 风格命令，直接走 withIdempotency。",
+      "rationale": "复用最彻底；但 sync 批处理/部分成功/conflict 语义与单命令不同，需大量适配层，迁移风险高。",
+      "recommended": false
+    },
+    "OPT-C": {
+      "name": "新建独立作用域同步回执表",
+      "summary": "另建 SyncReceipt 表（actorId+deviceId+clientMutationId+entity/op/entityId+payloadHash+status+expiresAt），原 SyncMutation 仅作审计。",
+      "rationale": "隔离清晰；但引入双写与迁移/回填成本，且需保持与 SyncMutation 的最终一致。",
+      "recommended": false
+    }
+  },
+  "scope": {
+    "inScope": [
+      "POST /api/sync/push 的每项变更回执作用域化（actor/device/entity/op/entityId/clientMutationId + payloadHash）",
+      "业务写与回执写入同一事务边界（含必要审计）",
+      "按 key 的结果查询 API 与授权（仅本人+本设备）",
+      "保留期/最大离线窗（expiresAt）与 unknown/expired 显式状态",
+      "错误响应：同 key 异 payload/actor → 409；未知/过期 → 显式态；提交前后 500 处理"
+    ],
+    "outOfScope": [
+      "HTTP 命令通道（mutationReceipt）已满足，本决策不再改",
+      "实际清理/留存 job 的实现（由运维/实现任务承接，仅规定窗口与字段）",
+      "字段级/status/assignee 链兼容性（属 T-RP-03，窗口 E）",
+      "认证传输/浏览器 UA 等（属 T-RP-09，窗口 D）"
+    ]
+  },
+  "fieldsAndApi": {
+    "schemaSyncMutationAdditive": [
+      "actorId String @map('actor_id')（纳入作用域唯一键）",
+      "resourceScope String @map('resource_scope') @db.VarChar(200)（如 'project:<id>'）",
+      "payloadHash String @map('payload_hash') @db.Char(64)（canonicalize+sha256，复用 payloadHash.js）",
+      "expiresAt DateTime? @map('expires_at') @db.Timestamptz(3)",
+      "新增状态枚举值/字符串：'unknown'、'expired'（与 applied/conflict/rejected 并列）",
+      "唯一键改为 @@unique([actorId, deviceId, clientMutationId, resourceScope]) 或保留 clientMutationId 全局唯一但查询强制 actor+device 过滤"
+    ],
+    "newQueryApi": {
+      "proposal": "GET /api/sync/receipts?clientMutationId=<id> 或 POST 批量；返回 {status, result, payloadHashMatched, expiresAt}",
+      "authorization": "仅返回当前认证 actor + 本设备(deviceId) 名下记录；不匹配返回 404/空，绝不跨 actor 泄露",
+      "unknownSemantics": "查无记录或 actor/device 不匹配 → status='unknown'（非 200 命中）",
+      "expiredSemantics": "记录存在但 expiresAt 已过 → status='expired'，禁止自动换 key 重做"
+    }
+  },
+  "retentionAndOfflineWindow": {
+    "retentionField": "SyncMutation.expiresAt",
+    "recommendedValueHours": 24,
+    "valueSource": "对齐 mutationReceipt.RECEIPT_TTL_MS=24h（receipts.js L20）；更长离线窗为建议待批准，需产品/运维确认",
+    "maxOfflineWindowDefinition": "客户端在 expiresAt 之前重放的，可安全按原 key/hash 重放或查询；超出则视为 expired，交由人工/业务恢复，禁止静默换 key",
+    "cleanupJob": "需明确留存清理 job 与频率（OPEN_INPUT：当前无清理任务，S03-OI-04 仍 OPEN）；本决策只规定字段与窗口，不实现 job"
+  },
+  "queryAuthorization": {
+    "rule": "回执查询必须在鉴权与资源授权之后；跨 actor、跨 device 查询一律按 unknown 处理",
+    "crossReference": "与窗口 D（T-RP-09 认证）确认 actor/device 绑定与 401/409 边界；与窗口 F（T-RP-04+T-RP-12 缓存/水位）确认离线窗与缓存 TTL 关系"
+  },
+  "errorResponses": {
+    "sameKeyDifferentPayload": "409 IDEMPOTENCY_PAYLOAD_MISMATCH（复用 receipts.js L50-57 语义）",
+    "sameKeyDifferentActor": "409 / 404 unknown（绝不允许跨 actor 回放）",
+    "unknown": "显式 status='unknown'，可重试查询或原 key/hash 重试",
+    "expired": "显式 status='expired'，禁止自动换 key；交由业务/人工恢复",
+    "submitBeforeAfter500": "业务写与回执同事务 → 500 时整体回滚无半成品（消除 B06）；响应丢失走 unknown→按 key 查询/原 key 重放"
+  },
+  "compatibilityWindow": {
+    "legacyClients": "旧客户端仅发 clientMutationId、无 payloadHash → 迁移期将 payloadHash 视为可选：缺失时不强制 409，但记录标记 legacyHashAbsent（兼容窗口结束后置为必需）",
+    "backwardCompatible": "applied/conflict/rejected 回放语义保持；新增 unknown/expired 仅为正向状态，不破坏旧客户端读取",
+    "cutover": "加列为 additive；灰度通过 feature flag 控制新事务路径，旧路径保留以便回退"
+  },
+  "migrationAndRollback": {
+    "schemaMigration": "additive 加列 + 可选唯一键调整；需生成/执行 Prisma migration，含回填 expiresAt（默认 now+窗口）",
+    "codeRollback": "feature flag 关闭即回退旧 push 路径（独立 upsert）；新列留空不影响旧逻辑",
+    "dataRollback": "新列可 nullable，回退不丢失数据；若改唯一键需谨慎（先加后删旧约束）",
+    "boundary": "回退边界归实现任务 RP09-T01/T02、RP12-T02；本决策仅规定策略，不实施"
+  },
+  "openQuestions": [
+    "最大离线窗/保留期确切小时数（建议 24h 对齐，更长需产品/运维批准）",
+    "SyncMutation 唯一键是否改为 actor+device+key+scope，或保留全局 key 仅查询过滤（影响跨设备重放语义）",
+    "留存清理 job 的频率与责任人（S03-OI-04）",
+    "与 T-RP-07（删除命令适配器）在 delete op 上的作用域/回执交互——必要 T-RP-07/S03-OI-05 仅在对应 delete 范围生效"
+  ],
+  "evidenceBasis": {
+    "currentContract": "current-contract.md（本目录）",
+    "staticMatrix": "execution/RP00/RP00-T02/evidence/failure-point-matrix.json",
+    "sourceHashes": {
+      "receipts.js": "5fedecb6fcdb9fb8878d7c331ba5c22ad23519a6e1486ae1da680f3806226c05",
+      "payloadHash.js": "2d9eaadf31ee0b71c36e6f399eefa9c3e411b2e5bcd510212cf4bce4bcf88ff9",
+      "sync.js": "ad41610a6036f054533e663089f1584a9c9730a8264c2a62f39448add7672c7f",
+      "schema.prisma": "fac40301f61926686ae1466b83e6b71b9c4bf8be9f519bf11dde32a04d967f22"
+    }
+  },
+  "statusBoundary": {
+    "decision": "PROPOSED",
+    "approvedBy": null,
+    "approvedAt": null,
+    "evidenceRef": null,
+    "implementation": "NOT_STARTED (父任务 RP09-T01/T02, RP12-T02 均 NOT_STARTED)",
+    "dynamicAcceptance": "NOT_RUN",
+    "release": "NOT_EVALUATED"
+  }
+}

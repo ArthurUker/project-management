@@ -1,0 +1,33 @@
+{
+  "taskId": "RP10-T02",
+  "packageId": "RP10",
+  "run": "2026-10-03-codebuddy-lr3-rework",
+  "kind": "REWORK",
+  "implementation": "COMPLETE",
+  "validation": "PASS",
+  "release": "NOT_EVALUATED",
+  "sourceChanges": [
+    "rdpms-system/backend/src/routes/reports.js",
+    "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+  ],
+  "unchangedAllowedFiles": ["rdpms-system/backend/src/modules/reports/reportCommands.ts (no change needed this round)"],
+  "fixAcceptance": {
+    "localScoped": "PASS",
+    "targetEnvironment": "NOT_RUN",
+    "B10": "SUPPORTED; LR3-01 fixed locally; wider CAS/legacy matrix (RP10-T01) and source-state policy (RP10-T03/D-S01-07) still open; not FIX_ACCEPTED"
+  },
+  "reviewFindingDisposition": {
+    "LR3-01": "FIXED_LOCAL_SCOPED (absent-row branch now creates; unique-key race -> 409; tombstone restore conditional; negative control fails 5 tests)",
+    "LR2-01": "STILL_FIXED_LOCAL_SCOPED (PUT/sync unchanged and re-verified)"
+  },
+  "decisionBoundary": "D-S01-07 condition=false (NOT_APPLICABLE, not PASS); no pending decision signed; no migration; no deployment; RP10-T01/T03 not implemented.",
+  "evidence": {
+    "finalSuite": "evidence/attempt-05/integration-suite.log",
+    "runResults": "evidence/attempt-05/run-results.json",
+    "negativeControl": "evidence/negative-control/attempt-01/integration-suite.log",
+    "regression": "evidence/regression/",
+    "diagnosticProbe": "evidence/diagnostic/attempt-06/integration-suite.log (isolated POST create audit/receipt probe)",
+    "supersededAttempts": ["evidence/attempt-01..04 (fixture expectation corrections: schema default currentVersion, replay status, period-key collision)"]
+  },
+  "notRun": ["target/candidate environment", "full JWT chain", "frontend IndexedDB", "AC-B10-02 (D-S01-07)", "INT-PC03-01"]
+}

@@ -1,0 +1,373 @@
+{
+  "commands": [
+    {
+      "command": [
+        "python3",
+        "/Users/renkang/VS Code/project-management/rdpms-system/deploy/scripts/backup-pair.py",
+        "predeploy"
+      ],
+      "exit": 0,
+      "stdout": "{\"consistentPoint\": \"NOT_VERIFIED\", \"pair\": \"/private/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/pg/pairs/point-372575dc-9066-403a-846f-9c7178945b69\", \"retiredPairs\": [], \"runId\": \"point-372575dc-9066-403a-846f-9c7178945b69\", \"snapshot\": \"/private/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/uploads/point-372575dc-9066-403a-846f-9c7178945b69\", \"state\": \"PUBLISHED\"}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "/Users/renkang/VS Code/project-management/rdpms-system/deploy/scripts/drill/paired-restore-check.py",
+        "--pair",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/pg/pairs/point-372575dc-9066-403a-846f-9c7178945b69",
+        "--uploads",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/uploads",
+        "--snapshot",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/uploads/point-372575dc-9066-403a-846f-9c7178945b69"
+      ],
+      "exit": 0,
+      "stdout": "{\"consistentPoint\": \"NOT_VERIFIED\", \"dumpSha256\": \"dc3f4b6f4af628980d5835add3a90eb990ac27ac401ff5941eea98a9ca20820b\", \"fileManifestSha256\": \"566324f4489682e6cc2a8a67725e882e9ce423fec811dc3742fb67b792ada13c\", \"integrity\": \"PASS\", \"restoreEligible\": false, \"runId\": \"point-372575dc-9066-403a-846f-9c7178945b69\"}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "/Users/renkang/VS Code/project-management/rdpms-system/deploy/scripts/backup-pair.py",
+        "predeploy"
+      ],
+      "exit": 0,
+      "stdout": "{\"consistentPoint\": \"NOT_VERIFIED\", \"pair\": \"/private/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/pg/pairs/another-206b97ed-320f-453d-bd4a-9a7c06386c1d\", \"retiredPairs\": [], \"runId\": \"another-206b97ed-320f-453d-bd4a-9a7c06386c1d\", \"snapshot\": \"/private/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/uploads/another-206b97ed-320f-453d-bd4a-9a7c06386c1d\", \"state\": \"PUBLISHED\"}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "/Users/renkang/VS Code/project-management/rdpms-system/deploy/scripts/drill/paired-restore-check.py",
+        "--pair",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/pg/pairs/point-372575dc-9066-403a-846f-9c7178945b69",
+        "--uploads",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/uploads",
+        "--snapshot",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/uploads/another-206b97ed-320f-453d-bd4a-9a7c06386c1d"
+      ],
+      "exit": 1,
+      "stdout": "",
+      "stderr": "PAIRED_RESTORE_REJECTED:WRONG_PAIR_SNAPSHOT\n"
+    },
+    {
+      "command": [
+        "python3",
+        "/Users/renkang/VS Code/project-management/rdpms-system/deploy/scripts/drill/paired-restore-check.py",
+        "--pair",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/damaged/point-372575dc-9066-403a-846f-9c7178945b69",
+        "--uploads",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/uploads",
+        "--snapshot",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/uploads/point-372575dc-9066-403a-846f-9c7178945b69"
+      ],
+      "exit": 1,
+      "stdout": "",
+      "stderr": "PAIRED_RESTORE_REJECTED:PAIR_HASH_MISMATCH\n"
+    },
+    {
+      "command": [
+        "python3",
+        "/Users/renkang/VS Code/project-management/rdpms-system/deploy/scripts/drill/paired-restore-check.py",
+        "--pair",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/pg/pairs/point-372575dc-9066-403a-846f-9c7178945b69",
+        "--uploads",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/uploads",
+        "--snapshot",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/uploads/point-372575dc-9066-403a-846f-9c7178945b69"
+      ],
+      "exit": 0,
+      "stdout": "{\"consistentPoint\": \"NOT_VERIFIED\", \"dumpSha256\": \"dc3f4b6f4af628980d5835add3a90eb990ac27ac401ff5941eea98a9ca20820b\", \"fileManifestSha256\": \"566324f4489682e6cc2a8a67725e882e9ce423fec811dc3742fb67b792ada13c\", \"integrity\": \"PASS\", \"restoreEligible\": false, \"runId\": \"point-372575dc-9066-403a-846f-9c7178945b69\"}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/renkang/.nvm/versions/node/v24.15.0/bin/node",
+        "scripts/test-db.mjs",
+        "check"
+      ],
+      "exit": 2,
+      "stdout": "[test-db] 环境文件: /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/target.env\n[test-db] DATABASE_URL → rdpms_exec@127.0.0.1:63510/rdpms_test_physical_d545d94be83f88\n[test-db] DIRECT_URL   → rdpms_exec@127.0.0.1:63510/rdpms_test_physical_d545d94be83f88\n",
+      "stderr": "[test-db] ENV_BLOCKED：测试库已配置但运行角色不可用 —— \n[test-db] 提示：先执行 npm run test:db:reset 重建并授权。\n"
+    },
+    {
+      "command": [
+        "createdb",
+        "-O",
+        "rdpms_exec",
+        "rdpms_test_physical_d545d94be83f88"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "pg_restore",
+        "--exit-on-error",
+        "--no-owner",
+        "-d",
+        "rdpms_test_physical_d545d94be83f88",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/pg/pairs/point-372575dc-9066-403a-846f-9c7178945b69/database.dump"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/renkang/.nvm/versions/node/v24.15.0/bin/node",
+        "scripts/test-db.mjs",
+        "check"
+      ],
+      "exit": 0,
+      "stdout": "[test-db] 环境文件: /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/target.env\n[test-db] DATABASE_URL → rdpms_exec@127.0.0.1:63510/rdpms_test_physical_d545d94be83f88\n[test-db] DIRECT_URL   → rdpms_exec@127.0.0.1:63510/rdpms_test_physical_d545d94be83f88\n[test-db] OK：rdpms_exec@rdpms_test_physical_d545d94be83f88 可读 52 张表\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "/Users/renkang/VS Code/project-management/rdpms-system/deploy/scripts/drill/paired-restore-check.py",
+        "--seal-owned-target",
+        "--backend",
+        "/Users/renkang/VS Code/project-management/rdpms-system/backend",
+        "--ownership",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/ownership.json",
+        "--security-floor",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/incomplete-floor.json"
+      ],
+      "exit": 1,
+      "stdout": "",
+      "stderr": "PAIRED_RESTORE_REJECTED:OWNED_SEAL_REJECTED\n"
+    },
+    {
+      "command": [
+        "python3",
+        "/Users/renkang/VS Code/project-management/rdpms-system/deploy/scripts/drill/paired-restore-check.py",
+        "--seal-owned-target",
+        "--backend",
+        "/Users/renkang/VS Code/project-management/rdpms-system/backend",
+        "--ownership",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/ownership.json",
+        "--security-floor",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/wrong-policy.json"
+      ],
+      "exit": 1,
+      "stdout": "",
+      "stderr": "PAIRED_RESTORE_REJECTED:OWNED_SEAL_REJECTED\n"
+    },
+    {
+      "command": [
+        "python3",
+        "/Users/renkang/VS Code/project-management/rdpms-system/deploy/scripts/drill/paired-restore-check.py",
+        "--seal-owned-target",
+        "--backend",
+        "/Users/renkang/VS Code/project-management/rdpms-system/backend",
+        "--ownership",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/ownership.json",
+        "--security-floor",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/security-floor.json"
+      ],
+      "exit": 0,
+      "stdout": "{\"catalogPolicy\": \"EXACT_USER_ID_AND_RBAC_MATCH_REQUIRED\", \"floorUsers\": 4, \"kind\": \"OWNED_DRILL_ONLY_SECURITY_SEAL\", \"newEpoch\": \"be07a7a8-4961-43c4-85f5-8b57159d2943\", \"productionEligibility\": \"NOT_EVALUATED\", \"result\": \"PASS\", \"targetDB\": \"rdpms_test_physical_d545d94be83f88\"}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "/Users/renkang/VS Code/project-management/rdpms-system/deploy/scripts/drill/paired-restore-check.py",
+        "--seal-owned-target",
+        "--backend",
+        "/Users/renkang/VS Code/project-management/rdpms-system/backend",
+        "--ownership",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/ownership.json",
+        "--security-floor",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/security-floor.json"
+      ],
+      "exit": 1,
+      "stdout": "",
+      "stderr": "PAIRED_RESTORE_REJECTED:OWNED_TARGET_MISMATCH\n"
+    },
+    {
+      "command": [
+        "/Users/renkang/.nvm/versions/node/v24.15.0/bin/node",
+        "scripts/test-db.mjs",
+        "drop"
+      ],
+      "exit": 0,
+      "stdout": "[test-db] 环境文件: /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-physical-pair-owned-ASWZ0t/target.env\n[test-db] DATABASE_URL → rdpms_exec@127.0.0.1:63510/rdpms_test_physical_d545d94be83f88\n[test-db] DIRECT_URL   → rdpms_exec@127.0.0.1:63510/rdpms_test_physical_d545d94be83f88\n[test-db] 已销毁 rdpms_test_physical_d545d94be83f88\n",
+      "stderr": ""
+    }
+  ],
+  "facts": [
+    {
+      "writerRound": 0,
+      "liveHash": "081883008aee57c6f2d6b82328e3251f797393ccbd2a369cf01033c8e419e6e2",
+      "added": "round-0.bin",
+      "deleted": null
+    },
+    {
+      "writerRound": 1,
+      "liveHash": "ab084af821b14ea07cfb13cacbafa63bb931a657b9728f90d23cb0f17d6da696",
+      "added": "round-1.bin",
+      "deleted": "round-0.bin"
+    },
+    {
+      "writerRound": 2,
+      "liveHash": "8ba72785dee49f5aeec6df55b2caf67dddecb77c1ae75af8ea7f9827ddb43799",
+      "added": "round-2.bin",
+      "deleted": "round-1.bin"
+    },
+    {
+      "commonPoint": "LOCAL_STOPPED_OWNED_FILE_WRITER_AND_DATABASE_RESTORE_GATE",
+      "writerStopped": true,
+      "barrierRun": "6df9ebd0-f7d2-4cd5-b02c-baa20164cf79",
+      "tableCounts": {
+        "_prisma_migrations": 12,
+        "attachments": 0,
+        "audit_logs": 1,
+        "code_sequences": 6,
+        "data_recovery_state": 1,
+        "detection_targets": 0,
+        "doc_categories": 4,
+        "doc_documents": 0,
+        "doc_versions": 0,
+        "enum_meta": 256,
+        "file_objects": 2,
+        "formula_components": 0,
+        "milestones": 0,
+        "monthly_progress": 0,
+        "mutation_receipts": 1,
+        "permissions": 99,
+        "phase_transitions": 0,
+        "prep_records": 0,
+        "primers": 0,
+        "project_members": 1,
+        "project_phases": 0,
+        "project_templates": 5,
+        "projects": 1,
+        "reagent_formulas": 0,
+        "reagent_lots": 0,
+        "reagent_materials": 0,
+        "refresh_tokens": 1,
+        "registration_profiles": 0,
+        "regulatory_documents": 26,
+        "report_versions": 0,
+        "reports": 0,
+        "role_permissions": 289,
+        "roles": 6,
+        "sample_materials": 0,
+        "sync_change_events": 2,
+        "sync_devices": 1,
+        "sync_mutations": 0,
+        "sync_publication_state": 0,
+        "sync_source_revisions": 2,
+        "system_logs": 1,
+        "system_settings": 8,
+        "task_dependencies": 0,
+        "task_doc_refs": 0,
+        "task_regulatory_documents": 0,
+        "task_template_steps": 424,
+        "task_templates": 79,
+        "tasks": 0,
+        "template_phases": 37,
+        "template_roles": 20,
+        "template_tasks": 149,
+        "user_roles": 2,
+        "users": 4
+      },
+      "pairId": "point-372575dc-9066-403a-846f-9c7178945b69",
+      "productionConsistency": "NOT_EVALUATED"
+    },
+    {
+      "wrongPair": "REJECTED_PRE_RESTORE",
+      "checksum": "REJECTED_PRE_RESTORE",
+      "sourcePreserved": true
+    },
+    {
+      "restoredTableCounts": {
+        "_prisma_migrations": 12,
+        "attachments": 0,
+        "audit_logs": 1,
+        "code_sequences": 6,
+        "data_recovery_state": 1,
+        "detection_targets": 0,
+        "doc_categories": 4,
+        "doc_documents": 0,
+        "doc_versions": 0,
+        "enum_meta": 256,
+        "file_objects": 2,
+        "formula_components": 0,
+        "milestones": 0,
+        "monthly_progress": 0,
+        "mutation_receipts": 1,
+        "permissions": 99,
+        "phase_transitions": 0,
+        "prep_records": 0,
+        "primers": 0,
+        "project_members": 1,
+        "project_phases": 0,
+        "project_templates": 5,
+        "projects": 1,
+        "reagent_formulas": 0,
+        "reagent_lots": 0,
+        "reagent_materials": 0,
+        "refresh_tokens": 1,
+        "registration_profiles": 0,
+        "regulatory_documents": 26,
+        "report_versions": 0,
+        "reports": 0,
+        "role_permissions": 289,
+        "roles": 6,
+        "sample_materials": 0,
+        "sync_change_events": 2,
+        "sync_devices": 1,
+        "sync_mutations": 0,
+        "sync_publication_state": 0,
+        "sync_source_revisions": 2,
+        "system_logs": 1,
+        "system_settings": 8,
+        "task_dependencies": 0,
+        "task_doc_refs": 0,
+        "task_regulatory_documents": 0,
+        "task_template_steps": 424,
+        "task_templates": 79,
+        "tasks": 0,
+        "template_phases": 37,
+        "template_roles": 20,
+        "template_tasks": 149,
+        "user_roles": 2,
+        "users": 4
+      },
+      "restoredFileReferences": [
+        {
+          "id": "0cd9b9a5-14bc-43ed-ab11-7bb40a5757f8",
+          "key": "live.bin",
+          "size": 19,
+          "sha256": "8ba72785dee49f5aeec6df55b2caf67dddecb77c1ae75af8ea7f9827ddb43799"
+        },
+        {
+          "id": "0a70d252-276a-40bb-a7ca-a991db613a18",
+          "key": "round-2.bin",
+          "size": 5,
+          "sha256": "49499ba0d60d4f49b8e029465638bd373862182f840247b4909a44a5a69fead8"
+        }
+      ],
+      "targetStillContained": true
+    },
+    {
+      "productionRestoreEligible": false,
+      "targetWriterCatalog": "ENV_BLOCKED",
+      "targetRPO_RTO": "NOT_RUN"
+    }
+  ],
+  "cleanup": {
+    "guardTargetDrop": 0,
+    "ownedRootRemoved": true
+  },
+  "limits": [
+    "Only owned stopped fixture filesystem writer and real DB restore-state barrier; target writer inventory/RPO/RTO absent",
+    "No production restore; published backup manifest remains NOT_VERIFIED/restoreEligible false",
+    "Native Hono real JWT handler chain, not target proxy/browser UI"
+  ]
+}

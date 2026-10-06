@@ -1,0 +1,83 @@
+{
+  "source": "User message: 请继续按计划执行所有的修复工作，执行完才停下来",
+  "registeredAtUtc": "2026-10-05T05:07:45.267287+00:00",
+  "executor": "Codex current model; no subagents or model switch",
+  "mode": "CONTINUOUS_LOCAL_IMPLEMENTATION_WHEN_TASK_GATES_MET",
+  "userConfirmedOtherWritersStopped": true,
+  "scopeOverrides": [
+    "Prior one-subtask-per-turn and wait-for-继续 limits",
+    "Prior preparation-only stop for this new continuation"
+  ],
+  "allowedStandardTaskIds": [
+    "RP01-T02",
+    "RP02-T02",
+    "RP03-T01",
+    "RP03-T02",
+    "RP05-T02",
+    "RP06-T01",
+    "RP06-T02",
+    "RP07-T02",
+    "RP08-T02",
+    "RP09-T01",
+    "RP09-T02",
+    "RP10-T01",
+    "RP10-T03",
+    "RP11-T01",
+    "RP11-T02",
+    "RP11-T03",
+    "RP12-T01",
+    "RP12-T02",
+    "RP13-T03",
+    "RP14-T02",
+    "RP15-T01",
+    "RP15-T02",
+    "RP15-T03",
+    "RP16-T01",
+    "RP16-T02",
+    "RP16-T03",
+    "RP17-T02",
+    "RP17-T03",
+    "RP18-T01",
+    "RP18-T02",
+    "RP18-T03",
+    "RP19-T02",
+    "RP19-T03",
+    "RP19-T04"
+  ],
+  "allowedValidationOnlyTaskIds": [
+    "RP00-T01",
+    "RP00-T03",
+    "RP00-T04",
+    "RP00-T05",
+    "RP13-T01",
+    "RP13-T02",
+    "RP17-T01",
+    "RP19-T01"
+  ],
+  "currentlyAdmittedCodeTaskIds": [],
+  "approvedBusinessDecisionIds": [],
+  "preparationReworkIds": [
+    "RV-LP-01",
+    "RV-LP-02",
+    "RV-LP-03",
+    "RV-LP-04",
+    "RV-LP-05"
+  ],
+  "localRuntimeAllowedOnlyForAdmittedTask": [
+    "related build/test",
+    "fresh owned synthetic PG/files/browser resources after guard and ownership checks"
+  ],
+  "noRepeatedLocalAuthorizationRequired": true,
+  "rulesNotOverridden": [
+    "pending/proposed decisions cannot be signed by executor",
+    "optional role/DAG not activated",
+    "no production/shared DB or real data/accounts",
+    "no dependency install/upgrade",
+    "no stage/commit/push/merge/deploy/reset/clean/stash",
+    "old audit/run/review evidence frozen"
+  ],
+  "allowlistRef": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-remaining-rework-01/task-allowlist-addendum.json",
+  "preparationPrefix": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-remaining-rework-01",
+  "sessionPrefix": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-continuous-01",
+  "stopCondition": "Only after all independently eligible authorized work is delivered, or remaining work requires an unanswered decision/external input; never mark blocked tasks complete."
+}

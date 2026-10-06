@@ -1,0 +1,44 @@
+{
+  "sourceUnchanged": true,
+  "frozenInputsUnchanged": [
+    "docs/audits/2026-09-29-rdpms",
+    "docs/remediation/2026-10-01-rdpms/revisions/v1-2026-10-01",
+    "docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-02-luna",
+    "docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-02-post-continuous",
+    "docs/remediation/2026-10-01-rdpms/execution/RP10/RP10-T02/runs/2026-10-03-codebuddy-b10-rework",
+    "docs/remediation/2026-10-01-rdpms/execution/RP04/RP04-T02/runs/2026-10-03-codebuddy-b18-rework",
+    "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T01/runs/2026-10-03-codebuddy-b14-validation",
+    "docs/remediation/2026-10-01-rdpms/execution/RP08/RP08-T01/runs/2026-10-03-codebuddy-b04-validation"
+  ],
+  "taskStateGraphConsistentAll54": true,
+  "sparseExecutionMirrorConsistentAsPresent": true,
+  "selectedPackageTaskMirrorsConsistent": true,
+  "caseDefinitionsAndIdsUnchanged": true,
+  "taskCount": 54,
+  "counts": {
+    "tasks": 54,
+    "implementation": {
+      "COMPLETE": 17,
+      "NOT_STARTED": 34,
+      "IN_PROGRESS": 3
+    },
+    "validation": {
+      "ENV_BLOCKED": 7,
+      "PASS": 8,
+      "NOT_RUN": 38,
+      "FAIL": 1
+    },
+    "release": "NOT_EVALUATED for all tasks",
+    "incompleteImplementation": 37,
+    "note": "Run-state mirror only; planning checkpoints (PLAN_VALIDATION) remain as recorded and are not product acceptance."
+  },
+  "acceptanceCounts": {
+    "NOT_RUN": 231,
+    "PASS": 47,
+    "ENV_BLOCKED": 25,
+    "FAIL": 3
+  },
+  "ownedBuildAbsent": true,
+  "reviewProbeVersions": "evidence/probe-versions/manifest.json",
+  "gitDiffCheck": 0
+}

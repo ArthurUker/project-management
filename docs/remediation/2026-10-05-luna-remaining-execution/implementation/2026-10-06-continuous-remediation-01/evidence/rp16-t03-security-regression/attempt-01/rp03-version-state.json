@@ -1,0 +1,43 @@
+{
+  "kind": "REAL_DB_AND_JWT",
+  "traces": [
+    {
+      "userId": "rp03-0e74b4b4-d3a6-4a15-8b8f-f09ec84baff3-3",
+      "version": 1,
+      "oldAccess": 401,
+      "oldRefresh": 401
+    },
+    {
+      "userId": "rp03-0e74b4b4-d3a6-4a15-8b8f-f09ec84baff3-4",
+      "version": 1,
+      "oldAccess": 401,
+      "oldRefresh": 401
+    },
+    {
+      "userId": "rp03-0e74b4b4-d3a6-4a15-8b8f-f09ec84baff3-4",
+      "version": 2,
+      "oldAccess": 401,
+      "oldRefresh": 401
+    },
+    {
+      "userId": "rp03-0e74b4b4-d3a6-4a15-8b8f-f09ec84baff3-5",
+      "version": 1,
+      "oldAccess": 401,
+      "oldRefresh": 401
+    },
+    {
+      "userId": "rp03-0e74b4b4-d3a6-4a15-8b8f-f09ec84baff3-6",
+      "version": 1,
+      "oldAccess": 401,
+      "oldRefresh": 401
+    },
+    {
+      "userId": "rp03-0e74b4b4-d3a6-4a15-8b8f-f09ec84baff3-6",
+      "version": 3,
+      "oldAccess": 401,
+      "oldRefresh": 401
+    }
+  ],
+  "noTokensPersisted": true,
+  "wholeDBCleanup": true
+}

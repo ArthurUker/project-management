@@ -1,0 +1,76 @@
+{
+  "files": [
+    "rdpms-system/backend/src/kernel/backupRestore.js",
+    "rdpms-system/backend/src/kernel/restoreSchemaRegistry.js",
+    "rdpms-system/backend/src/platform/recovery/dataEpoch.ts",
+    "rdpms-system/backend/src/kernel/rbac.js",
+    "rdpms-system/backend/src/routes/auth.js",
+    "rdpms-system/backend/src/routes/sync.js",
+    "rdpms-system/backend/src/platform/db/client.js",
+    "rdpms-system/backend/src/platform/requestContext.js",
+    "rdpms-system/backend/src/platform/idempotency/receipts.js",
+    "rdpms-system/backend/src/modules/sync/syncMutationCommands.ts",
+    "rdpms-system/backend/src/modules/sync/syncReadPolicy.ts",
+    "rdpms-system/backend/src/routes/backup.js",
+    "rdpms-system/backend/prisma/schema.prisma",
+    "rdpms-system/backend/prisma/migrations/20261007_dataset_epoch_fences/migration.sql",
+    "rdpms-system/backend/tests/integration/rp16-restore-epoch.integration.test.mjs",
+    "rdpms-system/backend/tests/integration/rp16-restore-apply.integration.test.mjs",
+    "rdpms-system/backend/tests/integration/rp14-scan-elevated-policy.integration.test.mjs",
+    "rdpms-system/backend/tests/integration/rp10-submit-state-policy.integration.test.mjs",
+    "rdpms-system/frontend/src/offline/idb.ts",
+    "rdpms-system/frontend/src/offline/engine.ts",
+    "rdpms-system/frontend/src/auth/tokenStore.ts",
+    "rdpms-system/frontend/src/api/endpoints/sync.ts",
+    "rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx",
+    "rdpms-system/backend/tests/helpers/stubDeps.mjs",
+    "rdpms-system/frontend/src/components/EditProjectModal.tsx",
+    "rdpms-system/frontend/src/offline/pendingDraft.ts",
+    "rdpms-system/backend/tests/helpers/syncV1Fixture.mjs",
+    "rdpms-system/backend/tests/integration/rp03-security-version.integration.test.mjs",
+    "rdpms-system/backend/tests/integration/rp02-login-lock-ttl.integration.test.mjs",
+    "rdpms-system/backend/tests/integration/rp09-receipt-recovery.integration.test.mjs"
+  ],
+  "beforeDirectory": "before-RP16-T03",
+  "runs": [
+    "rp16-t03-epoch",
+    "rp16-t03-browser",
+    "rp16-t03-browser-native",
+    "rp16-t03-units",
+    "rp16-t03-apply-regression",
+    "rp16-t03-registry-regression",
+    "rp16-t03-security-regression",
+    "rp16-t03-refresh-regression",
+    "rp16-t03-lock-regression",
+    "rp16-t03-sync-receipts-regression",
+    "rp16-t03-browser-receipts-regression",
+    "rp16-t03-browser-acl-scoped-regression"
+  ],
+  "summary": "Current approved module JSON restore epoch/security/session/device/receipt/ACL/request/IDB/draft namespace contract implemented. Native JWT/DB10; native JWT/DB/Chrome joint1; synthetic-auth real Chrome6; unit/contract93; registry5/apply11/security8/refresh11/lock12/receipt22/native browser receipts6/ACL7 scoped regressions. Old pending/applied original bindings remain exact, current new intents work; real signed >3000 continuation token rejects old epoch. Precommit rollback preserves epoch/auth; postcommit failures stay contained with exact initiating recovery credential. All local only.",
+  "compatibility": "JWT missing old epoch requires reauth; current public Prisma callback/batch transactions take expected epoch shared DB lease. Mixed/started public query batches explicitly reject. Additive epoch columns use DB default; old rows retained. Candidate current actor queue isolates old/unproven epoch; drafts new namespace preserves old bytes. Actual deployed client catalog unknown; no release/wholeDR assertion.",
+  "rollback": "Retain DataRecoveryState/epoch/security floor/receipts/write triggers. Contain restore/sync instead of activating old unsafe JWT/app. Never decrement version, revive credentials, delete originals, clear pending gate or rekey old uncertain intent. Native reconciliation only exact manifest/current issuer, full first-safe rollback separate RP18.",
+  "casePass": {
+    "PAC-RP16-05": "Current approved module JSON restore epoch/security/session/device/receipt/ACL/request/IDB/draft namespace contract implemented. Native JWT/DB10; native JWT/DB/Chrome joint1; synthetic-auth real Chrome6; unit/contract93; registry5/apply11/security8/refresh11/lock12/receipt22/native browser receipts6/ACL7 scoped regressions. Old pending/applied original bindings remain exact, current new intents work; real signed >3000 continuation token rejects old epoch. Precommit rollback preserves epoch/auth; postcommit failures stay contained with exact initiating recovery credential. All local only.",
+    "TASK-RP16-T03": "Current approved module JSON restore epoch/security/session/device/receipt/ACL/request/IDB/draft namespace contract implemented. Native JWT/DB10; native JWT/DB/Chrome joint1; synthetic-auth real Chrome6; unit/contract93; registry5/apply11/security8/refresh11/lock12/receipt22/native browser receipts6/ACL7 scoped regressions. Old pending/applied original bindings remain exact, current new intents work; real signed >3000 continuation token rejects old epoch. Precommit rollback preserves epoch/auth; postcommit failures stay contained with exact initiating recovery credential. All local only.",
+    "DECISION-T-RP-10": "Current approved module JSON restore epoch/security/session/device/receipt/ACL/request/IDB/draft namespace contract implemented. Native JWT/DB10; native JWT/DB/Chrome joint1; synthetic-auth real Chrome6; unit/contract93; registry5/apply11/security8/refresh11/lock12/receipt22/native browser receipts6/ACL7 scoped regressions. Old pending/applied original bindings remain exact, current new intents work; real signed >3000 continuation token rejects old epoch. Precommit rollback preserves epoch/auth; postcommit failures stay contained with exact initiating recovery credential. All local only."
+  },
+  "notRun": {
+    "INT-PC06-01": "Only module JSON/epoch native/Chrome subset; physical paired recovery, publication log/complete current full UI/quota/target/client compatibility remain RP13/RP19 and external inputs.",
+    "INT-PC07-01": "Full DAG/migration/restore/sync joint acceptance not established by restore subset."
+  },
+  "limits": [
+    "All native credentials/DB/browser synthetic fixtures; no production/real data/sharedDB/target deployment.",
+    "Actual quota exhaustion/target/client catalog/full physical backup restore remains unverified; no wholeDR or user-facing recoveryUI guarantee. Old pending form/edit draft namespace bytes preserved, legacy draft discovery/export UI not validated.",
+    "Public Prisma facade changes native request query boundary; original real SQL/CAS/account/receipt assertions kept, fixture adapters tracked. Unsupported mixed/started transaction batches fail explicitly, target fluent/custom query usage unverified.",
+    "Original unscoped cross-owner ACL physical-cache assertion failed; owned scoped clone proves current actor purge and foreign partition unchanged. Original failure and script retained.",
+    "Global user version increments/refresh revocations are separate security housekeeping counts; module inserted/updated/deleted counts not inferred from housekeeping.",
+    "Missing/old JWT fails closed, target cutover/relogin budget not evaluated. Only exact known initiating old SUPER credential can diagnose/reconcile pending own restore; no browser full operational recovery acceptance.",
+    "Earlier native unit/source bindings differ only scoped test fixture/barrier refinements; current product business source is bound in final native epoch and joint runs. All failed/preflight attempts preserved."
+  ],
+  "findings": [
+    "B13"
+  ],
+  "validation": "PASS",
+  "next": "RP13-T03 commit-visible publication journal/producer coverage/bootstrap/epoch/ACL protocol",
+  "nextTask": "RP13-T03"
+}

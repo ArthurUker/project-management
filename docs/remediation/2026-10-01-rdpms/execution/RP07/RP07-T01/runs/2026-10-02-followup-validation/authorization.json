@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-02",
+  "executor": "Codex",
+  "authorizationSource": "User authorized end-of-run affected regression and all-54 readiness reevaluation; this is validation of existing task implementation only.",
+  "taskId": "RP07-T01",
+  "sourceBaseline": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "scope": "No implementation change; task-specific real PostgreSQL/API acceptance run in a fresh owned DB.",
+  "prohibited": [
+    "production/shared DB",
+    "real accounts/data",
+    "schema/business change",
+    "stage/commit/push/merge/deploy",
+    "approve pending decisions"
+  ]
+}

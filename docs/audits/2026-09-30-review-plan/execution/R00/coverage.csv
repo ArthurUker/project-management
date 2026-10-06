@@ -1,0 +1,9 @@
+packet,file,symbol_or_route,question,review_status,evidence_ref,unreviewed_reason
+R00,docs/audits/2026-09-30-review-plan/REVIEW_PLAN.md,R00/R01 contracts,Read complete in two sections,REVIEWED,this run,
+R00,docs/audits/2026-09-30-review-plan/INITIAL_STATE.json,packet order/status,All NOT_STARTED before run,REVIEWED,this run,
+R00,docs/audits/2026-09-29-rdpms/HANDOFF.md,baseline/boundaries,Inherited constraints,REVIEWED,historical handoff,
+R00,docs/audits/2026-09-29-rdpms/REPORT.md,28 finding headings and B01/B17,IDs/severity/details align,REVIEWED,historical report,
+R00,docs/audits/2026-09-29-rdpms/manifest.json,listed SHA256,All match,REVIEWED,baseline.json,
+R00,docs/audits/2026-09-29-rdpms/findings.json,finding map,28 unique IDs; 16 P1/12 P2,REVIEWED,evidence-index.json,
+R00,docs/audits/2026-09-29-rdpms/backend-results.json,B01/B17 probe outcomes,Historical only; no rerun,REVIEWED,evidence-index.json,
+R00,docs/audits/2026-09-29-rdpms/verify-backend.mjs,probe setup,B01 actual JWT path context checked,REVIEWED,historical harness,

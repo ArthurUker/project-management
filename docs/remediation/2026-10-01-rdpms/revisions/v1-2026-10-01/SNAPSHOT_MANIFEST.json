@@ -1,0 +1,58 @@
+{
+  "capturedAt": "2026-10-02",
+  "version": "v1",
+  "entries": [
+    {
+      "path": "ACCEPTANCE_MATRIX.csv",
+      "sha256": "2eb81f3df5e3ba7a16f4dea5dc659c2d20c89ff7cfab5ff2f46b768ea48a98cd"
+    },
+    {
+      "path": "DECISIONS_AND_GATES.md",
+      "sha256": "09b9ab7b9fa963c32f707eb1b797723f244daed71306515eb4cf428535569d39"
+    },
+    {
+      "path": "EXECUTOR_PROMPT.md",
+      "sha256": "62b4e840d2f5278c2560bfdadb24300b60b1f7b52d7e00ad85108d1b8358d8db"
+    },
+    {
+      "path": "FINDING_TO_PACKAGE.json",
+      "sha256": "1ea217f34ded247acc4d625d597d51200223b3bc781e8fcc80b1917ec88688a2"
+    },
+    {
+      "path": "HANDOFF.md",
+      "sha256": "89e5402a349b559827a56992d60063d4c0ccf4edd45bcd80af2804de23afaf78"
+    },
+    {
+      "path": "IMPLEMENTATION_STATE.json",
+      "sha256": "f08dee322571700ed01778196d0462f1de12bfd608598ae6fcc47ea0ad1f7cc3"
+    },
+    {
+      "path": "INPUT_MANIFEST.json",
+      "sha256": "e617095b65e5cf533eccce715234905ac443d0d5d1d2cff3720b7f6d703f8965"
+    },
+    {
+      "path": "OPEN_ITEM_GATES.json",
+      "sha256": "731f443a0339797a2420b75fbb899acd49e84467885571a90a36be1cf6c5aff4"
+    },
+    {
+      "path": "PACKAGES.json",
+      "sha256": "1b72ec11d7be245318d95de5042ec0bdf87131b6fa1793c2799b0cd3c9a0ddeb"
+    },
+    {
+      "path": "PACKAGES.md",
+      "sha256": "9e167c6ed33c0b810791080fb452d9101fe3d302be51a11f63856ce2ce527808"
+    },
+    {
+      "path": "PLAN_VALIDATION.json",
+      "sha256": "cba6f8a34de1f1b2fff7cfa8807078b1db858a1b550cc3624aeabd7ed9fd78de"
+    },
+    {
+      "path": "README.md",
+      "sha256": "53677d4f1ac0a49b716e1d31f9f9940ea2d125af8ffd7536e4ac5c2a85035dfd"
+    },
+    {
+      "path": "REMEDIATION_PLAN.md",
+      "sha256": "5ebb23864833e654ebfbb226364bac875eb3a1e57d0e5b1360adb5f70ca09ad7"
+    }
+  ]
+}

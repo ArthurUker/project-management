@@ -1,0 +1,31 @@
+{
+  "taskId": "RP17-T03",
+  "runs": [
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP17/RP17-T03/runs/2026-10-06-continuous-remediation-01/evidence/rp17-t03-fs/attempt-01/run-results.json",
+      "sha256": "17be5df4fbc1612073bebdcc0176a0d341753c321567ca2c60d008815b88d4a7",
+      "commandResults": [
+        {
+          "command": [
+            "rdpms-system/deploy/scripts/drill/backup-filesystem-check.py",
+            "--parent",
+            "/private/tmp",
+            "--output",
+            "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/evidence/rp17-t03-fs/attempt-01/run-results.json",
+            "--require-linux"
+          ],
+          "exitCode": 2
+        }
+      ],
+      "cleanup": {
+        "ownedRootRemoved": true
+      }
+    }
+  ],
+  "limits": [
+    "No target Linux resource/access provided; no actual target fs inode/metadata/xattr/ACL/capacity/operator result.",
+    "Five local owned filesystem checks prove stated local mechanics only; standalone failures use real missing-parent rename/collision OS errors, not target proxy.",
+    "Required physical restore moves to RP19; dump list/hash not restore or consistency."
+  ],
+  "earlierAttempts": "Preserved; only enumerated current attempts support acceptance"
+}

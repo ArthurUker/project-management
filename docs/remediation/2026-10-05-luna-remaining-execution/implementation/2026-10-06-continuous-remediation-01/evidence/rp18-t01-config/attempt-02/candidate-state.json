@@ -1,0 +1,55 @@
+{
+  "runs": [
+    {
+      "command": [
+        "python3",
+        "/Users/renkang/VS Code/project-management/rdpms-system/deploy/scripts/candidate-gate.py",
+        "--candidate",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-candidate-owned-7qWcOo/candidate-cd6c7493-d6cc-4755-9b62-25807331f6d5",
+        "--env-file",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-candidate-owned-7qWcOo/synthetic.env",
+        "--evidence",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-candidate-owned-7qWcOo/successful-gate"
+      ],
+      "exit": 1,
+      "stdout": "REJECTED_PRE_DDL\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "/Users/renkang/VS Code/project-management/rdpms-system/deploy/scripts/candidate-gate.py",
+        "--candidate",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-candidate-owned-7qWcOo/candidate-97103489-2283-4b1a-8d1c-0485fcd1fb51",
+        "--env-file",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-candidate-owned-7qWcOo/synthetic.env",
+        "--evidence",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-candidate-owned-7qWcOo/bad-build"
+      ],
+      "exit": 1,
+      "stdout": "REJECTED_PRE_DDL\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python3",
+        "/Users/renkang/VS Code/project-management/rdpms-system/deploy/scripts/candidate-gate.py",
+        "--candidate",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-candidate-owned-7qWcOo/candidate-cd6c7493-d6cc-4755-9b62-25807331f6d5",
+        "--env-file",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-candidate-owned-7qWcOo/invalid-config.env",
+        "--evidence",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-candidate-owned-7qWcOo/bad-config",
+        "--verify-built"
+      ],
+      "exit": 1,
+      "stdout": "REJECTED_PRE_DDL\n",
+      "stderr": ""
+    }
+  ],
+  "ownedCandidateRootRemoved": true,
+  "limits": [
+    "No target Linux/service/proxy/deployment/DDL/install",
+    "Real native PG/JWT config/CORS and own candidate build; no real dotenv"
+  ]
+}

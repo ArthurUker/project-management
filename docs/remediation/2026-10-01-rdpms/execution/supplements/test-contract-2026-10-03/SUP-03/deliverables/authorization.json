@@ -1,0 +1,13 @@
+{
+  "id": "SUP-03",
+  "parentTasks": ["RP04", "RP08"],
+  "finding": "LR4-04 / B20",
+  "mode": "REVIEW_ONLY",
+  "executor": "CodeBuddy (local isolated)",
+  "authorityRef": "CODEBUDDY_TEST_CONTRACT_EXECUTOR_PROMPT_2026-10-03.md + reviews/2026-10-03-codebuddy-followup (task-readiness LR4-04)",
+  "date": "2026-10-03",
+  "scope": "定向核对阶段读取、软删写入、直接客户端及历史合同范围（只读）；不修改业务源码、schema、前端、helper。",
+  "limits": "不添加 projects.js 过滤、不改前端、不生成业务 patch；无明确合同来源时记录 CONTRACT_UNRESOLVED，不自行选择默认过滤政策。",
+  "release": "NOT_EVALUATED",
+  "codeChanges": "none"
+}

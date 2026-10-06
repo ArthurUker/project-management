@@ -1,0 +1,157 @@
+{
+  "kind": "POST_SEAL_READBACK",
+  "sessionId": "lr6-closeout-2026-10-04-cb1",
+  "date": "2026-10-04",
+  "declaredExclusion": {
+    "excludedFromSealedPayload": [
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/post-seal-readback.json"
+    ],
+    "excludedFromFinalIntegrity": [
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/post-seal-readback.json"
+    ],
+    "reason": "pre-declared appendix that must exist after the history entries are appended; it records the real final registry hashes that cannot live inside the files sealed before those appends"
+  },
+  "sealedDigestReadback": {
+    "payloadManifestSha256": "8183e2ec676c82db6fbbcaa8b3a47de838e1864a30972ceb0b4415ef95746926",
+    "finalIntegritySha256": "7c2dbc762f158eb02d82929786cecbc519d34a5808411861d944bb82a0e5b290",
+    "manifestSealedFiles": 519,
+    "drift": [],
+    "verdict": "PASS"
+  },
+  "jsonValidity": {
+    "invalid": [],
+    "verdict": "PASS"
+  },
+  "placeholderScan": {
+    "hits": [],
+    "verdict": "PASS"
+  },
+  "histories": {
+    "REVISION_HISTORY.json": {
+      "pathBase": "PLAN",
+      "sha256": "f6079388c2093d0108d2d167e782f5735549ebdcad8fcfc9dbea95c06b226a03",
+      "entryCount": 26,
+      "newVersionId": "lr6-closeout-2026-10-04-cb1",
+      "newIdOccurrences": 1,
+      "previousEntryAt24CanonicalUnchanged": true
+    },
+    "EXECUTION_REVISION_HISTORY.json": {
+      "pathBase": "PLAN",
+      "sha256": "077dcdc13d293eb398529c2e8d29fa79ab1ac6decbb12eb2720c59e66dfedbc4",
+      "entryCount": 17,
+      "newEntryId": "EXEC-lr6-closeout-2026-10-04-cb1",
+      "newIdOccurrences": 1,
+      "previousEntryAt15CanonicalUnchanged": true
+    },
+    "noSelfOrCrossHistoryHashInNewEntries": true
+  },
+  "closeResults": {
+    "CLOSE-01": {
+      "status": "PASS",
+      "layer": "REAL_DB",
+      "suite": {
+        "tests": 25,
+        "pass": 25,
+        "fail": 0
+      },
+      "finalTestSha256": "23e4cff4da62cb2714bfc564ebc582e4c6245a7d3b535797273150ef314ad9e8",
+      "caseNames": [
+        "submit snapshots the latest committed source revision after waiting for a concurrent draft writer",
+        "save completes first: submit snapshots the successfully saved revision",
+        "submit commits first: legacy draft save already past validation is rejected and leaves no business/audit/receipt change",
+        "submit commits first: modern CAS draft save with a stale baseline is rejected with INVALID_STATE",
+        "sync push shares the same write boundary: late offline report save after submit is rejected",
+        "legal same-key replay survives the post-submit state change, while a new key cannot impersonate it",
+        "stale concurrency baseline without submit is still rejected as CONFLICT and does not overwrite",
+        "concurrent distinct submit keys allocate unique versions and keep currentVersion on the latest snapshot",
+        "RP10 LR3-01 A01 authorized POST creates exactly one DRAFT row with author, project, period and content",
+        "RP10 LR3-01 A02 absent-row POST loses the race to a competing create+submit and is rejected without side effects",
+        "RP10 LR3-01 A03 two different keys racing the same business key: one succeeds, the loser is a 409 conflict",
+        "RP10 LR3-01 A03b an actor holding only reports.create cannot overwrite a draft that appears during the window",
+        "RP10 LR3-01 A04 existing editable draft: authorized save succeeds, reports.update is required, stale baseline conflicts cleanly",
+        "RP10 LR3-01 A04b a POST already validated on an editable draft is rejected when submit commits first",
+        "RP10 LR3-01 A05 same-key replay after submit returns the original success; a new key cannot impersonate it",
+        "RP10 LR3-01 A06 tombstone restore keeps the existing contract (draft only, no status or version reset)",
+        "RP10 LR3-01 A06b a tombstone that becomes active during the request is a controlled conflict, not an overwrite",
+        "RP10 LR4-03 SUP-01-01 generalized barrier reaches the real write boundary across write primitives",
+        "RP10 LR4-03 SUP-01-03 SEMANTIC_NEGATIVE_CONTROL: a delayed create adapted to unconditional upsert reproduces the lost-overwrite invariant",
+        "RP10 LR5-01 SUP-01-01b barrier compatibility matrix: create/upsert/update/updateMany each really hit",
+        "RP10 LR5-01 SUP-01-02 tombstone late restore loses to a competing restore+submit and is rejected",
+        "RP10 LR5-01 SUP-01-04 barrier release/settle control: a mid-race failure still releases and settles",
+        "RP10 LR6-01 SUP-01-05 report write matcher requires the full business identity or target id plus a mandatory marker",
+        "RP10 LR6-01 SUP-01-06 draftWriteBarrier hits a real Prisma upsert where.id with create/update payload, and rejects wrong id or marker",
+        "RP10 LR6-01 SUP-01-07 legacy/modern/sync draft races release, clear timers and settle on an intermediate exception"
+      ]
+    },
+    "CLOSE-02": {
+      "status": "PASS",
+      "layer": "SIMULATED_CONTROL_ALL_SUBPROCESSES_STUBBED",
+      "controls": [
+        {
+          "mode": "build-nonzero",
+          "observedExitCode": 1
+        },
+        {
+          "mode": "drop-exception",
+          "observedExitCode": 1
+        },
+        {
+          "mode": "stop-nonzero",
+          "observedExitCode": 1
+        },
+        {
+          "mode": "build-timeout",
+          "observedExitCode": 1
+        },
+        {
+          "mode": "suite-spawn-exception",
+          "observedExitCode": 1
+        },
+        {
+          "mode": "result-write-oserror",
+          "observedExitCode": 1
+        }
+      ],
+      "runnerSha256": "36551b9281bc45209bdfb03f9912cba9e264b158c0b9599a4e0aacf3cb2a81a7"
+    },
+    "CLOSE-03": {
+      "status": "PASS",
+      "layer": "REAL_FILE_READBACK",
+      "payloadManifest": {
+        "sessionFiles": 519,
+        "sessionRecords": 4,
+        "repoFiles": 4
+      },
+      "finalIntegrity": "SEALED"
+    },
+    "CLOSE-04": {
+      "status": "PASS",
+      "layer": "STATIC_REVIEW",
+      "errata": "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-04/scope-errata.md",
+      "businessSourceChanges": 0
+    }
+  },
+  "cleanup": {
+    "backendDistExistsNow": false,
+    "ownedTempRootsFromControls": 0,
+    "finalSuiteCleanup": {
+      "guardDropExit": 0,
+      "clusterStopExit": 0,
+      "ownedTempRootRemoved": true
+    }
+  },
+  "reuseDeclaration": {
+    "SUP-02": "REUSED_INDEPENDENTLY_VERIFIED_EVIDENCE — 12/12 and 101/101 belong to the independent review run; rp08 was not rerun in this round",
+    "syncTestSha256": "720c3f6a7b4badc3a7f8dfd754371467812b1c67cbe90358d504c2d2284d9fc7"
+  },
+  "notRun": [
+    "full JWT chain",
+    "frontend IndexedDB/UI",
+    "phase dynamic API/UI",
+    "target/candidate environment",
+    "deployment"
+  ],
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "verdict": "PASS"
+}

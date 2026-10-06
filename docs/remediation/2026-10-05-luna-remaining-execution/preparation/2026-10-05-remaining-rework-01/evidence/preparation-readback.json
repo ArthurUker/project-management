@@ -1,0 +1,13 @@
+{
+  "result": "PASS",
+  "scope": "Preparation content/cardinality/source checks only",
+  "taskSpecs": 8,
+  "caseAnalysis": 13,
+  "taskAllowlist": 36,
+  "unsignedDecisions": 21,
+  "sourceBindings": 104,
+  "falseMissingResolved": 49,
+  "identityCases": 20,
+  "lastCopyCases": 12,
+  "productDynamicCommands": 0
+}

@@ -1,0 +1,49 @@
+{
+  "supplementId": "SUP-01",
+  "parentTaskIds": [
+    "RP10-T02"
+  ],
+  "parentTaskStatusChanged": false,
+  "kind": "TEST_ONLY",
+  "originalFinding": "LR4-03",
+  "currentFindings": [
+    "LR5-01",
+    "LR5-04",
+    "LR5-05"
+  ],
+  "delivery": {
+    "sevenTypeArtifacts": true,
+    "evidenceDir": true,
+    "status": "DELIVERED"
+  },
+  "implementation": {
+    "scope": "formal report test only",
+    "srcChanges": 0,
+    "testFileChanges": 1,
+    "newTestsAdded": 3,
+    "suiteTests": 22,
+    "status": "TEST_ONLY_DELIVERED_NOT_A_BUSINESS_FIX"
+  },
+  "validation": {
+    "status": "LOCAL_REAL_DB_PASS",
+    "suite": {
+      "tests": 22,
+      "pass": 22,
+      "fail": 0
+    },
+    "checks": {
+      "build": 0,
+      "typecheck": 0,
+      "lint:undefined": 0,
+      "gitDiffCheck": 0
+    },
+    "meaning": "局部真实自有库通过；不等于业务修复验收或发布验收"
+  },
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "uncovered": [
+    "AC-B10-02 / INT-PC03-01",
+    "五项源码回退控制",
+    "JWT 全链 / IDB / 目标环境 / 部署"
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "counts": {
+    "tasks": 54,
+    "implementation": {
+      "COMPLETE": 22,
+      "NOT_STARTED": 30,
+      "IN_PROGRESS": 2
+    },
+    "validation": {
+      "ENV_BLOCKED": 7,
+      "PASS": 14,
+      "NOT_RUN": 33
+    },
+    "incompleteImplementation": 32,
+    "release": "NOT_EVALUATED for all tasks",
+    "note": "22 local implementations complete; validation/target/release separate;2 inactive optional tasks not activated."
+  },
+  "cases": {
+    "NOT_RUN": 197,
+    "PASS": 84,
+    "ENV_BLOCKED": 25
+  },
+  "decisions": {
+    "D-S01-01": "PENDING",
+    "D-S01-02": "PENDING",
+    "D-S01-03": "PENDING",
+    "D-S01-04": "PENDING",
+    "D-S01-05": "PENDING",
+    "D-S01-06": "PENDING",
+    "D-S01-07": "APPROVED",
+    "D-S01-08": "PENDING",
+    "T-RP-01": "PROPOSED",
+    "T-RP-02": "PROPOSED",
+    "T-RP-03": "PROPOSED",
+    "T-RP-04": "PROPOSED",
+    "T-RP-05": "APPROVED",
+    "T-RP-06": "PROPOSED",
+    "T-RP-07": "PROPOSED",
+    "T-RP-08": "PROPOSED",
+    "T-RP-09": "APPROVED",
+    "T-RP-10": "PROPOSED",
+    "T-RP-11": "PROPOSED",
+    "T-RP-12": "PROPOSED",
+    "T-RP-13": "PROPOSED"
+  },
+  "nextReadyTask": null,
+  "remainingImplementation": 32,
+  "requiredRemaining": 30,
+  "inactiveOptional": 2,
+  "noTaskStatusChange": true,
+  "sourceRef": "docs/remediation/2026-10-01-rdpms/IMPLEMENTATION_STATE.json"
+}

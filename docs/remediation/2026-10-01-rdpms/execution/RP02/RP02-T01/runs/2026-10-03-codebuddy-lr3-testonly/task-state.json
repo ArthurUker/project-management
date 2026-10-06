@@ -1,0 +1,19 @@
+{
+  "taskId": "RP02-T01",
+  "packageId": "RP02",
+  "run": "2026-10-03-codebuddy-lr3-testonly",
+  "kind": "TEST_ONLY",
+  "implementation": "COMPLETE",
+  "validation": "PASS",
+  "release": "NOT_EVALUATED",
+  "sourceChanges": ["rdpms-system/backend/tests/integration/rp02-login-lock-ttl.integration.test.mjs"],
+  "fixAcceptance": {
+    "localScoped": "PASS",
+    "targetEnvironment": "NOT_RUN",
+    "B14": "SUPPORTED; the independent fence scenario is now a permanent regression; not FIX_ACCEPTED at target/release level"
+  },
+  "observationDisposition": {"OBS-RP02-FENCE": "CLOSED_INTO_PERMANENT_REGRESSION (test-only; no business change)"},
+  "decisionBoundary": "T-RP-09 remains PROPOSED; no session/refresh/activation/forced-password-change policy change; executor signs nothing.",
+  "evidence": {"suite": "evidence/attempt-01/integration-suite.log", "runResults": "evidence/attempt-01/run-results.json"},
+  "notRun": ["target/candidate environment", "full JWT chain", "frontend IndexedDB", "RP02-T02 refresh family"]
+}

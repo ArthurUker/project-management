@@ -1,0 +1,47 @@
+{
+  "files": [
+    "rdpms-system/frontend/src/offline/engine.ts",
+    "rdpms-system/frontend/src/api/endpoints/sync.ts",
+    "rdpms-system/frontend/src/offline/idb.ts",
+    "rdpms-system/frontend/src/offline/deadLetter.ts",
+    "rdpms-system/frontend/src/offline/RecoveryPanel.tsx",
+    "rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx",
+    "rdpms-system/frontend/src/offline/SyncProvider.tsx"
+  ],
+  "beforeDirectory": "before-RP12-T02",
+  "runs": [
+    "rp12-t02-browser-receipts",
+    "rp12-t02-native-browser",
+    "rp12-t02-batch-regression",
+    "rp12-t02-owner-regression",
+    "rp12-t02-recovery-regression"
+  ],
+  "summary": "V1 client records canonical semantic SHA256/device/project/key and reserving stage before reserve; durable bound handle/window before push and pushed stage before HTTP. Original-only query on response loss/partial500, exact identity/hash/handle/status validation before atomic ack, same-owner generation fences, up to3 automatic reservation/push attempts. Unknown/expired/legacy retained without auto reservation/rekey. Original rejection metadata preserved; explicit conflict new intent clears old binding and allocates new sequence. Current real Chrome client10/10, native JWT+DB+IDB6/6, batch7/7, owner13/13, recovery5PASS+quotaENV_BLOCKED. Native joint faults show one business/audit/applied receipt effect and original-only retry.",
+  "compatibility": "Existing native backend approved v1 contract. No business backend/schema/dependency change; old legacy ambiguous queues retained. Backend protocol rejects clients lacking reservation; supported deployed client catalog and target HTTP budget remain external.",
+  "rollback": "Retain owner original/bindings/unknown state; do not fall back to unreserved writes or blind replay/new-key replacement. Keep IDB migration stores and actor originals; pause sync if reverting receipt-aware client.",
+  "casePass": {
+    "AC-F04-01": "Current native6 real JWT/DB/IDB cases plus10 receipt oracle,7 batch,13 owner and5 recovery PASS (quota explicitly ENV_BLOCKED). Exact v1 original binding and payload preservation; current owned baseline only. Joint/target/external budgets excluded.",
+    "AC-F04-02": "Current native6 real JWT/DB/IDB cases plus10 receipt oracle,7 batch,13 owner and5 recovery PASS (quota explicitly ENV_BLOCKED). Exact v1 original binding and payload preservation; current owned baseline only. Joint/target/external budgets excluded.",
+    "AC-F04-03": "Current native6 real JWT/DB/IDB cases plus10 receipt oracle,7 batch,13 owner and5 recovery PASS (quota explicitly ENV_BLOCKED). Exact v1 original binding and payload preservation; current owned baseline only. Joint/target/external budgets excluded.",
+    "PAC-RP12-02": "Current native6 real JWT/DB/IDB cases plus10 receipt oracle,7 batch,13 owner and5 recovery PASS (quota explicitly ENV_BLOCKED). Exact v1 original binding and payload preservation; current owned baseline only. Joint/target/external budgets excluded.",
+    "PAC-RP12-03": "Current native6 real JWT/DB/IDB cases plus10 receipt oracle,7 batch,13 owner and5 recovery PASS (quota explicitly ENV_BLOCKED). Exact v1 original binding and payload preservation; current owned baseline only. Joint/target/external budgets excluded.",
+    "PAC-RP12-04": "Current native6 real JWT/DB/IDB cases plus10 receipt oracle,7 batch,13 owner and5 recovery PASS (quota explicitly ENV_BLOCKED). Exact v1 original binding and payload preservation; current owned baseline only. Joint/target/external budgets excluded.",
+    "TASK-RP12-T02": "Current native6 real JWT/DB/IDB cases plus10 receipt oracle,7 batch,13 owner and5 recovery PASS (quota explicitly ENV_BLOCKED). Exact v1 original binding and payload preservation; current owned baseline only. Joint/target/external budgets excluded."
+  },
+  "notRun": {
+    "INT-PC03-01": "Native client/DB receipt partial500+commit-loss subset proven here; full cross-package project/task/report/delete concurrent adapters and all contracts not rerun.",
+    "INT-PC12-01": "Owner switch/unknown receipt/current UI recovery subsets proven; real quota, target recovery epoch/release are not fully verified."
+  },
+  "limits": [
+    "Candidate local native JWT and real current routes; no target/deployed release acceptance.",
+    "Earlier failed fixture username and manual-network cases retained; final native6/6 supports acceptance.",
+    "Real quota failure remains ENV_BLOCKED; candidate256KiB budget not verified deployed HTTP chain limit.",
+    "Other package joint acceptance rows remain open; no finding/target/release closure."
+  ],
+  "next": "RP08-T02 permission/member-role ACL fingerprint, backfill/revocation and owner cache/outbox isolation",
+  "nextTask": "RP08-T02",
+  "findings": [
+    "F04"
+  ],
+  "validation": "PASS"
+}

@@ -1,0 +1,10 @@
+{
+  "createdAt":"2026-10-02",
+  "executor":"Codex executor",
+  "authorizationSource":"Continuation of user's bounded local remediation authorization and latest request to continue task-by-task.",
+  "baselineCommit":"138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "allowedTaskIds":["RP00-T05"],
+  "allowedActivities":["read-only review of T-RP-11/T-RP-13/PC10/PC11 and release-candidate templates","write RP00-T05 static register and task status artifacts"],
+  "prohibited":["invent target numeric budgets","approve/sign T-RP-11 or T-RP-13","select or activate a release candidate","production/shared environment access","code/schema/dependency changes","commit/stage/push/merge/deploy","tests or stress runs without owned target-like environment","subagents/model switch"],
+  "decisionBoundary":"Technical proposals remain PROPOSED until named approver evidence exists."
+}

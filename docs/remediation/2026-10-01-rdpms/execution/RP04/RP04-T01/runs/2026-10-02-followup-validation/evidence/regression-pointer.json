@@ -1,0 +1,6 @@
+{
+  "suite": "rp04-project-snapshot-active",
+  "path": "../final-regression-2026-10-02/RP04/rp04-project-snapshot-active/attempt-01",
+  "result": "PASS",
+  "limitations": "See acceptance.json; ENV_BLOCKED means broader required evidence remains."
+}

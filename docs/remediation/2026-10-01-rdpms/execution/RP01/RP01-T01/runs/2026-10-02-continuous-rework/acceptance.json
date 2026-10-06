@@ -1,0 +1,14 @@
+{
+  "taskId":"RP01-T01","run":"2026-10-02-continuous-rework","implementationStatus":"COMPLETE","validationStatus":"PASS","releaseStatus":"NOT_EVALUATED",
+  "cases":[
+    {"id":"AC-B17-01","status":"PASS","evidence":["evidence/attempt-01/integration-suite.log","evidence/attempt-01/run-results.json"],"scope":"已认证SUPER_ADMIN实际201创建；数据库行code/name、createdById正确，isSystem=false，无permission links。"},
+    {"id":"AC-B17-02","status":"PASS","evidence":["evidence/attempt-01/integration-suite.log"],"scope":"duplicate明确CODE_EXISTS；小写非法code明确400；数组/对象/数值code不进入ORM且无新增行。"},
+    {"id":"AC-B17-03","status":"PASS","evidence":["evidence/attempt-01/integration-suite.log"],"scope":"id/permission links/audit/system字段注入明确拒绝；关系表无新增关系。"},
+    {"id":"PAC-RP01-03","status":"PASS","evidence":["evidence/attempt-01/integration-suite.log"],"scope":"合法、重复、非法code及新增code/name/description类型负例的HTTP与真实DB行通过。"},
+    {"id":"TASK-RP01-T01","status":"PASS","evidence":["change-summary.md","evidence/attempt-01/run-results.json"],"scope":"本子任务代码与实证交付完成。"}
+  ],
+  "reviewerIssueDisposition":{"LR-03":"FIXED_AND_TESTED_LOCAL"},
+  "oldFindingDisposition":{"B17":"LOCAL_FIX_ACCEPTED for role creation DTO scope; does not close unrelated RBAC findings or target/release acceptance."},
+  "excluded":{"D-S01-03":"NOT_APPLICABLE; no custom-role binding changes."},
+  "cleanup":"PASS; owned test DB and cluster dropped/stopped; generated dist and temp root removed."
+}

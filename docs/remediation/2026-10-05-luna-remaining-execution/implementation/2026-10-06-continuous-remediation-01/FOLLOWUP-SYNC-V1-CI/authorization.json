@@ -1,0 +1,13 @@
+{
+  "ref": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/authorization.json",
+  "taskId": "FOLLOWUP-SYNC-V1-CI",
+  "kind": "TEST_ONLY",
+  "allowedFiles": [
+    "rdpms-system/backend/tests/helpers/syncV1Fixture.mjs",
+    "rdpms-system/backend/tests/unit/rf04-entry-matrix.test.mjs",
+    "rdpms-system/backend/tests/unit/rf04-write-authorization.test.mjs",
+    "rdpms-system/backend/tests/integration/rf02-sync-rejection-retry.integration.test.mjs",
+    "rdpms-system/backend/tests/integration/rf04-write-authorization.integration.test.mjs",
+    "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+  ]
+}

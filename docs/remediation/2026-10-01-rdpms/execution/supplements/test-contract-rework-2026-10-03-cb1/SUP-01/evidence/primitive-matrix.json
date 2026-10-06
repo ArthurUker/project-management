@@ -1,0 +1,101 @@
+{
+  "kind": "REAL_OWNED_DB_TRACE",
+  "case": "SUP-01-01b",
+  "database": "rdpms_test_rework_4a56c2cb29",
+  "logRef": "SUP-01/runs/rp10-suite/attempt-05/integration-suite.log",
+  "note": "四种写入原语各自独立真实命中（不是 create 命中后内部调用 upsert 充数）",
+  "traces": [
+    {
+      "primitive": "create",
+      "target": {
+        "reportId": "19d3c2dc-e33d-40ec-b830-8c5e067d0764",
+        "periodKey": "2028-01",
+        "businessKey": {
+          "projectId": "ce9c309d-db8c-4dd4-99ab-7f2babd181b8",
+          "authorId": "rp10-actor-74c8fe29-6316-462e-99e0-87a7f7e096a2",
+          "reportType": "MONTHLY",
+          "periodKey": "2028-01"
+        }
+      },
+      "marker": "matrix-create",
+      "hit": true,
+      "firedMethod": "create",
+      "released": true,
+      "persisted": {
+        "content": {
+          "revision": "matrix-create"
+        },
+        "updateCount": null
+      }
+    },
+    {
+      "primitive": "upsert",
+      "target": {
+        "reportId": "rp10-matrix-upsert-74c8fe29-6316-462e-99e0-87a7f7e096a2",
+        "periodKey": "2028-02",
+        "businessKey": {
+          "projectId": "ce9c309d-db8c-4dd4-99ab-7f2babd181b8",
+          "authorId": "rp10-actor-74c8fe29-6316-462e-99e0-87a7f7e096a2",
+          "reportType": "MONTHLY",
+          "periodKey": "2028-02"
+        }
+      },
+      "marker": "matrix-upsert",
+      "hit": true,
+      "firedMethod": "upsert",
+      "released": true,
+      "persisted": {
+        "content": {
+          "revision": "matrix-upsert"
+        },
+        "updateCount": null
+      }
+    },
+    {
+      "primitive": "updateMany",
+      "target": {
+        "reportId": "rp10-matrix-updateMany-74c8fe29-6316-462e-99e0-87a7f7e096a2",
+        "periodKey": "2028-03",
+        "businessKey": {
+          "projectId": "ce9c309d-db8c-4dd4-99ab-7f2babd181b8",
+          "authorId": "rp10-actor-74c8fe29-6316-462e-99e0-87a7f7e096a2",
+          "reportType": "MONTHLY",
+          "periodKey": "2028-03"
+        }
+      },
+      "marker": "matrix-update-many",
+      "hit": true,
+      "firedMethod": "updateMany",
+      "released": true,
+      "persisted": {
+        "content": {
+          "revision": "matrix-update-many"
+        },
+        "updateCount": 1
+      }
+    },
+    {
+      "primitive": "update",
+      "target": {
+        "reportId": "rp10-matrix-update-74c8fe29-6316-462e-99e0-87a7f7e096a2",
+        "periodKey": "2028-04",
+        "businessKey": {
+          "projectId": "ce9c309d-db8c-4dd4-99ab-7f2babd181b8",
+          "authorId": "rp10-actor-74c8fe29-6316-462e-99e0-87a7f7e096a2",
+          "reportType": "MONTHLY",
+          "periodKey": "2028-04"
+        }
+      },
+      "marker": "matrix-update",
+      "hit": true,
+      "firedMethod": "update",
+      "released": true,
+      "persisted": {
+        "content": {
+          "revision": "matrix-update"
+        },
+        "updateCount": null
+      }
+    }
+  ]
+}

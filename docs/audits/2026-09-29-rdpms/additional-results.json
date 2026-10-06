@@ -1,0 +1,25 @@
+{
+  "executedAt": "2026-09-29T06:58:52.342Z",
+  "isolation": {
+    "database": "rdpms_audit_isolated",
+    "dataDirectory": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-deep-audit-hru8uwnj/pgdata",
+    "port": 50796
+  },
+  "summary": {
+    "reproduced": 1,
+    "notReproduced": 0
+  },
+  "results": [
+    {
+      "id": "B21_REGISTRATION_BYPASSES_PROJECT_SCOPE",
+      "defectReproduced": true,
+      "evidence": {
+        "normalProjectStatus": 404,
+        "registrationDetailStatus": 200,
+        "nonmemberReadPrivateTask": true,
+        "nonmemberUpdateStatus": 200,
+        "storedName": "modified-by-nonmember"
+      }
+    }
+  ]
+}

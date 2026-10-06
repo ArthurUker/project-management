@@ -1,0 +1,75 @@
+{
+  "taskId": "RP11-T03",
+  "approvalRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/approval.json",
+  "cases": [
+    {
+      "caseId": "AC-F02-01",
+      "result": "PASS",
+      "scope": "Current real Chrome/IDB native transaction abort/reopen, duplicate conflict, atomic rejected/conflict retry; actual current production recovery dialog owns download, cancel/confirm discard+atomic local audit, B export/discard denial;13 owner/Tasks regression.5 recoveryPASS and1 actual quotaENV_BLOCKED, no synthetic abort relabelled as quota. Exact delegated owner/recovery contracts.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP11/RP11-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-F02-02",
+      "result": "PASS",
+      "scope": "Current real Chrome/IDB native transaction abort/reopen, duplicate conflict, atomic rejected/conflict retry; actual current production recovery dialog owns download, cancel/confirm discard+atomic local audit, B export/discard denial;13 owner/Tasks regression.5 recoveryPASS and1 actual quotaENV_BLOCKED, no synthetic abort relabelled as quota. Exact delegated owner/recovery contracts.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP11/RP11-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP11-02",
+      "result": "PASS",
+      "scope": "Current real Chrome/IDB native transaction abort/reopen, duplicate conflict, atomic rejected/conflict retry; actual current production recovery dialog owns download, cancel/confirm discard+atomic local audit, B export/discard denial;13 owner/Tasks regression.5 recoveryPASS and1 actual quotaENV_BLOCKED, no synthetic abort relabelled as quota. Exact delegated owner/recovery contracts.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP11/RP11-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "GATE-S02-OPEN-03",
+      "result": "PASS",
+      "scope": "Current real Chrome/IDB native transaction abort/reopen, duplicate conflict, atomic rejected/conflict retry; actual current production recovery dialog owns download, cancel/confirm discard+atomic local audit, B export/discard denial;13 owner/Tasks regression.5 recoveryPASS and1 actual quotaENV_BLOCKED, no synthetic abort relabelled as quota. Exact delegated owner/recovery contracts.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP11/RP11-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "DECISION-T-RP-12",
+      "result": "PASS",
+      "scope": "Current real Chrome/IDB native transaction abort/reopen, duplicate conflict, atomic rejected/conflict retry; actual current production recovery dialog owns download, cancel/confirm discard+atomic local audit, B export/discard denial;13 owner/Tasks regression.5 recoveryPASS and1 actual quotaENV_BLOCKED, no synthetic abort relabelled as quota. Exact delegated owner/recovery contracts.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP11/RP11-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP11-05",
+      "result": "ENV_BLOCKED",
+      "reason": "Blocking/upgrade abort/page close/two tabs proven in RP11-T01/T02; current Chrome reports quota overrideActive=true/quota0 yet no actual QuotaExceededError after reopen/1MiB copy. Native quota evidence remains ENV_BLOCKED; no dependency install/false quota claim.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP11/RP11-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "INT-PC04-01",
+      "result": "ENV_BLOCKED",
+      "reason": "Native migration/blocked/abort/pageclose passed; actual quota error unavailable with existing owned Chrome controls. Preserve original and record environment proof.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP11/RP11-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "TASK-RP11-T03",
+      "result": "ENV_BLOCKED",
+      "reason": "Implementation and current5 recovery+13 owner cases passed; required native quota subcase ENV_BLOCKED. Task implementation complete; validation ENV_BLOCKED, no package/joint close.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP11/RP11-T03/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "INT-PC06-01",
+      "result": "NOT_RUN",
+      "reason": "Historical restore/epoch replay remains not run and requires separate recovery task/current target materials."
+    },
+    {
+      "caseId": "INT-PC12-01",
+      "result": "NOT_RUN",
+      "reason": "Actual current dialog A/B/export/discard and transaction faults covered; unknown receipt/oversize UI and native JWT/backend joint await RP12."
+    }
+  ],
+  "localValidation": "ENV_BLOCKED",
+  "jointValidation": "NOT_RUN",
+  "targetValidation": "NOT_RUN",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "limits": [
+    "Real Chrome/IDB production Tasks/dialog with synthetic HTTP auth/init/push; native JWT/backend/target joint NOT_RUN",
+    "Recovery validation5 PASS /1 ENV_BLOCKED;13 owner regression PASS; quota override accepted but actual native quota failure not produced, preserved exact evidence",
+    "Original server snapshots are never directly shown; comparison uses fresh authorized sync projection when available. Unknown legacy body/claim/export/discard prohibited",
+    "No commit/deploy/target environment/production snapshot or real user action"
+  ]
+}

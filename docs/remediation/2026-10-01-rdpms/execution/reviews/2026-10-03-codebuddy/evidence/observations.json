@@ -1,0 +1,121 @@
+{
+  "run": "74f31529-a759-4928-a69b-f5c4e2682a35",
+  "database": "unique owned PostgreSQL",
+  "authentication": "trusted injected actor for protected routes; real bcrypt login for login fence; not end-to-end JWT acceptance",
+  "instrumentation": "deterministic pauses immediately before real ORM upsert/updateMany; unchanged actual SQL and transaction execution",
+  "observations": [
+    {
+      "case": "legal-authorized-project",
+      "status": 201,
+      "persisted": 1
+    },
+    {
+      "case": "project-subtype-object",
+      "status": 400,
+      "noResidue": true
+    },
+    {
+      "case": "project-type-array",
+      "status": 400,
+      "noResidue": true
+    },
+    {
+      "case": "project-date-boolean",
+      "status": 400,
+      "noResidue": true
+    },
+    {
+      "case": "project-invalid-enum",
+      "status": 400,
+      "noResidue": true
+    },
+    {
+      "case": "project-invalid-date",
+      "status": 400,
+      "noResidue": true
+    },
+    {
+      "case": "late-PUT-inverse",
+      "status": 409,
+      "code": "INVALID_STATE",
+      "persistedStatus": "SUBMITTED",
+      "content": {
+        "revision": "put-source"
+      },
+      "versionContent": {
+        "revision": "put-source"
+      },
+      "failedSaveReceipts": 0
+    },
+    {
+      "case": "late-POST-after-absent-row-validation",
+      "firstValidateSawAbsent": true,
+      "createStatus": 201,
+      "submitStatus": 200,
+      "latePostStatus": 201,
+      "persistedStatus": "SUBMITTED",
+      "currentVersion": 1,
+      "currentContent": {
+        "revision": "late-new-POST"
+      },
+      "versionContent": {
+        "revision": "winner-created"
+      },
+      "audit": [
+        {
+          "action": "create",
+          "metadata": {
+            "projectId": "f3c6d4eb-638f-4176-aec0-69c7deb418e7",
+            "permissionCode": "reports.create"
+          }
+        },
+        {
+          "action": "submit",
+          "metadata": {
+            "permissionCode": "reports.submit"
+          }
+        },
+        {
+          "action": "create",
+          "metadata": {
+            "projectId": "f3c6d4eb-638f-4176-aec0-69c7deb418e7",
+            "permissionCode": "reports.create"
+          }
+        }
+      ],
+      "receipts": [
+        {
+          "command": "POST /api/projects",
+          "resourceScope": "projects:create"
+        },
+        {
+          "command": "POST /api/reports",
+          "resourceScope": "report:f3c6d4eb-638f-4176-aec0-69c7deb418e7:MONTHLY:2026-11"
+        },
+        {
+          "command": "POST /api/reports",
+          "resourceScope": "report:f3c6d4eb-638f-4176-aec0-69c7deb418e7:MONTHLY:2026-11"
+        },
+        {
+          "command": "POST /api/reports/:id/submit",
+          "resourceScope": "report:09f1497f-5864-494b-9542-d1bbd536d9d6"
+        },
+        {
+          "command": "POST /api/reports/:id/submit",
+          "resourceScope": "report:4cc21f6f-d569-4a9c-b97d-d9a0d82ce0fc"
+        }
+      ]
+    },
+    {
+      "case": "login-stale-ACTIVE-before-conditional-reset",
+      "disabledStatus": 200,
+      "loginStatus": 403,
+      "code": "ACCOUNT_DISABLED",
+      "persistedStatus": "DISABLED",
+      "lastLoginAt": null,
+      "refreshCount": 0,
+      "successAuditCount": 0,
+      "accessTokenPresent": false
+    }
+  ]
+}

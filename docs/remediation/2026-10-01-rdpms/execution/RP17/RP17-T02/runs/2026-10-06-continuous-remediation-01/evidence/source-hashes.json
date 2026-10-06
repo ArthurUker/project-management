@@ -1,0 +1,17 @@
+[
+  {
+    "path": "rdpms-system/deploy/scripts/backup-pg.sh",
+    "beforeSha256": "74c033bccf7d5684dea0a66ac91f5b552af2e406d59ff8882e760ec616034101",
+    "afterSha256": "92ab312ad12c9896f936e825135e6b24ae82605228b43e8f9fa5402396453bc1"
+  },
+  {
+    "path": "rdpms-system/deploy/scripts/backup-pair.py",
+    "beforeSha256": null,
+    "afterSha256": "b8ab20a7a5552a61a27e86d3cab07d7188acbd357fe08f7304896093b857aac0"
+  },
+  {
+    "path": "rdpms-system/backend/tests/integration/rp17-backup-pair.integration.test.mjs",
+    "beforeSha256": null,
+    "afterSha256": "8e21597bdbc8c47867896c9209bb8106d2caac3683e9ad67f1046d790f24b6a1"
+  }
+]

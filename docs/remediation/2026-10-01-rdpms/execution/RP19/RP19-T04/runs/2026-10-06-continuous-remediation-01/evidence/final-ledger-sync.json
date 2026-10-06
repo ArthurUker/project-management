@@ -1,0 +1,200 @@
+{
+  "kind": "DOCUMENTARY_MIRROR_SYNC_NOT_PRODUCT_ACCEPTANCE",
+  "filledMissingMirrorTaskIds": [
+    "RP01-T03",
+    "RP05-T03",
+    "RP10-T01",
+    "RP15-T02",
+    "RP15-T03"
+  ],
+  "graphStatusCorrections": [
+    {
+      "taskId": "RP00-T01",
+      "before": {
+        "status": "IN_PROGRESS",
+        "implementationStatus": "COMPLETE",
+        "validation": "ENV_BLOCKED",
+        "validationStatus": "ENV_BLOCKED",
+        "releaseStatus": "NOT_EVALUATED"
+      },
+      "after": {
+        "status": "COMPLETE",
+        "implementationStatus": "COMPLETE",
+        "validation": "ENV_BLOCKED",
+        "validationStatus": "ENV_BLOCKED",
+        "releaseStatus": "NOT_EVALUATED"
+      }
+    },
+    {
+      "taskId": "RP00-T03",
+      "before": {
+        "status": "IN_PROGRESS",
+        "implementationStatus": "COMPLETE",
+        "validation": "NOT_RUN",
+        "validationStatus": "NOT_RUN",
+        "releaseStatus": "NOT_EVALUATED"
+      },
+      "after": {
+        "status": "COMPLETE",
+        "implementationStatus": "COMPLETE",
+        "validation": "NOT_RUN",
+        "validationStatus": "NOT_RUN",
+        "releaseStatus": "NOT_EVALUATED"
+      }
+    },
+    {
+      "taskId": "RP00-T04",
+      "before": {
+        "status": "IN_PROGRESS",
+        "implementationStatus": "COMPLETE",
+        "validation": "NOT_RUN",
+        "validationStatus": "NOT_RUN",
+        "releaseStatus": "NOT_EVALUATED"
+      },
+      "after": {
+        "status": "COMPLETE",
+        "implementationStatus": "COMPLETE",
+        "validation": "NOT_RUN",
+        "validationStatus": "NOT_RUN",
+        "releaseStatus": "NOT_EVALUATED"
+      }
+    },
+    {
+      "taskId": "RP00-T05",
+      "before": {
+        "status": "IN_PROGRESS",
+        "implementationStatus": "COMPLETE",
+        "validation": "NOT_RUN",
+        "validationStatus": "NOT_RUN",
+        "releaseStatus": "NOT_EVALUATED"
+      },
+      "after": {
+        "status": "COMPLETE",
+        "implementationStatus": "COMPLETE",
+        "validation": "NOT_RUN",
+        "validationStatus": "NOT_RUN",
+        "releaseStatus": "NOT_EVALUATED"
+      }
+    },
+    {
+      "taskId": "RP04-T01",
+      "before": {
+        "status": "COMPLETE",
+        "implementationStatus": "COMPLETE",
+        "validation": "ENV_BLOCKED",
+        "validationStatus": "PASS",
+        "releaseStatus": "NOT_EVALUATED"
+      },
+      "after": {
+        "status": "COMPLETE",
+        "implementationStatus": "COMPLETE",
+        "validation": "PASS",
+        "validationStatus": "PASS",
+        "releaseStatus": "NOT_EVALUATED"
+      }
+    },
+    {
+      "taskId": "RP05-T01",
+      "before": {
+        "status": "COMPLETE",
+        "implementationStatus": "COMPLETE",
+        "validation": "ENV_BLOCKED",
+        "validationStatus": "PASS",
+        "releaseStatus": "NOT_EVALUATED"
+      },
+      "after": {
+        "status": "COMPLETE",
+        "implementationStatus": "COMPLETE",
+        "validation": "PASS",
+        "validationStatus": "PASS",
+        "releaseStatus": "NOT_EVALUATED"
+      }
+    },
+    {
+      "taskId": "RP07-T01",
+      "before": {
+        "status": "COMPLETE",
+        "implementationStatus": "COMPLETE",
+        "validation": "ENV_BLOCKED",
+        "validationStatus": "PASS",
+        "releaseStatus": "NOT_EVALUATED"
+      },
+      "after": {
+        "status": "COMPLETE",
+        "implementationStatus": "COMPLETE",
+        "validation": "PASS",
+        "validationStatus": "PASS",
+        "releaseStatus": "NOT_EVALUATED"
+      }
+    },
+    {
+      "taskId": "RP13-T02",
+      "before": {
+        "status": "COMPLETE",
+        "implementationStatus": "COMPLETE",
+        "validation": "NOT_RUN",
+        "validationStatus": "ENV_BLOCKED",
+        "releaseStatus": "NOT_EVALUATED"
+      },
+      "after": {
+        "status": "COMPLETE",
+        "implementationStatus": "COMPLETE",
+        "validation": "ENV_BLOCKED",
+        "validationStatus": "ENV_BLOCKED",
+        "releaseStatus": "NOT_EVALUATED"
+      }
+    },
+    {
+      "taskId": "RP14-T01",
+      "before": {
+        "status": "COMPLETE",
+        "implementationStatus": "COMPLETE",
+        "validation": "ENV_BLOCKED",
+        "validationStatus": "PASS",
+        "releaseStatus": "NOT_EVALUATED"
+      },
+      "after": {
+        "status": "COMPLETE",
+        "implementationStatus": "COMPLETE",
+        "validation": "PASS",
+        "validationStatus": "PASS",
+        "releaseStatus": "NOT_EVALUATED"
+      }
+    },
+    {
+      "taskId": "RP19-T01",
+      "before": {
+        "status": "IN_PROGRESS",
+        "implementationStatus": "COMPLETE",
+        "validation": "ENV_BLOCKED",
+        "validationStatus": "ENV_BLOCKED",
+        "releaseStatus": "NOT_EVALUATED"
+      },
+      "after": {
+        "status": "COMPLETE",
+        "implementationStatus": "COMPLETE",
+        "validation": "ENV_BLOCKED",
+        "validationStatus": "ENV_BLOCKED",
+        "releaseStatus": "NOT_EVALUATED"
+      }
+    }
+  ],
+  "canonicalAuthority": "IMPLEMENTATION_STATE tasks + actual per-task evidence",
+  "countsUnchanged": {
+    "tasks": 54,
+    "implementation": {
+      "COMPLETE": 48,
+      "NOT_STARTED": 5,
+      "IN_PROGRESS": 1
+    },
+    "validation": {
+      "ENV_BLOCKED": 12,
+      "PASS": 34,
+      "NOT_RUN": 8
+    },
+    "release": "NOT_EVALUATED for all tasks",
+    "incompleteImplementation": 6,
+    "note": "Implementation/local/target/release are separate; original planning checkpoints preserved"
+  },
+  "unmetDependenciesRecomputed": true
+}

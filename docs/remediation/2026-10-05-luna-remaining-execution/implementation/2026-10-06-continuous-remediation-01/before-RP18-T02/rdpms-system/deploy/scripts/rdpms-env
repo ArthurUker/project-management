@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+#
+# rdpms-env — 为手动执行的命令注入 /srv/rdpms/.env
+#
+# 用途：
+#   systemd 通过 EnvironmentFile 读取 /srv/rdpms/.env，但手动 shell 不会。
+#   因此所有手动执行的 prisma / seed 命令必须通过本 wrapper 加载环境变量。
+#
+# 用法：
+#   sudo -u rdpms env HOME=/var/lib/rdpms /usr/local/bin/rdpms-env npx prisma migrate deploy
+#
+# 安装（部署时执行，非代码目录）：
+#   sudo install -m 750 -o root -g rdpms deploy/scripts/rdpms-env /usr/local/bin/rdpms-env
+#
+# 安全约束：
+#   1. 本脚本绝不 echo / printf 任何环境变量值；
+#   2. 调用方脚本禁止使用 `set -x` 包裹本 wrapper 的调用；
+#   3. 日志中不得出现 DATABASE_URL / JWT_SECRET 等敏感值。
+#
+set -Eeuo pipefail
+
+ENV_FILE="${RDPMS_ENV_FILE:-/srv/rdpms/.env}"
+
+if [ ! -r "$ENV_FILE" ]; then
+  printf '[rdpms-env] FATAL: 无法读取 %s（权限应为 640 root:rdpms）\n' "$ENV_FILE" >&2
+  exit 1
+fi
+
+set -a
+# shellcheck disable=SC1090
+source "$ENV_FILE"
+set +a
+
+exec "$@"

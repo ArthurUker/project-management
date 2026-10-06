@@ -1,0 +1,203 @@
+{
+  "sessionId": "window-a-runner",
+  "executor": "CodeBuddy (LR7-01 window-a fix copy)",
+  "kind": "SIMULATED_CONTROL_RUNNER_FIX_COPY",
+  "targets": [
+    "tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+  ],
+  "preflight": {
+    "ROOT": "/Users/renkang/VS Code/project-management",
+    "ROOTexists": true,
+    "gitDirExists": true,
+    "BACKEND": "/Users/renkang/VS Code/project-management/rdpms-system/backend",
+    "backendExists": true,
+    "guardScriptExists": true,
+    "compilerPath": "/Users/renkang/VS Code/project-management/rdpms-system/frontend/node_modules/.bin/tsc",
+    "compilerExists": true,
+    "initdbPath": "/opt/homebrew/bin/initdb",
+    "initdbExists": true,
+    "pgCtlPath": "/opt/homebrew/bin/pg_ctl",
+    "pgCtlExists": true,
+    "distExistsAtStart": false,
+    "targetsExist": {
+      "tests/integration/rp10-report-submit-snapshot.integration.test.mjs": true
+    },
+    "verdict": "OK"
+  },
+  "commands": [
+    {
+      "label": "initdb",
+      "command": [
+        "/opt/homebrew/bin/initdb",
+        "-D",
+        "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/controls/_owned_tmp/rdpms-lr7-n9kud0gi/pg",
+        "-U",
+        "rdpms_exec",
+        "--auth=trust"
+      ],
+      "exitCode": 0,
+      "log": "initdb.log"
+    },
+    {
+      "label": "cluster-start",
+      "command": [
+        "/opt/homebrew/bin/pg_ctl",
+        "-D",
+        "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/controls/_owned_tmp/rdpms-lr7-n9kud0gi/pg",
+        "-l",
+        "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/controls/_owned_tmp/rdpms-lr7-n9kud0gi/postgres.log",
+        "-o",
+        "-h 127.0.0.1 -p 55484 -k /Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/controls/_owned_tmp/rdpms-lr7-n9kud0gi/socket",
+        "-w",
+        "start"
+      ],
+      "exitCode": 0,
+      "log": "cluster-start.log"
+    },
+    {
+      "label": "guard-check",
+      "command": [
+        "node",
+        "scripts/test-db.mjs",
+        "check"
+      ],
+      "exitCode": 2,
+      "log": "guard-check.log"
+    },
+    {
+      "label": "guard-reset",
+      "command": [
+        "node",
+        "scripts/test-db.mjs",
+        "reset"
+      ],
+      "exitCode": 0,
+      "log": "guard-reset.log"
+    },
+    {
+      "label": "backend-build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "log": "backend-build.log"
+    },
+    {
+      "label": "integration-suite",
+      "command": [
+        "node",
+        "--test",
+        "tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+      ],
+      "exitCode": 0,
+      "log": "integration-suite.log"
+    },
+    {
+      "label": "backend-typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "log": "backend-typecheck.log"
+    },
+    {
+      "label": "undefined-check",
+      "command": [
+        "npm",
+        "run",
+        "lint:undefined"
+      ],
+      "exitCode": 0,
+      "log": "undefined-check.log"
+    },
+    {
+      "label": "git-diff-check",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "log": "git-diff-check.log"
+    },
+    {
+      "label": "guard-drop",
+      "command": [
+        "node",
+        "scripts/test-db.mjs",
+        "drop"
+      ],
+      "exitCode": 0,
+      "log": "guard-drop.log"
+    },
+    {
+      "label": "cluster-stop",
+      "command": [
+        "/opt/homebrew/bin/pg_ctl",
+        "-D",
+        "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/controls/_owned_tmp/rdpms-lr7-n9kud0gi/pg",
+        "-m",
+        "fast",
+        "-w",
+        "stop"
+      ],
+      "exitCode": 1,
+      "log": "cluster-stop.log"
+    }
+  ],
+  "primaryExceptions": [],
+  "cleanup": {
+    "guardDropExit": 0,
+    "clusterStopExit": 1,
+    "ownedDistRemoved": true,
+    "ownedTempRootRemoved": false,
+    "preservedOwnedTempRoot": "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/controls/_owned_tmp/rdpms-lr7-n9kud0gi",
+    "releaseCondition": "cluster-stop did not succeed; the owned temp root is preserved on purpose. Release: run pg_ctl -D <root>/pg -m fast -w stop, then remove the root. Never delete a root whose cluster may still be running.",
+    "ownershipVerification": {
+      "ownedDatabase": "rdpms_test_lr7_07416bccb4",
+      "ownedPort": 55484,
+      "ownedTempRoot": "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/controls/_owned_tmp/rdpms-lr7-n9kud0gi",
+      "rootExistsAfterCleanup": true,
+      "postmasterPidExists": false,
+      "distExistsAfterCleanup": false,
+      "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+    }
+  },
+  "criticalFailures": [
+    "cluster-stop cleanup did not succeed",
+    "cluster-stop failed, owned temp root preserved (release condition recorded)"
+  ],
+  "notes": [],
+  "buildOutputOwnership": {
+    "path": "/Users/renkang/VS Code/project-management/rdpms-system/backend/dist",
+    "preExistingAtStart": false,
+    "ownershipDeclaredBeforeBuild": true,
+    "owner": "window-a-runner"
+  },
+  "ownedResources": {
+    "database": "rdpms_test_lr7_07416bccb4",
+    "port": 55484,
+    "bindHost": "127.0.0.1",
+    "ownerRole": "rdpms_exec",
+    "tempRoot": "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/controls/_owned_tmp/rdpms-lr7-n9kud0gi",
+    "envFileMode": "0600",
+    "dotenv": "new private env file only; repository dotenv files never read",
+    "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+  },
+  "guardContract": {
+    "expectedExitCodeBeforeReset": 2,
+    "actualExitCode": 2,
+    "markersFound": {
+      "db": true,
+      "host": true,
+      "roleUnavailable": true
+    },
+    "verdict": "GUARD_CONTRACT_OK",
+    "meaning": "exit 2 before reset is the documented guard contract, not a business failure"
+  },
+  "exitReason": "critical failures: cluster-stop cleanup did not succeed; cluster-stop failed, owned temp root preserved (release condition recorded)"
+}

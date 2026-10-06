@@ -1,0 +1,27 @@
+[
+  {
+    "path": "rdpms-system/backend/src/routes/users.js",
+    "beforeSha256": "1b54ba1ec58ed92ad2d0441820b52b02774487753a0c9b093a1db1a6628ef700",
+    "afterSha256": "c8276b6fc1b034fe9f8732d387965b488bce15d744000ef6d8bae39af52ee928"
+  },
+  {
+    "path": "rdpms-system/backend/src/routes/auth.js",
+    "beforeSha256": "7a9301654ea603ab8eeb576f52260cd48b33c3a7cbd67811d523c77d2281d8de",
+    "afterSha256": "e1f1f9955e119c464196ad459569365ac31353d3cd3110941e39f3d75dd34824"
+  },
+  {
+    "path": "rdpms-system/backend/src/kernel/rbac.js",
+    "beforeSha256": "99ca8177a7c6aed2f4cf820e7bb82ae572c516d2647aec1366dbfcce9695ce2f",
+    "afterSha256": "995d74dd668f9eb292a22c65b7139eb362d52be024a203d5fde36620176ab13e"
+  },
+  {
+    "path": "rdpms-system/backend/src/modules/auth/accountPolicy.ts",
+    "beforeSha256": null,
+    "afterSha256": "992d8ce2c89f5f482d41e947ceabcc095c3e805040253d5b0419ac09281f7615"
+  },
+  {
+    "path": "rdpms-system/backend/tests/integration/rp01-account-policy.integration.test.mjs",
+    "beforeSha256": null,
+    "afterSha256": "9f7dd109e1de87723dc60298a360a1fe7a989fef279c51a198adea2720995930"
+  }
+]

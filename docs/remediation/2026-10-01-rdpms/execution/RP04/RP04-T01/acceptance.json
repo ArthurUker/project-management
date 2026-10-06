@@ -1,0 +1,18 @@
+{
+ "taskId":"RP04-T01","baseline":"138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+ "implementationStatus":"COMPLETE","validationStatus":"ENV_BLOCKED","releaseStatus":"NOT_EVALUATED",
+ "cases":[
+  {"id":"AC-B03-01","status":"ENV_BLOCKED","scope":"Legal transition, same-status edit, illegal rejection integration assertions authored; no current API/database execution."},
+  {"id":"AC-B03-02","status":"ENV_BLOCKED","scope":"Template default date from project startDate assertion authored; no project phase row inspected dynamically."},
+  {"id":"AC-B03-03","status":"ENV_BLOCKED","scope":"Batch status transition assertion authored; no HTTP or durable-state validation."},
+  {"id":"AC-B20-01","status":"ENV_BLOCKED","scope":"List and total count soft-delete exclusion test authored; not run."},
+  {"id":"AC-B20-02","status":"ENV_BLOCKED","scope":"Existing deleted detail 404 assertion authored; not run."},
+  {"id":"AC-B20-03","status":"ENV_BLOCKED","scope":"Type/status statistics exclude deleted rows assertion authored; not run."},
+  {"id":"PAC-RP04-01","status":"ENV_BLOCKED","scope":"Package runtime acceptance not run because build and isolated DB unavailable."},
+  {"id":"PAC-RP04-03","status":"ENV_BLOCKED","scope":"List/count/stats/detail persisted behavior not run."},
+  {"id":"TASK-RP04-T01","status":"ENV_BLOCKED","scope":"Source implementation and test artifact delivered; acceptance awaits clean build and owned DB."}
+ ],
+ "historicalFindings":{"B03":"SUPPORTED / P1; code path corrected, FIX_ACCEPTED not set","B20":"SUPPORTED / P2; local project query scope corrected, FIX_ACCEPTED not set"},
+ "blockers":["Backend TypeScript build cannot run: `tsc` unavailable; dist is absent.","No owned isolated PostgreSQL and private test env currently registered.","Need inspect actual response and persisted project/date rows for the synthetic fixtures."],
+ "release":"NOT_EVALUATED"
+}

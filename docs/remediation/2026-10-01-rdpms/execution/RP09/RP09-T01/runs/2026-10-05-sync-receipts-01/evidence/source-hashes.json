@@ -1,0 +1,27 @@
+[
+  {
+    "path": "rdpms-system/backend/src/routes/sync.js",
+    "beforeSha256": "ad41610a6036f054533e663089f1584a9c9730a8264c2a62f39448add7672c7f",
+    "afterSha256": "5e25071cbfaff1437323f002e06fbb65e97c724da80034f310d8cb22e6c2310d"
+  },
+  {
+    "path": "rdpms-system/backend/src/modules/sync/syncMutationCommands.ts",
+    "beforeSha256": null,
+    "afterSha256": "3d97e1d1dc313ff6462c373f3d4ec7c616e35f1acedbb9ddf59b7019fd7e72f6"
+  },
+  {
+    "path": "rdpms-system/backend/prisma/schema.prisma",
+    "beforeSha256": "fac40301f61926686ae1466b83e6b71b9c4bf8be9f519bf11dde32a04d967f22",
+    "afterSha256": "38da845f7272a201551d473939e79f673f3ccc7a6fb9f4b3cb534a102fd7d269"
+  },
+  {
+    "path": "rdpms-system/backend/prisma/migrations/20261005_sync_receipt_v1_scope/migration.sql",
+    "beforeSha256": null,
+    "afterSha256": "49ce6f3501ed99ae39dc9dc94386f4842c6af8a08a8468bd4ad1808d840cca55"
+  },
+  {
+    "path": "rdpms-system/backend/tests/integration/rp09-scoped-receipt.integration.test.mjs",
+    "beforeSha256": null,
+    "afterSha256": "93b20ea14158da393ad6f50b4498ef6cf37960d14acc169619cdb6025559736d"
+  }
+]

@@ -1,0 +1,32 @@
+{
+  "purpose": "Source-fact index backing current-contract.md and decision-draft.* for window C. Read-only inspection; no source modified.",
+  "recordedAt": "2026-10-04",
+  "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "currentSourceHashes": {
+    "rdpms-system/backend/src/routes/sync.js": "ad41610a6036f054533e663089f1584a9c9730a8264c2a62f39448add7672c7f",
+    "rdpms-system/backend/src/platform/idempotency/receipts.js": "5fedecb6fcdb9fb8878d7c331ba5c22ad23519a6e1486ae1da680f3806226c05",
+    "rdpms-system/backend/src/platform/idempotency/payloadHash.js": "2d9eaadf31ee0b71c36e6f399eefa9c3e411b2e5bcd510212cf4bce4bcf88ff9",
+    "rdpms-system/backend/prisma/schema.prisma": "fac40301f61926686ae1466b83e6b71b9c4bf8be9f519bf11dde32a04d967f22"
+  },
+  "facts": [
+    {"id": "F-HTTP-SCOPE", "file": "rdpms-system/backend/src/platform/idempotency/receipts.js", "lines": "33-39,100-104,1615(schema)", "sha256": "5fedecb6fcdb9fb8878d7c331ba5c22ad23519a6e1486ae1da680f3806226c05", "claim": "mutationReceipt scoped by actorId+command+resourceScope+idempotencyKey; query after auth"},
+    {"id": "F-HTTP-HASH", "file": "rdpms-system/backend/src/platform/idempotency/receipts.js", "lines": "50-59", "sha256": "5fedecb6fcdb9fb8878d7c331ba5c22ad23519a6e1486ae1da680f3806226c05", "claim": "same key different payloadHash -> 409 IDEMPOTENCY_PAYLOAD_MISMATCH"},
+    {"id": "F-HTTP-TXN", "file": "rdpms-system/backend/src/platform/idempotency/receipts.js", "lines": "107-145", "sha256": "5fedecb6fcdb9fb8878d7c331ba5c22ad23519a6e1486ae1da680f3806226c05", "claim": "single transaction write+receipt; failure rollback no receipt"},
+    {"id": "F-HTTP-TTL", "file": "rdpms-system/backend/src/platform/idempotency/receipts.js", "lines": "20,118", "sha256": "5fedecb6fcdb9fb8878d7c331ba5c22ad23519a6e1486ae1da680f3806226c05", "claim": "RECEIPT_TTL_MS=24h; expiresAt written; no cleanup job"},
+    {"id": "F-HASH-ALGO", "file": "rdpms-system/backend/src/platform/idempotency/payloadHash.js", "lines": "13-31", "sha256": "2d9eaadf31ee0b71c36e6f399eefa9c3e411b2e5bcd510212cf4bce4bcf88ff9", "claim": "canonicalize (recursive sort) + sha256(canonicalJson)"},
+    {"id": "F-SYNC-GLOBAL-KEY", "file": "rdpms-system/backend/src/routes/sync.js", "lines": "523-527", "sha256": "ad41610a6036f054533e663089f1584a9c9730a8264c2a62f39448add7672c7f", "claim": "replay prefetch by clientMutationId only, no actor filter (cross-actor risk)"},
+    {"id": "F-SYNC-APPLIED-REPLAY", "file": "rdpms-system/backend/src/routes/sync.js", "lines": "544-554", "sha256": "ad41610a6036f054533e663089f1584a9c9730a8264c2a62f39448add7672c7f", "claim": "only applied replayed; rejected/conflict re-evaluated and overwrite same SyncMutation row"},
+    {"id": "F-SYNC-SEPARATE-UPSERT", "file": "rdpms-system/backend/src/routes/sync.js", "lines": "706-718", "sha256": "ad41610a6036f054533e663089f1584a9c9730a8264c2a62f39448add7672c7f", "claim": "SyncMutation upsert AFTER business write, not same transaction (B06 path)"},
+    {"id": "F-SYNC-STATUS-AGG", "file": "rdpms-system/backend/src/routes/sync.js", "lines": "762-773", "sha256": "ad41610a6036f054533e663089f1584a9c9730a8264c2a62f39448add7672c7f", "claim": "/sync/status returns aggregate counts only; no per-key result query"},
+    {"id": "F-SCHEMA-SYNCMUT", "file": "rdpms-system/backend/prisma/schema.prisma", "lines": "486-503", "sha256": "fac40301f61926686ae1466b83e6b71b9c4bf8be9f519bf11dde32a04d967f22", "claim": "SyncMutation unique only clientMutationId; no payloadHash/expiresAt; status applied/conflict/rejected"},
+    {"id": "F-SCHEMA-RECEIPT", "file": "rdpms-system/backend/prisma/schema.prisma", "lines": "1600-1619", "sha256": "fac40301f61926686ae1466b83e6b71b9c4bf8be9f519bf11dde32a04d967f22", "claim": "MutationReceipt scoped unique key + payloadHash + expiresAt"}
+  ],
+  "reusedVerifiedEvidence": [
+    {"ref": "execution/RP00/RP00-T02/evidence/failure-point-matrix.json", "claim": "static 500-recovery matrix FP-01..FP-10 + crossCutting; RP00-T02 static PASS; INT-PC03-01 NOT_RUN"},
+    {"ref": "docs/audits/2026-09-29-rdpms/backend-results.json#B06_SYNC_WRITE_RECEIPT_NOT_ATOMIC", "claim": "HTTP 500 + committed title + receipt count 0; SUPPORTED/P1; inherited not rerun"}
+  ],
+  "limitations": [
+    "No real DB/build/browser run; no dynamic acceptance (INT-PC03-01, B06 rerun) executed.",
+    "sync.js hash differs from frozen S03 (9d9408f5); treated as pre-existing uncommitted working-tree modification, read-only, not used as change basis."
+  ]
+}

@@ -1,0 +1,49 @@
+--- before
++++ after
+@@ -12,9 +12,9 @@
+ Object.assign(process.env, loadEnvFile(envFile));
+ process.env.NODE_ENV = 'test';
+ const [{ default: authRoutes }, { default: roleRoutes }, { runWithContext }] = await Promise.all([
+-  import('../../src/routes/auth.js'),
+-  import('../../src/routes/roles.js'),
+-  import('../../src/platform/requestContext.js'),
++  import('../../dist/routes/auth.js'),
++  import('../../dist/routes/roles.js'),
++  import('../../dist/platform/requestContext.js'),
+ ]);
+ 
+ const environment = checkEnvironment();
+@@ -60,7 +60,7 @@
+   const port = await freePort();
+   const base = `http://127.0.0.1:${port}`;
+   // Keep this focused harness on the real auth/role route modules and DB; the
+-  // full createApp graph cannot load in this checkout without its TS build.
++  // modules are imported from the actual compiler output; assertions unchanged.
+   const api = new Hono();
+   api.use('*', async (c, next) => runWithContext({ db: prisma }, next));
+   api.get('/health', (c) => c.json({ status: 'ok' }));
+@@ -105,8 +105,23 @@
+       }),
+     });
+     assert.equal(login.status, 200, 'synthetic SUPER_ADMIN fixture must authenticate');
+-    const loginBody = await json(login);
++    let loginBody = await json(login);
+     token = loginBody.accessToken;
++    if (loginBody.user.mustChangePassword) {
++      const nextPassword = 'Owned B17 renewedSecret2026!';
++      const changed = await fetch(`${app.base}/api/auth/password/force`, {
++        method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
++        body: JSON.stringify({ oldPassword: process.env.SEED_SUPER_ADMIN_PASSWORD, newPassword: nextPassword }),
++      });
++      assert.equal(changed.status, 200, 'owned seed must complete the real forced-password flow');
++      const fresh = await fetch(`${app.base}/api/auth/login`, {
++        method: 'POST', headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify({ username: loginBody.user.username, password: nextPassword }),
++      });
++      assert.equal(fresh.status, 200, 'fresh legal credential must authenticate');
++      loginBody = await json(fresh); token = loginBody.accessToken;
++      assert.equal(loginBody.user.mustChangePassword, false);
++    }
+     actorId = loginBody.user?.id;
+     assert.ok(token, 'login must return a bearer token');
+     assert.ok(actorId, 'login must identify the authenticated synthetic account');

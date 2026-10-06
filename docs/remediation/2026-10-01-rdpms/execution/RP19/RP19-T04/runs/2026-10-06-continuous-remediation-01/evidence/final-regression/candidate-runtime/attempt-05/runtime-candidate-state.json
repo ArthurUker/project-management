@@ -1,0 +1,94 @@
+{
+  "commands": [
+    {
+      "command": [
+        "python3",
+        "/Users/renkang/VS Code/project-management/rdpms-system/deploy/scripts/candidate-gate.py",
+        "--candidate",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-runtime-candidate-owned-JBVNtK/candidate",
+        "--env-file",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-runtime-candidate-owned-JBVNtK/synthetic.env",
+        "--evidence",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-runtime-candidate-owned-JBVNtK/candidate-evidence"
+      ],
+      "exit": 0,
+      "stdout": "PREPARED_PRE_DDL\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "bash",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-runtime-candidate-owned-JBVNtK/candidate/rdpms-system/deploy/scripts/rdpms-start.sh"
+      ],
+      "exit": 1,
+      "stdout": "",
+      "stderr": "{\"valid\":false,\"fields\":[\"PREPARED_RUNTIME_CONFIG_MISMATCH\"]}\n"
+    },
+    {
+      "command": [
+        "bash",
+        "/Users/renkang/VS Code/project-management/rdpms-system/deploy/scripts/rdpms-start.sh"
+      ],
+      "exit": 1,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "bash",
+        "/Users/renkang/VS Code/project-management/rdpms-system/deploy/scripts/rdpms-env",
+        "/Users/renkang/.nvm/versions/node/v24.15.0/bin/node",
+        "-e",
+        "require(\"node:fs\").writeFileSync(process.argv[1],JSON.stringify({literal:process.env.OWNED_LITERAL,transport:process.env.VITE_AUTH_MODE}))",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-runtime-candidate-owned-JBVNtK/literal-child.json"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "observations": [
+    {
+      "endpoint": "/health",
+      "status": 200
+    },
+    {
+      "endpoint": "/api/ready",
+      "status": 200
+    },
+    {
+      "endpoint": "/api/auth/login",
+      "status": 200
+    },
+    {
+      "endpoint": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "endpoint": "/api/auth/me",
+      "status": 401
+    },
+    {
+      "endpoint": "/api/auth/login",
+      "status": 204
+    },
+    {
+      "endpoint": "/api/ready",
+      "status": 503
+    },
+    {
+      "endpoint": "/api/ready",
+      "status": 200
+    }
+  ],
+  "buildId": "0d00a77d6655e16ecd76e79cec6e72bc08cbda3852e1b1b875b8ec33f590bfb5",
+  "daemonLog": "🚀 R&D PMS API starting on port 49941...\n✅ Server is running at http://localhost:49941\n",
+  "cleanup": {
+    "daemonStopped": true,
+    "ownedCandidateRootRemoved": true
+  },
+  "limits": [
+    "Actual owned local candidate daemon/PG only, not target Linux/systemd/proxy",
+    "No production pointer/migration/deploy or supported deployed version matrix"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "window": "A",
+  "taskId": "LR7-01",
+  "amendment": "readiness-amendment-01",
+  "status": "READY_FOR_AGGREGATION",
+  "amendmentKind": "DELIVERY_PROTOCOL_AMENDMENT_ONLY",
+  "originalAStatus": "COMPLETE (preserved, byte-identical to REVIEW.md readback)",
+  "startBaseline": {
+    "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "frozenPlanDigest": "edad8b5937849ecb88ab282f4c2254b2faadee01d41020904c88996259d2d62d",
+    "protectedFileCount": 283,
+    "protectedFileDrift": "none"
+  },
+  "originalFilesBound": 843,
+  "originalManifestListed": 11,
+  "originalUnlistedBound": 830,
+  "newDeliveryFiles": 8,
+  "actualDynamicRuns": 0,
+  "originalWriterStoppedConfirmed": true,
+  "writerStopped": true,
+  "readiness": "READY_FOR_AGGREGATION",
+  "notes": "原 A 零漂移；本补正完成交付协议字段补全与冻结输入完整绑定（原 A 843 + N 8 产物，排除新 manifest/新 READY）。"
+}

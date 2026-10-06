@@ -1,0 +1,82 @@
+{
+  "resultsRef": "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/run-results.json",
+  "database": "rdpms_test_lr6_a01e4c4281",
+  "commands": [
+    {
+      "label": "initdb",
+      "exitCode": 0
+    },
+    {
+      "label": "cluster-start",
+      "exitCode": 0
+    },
+    {
+      "label": "guard-check",
+      "exitCode": 2
+    },
+    {
+      "label": "guard-reset",
+      "exitCode": 0
+    },
+    {
+      "label": "backend-build",
+      "exitCode": 0
+    },
+    {
+      "label": "integration-suite",
+      "exitCode": 0
+    },
+    {
+      "label": "backend-typecheck",
+      "exitCode": 0
+    },
+    {
+      "label": "undefined-check",
+      "exitCode": 0
+    },
+    {
+      "label": "git-diff-check",
+      "exitCode": 0
+    },
+    {
+      "label": "guard-drop",
+      "exitCode": 0
+    },
+    {
+      "label": "cluster-stop",
+      "exitCode": 0
+    }
+  ],
+  "guardContract": {
+    "expectedExitCodeBeforeReset": 2,
+    "actualExitCode": 2,
+    "markersFound": {
+      "db": true,
+      "host": true,
+      "roleUnavailable": true
+    },
+    "verdict": "GUARD_CONTRACT_OK",
+    "meaning": "exit 2 before reset is the documented guard contract, not a business failure"
+  },
+  "cleanup": {
+    "guardDropExit": 0,
+    "clusterStopExit": 0,
+    "ownedDistRemoved": true,
+    "ownedTempRootRemoved": true,
+    "ownershipVerification": {
+      "ownedDatabase": "rdpms_test_lr6_a01e4c4281",
+      "ownedPort": 53198,
+      "ownedTempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-vn0ns4km",
+      "rootExistsAfterCleanup": false,
+      "postmasterPidExists": false,
+      "distExistsAfterCleanup": false,
+      "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+    }
+  },
+  "summary": {
+    "tests": 25,
+    "pass": 25,
+    "fail": 0
+  },
+  "failedAttempt": "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01 (destructure mismatch after changing the helper return shape; fixed, log retained)"
+}

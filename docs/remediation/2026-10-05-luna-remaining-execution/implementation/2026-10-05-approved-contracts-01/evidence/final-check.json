@@ -1,0 +1,399 @@
+{
+  "capturedAt": "2026-10-05T09:24:30.220254+00:00",
+  "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "headUnchanged": true,
+  "stagedPaths": "",
+  "protectedFileCount": 2364,
+  "protectedDrift": [],
+  "nonRuntimeTaskDefinitionsUnchanged": true,
+  "acceptance306DefinitionsUnchanged": true,
+  "other19DecisionRecordsUnchanged": true,
+  "onlyApprovedDecisionIds": [
+    "D-S01-07",
+    "T-RP-05"
+  ],
+  "historyAppendOnlyChecks": {
+    "REVISION_HISTORY.json": {
+      "originalEntries": 30,
+      "currentEntries": 33,
+      "oldEntriesUnchanged": true,
+      "newEntries": 3
+    },
+    "EXECUTION_REVISION_HISTORY.json": {
+      "originalEntries": 21,
+      "currentEntries": 24,
+      "oldEntriesUnchanged": true,
+      "newEntries": 3
+    }
+  },
+  "handoffPrefixChecks": {
+    "HANDOFF.md": true,
+    "execution/handoff.md": true
+  },
+  "sourceChanges": [
+    {
+      "path": "rdpms-system/backend/src/modules/files/fileReadService.ts",
+      "startSha256": "5fcc1e7bfbf7aa9bbf6c52989b6ff6abde5f6e7d11b4d2a75a62cf8168ada389",
+      "endSha256": "f79fae30d2627c49b5789cc8ca302ac17ce21497833be422915b164d58f8e339",
+      "changed": true
+    },
+    {
+      "path": "rdpms-system/backend/src/modules/files/fileAccessPolicy.ts",
+      "startSha256": "39e3b500c3849e25d2720065d1cd7d23894be81cabbaebc9eec16f2a8dd85031",
+      "endSha256": "893d1e05fd6e0749f7dcdf3d604ea114449a23073d6481a135635a48164c9ef5",
+      "changed": true
+    },
+    {
+      "path": "rdpms-system/backend/src/routes/files.js",
+      "startSha256": "53f27e4cc866195b9644deb1862ffae78b0ea6e2cf24f686107ddfa9a97da409",
+      "endSha256": "b15e879c95417f40174c9194095fec7f57a5d4b38cd4b003f8e606a88f21765c",
+      "changed": true
+    },
+    {
+      "path": "rdpms-system/backend/src/routes/regulatory-documents.js",
+      "startSha256": "235e393b644f8a822c594120d739033c921464f480e3483c3e97bbc8ebab7ce4",
+      "endSha256": "5b416994411385b0663c162d7b78d14a9af30c08c161031ebdd5193c40fd5149",
+      "changed": true
+    },
+    {
+      "path": "rdpms-system/backend/tests/integration/rp14-scan-elevated-policy.integration.test.mjs",
+      "startSha256": null,
+      "endSha256": "329ae52d55d826b036d67c274655a000e880603e2d64b927c6593e0515ed23e0",
+      "changed": true
+    },
+    {
+      "path": "rdpms-system/backend/tests/integration/rf05-file-scope.integration.test.mjs",
+      "startSha256": "c1fc5818709ce31159ee5728184156efa1a8755d5592cc57bcb04f50975bf14f",
+      "endSha256": "8edebd9e83a8cea474e48aeb8a7ff8922fdd063dc388f1569527c9dc1378d57f",
+      "changed": true
+    },
+    {
+      "path": "rdpms-system/backend/src/routes/reports.js",
+      "startSha256": "1bcbef68fcf01cb394be457857c5d8b6e9d9e5a7c70038d8ae89d79436270c60",
+      "endSha256": "ab639ccf84cf64dc7d45e7df9fcebd4b419559f62f010f4ab0dc5dd2d5fdc133",
+      "changed": true
+    },
+    {
+      "path": "rdpms-system/backend/src/modules/reports/reportCommands.ts",
+      "startSha256": "758cb5010beda8d5d76da69d03148360bf5b0462d67799f1589c801c2a52cfb3",
+      "endSha256": "0f036007e94162fa3d7d488186fd6b4d938aa0be3f9ee4d3a6a39c3d5ebdcc40",
+      "changed": true
+    },
+    {
+      "path": "rdpms-system/backend/tests/integration/rp10-submit-state-policy.integration.test.mjs",
+      "startSha256": null,
+      "endSha256": "2b0048bb0a99bbbc9a4915905e58441049d64cda521589cc8476527556cb110f",
+      "changed": true
+    },
+    {
+      "path": "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs",
+      "startSha256": "23e4cff4da62cb2714bfc564ebc582e4c6245a7d3b535797273150ef314ad9e8",
+      "endSha256": "8bdb7d4569f1f0f65a084da802143d4f89f0a6300ea41a95340250dd9c9fdbb6",
+      "changed": true
+    }
+  ],
+  "acceptedRuns": [
+    {
+      "taskId": "RP14-T02",
+      "suite": "policy-suite",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP14/RP14-T02/runs/2026-10-05-approved-contracts-01/evidence/policy-suite/attempt-02/run-results.json",
+      "sha256": "868385e41336411637fd0fe623a14a8f33bd5895a1e3ce467ebf3465de54481b",
+      "criticalFailures": [],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_ecfed18806",
+          "ownedPort": 65427,
+          "ownedTempRoot": "/tmp/rdpms-ac-7_lvkb7v",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    },
+    {
+      "taskId": "RP14-T02",
+      "suite": "regression-files",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP14/RP14-T02/runs/2026-10-05-approved-contracts-01/evidence/regression-files/attempt-01/run-results.json",
+      "sha256": "7f9559ba3dd097bf51989bb6c99f9a85ea9a7ef2d98c0d3ba0df3d6194822865",
+      "criticalFailures": [],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_ed9415d6c7",
+          "ownedPort": 49169,
+          "ownedTempRoot": "/tmp/rdpms-ac-5m25khex",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    },
+    {
+      "taskId": "RP14-T02",
+      "suite": "regression-infected",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP14/RP14-T02/runs/2026-10-05-approved-contracts-01/evidence/regression-infected/attempt-01/run-results.json",
+      "sha256": "ab02a64c24a40f540791bc7ad09ffbe3c6d66111b13c7764bab5404cdad3b237",
+      "criticalFailures": [],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_b26db3221d",
+          "ownedPort": 49281,
+          "ownedTempRoot": "/tmp/rdpms-ac-s4y162uv",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    },
+    {
+      "taskId": "RP10-T03",
+      "suite": "policy-suite",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP10/RP10-T03/runs/2026-10-05-approved-contracts-01/evidence/policy-suite/attempt-02/run-results.json",
+      "sha256": "3f1389de45be0d9672a4ef4c071a23339f12db24409e403b913488f7b3d088ec",
+      "criticalFailures": [],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_bc0faa7970",
+          "ownedPort": 50317,
+          "ownedTempRoot": "/tmp/rdpms-ac-gh8a9wv0",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    },
+    {
+      "taskId": "RP10-T03",
+      "suite": "regression-snapshot",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP10/RP10-T03/runs/2026-10-05-approved-contracts-01/evidence/regression-snapshot/attempt-01/run-results.json",
+      "sha256": "5ce6f77cfe9b287caf8e0531bae13de8429511771c2687f181f5a6693a04831d",
+      "criticalFailures": [],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_0134a46c49",
+          "ownedPort": 50412,
+          "ownedTempRoot": "/tmp/rdpms-ac-jet648z4",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    },
+    {
+      "taskId": "RP10-T03",
+      "suite": "regression-idempotency",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP10/RP10-T03/runs/2026-10-05-approved-contracts-01/evidence/regression-idempotency/attempt-01/run-results.json",
+      "sha256": "cad027af8174260382af80ac190412f64d22bdc34615a648f1b75f9cb6385190",
+      "criticalFailures": [],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_6c8e32336c",
+          "ownedPort": 50539,
+          "ownedTempRoot": "/tmp/rdpms-ac-0zytcxc8",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    },
+    {
+      "taskId": "RP10-T03",
+      "suite": "regression-write-authority",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP10/RP10-T03/runs/2026-10-05-approved-contracts-01/evidence/regression-write-authority/attempt-01/run-results.json",
+      "sha256": "d3fd8078bd2309786270d548741bfa32b1f2b831db92709e8310d02e72af6db6",
+      "criticalFailures": [],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_79fab8bc44",
+          "ownedPort": 50643,
+          "ownedTempRoot": "/tmp/rdpms-ac-h3qirsve",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    },
+    {
+      "taskId": "RP10-T03",
+      "suite": "regression-versions-access",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP10/RP10-T03/runs/2026-10-05-approved-contracts-01/evidence/regression-versions-access/attempt-01/run-results.json",
+      "sha256": "52079b266f83d39d1d60e8de8d3a180ac5c26425de7e49d083dbe9faedbb8758",
+      "criticalFailures": [],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_fea741010f",
+          "ownedPort": 50757,
+          "ownedTempRoot": "/tmp/rdpms-ac-mpc4x6vm",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    },
+    {
+      "taskId": "RP10-T03",
+      "suite": "backend-unit-contract",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP10/RP10-T03/runs/2026-10-05-approved-contracts-01/evidence/backend-unit-contract/attempt-01/run-results.json",
+      "sha256": "8386c514ad0a02148ea6e40e809a0a6e4a0e4da29411add47a928d79234be61f",
+      "criticalFailures": [],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_a0a85dcbbe",
+          "ownedPort": 50850,
+          "ownedTempRoot": "/tmp/rdpms-ac-x1c1q1e8",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    }
+  ],
+  "failedAttemptsPreserved": [
+    {
+      "taskId": "RP14-T02",
+      "suite": "policy-suite",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP14/RP14-T02/runs/2026-10-05-approved-contracts-01/evidence/policy-suite/attempt-01/run-results.json",
+      "sha256": "d0bc5190ac7aff6ed73a718fd229a7dcbc044df2ecf1d46e6976e08f9478a5e3",
+      "criticalFailures": [
+        "cluster-start did not succeed",
+        "cluster-stop failed, owned temp root preserved (release condition recorded)"
+      ],
+      "cleanup": {
+        "guardDropSkipped": "cluster never started",
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": false,
+        "preservedOwnedTempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-approved-contracts-hh2hs5gp",
+        "releaseCondition": "cluster-stop did not succeed; the owned temp root is preserved on purpose. Release: run pg_ctl -D <root>/pg -m fast -w stop, then remove the root. Never delete a root whose cluster may still be running.",
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_2da2f960a9",
+          "ownedPort": 65351,
+          "ownedTempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-approved-contracts-hh2hs5gp",
+          "rootExistsAfterCleanup": true,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    },
+    {
+      "taskId": "RP10-T03",
+      "suite": "policy-suite",
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP10/RP10-T03/runs/2026-10-05-approved-contracts-01/evidence/policy-suite/attempt-01/run-results.json",
+      "sha256": "7b3e18445145ccdbe60a8ca8d16df89c49cc2e3a002936839963b6e88ea50e56",
+      "criticalFailures": [
+        "integration-suite did not succeed"
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_f91a33ca7a",
+          "ownedPort": 50188,
+          "ownedTempRoot": "/tmp/rdpms-ac-t1wowzti",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      }
+    }
+  ],
+  "cleanup": {
+    "ownedRootChecks": [
+      {
+        "tempRoot": "/tmp/rdpms-ac-7_lvkb7v",
+        "existsNow": false
+      },
+      {
+        "tempRoot": "/tmp/rdpms-ac-5m25khex",
+        "existsNow": false
+      },
+      {
+        "tempRoot": "/tmp/rdpms-ac-s4y162uv",
+        "existsNow": false
+      },
+      {
+        "tempRoot": "/tmp/rdpms-ac-gh8a9wv0",
+        "existsNow": false
+      },
+      {
+        "tempRoot": "/tmp/rdpms-ac-jet648z4",
+        "existsNow": false
+      },
+      {
+        "tempRoot": "/tmp/rdpms-ac-0zytcxc8",
+        "existsNow": false
+      },
+      {
+        "tempRoot": "/tmp/rdpms-ac-h3qirsve",
+        "existsNow": false
+      },
+      {
+        "tempRoot": "/tmp/rdpms-ac-mpc4x6vm",
+        "existsNow": false
+      },
+      {
+        "tempRoot": "/tmp/rdpms-ac-x1c1q1e8",
+        "existsNow": false
+      }
+    ],
+    "firstStartFailureCleanup": {
+      "ownedTempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-approved-contracts-hh2hs5gp",
+      "pgCtlStatus": 3,
+      "pidFileAbsent": true,
+      "rootRemoved": true
+    },
+    "distExists": false,
+    "guardDropAndStopAllAcceptedExit0": true
+  },
+  "gitStatus": " M rdpms-system/backend/src/kernel/rbac.js\n M rdpms-system/backend/src/modules/files/fileAccessPolicy.ts\n M rdpms-system/backend/src/modules/reports/reportCommands.ts\n M rdpms-system/backend/src/routes/auth.js\n M rdpms-system/backend/src/routes/files.js\n M rdpms-system/backend/src/routes/projects.js\n M rdpms-system/backend/src/routes/regulatory-documents.js\n M rdpms-system/backend/src/routes/reports.js\n M rdpms-system/backend/src/routes/roles.js\n M rdpms-system/backend/src/routes/sync.js\n M rdpms-system/backend/src/routes/tasks.js\n M rdpms-system/backend/tests/helpers/stubDeps.mjs\n M rdpms-system/backend/tests/integration/rf05-file-scope.integration.test.mjs\n M rdpms-system/deploy/scripts/backup-pg.sh\n M rdpms-system/frontend/src/api/endpoints/sync.ts\n M rdpms-system/frontend/src/offline/engine.ts\n M rdpms-system/frontend/tests/unit/offlineAccountSwitch.test.ts\n?? docs/audits/\n?? docs/remediation/\n?? rdpms-system/backend/src/modules/files/fileReadService.ts\n?? rdpms-system/backend/src/modules/projects/\n?? rdpms-system/backend/tests/integration/b17-role-create.integration.test.mjs\n?? rdpms-system/backend/tests/integration/rp02-login-lock-ttl.integration.test.mjs\n?? rdpms-system/backend/tests/integration/rp04-project-create-aggregate.integration.test.mjs\n?? rdpms-system/backend/tests/integration/rp04-project-snapshot-active.integration.test.mjs\n?? rdpms-system/backend/tests/integration/rp05-parent-delete-guard.integration.test.mjs\n?? rdpms-system/backend/tests/integration/rp07-project-status-shared.integration.test.mjs\n?? rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs\n?? rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs\n?? rdpms-system/backend/tests/integration/rp10-submit-state-policy.integration.test.mjs\n?? rdpms-system/backend/tests/integration/rp13-stable-pull-pagination.integration.test.mjs\n?? rdpms-system/backend/tests/integration/rp14-infected-file-read.integration.test.mjs\n?? rdpms-system/backend/tests/integration/rp14-scan-elevated-policy.integration.test.mjs\n",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "limits": "Runtime assertions read true DB rows/relationships and file bytes. Exact source hashes bound per task. Auth signer/Bearer loading is not password-login/refresh full chain; pure enum-unrepresentable scan inputs and injected audit failure are labeled. No whole-package/finding/target/release closure."
+}

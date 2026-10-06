@@ -1,0 +1,26 @@
+{
+  "date": "2026-10-03",
+  "executor": "CodeBuddy",
+  "taskId": "RP04-T02",
+  "run": "2026-10-03-codebuddy-b18-rework",
+  "authorizationSource": "User message 2026-10-03 (CODEBUDDY_EXECUTOR_PROMPT.md); session scope file execution/authorization-2026-10-03-codebuddy.json",
+  "baselineCommit": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "kind": "REWORK",
+  "reviewFindings": ["LR2-02"],
+  "historicalFinding": "B18",
+  "allowedSourceFiles": ["rdpms-system/backend/src/routes/projects.js"],
+  "allowedTestFile": "rdpms-system/backend/tests/integration/rp04-project-create-aggregate.integration.test.mjs",
+  "applicableImplementationGates": [],
+  "gateD-S01-06": "NOT_APPLICABLE / not activated (no manager/member policy change)",
+  "rp09-T01": "acceptance dependency only; does not block this rework",
+  "prohibited": [
+    "commit/stage/push/merge/deploy",
+    "real or shared database, real accounts, real restore data",
+    "dependency install or upgrade",
+    "new business migration",
+    "worktree reset/clean/stash",
+    "changing manager/member product policy or inventing date business rules"
+  ],
+  "runner": "execution/codebuddy-run-2026-10-03/owned-suite-runner.py",
+  "cleanup": "guard drop -> cluster stop -> owned dist removed -> temp root removed (exit codes in evidence/attempt-XX/run-results.json)"
+}

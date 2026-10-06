@@ -1,0 +1,18 @@
+{
+  "reviewDelivery": "COMPLETE",
+  "overallVerdict": "MATERIAL_PRESERVED_PREPARATION_PARTIALLY_ACCEPTED_REWORK_REQUIRED",
+  "writerStopped": true,
+  "runtimeValidation": "NOT_RUN",
+  "release": "NOT_EVALUATED",
+  "originalTaskAndCaseWrites": false,
+  "checks": {
+    "executorMUnchanged": true,
+    "executorLUnchanged": true,
+    "nonHistoryRootUnchanged": true,
+    "historyBytesUnchangedDuringReview": true,
+    "reviewJsonParsed": true,
+    "caseReconciliationCount13": true,
+    "findingsCount8": true
+  },
+  "noBusinessImplementationAuthorizationAdded": true
+}

@@ -1,0 +1,143 @@
+[
+  {
+    "taskId": "RP01-T03",
+    "activation": "CONDITIONAL_NOT_APPROVED",
+    "implementation": "NOT_STARTED",
+    "validation": "NOT_RUN",
+    "implementationDependencies": [
+      "RP01-T01"
+    ],
+    "acceptanceDependencies": [],
+    "conditionalGates": [
+      {
+        "ref": "D-S01-03",
+        "before": "IMPLEMENTATION",
+        "condition": "always"
+      }
+    ],
+    "minimumMaterialOrCondition": "OPTIONAL inactive custom-role binding extension; current standard seed role protection complete. Do not expand scope from blanket local repair authorization.",
+    "needsRepeatedLocalAuthorization": false,
+    "optional": true
+  },
+  {
+    "taskId": "RP05-T03",
+    "activation": "CONDITIONAL_NOT_APPROVED",
+    "implementation": "NOT_STARTED",
+    "validation": "NOT_RUN",
+    "implementationDependencies": [
+      "RP05-T02"
+    ],
+    "acceptanceDependencies": [],
+    "conditionalGates": [
+      {
+        "ref": "D-S01-08",
+        "before": "IMPLEMENTATION",
+        "condition": "DAG/live policy approved"
+      },
+      {
+        "ref": "T-RP-11",
+        "before": "VALIDATION",
+        "condition": "always"
+      }
+    ],
+    "minimumMaterialOrCondition": "OPTIONAL inactive general DAG/live/deletion semantics extension; current parent guards/delta commands complete. Do not turn enhancement into required defect remediation.",
+    "needsRepeatedLocalAuthorization": false,
+    "optional": true
+  },
+  {
+    "taskId": "RP10-T01",
+    "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+    "implementation": "NOT_STARTED",
+    "validation": "NOT_RUN",
+    "implementationDependencies": [
+      "RP00-T03"
+    ],
+    "acceptanceDependencies": [],
+    "conditionalGates": [
+      {
+        "ref": "T-RP-03",
+        "before": "IMPLEMENTATION",
+        "condition": "always"
+      },
+      {
+        "ref": "S03-OI-05",
+        "before": "IMPLEMENTATION",
+        "condition": "only if stale/delete command adapter is changed; no gate on unrelated task fields or report snapshot"
+      }
+    ],
+    "minimumMaterialOrCondition": "S03-OI-09: supported deployed client/producer versions, POST/PUT/sync revision carrying behavior, legacy queued drafts/send history and upgrade/retirement window. Static currentcandidate matrix alone cannot establish deployed clients.",
+    "needsRepeatedLocalAuthorization": false,
+    "optional": false
+  },
+  {
+    "taskId": "RP15-T01",
+    "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+    "implementation": "IN_PROGRESS",
+    "validation": "ENV_BLOCKED",
+    "implementationDependencies": [
+      "RP00-T01"
+    ],
+    "acceptanceDependencies": [],
+    "conditionalGates": [
+      {
+        "ref": "S04-OI-01",
+        "before": "VALIDATION",
+        "condition": "always"
+      }
+    ],
+    "minimumMaterialOrCondition": "S04-OI-01: data-owner-approved minimized read-only historical snapshot/anomaly inventory with stable IDs/counts/reference fields and provenance. No production/shared data access was authorized.",
+    "needsRepeatedLocalAuthorization": false,
+    "optional": false
+  },
+  {
+    "taskId": "RP15-T02",
+    "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+    "implementation": "NOT_STARTED",
+    "validation": "NOT_RUN",
+    "implementationDependencies": [
+      "RP15-T01",
+      "RP05-T01"
+    ],
+    "acceptanceDependencies": [],
+    "conditionalGates": [
+      {
+        "ref": "D-S01-08",
+        "before": "IMPLEMENTATION",
+        "condition": "always"
+      },
+      {
+        "ref": "T-RP-11",
+        "before": "IMPLEMENTATION",
+        "condition": "always"
+      }
+    ],
+    "minimumMaterialOrCondition": "After RP15-T01 actual anomaly classification, approved non-destructive repair mapping/quarantine and exact FK/unique scope; synthetic invented backfill does not repair historical rows.",
+    "needsRepeatedLocalAuthorization": false,
+    "optional": false
+  },
+  {
+    "taskId": "RP15-T03",
+    "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+    "implementation": "NOT_STARTED",
+    "validation": "NOT_RUN",
+    "implementationDependencies": [
+      "RP15-T02"
+    ],
+    "acceptanceDependencies": [],
+    "conditionalGates": [
+      {
+        "ref": "D-S01-08",
+        "before": "IMPLEMENTATION",
+        "condition": "always"
+      },
+      {
+        "ref": "T-RP-11",
+        "before": "VALIDATION",
+        "condition": "always"
+      }
+    ],
+    "minimumMaterialOrCondition": "After RP15-T02 actual verified mapping and rollback copies, target-safe migration validation/rollback, no current database destructive DDL.",
+    "needsRepeatedLocalAuthorization": false,
+    "optional": false
+  }
+]

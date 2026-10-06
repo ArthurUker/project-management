@@ -1,0 +1,28 @@
+{
+  "originalAuditBaseline": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "currentHead": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "files": [
+    {
+      "path": "rdpms-system/backend/src/routes/projects.js",
+      "taskStartSha256": "634347539957157874037aa32344ce879d493150ecfeffcf5f5d09b798864fa4",
+      "taskEndSha256": "c8bc8d7fb456388f3ae2d8192fac18cd5dc0036079689c18a8d37f9c62d1d1ff"
+    },
+    {
+      "path": "rdpms-system/backend/src/routes/sync.js",
+      "taskStartSha256": "15021e613d11fd7dbc48a7c40b89eed1bea3113fffde70aaa981d22b5141d3dc",
+      "taskEndSha256": "ec62e54ad622103af36af6a065a3759be8e5650f2459efa95425544778655028"
+    },
+    {
+      "path": "rdpms-system/backend/src/modules/projects/projectCommands.ts",
+      "taskStart": "absent",
+      "taskEndSha256": "aa16b4a66647b46be33db809d1411063e9416cb1fd5ccd681bbbef73f6170e6b"
+    },
+    {
+      "path": "rdpms-system/backend/tests/integration/rp07-project-status-shared.integration.test.mjs",
+      "taskStart": "absent",
+      "taskEndSha256": "2b7f1f28e17b5f57f688912ceadfb4915ac7d601ecf8d7064e20bc90c53e4245"
+    }
+  ],
+  "taskSpecificDiff": "source-diff.patch",
+  "taskStartReconstruction": "projects.js pre-state exactly matches RP05-T01 task-end SHA-256; sync.js pre-state exactly matches RP05-T01 task-end SHA-256. These hashes anchor the current execution sequence."
+}

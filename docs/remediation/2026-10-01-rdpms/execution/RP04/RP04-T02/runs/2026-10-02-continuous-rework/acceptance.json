@@ -1,0 +1,15 @@
+{
+  "taskId":"RP04-T02","run":"2026-10-02-continuous-rework","implementationStatus":"COMPLETE","validationStatus":"PASS","releaseStatus":"NOT_EVALUATED",
+  "cases":[
+    {"id":"AC-B18-01","status":"PASS","evidence":["evidence/attempt-01/integration-suite.log"],"scope":"child插入故障和所有新增malformed nested DTO请求均无部分聚合写入。"},
+    {"id":"AC-B18-02","status":"PASS","evidence":["evidence/attempt-01/integration-suite.log"],"scope":"合法aggregate与同key回放返回相同项目且只生成一组真实项目/子行。"},
+    {"id":"AC-B18-03","status":"PASS","evidence":["evidence/attempt-01/integration-suite.log"],"scope":"strict audit/receipt/sequence失败触发回滚，真实DB未留项目、子行、receipt或audit。"},
+    {"id":"PAC-RP04-02","status":"ENV_BLOCKED","evidence":["evidence/attempt-01/integration-suite.log"],"scope":"RP09-T01是acceptance dependency；更广联合接受尚不可关闭。"},
+    {"id":"PAC-RP04-04","status":"ENV_BLOCKED","evidence":["evidence/attempt-01/integration-suite.log"],"scope":"本地任务的sequence/child/audit/receipt故障覆盖通过；仍受RP09联合验收依赖约束。"},
+    {"id":"TASK-RP04-T02","status":"PASS","evidence":["change-summary.md","evidence/attempt-01/run-results.json"],"scope":"本地实现与本任务实证通过；不标整包完成。"},
+    {"id":"INT-PC03-01","status":"NOT_RUN","evidence":[],"scope":"相同key异actor/hash、unknown/expired及客户端最后副本恢复合同未覆盖；PC03仍PROPOSED。"}
+  ],
+  "reviewerIssueDisposition":{"LR-04":"FIXED_AND_TESTED_LOCAL"},
+  "oldFindingDisposition":{"B18":"LOCAL_FIX_ACCEPTED for project create aggregate behavior tested here; broader package/joint validation remains open."},
+  "cleanup":"PASS; see owned DB guard-drop/cluster-stop and temp cleanup record."
+}

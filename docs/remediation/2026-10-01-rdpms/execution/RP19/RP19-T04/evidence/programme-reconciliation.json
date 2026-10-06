@@ -1,0 +1,850 @@
+{
+  "asOf": "2026-10-02",
+  "baseline": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "recordCount": 33,
+  "confirmedSupportedCount": 32,
+  "pendingCandidateCount": 1,
+  "repairAcceptedLocally": 1,
+  "releaseEvaluated": 0,
+  "closureStatus": "NOT_CLOSED",
+  "closureBlockers": [
+    "31 frozen audit open items remain OPEN",
+    "Multiple repair tasks are NOT_STARTED or IN_PROGRESS",
+    "Validation remains ENV_BLOCKED/NOT_RUN for current tasks",
+    "Target environment, deployment and release acceptance are NOT_EVALUATED",
+    "R12-N01 remains PENDING due S05-OI-02"
+  ],
+  "records": [
+    {
+      "findingId": "B01",
+      "title": "ADMIN可重置SUPER_ADMIN密码并取得其身份",
+      "severity": "P1",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP01",
+      "primaryTaskRefs": [
+        "RP01-T02"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP01-T02",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "B17",
+      "title": "Role create whitelist conflicts with global code blacklist",
+      "severity": "P2",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP01",
+      "primaryTaskRefs": [
+        "RP01-T01"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP01-T01",
+          "implementation": "COMPLETE",
+          "validation": "PASS",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "FIX_ACCEPTED_LOCAL; target/release pending",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "B14",
+      "title": "临时登录锁定实际永久生效（到期不自动解锁）",
+      "severity": "P1",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP02",
+      "primaryTaskRefs": [
+        "RP02-T01"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP02-T01",
+          "implementation": "COMPLETE",
+          "validation": "ENV_BLOCKED",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "B15",
+      "title": "刷新令牌并发可双重消费，TTL响应也不准确",
+      "severity": "P2",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP02",
+      "primaryTaskRefs": [
+        "RP02-T02"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP02-T02",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "N-R02-01",
+      "title": "跨tab刷新失败可清除已轮换的新会话",
+      "severity": "P2",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP03",
+      "primaryTaskRefs": [
+        "RP03-T01"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP03-T01",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "N-R02-02",
+      "title": "改密或管理员重置未即时撤销已签发access JWT",
+      "severity": "P2",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP03",
+      "primaryTaskRefs": [
+        "RP03-T02"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP03-T02",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "B02",
+      "title": "项目编辑通过嵌套数组替换绕过子实体删除权限并物理删除任务",
+      "severity": "P1",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP05",
+      "primaryTaskRefs": [
+        "RP05-T01",
+        "RP05-T02"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP05-T01",
+          "implementation": "COMPLETE",
+          "validation": "ENV_BLOCKED",
+          "release": "NOT_EVALUATED"
+        },
+        {
+          "taskId": "RP05-T02",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "B03",
+      "title": "项目状态与模板基准日期从未选取这些字段的授权投影读取",
+      "severity": "P1",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP04",
+      "primaryTaskRefs": [
+        "RP04-T01"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP04-T01",
+          "implementation": "COMPLETE",
+          "validation": "ENV_BLOCKED",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "B18",
+      "title": "创建项目及其阶段任务里程碑分步提交，失败可留下半成品",
+      "severity": "P1",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP04",
+      "primaryTaskRefs": [
+        "RP04-T02"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP04-T02",
+          "implementation": "COMPLETE",
+          "validation": "ENV_BLOCKED",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "B20",
+      "title": "软删除项目仍进入普通项目列表和统计过滤范围",
+      "severity": "P2",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP04",
+      "primaryTaskRefs": [
+        "RP04-T01"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP04-T01",
+          "implementation": "COMPLETE",
+          "validation": "ENV_BLOCKED",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "B21",
+      "title": "注册项目入口绕过项目成员边界",
+      "severity": "P1",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP06",
+      "primaryTaskRefs": [
+        "RP06-T01",
+        "RP06-T02"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP06-T01",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        },
+        {
+          "taskId": "RP06-T02",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "B04",
+      "title": "同步拉取只按项目范围过滤，未实施实体查看权限",
+      "severity": "P1",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP08",
+      "primaryTaskRefs": [
+        "RP08-T01"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP08-T01",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "B07",
+      "title": "同步拉取受硬上限截断后仍推进时间游标",
+      "severity": "P1",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP13",
+      "primaryTaskRefs": [
+        "RP13-T01",
+        "RP13-T02",
+        "RP13-T03"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP13-T01",
+          "implementation": "COMPLETE",
+          "validation": "ENV_BLOCKED",
+          "release": "NOT_EVALUATED"
+        },
+        {
+          "taskId": "RP13-T02",
+          "implementation": "IN_PROGRESS",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        },
+        {
+          "taskId": "RP13-T03",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "B08",
+      "title": "新授权项目只更新同步 ACL，没有触发历史数据回填",
+      "severity": "P2",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP08",
+      "primaryTaskRefs": [
+        "RP08-T02"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP08-T02",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "B05",
+      "title": "同步回执未绑定主体与载荷",
+      "severity": "P2",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP09",
+      "primaryTaskRefs": [
+        "RP09-T01"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP09-T01",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "B06",
+      "title": "同步业务写入与成功回执非原子",
+      "severity": "P1",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP09",
+      "primaryTaskRefs": [
+        "RP09-T01",
+        "RP09-T02"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP09-T01",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        },
+        {
+          "taskId": "RP09-T02",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "B09",
+      "title": "同步项目状态写入绕过归档权限与状态转换",
+      "severity": "P1",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP07",
+      "primaryTaskRefs": [
+        "RP07-T01"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP07-T01",
+          "implementation": "COMPLETE",
+          "validation": "ENV_BLOCKED",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "R06-N01",
+      "title": "同步更新项目负责人时未同步负责人成员关系",
+      "severity": "P2",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP07",
+      "primaryTaskRefs": [
+        "RP07-T02"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP07-T02",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "F01",
+      "title": "初始化身份时清理路径仍可能清空尚未同步的用户草稿",
+      "severity": "P1",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP11",
+      "primaryTaskRefs": [
+        "RP11-T01"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP11-T01",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "F03",
+      "title": "实体缓存没有账号命名空间，缓存 API 可跨账号读取",
+      "severity": "P2",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP11",
+      "primaryTaskRefs": [
+        "RP11-T01"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP11-T01",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "F02",
+      "title": "冲突先从 outbox 删除，再批量持久化冲突，写入失败会丢失本地修改",
+      "severity": "P1",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP11",
+      "primaryTaskRefs": [
+        "RP11-T03"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP11-T03",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "F04",
+      "title": "离线出队没有分批，超过服务端 500 条限制后队列无法推进",
+      "severity": "P2",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP12",
+      "primaryTaskRefs": [
+        "RP12-T01",
+        "RP12-T02"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP12-T01",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        },
+        {
+          "taskId": "RP12-T02",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "B10",
+      "title": "汇报提交版本快照可能落后于最终正文",
+      "severity": "P1",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP10",
+      "primaryTaskRefs": [
+        "RP10-T02",
+        "RP10-T03"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP10-T02",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        },
+        {
+          "taskId": "RP10-T03",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "B16",
+      "title": "在线任务修改未应用客户端并发基线",
+      "severity": "P2",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP10",
+      "primaryTaskRefs": [
+        "RP10-T01"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP10-T01",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "B11",
+      "title": "法规原文读取别名绕过统一下载入口的感染状态阻断",
+      "severity": "P1",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP14",
+      "primaryTaskRefs": [
+        "RP14-T01"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP14-T01",
+          "implementation": "COMPLETE",
+          "validation": "ENV_BLOCKED",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "B12",
+      "title": "项目文件策略丢失 elevated 上下文并拒绝超管非成员访问",
+      "severity": "P2",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP14",
+      "primaryTaskRefs": [
+        "RP14-T02"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP14-T02",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "B19",
+      "title": "任务父子关系允许跨项目",
+      "severity": "P2",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP05",
+      "primaryTaskRefs": [
+        "RP05-T01"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP05-T01",
+          "implementation": "COMPLETE",
+          "validation": "ENV_BLOCKED",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "B13",
+      "title": "恢复接口跳过重复唯一键记录却虚报恢复成功数量",
+      "severity": "P1",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP16",
+      "primaryTaskRefs": [
+        "RP16-T01",
+        "RP16-T02",
+        "RP16-T03"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP16-T01",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        },
+        {
+          "taskId": "RP16-T02",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        },
+        {
+          "taskId": "RP16-T03",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "D01",
+      "title": "文件备份将新快照做成旧快照软链并可能改写历史内容",
+      "severity": "P1",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP17",
+      "primaryTaskRefs": [
+        "RP17-T01",
+        "RP17-T02",
+        "RP17-T03"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP17-T01",
+          "implementation": "COMPLETE",
+          "validation": "ENV_BLOCKED",
+          "release": "NOT_EVALUATED"
+        },
+        {
+          "taskId": "RP17-T02",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        },
+        {
+          "taskId": "RP17-T03",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "R12-N01",
+      "title": "候选风险：数据库 dump 与 uploads 文件快照没有共同恢复点协调",
+      "severity": "P2",
+      "frozenAuditDisposition": "PENDING",
+      "candidateOnly": true,
+      "primaryPackage": "RP19",
+      "primaryTaskRefs": [
+        "RP19-T01",
+        "RP19-T02"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP19-T01",
+          "implementation": "COMPLETE",
+          "validation": "ENV_BLOCKED",
+          "release": "NOT_EVALUATED"
+        },
+        {
+          "taskId": "RP19-T02",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "PENDING_CANDIDATE",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "D02",
+      "title": "发布前检查校验旧版本而非候选版本",
+      "severity": "P2",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP18",
+      "primaryTaskRefs": [
+        "RP18-T01",
+        "RP18-T02"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP18-T01",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        },
+        {
+          "taskId": "RP18-T02",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "D03",
+      "title": "部署配置检查与运行时配置不一致",
+      "severity": "P2",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP18",
+      "primaryTaskRefs": [
+        "RP18-T01",
+        "RP18-T03"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP18-T01",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        },
+        {
+          "taskId": "RP18-T03",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    },
+    {
+      "findingId": "N-S02-01",
+      "title": "旧版无主体 outbox 在启动清理中被误归属，竞态时可能进入当前账号 push",
+      "severity": "P2",
+      "frozenAuditDisposition": "SUPPORTED",
+      "candidateOnly": false,
+      "primaryPackage": "RP11",
+      "primaryTaskRefs": [
+        "RP11-T01",
+        "RP11-T02"
+      ],
+      "taskStatus": [
+        {
+          "taskId": "RP11-T01",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        },
+        {
+          "taskId": "RP11-T02",
+          "implementation": "NOT_STARTED",
+          "validation": "NOT_RUN",
+          "release": "NOT_EVALUATED"
+        }
+      ],
+      "repairAcceptance": "NOT_ACCEPTED",
+      "release": "NOT_EVALUATED",
+      "evidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json"
+    }
+  ]
+}

@@ -1,0 +1,188 @@
+{
+  "layer": "REAL_CHROME_INDEXEDDB_ATOMIC_RECOVERY_PRODUCT_DIALOG_SYNTHETIC_HTTP_AUTH",
+  "cases": [
+    {
+      "name": "NATIVE_CONFLICT_MOVE_ABORT_REOPEN_PRESERVES_ORIGINAL",
+      "result": "PASS",
+      "actualNativeAbort": true,
+      "originalAfterPageReload": true,
+      "partialConflictRows": 0
+    },
+    {
+      "name": "CONFLICT_COMMIT_DUPLICATE_AND_NEW_INTENT_MOVE_ATOMIC",
+      "result": "PASS",
+      "duplicateConflictCopies": 1,
+      "failedMoveLastCopyPreserved": true,
+      "explicitNewIntent": true,
+      "payloadUnchanged": true
+    },
+    {
+      "name": "REJECTED_RETRY_ATOMIC_ABORT_AND_SAME_COMMAND_PRESERVATION",
+      "result": "PASS",
+      "failedMoveNoQueueOrDeadLetterLoss": true,
+      "originalKeyPreserved": true
+    },
+    {
+      "name": "REAL_CHROME_QUOTA_EXCEEDED_ABORTS_MOVE_WITHOUT_LAST_COPY_LOSS",
+      "result": "ENV_BLOCKED",
+      "caseResult": "ENV_BLOCKED",
+      "nativeQuotaAcceptance": "ENV_BLOCKED",
+      "quotaControlApplied": true,
+      "confirmedNativeQuotaError": false
+    },
+    {
+      "name": "ACTUAL_RECOVERY_DIALOG_VIEW_EXPORT_AND_CONFIRMED_DISCARD",
+      "result": "PASS",
+      "actualDialog": true,
+      "actualOwnedDownload": true,
+      "cancelRetainedOriginal": true,
+      "confirmedDeleteAndLocalAuditCommitted": true,
+      "unknownBodiesHidden": true
+    },
+    {
+      "name": "SWITCH_B_CANNOT_VIEW_EXPORT_DISCARD_A_IN_PRODUCT_DIALOG",
+      "result": "PASS",
+      "foreignOwnerExportDenied": true,
+      "foreignOwnerDiscardDenied": true,
+      "originalOwnerRecovery": true
+    }
+  ],
+  "commands": [
+    {
+      "label": "frontend-typecheck",
+      "command": [
+        "/Users/renkang/.nvm/versions/node/v24.15.0/bin/node",
+        "/Users/renkang/VS Code/project-management/rdpms-system/frontend/node_modules/typescript/bin/tsc",
+        "--project",
+        "/Users/renkang/VS Code/project-management/rdpms-system/frontend/tsconfig.app.json",
+        "--noEmit"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "git-diff-check",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "cleanup": {
+    "chromeExit": {
+      "code": 0,
+      "signal": null
+    },
+    "ownedServerClosed": true,
+    "ownedProfileRootRemoved": true
+  },
+  "limits": [
+    "Native JWT/backend DB/production release NOT_RUN",
+    "Actual current AuthProvider, SyncProvider, Tasks, tokenStore, engine and IDB; synthetic auth/pull/push fixtures explicitly identified",
+    "No dependency installation, target profile, real dotenv or SSH"
+  ],
+  "startSourceBindings": [
+    {
+      "path": "rdpms-system/frontend/src/offline/idb.ts",
+      "sha256": "636062414ee1a997cd614ad8c3509c19955a0ed3c455b05c6872d325ed358638"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/engine.ts",
+      "sha256": "c665024bb3e6ff3120b3180693f194f1c2eda7fb25ede30cd3b09f8126c24f26"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/SyncProvider.tsx",
+      "sha256": "13a247f7d20882a2e81ed01cfe7f06da4b7c40dd2eb8657ed7320f722a81d4a8"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/pendingDraft.ts",
+      "sha256": "0ccc3adcfc1fb352d438f9d77404ec2d03d82c2632d4e1cfb0129baf16cf8a92"
+    },
+    {
+      "path": "rdpms-system/frontend/src/pages/Tasks.tsx",
+      "sha256": "598498505a02be301a06581ea36dd814855f5c99e182cc5f2736dc8cdb2cc6b0"
+    },
+    {
+      "path": "rdpms-system/frontend/src/auth/AuthProvider.tsx",
+      "sha256": "5f5656325c39217d5a497bf9e8a583ae85b76e1720acc79793f57e4dc22462f7"
+    },
+    {
+      "path": "rdpms-system/frontend/src/auth/tokenStore.ts",
+      "sha256": "e8e207bff432c0dd08956e778206152c055b9b38a7d2d6b06f4c80825beea6a6"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx",
+      "sha256": "9f4c10315ebf15bef6c7d3c50f02e238d874918b233669d490cd0b82d5b5649e"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/RecoveryPanel.tsx",
+      "sha256": "6abc0db06e02cd0d24bac194b62bad5d63d4a5d2fa6f641c52fab7f6f20b203a"
+    },
+    {
+      "path": "rdpms-system/frontend/src/components/SyncConflictDialog.tsx",
+      "sha256": "8834b78e54eead86f2218c55ec055b61f8aa8667dcef17500cbf2e330a732728"
+    }
+  ],
+  "mainCommand": [
+    "/Users/renkang/.nvm/versions/node/v24.15.0/bin/node",
+    "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/run-offline-browser.mjs",
+    "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/evidence/rp11-t03-recovery",
+    "recovery"
+  ],
+  "lastEvaluation": "bridge.rows()",
+  "resourceLimits": [
+    {
+      "case": "NATIVE_QUOTA_ERROR",
+      "status": "ENV_BLOCKED",
+      "reason": "Existing Chrome quota override did not produce a confirmed native QuotaExceededError; no synthetic abort called quota proof",
+      "effectiveQuota": 0,
+      "overrideActive": true,
+      "error": null
+    }
+  ],
+  "result": "PASS",
+  "sourceBindings": [
+    {
+      "path": "rdpms-system/frontend/src/offline/idb.ts",
+      "sha256": "636062414ee1a997cd614ad8c3509c19955a0ed3c455b05c6872d325ed358638"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/engine.ts",
+      "sha256": "c665024bb3e6ff3120b3180693f194f1c2eda7fb25ede30cd3b09f8126c24f26"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/SyncProvider.tsx",
+      "sha256": "13a247f7d20882a2e81ed01cfe7f06da4b7c40dd2eb8657ed7320f722a81d4a8"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/pendingDraft.ts",
+      "sha256": "0ccc3adcfc1fb352d438f9d77404ec2d03d82c2632d4e1cfb0129baf16cf8a92"
+    },
+    {
+      "path": "rdpms-system/frontend/src/pages/Tasks.tsx",
+      "sha256": "598498505a02be301a06581ea36dd814855f5c99e182cc5f2736dc8cdb2cc6b0"
+    },
+    {
+      "path": "rdpms-system/frontend/src/auth/AuthProvider.tsx",
+      "sha256": "5f5656325c39217d5a497bf9e8a583ae85b76e1720acc79793f57e4dc22462f7"
+    },
+    {
+      "path": "rdpms-system/frontend/src/auth/tokenStore.ts",
+      "sha256": "e8e207bff432c0dd08956e778206152c055b9b38a7d2d6b06f4c80825beea6a6"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx",
+      "sha256": "9f4c10315ebf15bef6c7d3c50f02e238d874918b233669d490cd0b82d5b5649e"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/RecoveryPanel.tsx",
+      "sha256": "6abc0db06e02cd0d24bac194b62bad5d63d4a5d2fa6f641c52fab7f6f20b203a"
+    },
+    {
+      "path": "rdpms-system/frontend/src/components/SyncConflictDialog.tsx",
+      "sha256": "8834b78e54eead86f2218c55ec055b61f8aa8667dcef17500cbf2e330a732728"
+    }
+  ],
+  "sourceDrift": []
+}

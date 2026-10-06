@@ -1,0 +1,38 @@
+{
+  "sessionId": "2026-10-05-sync-receipts-01",
+  "status": "READY_FOR_INDEPENDENT_REVIEW",
+  "writerStopped": true,
+  "taskIds": [
+    "RP09-T01",
+    "RP09-T02"
+  ],
+  "implementation": "COMPLETE",
+  "validationScope": "APPROVED_LOCAL_V1_BACKEND_ONLY",
+  "localValidation": "PASS",
+  "ciRegression": "FAIL",
+  "jointValidation": "NOT_RUN",
+  "targetValidation": "NOT_RUN",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "manifest": {
+    "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/payload-manifest.json",
+    "sha256": "a8ffd65ad01e76e1afa47b6cc9f92b46b2be74a13bc71a614a8283e7c2b4c82d"
+  },
+  "finalIntegrity": {
+    "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/final-integrity.json",
+    "sha256": "128f617568742974ff2485969f455064980a29fad060f7a815f93882d38559f8"
+  },
+  "postSealReadback": {
+    "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/post-seal-readback.json",
+    "sha256": "481dd457b4faa5a77d2378d9828735097352ac78045a429200727abf5c4bee60"
+  },
+  "reviewEntry": {
+    "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/REVIEW_ENTRY.md",
+    "sha256": "4c961dc867f24bc780ac77d85db0e7cb8f56ddc53c8d00d88643bfb55b6a63da"
+  },
+  "handoff": {
+    "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/handoff.md",
+    "sha256": "d7b1e9a92e591903d630f211eb32483c419e266b02205f3084a89b6eec1d2002"
+  },
+  "nextReadyBusinessTask": null
+}

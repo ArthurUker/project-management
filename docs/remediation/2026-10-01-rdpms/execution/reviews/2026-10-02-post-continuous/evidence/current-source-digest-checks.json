@@ -1,0 +1,198 @@
+[
+  {
+    "manifest": "docs/remediation/2026-10-01-rdpms/execution/RP01/RP01-T01/runs/2026-10-02-continuous-rework/evidence/source-hash.json",
+    "matches": true,
+    "files": [
+      {
+        "path": "rdpms-system/backend/src/routes/roles.js",
+        "expected": "5b60d6af2f9c196a8836b195d507ed57bdd8f8d2d29c5e30d6bb76af56703aa9",
+        "current": "5b60d6af2f9c196a8836b195d507ed57bdd8f8d2d29c5e30d6bb76af56703aa9"
+      },
+      {
+        "path": "rdpms-system/backend/tests/integration/b17-role-create.integration.test.mjs",
+        "expected": "164d8cd5b2e425d0dc7b9f89d326476fbe7aeabe7087c76b2567271a4600288d",
+        "current": "164d8cd5b2e425d0dc7b9f89d326476fbe7aeabe7087c76b2567271a4600288d"
+      }
+    ]
+  },
+  {
+    "manifest": "docs/remediation/2026-10-01-rdpms/execution/RP02/RP02-T01/runs/2026-10-02-continuous-rework/evidence/source-hash.json",
+    "matches": true,
+    "files": [
+      {
+        "path": "rdpms-system/backend/src/routes/auth.js",
+        "expected": "8f736619a1526247073697865490a6fef67053f92c501fbe65f617b29b3f12b4",
+        "current": "8f736619a1526247073697865490a6fef67053f92c501fbe65f617b29b3f12b4"
+      },
+      {
+        "path": "rdpms-system/backend/tests/integration/rp02-login-lock-ttl.integration.test.mjs",
+        "expected": "0d534f6e6efeaadd5cb75bca447f3be30707e1cab9888c01f15c1c6cdf841048",
+        "current": "0d534f6e6efeaadd5cb75bca447f3be30707e1cab9888c01f15c1c6cdf841048"
+      }
+    ]
+  },
+  {
+    "manifest": "docs/remediation/2026-10-01-rdpms/execution/RP04/RP04-T01/runs/2026-10-02-followup-validation/evidence/source-hash.json",
+    "matches": true,
+    "files": [
+      {
+        "path": "rdpms-system/backend/src/routes/projects.js",
+        "expected": "446c418d72bbb5ec6fbe5f09b51a1384c6791a194e562742678c4dc7280f641c",
+        "current": "446c418d72bbb5ec6fbe5f09b51a1384c6791a194e562742678c4dc7280f641c"
+      },
+      {
+        "path": "rdpms-system/backend/tests/integration/rp04-project-snapshot-active.integration.test.mjs",
+        "expected": "cdf7dcf7695bca5e4d8364b06f6b22ae7cd6bb6e087fe29112cde730e116ed1a",
+        "current": "cdf7dcf7695bca5e4d8364b06f6b22ae7cd6bb6e087fe29112cde730e116ed1a"
+      }
+    ]
+  },
+  {
+    "manifest": "docs/remediation/2026-10-01-rdpms/execution/RP04/RP04-T02/runs/2026-10-02-continuous-rework/evidence/source-hash.json",
+    "matches": true,
+    "files": [
+      {
+        "path": "rdpms-system/backend/src/routes/projects.js",
+        "expected": "446c418d72bbb5ec6fbe5f09b51a1384c6791a194e562742678c4dc7280f641c",
+        "current": "446c418d72bbb5ec6fbe5f09b51a1384c6791a194e562742678c4dc7280f641c"
+      },
+      {
+        "path": "rdpms-system/backend/tests/integration/rp04-project-create-aggregate.integration.test.mjs",
+        "expected": "26e7aa6a753d67ff58ab80bc15ba28ae06942bfa6d5ee57c261c1ddd54e530e8",
+        "current": "26e7aa6a753d67ff58ab80bc15ba28ae06942bfa6d5ee57c261c1ddd54e530e8"
+      }
+    ]
+  },
+  {
+    "manifest": "docs/remediation/2026-10-01-rdpms/execution/RP05/RP05-T01/runs/2026-10-02-continuous-rework/evidence/source-hash.json",
+    "matches": true,
+    "files": [
+      {
+        "path": "rdpms-system/backend/tests/integration/rp05-parent-delete-guard.integration.test.mjs",
+        "expected": "b0a1ade6041308d2d23f46ef32a67e69da82dc255e3bdf196624415817a2457a",
+        "current": "b0a1ade6041308d2d23f46ef32a67e69da82dc255e3bdf196624415817a2457a"
+      }
+    ]
+  },
+  {
+    "manifest": "docs/remediation/2026-10-01-rdpms/execution/RP07/RP07-T01/runs/2026-10-02-followup-validation/evidence/source-hash.json",
+    "matches": true,
+    "files": [
+      {
+        "path": "rdpms-system/backend/src/routes/projects.js",
+        "expected": "446c418d72bbb5ec6fbe5f09b51a1384c6791a194e562742678c4dc7280f641c",
+        "current": "446c418d72bbb5ec6fbe5f09b51a1384c6791a194e562742678c4dc7280f641c"
+      },
+      {
+        "path": "rdpms-system/backend/src/routes/sync.js",
+        "expected": "ad41610a6036f054533e663089f1584a9c9730a8264c2a62f39448add7672c7f",
+        "current": "ad41610a6036f054533e663089f1584a9c9730a8264c2a62f39448add7672c7f"
+      },
+      {
+        "path": "rdpms-system/backend/tests/integration/rp07-project-status-shared.integration.test.mjs",
+        "expected": "2b7f1f28e17b5f57f688912ceadfb4915ac7d601ecf8d7064e20bc90c53e4245",
+        "current": "2b7f1f28e17b5f57f688912ceadfb4915ac7d601ecf8d7064e20bc90c53e4245"
+      }
+    ]
+  },
+  {
+    "manifest": "docs/remediation/2026-10-01-rdpms/execution/RP08/RP08-T01/runs/2026-10-02-continuous-rework/evidence/source-hash.json",
+    "matches": true,
+    "files": [
+      {
+        "path": "rdpms-system/backend/src/routes/sync.js",
+        "expected": "ad41610a6036f054533e663089f1584a9c9730a8264c2a62f39448add7672c7f",
+        "current": "ad41610a6036f054533e663089f1584a9c9730a8264c2a62f39448add7672c7f"
+      },
+      {
+        "path": "rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs",
+        "expected": "9b307f9d02aa234bb664f5f2ab8441ca742a8289101c92747ee293f1768a2255",
+        "current": "9b307f9d02aa234bb664f5f2ab8441ca742a8289101c92747ee293f1768a2255"
+      },
+      {
+        "path": "rdpms-system/backend/tests/integration/rp13-stable-pull-pagination.integration.test.mjs",
+        "expected": "c030d42867ae1a8f809d1f1695d03d98d2db06dae83b59963362fa1eaa65309f",
+        "current": "c030d42867ae1a8f809d1f1695d03d98d2db06dae83b59963362fa1eaa65309f"
+      }
+    ]
+  },
+  {
+    "manifest": "docs/remediation/2026-10-01-rdpms/execution/RP10/RP10-T02/runs/2026-10-02-continuous-rework/evidence/source-hash.json",
+    "matches": true,
+    "files": [
+      {
+        "path": "rdpms-system/backend/src/routes/reports.js",
+        "expected": "939fdbac4fcb36b74cb95bacc31bae89ca0043099a4dce52e08a4f9c4b165e1d",
+        "current": "939fdbac4fcb36b74cb95bacc31bae89ca0043099a4dce52e08a4f9c4b165e1d"
+      },
+      {
+        "path": "rdpms-system/backend/src/modules/reports/reportCommands.ts",
+        "expected": "096040fac19d519ba61b45118aab1192e61b1d591b9fe00f0e398d84a28b08ac",
+        "current": "096040fac19d519ba61b45118aab1192e61b1d591b9fe00f0e398d84a28b08ac"
+      },
+      {
+        "path": "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs",
+        "expected": "a9bcc0adfedcb3f282aad7a806a040ed021c841c5cc1d1bc1e81ed0d77d0375e",
+        "current": "a9bcc0adfedcb3f282aad7a806a040ed021c841c5cc1d1bc1e81ed0d77d0375e"
+      }
+    ]
+  },
+  {
+    "manifest": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T01/runs/2026-10-02-followup-validation/evidence/source-hash.json",
+    "matches": true,
+    "files": [
+      {
+        "path": "rdpms-system/backend/src/routes/sync.js",
+        "expected": "ad41610a6036f054533e663089f1584a9c9730a8264c2a62f39448add7672c7f",
+        "current": "ad41610a6036f054533e663089f1584a9c9730a8264c2a62f39448add7672c7f"
+      },
+      {
+        "path": "rdpms-system/frontend/src/offline/engine.ts",
+        "expected": "83f86f613d23e657e6f0de95a149399cbd4d82abb15362337a234811203c7f11",
+        "current": "83f86f613d23e657e6f0de95a149399cbd4d82abb15362337a234811203c7f11"
+      },
+      {
+        "path": "rdpms-system/backend/tests/integration/rp13-stable-pull-pagination.integration.test.mjs",
+        "expected": "c030d42867ae1a8f809d1f1695d03d98d2db06dae83b59963362fa1eaa65309f",
+        "current": "c030d42867ae1a8f809d1f1695d03d98d2db06dae83b59963362fa1eaa65309f"
+      }
+    ]
+  },
+  {
+    "manifest": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/source-hash.json",
+    "matches": true,
+    "files": [
+      {
+        "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/evidence/WATERMARK_ADR_DRAFT.md",
+        "expected": "b827fd28a1a011f30afb84323a7593c2f7e7bd1f584b1f1746d88d7a675e02d9",
+        "current": "b827fd28a1a011f30afb84323a7593c2f7e7bd1f584b1f1746d88d7a675e02d9"
+      },
+      {
+        "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/owned-watermark-barrier.py",
+        "expected": "55670bac99934aaa1520b3ddde2b7ac8f21850578638588f9aa858c72dc195f4",
+        "current": "55670bac99934aaa1520b3ddde2b7ac8f21850578638588f9aa858c72dc195f4"
+      }
+    ]
+  },
+  {
+    "manifest": "docs/remediation/2026-10-01-rdpms/execution/RP14/RP14-T01/runs/2026-10-02-followup-validation/evidence/source-hash.json",
+    "matches": true,
+    "files": [
+      {
+        "path": "rdpms-system/backend/src/routes/files.js",
+        "expected": "53f27e4cc866195b9644deb1862ffae78b0ea6e2cf24f686107ddfa9a97da409",
+        "current": "53f27e4cc866195b9644deb1862ffae78b0ea6e2cf24f686107ddfa9a97da409"
+      },
+      {
+        "path": "rdpms-system/backend/src/routes/regulatory-documents.js",
+        "expected": "235e393b644f8a822c594120d739033c921464f480e3483c3e97bbc8ebab7ce4",
+        "current": "235e393b644f8a822c594120d739033c921464f480e3483c3e97bbc8ebab7ce4"
+      },
+      {
+        "path": "rdpms-system/backend/tests/integration/rp14-infected-file-read.integration.test.mjs",
+        "expected": "6730fefeb7e2a39578f73c88cb887216d68bb87bc37fc757be34a08486e40913",
+        "current": "6730fefeb7e2a39578f73c88cb887216d68bb87bc37fc757be34a08486e40913"
+      }
+    ]
+  }
+]

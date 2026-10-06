@@ -1,0 +1,12 @@
+[
+  {
+    "path": "rdpms-system/deploy/scripts/drill/paired-restore-check.py",
+    "beforeSha256": null,
+    "afterSha256": "aad9008ab2eb3b4a3de8bf43151c890e51c8fd0774eec0e898a64ca9790c1429"
+  },
+  {
+    "path": "rdpms-system/backend/tests/integration/rp19-paired-restore.integration.test.mjs",
+    "beforeSha256": null,
+    "afterSha256": "18063b77aa0dcaaad8f8304c4073056f70e6b1e1cc4461b116a5ba17abe1ee7a"
+  }
+]

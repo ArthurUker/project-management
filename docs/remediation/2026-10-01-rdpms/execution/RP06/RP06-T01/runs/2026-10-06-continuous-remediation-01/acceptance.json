@@ -1,0 +1,88 @@
+{
+  "taskId": "RP06-T01",
+  "approvalRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/approval.json",
+  "cases": [
+    {
+      "caseId": "AC-B21-01",
+      "result": "PASS",
+      "scope": "Exact decided member-only registration contract; realJWT10 entrymatrix cases plus current manager13, actual row/profile/audit checks and cleanup. Scoped local; no deployed acceptance.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP06/RP06-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-B21-02",
+      "result": "PASS",
+      "scope": "Exact decided member-only registration contract; realJWT10 entrymatrix cases plus current manager13, actual row/profile/audit checks and cleanup. Scoped local; no deployed acceptance.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP06/RP06-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-B21-03",
+      "result": "PASS",
+      "scope": "Exact decided member-only registration contract; realJWT10 entrymatrix cases plus current manager13, actual row/profile/audit checks and cleanup. Scoped local; no deployed acceptance.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP06/RP06-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP06-01",
+      "result": "PASS",
+      "scope": "Exact decided member-only registration contract; realJWT10 entrymatrix cases plus current manager13, actual row/profile/audit checks and cleanup. Scoped local; no deployed acceptance.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP06/RP06-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP06-02",
+      "result": "PASS",
+      "scope": "Exact decided member-only registration contract; realJWT10 entrymatrix cases plus current manager13, actual row/profile/audit checks and cleanup. Scoped local; no deployed acceptance.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP06/RP06-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP06-03",
+      "result": "PASS",
+      "scope": "Exact decided member-only registration contract; realJWT10 entrymatrix cases plus current manager13, actual row/profile/audit checks and cleanup. Scoped local; no deployed acceptance.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP06/RP06-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP06-04",
+      "result": "PASS",
+      "scope": "Exact decided member-only registration contract; realJWT10 entrymatrix cases plus current manager13, actual row/profile/audit checks and cleanup. Scoped local; no deployed acceptance.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP06/RP06-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "TASK-RP06-T01",
+      "result": "PASS",
+      "scope": "Exact decided member-only registration contract; realJWT10 entrymatrix cases plus current manager13, actual row/profile/audit checks and cleanup. Scoped local; no deployed acceptance.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP06/RP06-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "GATE-D-S01-05",
+      "result": "PASS",
+      "scope": "Exact decided member-only registration contract; realJWT10 entrymatrix cases plus current manager13, actual row/profile/audit checks and cleanup. Scoped local; no deployed acceptance.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP06/RP06-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "DECISION-D-S01-05",
+      "result": "PASS",
+      "scope": "Exact decided member-only registration contract; realJWT10 entrymatrix cases plus current manager13, actual row/profile/audit checks and cleanup. Scoped local; no deployed acceptance.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP06/RP06-T01/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-B21-04",
+      "result": "NOT_RUN",
+      "reason": "Shared manager already realtested; formally RP06-T02 after this dependency delivery, not mark adaptertask finished here."
+    },
+    {
+      "caseId": "INT-PC02-01",
+      "result": "NOT_RUN",
+      "reason": "Registration/current member+grant subset verified; full authorization joint with allotherAPI/filealiases not fully rerun."
+    }
+  ],
+  "localValidation": "PASS",
+  "jointValidation": "NOT_RUN",
+  "targetValidation": "NOT_RUN",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "limits": [
+    "Current local candidate only, no UI/target/release acceptance.",
+    "No actual export/DELETE handlers exist; endpoint inventory recorded, no invented feature.",
+    "Read authority linearizes at repeatable-read snapshot; writer authority reread after explicit locks. No general global live-grant promise after offline lease.",
+    "Creation construction atomically improved only as necessary creator/scaffold scope; no blanket RP04/backup guarantees.",
+    "Strict audit faults and first oldsnapshot/constantfixture failures preserved; synthetic actors retain untilownedwholeDBdrop."
+  ]
+}

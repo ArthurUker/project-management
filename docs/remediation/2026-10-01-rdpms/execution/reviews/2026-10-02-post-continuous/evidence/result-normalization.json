@@ -1,0 +1,20 @@
+{
+  "note": "static-delivery and partial observations retained in original evidence; do not substitute for complete case result",
+  "corrections": [
+    {
+      "case": "PAC-RP14-03",
+      "previous": "PARTIAL",
+      "current": "NOT_RUN"
+    },
+    {
+      "case": "TASK-RP00-T04",
+      "previous": "PASS (static artifact delivery only; validation NOT_RUN)",
+      "current": "NOT_RUN"
+    },
+    {
+      "case": "TASK-RP00-T05",
+      "previous": "PASS (static artifact delivery only; validation NOT_RUN)",
+      "current": "NOT_RUN"
+    }
+  ]
+}

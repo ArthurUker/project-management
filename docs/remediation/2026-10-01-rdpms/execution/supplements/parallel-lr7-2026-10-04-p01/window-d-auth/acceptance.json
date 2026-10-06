@@ -1,0 +1,54 @@
+{
+  "window": "D",
+  "decisionRef": "T-RP-09",
+  "acceptanceLevel": "PREPARATION_MATERIAL_DELIVERY_AND_SOURCE_CONSISTENCY_ONLY",
+  "businessAcceptance": "NOT_RUN",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "criteria": [
+    {
+      "id": "D-MAT-01",
+      "description": "所有交付文件位于 window-d-auth 写前缀内，未越界写共享台账/其他窗口/业务源码。",
+      "result": "PASS",
+      "evidence": ["authorization.json", "change-summary.md"]
+    },
+    {
+      "id": "D-MAT-02",
+      "description": "transport-current 事实含实际入口/反证、行号与 SHA256；cookie 不支持结论有反证。",
+      "result": "PASS",
+      "evidence": ["transport-current.csv", "transport-current.md", "evidence/source-facts.md"]
+    },
+    {
+      "id": "D-MAT-03",
+      "description": "generation-matrix 区分源码层与旧运行层，覆盖两 tab/切用户/logout/迟到成功失败/refresh 竞争/重放，且标注 NOT_RUN。",
+      "result": "PASS",
+      "evidence": ["generation-matrix.csv"]
+    },
+    {
+      "id": "D-MAT-04",
+      "description": "decision-draft 维持/调整 transport、single-use/family 失败语义、前端 generation fence、兼容回退；status=PROPOSED，签名字段 null。",
+      "result": "PASS",
+      "evidence": ["decision-draft.json", "decision-draft.md"]
+    },
+    {
+      "id": "D-MAT-05",
+      "description": "acceptance-draft 以真实合法 token/非空资源为成功前提，含两身份与两 tab 正负例与临时环境，不以注入 actor/mock 冒充 JWT 全链。",
+      "result": "PASS",
+      "evidence": ["acceptance-draft.csv"]
+    },
+    {
+      "id": "D-MAT-06",
+      "description": "approval-request 与 interface-notes 列明需具名确认的选择及与 C/E/F 的待汇总接口点；D-S01-04/T-RP-12 不代签。",
+      "result": "PASS",
+      "evidence": ["approval-request.md", "interface-notes.md"]
+    }
+  ],
+  "notRun": [
+    "real JWT full chain",
+    "frontend IndexedDB/UI",
+    "real database / dynamic PC01 scenarios",
+    "build / deploy / candidate environment"
+  ],
+  "notApproved": ["T-RP-09", "PC01", "PC04", "PC09", "D-S01-04"],
+  "note": "本 acceptance.json 仅评价材料交付与来源一致性；父任务 RP00-T04/RP02-T02/RP03-T01/RP11-T01 的业务实施与验证均为 NOT_RUN。"
+}

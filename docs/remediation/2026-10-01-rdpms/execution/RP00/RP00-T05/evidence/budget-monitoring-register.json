@@ -1,0 +1,43 @@
+{
+  "taskId": "RP00-T05",
+  "baseline": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "status": "STATIC_REGISTER_DELIVERED; values and thresholds await named owners",
+  "decisionRefs": {"T-RP-11":"PROPOSED","T-RP-13":"PROPOSED"},
+  "contractRefs": {"PC11":"PROPOSED / NOT_RUN","PC10":"PROPOSED / NOT_RUN"},
+  "principle": "No numerical production/target threshold is invented without target workload, infrastructure limits, and a named approver. Each pending field has an owner role, required evidence, and validation stage.",
+  "budgetDomains": [
+    {"id":"HTTP_BODY_BYTES","scope":"API/request and upload body limits","requiredInputs":["application and reverse-proxy effective max request bytes","per route or content type exception","legacy-client payload distribution"],"ownerRoles":["API owner","Operations owner"],"threshold":"NOT_SET","evidenceRequired":"effective config plus observed representative payload sizes","stopCondition":"unknown effective limit or candidate/proxy mismatch; reject release validation"},
+    {"id":"IDB_QUEUE_BYTES","scope":"offline outbox count and bytes, including last-copy retention","requiredInputs":["supported browser quota behavior","payload size/count distribution","reserved local storage and user recovery policy"],"ownerRoles":["Frontend/offline owner","Product/data owner"],"threshold":"NOT_SET","evidenceRequired":"owned-browser quota measurements and last-copy recovery evidence","stopCondition":"quota exhaustion may discard/overwrite last recoverable payload"},
+    {"id":"DB_LOCK_TX","scope":"lock wait, transaction duration, timeout, deadlock retry","requiredInputs":["target PostgreSQL version/config","baseline lock and transaction distributions","approved retryable error classes and retry budget"],"ownerRoles":["Database owner","Backend owner"],"threshold":"NOT_SET","evidenceRequired":"isolated candidate measurements and bounded concurrency run","stopCondition":"unbounded wait/retry or mutation replay without idempotency guarantee"},
+    {"id":"RECURSION_DAG","scope":"recursive hierarchy/DAG depth, nodes and lock cost","requiredInputs":["approved D-S01-08 policy","existing data distribution from authorized copy","query/transaction resource ceiling"],"ownerRoles":["Product owner","Database owner","Backend owner"],"threshold":"NOT_SET","evidenceRequired":"approved semantics and synthetic worst-case graph measurements","stopCondition":"policy unapproved or query/lock budget exceeded"},
+    {"id":"PUBLISHER_LAG","scope":"change feed/publisher lag and safe watermark","requiredInputs":["publisher topology and ordering","baseline lag distribution","client recovery/RESET behavior"],"ownerRoles":["Sync/backend owner","Operations owner"],"threshold":"NOT_SET","evidenceRequired":"instrumented candidate load and ordering barriers","stopCondition":"watermark advances past uncommitted/unpublished changes or lag exceeds approved limit"},
+    {"id":"RECEIPT_WINDOW","scope":"idempotency receipt retention versus maximum supported offline interval","requiredInputs":["actual cleanup schedule","supported longest offline interval","payload/key replay and data-retention policy"],"ownerRoles":["Product/data owner","Backend owner","Operations owner"],"threshold":"NOT_SET","evidenceRequired":"retention job configuration and compatibility window approval","stopCondition":"receipt may expire while a supported client can still retry same command"},
+    {"id":"BACKUP_STORAGE_PAIR","scope":"backup filesystem bytes/inodes, run staging, retained DB/files pair","requiredInputs":["target FS type/capacity/free-space policy","backup sizes and growth","concurrency and retention count","full restore-point pairing requirements"],"ownerRoles":["Operations owner","Database owner"],"threshold":"NOT_SET","evidenceRequired":"target Linux filesystem measurements, paired manifest and restore verification","stopCondition":"insufficient capacity or cleanup could remove only valid restore pair"},
+    {"id":"SCHEMA_LOCK","scope":"migration lock duration and deployment interruption budget","requiredInputs":["candidate task/schema scope","target table sizes and indexes","approved maintenance window and rollback/containment"],"ownerRoles":["Database owner","Release owner"],"threshold":"NOT_SET","evidenceRequired":"candidate build plus isolated migration timing/failure barriers","stopCondition":"target lock impact unknown or rollback reopens confirmed defects"}
+  ],
+  "observabilityContractDraft": {
+    "requiredSignals": ["HTTP status/error class and duration","sanitized actor/resource/command/key hashes","authorization denial count","refresh/session generation transition outcome","receipt unknown/expired/replay outcome","outbox count/bytes and oldest age","DB transaction/lock wait/deadlock/retry","publisher lag and safe watermark","backup pair manifest age/integrity/free space","schema/migration lock duration","candidate health and recovery-point completeness"],
+    "redaction": "Never log bearer/access/refresh tokens, passwords, raw offline payloads, personal data, or full idempotency keys. Use approved keyed or one-way pseudonymous identifiers and error categories.",
+    "thresholdsAndWindows": "NOT_SET pending environment baselines and named T-RP-11/T-RP-13 approval.",
+    "stopActions": "Per signal, approver must select alert-only, stop current candidate, pause writes, isolate feature, or enter maintenance; no action is activated by this draft."
+  },
+  "candidateScopeTemplate": {
+    "candidateId":"UNASSIGNED",
+    "baseHead":"UNASSIGNED",
+    "headAndArtifactHashes":"UNASSIGNED",
+    "includedTaskIds":[],
+    "affectedTaskIds":[],
+    "sharedFileOwner":"UNASSIGNED",
+    "decisionAndGateDisposition":"UNASSIGNED",
+    "schemaAndProtocolCompatibility":"UNASSIGNED",
+    "supportedClientWindow":"UNASSIGNED",
+    "requiredCaseIds":[],
+    "environmentAndBudgetEvidence":"UNASSIGNED",
+    "namedReleaseOwnerAndApprovals":"UNASSIGNED",
+    "safeRollbackArtifactOrApprovedContainment":"UNASSIGNED",
+    "observationWindowAndStopThresholds":"UNASSIGNED",
+    "fullRestorePairAndCleanupPlan":"UNASSIGNED"
+  },
+  "firstSafeReleaseRules": ["Only include actual completed tasks and transitive implementation dependencies; do not include every package by default.","Do not call a known vulnerable older build a safe rollback target.","If no compatible safe artifact exists, use only explicitly approved containment/maintenance/write-stop behavior.","No release candidate has been selected; RELEASE_GATES.executionAuthorized remains false; release stays NOT_EVALUATED."],
+  "dynamicAcceptance": {"caseId":"INT-PC11-01","status":"NOT_RUN","reason":"No target workload, effective limits, named T-RP-11/T-RP-13 approver, candidate, or owned stress environment is registered."}
+}

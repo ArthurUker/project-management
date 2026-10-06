@@ -1,0 +1,16 @@
+{
+  "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "capturedAt": "2026-10-02",
+  "files": [
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/evidence/WATERMARK_ADR_DRAFT.md",
+      "sha256": "b827fd28a1a011f30afb84323a7593c2f7e7bd1f584b1f1746d88d7a675e02d9",
+      "bytes": 7153
+    },
+    {
+      "path": "docs/remediation/2026-10-01-rdpms/execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/owned-watermark-barrier.py",
+      "sha256": "55670bac99934aaa1520b3ddde2b7ac8f21850578638588f9aa858c72dc195f4",
+      "bytes": 11330
+    }
+  ]
+}

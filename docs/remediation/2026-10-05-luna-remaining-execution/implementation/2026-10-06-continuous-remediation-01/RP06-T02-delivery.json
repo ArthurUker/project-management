@@ -1,0 +1,27 @@
+{
+  "files": [
+    "rdpms-system/backend/tests/integration/rp06-registration-manager-adapter.integration.test.mjs"
+  ],
+  "beforeDirectory": "before-RP06-T02",
+  "runs": [
+    "rp06-t02-adapter"
+  ],
+  "summary": "Formal registration shared manager adapter after both dependencies complete; business source zero change in this task. NativeJWT/ownedPG3/3 proves authorized nonempty update/detail, old/new manager roles and OWNER retention, sameproject active target/baseline/additional management permission, profile+strictaudit failure full rollback. Current registration scope10 and manager13 precede this run; existing fullfinding packagewide/target not closed.",
+  "compatibility": "No new runtime change/schema/dependency. Existing shared active-member manager transfer and scoped registration preserved.",
+  "rollback": "Test-only increment; preserve shared manager command and registration scope. No runtime reversal authorized by test removal.",
+  "casePass": {
+    "AC-B21-04": "Native JWT/DB3-case registration adapter validation, exact allowedrole/manager/base/profile+audit atomic effects.",
+    "TASK-RP06-T02": "Native JWT/DB3-case registration adapter validation, exact allowedrole/manager/base/profile+audit atomic effects."
+  },
+  "notRun": {},
+  "limits": [
+    "Local adapter only, not target/release/UI acceptance. Registration UI currentStage unconditional save preexisting incompatibility not repaired by this test-only task; fullUI notRUN.",
+    "B21/SUPPORTED widertarget remainsopen; earlier B21 current scopedcases evidence separate."
+  ],
+  "findings": [
+    "B21"
+  ],
+  "validation": "PASS",
+  "next": "RP05-T02 ID-preserving explicit child deltas and controlled soft-delete",
+  "nextTask": "RP05-T02"
+}

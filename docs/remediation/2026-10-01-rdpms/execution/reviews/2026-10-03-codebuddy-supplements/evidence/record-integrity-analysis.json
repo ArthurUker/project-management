@@ -1,0 +1,59 @@
+{
+  "frozenPlanInputsMatches": {
+    "TASK_GRAPH.json": true,
+    "PACKAGES.json": true,
+    "FINDING_TO_PACKAGE.json": true,
+    "ACCEPTANCE_MATRIX.csv": true,
+    "execution/all54-task-status.csv": true,
+    "execution/remaining-task-gates.csv": true,
+    "REMEDIATION_PLAN.md": true,
+    "DECISION_REGISTER.json": true,
+    "DECISIONS_AND_GATES.md": true,
+    "OPEN_ITEM_GATES.json": true,
+    "CROSS_PACKAGE_CONTRACTS.json": true,
+    "CROSS_PACKAGE_CONTRACTS.md": true,
+    "RELEASE_GATES.json": true,
+    "INPUT_MANIFEST.json": true,
+    "REVISION_INPUT_MANIFEST.json": true,
+    "PLAN_VALIDATION.json": true,
+    "REVIEW_ENTRY.md": true
+  },
+  "rootStateOnlySupplementAdded": {
+    "IMPLEMENTATION_STATE.json": true,
+    "execution/state.json": true
+  },
+  "historicalHandoffPrefixMatches": {
+    "HANDOFF.md": true,
+    "execution/handoff.md": true
+  },
+  "versionEntries": {
+    "REVISION_HISTORY.json": {
+      "invalidHashEntries": {
+        "docs/remediation/2026-10-01-rdpms/execution/supplements/test-contract-2026-10-03/": "SESSION_DIR"
+      },
+      "nonFileCurrentSourceEntries": {}
+    },
+    "EXECUTION_REVISION_HISTORY.json": {
+      "invalidHashEntries": {
+        "execution/state.json": "APPENDED_SUPPLEMENTAL_EXECUTION",
+        "execution/handoff.md": "APPENDED_SUPPLEMENTAL_CHAPTER",
+        "HANDOFF.md": "APPENDED_SUPPLEMENTAL_CHAPTER",
+        "IMPLEMENTATION_STATE.json": "APPENDED_SUPPLEMENTAL_EXECUTIONS",
+        "REVISION_HISTORY.json": "APPENDED_VERSION",
+        "EXECUTION_REVISION_HISTORY.json": "APPENDED_ENTRY"
+      },
+      "nonFileCurrentSourceEntries": {
+        "rdpms-system/backend/src + frontend/src combined": "7564dcf2b4da343ed077b8e85a2ba8ba0b5e1da9af6e5fbf9da1770a4a88a0eb (unchanged from start baseline)"
+      }
+    }
+  },
+  "missingRequiredSessionArtifacts": [
+    "start-baseline.json",
+    "SUP-02/deliverables/field-comparison.csv"
+  ],
+  "requiredChecksWithoutExecutorCommandEvidence": [
+    "npm run typecheck",
+    "npm run lint:undefined",
+    "git diff --check"
+  ]
+}

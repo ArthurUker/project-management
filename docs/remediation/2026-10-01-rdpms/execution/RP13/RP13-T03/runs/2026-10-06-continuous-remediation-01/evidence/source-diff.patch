@@ -1,0 +1,519 @@
+--- before/rdpms-system/backend/src/routes/sync.js
++++ after/rdpms-system/backend/src/routes/sync.js
+@@ -1,3 +1,4 @@
++import { publishCommittedChanges, pullPublishedChanges } from '../modules/sync/changePublisher.js';
+ import { assertLiveTaskReferences, tombstoneTasks } from '../modules/projects/projectChildren.js';
+ import { readAclSnapshot } from '../modules/sync/syncReadPolicy.js';
+ import { getActorResolver } from '../platform/identity/actorResolver.js';
+@@ -380,6 +381,16 @@
+ 
+ // ── 增量拉取 ─────────────────────────────────────────────────────────────────
+ sync.get('/init', async (c) => {
++  if(c.req.query('pullProtocol')==='2'){
++    await publishCommittedChanges(prisma);
++    return prisma.$transaction(async(db)=>{
++      const {auth,acl}=await readAclSnapshot(db,getAuth(c),Boolean(getActorResolver()));
++      acl.writePolicy=Object.fromEntries(ENTITY_KEYS.map(entity=>{const def=SYNC_ENTITIES[entity];return [entity,{read:def.readPermission,update:def.permission,create:def.createPermission??null,delete:def.deletePermission,status:def.statusPermission??(entity==='projects'?'projects.change_status':null),assign:def.assignPermission??null,capability:def.requireCapability??(entity==='monthlyProgress'?'manage_members':'write')}]}));
++      const deviceId=String(c.req.query('deviceId')||'').slice(0,64);
++      if(deviceId)await upsertSyncDevice(auth,deviceId,c.req.query('deviceLabel'),c.req.query('platform'),db);
++      return c.json(await pullPublishedChanges(db,SYNC_ENTITIES,auth,acl,{deviceId,since:c.req.query('since'),pageToken:c.req.query('pageToken')}));
++    },{isolationLevel:'RepeatableRead',timeout:30000});
++  }
+   return prisma.$transaction(async (db) => {
+   const { auth, acl } = await readAclSnapshot(db, getAuth(c), Boolean(getActorResolver()));
+   const sinceRaw = c.req.query('since');
+@@ -418,7 +429,7 @@
+   if (pageToken && pageState.aclVersion !== acl.aclVersion) {
+     throw new HttpError(409, 'SYNC_ACL_CHANGED', '当前授权已变化，请保全待提交原文并重新获取快照');
+   }
+-  if (!pageToken && sinceRaw && (c.req.query('aclVersion') !== acl.aclVersion || c.req.query('datasetEpoch') !== acl.datasetEpoch)) {
++  if (!pageToken && sinceRaw) {
+     pageState.since = new Date(0); pageState.full = true;
+   }
+   acl.writePolicy = Object.fromEntries(ENTITY_KEYS.map((entity) => {
+--- before/rdpms-system/backend/prisma/schema.prisma
++++ after/rdpms-system/backend/prisma/schema.prisma
+@@ -1643,3 +1643,37 @@
+ 
+   @@map("data_recovery_state")
+ }
++
++// Commit-visible synchronization journal: payload/revision are immutable.
++model SyncPublicationState {
++  epoch String @id @db.Uuid
++  head BigInt @default(0)
++  floor BigInt @default(0)
++  initialized Boolean @default(false)
++  @@map("sync_publication_state")
++}
++model SyncSourceRevision {
++  epoch String @db.Uuid
++  entity String
++  entityId String @map("entity_id")
++  revision BigInt
++  @@id([epoch,entity,entityId])
++  @@map("sync_source_revisions")
++}
++model SyncChangeEvent {
++  id String @id @default(uuid()) @db.Uuid
++  epoch String @db.Uuid
++  entity String
++  entityId String @map("entity_id")
++  projectId String @map("project_id")
++  authorId String? @map("author_id")
++  revision BigInt
++  action String
++  payload Json
++  publishedSequence BigInt? @map("published_sequence")
++  createdAt DateTime @default(now()) @map("created_at")
++  @@unique([epoch,publishedSequence])
++  @@unique([epoch,entity,entityId,revision])
++  @@index([epoch,entity,entityId,revision])
++  @@map("sync_change_events")
++}
+--- before/rdpms-system/backend/src/modules/sync/changePublisher.ts
++++ after/rdpms-system/backend/src/modules/sync/changePublisher.ts
+@@ -0,0 +1,87 @@
++import crypto from 'node:crypto';
++import { Prisma } from '@prisma/client';
++import { HttpError } from '../../kernel/http.js';
++type Registry=Record<string,any>;
++const tables:Record<string,string>={projects:'projects',projectPhases:'project_phases',tasks:'tasks',milestones:'milestones',monthlyProgress:'monthly_progress',reports:'reports',projectMembers:'project_members'};
++const PAGE_SIZE=500, MAX_PUBLISH=10000;
++/** Head allocation and publication COMMIT together. Producers never lock this head. */
++export async function publishCommittedChanges(db:any):Promise<void>{
++ await db.$transaction(async(tx:any)=>{
++  const states=await tx.$queryRaw`SELECT epoch,status FROM data_recovery_state WHERE id=1 FOR SHARE`;
++  const dataset=states[0];if(!dataset||dataset.status!=='READY')throw new HttpError(503,'RESTORE_NEEDS_RECONCILIATION','Dataset is not ready');
++  await tx.syncPublicationState.upsert({where:{epoch:dataset.epoch},create:{epoch:dataset.epoch},update:{}});
++  await tx.$queryRaw`SELECT epoch FROM sync_publication_state WHERE epoch=${dataset.epoch}::uuid FOR UPDATE`;
++  const state=await tx.syncPublicationState.findUniqueOrThrow({where:{epoch:dataset.epoch}});
++  if(!state.initialized){
++   // Known table names only. Lock source set before copying; no head lock in producers.
++   for(const table of Object.values(tables).sort())await tx.$executeRaw(Prisma.raw(`LOCK TABLE "${table}" IN SHARE MODE`));
++   for(const [entity,table] of Object.entries(tables)){
++    const tombstone=entity==='projectMembers'?'left_at':'deleted_at';
++    await tx.$executeRaw(Prisma.sql`SELECT rdpms_capture_sync_row(${dataset.epoch}::uuid,${entity},to_jsonb(t),CASE WHEN ${Prisma.raw('t.'+tombstone)} IS NULL THEN 'upsert' ELSE 'delete' END) FROM ${Prisma.raw('"'+table+'"')} t WHERE NOT EXISTS (SELECT 1 FROM sync_source_revisions r WHERE r.epoch=${dataset.epoch}::uuid AND r.entity=${entity} AND r.entity_id=t.id)`);
++   }
++  }
++  const pending=await tx.syncChangeEvent.findMany({where:{epoch:dataset.epoch,publishedSequence:null},orderBy:[{entity:'asc'},{entityId:'asc'},{revision:'asc'}],take:MAX_PUBLISH+1});
++  if(pending.length>MAX_PUBLISH)throw new HttpError(503,'SYNC_PUBLISH_BACKLOG_TOO_LARGE','Publication cap reached; no cursor advancement. Target budget not certified.');
++  let head:bigint=state.head;
++  for(const event of pending){head++;const changed=await tx.syncChangeEvent.updateMany({where:{id:event.id,publishedSequence:null},data:{publishedSequence:head}});if(changed.count!==1)throw new Error('SYNC_PUBLICATION_ASSIGNMENT_CONFLICT');}
++  await tx.syncPublicationState.update({where:{epoch:dataset.epoch},data:{head,initialized:true}});
++ },{isolationLevel:'ReadCommitted',timeout:180000,maxWait:15000});
++}
++function sign(value:any):string{
++ const key=process.env.JWT_SECRET;if(!key)throw new Error('JWT_SECRET_REQUIRED');
++ const payload=Buffer.from(JSON.stringify(value)).toString('base64url');return 'rdpms2.'+payload+'.'+crypto.createHmac('sha256',key).update(payload).digest('base64url');
++}
++function decode(raw:string):any{
++ if(!raw.startsWith('rdpms2.'))throw new HttpError(409,'RESET_REQUIRED','Legacy checkpoint requires controlled full snapshot; retain original outbox');
++ const [,payload,sig,...extra]=raw.split('.');const key=process.env.JWT_SECRET;if(!key)throw new Error('JWT_SECRET_REQUIRED');
++ const expected=crypto.createHmac('sha256',key).update(payload??'').digest('base64url');
++ if(extra.length||!sig||Buffer.byteLength(sig)!==Buffer.byteLength(expected)||!crypto.timingSafeEqual(Buffer.from(sig),Buffer.from(expected)))throw new HttpError(400,'SYNC_CURSOR_INVALID','Invalid signed cursor');
++ let value;try{value=JSON.parse(Buffer.from(payload,'base64url').toString());}catch{throw new HttpError(400,'SYNC_CURSOR_INVALID','Invalid cursor');}return value;
++}
++const integer=(v:any):bigint=>{if(typeof v!=='string'||! /^\d+$/.test(v))throw new HttpError(400,'SYNC_CURSOR_INVALID','Invalid sequence');return BigInt(v);};
++function assertBinding(state:any,auth:any,acl:any,deviceId:string){
++ if(state.version!==2||state.actorId!==auth.userId)throw new HttpError(400,'SYNC_CURSOR_INVALID','Cursor owner/device mismatch');
++ if(state.epoch!==acl.datasetEpoch)throw new HttpError(409,'RESET_REQUIRED','Dataset changed; retain original commands');
++ if(state.deviceId!==deviceId)throw new HttpError(400,'SYNC_CURSOR_INVALID','Cursor device mismatch');
++ if(state.aclVersion!==acl.aclVersion)throw new HttpError(409,'RESET_REQUIRED','Current authorization changed; full backfill required');
++}
++export async function pullPublishedChanges(db:any,registry:Registry,auth:any,acl:any,params:{deviceId:string;since?:string;pageToken?:string}){
++ const state=await db.syncPublicationState.findUniqueOrThrow({where:{epoch:acl.datasetEpoch}});
++ let lower=0n,upper:bigint=state.head,after=0n,full=true;
++ const binding={version:2,actorId:auth.userId,deviceId:params.deviceId,epoch:acl.datasetEpoch,aclVersion:acl.aclVersion};
++ if(params.pageToken){const p=decode(params.pageToken);assertBinding(p,auth,acl,params.deviceId);if(p.kind!=='page')throw new HttpError(400,'SYNC_CURSOR_INVALID','Expected page cursor');lower=integer(p.lower);upper=integer(p.upper);after=integer(p.after);full=p.full===true;}
++ else if(params.since){const p=decode(params.since);assertBinding(p,auth,acl,params.deviceId);if(p.kind!=='checkpoint')throw new HttpError(400,'SYNC_CURSOR_INVALID','Expected checkpoint');lower=integer(p.sequence);full=false;}
++ if((!full&&lower<state.floor)||upper<state.floor||upper>state.head||lower>upper||after>upper)throw new HttpError(409,'RESET_REQUIRED','Retained sequence window no longer available');
++ const entities=Object.keys(registry).filter(k=>auth.permissions.includes(registry[k].readPermission));
++ let rows:any[]=[];
++ if(entities.length&&acl.projectIds.length){
++  // Collapse by SOURCE revision before filtering incremental sequence. Older late publication
++  // cannot replace the already published higher revision; authorization filtering precedes collapse.
++  rows=await db.$queryRaw(Prisma.sql`SELECT * FROM (
++    SELECT DISTINCT ON(entity,entity_id) * FROM sync_change_events
++    WHERE epoch=${acl.datasetEpoch}::uuid AND published_sequence<=${upper}
++      AND entity IN (${Prisma.join(entities)}) AND project_id IN (${Prisma.join(acl.projectIds)})
++      AND (entity<>'reports' OR author_id=${auth.userId})
++    ORDER BY entity,entity_id,revision DESC,published_sequence DESC
++   ) latest WHERE (${full} OR published_sequence>${lower}) AND published_sequence>${after}
++   ORDER BY published_sequence ASC LIMIT ${PAGE_SIZE+1}`);
++ }
++ const hasMore=rows.length>PAGE_SIZE;rows=rows.slice(0,PAGE_SIZE);
++ const changes:Record<string,any>=Object.fromEntries(Object.keys(registry).map(k=>[k,{upserts:[],tombstones:[],tombstoneRevisions:{},authorizationTombstones:[]}]));
++ for(const entity of entities){const group=rows.filter(e=>e.entity===entity),def=registry[entity];if(!group.length)continue;
++  // Only current scope/liveness metadata is read from live rows. Payload is always captured revision.
++  const metadata=await db[def.model].findMany({where:{id:{in:group.map(e=>e.entity_id)}},select:{id:true,...(entity==='projects'?{}:{projectId:true}),...(def.ownOnly?{authorId:true}:{}),[def.tombstoneField]:true}});
++  const current=new Map<string,any>(metadata.map((m:any)=>[m.id,m]));
++  const model=Prisma.dmmf.datamodel.models.find(m=>m.name[0].toLowerCase()+m.name.slice(1)===def.model)!;
++  const fields=new Map(model.fields.filter(f=>f.kind!=='object').map(f=>[f.name,f.dbName??f.name]));
++  for(const event of group){const live=current.get(event.entity_id);const authorized=live&&acl.projectIds.includes(entity==='projects'?live.id:live.projectId)&&(!def.ownOnly||live.authorId===auth.userId)&&!live[def.tombstoneField];
++   if(event.action==='delete'||!authorized){changes[entity].tombstones.push(event.entity_id);changes[entity].tombstoneRevisions[event.entity_id]=String(event.revision);if(!authorized)changes[entity].authorizationTombstones.push(event.entity_id);continue;}
++   const projection:any={};for(const name of def.readFields){const dbName=fields.get(name);if(dbName&&Object.hasOwn(event.payload,dbName))projection[name]=event.payload[dbName];}
++   projection._syncRevision=String(event.revision);changes[entity].upserts.push(projection);
++  }
++ }
++ const next=rows.length?String(rows.at(-1).published_sequence):String(after);
++ return {pullProtocol:2,datasetEpoch:acl.datasetEpoch,serverTime:new Date().toISOString(),
++  cursor:sign({...binding,kind:'checkpoint',sequence:String(hasMore?lower:upper)}),full,acl,entities:Object.keys(registry),changes,
++  pagination:{hasMore,nextPageToken:hasMore?sign({...binding,kind:'page',lower:String(lower),upper:String(upper),after:next,full}):null}};
++}
+--- before/rdpms-system/backend/prisma/migrations/20261008_sync_commit_journal/migration.sql
++++ after/rdpms-system/backend/prisma/migrations/20261008_sync_commit_journal/migration.sql
+@@ -0,0 +1,54 @@
++CREATE TABLE sync_publication_state(epoch UUID PRIMARY KEY,head BIGINT NOT NULL DEFAULT 0,floor BIGINT NOT NULL DEFAULT 0,initialized BOOLEAN NOT NULL DEFAULT FALSE,CHECK(floor>=0 AND head>=floor));
++CREATE TABLE sync_source_revisions(epoch UUID NOT NULL,entity TEXT NOT NULL,entity_id TEXT NOT NULL,revision BIGINT NOT NULL,CHECK(revision>0),PRIMARY KEY(epoch,entity,entity_id));
++CREATE TABLE sync_change_events(id UUID PRIMARY KEY DEFAULT gen_random_uuid(),epoch UUID NOT NULL,entity TEXT NOT NULL,entity_id TEXT NOT NULL,project_id TEXT NOT NULL,author_id TEXT,revision BIGINT NOT NULL,action TEXT NOT NULL CHECK(action IN ('upsert','delete')),payload JSONB NOT NULL,published_sequence BIGINT,created_at TIMESTAMP(3) NOT NULL DEFAULT clock_timestamp(),UNIQUE(epoch,published_sequence),UNIQUE(epoch,entity,entity_id,revision));
++CREATE INDEX sync_events_resource_revision ON sync_change_events(epoch,entity,entity_id,revision);
++CREATE FUNCTION rdpms_capture_sync_row(p_epoch UUID,p_entity TEXT,p_row JSONB,p_action TEXT) RETURNS VOID LANGUAGE plpgsql AS $$
++DECLARE rev BIGINT;
++BEGIN
++ INSERT INTO sync_source_revisions(epoch,entity,entity_id,revision) VALUES(p_epoch,p_entity,p_row->>'id',1)
++ ON CONFLICT(epoch,entity,entity_id) DO UPDATE SET revision=sync_source_revisions.revision+1 RETURNING revision INTO rev;
++ INSERT INTO sync_change_events(epoch,entity,entity_id,project_id,author_id,revision,action,payload)
++ VALUES(p_epoch,p_entity,p_row->>'id',CASE WHEN p_entity='projects' THEN p_row->>'id' ELSE p_row->>'project_id' END,CASE WHEN p_entity='reports' THEN p_row->>'author_id' END,rev,p_action,p_row);
++END $$;
++CREATE FUNCTION rdpms_source_sync_trigger() RETURNS TRIGGER LANGUAGE plpgsql AS $$
++DECLARE e UUID; row_data JSONB; old_data JSONB; action TEXT;
++BEGIN
++ SELECT epoch INTO e FROM data_recovery_state WHERE id=1;
++ IF e IS NULL THEN RAISE EXCEPTION 'DATASET_EPOCH_UNAVAILABLE'; END IF;
++ IF TG_OP='DELETE' THEN PERFORM rdpms_capture_sync_row(e,TG_ARGV[0],to_jsonb(OLD),'delete'); RETURN OLD; END IF;
++ row_data:=to_jsonb(NEW);
++ IF TG_OP='UPDATE' THEN
++  old_data:=to_jsonb(OLD);
++  IF old_data->>'id' IS DISTINCT FROM row_data->>'id' OR old_data->>'project_id' IS DISTINCT FROM row_data->>'project_id' OR old_data->>'author_id' IS DISTINCT FROM row_data->>'author_id' THEN
++   PERFORM rdpms_capture_sync_row(e,TG_ARGV[0],old_data,'delete');
++  END IF;
++ END IF;
++ action:=CASE WHEN row_data->>TG_ARGV[1] IS NOT NULL THEN 'delete' ELSE 'upsert' END;
++ PERFORM rdpms_capture_sync_row(e,TG_ARGV[0],row_data,action); RETURN NEW;
++END $$;
++CREATE TRIGGER journal_projects AFTER INSERT OR UPDATE OR DELETE ON projects FOR EACH ROW EXECUTE FUNCTION rdpms_source_sync_trigger('projects','deleted_at');
++CREATE TRIGGER journal_project_phases AFTER INSERT OR UPDATE OR DELETE ON project_phases FOR EACH ROW EXECUTE FUNCTION rdpms_source_sync_trigger('projectPhases','deleted_at');
++CREATE TRIGGER journal_tasks AFTER INSERT OR UPDATE OR DELETE ON tasks FOR EACH ROW EXECUTE FUNCTION rdpms_source_sync_trigger('tasks','deleted_at');
++CREATE TRIGGER journal_milestones AFTER INSERT OR UPDATE OR DELETE ON milestones FOR EACH ROW EXECUTE FUNCTION rdpms_source_sync_trigger('milestones','deleted_at');
++CREATE TRIGGER journal_monthly_progress AFTER INSERT OR UPDATE OR DELETE ON monthly_progress FOR EACH ROW EXECUTE FUNCTION rdpms_source_sync_trigger('monthlyProgress','deleted_at');
++CREATE TRIGGER journal_reports AFTER INSERT OR UPDATE OR DELETE ON reports FOR EACH ROW EXECUTE FUNCTION rdpms_source_sync_trigger('reports','deleted_at');
++CREATE TRIGGER journal_project_members AFTER INSERT OR UPDATE OR DELETE ON project_members FOR EACH ROW EXECUTE FUNCTION rdpms_source_sync_trigger('projectMembers','left_at');
++CREATE FUNCTION rdpms_immutable_sync_event() RETURNS TRIGGER LANGUAGE plpgsql AS $$
++BEGIN
++ IF TG_OP='DELETE' OR OLD.published_sequence IS NOT NULL OR NEW.published_sequence IS NULL OR
++ (to_jsonb(OLD)-'published_sequence') IS DISTINCT FROM (to_jsonb(NEW)-'published_sequence') THEN RAISE EXCEPTION 'SYNC_EVENT_IMMUTABLE'; END IF;
++ RETURN NEW;
++END $$;
++CREATE TRIGGER immutable_sync_event BEFORE UPDATE OR DELETE ON sync_change_events FOR EACH ROW EXECUTE FUNCTION rdpms_immutable_sync_event();
++CREATE TRIGGER recovery_gate_journal BEFORE INSERT OR UPDATE OR DELETE ON sync_change_events FOR EACH STATEMENT EXECUTE FUNCTION rdpms_restore_write_gate();
++CREATE TRIGGER recovery_gate_revisions BEFORE INSERT OR UPDATE OR DELETE ON sync_source_revisions FOR EACH STATEMENT EXECUTE FUNCTION rdpms_restore_write_gate();
++CREATE TRIGGER recovery_gate_publisher BEFORE INSERT OR UPDATE OR DELETE ON sync_publication_state FOR EACH STATEMENT EXECUTE FUNCTION rdpms_restore_write_gate();
++
++CREATE FUNCTION rdpms_block_sync_truncate() RETURNS TRIGGER LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'SYNC_SOURCE_TRUNCATE_REQUIRES_NEW_EPOCH'; END $$;
++CREATE TRIGGER no_truncate_projects BEFORE TRUNCATE ON projects EXECUTE FUNCTION rdpms_block_sync_truncate();
++CREATE TRIGGER no_truncate_phases BEFORE TRUNCATE ON project_phases EXECUTE FUNCTION rdpms_block_sync_truncate();
++CREATE TRIGGER no_truncate_tasks BEFORE TRUNCATE ON tasks EXECUTE FUNCTION rdpms_block_sync_truncate();
++CREATE TRIGGER no_truncate_milestones BEFORE TRUNCATE ON milestones EXECUTE FUNCTION rdpms_block_sync_truncate();
++CREATE TRIGGER no_truncate_progress BEFORE TRUNCATE ON monthly_progress EXECUTE FUNCTION rdpms_block_sync_truncate();
++CREATE TRIGGER no_truncate_reports BEFORE TRUNCATE ON reports EXECUTE FUNCTION rdpms_block_sync_truncate();
++CREATE TRIGGER no_truncate_members BEFORE TRUNCATE ON project_members EXECUTE FUNCTION rdpms_block_sync_truncate();
+--- before/rdpms-system/backend/tests/integration/rp13-commit-journal.integration.test.mjs
++++ after/rdpms-system/backend/tests/integration/rp13-commit-journal.integration.test.mjs
+@@ -0,0 +1,16 @@
++import {test,before,after} from 'node:test';import assert from 'node:assert/strict';import crypto from 'node:crypto';import fs from 'node:fs';import path from 'node:path';import bcrypt from 'bcryptjs';import {PrismaClient} from '@prisma/client';import {createApp} from '../../dist/bootstrap/createApp.js';import {publishCommittedChanges} from '../../dist/modules/sync/changePublisher.js';
++const url=new URL(process.env.DATABASE_URL);assert.equal(url.hostname,'127.0.0.1');assert.equal(url.pathname.slice(1),process.env.RDPMS_EXEC_OWNED_DB);const db=new PrismaClient(),app=createApp({db}),id=()=>crypto.randomUUID(),trace=[];let actor,token,project,device=id();
++async function call(endpoint,body,server=app){const r=await server.request('/api'+endpoint,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});const v=await r.json();trace.push({endpoint,status:r.status,code:v.code,cursor:v.cursor,pagination:v.pagination});return{r,v};}
++async function pull(since,pageToken,whoDevice=device){const r=await call('/sync/init?pullProtocol=2&deviceId='+whoDevice+(since?'&since='+encodeURIComponent(since):'')+(pageToken?'&pageToken='+encodeURIComponent(pageToken):''));assert.equal(r.r.status,200,JSON.stringify(r.v));return r.v;}
++async function all(since){const pages=[];let p=await pull(since);pages.push(p);while(p.pagination.hasMore){p=await pull(undefined,p.pagination.nextPageToken);pages.push(p);}return pages;}
++before(async()=>{actor=await db.user.create({data:{username:'journal-'+id(),displayName:'Owned journal actor',passwordHash:await bcrypt.hash('Owned Journal 2026!',4),status:'ACTIVE',systemRole:'SUPER_ADMIN'}});const r=await app.request('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:actor.username,password:'Owned Journal 2026!'})});assert.equal(r.status,200);token=(await r.json()).accessToken;project=await db.project.create({data:{code:'JOURNAL-'+id(),name:'Owned journal project',type:'TESTING',managerId:actor.id,members:{create:{userId:actor.id,role:'OWNER'}}}});});
++after(async()=>{try{fs.writeFileSync(path.join(process.env.RDPMS_EXEC_EVIDENCE_DIR,'journal-state.json'),JSON.stringify({trace,heads:(await db.syncPublicationState.findMany()).map(r=>({...r,head:String(r.head),floor:String(r.floor)})),events:(await db.syncChangeEvent.findMany()).map(r=>({...r,revision:String(r.revision),publishedSequence:r.publishedSequence?.toString()}))},null,2));}finally{await db.$disconnect();}});
++test('real JWT nonempty fixed-cut snapshot captures exact scalar projection with revisions and no forbidden fields',async()=>{const task=await db.task.create({data:{projectId:project.id,title:'first journal payload',createdById:actor.id}});const pages=await all();const row=pages.flatMap(p=>p.changes.tasks.upserts).find(r=>r.id===task.id);assert.equal(row.title,task.title);assert.ok(/^\d+$/.test(row._syncRevision));assert.equal(Object.hasOwn(row,'createdById'),false);assert.equal(pages.at(-1).pullProtocol,2);assert.equal(pages.at(-1).acl.datasetEpoch,pages.at(-1).datasetEpoch);assert.ok(pages.at(-1).cursor.startsWith('rdpms2.'));});
++test('long transaction commits AFTER finished pull: captured late exact revision appears after checkpoint without timestamp dependence',async()=>{const initial=(await all()).at(-1).cursor;let ready,release;const entered=new Promise(r=>ready=r),gate=new Promise(r=>release=r);let row;const writer=db.$transaction(async(tx)=>{row=await tx.task.create({data:{projectId:project.id,title:'LATE-OWNED-'+id(),updatedAt:new Date('2000-01-01')}});ready();await gate;},{timeout:15000});try{await entered;const before=await all(initial);assert.ok(!before.flatMap(p=>p.changes.tasks.upserts).some(r=>r.id===row.id));const cut=before.at(-1).cursor;release();await writer;const after=await all(cut);assert.equal(after.flatMap(p=>p.changes.tasks.upserts).find(r=>r.id===row.id).title,row.title);trace.push({barrier:'actual uncommitted source row + journal then real authenticated completed cut',rowId:row.id,lateRecovered:true});}finally{release();await Promise.allSettled([writer]);}});
++test('publication rollback and competing publishers never leave permanent head holes or duplicate assignment',async()=>{const task=await db.task.create({data:{projectId:project.id,title:'publication failure'}});const state=await db.dataRecoveryState.findUniqueOrThrow({where:{id:1}});const before=await db.syncPublicationState.findUniqueOrThrow({where:{epoch:state.epoch}});const proxy=new Proxy(db,{get(t,k){if(k==='$transaction')return(fn,opts)=>t.$transaction(tx=>fn(new Proxy(tx,{get(t,k){if(k==='syncChangeEvent')return new Proxy(t[k],{get(m,op){if(op==='updateMany')return async()=>{throw Error('OWNED_PUBLISH_FAULT');};return typeof m[op]==='function'?m[op].bind(m):m[op];}});return typeof t[k]==='function'?t[k].bind(t):t[k];}})),opts);return typeof t[k]==='function'?t[k].bind(t):t[k];}});await assert.rejects(()=>publishCommittedChanges(proxy),/OWNED_PUBLISH_FAULT/);assert.deepEqual(await db.syncPublicationState.findUnique({where:{epoch:state.epoch}}),before);assert.equal((await db.syncChangeEvent.findFirstOrThrow({where:{entityId:task.id}})).publishedSequence,null);await Promise.all([publishCommittedChanges(db),publishCommittedChanges(db)]);const events=await db.syncChangeEvent.findMany({where:{epoch:state.epoch,publishedSequence:{not:null}},orderBy:{publishedSequence:'asc'}});assert.deepEqual(events.map(r=>r.publishedSequence),Array.from({length:events.length},(_,i)=>BigInt(i+1)));assert.equal(await db.syncChangeEvent.count({where:{entityId:task.id}}),1);});
++test('out-of-order publication of older captured revision cannot overwrite higher source revision or emit stale delete',async()=>{const task=await db.task.create({data:{projectId:project.id,title:'revision-one'}});await db.task.update({where:{id:task.id},data:{title:'revision-two'}});const state=await db.dataRecoveryState.findUniqueOrThrow({where:{id:1}});const events=await db.syncChangeEvent.findMany({where:{entityId:task.id},orderBy:{revision:'desc'}});await db.$transaction(async(tx)=>{await tx.$queryRaw`SELECT epoch FROM sync_publication_state WHERE epoch=${state.epoch}::uuid FOR UPDATE`;const h=await tx.syncPublicationState.findUniqueOrThrow({where:{epoch:state.epoch}});await tx.syncChangeEvent.update({where:{id:events[0].id},data:{publishedSequence:h.head+1n}});await tx.syncPublicationState.update({where:{epoch:state.epoch},data:{head:h.head+1n}});});const first=await all();assert.equal(first.flatMap(p=>p.changes.tasks.upserts).find(r=>r.id===task.id).title,'revision-two');const next=await all(first.at(-1).cursor);assert.ok(!next.flatMap(p=>p.changes.tasks.upserts).some(r=>r.id===task.id));assert.ok(!next.flatMap(p=>p.changes.tasks.tombstones).includes(task.id));await assert.rejects(()=>db.syncChangeEvent.update({where:{id:events[0].id},data:{payload:{bad:'mutation'}}}),/SYNC_EVENT_IMMUTABLE/);});
++test('3001 upserts and 5001 tombstones fully page under one signed cut; midpage newer writes replay only after final cut',async()=>{const ups=Array.from({length:3001},(_,i)=>({id:id(),projectId:project.id,title:'bulk live '+i,updatedAt:new Date('2000-01-01')})),gone=Array.from({length:5001},(_,i)=>({id:id(),projectId:project.id,title:'bulk deleted '+i,deletedAt:new Date('2000-01-01')}));await db.task.createMany({data:[...ups,...gone]});let p=await pull();const first=p;assert.equal(p.pagination.hasMore,true);const fresh=await db.task.update({where:{id:ups[0].id},data:{title:'AFTER-CUT'}});const rows=[],deleted=[];while(true){rows.push(...p.changes.tasks.upserts);deleted.push(...p.changes.tasks.tombstones);if(!p.pagination.hasMore)break;assert.equal(p.cursor,first.cursor);p=await pull(undefined,p.pagination.nextPageToken);}assert.equal(rows.filter(r=>ups.some(u=>u.id===r.id)).length,3001);assert.equal(new Set(deleted.filter(r=>gone.some(g=>g.id===r))).size,5001);assert.equal(rows.find(r=>r.id===fresh.id).title,'bulk live 0');const next=await all(p.cursor);assert.equal(next.flatMap(p=>p.changes.tasks.upserts).find(r=>r.id===fresh.id).title,'AFTER-CUT');});
++test('seven source DML triggers/rollback and forbidden truncate cover producer boundary without per-route shadow omission',async()=>{const names=await db.$queryRaw`SELECT event_object_table,trigger_name FROM information_schema.triggers WHERE trigger_name LIKE 'journal_%'`;assert.equal(new Set(names.map(r=>r.event_object_table)).size,7);const events=await db.syncChangeEvent.count();await assert.rejects(()=>db.$transaction(async(tx)=>{await tx.task.create({data:{projectId:project.id,title:'rolled back source'}});throw Error('OWNED_SOURCE_ROLLBACK');}),/OWNED_SOURCE_ROLLBACK/);assert.equal(await db.syncChangeEvent.count(),events);await assert.rejects(()=>db.$executeRawUnsafe('TRUNCATE tasks CASCADE'),/SYNC_SOURCE_TRUNCATE_REQUIRES_NEW_EPOCH/);assert.ok(await db.task.count());});
++test('all seven source models exercise real create/update/tombstone/restore capture; no source effect exists without journal',async()=>{const other=await db.user.create({data:{username:'source-member-'+id(),displayName:'Owned source member',passwordHash:'synthetic-disabled',status:'DISABLED'}});const phase=await db.projectPhase.create({data:{projectId:project.id,code:'JOURNAL_PHASE',name:'phase',sortOrder:1}}),milestone=await db.milestone.create({data:{projectId:project.id,name:'milestone',dueDate:new Date()}}),progress=await db.monthlyProgress.create({data:{projectId:project.id,periodKey:'2026-10',submittedById:actor.id,actualWork:'work'}}),report=await db.report.create({data:{projectId:project.id,authorId:actor.id,reportType:'DAILY',periodKey:'2026-10-08',content:{text:'report'}}}),member=await db.projectMember.create({data:{projectId:project.id,userId:other.id,role:'MEMBER'}}),task=await db.task.create({data:{projectId:project.id,title:'producer task'}});const cases=[['projects','project',project,'name','deletedAt'],['projectPhases','projectPhase',phase,'name','deletedAt'],['tasks','task',task,'title','deletedAt'],['milestones','milestone',milestone,'name','deletedAt'],['monthlyProgress','monthlyProgress',progress,'actualWork','deletedAt'],['reports','report',report,'content','deletedAt'],['projectMembers','projectMember',member,'role','leftAt']];for(const[entity,model,row,field,tomb]of cases){const before=await db.syncChangeEvent.count({where:{entity,entityId:row.id}});const value=field==='content'?{text:'captured'}:field==='role'?'VIEWER':'captured '+entity;await db[model].update({where:{id:row.id},data:{[field]:value}});await db[model].update({where:{id:row.id},data:{[tomb]:new Date()}});await db[model].update({where:{id:row.id},data:{[tomb]:null}});const events=await db.syncChangeEvent.findMany({where:{entity,entityId:row.id},orderBy:{revision:'asc'}});assert.equal(events.length,before+3);assert.deepEqual(events.slice(-3).map(e=>e.action),['upsert','delete','upsert']);assert.equal(events.at(-1).payload[field.replace(/[A-Z]/g,c=>'_'+c.toLowerCase())]===undefined,false);trace.push({actualProducerTable:entity,rowId:row.id,events:events.length,allDMLAtomicCapture:true});}});
++test('v2 current permission/member/report ownership filters: revoke/rejoin reset; moved row body not visible in old scope',async()=>{const member=await db.user.create({data:{username:'reader-'+id(),displayName:'Owned reader',passwordHash:await bcrypt.hash('Owned Reader 2026!',4),status:'ACTIVE',systemRole:'MEMBER'}});const permissions=await db.permission.findMany({where:{code:{in:['projects.view','tasks.view','reports.view']}}}),role=await db.role.create({data:{code:'JOURNAL_READER_'+id(),name:'Owned reader fixture',permissions:{create:permissions.map(p=>({permissionId:p.id}))}}});await db.userRole.create({data:{userId:member.id,roleId:role.id}});const membership=await db.projectMember.create({data:{projectId:project.id,userId:member.id,role:'MEMBER'}});const own=await db.report.create({data:{projectId:project.id,authorId:member.id,reportType:'DAILY',periodKey:'2026-10-09',content:{private:'owned report'}}});const login=await app.request('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:member.username,password:'Owned Reader 2026!'})});assert.equal(login.status,200);const credential=(await login.json()).accessToken,dev=id();async function as(since,pageToken){const r=await app.request('/api/sync/init?pullProtocol=2&deviceId='+dev+(since?'&since='+encodeURIComponent(since):'')+(pageToken?'&pageToken='+encodeURIComponent(pageToken):''),{headers:{Authorization:'Bearer '+credential}});return{r,v:await r.json()};}async function allAs(){let result=await as();assert.equal(result.r.status,200,JSON.stringify(result.v));const pages=[result.v];while(result.v.pagination.hasMore){result=await as(undefined,result.v.pagination.nextPageToken);assert.equal(result.r.status,200,JSON.stringify(result.v));pages.push(result.v);}const changes=Object.fromEntries(Object.keys(result.v.changes).map(e=>[e,{upserts:pages.flatMap(p=>p.changes[e].upserts),tombstones:pages.flatMap(p=>p.changes[e].tombstones)}]));return {r:result.r,v:{...result.v,changes}};}let initial=await allAs();assert.equal(initial.r.status,200);assert.ok(initial.v.changes.reports.upserts.some(r=>r.id===own.id));assert.ok(initial.v.changes.reports.upserts.every(r=>r.authorId===member.id));await db.projectMember.update({where:{id:membership.id},data:{leftAt:new Date()}});const denied=await as(initial.v.cursor);assert.equal(denied.r.status,409);assert.equal(denied.v.code,'RESET_REQUIRED');const empty=await as();assert.deepEqual(empty.v.acl.projectIds,[]);assert.ok(Object.values(empty.v.changes).every(b=>!b.upserts.length&&!b.tombstones.length));await db.projectMember.update({where:{id:membership.id},data:{leftAt:null}});const full=await allAs();assert.equal(full.v.full,true);assert.ok(full.v.changes.reports.upserts.some(r=>r.id===own.id));const moved=await db.task.create({data:{projectId:project.id,title:'PRIVATE MOVED BODY'}});const foreign=await db.project.create({data:{code:'FOREIGN-'+id(),name:'Other project',type:'TESTING',managerId:actor.id}});await db.task.update({where:{id:moved.id},data:{projectId:foreign.id}});const taskView=permissions.find(p=>p.code==='tasks.view');await db.rolePermission.delete({where:{roleId_permissionId:{roleId:role.id,permissionId:taskView.id}}});const zero=await as();assert.deepEqual(zero.v.changes.tasks.upserts,[]);assert.deepEqual(zero.v.changes.tasks.tombstones,[]);await db.rolePermission.create({data:{roleId:role.id,permissionId:taskView.id}});const after=await allAs();assert.equal(JSON.stringify(after.v.changes).includes('PRIVATE MOVED BODY'),false);assert.ok(!after.v.changes.tasks.upserts.some(r=>r.id===moved.id));});
++test('retained floor expiry returns explicit reset; full backfill still works and keeps journal, then restore new epoch bootstraps with fresh cursor',async()=>{const old=(await all()).at(-1),state=await db.dataRecoveryState.findUniqueOrThrow({where:{id:1}});await db.task.create({data:{projectId:project.id,title:'floor advancement'}});await publishCommittedChanges(db);const head=await db.syncPublicationState.findUniqueOrThrow({where:{epoch:state.epoch}});await db.syncPublicationState.update({where:{epoch:state.epoch},data:{floor:head.head}});const expired=await call('/sync/init?pullProtocol=2&deviceId='+device+'&since='+encodeURIComponent(old.cursor));assert.equal(expired.r.status,409);assert.equal(expired.v.code,'RESET_REQUIRED');const fresh=(await all()).at(-1);const restored=await call('/backup/restore',{backup:{version:'2.0',data:{roles:[]}}});assert.equal(restored.r.status,200,JSON.stringify(restored.v));const r=await app.request('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:actor.username,password:'Owned Journal 2026!'})});assert.equal(r.status,200);token=(await r.json()).accessToken;device=id();const stale=await call('/sync/init?pullProtocol=2&deviceId='+device+'&since='+encodeURIComponent(fresh.cursor));assert.equal(stale.r.status,409,JSON.stringify(stale.v));assert.equal(stale.v.code,'RESET_REQUIRED');const next=await all();assert.notEqual(next.at(-1).datasetEpoch,state.epoch);assert.ok(next.flatMap(p=>p.changes.tasks.upserts).length>=3001);assert.ok(await db.syncChangeEvent.count({where:{epoch:state.epoch}}));});
+--- before/rdpms-system/frontend/src/offline/engine.ts
++++ after/rdpms-system/frontend/src/offline/engine.ts
+@@ -49,7 +49,7 @@
+  * 生产代码不调用；默认行为与直接调用 syncAPI 完全一致。
+  */
+ export interface SyncTransport {
+-  init: (params: { since?: string; aclVersion?: string; datasetEpoch?: string; deviceId: string; deviceLabel?: string; platform?: string; paginationVersion?: 1; pageToken?: string }) => Promise<SyncInitResponse>;
++  init: (params: { pullProtocol?: 2; since?: string; aclVersion?: string; datasetEpoch?: string; deviceId: string; deviceLabel?: string; platform?: string; paginationVersion?: 1; pageToken?: string }) => Promise<SyncInitResponse>;
+   reserve: (payload: { protocolVersion: 1; deviceId: string; changes: SyncChange[] }) => Promise<{ protocolVersion: 1; results: SyncPushResult[] }>;
+   query: (payload: { protocolVersion: 1; deviceId: string; changes: SyncChange[] }) => Promise<{ protocolVersion: 1; results: SyncPushResult[] }>;
+   push: (payload: {
+@@ -340,7 +340,7 @@
+   isStale: () => boolean;
+ }
+ 
+-async function applyPull(res: SyncInitResponse, session: SyncSession, commitCursor: boolean, accumulated: { upserts: RecordRow[]; tombstones: string[]; full: boolean }): Promise<void> {
++async function applyPull(res: SyncInitResponse, session: SyncSession, commitCursor: boolean, accumulated: { upserts: RecordRow[]; tombstones: string[]; full: boolean; revisions: Record<string,string>; authorizationTombstones: string[] }): Promise<void> {
+   const db = session.db;
+   const upserts: RecordRow[] = [];
+   const tombstoneKeys: string[] = [];
+@@ -355,16 +355,16 @@
+         id,
+         projectId: (rec.projectId as string | undefined) ?? null,
+         data: rec,
+-        updatedAt: rec.updatedAt as string | undefined,
++        updatedAt: rec.updatedAt as string | undefined, sourceRevision: rec._syncRevision as string | undefined,
+       });
+     }
+-    for (const id of bucket.tombstones) tombstoneKeys.push(`${entity}:${id}`);
++    for (const id of bucket.tombstones) { const key=`${entity}:${id}`; tombstoneKeys.push(key); if(bucket.tombstoneRevisions?.[id]) accumulated.revisions[key]=bucket.tombstoneRevisions[id]; if(bucket.authorizationTombstones?.includes(id))accumulated.authorizationTombstones.push(key); }
+   }
+   accumulated.upserts.push(...upserts); accumulated.tombstones.push(...tombstoneKeys);
+   if (!commitCursor || session.isStale()) return;
+   await db.publishPull(accumulated.upserts, accumulated.tombstones, accumulated.full,
+     aclKey(session.userId), { ...res.acl, observedAt: Date.now(), loginGeneration: session.owner.loginGeneration },
+-    cursorKey(session.userId), res.cursor);
++    cursorKey(session.userId), res.cursor, accumulated.revisions, accumulated.authorizationTombstones, res.serverTime);
+ }
+ 
+ function canSendWithAcl(row: OutboxRecord, acl: SyncInitResponse['acl']): boolean {
+@@ -398,19 +398,20 @@
+     if(datasetEpoch && await db.resetDatasetEpoch(datasetEpoch)) await hydrate();
+     const since = await db.kvGet<string>(cursorKey(myUserId));
+     const oldAcl = await db.kvGet<SyncInitResponse['acl'] & { loginGeneration: string }>(aclKey(myUserId));
+-    let firstPull = await transport.init({
++    let firstPull: SyncInitResponse;
++    try { firstPull = await transport.init({
+       since: since || undefined,
+       aclVersion: oldAcl?.aclVersion,
+       datasetEpoch,
+       deviceId,
+-      paginationVersion: 1,
++      paginationVersion: 1, pullProtocol: 2,
+       ...deviceMeta(),
+-    });
++    }); } catch(error) { if (!isApiError(error) || error.code!=='RESET_REQUIRED') throw error; await db.kvDelete(aclKey(myUserId)); firstPull=await transport.init({deviceId,paginationVersion:1,pullProtocol:2,datasetEpoch,...deviceMeta()}); }
+     if (isStale()) return;
+     if(datasetEpoch && firstPull.datasetEpoch!==datasetEpoch) throw new Error('DATASET_EPOCH_CHANGED');
+     if (!oldAcl || oldAcl.aclVersion !== firstPull.acl.aclVersion) await db.kvDelete(aclKey(myUserId));
+     if (since && !firstPull.full && (!oldAcl || oldAcl.aclVersion !== firstPull.acl.aclVersion || oldAcl.loginGeneration !== owner.loginGeneration)) {
+-      firstPull = await transport.init({ deviceId, paginationVersion: 1, ...deviceMeta() });
++      firstPull = await transport.init({ deviceId, paginationVersion: 1, pullProtocol: 2, ...deviceMeta() });
+     }
+     if (isStale()) return;
+     // Record denial before cache staging. If publish aborts or a page is lost,
+@@ -420,7 +421,7 @@
+     }
+     const changedAcl = !oldAcl || oldAcl.aclVersion !== firstPull.acl.aclVersion || oldAcl.loginGeneration !== owner.loginGeneration;
+     if (changedAcl || firstPull.full) await db.kvDelete(aclKey(myUserId));
+-    const accumulated = { upserts: [] as RecordRow[], tombstones: [] as string[], full: firstPull.full || changedAcl };
++    const accumulated = { upserts: [] as RecordRow[], tombstones: [] as string[], full: firstPull.full || changedAcl, revisions: {} as Record<string,string>, authorizationTombstones: [] as string[] };
+     let pull = firstPull;
+     while (true) {
+       if (isStale()) return; // 旧会话的拉取结果不得落盘
+@@ -430,7 +431,7 @@
+       if (!hasMore) break;
+       const pageToken = pull.pagination?.nextPageToken;
+       if (!pageToken) throw new Error('同步分页响应缺少 nextPageToken');
+-      pull = await transport.init({ pageToken, deviceId, paginationVersion: 1, ...deviceMeta() });
++      pull = await transport.init({ pageToken, deviceId, paginationVersion: 1, pullProtocol: 2, ...deviceMeta() });
+     }
+     const res = pull;
+ 
+@@ -530,9 +531,21 @@
+ async function freshRecovery(owner: OfflineOwner) {
+   const me = await authAPI.me();
+   if (!sameOwner(owner) || me.id !== owner.userId) throw new Error('OFFLINE_SESSION_CHANGED');
+-  const acl = await transport.init({ deviceId: getDeviceId(), paginationVersion: 1, ...deviceMeta() });
+-  if (!sameOwner(owner)) throw new Error('OFFLINE_SESSION_CHANGED');
+-  return { permissions: me.permissions, acl: acl.acl, changes: acl.changes };
++  const deviceId=getDeviceId(), epoch=tokenStore.datasetEpoch();
++  let page = await transport.init({ deviceId, paginationVersion: 1, pullProtocol: 2, ...deviceMeta() });
++  const acl=page.acl, changes: SyncInitResponse['changes']={};
++  while(true) {
++    if (!sameOwner(owner)) throw new Error('OFFLINE_SESSION_CHANGED');
++    if(epoch && page.datasetEpoch!==epoch || page.acl.aclVersion!==acl.aclVersion) throw new Error('RECOVERY_SNAPSHOT_CHANGED');
++    for(const [entity,bucket] of Object.entries(page.changes)) {
++      const target=changes[entity] ??= {upserts:[],tombstones:[]};
++      target.upserts.push(...bucket.upserts);target.tombstones.push(...bucket.tombstones);
++    }
++    if(!page.pagination?.hasMore)break;
++    if(!page.pagination.nextPageToken)throw new Error('RECOVERY_PAGE_TOKEN_MISSING');
++    page=await transport.init({deviceId,pageToken:page.pagination.nextPageToken,paginationVersion:1,pullProtocol:2,...deviceMeta()});
++  }
++  return { permissions: me.permissions, acl, changes };
+ }
+ function canRecover(item: RecoveryItem, cache: RecordRow[], grants: Awaited<ReturnType<typeof freshRecovery>>, writing = false) {
+   const projectId = item.entity === 'projects' ? item.id : String(item.payload?.projectId ?? cache.find((r) => r.entity === item.entity && r.id === item.id)?.projectId ?? '');
+@@ -615,7 +628,7 @@
+ export async function hydrate(): Promise<void> {
+   const owner = captureOwner(); const db = idb.forOwner(owner);
+   const conflicts = (await db.kvGet<ConflictRecord[]>(conflictKey(owner.userId))) ?? [];
+-  const cursor = await db.kvGet<string>(cursorKey(owner.userId));
++  const cursor = await db.kvGet<string>('rdpms.sync.lastSyncTime:'+owner.userId) ?? await db.kvGet<string>(cursorKey(owner.userId));
+   const pending = (await db.outboxAll()).length;
+   if (!sameOwner(owner)) return;
+   set({
+--- before/rdpms-system/frontend/src/offline/idb.ts
++++ after/rdpms-system/frontend/src/offline/idb.ts
+@@ -13,6 +13,7 @@
+   attempt?: 'reserving' | 'bound' | 'pushed'; retryCount?: number; recoveryStatus?: 'pending' | 'unknown' | 'expired' | 'invalid';
+ }
+ export interface RecordRow {
++  sourceRevision?: string;
+   key: string; entity: string; id: string; projectId?: string | null;
+   data: Record<string, unknown>; updatedAt?: string;
+ }
+@@ -223,16 +224,43 @@
+         if(old?.value===epoch){result(false);return;}
+         request(s.records.getAll(), (rows) => { ownedRows(rows,fixed).forEach(r=>s.records.delete(ownerKey(fixed,r.key))); });
+         request(s.kv.getAll(), (rows) => { ownedRows(rows,fixed).forEach(r=>{
+-          if(r.key.startsWith('rdpms.sync.acl:') || r.key.startsWith('rdpms.sync.cursor:') || r.key.startsWith('rdpms.sync.applied:'))s.kv.delete(ownerKey(fixed,r.key));
++          if(r.key.startsWith('rdpms.sync.acl:') || r.key.startsWith('rdpms.sync.cursor:') || r.key.startsWith('rdpms.sync.applied:') || r.key.startsWith('rdpms.sync.lastSyncTime:') || r.key.startsWith('rdpms.sync.sourceRevision:'))s.kv.delete(ownerKey(fixed,r.key));
+         }); });
+         request(s.outbox.getAll(), (rows) => { ownedRows(rows,fixed).forEach(r=>{ if(r.datasetEpoch!==epoch)s.outbox.put({...r,datasetBlocked:epoch}); }); });
+         s.kv.put({ownerId:fixed.userId,key:'rdpms.sync.datasetEpoch',value:epoch});result(true);
+       });
+     }),
+-    publishPull: (rows: RecordRow[], tombstones: string[], full: boolean, aclKey: string, acl: unknown, cursorKey: string, cursor: string) => transaction<void>(fixed, ['records', 'kv'], 'readwrite', (s, result) => {
+-      const commit = () => { rows.forEach(r => s.records.put({ ...r, ownerId: fixed.userId })); tombstones.forEach(key => s.records.delete(ownerKey(fixed, key)));
+-        s.kv.put({ ownerId: fixed.userId, key: aclKey, value: acl }); s.kv.put({ ownerId: fixed.userId, key: cursorKey, value: cursor }); result(undefined); };
+-      if (full) request(s.records.getAll(), (old) => { ownedRows(old, fixed).forEach(r => s.records.delete(ownerKey(fixed, r.key))); commit(); }); else commit();
++    publishPull: (rows: RecordRow[], tombstones: string[], full: boolean, aclKey: string, acl: unknown, cursorKey: string, cursor: string, revisions: Record<string,string> = {}, authorizationTombstones: string[] = [], serverTime?: string) => transaction<void>(fixed, ['records', 'kv'], 'readwrite', (s, result, tx) => {
++      const revisionKey = (key: string) => 'rdpms.sync.sourceRevision:' + key;
++      const newer = (incoming: string | undefined, old: string | undefined) => {
++        if (incoming !== undefined && !/^\d+$/.test(incoming) || old !== undefined && !/^\d+$/.test(old)) { tx.abort(); return false; }
++        return incoming === undefined || old === undefined || BigInt(incoming) > BigInt(old);
++      };
++      const commit = () => {
++        rows.forEach(r => request(s.kv.get(ownerKey(fixed,revisionKey(r.key))), marker => {
++          request(s.records.get(ownerKey(fixed,r.key)), old => {
++            const previous = marker?.value as string | undefined ?? old?.sourceRevision;
++            if (newer(r.sourceRevision,full ? undefined : previous)) {
++              s.records.put({...r,ownerId:fixed.userId});
++              if(r.sourceRevision !== undefined)s.kv.put({ownerId:fixed.userId,key:revisionKey(r.key),value:r.sourceRevision});
++            }
++          });
++        }));
++        tombstones.forEach(key => request(s.kv.get(ownerKey(fixed,revisionKey(key))), marker => {
++          request(s.records.get(ownerKey(fixed,key)), old => {
++            const incoming=revisions[key],previous=marker?.value as string | undefined ?? old?.sourceRevision;
++            const advance=newer(incoming,full ? undefined : previous);
++            if(advance || authorizationTombstones.includes(key))s.records.delete(ownerKey(fixed,key));
++            if(advance && incoming !== undefined)s.kv.put({ownerId:fixed.userId,key:revisionKey(key),value:incoming});
++          });
++        }));
++        s.kv.put({ ownerId: fixed.userId, key: aclKey, value: acl }); s.kv.put({ ownerId: fixed.userId, key: cursorKey, value: cursor });
++        if(serverTime)s.kv.put({ownerId:fixed.userId,key:'rdpms.sync.lastSyncTime:'+fixed.userId,value:serverTime});result(undefined);
++      };
++      if (full) request(s.records.getAll(), (old) => {
++        ownedRows(old, fixed).forEach(r => s.records.delete(ownerKey(fixed,r.key)));
++        request(s.kv.getAll(), markers => { ownedRows(markers,fixed).filter(r=>r.key.startsWith('rdpms.sync.sourceRevision:')).forEach(r=>s.kv.delete(ownerKey(fixed,r.key)));commit(); });
++      }); else commit();
+     }),
+     recordsPutMany: (rows: RecordRow[]) => transaction<void>(fixed, ['records'], 'readwrite', (s, result) => { rows.forEach((r) => s.records.put({ ...r, ownerId: fixed.userId })); result(undefined); }),
+     recordsDeleteMany: (keys: string[]) => transaction<void>(fixed, ['records'], 'readwrite', (s, result) => { keys.forEach((k) => s.records.delete(ownerKey(fixed, k))); result(undefined); }),
+--- before/rdpms-system/frontend/src/api/endpoints/sync.ts
++++ after/rdpms-system/frontend/src/api/endpoints/sync.ts
+@@ -58,6 +58,7 @@
+ }
+ 
+ export interface SyncInitResponse {
++  pullProtocol?: 2;
+   datasetEpoch?: string;
+   serverTime: string;
+   cursor: string;
+@@ -67,7 +68,7 @@
+     writePolicy?: Record<string, { read: string; update: string; create: string | null; delete: string; status: string | null; assign: string | null; capability: string }>;
+   };
+   entities: string[];
+-  changes: Record<string, { upserts: Array<Record<string, unknown>>; tombstones: string[] }>;
++  changes: Record<string, { upserts: Array<Record<string, unknown>>; tombstones: string[]; tombstoneRevisions?: Record<string,string>; authorizationTombstones?: string[] }>;
+   pagination?: { hasMore: boolean; nextPageToken: string | null };
+ }
+ 
+@@ -86,7 +87,7 @@
+ }
+ 
+ export const syncAPI = {
+-  init: (params: { since?: string; aclVersion?: string; datasetEpoch?: string; deviceId: string; deviceLabel?: string; platform?: string; paginationVersion?: 1; pageToken?: string }) =>
++  init: (params: { pullProtocol?: 2; since?: string; aclVersion?: string; datasetEpoch?: string; deviceId: string; deviceLabel?: string; platform?: string; paginationVersion?: 1; pageToken?: string }) =>
+     get<SyncInitResponse>('/sync/init', { params } as never),
+ 
+   push: (payload: { deviceId: string; deviceLabel?: string; platform?: string; changes: SyncChange[] }) =>
+--- before/rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx
++++ after/rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx
+@@ -37,7 +37,7 @@
+ let pullGate: { entered: Promise<void>; enter: () => void; released: Promise<void>; release: () => void } | null = null;
+ function deferred() { let resolve!: () => void; const promise = new Promise<void>((r) => { resolve = r; }); return { promise, resolve }; }
+ function response(actor: string) {
+-  return { datasetEpoch: tokenStore.datasetEpoch(), serverTime: new Date().toISOString(), cursor: `cursor-${actor}`, full: true,
++  return { pullProtocol: 2 as const, datasetEpoch: tokenStore.datasetEpoch(), serverTime: new Date().toISOString(), cursor: `cursor-${actor}`, full: true,
+     acl: { datasetEpoch: tokenStore.datasetEpoch(), projectIds: aclMode === 'nonmember' ? [] : ['shared-project'], permissions: aclMode === 'task-revoke' ? permissions.filter(p => p !== 'tasks.view') : permissions, aclVersion: `acl-${actor}-${aclMode}`,
+       projects: aclMode === 'nonmember' ? [] : [{ id: 'shared-project', role: aclMode === 'role-viewer' ? 'VIEWER' : 'OWNER', capabilities: aclMode === 'role-viewer' ? ['read'] : ['read','write','delete','transition','assign','manage_members'] }],
+       writePolicy: { tasks: { read: 'tasks.view', update: 'tasks.update', create: null, delete: 'tasks.delete', status: 'tasks.change_status', assign: 'tasks.assign', capability: 'write' } } }, entities: ['tasks'],
+@@ -154,6 +154,12 @@
+   abortUpgrade() { nativePut = IDBObjectStore.prototype.put; IDBObjectStore.prototype.put = function(...args) { const req = nativePut!.apply(this, args); if (this.name === 'legacyQuarantine') this.transaction.abort(); return req; }; },
+   armCloseUpgrade() { nativePut = IDBObjectStore.prototype.put; let fired = false; IDBObjectStore.prototype.put = function(...args) { const req = nativePut!.apply(this, args); if (!fired && this.name === 'legacyQuarantine') { fired = true; (window as unknown as { notifyUpgrade: (text: string) => void }).notifyUpgrade('NATIVE_UPGRADE_COPY_STARTED'); } return req; }; },
+   restoreNativePut() { if (nativePut) IDBObjectStore.prototype.put = nativePut; nativePut = null; },
++  journalRows: () => store().recordsAll(),
++  journalPublish: (revision: string, title: string, cursor: string, full=false, deleted=false, forced=false) => {
++    const row={key:'tasks:journal',entity:'tasks',id:'journal',projectId:'shared-project',data:{title},sourceRevision:revision};
++    return store().publishPull(deleted?[]:[row],deleted?[row.key]:[],full,'journal.acl',{legal:true},'journal.cursor',cursor,{[row.key]:revision},forced?[row.key]:[],new Date().toISOString());
++  },
++  journalCursor: () => store().kvGet('journal.cursor'),
+   epoch: () => tokenStore.datasetEpoch(),
+   resetEpoch: (epoch: string) => store().resetDatasetEpoch(epoch),
+   kv: async () => (await raw('ownerKv') as {ownerId:string}[]).filter(r=>r.ownerId===owner().userId),
+--- before/rdpms-system/backend/tests/integration/rp08-acl-backfill.integration.test.mjs
++++ after/rdpms-system/backend/tests/integration/rp08-acl-backfill.integration.test.mjs
+@@ -21,4 +21,4 @@
+ test('entity grant revoke in visible project returns no task projection and changed full ACL',async()=>{const before=await pull();assert.ok(before.body.changes.tasks.upserts.length);const permission=await db.permission.findUnique({where:{code:'tasks.view'}});await db.rolePermission.delete({where:{roleId_permissionId:{roleId:role.id,permissionId:permission.id}}});try{const after=await pull({since:before.body.cursor,aclVersion:before.body.acl.aclVersion});assert.equal(after.r.status,200);assert.deepEqual(after.body.acl.projectIds,before.body.acl.projectIds);assert.notEqual(after.body.acl.aclVersion,before.body.acl.aclVersion);assert.deepEqual(after.body.changes.tasks,{upserts:[],tombstones:[]});assert.ok(!after.body.acl.permissions.includes('tasks.view'));}finally{await db.rolePermission.create({data:{roleId:role.id,permissionId:permission.id}});}});
+ test('leave and rejoin preserve complete historical projection without replacing existing cursor by empty incremental',async()=>{const before=await pull();await db.projectMember.update({where:{projectId_userId:{projectId:project.id,userId:member.id}},data:{leftAt:new Date()}});const left=await pull({since:before.body.cursor,aclVersion:before.body.acl.aclVersion});assert.deepEqual(left.body.acl.projectIds,[]);assert.deepEqual(left.body.changes.tasks.upserts,[]);await db.projectMember.update({where:{projectId_userId:{projectId:project.id,userId:member.id}},data:{leftAt:null,joinedAt:new Date(),role:'MEMBER'}});const rejoined=await pull({since:left.body.cursor,aclVersion:left.body.acl.aclVersion});assert.equal(rejoined.body.full,true);assert.ok(rejoined.body.changes.tasks.upserts.some(r=>r.id===oldTask.id));});
+ test('every signed page rechecks current ACL: role change after first3000 rows prevents second-page data',async()=>{await db.task.createMany({data:Array.from({length:3000},(_,i)=>({id:'rp08-page-'+i+'-'+project.id,projectId:project.id,title:'Old page '+i,createdAt:new Date('2000-01-01'),updatedAt:new Date('2000-01-01')}))});const first=await pull({deviceId:'owned-rp08-page'});assert.equal(first.r.status,200);assert.equal(first.body.changes.tasks.upserts.length,3000);assert.equal(first.body.pagination.hasMore,true);const token=first.body.pagination.nextPageToken;await db.projectMember.update({where:{projectId_userId:{projectId:project.id,userId:member.id}},data:{role:'VIEWER'}});const next=await pull({deviceId:'owned-rp08-page',pageToken:token});assert.equal(next.r.status,409);assert.equal((next.body.error?.code??next.body.code),'SYNC_ACL_CHANGED');assert.equal(Object.hasOwn(next.body,'changes'),false);});
+-test('legacy client missing ACL fingerprint safely gets full current snapshot; same fingerprint incremental remains efficient',async()=>{let old=await pull();while(old.body.pagination.hasMore)old=await pull({pageToken:old.body.pagination.nextPageToken});const same=await pull({since:old.body.cursor,aclVersion:old.body.acl.aclVersion});assert.equal(same.r.status,200);assert.equal(same.body.full,false);assert.deepEqual(same.body.changes.tasks.upserts,[]);const legacy=await pull({since:old.body.cursor});assert.equal(legacy.r.status,200);assert.equal(legacy.body.full,true);assert.ok(legacy.body.changes.tasks.upserts.length);assert.equal(await db.syncMutation.count(),0);});
++test('legacy timestamp always safely resnapshots; v2 signed committed checkpoint remains incremental',async()=>{let old=await pull();while(old.body.pagination.hasMore)old=await pull({pageToken:old.body.pagination.nextPageToken});const legacy=await pull({since:old.body.cursor,aclVersion:old.body.acl.aclVersion});assert.equal(legacy.r.status,200);assert.equal(legacy.body.full,true);assert.ok(legacy.body.changes.tasks.upserts.length);let v2=await pull({pullProtocol:'2',deviceId:'owned-v2-efficient'});while(v2.body.pagination.hasMore)v2=await pull({pullProtocol:'2',deviceId:'owned-v2-efficient',pageToken:v2.body.pagination.nextPageToken});const same=await pull({pullProtocol:'2',deviceId:'owned-v2-efficient',since:v2.body.cursor});assert.equal(same.r.status,200);assert.equal(same.body.full,false);assert.deepEqual(same.body.changes.tasks.upserts,[]);assert.equal(await db.syncMutation.count(),0);});
+--- before/rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs
++++ after/rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs
+@@ -526,11 +526,11 @@
+   const deviceId = `rp08m-device-${fixtures.suffix}`;
+   currentActor = actorFor(fixtures, 'member', [...ALL_READ_PERMISSIONS, 'tasks.update']);
+ 
+-  const full = await pullWith(`?deviceId=${deviceId}`);
++  const full = await pullWith(`?pullProtocol=2&deviceId=${deviceId}`);
+   assert.equal(full.response.status, 200, JSON.stringify(full.body));
+   assert.equal(full.body.full, true, 'the first pull must be a full pull');
+   const cut = full.body.cursor;
+-  assert.ok(cut && !Number.isNaN(new Date(cut).getTime()), 'full pull must return a usable cursor');
++  assert.ok(cut.startsWith('rdpms2.'), 'full pull must return a signed commit checkpoint');
+ 
+   const beforeIds = await rowIdsOf(fixtures);
+   assert.ok(full.body.changes.tasks.upserts.some((row) => row.id === beforeIds.task), 'full pull must include the task');
+@@ -541,8 +541,7 @@
+     dueDate: new Date('2026-12-31'),
+   } });
+ 
+-  // 让数据库时间跨过切点毫秒边界（只用于避免同毫秒相等，不用于排序竞争）
+-  await new Promise((resolve) => { setTimeout(resolve, 50); });
++  // Transactional publication sequencing needs no wall-clock delay.
+ 
+   const updated = await app.request(`/api/tasks/${beforeIds.task}`, {
+     method: 'PUT', headers: { 'content-type': 'application/json' },
+@@ -551,7 +550,7 @@
+   assert.equal(updated.status, 200, JSON.stringify(await updated.json()));
+   await prisma.milestone.update({ where: { id: milestone.id }, data: { deletedAt: new Date() } });
+ 
+-  const incremental = await pullWith(`?since=${encodeURIComponent(cut)}&aclVersion=${encodeURIComponent(full.body.acl.aclVersion)}&deviceId=${deviceId}`);
++  const incremental = await pullWith(`?pullProtocol=2&since=${encodeURIComponent(cut)}&aclVersion=${encodeURIComponent(full.body.acl.aclVersion)}&deviceId=${deviceId}`);
+   assert.equal(incremental.response.status, 200, JSON.stringify(incremental.body));
+   assert.equal(incremental.body.full, false, 'a pull with since must not be a full pull');
+ 
+@@ -565,7 +564,7 @@
+     'rows unchanged since the cut must not be re-delivered');
+   assert.equal(incremental.body.changes.milestones.upserts.some((row) => row.id === milestone.id), false,
+     'a tombstoned row must not also appear as an upsert');
+-  assert.ok(new Date(incremental.body.cursor) > new Date(cut), 'the incremental cursor must advance');
++  const sequence=c=>BigInt(JSON.parse(Buffer.from(c.split('.')[1],'base64url').toString()).sequence);assert.ok(sequence(incremental.body.cursor)>sequence(cut), 'the committed publication sequence must advance');
+ });
+ 
+ test('RP08 LR3-02 B5 sync fields are a verified subset of the ordinary API response, with forbidden columns absent', async () => {

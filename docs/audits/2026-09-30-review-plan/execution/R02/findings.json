@@ -1,0 +1,120 @@
+[
+  {
+    "id": "B14",
+    "packet": "R02",
+    "origin": "BASELINE",
+    "baselineSeverity": "P1",
+    "currentSeverity": "P1",
+    "disposition": "SUPPORTED",
+    "title": "临时登录锁定实际永久生效（到期不自动解锁）",
+    "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "workingTreeDigestRefs": ["execution/R02/source-digests.json"],
+    "entrypoint": "POST /api/auth/login",
+    "preconditions": ["用户达到5次失败登录", "系统把status设为LOCKED并写lockedUntil=当前时间+15分钟", "时间过去后用户尝试正确密码登录"],
+    "source": [
+      {"path": "rdpms-system/backend/src/routes/auth.js", "lineStart": 110, "lineEnd": 169, "symbol": "login lookup, lock gate, failure update and success reset"},
+      {"path": "rdpms-system/backend/src/routes/users.js", "lineStart": 261, "lineEnd": 297, "symbol": "manual status enable clears lock fields"},
+      {"path": "rdpms-system/backend/src/kernel/rbac.js", "lineStart": 69, "lineEnd": 87, "symbol": "authenticate accepts only ACTIVE user"},
+      {"path": "rdpms-system/backend/prisma/schema.prisma", "lineStart": 30, "lineEnd": 35, "symbol": "UserStatus enum"}
+    ],
+    "callPath": ["Login loads non-deleted user", "status DISABLED check", "status LOCKED OR lockedUntil in future check", "5th failed password writes failedLoginAttempts=5, lockedUntil=now+15m and status=LOCKED", "subsequent login rejects on status LOCKED even after lockedUntil expires", "administrator must set status ACTIVE to restore login"],
+    "evidence": [
+      {"level": "H", "ref": "docs/audits/2026-09-29-rdpms/backend-results.json#B14_EXPIRED_LOCK_STILL_REJECTED", "limitation": "Historical isolated route/database evidence returned 403 ACCOUNT_LOCKED after lockedUntil was in the past; not rerun this turn."},
+      {"level": "S", "ref": "rdpms-system/backend/src/routes/auth.js:110-169; users.js:261-297; kernel/rbac.js:69-87", "limitation": "Current source confirms the expired-time status short-circuit and manual ACTIVE recovery. Failure counter interleaving was not dynamically examined."}
+    ],
+    "counterevidenceChecked": ["There is a users.enable status path that can restore ACTIVE and clears failed attempts and lockedUntil.", "Password change clears lockedUntil but does not change LOCKED status.", "DISABLED is explicitly rejected before password comparison."],
+    "observedImpact": "Historical evidence shows an expired timed lock still rejects correct credentials; source provides no automatic LOCKED-to-ACTIVE transition. Manual account enable is required.",
+    "verification": "HISTORICAL_ONLY",
+    "recommendation": "Separate administrative disable from timed lock, or explicitly transition an expired timed lock back to ACTIVE before password validation; make failure counter updates atomic and retain auditability.",
+    "acceptanceCriteria": ["The fifth failure enters the documented lock state.", "At expiry, the documented automatic or manual recovery flow succeeds with correct credentials.", "DISABLED remains rejected.", "Successful login clears failure count and timed-lock data."],
+    "pendingQuestions": [],
+    "supersedesOrRelated": []
+  },
+  {
+    "id": "B15",
+    "packet": "R02",
+    "origin": "BASELINE",
+    "baselineSeverity": "P2",
+    "currentSeverity": "P2",
+    "disposition": "SUPPORTED",
+    "title": "刷新令牌并发可双重消费，TTL响应也不准确",
+    "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "workingTreeDigestRefs": ["execution/R02/source-digests.json"],
+    "entrypoint": "POST /api/auth/refresh; access-token TTL contract in login and refresh responses",
+    "preconditions": ["Same unexpired refresh token is submitted by two requests", "Both requests read it before either revokes it", "Configured access TTL differs from fixed response expiresIn=7200"],
+    "source": [
+      {"path": "rdpms-system/backend/src/routes/auth.js", "lineStart": 30, "lineEnd": 42, "symbol": "refresh token issuance and familyId"},
+      {"path": "rdpms-system/backend/src/routes/auth.js", "lineStart": 183, "lineEnd": 216, "symbol": "login and refresh token responses; refresh read/revoke/issue sequence"},
+      {"path": "rdpms-system/backend/src/kernel/rbac.js", "lineStart": 20, "lineEnd": 43, "symbol": "access TTL parser and JWT signer"},
+      {"path": "rdpms-system/backend/prisma/schema.prisma", "lineStart": 505, "lineEnd": 520, "symbol": "RefreshToken schema"},
+      {"path": "rdpms-system/frontend/src/api/http.ts", "lineStart": 78, "lineEnd": 107, "symbol": "per-module single-flight refresh"}
+    ],
+    "callPath": ["Refresh hash lookup and validity check", "unconditional revoke by row id", "sign access token", "insert a new refresh token with a newly randomized familyId", "return fixed expiresIn=7200", "no encompassing transaction or compare-and-set result check"],
+    "evidence": [
+      {"level": "H", "ref": "docs/audits/2026-09-29-rdpms/backend-results.json#B15_REFRESH_PARALLEL_REUSE", "limitation": "Historical controlled interleaving observed both requests return 200 with two successor tokens; the tested JWT was 900 seconds while response advertised 7200. Not rerun."},
+      {"level": "S", "ref": "rdpms-system/backend/src/routes/auth.js:30-42,183-216; kernel/rbac.js:20-43; schema.prisma:505-520", "limitation": "Current source still separates lookup, revoke, issue and gives every successor an independent familyId. Frontend single-flight is local to one module instance only."}
+    ],
+    "counterevidenceChecked": ["Frontend merges concurrent 401 refresh attempts inside one tab/module instance.", "Refresh rows store revokedAt and expiresAt; these validate each request but do not arbitrate concurrent winners.", "Frontend does not consume the expiresIn response field."],
+    "observedImpact": "Historical requests created two successor refresh tokens from one old token; the response TTL differed from signed TTL. Cross-tab client effects are tracked separately as N-R02-01.",
+    "verification": "HISTORICAL_ONLY",
+    "recommendation": "Use a transaction and conditional update where revokedAt is null, inspect affected row count, and issue the successor only for the winner. Preserve a stable family relationship and define replay response. Return the signed access TTL rather than a constant.",
+    "acceptanceCriteria": ["Controlled concurrent use of one refresh token yields at most one successor.", "A replay follows documented family-level response and cannot create another active branch.", "Any failure after consuming a token leaves a recoverable, observable session outcome.", "Response expiresIn equals the access JWT remaining lifetime."],
+    "pendingQuestions": [],
+    "supersedesOrRelated": ["N-R02-01"]
+  },
+  {
+    "id": "N-R02-01",
+    "packet": "R02",
+    "origin": "NEW",
+    "baselineSeverity": null,
+    "currentSeverity": "P2",
+    "disposition": "SUPPORTED",
+    "title": "跨tab刷新失败可清除已轮换的新会话",
+    "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "workingTreeDigestRefs": ["execution/R02/source-digests.json"],
+    "entrypoint": "frontend Axios response interceptor refresh flow after a 401",
+    "preconditions": ["Two same-origin tabs hold the same refresh token in localStorage", "Both tabs trigger refresh before either observes the other's update", "One request stores the rotated token before the other tab's old-token request fails"],
+    "source": [
+      {"path": "rdpms-system/frontend/src/api/http.ts", "lineStart": 78, "lineEnd": 107, "symbol": "module-scoped inflight refresh promise"},
+      {"path": "rdpms-system/frontend/src/api/http.ts", "lineStart": 128, "lineEnd": 151, "symbol": "refresh failure clears token store and emits session expiry"},
+      {"path": "rdpms-system/frontend/src/auth/tokenStore.ts", "lineStart": 10, "lineEnd": 49, "symbol": "shared localStorage token storage"}
+    ],
+    "callPath": ["Each tab has a distinct module-scoped inflight variable", "both can read same refresh token from shared localStorage", "one tab rotates and writes new token", "other old-token refresh rejects", "its interceptor catch unconditionally clears shared token storage"],
+    "evidence": [{"level": "S", "ref": "rdpms-system/frontend/src/api/http.ts:78-107,128-151; frontend/src/auth/tokenStore.ts:10-49", "limitation": "Static cross-tab control-flow inference only; no browser run this turn."}],
+    "counterevidenceChecked": ["Single-flight does coalesce requests within one module instance.", "No cross-tab lock, broadcast-based refresh coordination, or conditional clear is present in the reviewed tokenStore/http code."],
+    "observedImpact": "An old refresh request that fails after another tab has stored a valid successor can remove that successor from shared localStorage and cause an unnecessary local logout. No unauthorized access gain is established.",
+    "verification": "NOT_NEEDED",
+    "recommendation": "Coordinate rotation across tabs and make failure cleanup conditional on the failed token still being the current token; use server replay tolerance only with an explicit bounded contract.",
+    "acceptanceCriteria": ["In two-browser-context controlled response ordering, a losing old-token response cannot clear a newer stored token.", "A genuinely invalid current refresh still clears local session and routes to login."],
+    "pendingQuestions": [],
+    "supersedesOrRelated": ["B15"]
+  },
+  {
+    "id": "N-R02-02",
+    "packet": "R02",
+    "origin": "NEW",
+    "baselineSeverity": null,
+    "currentSeverity": "P2",
+    "disposition": "SUPPORTED",
+    "title": "改密或管理员重置未即时撤销已签发access JWT",
+    "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "workingTreeDigestRefs": ["execution/R02/source-digests.json"],
+    "entrypoint": "PUT /api/auth/password and PUT /api/users/:id/reset-password",
+    "preconditions": ["A user has a still-valid access JWT", "That user's password is changed by self-service or administrator reset", "The account remains ACTIVE"],
+    "source": [
+      {"path": "rdpms-system/backend/src/routes/auth.js", "lineStart": 261, "lineEnd": 299, "symbol": "self-service password update and refresh-token revocation"},
+      {"path": "rdpms-system/backend/src/routes/users.js", "lineStart": 346, "lineEnd": 385, "symbol": "admin password reset and refresh-token revocation"},
+      {"path": "rdpms-system/backend/src/kernel/rbac.js", "lineStart": 49, "lineEnd": 107, "symbol": "JWT authentication checks status but no password/session version"},
+      {"path": "rdpms-system/backend/prisma/schema.prisma", "lineStart": 404, "lineEnd": 419, "symbol": "passwordChangedAt and account security fields"}
+    ],
+    "callPath": ["Password hash and passwordChangedAt update", "active refresh-token rows revoked separately", "old access JWT remains cryptographically valid", "authenticate verifies JWT and current ACTIVE user but does not compare iat/passwordChangedAt or lookup a session revocation marker"],
+    "evidence": [{"level": "S", "ref": "rdpms-system/backend/src/routes/auth.js:261-299; users.js:346-385; kernel/rbac.js:49-107; prisma/schema.prisma:404-419", "limitation": "Static call-path conclusion. Exact remaining acceptance window depends on deployed access TTL; no request replay was run."}],
+    "counterevidenceChecked": ["Disabled/locked users are rejected on each authenticated request.", "System role and permissions are reloaded from current DB state per request, so role changes are not frozen in the token.", "Refresh tokens are revoked after password update, but access JWTs are not."],
+    "observedImpact": "A holder of an already-issued access token can keep using it for the remaining token lifetime after password change/reset; max duration depends on configured access TTL.",
+    "verification": "NOT_NEEDED",
+    "recommendation": "Define whether password change/reset requires immediate session invalidation. If yes, enforce a session version or server-side revocation contract on each request and keep credential update, refresh revocation, and audit failure semantics recoverable.",
+    "acceptanceCriteria": ["After the chosen contract window, old access and refresh credentials are both rejected following self-change and administrator reset.", "New login using the resulting password works and must-change behavior remains enforced according to policy."],
+    "pendingQuestions": ["Confirm whether self-password change and administrator reset must invalidate existing access sessions immediately, and specify the maximum allowed delay."],
+    "supersedesOrRelated": ["B01"]
+  }
+]

@@ -1,0 +1,17 @@
+{
+  "tasks": 54,
+  "executedTaskMirrorRows": 24,
+  "remaining": 32,
+  "taskAxesAndMirrorsAgree": true,
+  "acceptanceRows": 306,
+  "acceptanceCounts": {
+    "NOT_RUN": 197,
+    "PASS": 84,
+    "ENV_BLOCKED": 25
+  },
+  "sourceHashRefsCurrent": true,
+  "controlledJsonParsed": 72,
+  "caseDefinitionsAndGraphRulesPreserved": true,
+  "release": "NOT_EVALUATED",
+  "independentReview": "PENDING"
+}

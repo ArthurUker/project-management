@@ -1,0 +1,196 @@
+{
+  "sessionId": "test-contract-rework-2026-10-03-cb1",
+  "executor": "CodeBuddy (session test-contract-rework-2026-10-03-cb1)",
+  "kind": "REAL_OWNED_DB_RUN",
+  "simulation": null,
+  "targets": [
+    "tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+  ],
+  "preflight": {
+    "ROOT": "/Users/renkang/VS Code/project-management",
+    "BACKEND": "/Users/renkang/VS Code/project-management/rdpms-system/backend",
+    "backendExists": true,
+    "guardScriptExists": true,
+    "compilerTsc": "/Users/renkang/VS Code/project-management/rdpms-system/frontend/node_modules/.bin/tsc",
+    "compilerExists": true,
+    "initdbBinary": "/opt/homebrew/bin/initdb",
+    "initdbExists": true,
+    "pgCtlBinary": "/opt/homebrew/bin/pg_ctl",
+    "pgCtlExists": true,
+    "distExistsAtStart": false,
+    "targetsExist": {
+      "tests/integration/rp10-report-submit-snapshot.integration.test.mjs": true
+    },
+    "verdict": "OK"
+  },
+  "commands": [
+    {
+      "label": "initdb",
+      "command": [
+        "/opt/homebrew/bin/initdb",
+        "-D",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-s3ke49hq/pg",
+        "-U",
+        "rdpms_exec",
+        "--auth=trust"
+      ],
+      "exitCode": 0,
+      "log": "initdb.log"
+    },
+    {
+      "label": "cluster-start",
+      "command": [
+        "/opt/homebrew/bin/pg_ctl",
+        "-D",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-s3ke49hq/pg",
+        "-l",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-s3ke49hq/postgres.log",
+        "-o",
+        "-h 127.0.0.1 -p 52671 -k /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-s3ke49hq/socket",
+        "-w",
+        "start"
+      ],
+      "exitCode": 0,
+      "log": "cluster-start.log"
+    },
+    {
+      "label": "guard-check",
+      "command": [
+        "node",
+        "scripts/test-db.mjs",
+        "check"
+      ],
+      "exitCode": 2,
+      "log": "guard-check.log"
+    },
+    {
+      "label": "guard-reset",
+      "command": [
+        "node",
+        "scripts/test-db.mjs",
+        "reset"
+      ],
+      "exitCode": 0,
+      "log": "guard-reset.log"
+    },
+    {
+      "label": "backend-build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "log": "backend-build.log"
+    },
+    {
+      "label": "integration-suite",
+      "command": [
+        "node",
+        "--test",
+        "tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+      ],
+      "exitCode": 0,
+      "log": "integration-suite.log"
+    },
+    {
+      "label": "backend-typecheck",
+      "command": [
+        "npm",
+        "run",
+        "typecheck"
+      ],
+      "exitCode": 0,
+      "log": "backend-typecheck.log"
+    },
+    {
+      "label": "undefined-check",
+      "command": [
+        "npm",
+        "run",
+        "lint:undefined"
+      ],
+      "exitCode": 0,
+      "log": "undefined-check.log"
+    },
+    {
+      "label": "git-diff-check",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "log": "git-diff-check.log"
+    },
+    {
+      "label": "guard-drop",
+      "command": [
+        "node",
+        "scripts/test-db.mjs",
+        "drop"
+      ],
+      "exitCode": 0,
+      "log": "guard-drop.log"
+    },
+    {
+      "label": "cluster-stop",
+      "command": [
+        "/opt/homebrew/bin/pg_ctl",
+        "-D",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-s3ke49hq/pg",
+        "-m",
+        "fast",
+        "-w",
+        "stop"
+      ],
+      "exitCode": 0,
+      "log": "cluster-stop.log"
+    }
+  ],
+  "cleanup": {
+    "guardDropExit": 0,
+    "clusterStopExit": 0,
+    "ownedDistRemoved": true,
+    "ownedTempRootRemoved": true,
+    "ownershipVerification": {
+      "ownedDatabase": "rdpms_test_rework_4a56c2cb29",
+      "ownedPort": 52671,
+      "ownedTempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-s3ke49hq",
+      "rootExistsAfterCleanup": false,
+      "postmasterPidExists": false,
+      "distExistsAfterCleanup": false,
+      "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+    }
+  },
+  "criticalFailures": [],
+  "notes": [],
+  "buildOutputOwnership": {
+    "path": "/Users/renkang/VS Code/project-management/rdpms-system/backend/dist",
+    "preExistingAtStart": false,
+    "ownershipDeclaredBeforeBuild": true,
+    "owner": "test-contract-rework-2026-10-03-cb1"
+  },
+  "ownedResources": {
+    "database": "rdpms_test_rework_4a56c2cb29",
+    "port": 52671,
+    "bindHost": "127.0.0.1",
+    "ownerRole": "rdpms_exec",
+    "tempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-rework-s3ke49hq",
+    "envFileMode": "0600",
+    "dotenv": "new private env file only; repository dotenv files never read",
+    "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+  },
+  "guardContract": {
+    "expectedExitCodeBeforeReset": 2,
+    "actualExitCode": 2,
+    "markersFound": {
+      "db": true,
+      "host": true,
+      "roleUnavailable": true
+    },
+    "verdict": "GUARD_CONTRACT_OK",
+    "meaning": "exit 2 before reset is the documented guard contract, not a business failure"
+  },
+  "exitReason": "no critical failures"
+}

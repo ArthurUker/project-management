@@ -1,0 +1,53 @@
+{
+  "verifiedAt": "2026-10-05T22:54:26.085553+08:00",
+  "kind": "STATIC_ARTIFACT_AND_PROTECTED_BYTES_READBACK",
+  "result": "PASS",
+  "checks": {
+    "protectedCurrentSourceTestsConfig": {
+      "checked": 256,
+      "drift": []
+    },
+    "protectedRootRecords": {
+      "checked": 10,
+      "drift": []
+    },
+    "sourceBindings": {
+      "checked": 70,
+      "drift": []
+    },
+    "frozenHistoricalEvidence": {
+      "checked": 2364,
+      "drift": []
+    },
+    "previousSealedPayload": {
+      "checked": 344,
+      "drift": []
+    }
+  },
+  "headUnchanged": true,
+  "gitStatusUnchanged": true,
+  "jsonValidCount": 10,
+  "jsonFiles": [
+    "original-acceptance-rows.json",
+    "decision-proposal.json",
+    "acceptance.json",
+    "task-state.json",
+    "authorization.json",
+    "source-bindings.json",
+    "acceptance-spec.json",
+    "current-progress.json",
+    "execution-boundary.json",
+    "start-baseline.json"
+  ],
+  "originalAcceptanceRowsUnchanged": 24,
+  "remainingTaskRows": 32,
+  "businessSourceFileCount": 174,
+  "businessEdits": 0,
+  "testsBuildDbBrowserNetworkRun": "NOT_RUN",
+  "temporaryServiceResourcesAllocated": 0,
+  "limitations": [
+    "Static readback is not application tests, code repair, decision approval or release acceptance",
+    "Protected hashes are start/end current-run proof, not independent historical re-review",
+    "Original old evidence and live planning checkpoint states not rewritten"
+  ]
+}

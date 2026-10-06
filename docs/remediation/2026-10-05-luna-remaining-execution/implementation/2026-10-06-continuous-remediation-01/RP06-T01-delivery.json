@@ -1,0 +1,44 @@
+{
+  "files": [
+    "rdpms-system/backend/src/routes/registrations.js",
+    "rdpms-system/backend/src/modules/projects/registrationAccess.ts",
+    "rdpms-system/backend/tests/integration/rp06-registration-scope.integration.test.mjs"
+  ],
+  "beforeDirectory": "before-RP06-T01",
+  "runs": [
+    "rp06-t01-registration-scope",
+    "rp06-t01-manager-regression"
+  ],
+  "summary": "No registration global exception. Ordinary active-member alive registration list/stats/detail scope same read snapshot; linked tasks/counts/phases/milestones/members/regulatory projection requires corresponding grant and alive rows. Native current account/grants/version rechecked; writes lock users/project/currentmember before fresh admission. Update/profile requires write, stage transition; strict audit and state atomic. SUPER nonmember elevated scope logged. Creator OWNER/new manager controlled active enrollment and template scaffold+sequence+project/profile/audit same tx. Native JWT10/10 entry/capability/no-grant/nonmember/left/deleted/type/projection/rollback/current-revoke/barrier/concurrentstage cases, plus manager13/13 regression. First Serializable stale-snapshot barrier failure preserved; bounded locked ReadCommitted writer refinement fixes admission, read RepeatableRead unchanged.",
+  "compatibility": "Same routes and ordinary response structure; inaccessible linked collections/count keys omitted, scope restricted instead of oldglobal. No newDELETE/export route or schema/dependency changes. Templates global active catalog unchanged.",
+  "rollback": "Contain registration reads/writes rather than restore unscoped handlers. Keep strict member scope, safe child projection and shared manager command. Reverse only task-owned diff after later changes inspected; retain audits/receipts/data.",
+  "casePass": {
+    "AC-B21-01": "Exact decided member-only registration contract; realJWT10 entrymatrix cases plus current manager13, actual row/profile/audit checks and cleanup. Scoped local; no deployed acceptance.",
+    "AC-B21-02": "Exact decided member-only registration contract; realJWT10 entrymatrix cases plus current manager13, actual row/profile/audit checks and cleanup. Scoped local; no deployed acceptance.",
+    "AC-B21-03": "Exact decided member-only registration contract; realJWT10 entrymatrix cases plus current manager13, actual row/profile/audit checks and cleanup. Scoped local; no deployed acceptance.",
+    "PAC-RP06-01": "Exact decided member-only registration contract; realJWT10 entrymatrix cases plus current manager13, actual row/profile/audit checks and cleanup. Scoped local; no deployed acceptance.",
+    "PAC-RP06-02": "Exact decided member-only registration contract; realJWT10 entrymatrix cases plus current manager13, actual row/profile/audit checks and cleanup. Scoped local; no deployed acceptance.",
+    "PAC-RP06-03": "Exact decided member-only registration contract; realJWT10 entrymatrix cases plus current manager13, actual row/profile/audit checks and cleanup. Scoped local; no deployed acceptance.",
+    "PAC-RP06-04": "Exact decided member-only registration contract; realJWT10 entrymatrix cases plus current manager13, actual row/profile/audit checks and cleanup. Scoped local; no deployed acceptance.",
+    "TASK-RP06-T01": "Exact decided member-only registration contract; realJWT10 entrymatrix cases plus current manager13, actual row/profile/audit checks and cleanup. Scoped local; no deployed acceptance.",
+    "GATE-D-S01-05": "Exact decided member-only registration contract; realJWT10 entrymatrix cases plus current manager13, actual row/profile/audit checks and cleanup. Scoped local; no deployed acceptance.",
+    "DECISION-D-S01-05": "Exact decided member-only registration contract; realJWT10 entrymatrix cases plus current manager13, actual row/profile/audit checks and cleanup. Scoped local; no deployed acceptance."
+  },
+  "notRun": {
+    "AC-B21-04": "Shared manager already realtested; formally RP06-T02 after this dependency delivery, not mark adaptertask finished here.",
+    "INT-PC02-01": "Registration/current member+grant subset verified; full authorization joint with allotherAPI/filealiases not fully rerun."
+  },
+  "limits": [
+    "Current local candidate only, no UI/target/release acceptance.",
+    "No actual export/DELETE handlers exist; endpoint inventory recorded, no invented feature.",
+    "Read authority linearizes at repeatable-read snapshot; writer authority reread after explicit locks. No general global live-grant promise after offline lease.",
+    "Creation construction atomically improved only as necessary creator/scaffold scope; no blanket RP04/backup guarantees.",
+    "Strict audit faults and first oldsnapshot/constantfixture failures preserved; synthetic actors retain untilownedwholeDBdrop."
+  ],
+  "findings": [
+    "B21"
+  ],
+  "validation": "PASS",
+  "next": "RP06-T02 formal shared registration manager adapter acceptance, then RP05-T02 and other independentSTANDARD tasks",
+  "nextTask": "RP06-T02"
+}

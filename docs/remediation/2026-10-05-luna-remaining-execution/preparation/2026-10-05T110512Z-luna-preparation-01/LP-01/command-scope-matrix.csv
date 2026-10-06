@@ -1,0 +1,7 @@
+operation,scope,transactionBoundary,batchSemantics,gate
+Non-delete sync item,Per actor/device/resource/command/key/hash; exact unique-key choice open,"Per-command authorization+CAS+business+required audit+receipt, if approved",Prior/later batch items are not atomically rolled back,T-RP-02/PC03
+"Same key, same hash replay",Must also match actor/device/resource and current authorization,"Read stored outcome, no duplicate business effect",Per-item replay,T-RP-02
+"Same key, changed hash/actor/device/resource",Never expose or replay another principal/resource receipt,Reject/unknown as approved; zero business side effect,Other items keep own durable result,T-RP-02 + current authorization
+Status lookup,Authenticate/resource authorize before actor+device-scoped lookup,Read only; unknown/expired explicit,Per-key result attribution,T-RP-02; T-RP-09 actor/device source
+Delete/tombstone/restore adapter,Same immutable binding plus delete revision/scope contract,Only if signed delete policy; inspect every affected helper/caller,No batch rollback promise,T-RP-07/D-S01-08/S03-OI-05 only when actual delete semantics affected
+Receipt retention/cleanup,Tie server receipt expiry to approved max offline interval and client last-copy retention,Cleanup job owner/frequency and unknown expiry behavior required,Not implemented in preparation,T-RP-02 + S03-OI-04 release/env gate

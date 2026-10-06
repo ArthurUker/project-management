@@ -1,0 +1,488 @@
+--- a/rdpms-system/backend/src/routes/projects.js
++++ b/rdpms-system/backend/src/routes/projects.js
+@@ -5,6 +5,8 @@
+ import { AUDIT_ACTIONS } from '../kernel/constants.js';
+ import { writeAudit } from '../kernel/audit.js';
+ import { nextCode } from '../kernel/sequence.js';
++import { withIdempotency, resolveIdempotencyKey } from '../platform/idempotency/receipts.js';
++import { writeAuditStrict } from '../platform/audit/strictAudit.js';
+ import {
+   resolveProjectAccess,
+   assertProjectCapability,
+@@ -124,6 +126,102 @@
+   };
+ }
+ 
++const TASK_STATUSES = new Set(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'BLOCKED', 'CANCELLED']);
++const TASK_PRIORITIES = new Set(['LOW', 'MEDIUM', 'HIGH', 'URGENT']);
++const TASK_TYPES = new Set([
++  'CLASSIFICATION', 'STRATEGY', 'REGISTRATION_DOSSIER', 'LABELING', 'QMS',
++  'CLINICAL_EVALUATION', 'CLINICAL_EVALUATION_EXEMPTION', 'CLINICAL_TRIAL',
++  'ANALYTICAL_VALIDATION', 'PERFORMANCE_VALIDATION', 'SOFTWARE', 'SUBMISSION',
++  'POST_MARKET', 'DESIGN_INPUT', 'DESIGN_OUTPUT', 'PRODUCTION', 'STABILITY', 'OTHER',
++]);
++const TASK_APPLICABILITIES = new Set(['REQUIRED', 'CONDITIONAL', 'NOT_APPLICABLE', 'TO_BE_CONFIRMED']);
++const REGULATORY_PRIORITIES = new Set(['P0', 'P1', 'P2', 'P3', 'P4']);
++
++function isRecord(value) {
++  return value !== null && typeof value === 'object' && !Array.isArray(value);
++}
++
++function parseOptionalDate(value, field) {
++  if (value === undefined || value === null || value === '') return null;
++  const date = new Date(value);
++  if (Number.isNaN(date.getTime())) throw badRequest('VALIDATION_ERROR', `${field} 日期无效`);
++  return date;
++}
++
++/** Validate the whole aggregate command before allocating a sequence or writing rows. */
++function validateProjectCreateCommand(raw, auth) {
++  if (!isRecord(raw)) throw badRequest('VALIDATION_ERROR', '创建项目: 请求体必须是 JSON 对象');
++  if (Object.prototype.hasOwnProperty.call(raw, 'code')) {
++    throw badRequest('VALIDATION_ERROR', 'code 由服务端统一发号，禁止客户端提交');
++  }
++  const data = pickForCreate(raw, [
++    'name', 'type', 'subtype', 'positioning', 'managerId', 'startDate', 'endDate',
++    'templateId', 'isDraft', 'metadata',
++  ], raw.isDraft === true ? [] : ['name'], { entityLabel: '创建项目' });
++  const tasks = raw.tasks ?? [];
++  const milestones = raw.milestones ?? [];
++  const participantIds = raw.participantIds ?? [];
++  if (!Array.isArray(tasks) || !tasks.every(isRecord)) throw badRequest('VALIDATION_ERROR', 'tasks 必须是对象数组');
++  if (!Array.isArray(milestones) || !milestones.every(isRecord)) throw badRequest('VALIDATION_ERROR', 'milestones 必须是对象数组');
++  if (!Array.isArray(participantIds) || !participantIds.every((id) => typeof id === 'string' && id.trim())) {
++    throw badRequest('VALIDATION_ERROR', 'participantIds 必须是非空字符串数组');
++  }
++  if (data.type !== undefined && !normalizeProjectType(data.type)) throw badRequest('VALIDATION_ERROR', '项目类型无效');
++  if (data.name !== undefined && (typeof data.name !== 'string' || !data.name.trim())) throw badRequest('VALIDATION_ERROR', '项目名称无效');
++  for (const field of ['managerId', 'templateId']) {
++    if (data[field] !== undefined && data[field] !== null && typeof data[field] !== 'string') {
++      throw badRequest('VALIDATION_ERROR', `${field} 无效`);
++    }
++  }
++  if (data.isDraft !== undefined && typeof data.isDraft !== 'boolean') throw badRequest('VALIDATION_ERROR', 'isDraft 必须是布尔值');
++  data.startDate = parseOptionalDate(data.startDate, 'startDate');
++  data.endDate = parseOptionalDate(data.endDate, 'endDate');
++  if (data.startDate && data.endDate && data.endDate < data.startDate) {
++    throw badRequest('VALIDATION_ERROR', 'endDate 不能早于 startDate');
++  }
++  const managerId = data.managerId || auth.userId;
++  const normalizedTasks = tasks.map((task, idx) => {
++    const item = normalizeTaskInput(task, idx);
++    if (typeof item.title !== 'string' || !item.title.trim()) throw badRequest('VALIDATION_ERROR', `tasks[${idx}].title 无效`);
++    if (!TASK_STATUSES.has(item.status)) throw badRequest('VALIDATION_ERROR', `tasks[${idx}].status 无效`);
++    if (!TASK_PRIORITIES.has(item.priority)) throw badRequest('VALIDATION_ERROR', `tasks[${idx}].priority 无效`);
++    if (item.taskType !== null && !TASK_TYPES.has(item.taskType)) throw badRequest('VALIDATION_ERROR', `tasks[${idx}].taskType 无效`);
++    if (!TASK_APPLICABILITIES.has(item.applicability)) throw badRequest('VALIDATION_ERROR', `tasks[${idx}].applicability 无效`);
++    if (item.regulatoryPriority !== null && !REGULATORY_PRIORITIES.has(item.regulatoryPriority)) throw badRequest('VALIDATION_ERROR', `tasks[${idx}].regulatoryPriority 无效`);
++    for (const [field, value] of Object.entries({ description: item.description, expectedDeliverable: item.expectedDeliverable, regulatoryNotes: item.regulatoryNotes })) {
++      if (value !== null && typeof value !== 'string') throw badRequest('VALIDATION_ERROR', `tasks[${idx}].${field} 无效`);
++    }
++    if (item.phaseKey !== null && (typeof item.phaseKey !== 'string' || !item.phaseKey.trim())) throw badRequest('VALIDATION_ERROR', `tasks[${idx}].phaseId 无效`);
++    if (item.assigneeId !== null && typeof item.assigneeId !== 'string') throw badRequest('VALIDATION_ERROR', `tasks[${idx}].assigneeId 无效`);
++    if (!Number.isInteger(item.sortOrder) || item.sortOrder < 0) throw badRequest('VALIDATION_ERROR', `tasks[${idx}].sortOrder 无效`);
++    item.dueDate = parseOptionalDate(task.dueDate, `tasks[${idx}].dueDate`);
++    item.assigneeId ||= managerId;
++    return item;
++  });
++  const normalizedMilestones = milestones.map((milestone, idx) => {
++    if (typeof milestone.name !== 'undefined' && typeof milestone.name !== 'string') {
++      throw badRequest('VALIDATION_ERROR', `milestones[${idx}].name 无效`);
++    }
++    const status = normalizeStatus(milestone.status) || 'NOT_STARTED';
++    if (!TASK_STATUSES.has(status)) throw badRequest('VALIDATION_ERROR', `milestones[${idx}].status 无效`);
++    const phaseKey = milestone.phaseId || milestone.phaseKey || null;
++    if (phaseKey !== null && (typeof phaseKey !== 'string' || !phaseKey.trim())) throw badRequest('VALIDATION_ERROR', `milestones[${idx}].phaseId 无效`);
++    return { name: milestone.name?.trim() || '未命名里程碑', dueDate: parseOptionalDate(milestone.date ?? milestone.dueDate, `milestones[${idx}].date`), status, phaseKey };
++  });
++  const phaseKeys = [...new Set([...normalizedTasks.map((t) => t.phaseKey), ...normalizedMilestones.map((m) => m.phaseKey)].filter(Boolean))];
++  const userIds = [...new Set([auth.userId, managerId, ...participantIds, ...normalizedTasks.map((t) => t.assigneeId).filter(Boolean)])];
++  return {
++    data,
++    isDraft: data.isDraft === true,
++    managerId,
++    tasks: normalizedTasks,
++    milestones: normalizedMilestones,
++    participantIds: [...new Set(participantIds)],
++    phaseKeys,
++    userIds,
++  };
++}
++
+ // ── 列表（projects.view；非 SUPER_ADMIN 按成员/负责人过滤）──────────────────
+ projects.get('/', requirePermission('projects.view'), async (c) => {
+   const auth = getAuth(c);
+@@ -218,109 +316,121 @@
+ projects.post('/', requirePermission('projects.create'), async (c) => {
+   const auth = getAuth(c);
+   const raw = await c.req.json().catch(() => null);
+-  if (raw && typeof raw === 'object' && 'code' in raw) {
+-    throw badRequest('VALIDATION_ERROR', 'code 由服务端统一发号，禁止客户端提交');
+-  }
+-  const data = pickForCreate(raw, [
+-    'name', 'type', 'subtype', 'positioning', 'managerId', 'startDate', 'endDate',
+-    'templateId', 'isDraft', 'metadata',
+-  ], raw?.isDraft === true ? [] : ['name'], { entityLabel: '创建项目' });
+-
+-  const isDraft = data.isDraft === true;
+-  const managerId = data.managerId || auth.userId;
+-  const year = new Date().getFullYear();
+-  const code = await nextCode(prisma, 'PROJECT', { periodKey: String(year), fallbackPrefix: `PRJ-${year}-`, padding: 3 });
+-
+-  const { tasks = [], milestones = [], participantIds = [], ...projectData } = raw ?? {};
+-  const project = await prisma.project.create({
+-    data: {
+-      ...data,
+-      name: data.name || `未命名草稿-${new Date().toISOString().slice(0, 10)}`,
+-      type: normalizeProjectType(data.type) || 'CUSTOMIZATION',
+-      status: 'PLANNING',
+-      isDraft,
+-      code,
+-      managerId,
+-      startDate: data.startDate ? new Date(data.startDate) : null,
+-      endDate: data.endDate ? new Date(data.endDate) : null,
+-      createdById: auth.userId,
+-      // 创建者固定为 OWNER 成员；负责人若非创建者，追加 MANAGER 成员
+-      members: {
+-        create: [
+-          { userId: auth.userId, role: 'OWNER', createdById: auth.userId },
+-          ...(managerId !== auth.userId ? [{ userId: managerId, role: 'MANAGER', createdById: auth.userId }] : []),
+-          ...(Array.isArray(participantIds)
+-            ? participantIds
+-              .filter((uid) => typeof uid === 'string' && uid && uid !== auth.userId && uid !== managerId)
+-              .map((uid) => ({ userId: uid, role: 'MEMBER', createdById: auth.userId }))
+-            : []),
+-        ],
+-      },
++  // Auth and permission middleware run before receipt lookup; malformed commands
++  // are rejected before code allocation or any aggregate write.
++  const command = validateProjectCreateCommand(raw, auth);
++  const { key } = resolveIdempotencyKey(c, raw);
++  if (key && key.length > 200) throw badRequest('VALIDATION_ERROR', '幂等键长度不能超过 200 个字符');
++  const payload = {
++    ...command.data,
++    startDate: command.data.startDate?.toISOString() ?? null,
++    endDate: command.data.endDate?.toISOString() ?? null,
++    managerId: command.managerId,
++    tasks: command.tasks.map((task) => ({ ...task, dueDate: task.dueDate?.toISOString() ?? null })),
++    milestones: command.milestones.map((milestone) => ({ ...milestone, dueDate: milestone.dueDate?.toISOString() ?? null })),
++    participantIds: command.participantIds,
++  };
++  const result = await withIdempotency({
++    db: prisma,
++    actor: { userId: auth.userId },
++    command: 'POST /api/projects',
++    resourceScope: 'projects:create',
++    idempotencyKey: key,
++    payload,
++    validate: async (tx) => {
++      const users = await tx.user.findMany({ where: { id: { in: command.userIds } }, select: { id: true } });
++      const found = new Set(users.map((user) => user.id));
++      const missingUsers = command.userIds.filter((id) => !found.has(id));
++      if (missingUsers.length) throw badRequest('VALIDATION_ERROR', '负责人、参与者或任务负责人不存在');
++      if (command.data.templateId) {
++        const template = await tx.projectTemplate.findFirst({ where: { id: command.data.templateId, deletedAt: null }, select: { id: true } });
++        if (!template) throw badRequest('VALIDATION_ERROR', '项目模板不存在');
++      }
++      return true;
+     },
+-    include: { manager: MANAGER_SELECT },
+-  });
+-
+-  // 批量创建任务 / 里程碑（旧中文枚举归一化）
+-  if (Array.isArray(tasks) && tasks.length > 0) {
+-    const phaseKeySet = [...new Set(tasks.map((t) => t.phaseId || t.phaseKey).filter(Boolean))];
+-    const phaseIdByKey = new Map();
+-    if (phaseKeySet.length > 0) {
+-      const phaseRows = await prisma.projectPhase.createManyAndReturn?.({
+-        data: phaseKeySet.map((key, idx) => ({
+-          projectId: project.id, code: `PH-${code}-${idx + 1}`, name: key, sortOrder: idx,
+-        })),
++    execute: async (tx) => {
++      const year = new Date().getFullYear();
++      const code = await nextCode(tx, 'PROJECT', { periodKey: String(year), fallbackPrefix: `PRJ-${year}-`, padding: 3 });
++      const members = [
++        { userId: auth.userId, role: 'OWNER', createdById: auth.userId },
++        ...(command.managerId !== auth.userId ? [{ userId: command.managerId, role: 'MANAGER', createdById: auth.userId }] : []),
++        ...command.participantIds
++          .filter((uid) => uid !== auth.userId && uid !== command.managerId)
++          .map((uid) => ({ userId: uid, role: 'MEMBER', createdById: auth.userId })),
++      ];
++      const project = await tx.project.create({
++        data: {
++          ...command.data,
++          name: command.data.name || `未命名草稿-${new Date().toISOString().slice(0, 10)}`,
++          type: normalizeProjectType(command.data.type) || 'CUSTOMIZATION',
++          status: 'PLANNING',
++          isDraft: command.isDraft,
++          code,
++          managerId: command.managerId,
++          createdById: auth.userId,
++          members: { create: members },
++        },
++        include: { manager: MANAGER_SELECT },
+       });
+-      for (const row of phaseRows ?? []) phaseIdByKey.set(row.name, row.id);
+-    }
+-    await prisma.task.createMany({
+-      data: tasks.map((t, idx) => {
+-        const nt = normalizeTaskInput(t, idx);
+-        return {
+-          projectId: project.id,
+-          title: nt.title,
+-          description: nt.description,
+-          status: nt.status,
+-          priority: nt.priority,
+-          taskType: nt.taskType,
+-          applicability: nt.applicability,
+-          regulatoryPriority: nt.regulatoryPriority,
+-          expectedDeliverable: nt.expectedDeliverable,
+-          regulatoryNotes: nt.regulatoryNotes,
+-          dueDate: nt.dueDate,
+-          assigneeId: nt.assigneeId || managerId,
+-          phaseId: phaseIdByKey.get(nt.phaseKey) ?? null,
+-          sortOrder: nt.sortOrder,
+-          createdById: auth.userId,
+-        };
+-      }),
+-    });
+-  }
+-  if (Array.isArray(milestones) && milestones.length > 0) {
+-    await prisma.milestone.createMany({
+-      data: milestones.map((m) => ({
+-        projectId: project.id,
+-        name: m.name || '未命名里程碑',
+-        phaseId: m.phaseId || null,
+-        dueDate: m.date ? new Date(m.date) : new Date(),
+-        status: normalizeStatus(m.status) || 'NOT_STARTED',
+-        createdById: auth.userId,
+-      })),
+-    });
+-  }
+-
+-  await writeAudit(prisma, {
+-    c,
+-    actorId: auth.userId,
+-    actorName: auth.user.displayName,
+-    actorRole: auth.systemRole,
+-    action: AUDIT_ACTIONS.CREATE,
+-    entityType: 'PROJECT',
+-    entityId: project.id,
+-    entityLabel: project.name,
+-    after: { code: project.code, name: project.name },
+-    metadata: { permissionCode: 'projects.create' },
+-  });
+-  return c.json(project, 201);
++
++      const phaseIdByKey = new Map();
++      for (const [idx, key] of command.phaseKeys.entries()) {
++        const phase = await tx.projectPhase.create({
++          data: { projectId: project.id, code: `PH-${code}-${idx + 1}`, name: key, sortOrder: idx, createdById: auth.userId },
++          select: { id: true },
++        });
++        phaseIdByKey.set(key, phase.id);
++      }
++      if (command.tasks.length) {
++        await tx.task.createMany({
++          data: command.tasks.map((task) => ({
++            projectId: project.id,
++            title: task.title.trim(),
++            description: task.description,
++            status: task.status,
++            priority: task.priority,
++            taskType: task.taskType,
++            applicability: task.applicability,
++            regulatoryPriority: task.regulatoryPriority,
++            expectedDeliverable: task.expectedDeliverable,
++            regulatoryNotes: task.regulatoryNotes,
++            dueDate: task.dueDate,
++            assigneeId: task.assigneeId,
++            phaseId: phaseIdByKey.get(task.phaseKey) ?? null,
++            sortOrder: task.sortOrder,
++            createdById: auth.userId,
++          })),
++        });
++      }
++      if (command.milestones.length) {
++        await tx.milestone.createMany({
++          data: command.milestones.map((milestone) => ({
++            projectId: project.id,
++            name: milestone.name,
++            phaseId: milestone.phaseKey ? phaseIdByKey.get(milestone.phaseKey) : null,
++            dueDate: milestone.dueDate || new Date(),
++            status: milestone.status,
++            createdById: auth.userId,
++          })),
++        });
++      }
++      await writeAuditStrict(tx, {
++        c,
++        actorId: auth.userId,
++        actorName: auth.user.displayName,
++        actorRole: auth.systemRole,
++        action: AUDIT_ACTIONS.CREATE,
++        entityType: 'PROJECT',
++        entityId: project.id,
++        entityLabel: project.name,
++        after: { code: project.code, name: project.name },
++        metadata: { permissionCode: 'projects.create' },
++      });
++      return { status: 201, body: project };
++    },
++  });
++  if (result.replayed) c.header('Idempotency-Replayed', 'true');
++  return c.json(result.body, result.status);
+ });
+ 
+ // ── 更新（projects.update + ∩ write；状态流转走 transition；归档需 projects.archive）─
+
+--- /dev/null
++++ rdpms-system/backend/tests/integration/rp04-project-create-aggregate.integration.test.mjs
+@@ -0,0 +1,147 @@
++import { test, before, after } from 'node:test';
++import assert from 'node:assert/strict';
++import crypto from 'node:crypto';
++import { PrismaClient } from '@prisma/client';
++import { createApp } from '../../dist/bootstrap/createApp.js';
++
++// Run only against a newly created, task-owned throwaway PostgreSQL database.
++const prisma = new PrismaClient();
++let actor;
++let app;
++let createdProjectId;
++const faultTriggers = [
++  ['rp04_t02_fail_task_insert', 'tasks'],
++  ['rp04_t02_fail_audit_insert', 'audit_logs'],
++  ['rp04_t02_fail_receipt_insert', 'mutation_receipts'],
++  ['rp04_t02_fail_sequence_write', 'code_sequences'],
++];
++const faultFunctions = faultTriggers.map(([trigger]) => `${trigger}_fn`);
++
++before(async () => {
++  await prisma.$queryRaw`SELECT 1`;
++  const suffix = crypto.randomUUID();
++  actor = await prisma.user.create({
++    data: {
++      id: `rp04t02-${suffix}`,
++      username: `rp04t02-${suffix}`,
++      displayName: 'RP04-T02 synthetic actor',
++      passwordHash: 'not-a-real-password-hash',
++      systemRole: 'SUPER_ADMIN',
++      status: 'ACTIVE',
++    },
++  });
++  app = createApp({ db: prisma, actorResolver: async () => ({
++    userId: actor.id,
++    user: { id: actor.id, username: actor.username, displayName: actor.displayName },
++    systemRole: 'SUPER_ADMIN',
++    permissions: ['projects.create'],
++  }) });
++});
++
++after(async () => {
++  for (const [[trigger, table], fn] of faultTriggers.map((item, index) => [item, faultFunctions[index]])) {
++    await prisma.$executeRawUnsafe(`DROP TRIGGER IF EXISTS "${trigger}" ON "${table}"`);
++    await prisma.$executeRawUnsafe(`DROP FUNCTION IF EXISTS "${fn}"()`);
++  }
++  if (createdProjectId) await prisma.project.deleteMany({ where: { id: createdProjectId } });
++  // Keep the synthetic actor because audit rows are append-only; the task runner
++  // must drop this entire throwaway database after evidence capture.
++  await prisma.$disconnect();
++});
++
++async function postProject(body, key) {
++  const response = await app.request('/api/projects', {
++    method: 'POST',
++    headers: { 'content-type': 'application/json', ...(key ? { 'Idempotency-Key': key } : {}) },
++    body: JSON.stringify(body),
++  });
++  let json;
++  try { json = await response.json(); } catch { json = null; }
++  return { response, json };
++}
++
++async function withFaultTrigger(index, conditionSql, operation) {
++  const [trigger, table] = faultTriggers[index];
++  const fn = faultFunctions[index];
++  await prisma.$executeRawUnsafe(`CREATE OR REPLACE FUNCTION "${fn}"() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF ${conditionSql} THEN RAISE EXCEPTION 'RP04_T02_INJECTED_FAILURE'; END IF; RETURN NEW; END $$`);
++  await prisma.$executeRawUnsafe(`CREATE TRIGGER "${trigger}" BEFORE INSERT OR UPDATE ON "${table}" FOR EACH ROW EXECUTE FUNCTION "${fn}"()`);
++  try {
++    await operation();
++  } finally {
++    await prisma.$executeRawUnsafe(`DROP TRIGGER IF EXISTS "${trigger}" ON "${table}"`);
++    await prisma.$executeRawUnsafe(`DROP FUNCTION IF EXISTS "${fn}"()`);
++  }
++}
++
++test('RP04-T02 AC-B18-01/02 project, children, audit and receipt commit once; same-key retry replays', async () => {
++  const key = `rp04t02-${crypto.randomUUID()}`;
++  const body = {
++    name: 'RP04-T02 aggregate success',
++    type: 'TESTING',
++    tasks: [{ title: 'RP04-T02 task', phaseKey: 'Phase A', status: 'NOT_STARTED' }],
++    milestones: [{ name: 'RP04-T02 milestone', phaseKey: 'Phase A', date: '2026-10-02' }],
++    participantIds: [actor.id],
++  };
++  const year = String(new Date().getFullYear());
++  const sequenceBefore = await prisma.codeSequence.findUnique({ where: { scope_periodKey: { scope: 'PROJECT', periodKey: year } } });
++  const first = await postProject(body, key);
++  assert.equal(first.response.status, 201, JSON.stringify(first.json));
++  createdProjectId = first.json.id;
++  assert.match(first.json.code, new RegExp(`^PRJ-${year}-\\d{3}$`));
++  assert.equal(await prisma.project.count({ where: { id: createdProjectId } }), 1);
++  assert.equal(await prisma.projectMember.count({ where: { projectId: createdProjectId, userId: actor.id, role: 'OWNER', leftAt: null } }), 1);
++  const phase = await prisma.projectPhase.findFirst({ where: { projectId: createdProjectId, name: 'Phase A' } });
++  assert.ok(phase);
++  const task = await prisma.task.findFirst({ where: { projectId: createdProjectId, title: 'RP04-T02 task' } });
++  assert.ok(task);
++  assert.equal(task.phaseId, phase.id);
++  const milestone = await prisma.milestone.findFirst({ where: { projectId: createdProjectId, name: 'RP04-T02 milestone' } });
++  assert.ok(milestone);
++  assert.equal(milestone.phaseId, phase.id);
++  assert.equal(await prisma.projectPhase.count({ where: { projectId: createdProjectId, name: 'Phase A' } }), 1);
++  assert.equal(await prisma.auditLog.count({ where: { actorId: actor.id, entityType: 'PROJECT', entityId: createdProjectId, action: 'create' } }), 1);
++  const sequenceAfterCreate = await prisma.codeSequence.findUnique({ where: { scope_periodKey: { scope: 'PROJECT', periodKey: year } } });
++  assert.ok(sequenceAfterCreate.lastValue > (sequenceBefore?.lastValue ?? 0));
++
++  const replay = await postProject(body, key);
++  assert.equal(replay.response.status, 201);
++  assert.equal(replay.response.headers.get('Idempotency-Replayed'), 'true');
++  assert.equal(replay.json.id, createdProjectId);
++  assert.equal(replay.json.code, first.json.code);
++  assert.equal(await prisma.project.count({ where: { createdById: actor.id, name: body.name } }), 1);
++  assert.equal(await prisma.task.count({ where: { projectId: createdProjectId } }), 1);
++  assert.equal(await prisma.mutationReceipt.count({ where: { actorId: actor.id, idempotencyKey: key } }), 1);
++  const sequenceAfterReplay = await prisma.codeSequence.findUnique({ where: { scope_periodKey: { scope: 'PROJECT', periodKey: year } } });
++  assert.equal(sequenceAfterReplay.lastValue, sequenceAfterCreate.lastValue);
++});
++
++test('RP04-T02 AC-B18-01/03 injected sequence, child, audit and receipt failures roll back the aggregate', async () => {
++  const year = String(new Date().getFullYear());
++  const scenarios = [
++    { trigger: 0, condition: "NEW.title = 'RP04_FAIL_CHILD'", name: 'RP04-T02 child fault' },
++    { trigger: 1, condition: "NEW.entity_type = 'PROJECT' AND NEW.entity_label = 'RP04_FAIL_AUDIT'", name: 'RP04_FAIL_AUDIT' },
++    { trigger: 2, condition: "NEW.idempotency_key LIKE 'rp04t02-fail-receipt-%'", name: 'RP04-T02 receipt fault' },
++    { trigger: 3, condition: "NEW.scope = 'PROJECT'", name: 'RP04-T02 sequence fault' },
++  ];
++  for (const scenario of scenarios) {
++    const beforeSequence = await prisma.codeSequence.findUnique({ where: { scope_periodKey: { scope: 'PROJECT', periodKey: year } } });
++    const key = scenario.trigger === 2 ? `rp04t02-fail-receipt-${crypto.randomUUID()}` : `rp04t02-fail-${crypto.randomUUID()}`;
++    const projectCountBefore = await prisma.project.count({ where: { createdById: actor.id } });
++    await withFaultTrigger(scenario.trigger, scenario.condition, async () => {
++      const response = await postProject({
++        name: scenario.name,
++        tasks: [{ title: scenario.trigger === 0 ? 'RP04_FAIL_CHILD' : 'RP04 ordinary fault fixture', phaseKey: 'Fault Phase' }],
++        milestones: [{ name: 'RP04 fault milestone', phaseKey: 'Fault Phase', date: '2026-10-02' }],
++      }, key);
++      assert.equal(response.response.status, 500, `fault=${scenario.trigger} body=${JSON.stringify(response.json)}`);
++    });
++
++    const afterSequence = await prisma.codeSequence.findUnique({ where: { scope_periodKey: { scope: 'PROJECT', periodKey: year } } });
++    assert.equal(afterSequence?.lastValue ?? null, beforeSequence?.lastValue ?? null, `sequence persisted after fault=${scenario.trigger}`);
++    assert.equal(await prisma.project.count({ where: { createdById: actor.id } }), projectCountBefore, `project persisted after fault=${scenario.trigger}`);
++    assert.equal(await prisma.task.count({ where: { title: { in: ['RP04_FAIL_CHILD', 'RP04 ordinary fault fixture'] } } }), 0);
++    assert.equal(await prisma.milestone.count({ where: { name: 'RP04 fault milestone' } }), 0);
++    assert.equal(await prisma.mutationReceipt.count({ where: { actorId: actor.id, idempotencyKey: key } }), 0);
++    assert.equal(await prisma.auditLog.count({ where: { actorId: actor.id, entityType: 'PROJECT', entityLabel: scenario.name } }), 0);
++  }
++});

@@ -1,0 +1,22 @@
+{
+  "taskId": "RP10-T02",
+  "packageId": "RP10",
+  "run": "2026-10-02-continuous-rework",
+  "implementation": {
+    "LR-07": "RESOLVED_SCOPE_SELECTED_WITH_ACCEPTANCE_DEPENDENCY_SEPARATED"
+  },
+  "validation": "PASS",
+  "release": "NOT_EVALUATED",
+  "reviewerIssueDisposition": {
+    "B10": "SUPPORTED; local report snapshot/version sub-scope passes, wider CAS/legacy matrix open"
+  },
+  "oldFindingDisposition": {},
+  "decisionBoundary": "No pending/proposed decision approved; no product migration or deployment.",
+  "evidence": {
+    "test": "evidence/attempt-03/run-results.json",
+    "rawLog": "evidence/attempt-03/integration-suite.log",
+    "failedCleanupAttempt": "evidence/attempt-01/integration-suite.log",
+    "passingConcurrency": "evidence/attempt-03/integration-suite.log"
+  },
+  "sourceHashEvidence": "evidence/source-hash.json"
+}

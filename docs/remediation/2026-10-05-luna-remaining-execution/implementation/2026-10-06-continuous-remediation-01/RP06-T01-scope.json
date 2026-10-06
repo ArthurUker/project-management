@@ -1,0 +1,18 @@
+{
+  "allowedFiles": [
+    "rdpms-system/backend/src/routes/registrations.js",
+    "rdpms-system/backend/src/modules/projects/registrationAccess.ts",
+    "rdpms-system/backend/tests/integration/rp06-registration-scope.integration.test.mjs"
+  ],
+  "gateRefs": [
+    "D-S01-05"
+  ],
+  "scope": "Current registration list/stats/detail/update/stage/profile alive membership and capability scope; filtered linked entities/softdelete; same transaction current authority/write/strict audit. Existing no-export/noDELETE remains absent. No global exception, system role policy or new migrations. Creation atomic scaffold is independently outside B21 acceptance unless necessary validated creation admission.",
+  "contracts": {
+    "D-S01-05": {
+      "proposal": "REGISTRATION_MEMBER_SCOPE_NO_GLOBAL_EXCEPTION_V1",
+      "rules": "No registration-wide read/write exception. Ordinary list/stats/detail require ACTIVE membership (leftAt null), alive registration subtype and read capability plus registrations.view; managerId alone without active membership is not exception. Detail/project profile are registration-owned projection; linked tasks/taskcounts require tasks.view, milestones requires milestones.view, phases requires project_phases.view, member profiles require projects.view and active members only, regulatory links require regulatory_documents.view. SUPER_ADMIN nonmember allowed with audit elevated and permissionCode, list/stats access logs sensitive scope. Updates/profile require registrations.update AND write capability; stage requires registrations.change_stage AND transition capability. Current actor status/deleted/forced/securityVersion/current DB role grants rechecked in same tx/snapshot; writer locks actor/project, rechecks alive subtype/currentmember and applies strict audit atomically. No caller-supplied visibility override. Stage lock+currentstate no stale edge. Templates remain global active public template catalog (registrations.view), no projectdata. Creator uses existing registrations.create only; new creator becomes OWNER to ensure project scoped readability; no implicit activation. Manager transfer existing D6 unchanged mandatory exactbaseline/membertarget."
+    }
+  },
+  "scopeAmendment": "Creator ownership/current native admission needed for consistent scoped project access; necessary scaffold called on same caller tx with sequence/create/profile/members/audit. No new global exception. Existing-object scope primary B21 acceptance; construction atomicity separately tested, not broad RP04/RP17 acceptance."
+}

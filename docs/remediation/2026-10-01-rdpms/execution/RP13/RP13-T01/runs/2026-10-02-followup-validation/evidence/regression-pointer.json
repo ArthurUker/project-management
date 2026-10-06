@@ -1,0 +1,6 @@
+{
+  "suite": "rp13-stable-pull-pagination",
+  "path": "../final-regression-2026-10-02/RP13/rp13-stable-pull-pagination/attempt-02",
+  "result": "PASS",
+  "limitations": "See acceptance.json; ENV_BLOCKED means broader required evidence remains."
+}

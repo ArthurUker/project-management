@@ -1,0 +1,41 @@
+{
+  "kind": "STATIC_REVIEW",
+  "baselineHead": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "correctedEntries": [
+    {
+      "branch": "GET /api/phases?projectId=",
+      "source": "rdpms-system/backend/src/routes/phases.js:32-41",
+      "scope": "resolveProjectAccess (phases.js:36) + assertProjectCapability(read) (phases.js:38)",
+      "reject": "project missing/deleted/non-member -> 404"
+    },
+    {
+      "branch": "GET /api/projects/:id/phases",
+      "source": "rdpms-system/backend/src/routes/projects.js:814-825",
+      "scope": "resolveProjectAccess + assertProjectCapability(read)",
+      "reject": "404 same as above"
+    },
+    {
+      "branch": "GET /api/phases/:id",
+      "source": "rdpms-system/backend/src/routes/phases.js:92-99",
+      "scope": "resolveProjectAccess(phase.projectId)",
+      "reject": "404 through project resolver"
+    },
+    {
+      "branch": "GET /api/phases (no projectId)",
+      "source": "rdpms-system/backend/src/routes/phases.js:42-50",
+      "scope": "projectVisibilityFilter (phases.js:44)",
+      "filterSource": "rdpms-system/backend/src/kernel/projectAccess.js:97-104",
+      "semantics": "SUPER_ADMIN -> null (no filter); other actors -> managerId OR active member (leftAt IS NULL)",
+      "projectDeletedAtCondition": "ABSENT",
+      "reject": "not a per-row resolver and not a uniform 404"
+    }
+  ],
+  "errataRef": "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-04/scope-errata.md",
+  "dynamicPhaseApiOrUi": "NOT_RUN",
+  "phaseDeletionPolicy": "CONTRACT_UNRESOLVED",
+  "businessRegressionClaim": "NOT_MADE",
+  "sourceHashesUnchanged": {
+    "rdpms-system/backend/src/routes/phases.js": true,
+    "rdpms-system/backend/src/kernel/projectAccess.js": true
+  }
+}

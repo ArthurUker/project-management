@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-05",
+  "pathBase": "REPOSITORY",
+  "stableInputFileHashes": {
+    "docs/remediation/2026-10-01-rdpms/EXECUTOR_PROMPT.md": "ee5c23eeee93850d95349aba2b1b1c1f5f82589a8b695692d0f627f8f154ea8b",
+    "docs/remediation/2026-10-01-rdpms/REMEDIATION_PLAN.md": "0921f23440c7a62bb4992e1c73d80e9e9bd54ec7348f391350f3470d5d9746cd",
+    "docs/remediation/2026-10-01-rdpms/DECISIONS_AND_GATES.md": "5509152815a466236567791af7f7ebb6617f01740ba08fc5765629e82a9ee204",
+    "docs/remediation/2026-10-01-rdpms/CROSS_PACKAGE_CONTRACTS.md": "574f2c6782e5e0b7a77a1b7423ff9cc81af1dc34d3cbb67f4a0c61408e87eed1",
+    "docs/remediation/2026-10-01-rdpms/CROSS_PACKAGE_CONTRACTS.json": "81cbc51e7bcf7cb2505c325a71fbac91fdc2a1932d744ba3113d21f281b4e2f6",
+    "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json": "8d9c5787f035551d8f447ae9958e9dcdbf7027be92b098fc39b141282f6ee2f1",
+    "docs/remediation/2026-10-01-rdpms/DECISION_REGISTER.json": "d92809a55434c67695f9bd8b087583f23beaac1a5ab97d1f81fc60d0616e888a",
+    "docs/remediation/2026-10-01-rdpms/OPEN_ITEM_GATES.json": "fe2ce73c32429ffd629fd7c7306ad89f883394fe1c8d356eb09eff0b6393d4b7",
+    "docs/remediation/2026-10-01-rdpms/PACKAGES.json": "3cfec9086a1460fbf13843b3726278fc11af5ed47501d215dfd536c259fcfde9",
+    "docs/remediation/2026-10-01-rdpms/PACKAGES.md": "a297027d871c3cdfbefd3bc27634ef645c4cebd5bd5904a74a09e7a5859d7222",
+    "docs/remediation/2026-10-01-rdpms/RELEASE_GATES.json": "24c8ea9ed9bec051e6b132795b91b15df94b1e39af6ad7a25ccd0d5f002c3c81",
+    "docs/remediation/2026-10-01-rdpms/FINDING_TO_PACKAGE.json": "5b7a5533e2f5e5929bcfc75965dd9fca9a0047ca76976f6d1dd01efcfa4b98f1",
+    "docs/remediation/2026-10-01-rdpms/ACCEPTANCE_MATRIX.csv": "8679b60edbc3db7241b2eb2629b7d8d710e4c49419f34f5f6a3d55869272cfc0",
+    "docs/remediation/2026-10-01-rdpms/IMPLEMENTATION_STATE.json": "3264584aaedf4a29769633c1b973554392368238bb16a189fb3e0edc60f7a60a",
+    "docs/remediation/2026-10-01-rdpms/HANDOFF.md": "b5723f898c81819b4b89a99cf55c8d09a5bb265edd93b419000a2f61f795f9bf",
+    "docs/remediation/2026-10-01-rdpms/execution/state.json": "bb46d3185f04330f7ae0f3a62e345fadc9c4281a3eeefe1c89422bdb110b5e0c",
+    "docs/remediation/2026-10-01-rdpms/execution/handoff.md": "d3c1c498dacfb6c43f02735cde6e6603e5c3e89f0b1ebc245d7b3a4bac853d2b",
+    "docs/remediation/2026-10-01-rdpms/execution/remaining-task-gates.csv": "68f8ea003c6917b41a56250f48cc88cdb5eac7280c39860232aceb95d9137196",
+    "docs/remediation/2026-10-01-rdpms/execution/all54-task-status.csv": "b9981cbdf5f4f92e9410ea4326ee77cfe9648237e58b2bead36ee8e814edbe20",
+    "docs/remediation/2026-10-01-rdpms/execution/parallel-2026-10-04/BATCH_MANIFEST.json": "5a472c7ff2972ad4b1117704f76db2cf043cf7297fe5999c4a51d9e3a88577b2",
+    "docs/remediation/2026-10-05-seal-correction-review/REVIEW.md": "e97641cd2e3bf8555a6d53e3577a6f24a33ced2fd2beb95c76060fbb27d6af45",
+    "docs/remediation/2026-10-05-seal-correction-review/canonical-reference-index.json": "c70c84857fa5f8a06f53f517618bccf5f05c36588921e94ed70f37fa3fc3901b",
+    "docs/remediation/2026-10-05-seal-correction-review/NEXT_EXECUTION_PROMPT.md": "476d26db5d7c692c3a9d3dcd1f7ce3ed055f444e29a769a2e98f1c317dd444f5",
+    "docs/remediation/2026-10-01-rdpms/execution/RP00/RP00-T02/evidence/failure-point-matrix.json": "bd6f8e6d3bdce150cce0ddd6f9534c6b874799c54b192634d1c18644950a71ee",
+    "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-d-auth/decision-draft.json": "ae87041b859acbfbd715cfbaeeba1074d8d66bfd787f70fa2d2d214b8c62aece",
+    "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-d-auth/interface-notes.md": "0707f6abd733e8bd181fdd8fc7fb6e92222398048437c85425bb42ba073ac749",
+    "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/cache-recovery-matrix.csv": "485508ae196dc28ae10d1e44d02766b244658ef278918883b5c5c5881e9ae316",
+    "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/interface-notes.md": "9abb9162be50c0d459e15c0cf10c112cd12bacc93c797c4c5c8f0fc2f7af3535",
+    "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/decision-draft.json": "13a48fb7f595120b6d51c7aadfb6dd95339ca8de9bc16d6fc668597336b13194",
+    "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/current-contract.md": "988beee86e7bf2e71b5e78865458a6f9ea5b4bce6ef70f8c284d71868f6ee9a2",
+    "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/interface-notes.md": "ddd6d48de68f3d964c8dcbfbb1ef3a9386c34664dc6d31f7e47bbecd1306b157",
+    "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/decision-draft.md": "160898d42aae3843e5fecdefa8677c75db533b9d0c632f09513d4673acc41bbf",
+    "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-e-revision/evidence/external-client-evidence-request.md": "86e6c16e288320494b2d930f5e4a915b91b1338119fc00a98f8ca62bfa959c13",
+    "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/watermark-options.md": "aac760b35256e21efd1eab33d6e2b634a2d78d396ab239c302b29164c8e38197",
+    "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-f-cache/approval-request.md": "55ca00b1eb3fb06e356465278b7d555c28f2e8ab8ad9245f116288949299f178",
+    "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/acceptance-draft.csv": "1288d0e73e121278f92bdfa00ebe08452bb8cecc3a8fbe571e15769a94837729"
+  },
+  "concurrentOwnerMutableRecords": {
+    "REVISION_HISTORY.json": {
+      "sha256AtObservation": "868e335a633fcf837318069e989addb5a2b7ef1deeeccd461c92b42a82978e85",
+      "comparisonAtEnd": "NOT_REQUIRED_CONCURRENT_OWNER_MUTABLE"
+    },
+    "EXECUTION_REVISION_HISTORY.json": {
+      "sha256AtObservation": "0e348d1460174adb397f5b1fdb45d3365fc105dce5df4174c72a72fac06a7886",
+      "comparisonAtEnd": "NOT_REQUIRED_CONCURRENT_OWNER_MUTABLE"
+    }
+  },
+  "rule": "Do not treat authorized CodeBuddy history appends or new runtime files as plan-source drift."
+}

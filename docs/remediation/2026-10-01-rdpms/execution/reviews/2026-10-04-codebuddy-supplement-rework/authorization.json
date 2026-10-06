@@ -1,0 +1,30 @@
+{
+  "reviewId": "CODEBUDDY-SUPPLEMENT-REWORK-REVIEW-2026-10-04",
+  "date": "2026-10-04",
+  "kind": "INDEPENDENT_REVIEW_ONLY",
+  "source": "User supplied completed SUP rework and requested continuation, including rerunning two formal suites; established session instruction requires independent review after CodeBuddy delivery",
+  "subjectSession": "execution/supplements/test-contract-rework-2026-10-03-cb1/",
+  "allowedWrites": [
+    "docs/remediation/2026-10-01-rdpms/execution/reviews/2026-10-04-codebuddy-supplement-rework/**",
+    "new owned temporary PostgreSQL clusters/env/files",
+    "backend/dist only when absent before own build and removed afterwards"
+  ],
+  "existingSourceTestPlanWritesAuthorized": false,
+  "allowedValidation": [
+    "same final rp10 and rp08 formal suites, sequential fresh owned databases",
+    "existing build/typecheck/lint:undefined/git diff --check",
+    "safe simulated control of frozen runner and bounded helper logic; all subprocesses mocked for control"
+  ],
+  "prohibited": [
+    "business or formal test repair",
+    "existing records/history updates",
+    "old session/review writes",
+    "other STANDARD tasks",
+    "production/shared resources",
+    "dependency changes",
+    "git writes",
+    "agents or model switching",
+    "policy approval"
+  ],
+  "release": "NOT_EVALUATED"
+}

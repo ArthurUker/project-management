@@ -1,0 +1,40 @@
+{
+  "taskId": "RP08-T01",
+  "run": "2026-10-03-codebuddy-lr3-validation",
+  "kind": "VALIDATION_ONLY",
+  "executor": "CodeBuddy",
+  "baselineCommit": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "sourceChanges": "none (tests + contract matrix only)",
+  "reviewFindings": ["LR3-02"],
+  "historicalFinding": "B04",
+  "gateDisposition": {
+    "D-S01-05": "NOT_APPLICABLE (ordinary scope condition=false; registration global exception not enabled; not recorded as PASS)",
+    "T-RP-04": "PROPOSED; RP08-T02 cache eviction / historical backfill not run",
+    "T-RP-12": "PROPOSED; same"
+  },
+  "subScenarios": [
+    {"id": "B1", "status": "PASS", "desc": "per entity paired requests on the same real row and actor: with permission the ordinary API returns 200 + the row and sync delivers it; without the permission the ordinary API returns 403 and sync upserts/tombstones are empty (7 entities)", "evidence": "evidence/attempt-03/integration-suite.log"},
+    {"id": "B1b", "status": "PASS", "desc": "membership revoked (leftAt): ordinary project detail 404; sync acl.projectIds drops the project and every entity becomes empty; membership restored afterwards", "evidence": "evidence/attempt-03/integration-suite.log"},
+    {"id": "B2", "status": "PASS", "desc": "SUPER_ADMIN own report fixture is non-empty and exclusively delivered; other authors' reports absent; ordinary API for the same project still returns all authors (own-only is a sync-only extra restriction)", "evidence": "evidence/attempt-03/integration-suite.log"},
+    {"id": "B3", "status": "PASS", "desc": "real tombstones (tasks/milestones/projectPhases/monthlyProgress/reports deletedAt, projectMembers leftAt) delivered with permission; zero-permission payload contains none of the tombstoned ids; non-member receives nothing; report tombstones stay own-only for elevated actors; ordinary active views exclude tombstoned rows", "evidence": "evidence/attempt-03/integration-suite.log"},
+    {"id": "B4", "status": "PASS", "desc": "incremental pull through the real entry GET /api/sync/init?since=<cursor>&deviceId=<own id>: post-cut task update and milestone tombstone delivered, pre-cut unchanged phase not re-delivered, cursor advances, full=false", "evidence": "evidence/attempt-03/integration-suite.log"},
+    {"id": "B5", "status": "PASS", "desc": "sync field keys are a subset of the ordinary API response for the same row; forbidden columns (metadata/createdById/updatedById/deletedAt/reviewerId/leftAt) absent; nested manager/assignee/phase narrower than ordinary", "evidence": "evidence/attempt-03/integration-suite.log"},
+    {"id": "PRIOR-5", "status": "PASS", "desc": "the five pre-existing tests (member/other/outsider read matrix, per-entity permission sweep, field allowlist, role scope matrix, elevated own-only) re-run unchanged", "evidence": "evidence/attempt-03/integration-suite.log"}
+  ],
+  "cases": [
+    {"id": "AC-B04-01", "definition": "Any entity denied by equivalent online read authorization is absent from sync response.", "status": "PASS", "scope": "B1 pairs every entity with its ordinary API entry: permission removal denies online (403) and empties sync; membership removal denies online (404) and drops the project from the sync scope. Field-level contract source is the current implementation, not an approved document.", "evidence": ["evidence/attempt-03/integration-suite.log", "read-contract-matrix.md"]},
+    {"id": "AC-B04-02", "definition": "Revoking one entity permission in a still-visible project removes its cached rows and prevents future pulls.", "status": "NOT_RUN", "reason": "client cache eviction / historical backfill remains RP08-T02 joint work (T-RP-04 / T-RP-12 unapproved); this round proves response-level gating only; frontend IndexedDB not run"},
+    {"id": "AC-B04-03", "definition": "Own-only reports remain restricted to their author.", "status": "PASS", "scope": "B2 elevated actor with a non-empty own report set + other authors excluded; B3 report tombstones also own-only; prior member/VIEWER evidence retained", "evidence": ["evidence/attempt-03/integration-suite.log"]},
+    {"id": "PAC-RP08-01", "definition": "在线拒绝的 task/report 实体或字段不会从 sync 返回；own-only report 仅作者可得。", "status": "PASS", "scope": "entity gating (B1/B1b), tombstone non-leak (B3), own-only (B2/B3), field subset and forbidden columns (B5)", "evidence": ["evidence/attempt-03/integration-suite.log", "read-contract-matrix.md"]},
+    {"id": "TASK-RP08-T01", "definition": "本任务：每实体/字段/own-only 读取授权", "status": "PASS", "scope": "11/11 tests on a real owned database; contract matrix delivered; no business code change. Package completion (PAC-RP08-02/03/04) explicitly excluded.", "evidence": ["evidence/attempt-03/integration-suite.log", "read-contract-matrix.csv"]},
+    {"id": "LR3-02", "status": "COVERAGE_COMPLETED_WITH_RECORDED_GAP", "notes": "all listed gaps executed; residual gap: no independent approved field-level contract exists in the repository, so field authorization is verified against the current implementation only", "evidence": ["evidence/attempt-03/integration-suite.log", "read-contract-matrix.md"]}
+  ],
+  "notRun": [
+    "AC-B04-02 / PAC-RP08-02/03/04 (RP08-T02 cache eviction, backfill, watermark, pagination fallback)",
+    "frontend IndexedDB offline cache behaviour",
+    "full JWT-chain requests (injected trusted actor only)",
+    "target/candidate environment acceptance",
+    "registration-project global exception (D-S01-05, not enabled)"
+  ],
+  "overallBoundary": "Local owned PostgreSQL, validation-only; release NOT_EVALUATED; B04 remains SUPPORTED and is not closed; package RP08 stays IN_PROGRESS."
+}

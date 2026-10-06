@@ -1,0 +1,13 @@
+{
+  "id": "SUP-02",
+  "parentTask": "RP08-T01",
+  "finding": "LR4-02 / B04",
+  "mode": "TEST_ONLY",
+  "executor": "CodeBuddy (local isolated)",
+  "authorityRef": "CODEBUDDY_TEST_CONTRACT_EXECUTOR_PROMPT_2026-10-03.md + manifest + reviews/2026-10-03-codebuddy-followup",
+  "date": "2026-10-03",
+  "scope": "把七实体（projects/projectPhases/tasks/milestones/monthlyProgress/reports/projectMembers）的精确行、字段键-值对照固化到正式测试，取代整段 JSON 子串搜键方式；仅改白名单测试，业务源码/同步投影/权限/前端只读。",
+  "limits": "不修改同步投影、权限、普通 API 或前端；禁止用整段 JSON 字符串搜键、另一行字段或空集合 every() 代替；当前普通 API 对照不是独立产品或安全政策批准，发布保持 NOT_EVALUATED。",
+  "release": "NOT_EVALUATED",
+  "testFile": "rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs"
+}

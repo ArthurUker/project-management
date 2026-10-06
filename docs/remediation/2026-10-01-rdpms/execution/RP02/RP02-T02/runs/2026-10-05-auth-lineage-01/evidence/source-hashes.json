@@ -1,0 +1,12 @@
+[
+  {
+    "path": "rdpms-system/backend/src/routes/auth.js",
+    "beforeSha256": "8f736619a1526247073697865490a6fef67053f92c501fbe65f617b29b3f12b4",
+    "afterSha256": "7a9301654ea603ab8eeb576f52260cd48b33c3a7cbd67811d523c77d2281d8de"
+  },
+  {
+    "path": "rdpms-system/backend/tests/integration/rp02-t02-acceptance.integration.test.mjs",
+    "beforeSha256": null,
+    "afterSha256": "a3b4ed4dd277685be05cbaf9475f8feba0b0ae5b1a142f909223e0e2a8b1b7fb"
+  }
+]

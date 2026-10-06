@@ -1,0 +1,11 @@
+{
+  "id": "SUP-03",
+  "parentTasks": ["RP04", "RP08"],
+  "finding": "LR4-04 / B20",
+  "mode": "REVIEW_ONLY",
+  "state": "DONE_REVIEW_ONLY",
+  "release": "NOT_EVALUATED",
+  "codeChanges": "none",
+  "deliverables": ["phase-read-contract.md", "scope-assessment.md", "next-action.md", "coverage.csv", "evidence/source-trace.md", "authorization.json", "change-summary.md", "acceptance.json", "rollback.md", "task-state.json", "handoff.md"],
+  "note": "只读合同核对完成；未改动业务源码、schema、前端、helper；发布保持 NOT_EVALUATED。"
+}

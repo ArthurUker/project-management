@@ -1,0 +1,4385 @@
+{
+  "ownedRuns": [
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/regressions/b17-role-create/attempt-01/run-results.json",
+      "sha256": "efc9eac5a6e5678032148a947dd3bfd684e351594989854572513fed3380b6e6",
+      "counts": {
+        "tests": 1,
+        "pass": 0,
+        "fail": 1,
+        "skipped": 0
+      },
+      "criticalFailures": [
+        "integration-suite did not succeed"
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_ce7fe0dd63",
+          "ownedPort": 57234,
+          "ownedTempRoot": "/tmp/rdpms-ac-5wrredwx",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-5wrredwx/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-5wrredwx/pg",
+            "-l",
+            "/tmp/rdpms-ac-5wrredwx/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 57234 -k /tmp/rdpms-ac-5wrredwx/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-5wrredwx/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "57234",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_approved_ce7fe0dd63\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-5wrredwx/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/b17-role-create.integration.test.mjs"
+          ],
+          "exitCode": 1,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-5wrredwx/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "testSourceSnapshot": "Source snapshot/hashes below; early attempts source text not individually retained",
+      "resource": {
+        "database": "rdpms_test_approved_ce7fe0dd63",
+        "port": 57234,
+        "bindHost": "127.0.0.1",
+        "ownerRole": "rdpms_exec",
+        "tempRoot": "/tmp/rdpms-ac-5wrredwx",
+        "envFileMode": "0600",
+        "dotenv": "new private env file only; repository dotenv files never read",
+        "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/regressions/b17-role-create/attempt-02/run-results.json",
+      "sha256": "0a721c8003eabb8178fff1c6a91024c79229bace63e138ba7c921b60e799b425",
+      "counts": {
+        "tests": 7,
+        "pass": 7,
+        "fail": 0,
+        "skipped": 0
+      },
+      "criticalFailures": [],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_rp01_b8e78b531b",
+          "ownedPort": 58415,
+          "ownedTempRoot": "/tmp/rdpms-ac-81p2fpdh",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-81p2fpdh/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-81p2fpdh/pg",
+            "-l",
+            "/tmp/rdpms-ac-81p2fpdh/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 58415 -k /tmp/rdpms-ac-81p2fpdh/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-81p2fpdh/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "58415",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_rp01_b8e78b531b\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-81p2fpdh/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/b17-role-create.integration.test.mjs"
+          ],
+          "exitCode": 0,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-81p2fpdh/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "testSourceSnapshot": "Source snapshot/hashes below; early attempts source text not individually retained",
+      "resource": {
+        "database": "rdpms_test_rp01_b8e78b531b",
+        "port": 58415,
+        "bindHost": "127.0.0.1",
+        "ownerRole": "rdpms_exec",
+        "tempRoot": "/tmp/rdpms-ac-81p2fpdh",
+        "envFileMode": "0600",
+        "dotenv": "new private env file only; repository dotenv files never read",
+        "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/regressions/backend-unit-contract/attempt-01/run-results.json",
+      "sha256": "1a838c50b1f0dca5da600246a1ac717c658fd3b41e7caf64a187960a959a20ee",
+      "counts": {
+        "tests": 93,
+        "pass": 83,
+        "fail": 10,
+        "skipped": 0
+      },
+      "criticalFailures": [
+        "integration-suite did not succeed"
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_202324587a",
+          "ownedPort": 56636,
+          "ownedTempRoot": "/tmp/rdpms-ac-spy3w2o7",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-spy3w2o7/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-spy3w2o7/pg",
+            "-l",
+            "/tmp/rdpms-ac-spy3w2o7/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 56636 -k /tmp/rdpms-ac-spy3w2o7/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-spy3w2o7/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "56636",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_approved_202324587a\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-spy3w2o7/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/unit/rf01-bootstrap.test.mjs",
+            "tests/unit/rf01-reports-routes.test.mjs",
+            "tests/unit/rf01-undefined-check.test.mjs",
+            "tests/unit/rf02-idempotency.test.mjs",
+            "tests/unit/rf03-report-period.test.mjs",
+            "tests/unit/rf03-super-admin-permissions.test.mjs",
+            "tests/unit/rf04-authz-before-replay.test.mjs",
+            "tests/unit/rf04-entry-matrix.test.mjs",
+            "tests/unit/rf04-post-upsert-authz.test.mjs",
+            "tests/unit/rf04-versions-access.test.mjs",
+            "tests/unit/rf04-write-authorization.test.mjs",
+            "tests/unit/rf05-file-access-policy.test.mjs",
+            "tests/contract/rf01-bootstrap-contract.test.mjs"
+          ],
+          "exitCode": 1,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-spy3w2o7/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "testSourceSnapshot": "Source snapshot/hashes below; early attempts source text not individually retained",
+      "resource": {
+        "database": "rdpms_test_approved_202324587a",
+        "port": 56636,
+        "bindHost": "127.0.0.1",
+        "ownerRole": "rdpms_exec",
+        "tempRoot": "/tmp/rdpms-ac-spy3w2o7",
+        "envFileMode": "0600",
+        "dotenv": "new private env file only; repository dotenv files never read",
+        "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/regressions/rf02-idempotency/attempt-01/run-results.json",
+      "sha256": "0507ffe9fe30ae4e80fe176d254de75c7794a5966519d155a42b0cb44c13a7cd",
+      "counts": {
+        "tests": 8,
+        "pass": 8,
+        "fail": 0,
+        "skipped": 0
+      },
+      "criticalFailures": [],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_bb49c0ffc0",
+          "ownedPort": 56729,
+          "ownedTempRoot": "/tmp/rdpms-ac-4ler7oho",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-4ler7oho/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-4ler7oho/pg",
+            "-l",
+            "/tmp/rdpms-ac-4ler7oho/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 56729 -k /tmp/rdpms-ac-4ler7oho/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-4ler7oho/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "56729",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_approved_bb49c0ffc0\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-4ler7oho/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rf02-idempotency.integration.test.mjs"
+          ],
+          "exitCode": 0,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-4ler7oho/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "testSourceSnapshot": "Source snapshot/hashes below; early attempts source text not individually retained",
+      "resource": {
+        "database": "rdpms_test_approved_bb49c0ffc0",
+        "port": 56729,
+        "bindHost": "127.0.0.1",
+        "ownerRole": "rdpms_exec",
+        "tempRoot": "/tmp/rdpms-ac-4ler7oho",
+        "envFileMode": "0600",
+        "dotenv": "new private env file only; repository dotenv files never read",
+        "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/regressions/rf02-post-concurrency/attempt-01/run-results.json",
+      "sha256": "30fdb5d355c29aba66a67b744c87436496eda77534698628e32f5f26988588c6",
+      "counts": {
+        "tests": 3,
+        "pass": 3,
+        "fail": 0,
+        "skipped": 0
+      },
+      "criticalFailures": [],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_0d0afa51b5",
+          "ownedPort": 56786,
+          "ownedTempRoot": "/tmp/rdpms-ac-usuf_ez0",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-usuf_ez0/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-usuf_ez0/pg",
+            "-l",
+            "/tmp/rdpms-ac-usuf_ez0/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 56786 -k /tmp/rdpms-ac-usuf_ez0/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-usuf_ez0/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "56786",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_approved_0d0afa51b5\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-usuf_ez0/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rf02-post-concurrency.integration.test.mjs"
+          ],
+          "exitCode": 0,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-usuf_ez0/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "testSourceSnapshot": "Source snapshot/hashes below; early attempts source text not individually retained",
+      "resource": {
+        "database": "rdpms_test_approved_0d0afa51b5",
+        "port": 56786,
+        "bindHost": "127.0.0.1",
+        "ownerRole": "rdpms_exec",
+        "tempRoot": "/tmp/rdpms-ac-usuf_ez0",
+        "envFileMode": "0600",
+        "dotenv": "new private env file only; repository dotenv files never read",
+        "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/regressions/rf02-sync-rejection-retry/attempt-01/run-results.json",
+      "sha256": "9e415daef061db4a710bc3771a48948f41ea5f643659baee45f776b45b048320",
+      "counts": {
+        "tests": 1,
+        "pass": 0,
+        "fail": 1,
+        "skipped": 0
+      },
+      "criticalFailures": [
+        "integration-suite did not succeed"
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_e9c228791e",
+          "ownedPort": 56878,
+          "ownedTempRoot": "/tmp/rdpms-ac-hgocz8fx",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-hgocz8fx/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-hgocz8fx/pg",
+            "-l",
+            "/tmp/rdpms-ac-hgocz8fx/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 56878 -k /tmp/rdpms-ac-hgocz8fx/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-hgocz8fx/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "56878",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_approved_e9c228791e\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-hgocz8fx/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rf02-sync-rejection-retry.integration.test.mjs"
+          ],
+          "exitCode": 1,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-hgocz8fx/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "testSourceSnapshot": "Source snapshot/hashes below; early attempts source text not individually retained",
+      "resource": {
+        "database": "rdpms_test_approved_e9c228791e",
+        "port": 56878,
+        "bindHost": "127.0.0.1",
+        "ownerRole": "rdpms_exec",
+        "tempRoot": "/tmp/rdpms-ac-hgocz8fx",
+        "envFileMode": "0600",
+        "dotenv": "new private env file only; repository dotenv files never read",
+        "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/regressions/rf04-versions-access/attempt-01/run-results.json",
+      "sha256": "fe076070bcd7901e380d68c057693586fce949a739ebc41efce3bde3c3331d92",
+      "counts": {
+        "tests": 3,
+        "pass": 3,
+        "fail": 0,
+        "skipped": 0
+      },
+      "criticalFailures": [],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_aa0e4153e5",
+          "ownedPort": 57011,
+          "ownedTempRoot": "/tmp/rdpms-ac-gas1u77i",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-gas1u77i/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-gas1u77i/pg",
+            "-l",
+            "/tmp/rdpms-ac-gas1u77i/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 57011 -k /tmp/rdpms-ac-gas1u77i/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-gas1u77i/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "57011",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_approved_aa0e4153e5\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-gas1u77i/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rf04-versions-access.integration.test.mjs"
+          ],
+          "exitCode": 0,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-gas1u77i/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "testSourceSnapshot": "Source snapshot/hashes below; early attempts source text not individually retained",
+      "resource": {
+        "database": "rdpms_test_approved_aa0e4153e5",
+        "port": 57011,
+        "bindHost": "127.0.0.1",
+        "ownerRole": "rdpms_exec",
+        "tempRoot": "/tmp/rdpms-ac-gas1u77i",
+        "envFileMode": "0600",
+        "dotenv": "new private env file only; repository dotenv files never read",
+        "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/regressions/rf04-write-authorization/attempt-01/run-results.json",
+      "sha256": "28c673f33ce212c1dbccc39ab68c57afa96e85820961143410525a310cb82f66",
+      "counts": {
+        "tests": 9,
+        "pass": 3,
+        "fail": 6,
+        "skipped": 0
+      },
+      "criticalFailures": [
+        "integration-suite did not succeed"
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_969658821e",
+          "ownedPort": 56962,
+          "ownedTempRoot": "/tmp/rdpms-ac-9fntyfa4",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-9fntyfa4/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-9fntyfa4/pg",
+            "-l",
+            "/tmp/rdpms-ac-9fntyfa4/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 56962 -k /tmp/rdpms-ac-9fntyfa4/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-9fntyfa4/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "56962",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_approved_969658821e\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-9fntyfa4/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rf04-write-authorization.integration.test.mjs"
+          ],
+          "exitCode": 1,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-9fntyfa4/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "testSourceSnapshot": "Source snapshot/hashes below; early attempts source text not individually retained",
+      "resource": {
+        "database": "rdpms_test_approved_969658821e",
+        "port": 56962,
+        "bindHost": "127.0.0.1",
+        "ownerRole": "rdpms_exec",
+        "tempRoot": "/tmp/rdpms-ac-9fntyfa4",
+        "envFileMode": "0600",
+        "dotenv": "new private env file only; repository dotenv files never read",
+        "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/regressions/rp08-sync-read-authorization/attempt-01/run-results.json",
+      "sha256": "b3e707037a2d44e8e42cd054ee33f8fed8df306e82a0cc6aecda319ea9945856",
+      "counts": {
+        "tests": 12,
+        "pass": 12,
+        "fail": 0,
+        "skipped": 0
+      },
+      "criticalFailures": [],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_75748482e4",
+          "ownedPort": 57064,
+          "ownedTempRoot": "/tmp/rdpms-ac-40s77yc2",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-40s77yc2/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-40s77yc2/pg",
+            "-l",
+            "/tmp/rdpms-ac-40s77yc2/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 57064 -k /tmp/rdpms-ac-40s77yc2/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-40s77yc2/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "57064",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_approved_75748482e4\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-40s77yc2/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rp08-sync-read-authorization.integration.test.mjs"
+          ],
+          "exitCode": 0,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-40s77yc2/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "testSourceSnapshot": "Source snapshot/hashes below; early attempts source text not individually retained",
+      "resource": {
+        "database": "rdpms_test_approved_75748482e4",
+        "port": 57064,
+        "bindHost": "127.0.0.1",
+        "ownerRole": "rdpms_exec",
+        "tempRoot": "/tmp/rdpms-ac-40s77yc2",
+        "envFileMode": "0600",
+        "dotenv": "new private env file only; repository dotenv files never read",
+        "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/regressions/rp09-scoped-receipt/attempt-01/run-results.json",
+      "sha256": "0d22a5d35375ed5001614924b87864cf11884339a13932e49742ed4ae8d956f5",
+      "counts": {
+        "tests": 30,
+        "pass": 30,
+        "fail": 0,
+        "skipped": 0
+      },
+      "criticalFailures": [],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_d6012b7cc1",
+          "ownedPort": 57285,
+          "ownedTempRoot": "/tmp/rdpms-ac-5pn7ejh3",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-5pn7ejh3/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-5pn7ejh3/pg",
+            "-l",
+            "/tmp/rdpms-ac-5pn7ejh3/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 57285 -k /tmp/rdpms-ac-5pn7ejh3/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-5pn7ejh3/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "57285",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_approved_d6012b7cc1\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-5pn7ejh3/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rp09-scoped-receipt.integration.test.mjs"
+          ],
+          "exitCode": 0,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-5pn7ejh3/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "testSourceSnapshot": "Source snapshot/hashes below; early attempts source text not individually retained",
+      "resource": {
+        "database": "rdpms_test_approved_d6012b7cc1",
+        "port": 57285,
+        "bindHost": "127.0.0.1",
+        "ownerRole": "rdpms_exec",
+        "tempRoot": "/tmp/rdpms-ac-5pn7ejh3",
+        "envFileMode": "0600",
+        "dotenv": "new private env file only; repository dotenv files never read",
+        "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/regressions/rp10-report-submit-snapshot/attempt-01/run-results.json",
+      "sha256": "cff5272010759d15109b578eae74032d4fdfc150eb15a55eec86aeb6cec4b9db",
+      "counts": {
+        "tests": 25,
+        "pass": 23,
+        "fail": 2,
+        "skipped": 0
+      },
+      "criticalFailures": [
+        "integration-suite did not succeed"
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_f08555cc6e",
+          "ownedPort": 57110,
+          "ownedTempRoot": "/tmp/rdpms-ac-970b0w_p",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-970b0w_p/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-970b0w_p/pg",
+            "-l",
+            "/tmp/rdpms-ac-970b0w_p/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 57110 -k /tmp/rdpms-ac-970b0w_p/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-970b0w_p/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "57110",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_approved_f08555cc6e\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-970b0w_p/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+          ],
+          "exitCode": 1,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-970b0w_p/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "testSourceSnapshot": "Source snapshot/hashes below; early attempts source text not individually retained",
+      "resource": {
+        "database": "rdpms_test_approved_f08555cc6e",
+        "port": 57110,
+        "bindHost": "127.0.0.1",
+        "ownerRole": "rdpms_exec",
+        "tempRoot": "/tmp/rdpms-ac-970b0w_p",
+        "envFileMode": "0600",
+        "dotenv": "new private env file only; repository dotenv files never read",
+        "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/regressions/semantic-negative-control/attempt-01/run-results.json",
+      "sha256": "04b3ceee36ba723d67a3b7aa0cb43d2e820b78e74435892bb99a6d9ec014afc4",
+      "counts": {
+        "tests": 30,
+        "pass": 0,
+        "fail": 3,
+        "skipped": 27
+      },
+      "criticalFailures": [
+        "integration-suite did not succeed"
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_57e055a6fb",
+          "ownedPort": 57330,
+          "ownedTempRoot": "/tmp/rdpms-ac-evwsaibj",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-evwsaibj/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-evwsaibj/pg",
+            "-l",
+            "/tmp/rdpms-ac-evwsaibj/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 57330 -k /tmp/rdpms-ac-evwsaibj/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-evwsaibj/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "57330",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_approved_57e055a6fb\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-evwsaibj/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/negative-controls/root-task-outside-tx-control.mjs"
+          ],
+          "exitCode": 1,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-evwsaibj/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "testSourceSnapshot": "Source snapshot/hashes below; early attempts source text not individually retained",
+      "resource": {
+        "database": "rdpms_test_approved_57e055a6fb",
+        "port": 57330,
+        "bindHost": "127.0.0.1",
+        "ownerRole": "rdpms_exec",
+        "tempRoot": "/tmp/rdpms-ac-evwsaibj",
+        "envFileMode": "0600",
+        "dotenv": "new private env file only; repository dotenv files never read",
+        "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/rp09-t01/attempt-01/run-results.json",
+      "sha256": "377e08f7cbb855b8aa85de56dea41cbd0378d2798f214d9830f2918f5a2d9303",
+      "counts": {
+        "tests": 21,
+        "pass": 21,
+        "fail": 0,
+        "skipped": 0
+      },
+      "criticalFailures": [],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_04ca3e00bf",
+          "ownedPort": 54651,
+          "ownedTempRoot": "/tmp/rdpms-ac-q4j1cyfa",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-q4j1cyfa/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-q4j1cyfa/pg",
+            "-l",
+            "/tmp/rdpms-ac-q4j1cyfa/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 54651 -k /tmp/rdpms-ac-q4j1cyfa/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-q4j1cyfa/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "54651",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_approved_04ca3e00bf\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-q4j1cyfa/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rp09-scoped-receipt.integration.test.mjs"
+          ],
+          "exitCode": 0,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-q4j1cyfa/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "testSourceSnapshot": "Source snapshot/hashes below; early attempts source text not individually retained",
+      "resource": {
+        "database": "rdpms_test_approved_04ca3e00bf",
+        "port": 54651,
+        "bindHost": "127.0.0.1",
+        "ownerRole": "rdpms_exec",
+        "tempRoot": "/tmp/rdpms-ac-q4j1cyfa",
+        "envFileMode": "0600",
+        "dotenv": "new private env file only; repository dotenv files never read",
+        "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/rp09-t01/attempt-02/run-results.json",
+      "sha256": "9f17b43716a580219f974f597382e5ce3d54923da80b10e23de4e38767231646",
+      "counts": {
+        "tests": 30,
+        "pass": 26,
+        "fail": 4,
+        "skipped": 0
+      },
+      "criticalFailures": [
+        "integration-suite did not succeed"
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_868bd9799e",
+          "ownedPort": 55013,
+          "ownedTempRoot": "/tmp/rdpms-ac-waonjmp_",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-waonjmp_/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-waonjmp_/pg",
+            "-l",
+            "/tmp/rdpms-ac-waonjmp_/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 55013 -k /tmp/rdpms-ac-waonjmp_/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-waonjmp_/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "55013",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_approved_868bd9799e\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-waonjmp_/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rp09-scoped-receipt.integration.test.mjs"
+          ],
+          "exitCode": 1,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-waonjmp_/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "testSourceSnapshot": "Source snapshot/hashes below; early attempts source text not individually retained",
+      "resource": {
+        "database": "rdpms_test_approved_868bd9799e",
+        "port": 55013,
+        "bindHost": "127.0.0.1",
+        "ownerRole": "rdpms_exec",
+        "tempRoot": "/tmp/rdpms-ac-waonjmp_",
+        "envFileMode": "0600",
+        "dotenv": "new private env file only; repository dotenv files never read",
+        "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/rp09-t01/attempt-03/run-results.json",
+      "sha256": "57ba47863e7fef38a9f534a98275ec5c9927931d8155eea3dcfd6252e705898f",
+      "counts": {
+        "tests": 30,
+        "pass": 30,
+        "fail": 0,
+        "skipped": 0
+      },
+      "criticalFailures": [],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_3c6613ff5b",
+          "ownedPort": 55112,
+          "ownedTempRoot": "/tmp/rdpms-ac-az_0yg9t",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-az_0yg9t/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-az_0yg9t/pg",
+            "-l",
+            "/tmp/rdpms-ac-az_0yg9t/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 55112 -k /tmp/rdpms-ac-az_0yg9t/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-az_0yg9t/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "55112",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_approved_3c6613ff5b\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-az_0yg9t/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rp09-scoped-receipt.integration.test.mjs"
+          ],
+          "exitCode": 0,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-az_0yg9t/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "testSourceSnapshot": "Source snapshot/hashes below; early attempts source text not individually retained",
+      "resource": {
+        "database": "rdpms_test_approved_3c6613ff5b",
+        "port": 55112,
+        "bindHost": "127.0.0.1",
+        "ownerRole": "rdpms_exec",
+        "tempRoot": "/tmp/rdpms-ac-az_0yg9t",
+        "envFileMode": "0600",
+        "dotenv": "new private env file only; repository dotenv files never read",
+        "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/rp09-t02/attempt-01/run-results.json",
+      "sha256": "40336ac9660a15c766be79d4f46e0c219e79f404f86805ed66c297de9bd7487b",
+      "counts": {
+        "tests": 14,
+        "pass": 12,
+        "fail": 2,
+        "skipped": 0
+      },
+      "criticalFailures": [
+        "integration-suite did not succeed"
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_0b436dc542",
+          "ownedPort": 55884,
+          "ownedTempRoot": "/tmp/rdpms-ac-9zce1m5l",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-9zce1m5l/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-9zce1m5l/pg",
+            "-l",
+            "/tmp/rdpms-ac-9zce1m5l/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 55884 -k /tmp/rdpms-ac-9zce1m5l/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-9zce1m5l/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "55884",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_approved_0b436dc542\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-9zce1m5l/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rp09-receipt-recovery.integration.test.mjs"
+          ],
+          "exitCode": 1,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-9zce1m5l/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "testSourceSnapshot": "Source snapshot/hashes below; early attempts source text not individually retained",
+      "resource": {
+        "database": "rdpms_test_approved_0b436dc542",
+        "port": 55884,
+        "bindHost": "127.0.0.1",
+        "ownerRole": "rdpms_exec",
+        "tempRoot": "/tmp/rdpms-ac-9zce1m5l",
+        "envFileMode": "0600",
+        "dotenv": "new private env file only; repository dotenv files never read",
+        "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/rp09-t02/attempt-02/run-results.json",
+      "sha256": "7f6ae7878068cbb60d8ca2282708b5e8c8550377b3123ef6d92670890919ba86",
+      "counts": {
+        "tests": 14,
+        "pass": 14,
+        "fail": 0,
+        "skipped": 0
+      },
+      "criticalFailures": [],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_3f91bad66f",
+          "ownedPort": 56133,
+          "ownedTempRoot": "/tmp/rdpms-ac-sievrh9g",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-sievrh9g/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-sievrh9g/pg",
+            "-l",
+            "/tmp/rdpms-ac-sievrh9g/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 56133 -k /tmp/rdpms-ac-sievrh9g/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-sievrh9g/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "56133",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_approved_3f91bad66f\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-sievrh9g/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rp09-receipt-recovery.integration.test.mjs"
+          ],
+          "exitCode": 0,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-sievrh9g/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "testSourceSnapshot": "Source snapshot/hashes below; early attempts source text not individually retained",
+      "resource": {
+        "database": "rdpms_test_approved_3f91bad66f",
+        "port": 56133,
+        "bindHost": "127.0.0.1",
+        "ownerRole": "rdpms_exec",
+        "tempRoot": "/tmp/rdpms-ac-sievrh9g",
+        "envFileMode": "0600",
+        "dotenv": "new private env file only; repository dotenv files never read",
+        "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/rp09-t02/attempt-03/run-results.json",
+      "sha256": "f7822bdfbb8a65d908e7c8574f9e347df5cc71dcbfcdcd62a9bf1b596c664511",
+      "counts": {
+        "tests": 16,
+        "pass": 16,
+        "fail": 0,
+        "skipped": 0
+      },
+      "criticalFailures": [],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_b06a1f9d39",
+          "ownedPort": 56480,
+          "ownedTempRoot": "/tmp/rdpms-ac-6f6axe60",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-6f6axe60/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-6f6axe60/pg",
+            "-l",
+            "/tmp/rdpms-ac-6f6axe60/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 56480 -k /tmp/rdpms-ac-6f6axe60/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-6f6axe60/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "56480",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_approved_b06a1f9d39\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-6f6axe60/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rp09-receipt-recovery.integration.test.mjs"
+          ],
+          "exitCode": 0,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-6f6axe60/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "testSourceSnapshot": "Source snapshot/hashes below; early attempts source text not individually retained",
+      "resource": {
+        "database": "rdpms_test_approved_b06a1f9d39",
+        "port": 56480,
+        "bindHost": "127.0.0.1",
+        "ownerRole": "rdpms_exec",
+        "tempRoot": "/tmp/rdpms-ac-6f6axe60",
+        "envFileMode": "0600",
+        "dotenv": "new private env file only; repository dotenv files never read",
+        "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/rp09-t02/attempt-04/run-results.json",
+      "sha256": "69d708a52869777c8302e1e90cd7bf4cf4a34aba7b36d55f792cdb2a06dbcd7d",
+      "counts": {
+        "tests": 22,
+        "pass": 20,
+        "fail": 2,
+        "skipped": 0
+      },
+      "criticalFailures": [
+        "integration-suite did not succeed"
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_6541ab9d65",
+          "ownedPort": 58328,
+          "ownedTempRoot": "/tmp/rdpms-ac-v164cmxx",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-v164cmxx/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-v164cmxx/pg",
+            "-l",
+            "/tmp/rdpms-ac-v164cmxx/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 58328 -k /tmp/rdpms-ac-v164cmxx/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-v164cmxx/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "58328",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_approved_6541ab9d65\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-v164cmxx/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rp09-receipt-recovery.integration.test.mjs"
+          ],
+          "exitCode": 1,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-v164cmxx/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "testSourceSnapshot": "Source snapshot/hashes below; early attempts source text not individually retained",
+      "resource": {
+        "database": "rdpms_test_approved_6541ab9d65",
+        "port": 58328,
+        "bindHost": "127.0.0.1",
+        "ownerRole": "rdpms_exec",
+        "tempRoot": "/tmp/rdpms-ac-v164cmxx",
+        "envFileMode": "0600",
+        "dotenv": "new private env file only; repository dotenv files never read",
+        "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+      }
+    },
+    {
+      "path": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/evidence/rp09-t02/attempt-05/run-results.json",
+      "sha256": "df3e68e14cde9532c7a0c47a8b8f694f95935433f640167b16f077e9e7b74b04",
+      "counts": {
+        "tests": 22,
+        "pass": 22,
+        "fail": 0,
+        "skipped": 0
+      },
+      "criticalFailures": [],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_approved_7b4baa5348",
+          "ownedPort": 58509,
+          "ownedTempRoot": "/tmp/rdpms-ac-lmy5boik",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commands": [
+        {
+          "label": "initdb",
+          "command": [
+            "/opt/homebrew/bin/initdb",
+            "-D",
+            "/tmp/rdpms-ac-lmy5boik/pg",
+            "-U",
+            "rdpms_exec",
+            "--auth=trust"
+          ],
+          "exitCode": 0,
+          "log": "initdb.log"
+        },
+        {
+          "label": "cluster-start",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-lmy5boik/pg",
+            "-l",
+            "/tmp/rdpms-ac-lmy5boik/postgres.log",
+            "-o",
+            "-h 127.0.0.1 -p 58509 -k /tmp/rdpms-ac-lmy5boik/socket",
+            "-w",
+            "start"
+          ],
+          "exitCode": 0,
+          "log": "cluster-start.log"
+        },
+        {
+          "label": "owned-client-generate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "generate",
+            "--schema",
+            "/tmp/rdpms-ac-lmy5boik/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-client-generate.log"
+        },
+        {
+          "label": "guard-check",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 2,
+          "log": "guard-check.log"
+        },
+        {
+          "label": "owned-create-db",
+          "command": [
+            "/opt/homebrew/bin/psql",
+            "-h",
+            "127.0.0.1",
+            "-p",
+            "58509",
+            "-U",
+            "rdpms_exec",
+            "-d",
+            "postgres",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-c",
+            "CREATE DATABASE \"rdpms_test_approved_7b4baa5348\" OWNER \"rdpms_exec\""
+          ],
+          "exitCode": 0,
+          "log": "owned-create-db.log"
+        },
+        {
+          "label": "owned-migrate",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/node_modules/prisma/build/index.js",
+            "migrate",
+            "deploy",
+            "--schema",
+            "/tmp/rdpms-ac-lmy5boik/schema/schema.prisma"
+          ],
+          "exitCode": 0,
+          "log": "owned-migrate.log"
+        },
+        {
+          "label": "owned-seed",
+          "command": [
+            "node",
+            "/Users/renkang/VS Code/project-management/rdpms-system/backend/prisma/seed.js"
+          ],
+          "exitCode": 0,
+          "log": "owned-seed.log"
+        },
+        {
+          "label": "guard-check-ready",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "check"
+          ],
+          "exitCode": 0,
+          "log": "guard-check-ready.log"
+        },
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exitCode": 0,
+          "log": "backend-build.log"
+        },
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rp09-receipt-recovery.integration.test.mjs"
+          ],
+          "exitCode": 0,
+          "log": "integration-suite.log"
+        },
+        {
+          "label": "backend-typecheck",
+          "command": [
+            "npm",
+            "run",
+            "typecheck"
+          ],
+          "exitCode": 0,
+          "log": "backend-typecheck.log"
+        },
+        {
+          "label": "undefined-check",
+          "command": [
+            "npm",
+            "run",
+            "lint:undefined"
+          ],
+          "exitCode": 0,
+          "log": "undefined-check.log"
+        },
+        {
+          "label": "git-diff-check",
+          "command": [
+            "git",
+            "diff",
+            "--check"
+          ],
+          "exitCode": 0,
+          "log": "git-diff-check.log"
+        },
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exitCode": 0,
+          "log": "guard-drop.log"
+        },
+        {
+          "label": "cluster-stop",
+          "command": [
+            "/opt/homebrew/bin/pg_ctl",
+            "-D",
+            "/tmp/rdpms-ac-lmy5boik/pg",
+            "-m",
+            "fast",
+            "-w",
+            "stop"
+          ],
+          "exitCode": 0,
+          "log": "cluster-stop.log"
+        }
+      ],
+      "testSourceSnapshot": "Source snapshot/hashes below; early attempts source text not individually retained",
+      "resource": {
+        "database": "rdpms_test_approved_7b4baa5348",
+        "port": 58509,
+        "bindHost": "127.0.0.1",
+        "ownerRole": "rdpms_exec",
+        "tempRoot": "/tmp/rdpms-ac-lmy5boik",
+        "envFileMode": "0600",
+        "dotenv": "new private env file only; repository dotenv files never read",
+        "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+      }
+    }
+  ],
+  "ownedRunCount": 20,
+  "formalV1": {
+    "RP09-T01": {
+      "attempt": "rp09-t01/attempt-03",
+      "result": "PASS",
+      "cases": 30,
+      "revalidatedCurrentSource": "regressions/rp09-scoped-receipt/attempt-01"
+    },
+    "RP09-T02": {
+      "attempt": "rp09-t02/attempt-05",
+      "result": "PASS",
+      "cases": 22
+    }
+  },
+  "oldSelectedRegressions": {
+    "tests": 161,
+    "pass": 142,
+    "fail": 19,
+    "ci": "FAIL"
+  },
+  "semanticNegativeControl": {
+    "fail": 3,
+    "skipped": 27,
+    "classification": "EXPECTED_ASSERTION_FAILURE_IDENTIFIED_NOT_PRODUCT_PASS"
+  },
+  "actualJWTAndHTTP": true,
+  "frontendIDB": "NOT_RUN",
+  "browser": "NOT_RUN",
+  "target": "NOT_RUN",
+  "release": "NOT_EVALUATED",
+  "generatedClient": "Derived existing dependency cache, own schema dir/no dotenv paths, no install or dependency lock changes"
+}

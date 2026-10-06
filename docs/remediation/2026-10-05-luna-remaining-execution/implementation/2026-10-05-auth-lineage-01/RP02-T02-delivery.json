@@ -1,0 +1,41 @@
+{
+  "files": [
+    "rdpms-system/backend/src/routes/auth.js",
+    "rdpms-system/backend/tests/integration/rp02-t02-acceptance.integration.test.mjs"
+  ],
+  "runs": [
+    "policy",
+    "login-regression"
+  ],
+  "casePass": {
+    "AC-B15-01": "Five requests paused before real user row lock yield one winner/four 401; exactly one successor and strict audit",
+    "AC-B15-02": "Consumed token explicit REFRESH_TOKEN_REPLAYED; no new branches; winning successor still rotates in same family",
+    "AC-B15-03": "Real transaction failure-injected successor/audit creates roll back consumption; post-commit response-loss model explicit relogin recovery per approved risk contract",
+    "AC-B15-04": "Actual password login and refresh JWT exp/iat/expiresIn checked",
+    "PAC-RP02-02": "One successor, inherited family, explicit loser response, controlled DB barrier",
+    "PAC-RP02-03": "Both post-consumption fault points roll back; old token then legally reusable after rollback",
+    "DECISION-T-RP-09": "Current exact user approval of T-RP-09-STRICT-LINEAGE-V1;郭仁康 role retained; no other decision inferred"
+  },
+  "notRun": {
+    "PAC-RP02-04": "Frontend real same-origin two-tab integration pending RP03-T01",
+    "PAC-RP02-05": "Backend failure scope passed; actual browser successor preservation pending",
+    "TASK-RP02-T02": "Implementation and local backend evidence delivered; acceptance dependency RP03-T01 not yet delivered",
+    "INT-PC01-01": "Local two-task portion pending; other PC01 scopes/security version/cache/target not accepted"
+  },
+  "validation": "NOT_RUN",
+  "summary": "Refresh input is checked before hashing. Conditional single-use consume, same-family successor and strict audit share one short transaction. Current actor row is locked before consume; disabled/deleted/pending/manual-locked actor never auto-activates. Concurrent losers explicitly rejected without revoking winner. Prior login threshold/TTL logic unchanged.",
+  "compatibility": "Bearer/body wire shape and actual JWT expiry retained; consumed/revoked token now401 REFRESH_TOKEN_REPLAYED; no migration, no cookies, no new access invalidation policy. Commit/response loss requires explicit relogin as approved.",
+  "rollback": "Never restore unconditional revoke/new-family or double-success path. Safe target rollback not evaluated; no token resurrection or audit deletion.",
+  "findings": [
+    "B15"
+  ],
+  "limits": [
+    "11-case new real password-login/refresh/Bearer DB suite passed; synthesized owned actors only, no actorResolver injection",
+    "Original 12-case login lock suite passed unchanged",
+    "Deterministic barriers and injected audit/successor faults use actual PostgreSQL; not real multi-tab yet",
+    "First attempt10/11 exposed fixture lock/audit-FK wait; corrected pause before actor lock, failure logs retained",
+    "RP03-T01 acceptance dependency and S02-OPEN-05 pending; full PC01/access security-version/target/release NOT_RUN"
+  ],
+  "nextTask": "RP03-T01",
+  "next": "Implement approved frontend lineage/coordination, then actual browser joint evidence if environment permits"
+}

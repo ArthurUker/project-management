@@ -1,0 +1,106 @@
+{
+  "pathBase": "REPOSITORY",
+  "generatedAt": "2026-10-05",
+  "batchId": "parallel-lr7-2026-10-04-p01",
+  "purpose": "Seal M static products for the bounded SC-01..04 overlay. Excludes self, final-integrity.json, post-seal-readback.json, and the two history registries (appended, not sealed here).",
+  "excludes": [
+    "payload-manifest.json",
+    "final-integrity.json",
+    "post-seal-readback.json",
+    "REVISION_HISTORY.json",
+    "EXECUTION_REVISION_HISTORY.json"
+  ],
+  "sealedFileCount": 18,
+  "files": [
+    {
+      "pathBase": "REPOSITORY",
+      "relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-overlay-2026-10-05-02/REVIEW_ENTRY.md",
+      "sha256": "85d33aa610f803b5ef335c1e4fb5e7aed3dfdec56fad9d264cfcb212ad9f0a14"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-overlay-2026-10-05-02/_BLOCKED.txt",
+      "sha256": "1b487c3a911d0b091301f206b9b26a5b6d9a8f1cb275f1beed9eb3f1006ff5a9"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-overlay-2026-10-05-02/acceptance.json",
+      "sha256": "5888770aa078b82211ab0e3110be8e247b5c96c0a5c7b65399c8795ca4096af3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-overlay-2026-10-05-02/authorization.json",
+      "sha256": "658a012c2cf33ecfbda78205f923c5e34b3eb81a75aa93b3b9507e45d2e18d58"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-overlay-2026-10-05-02/change-summary.md",
+      "sha256": "8487f2b1acb544683fd14d850b9385f10e0234d095adb94c4fd9cb82579f704e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-overlay-2026-10-05-02/evidence/input-binding.json",
+      "sha256": "b44729d954e4c5e44c1a4b7ec4b97f437d8b9c3e00a553b44a5daa1f9ea86401"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-overlay-2026-10-05-02/evidence/readiness-normalization.json",
+      "sha256": "0f52d7db8410cc78dbb0ef314ab5b344f3efdd313d9f46a6716f28bfccdaa0bc"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-overlay-2026-10-05-02/evidence/reference-overlay.json",
+      "sha256": "524201add7a153eef14db528581d10b4a7674b471b20ad1bef23ed3bddf3684e"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-overlay-2026-10-05-02/evidence/start-snapshots/EXECUTION_REVISION_HISTORY.json",
+      "sha256": "7002cbbd79fa9a368c5f01454ca3aa26e407b79d45e697246ff0ea328fe5d7c8"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-overlay-2026-10-05-02/evidence/start-snapshots/HANDOFF.md",
+      "sha256": "b5723f898c81819b4b89a99cf55c8d09a5bb265edd93b419000a2f61f795f9bf"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-overlay-2026-10-05-02/evidence/start-snapshots/IMPLEMENTATION_STATE.json",
+      "sha256": "3264584aaedf4a29769633c1b973554392368238bb16a189fb3e0edc60f7a60a"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-overlay-2026-10-05-02/evidence/start-snapshots/REVISION_HISTORY.json",
+      "sha256": "24433e058b38809784c2c95908361dbbe810d4c2fba209a5e5c576fe4119d0f3"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-overlay-2026-10-05-02/evidence/start-snapshots/execution_handoff.md",
+      "sha256": "d3c1c498dacfb6c43f02735cde6e6603e5c3e89f0b1ebc245d7b3a4bac853d2b"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-overlay-2026-10-05-02/evidence/start-snapshots/execution_state.json",
+      "sha256": "bb46d3185f04330f7ae0f3a62e345fadc9c4281a3eeefe1c89422bdb110b5e0c"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-overlay-2026-10-05-02/handoff.md",
+      "sha256": "c9dfbcc237e472f2db797393572f1bb03dda88c76ee48482a3791898185563d2"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-overlay-2026-10-05-02/resume.md",
+      "sha256": "6a7d12001660aca57cb2e68ed282bd5186f4a4ff9a0a13dc3aff32faaa03e585"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-overlay-2026-10-05-02/rollback.md",
+      "sha256": "5088a18254dfb1ceca6252ee66b4e8dfada6b5d3e8f5899a69e79dcafe15503c"
+    },
+    {
+      "pathBase": "REPOSITORY",
+      "relativePath": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-overlay-2026-10-05-02/task-state.json",
+      "sha256": "2466269ff6f48192993425807a40cee18f2e70881741c10e92efde465ebb3f13"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "backendNoEmit": {
+    "command": "./rdpms-system/frontend/node_modules/.bin/tsc -p rdpms-system/backend/tsconfig.json --noEmit",
+    "exitCode": 0,
+    "output": ""
+  },
+  "frontendNoEmit": {
+    "command": "./rdpms-system/frontend/node_modules/.bin/tsc -p rdpms-system/frontend/tsconfig.json --noEmit",
+    "exitCode": 0,
+    "output": ""
+  },
+  "source": "reviewer tools output 2026-10-02; existing compiler only, no installation"
+}

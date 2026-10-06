@@ -1,0 +1,10 @@
+{
+  "findingId": "B18",
+  "severity": "P1",
+  "historicalDisposition": "SUPPORTED",
+  "historicalEvidenceRef": "docs/audits/2026-09-30-review-plan/execution/supplemental/S06/FINDINGS_RECONCILIATION.json",
+  "historicalClaim": "Project row, children and audit were previously written by separate calls, permitting a persisted partial aggregate on a later child write failure.",
+  "historicalBoundary": "Reused frozen audit evidence; no full repository rescan or historical repro rerun. Historical reproduction is not repair acceptance.",
+  "currentTaskValidation": "ENV_BLOCKED",
+  "newRuntimeEvidence": false
+}

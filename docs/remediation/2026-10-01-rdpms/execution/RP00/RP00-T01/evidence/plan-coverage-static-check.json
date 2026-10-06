@@ -1,0 +1,11 @@
+{
+  "findingRecords": 33,
+  "uniqueFindingIds": 33,
+  "missingPrimaryPackage": 0,
+  "openItemRecords": 31,
+  "allRemainOpen": true,
+  "missingResolutionCondition": 0,
+  "packages": 20,
+  "acceptanceCaseRows": 392,
+  "source": "FINDING_TO_PACKAGE.json and OPEN_ITEM_GATES.json (read-only check; no historical decision/closure altered)"
+}

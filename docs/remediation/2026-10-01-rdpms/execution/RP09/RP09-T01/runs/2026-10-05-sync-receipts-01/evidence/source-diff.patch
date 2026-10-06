@@ -1,0 +1,972 @@
+--- before/rdpms-system/backend/src/routes/sync.js
++++ after/rdpms-system/backend/src/routes/sync.js
+@@ -6,7 +6,7 @@
+ import { writeAudit } from '../kernel/audit.js';
+ import { badRequest, HttpError } from '../kernel/http.js';
+ import { projectVisibilityFilter, assertProjectCapability } from '../kernel/projectAccess.js';
+-import { assertProjectStatusTransition } from '../modules/projects/projectCommands.js';
++import { assertProjectStatusTransition, normalizeProjectStatus } from '../modules/projects/projectCommands.js';
+ import {
+   assertActionPermission,
+   assertTaskStatusChange,
+@@ -14,9 +14,11 @@
+   assertPhaseStatusChange,
+   assertPhaseBelongsToProject,
+   assertReportWritable,
++  assertReportAuthority,
+ } from '../modules/access/writeGuards.js';
+ import { buildReportDraftPatch, saveReportDraft } from '../modules/reports/reportCommands.js';
+ import { updateTaskFields, changeTaskStatus, assignTask } from '../modules/tasks/taskCommands.js';
++import { createSyncMutationCommands, parseSyncCommand, parseSyncEnvelope } from '../modules/sync/syncMutationCommands.js';
+ 
+ /**
+  * /api/sync —— 离线同步 v2（批次四）
+@@ -173,18 +175,24 @@
+ }
+ 
+ async function upsertSyncDevice(auth, deviceId, label, platform) {
+-  return prisma.syncDevice.upsert({
+-    where: { id: deviceId },
+-    update: { label: label ?? undefined, platform: platform ?? undefined },
+-    create: { id: deviceId, userId: auth.userId, label: label ?? null, platform: platform ?? null },
+-  });
++  try {
++    return await prisma.syncDevice.upsert({
++      where: { id: deviceId, userId: auth.userId },
++      update: { label: label ?? undefined, platform: platform ?? undefined },
++      create: { id: deviceId, userId: auth.userId, label: label ?? null, platform: platform ?? null },
++    });
++  } catch (error) {
++    // Unique-key collision with a foreign owner is not permission to relabel it.
++    if (['P2002', 'P2025'].includes(error?.code)) throw new HttpError(404, 'DEVICE_NOT_FOUND', '设备不可用');
++    throw error;
++  }
+ }
+ 
+ /**
+  * 解析同步写入所需的项目访问上下文（与普通 API 的 resolveProjectAccess 同源判定）。
+  * 返回 null 表示非有效成员。
+  */
+-async function loadSyncAccess(auth, projectId) {
++async function loadSyncAccess(auth, projectId, db = prisma) {
+   if (auth.systemRole === 'SUPER_ADMIN') {
+     return {
+       capabilities: ['read', 'write', 'delete', 'transition', 'assign', 'manage_members'],
+@@ -193,7 +201,7 @@
+       elevated: true,
+     };
+   }
+-  const membership = await prisma.projectMember.findUnique({
++  const membership = await db.projectMember.findUnique({
+     where: { projectId_userId: { projectId, userId: auth.userId } },
+     select: { role: true, leftAt: true },
+   });
+@@ -210,7 +218,7 @@
+  * 实体动作级校验（RF04/F07）：同步与普通 API 调用同一组守卫，
+  * 保证「有项目 write 但无对应动作权限」的请求同样被拒绝。
+  */
+-async function assertSyncEntityActions({ entity, def, existing, data, auth, access, projectId, op, rawData }) {
++async function assertSyncEntityActions({ entity, def, existing, data, auth, access, projectId, op, rawData, db = prisma }) {
+   // 通用动作权限（所有实体统一执行）：
+   //   删除 → deletePermission（**独立权限码，绝不复用 update**）；未定义 = 不支持离线删除
+   //   更新 → permission；新建 → createPermission
+@@ -274,13 +282,13 @@
+     if (existing) assertActionPermission(auth, def.permission ?? 'tasks.update');
+     else assertActionPermission(auth, def.createPermission ?? 'tasks.create');
+     if (data.phaseId !== undefined && data.phaseId !== null) {
+-      await assertPhaseBelongsToProject(prisma, data.phaseId, projectId);
++      await assertPhaseBelongsToProject(db, data.phaseId, projectId);
+     }
+     if (op !== 'delete' && data.parentId !== undefined && data.parentId !== null) {
+       if (typeof data.parentId !== 'string' || !data.parentId.trim() || data.parentId === existing?.id) {
+         throw badRequest('INVALID_REFERENCE', 'parentId 无效', { field: 'parentId', projectId });
+       }
+-      const parent = await prisma.task.findUnique({ where: { id: data.parentId }, select: { id: true, projectId: true } });
++      const parent = await db.task.findUnique({ where: { id: data.parentId }, select: { id: true, projectId: true } });
+       if (!parent || parent.projectId !== projectId) {
+         throw badRequest('INVALID_REFERENCE', 'parentId 不属于该项目', { field: 'parentId', projectId });
+       }
+@@ -289,7 +297,7 @@
+   }
+ 
+   if (entity === 'milestones' && data.phaseId !== undefined && data.phaseId !== null) {
+-    await assertPhaseBelongsToProject(prisma, data.phaseId, projectId);
++    await assertPhaseBelongsToProject(db, data.phaseId, projectId);
+     return;
+   }
+ 
+@@ -496,264 +504,149 @@
+   });
+ });
+ 
+-// ── 上行变更 ─────────────────────────────────────────────────────────────────
++// ── 预约回执协议 v1（旧无预约写入安全拒绝；不修改拉取协议） ──
++async function authorizeSyncCommand(tx, actor, command) {
++  const def = SYNC_ENTITIES[command.entity];
++  const existing = await tx[def.model].findUnique({ where: { id: command.id } });
++  const projectId = def.scope === 'projectSelf' ? command.id : existing?.projectId ?? command.projectId;
++  if (projectId !== command.projectId) throw new HttpError(404, 'RECEIPT_UNAVAILABLE', '回执不可用');
++  const project = await tx.project.findUnique({ where: { id: projectId }, select: { id: true, deletedAt: true } });
++  if (!project || project.deletedAt) throw new HttpError(404, 'RECEIPT_UNAVAILABLE', '回执不可用');
++  const access = await loadSyncAccess(actor, projectId, tx);
++  if (!access) throw new HttpError(404, 'RECEIPT_UNAVAILABLE', '回执不可用');
++  assertProjectCapability(access, def.requireCapability ?? 'write', def.permission ?? 'sync.write');
++  if (def.ownOnly && existing) assertReportAuthority(existing, actor, access, def.permission);
++  if (def.ownOnly && !existing && command.op === 'delete') throw new HttpError(404, 'RECEIPT_UNAVAILABLE', '回执不可用');
++  const data = pickFields(command.data, def.fields);
++  const requiredPermissions = [];
++  const requiredCapabilities = [def.requireCapability ?? 'write'];
++  if (command.op === 'delete') {
++    if (!def.deletePermission) throw new HttpError(403, 'SYNC_DELETE_NOT_SUPPORTED', '不支持此实体离线删除');
++    assertActionPermission(actor, def.deletePermission);
++    requiredPermissions.push(def.deletePermission);
++  } else {
++    // Before scoped lookup require some current write authority. After lookup,
++    // the stored original action's exact permissions/capabilities are checked.
++    const alternatives = [def.permission, def.createPermission].filter(Boolean);
++    if (!alternatives.some((p) => actor.permissions.includes(p))) throw new HttpError(403, 'PERMISSION_DENIED', '缺少实体写权限');
++    requiredPermissions.push(existing ? def.permission : def.createPermission ?? def.permission);
++    if (command.entity === 'tasks') {
++      if (existing && data.status !== undefined && data.status !== existing.status) {
++        requiredPermissions.push('tasks.change_status'); requiredCapabilities.push('transition');
++      }
++      if (existing && data.assigneeId !== undefined && data.assigneeId !== existing.assigneeId) {
++        requiredPermissions.push('tasks.assign'); requiredCapabilities.push('assign');
++      }
++    }
++    if (command.entity === 'projectPhases' && existing && data.status !== undefined && data.status !== existing.status) {
++      requiredPermissions.push('project_phases.change_status'); requiredCapabilities.push('transition');
++    }
++    if (command.entity === 'projects' && Object.hasOwn(command.data, 'status') && normalizeProjectStatus(command.data.status) !== existing?.status) {
++      requiredCapabilities.push('transition');
++      if (normalizeProjectStatus(command.data.status) === 'ARCHIVED') requiredPermissions.push('projects.archive');
++    }
++  }
++  return { existing, data, access, requiredPermissions, requiredCapabilities };
++}
++
++async function executeSyncCommand(tx, actor, command, context) {
++  const { entity, id, op, projectId } = command;
++  const def = SYNC_ENTITIES[entity];
++  const { existing, data, access } = context;
++  await assertSyncEntityActions({ entity, def, existing, data, auth: actor, access, projectId, op, rawData: command.data, db: tx });
++  const tsField = def.timestampField ?? 'updatedAt';
++  const casFilter = existing ? { [tsField]: existing[tsField] } : undefined;
++  if (op !== 'delete' && existing && command.baseUpdatedAt && new Date(existing[tsField]) > new Date(command.baseUpdatedAt)) {
++    return { status: 'conflict', reason: '服务端已有更新', server: { id, updatedAt: existing[tsField], ...pickFields(existing, def.fields) } };
++  }
++  if (op === 'delete') {
++    if (!existing || existing[def.tombstoneField]) return { status: 'applied', action: 'noop', serverUpdatedAt: existing?.[tsField] ?? null };
++    const deleted = await tx[def.model].updateMany({ where: { id, [def.tombstoneField]: null },
++      data: { [def.tombstoneField]: new Date(), ...(def.touchUpdatedBy ? { updatedById: actor.userId } : {}) } });
++    if (deleted.count !== 1) throw new HttpError(409, 'CONFLICT', '删除状态已变化');
++    const row = await tx[def.model].findUnique({ where: { id } });
++    return { status: 'applied', action: 'deleted', serverUpdatedAt: row[tsField] };
++  }
++  if (!existing && !def.createAllowed) throw badRequest('VALIDATION_ERROR', '不支持离线新建');
++  for (const owned of def.serverOwned) delete data[owned];
++  if (def.derive) def.derive(data);
++  let row;
++  if (existing && entity === 'reports') {
++    row = await saveReportDraft(tx, { actor, reportId: id, patch: data, cas: casFilter });
++  } else if (existing && entity === 'tasks') {
++    const nextStatus = data.status; const statusChanging = nextStatus !== undefined && nextStatus !== existing.status;
++    const assigneeChanging = data.assigneeId !== undefined && data.assigneeId !== existing.assigneeId;
++    const nextAssignee = data.assigneeId ?? null;
++    delete data.status; delete data.assigneeId;
++    let casConsumed = false;
++    const nextCas = () => { if (casConsumed) return undefined; casConsumed = true; return casFilter; };
++    if (Object.keys(data).length) await updateTaskFields(tx, { actor, access, task: existing, fields: data, cas: nextCas() });
++    if (statusChanging) await changeTaskStatus(tx, { actor, access, task: existing, status: nextStatus, cas: nextCas() });
++    if (assigneeChanging) await assignTask(tx, { actor, access, task: existing, assigneeId: nextAssignee, cas: nextCas() });
++    row = await tx.task.findUnique({ where: { id } });
++  } else if (existing) {
++    const changed = await tx[def.model].updateMany({ where: { id, ...casFilter }, data: { ...data, ...(def.touchUpdatedBy ? { updatedById: actor.userId } : {}) } });
++    if (changed.count !== 1) throw new HttpError(409, 'CONFLICT', '并发基线已变化');
++    row = await tx[def.model].findUnique({ where: { id } });
++  } else {
++    const createData = { ...data, id, ...(def.scope === 'byProject' ? { projectId } : {}) };
++    if (entity === 'reports') createData.authorId = actor.userId;
++    if (entity === 'monthlyProgress') createData.submittedById = actor.userId;
++    if (def.touchUpdatedBy) createData.createdById = actor.userId;
++    row = await tx[def.model].create({ data: createData });
++  }
++  return { status: 'applied', action: existing ? 'updated' : 'created', serverUpdatedAt: row?.[tsField] };
++}
++
++function syncCommands() {
++  return createSyncMutationCommands(prisma, { authorize: authorizeSyncCommand, execute: executeSyncCommand });
++}
++
++sync.post('/receipts/reserve', async (c) => {
++  const { deviceId, changes } = parseSyncEnvelope(await c.req.json().catch(() => null));
++  const commands = changes.map((raw) => parseSyncCommand(raw, SYNC_ENTITIES));
++  const results = [];
++  for (const command of commands) results.push(await syncCommands().reserve(getAuth(c).userId, deviceId, command));
++  return c.json({ protocolVersion: 1, results });
++});
++
++sync.post('/receipts/query', async (c) => {
++  const { deviceId, changes } = parseSyncEnvelope(await c.req.json().catch(() => null));
++  const commands = changes.map((raw) => parseSyncCommand(raw, SYNC_ENTITIES));
++  const results = [];
++  for (const command of commands) results.push(await syncCommands().query(getAuth(c).userId, deviceId, command));
++  return c.json({ protocolVersion: 1, results });
++});
++
+ sync.post('/push', async (c) => {
+-  const auth = getAuth(c);
+-  const body = await c.req.json().catch(() => null);
+-  const deviceId = String(body?.deviceId || '').slice(0, 64);
+-  if (!deviceId) throw badRequest('VALIDATION_ERROR', 'deviceId 必填');
+-  const changes = Array.isArray(body?.changes) ? body.changes : [];
+-  if (changes.length > 500) throw badRequest('VALIDATION_ERROR', '单批最多 500 条变更');
+-
+-  await upsertSyncDevice(auth, deviceId, body?.deviceLabel, body?.platform);
+-
+-  if (changes.length === 0) {
+-    await prisma.syncDevice.update({ where: { id: deviceId }, data: { lastPushAt: new Date() } });
+-    return c.json({ serverTime: new Date().toISOString(), results: [], conflictCount: 0 });
+-  }
+-
+-  const aclFilter = projectVisibilityFilter(auth);
+-  const visible = await prisma.project.findMany({
+-    where: { ...(aclFilter ?? {}), deletedAt: null },
+-    select: { id: true },
+-  });
+-  const accessible = new Set(visible.map((p) => p.id));
+-
+-  // 幂等命中预取：同一 clientMutationId 重复上行直接回放首次结果
+-  const mutationIds = changes.map((ch) => String(ch?.clientMutationId || '')).filter(Boolean);
+-  const replayed = mutationIds.length
+-    ? await prisma.syncMutation.findMany({ where: { clientMutationId: { in: mutationIds } } })
+-    : [];
+-  const replayMap = new Map(replayed.map((m) => [m.clientMutationId, m]));
+-
++  const { deviceId, changes } = parseSyncEnvelope(await c.req.json().catch(() => null));
++  const commands = changes.map((raw) => parseSyncCommand(raw, SYNC_ENTITIES));
+   const results = [];
+-  for (const raw of changes) {
+-    const clientMutationId = String(raw?.clientMutationId || '').slice(0, 64);
+-    const entity = String(raw?.entity || '');
+-    const entityId = String(raw?.id || '');
+-    const op = raw?.op === 'delete' ? 'delete' : 'upsert';
+-    const def = SYNC_ENTITIES[entity];
+-
+-    const base = { clientMutationId, entity, id: entityId, op };
+-
+-    if (!clientMutationId || !def || !entityId) {
+-      results.push({ ...base, status: 'rejected', reason: '缺少 clientMutationId / 未知实体 / 缺少 id' });
+-      continue;
+-    }
+-
+-    const hit = replayMap.get(clientMutationId);
+-    if (hit) {
+-      // 只回放**已成功写库**的结果（applied）：回执的意义是「不要重复写」。
+-      // rejected / conflict 表示服务端什么都没写——若连失败结果也永久回放，
+-      // 用户「修好原因后重试同一条变更」将永远得到旧的拒绝（F10 恢复闭环实测的阻断点）。
+-      // 因此失败结果一律重新判定，并把新结果覆盖写回同一条回执记录。
+-      if (hit.status === 'applied') {
+-        results.push({ ...(hit.result ?? base), status: hit.status, replayed: true });
+-        continue;
+-      }
+-    }
+-
+-    let outcome;
+-    try {
+-      // eslint-disable-next-line no-await-in-loop
+-      const existing = await prisma[def.model].findUnique({ where: { id: entityId } });
+-      const data = pickFields(raw?.data, def.fields);
+-
+-      // 注意：data 已被 pickFields 白名单过滤，projectId 不在 def.fields 中，
+-      // 必须从原始载荷读取；否则离线**新建**（phase/task/report/milestone/monthlyProgress/member）
+-      // 永远拿不到归属项目 → 被误判"无权访问该数据所属项目"（演练环境发现）
+-      const projectId = def.scope === 'projectSelf'
+-        ? (existing?.id ?? entityId)
+-        : (existing?.projectId ?? raw?.data?.projectId);
+-
+-      if (!projectId || !accessible.has(projectId)) {
+-        outcome = { status: 'rejected', reason: '无权访问该数据所属项目' };
+-      } else if (def.ownOnly && existing && existing.authorId !== auth.userId) {
+-        outcome = { status: 'rejected', reason: '无权修改他人汇报' };
+-      } else {
+-        // RF04/F07：同步与普通 API 同源——项目访问上下文 + 实体动作级权限
+-        // eslint-disable-next-line no-await-in-loop
+-        const syncAccess = await loadSyncAccess(auth, projectId);
+-        if (!syncAccess) throw new Error('无权访问该数据所属项目');
+-        assertProjectCapability(syncAccess, def.requireCapability ?? 'write', def.permission ?? 'sync.write');
+-        // eslint-disable-next-line no-await-in-loop
+-        await assertSyncEntityActions({
+-          entity, def, existing, data, auth, access: syncAccess, projectId, op, rawData: raw?.data ?? {},
+-        });
+-
+-        const tsField = def.timestampField ?? 'updatedAt';
+-        // 并发基线：既用于「先判冲突」，也作为原子 UPDATE 的 WHERE 条件（下方 casFilter），
+-        // 避免先读、比较、再无条件更新之间的竞态。
+-        const casFilter = existing ? { [tsField]: existing[tsField] } : undefined;
+-        // 冲突检测：客户端基线早于服务端时间戳
+-        if (op !== 'delete' && existing && raw?.baseUpdatedAt
+-          && new Date(existing[tsField]) > new Date(raw.baseUpdatedAt)) {
+-          outcome = {
+-            status: 'conflict',
+-            reason: '服务端已有更新',
+-            server: { id: existing.id, updatedAt: existing[tsField], ...pickFields(existing, def.fields) },
+-          };
+-        } else if (op === 'delete') {
+-          const patch = def.tombstoneField === 'leftAt'
+-            ? { leftAt: new Date() }
+-            : { deletedAt: new Date() };
+-          if (!existing) {
+-            outcome = { status: 'applied', action: 'noop', reason: '记录不存在，无需删除' };
+-          } else {
+-            // eslint-disable-next-line no-await-in-loop
+-            const updated = await prisma[def.model].update({
+-              where: { id: entityId },
+-              data: { ...patch, ...(def.touchUpdatedBy ? { updatedById: auth.userId } : {}) },
+-            });
+-            outcome = { status: 'applied', action: 'deleted', serverUpdatedAt: updated[tsField] };
+-          }
+-        } else if (!existing && !def.createAllowed) {
+-          outcome = { status: 'rejected', reason: `${entity} 不支持离线新建` };
+-        } else {
+-          // 服务端权威字段一律剔除；补充归属
+-          for (const owned of def.serverOwned) delete data[owned];
+-          if (def.derive) def.derive(data);
+-
+-          if (existing) {
+-            // RF04：已存在记录的更新走与普通 API 相同的应用命令（不各自复制写入逻辑）
+-            let updated;
+-            if (entity === 'reports') {
+-              updated = await saveReportDraft(prisma, {
+-                actor: auth, reportId: entityId, patch: data, cas: casFilter,
+-              });
+-            } else if (entity === 'tasks') {
+-              const nextStatus = data.status;
+-              const statusChanging = nextStatus !== undefined && nextStatus !== existing.status;
+-              const assigneeChanging = data.assigneeId !== undefined && data.assigneeId !== existing.assigneeId;
+-              const nextAssignee = data.assigneeId ?? null;
+-              delete data.status;
+-              delete data.assigneeId;
+-              // 并发基线只在**本事务的第一次写入**上校验：
+-              // 第一次写入已把行锁住并改变了 updatedAt，后续写入再用旧基线会必然落空。
+-              let casConsumed = false;
+-              const nextCas = () => {
+-                if (casConsumed) return undefined;
+-                casConsumed = true;
+-                return casFilter;
+-              };
+-              // 同一事务：多命令不得各自提交（全成功或全不变）
+-              updated = await prisma.$transaction(async (tx) => {
+-                if (Object.keys(data).length > 0) {
+-                  await updateTaskFields(tx, { actor: auth, access: syncAccess, task: existing, fields: data, cas: nextCas() });
+-                }
+-                if (statusChanging) {
+-                  await changeTaskStatus(tx, { actor: auth, access: syncAccess, task: existing, status: nextStatus, cas: nextCas() });
+-                }
+-                if (assigneeChanging) {
+-                  await assignTask(tx, { actor: auth, access: syncAccess, task: existing, assigneeId: nextAssignee, cas: nextCas() });
+-                }
+-                return tx.task.findUnique({ where: { id: entityId } });
+-              });
+-            } else {
+-              const writeData = { ...data, ...(def.touchUpdatedBy ? { updatedById: auth.userId } : {}) };
+-              if (casFilter) {
+-                // 原子并发基线：UPDATE ... WHERE id = ? AND <ts> = <读到的值>
+-                // eslint-disable-next-line no-await-in-loop
+-                const cas = await prisma[def.model].updateMany({
+-                  where: { id: entityId, ...casFilter },
+-                  data: writeData,
+-                });
+-                if (cas.count === 0) {
+-                  const conflictErr = new Error('并发更新冲突：数据已被他人修改');
+-                  conflictErr.syncConflict = true;
+-                  throw conflictErr;
+-                }
+-                // eslint-disable-next-line no-await-in-loop
+-                updated = await prisma[def.model].findUnique({ where: { id: entityId } });
+-              } else {
+-                updated = await prisma[def.model].update({
+-                  where: { id: entityId },
+-                  data: writeData,
+-                });
+-              }
+-            }
+-            outcome = { status: 'applied', action: 'updated', serverUpdatedAt: updated?.[tsField] };
+-          } else {
+-            const createData = { ...data, id: entityId };
+-            if (entity === 'reports') createData.authorId = auth.userId;
+-            if (entity === 'monthlyProgress') createData.submittedById = auth.userId;
+-            if (def.touchUpdatedBy) createData.createdById = auth.userId;
+-            if (def.scope === 'byProject' && !createData.projectId) createData.projectId = projectId;
+-            // eslint-disable-next-line no-await-in-loop
+-            const created = await prisma[def.model].create({ data: createData });
+-            outcome = { status: 'applied', action: 'created', serverUpdatedAt: created[tsField] };
+-          }
+-        }
+-      }
+-    } catch (err) {
+-      // Prisma 校验失败时 err.message 是多行对象 dump；只把最后一行有效信息回给客户端
+-      // （如 "Argument `code` is missing."），完整错误留在服务端日志便于排查
+-      const lines = String(err?.message || '写入失败').split('\n').map((s) => s.trim()).filter(Boolean);
+-      const brief = lines[lines.length - 1] || '写入失败';
+-      // eslint-disable-next-line no-console
+-      console.error(`[sync.push] ${entity}/${op} 失败:`, err?.message || err);
+-      // 并发基线不一致 → conflict（客户端据此拉取最新并重新基于新版本提交），而不是 rejected
+-      // 仅并发基线冲突映射为 conflict；其他 409（如 INVALID_STATE 锁定）仍按 rejected 处理
+-      const isConflict = err?.syncConflict === true || err?.code === 'CONFLICT';
+-      outcome = isConflict
+-        ? { status: 'conflict', reason: '服务端已有更新（并发基线不一致）' }
+-        : { status: 'rejected', reason: brief };
+-    }
+-
+-    const record = { ...base, ...outcome };
+-    // upsert：失败结果重新判定后要覆盖旧回执（否则表里永远留着第一次的 rejected）
+-    // eslint-disable-next-line no-await-in-loop
+-    await prisma.syncMutation.upsert({
+-      where: { clientMutationId },
+-      update: {
+-        deviceId,
+-        userId: auth.userId,
+-        entity,
+-        entityId,
+-        op,
+-        status: outcome.status,
+-        result: record,
+-      },
+-      create: {
+-        clientMutationId,
+-        deviceId,
+-        userId: auth.userId,
+-        entity,
+-        entityId,
+-        op,
+-        status: outcome.status,
+-        result: record,
+-      },
+-    });
+-    results.push(record);
+-  }
+-
+-  await prisma.syncDevice.update({ where: { id: deviceId }, data: { lastPushAt: new Date() } });
+-
+-  const applied = results.filter((r) => r.status === 'applied').length;
+-  const conflicts = results.filter((r) => r.status === 'conflict').length;
+-  const rejected = results.filter((r) => r.status === 'rejected').length;
+-
+-  await writeAudit(prisma, {
+-    c,
+-    actorId: auth.userId,
+-    actorName: auth.user.displayName,
+-    actorRole: auth.systemRole,
+-    action: AUDIT_ACTIONS.UPDATE,
+-    entityType: null,
+-    entityLabel: `离线同步上行 ${changes.length} 条`,
+-    metadata: { deviceId, applied, conflicts, rejected, entities: [...new Set(results.map((r) => r.entity))] },
+-  });
+-
+-  return c.json({ serverTime: new Date().toISOString(), results, conflictCount: conflicts });
++  for (const command of commands) {
++    try { results.push(await syncCommands().push(getAuth(c).userId, deviceId, command, c)); }
++    catch (error) {
++      // Validation/authorization failures leave reservation unchanged. Unexpected
++      // audit/receipt/SQL faults escape, preserving prior committed batch items.
++      if (!(error instanceof HttpError)) throw error;
++      results.push({ clientMutationId: command.clientMutationId, entity: command.entity, id: command.id,
++        op: command.op, status: error.code === 'CONFLICT' ? 'conflict' : 'rejected', code: error.code, httpStatus: error.status });
++    }
++  }
++  // Metadata is not part of the per-item business commit. A failure here may be
++  // a 500 after committed items; exact receipt queries reconstruct those items.
++  if (commands.length) await prisma.syncDevice.updateMany({ where: { id: deviceId, userId: getAuth(c).userId }, data: { lastPushAt: new Date() } });
++  const status = results.length === 1 && results[0].httpStatus ? results[0].httpStatus : 200;
++  return c.json({ protocolVersion: 1, serverTime: new Date().toISOString(), results,
++    conflictCount: results.filter((r) => r.status === 'conflict').length }, status);
+ });
+ 
+ // ── 设备登记 ─────────────────────────────────────────────────────────────────
+ sync.post('/device', async (c) => {
+   const auth = getAuth(c);
+   const body = await c.req.json().catch(() => null);
+-  const deviceId = String(body?.deviceId || '').slice(0, 64);
+-  if (!deviceId) throw badRequest('VALIDATION_ERROR', 'deviceId 必填');
++  const deviceId = body?.deviceId;
++  if (typeof deviceId !== 'string' || !deviceId.trim() || deviceId.length > 64) throw badRequest('VALIDATION_ERROR', 'deviceId 必须是最多64字符的非空字符串');
++  if ([body?.label, body?.platform].some((value) => value !== undefined && value !== null && typeof value !== 'string')) throw badRequest('VALIDATION_ERROR', '设备元数据必须是字符串');
+   const device = await upsertSyncDevice(auth, deviceId, body?.label, body?.platform);
+   return c.json({ id: device.id, label: device.label, platform: device.platform });
+ });
+--- before/rdpms-system/backend/src/modules/sync/syncMutationCommands.ts
++++ after/rdpms-system/backend/src/modules/sync/syncMutationCommands.ts
+@@ -0,0 +1,212 @@
++/** Approved RP09 candidate: bound reservations, per-item atomic execution.
++ * No legacy replay, implicit reservation, GC or unsafe old-write fallback.
++ */
++import crypto from 'node:crypto';
++import type { Prisma, PrismaClient } from '@prisma/client';
++import { P0_PERMISSIONS, P1_UNFROZEN, AUDIT_ACTIONS } from '../../kernel/constants.js';
++import { badRequest, HttpError } from '../../kernel/http.js';
++import { writeAuditStrict } from '../../platform/audit/strictAudit.js';
++import type { AuthActor, ProjectAccess } from '../access/writeGuards.js';
++
++type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
++export interface SyncCommand {
++  clientMutationId: string; entity: string; id: string; op: 'upsert' | 'delete';
++  projectId: string; data: Record<string, Json>; baseUpdatedAt?: string | null;
++  receiptHandle?: string; payloadHash: string;
++}
++export interface SyncContext {
++  existing: Record<string, unknown> | null; data: Record<string, unknown>;
++  access: ProjectAccess; requiredPermissions: string[]; requiredCapabilities: string[];
++}
++type Outcome = Record<string, unknown>;
++interface Adapters {
++  authorize(tx: Prisma.TransactionClient, actor: AuthActor, command: SyncCommand): Promise<SyncContext>;
++  execute(tx: Prisma.TransactionClient, actor: AuthActor, command: SyncCommand, context: SyncContext): Promise<Outcome>;
++}
++
++function object(value: unknown): value is Record<string, unknown> {
++  return value !== null && typeof value === 'object' && !Array.isArray(value)
++    && (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null);
++}
++function scalar(value: unknown, name: string, max = 200): string {
++  if (typeof value !== 'string' || !value.trim() || value.length > max) {
++    throw badRequest('VALIDATION_ERROR', `${name} 必须是非空字符串（最多 ${max} 字符）`);
++  }
++  return value;
++}
++/** Build strings, not an ordinary object accumulator: __proto__ stays data. */
++function canonical(value: unknown): string {
++  if (value === null || typeof value === 'boolean' || typeof value === 'string') return JSON.stringify(value);
++  if (typeof value === 'number' && Number.isFinite(value)) return JSON.stringify(value);
++  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`;
++  if (object(value)) return `{${Object.keys(value).sort().map((k) => `${JSON.stringify(k)}:${canonical(value[k])}`).join(',')}}`;
++  throw badRequest('VALIDATION_ERROR', '命令包含非法 JSON 值');
++}
++
++export function parseSyncCommand(raw: unknown, entities: Record<string, unknown>): SyncCommand {
++  if (!object(raw)) throw badRequest('VALIDATION_ERROR', '变更必须是对象');
++  const clientMutationId = scalar(raw.clientMutationId, 'clientMutationId', 64);
++  const entity = scalar(raw.entity, 'entity', 64);
++  if (!Object.hasOwn(entities, entity)) throw badRequest('VALIDATION_ERROR', '未知实体');
++  const id = scalar(raw.id, 'id');
++  if (raw.op !== 'upsert' && raw.op !== 'delete') throw badRequest('VALIDATION_ERROR', 'op 无效');
++  const data = raw.data === undefined ? {} : raw.data;
++  if (!object(data)) throw badRequest('VALIDATION_ERROR', 'data 必须是 JSON 对象');
++  const projectId = scalar(raw.projectId ?? data.projectId ?? (entity === 'projects' ? id : undefined), 'projectId', 180);
++  const payload: Record<string, unknown> = { entity, id, op: raw.op, projectId, data };
++  if (Object.hasOwn(raw, 'baseUpdatedAt')) {
++    if (raw.baseUpdatedAt !== null && (typeof raw.baseUpdatedAt !== 'string' || !Number.isFinite(Date.parse(raw.baseUpdatedAt)))) {
++      throw badRequest('VALIDATION_ERROR', 'baseUpdatedAt 无效');
++    }
++    payload.baseUpdatedAt = raw.baseUpdatedAt;
++  }
++  const payloadHash = crypto.createHash('sha256').update(canonical(payload)).digest('hex');
++  if (raw.payloadHash !== undefined && raw.payloadHash !== payloadHash) {
++    throw new HttpError(409, 'IDEMPOTENCY_PAYLOAD_MISMATCH', 'payloadHash 与命令不符');
++  }
++  const command: SyncCommand = { clientMutationId, entity, id, op: raw.op, projectId, data: data as Record<string, Json>, payloadHash };
++  if (Object.hasOwn(raw, 'baseUpdatedAt')) command.baseUpdatedAt = raw.baseUpdatedAt as string | null;
++  if (raw.receiptHandle !== undefined) command.receiptHandle = scalar(raw.receiptHandle, 'receiptHandle');
++  return command;
++}
++
++export function parseSyncEnvelope(body: unknown): { deviceId: string; changes: unknown[] } {
++  if (!object(body)) throw badRequest('VALIDATION_ERROR', '请求必须是对象');
++  if (body.protocolVersion !== 1) throw new HttpError(426, 'UPGRADE_REQUIRED', '需要预约回执协议 v1；原副本必须保留');
++  const deviceId = scalar(body.deviceId, 'deviceId', 64);
++  if (!Array.isArray(body.changes) || body.changes.length > 500) throw badRequest('VALIDATION_ERROR', 'changes 必须是最多500项的数组');
++  return { deviceId, changes: body.changes };
++}
++
++async function currentActor(tx: Prisma.TransactionClient, userId: string): Promise<AuthActor> {
++  const user = await tx.user.findUnique({ where: { id: userId }, select: { id: true, displayName: true, systemRole: true, status: true } });
++  if (!user || user.status !== 'ACTIVE') throw new HttpError(401, 'SESSION_INVALID', '当前账号不可用');
++  const bindings = user.systemRole === 'SUPER_ADMIN' ? [] : await tx.userRole.findMany({ where: { userId },
++    select: { role: { select: { permissions: { select: { permission: { select: { code: true } } } } } } } });
++  const permissions = user.systemRole === 'SUPER_ADMIN' ? [...P0_PERMISSIONS, ...P1_UNFROZEN]
++    : [...new Set(bindings.flatMap((b) => b.role.permissions.map((p) => p.permission.code)))];
++  return { userId, user, systemRole: user.systemRole, permissions };
++}
++
++const unavailable = (command: SyncCommand): Outcome => ({ clientMutationId: command.clientMutationId,
++  entity: command.entity, id: command.id, op: command.op, status: 'unknown', code: 'RECEIPT_UNAVAILABLE' });
++const base = (command: SyncCommand): Outcome => ({ clientMutationId: command.clientMutationId, entity: command.entity, id: command.id, op: command.op });
++
++/** Short bounded retry with the exact same command; serialization is not a new intent. */
++async function serial<T>(db: PrismaClient, fn: (tx: Prisma.TransactionClient) => Promise<T>): Promise<T> {
++  for (let attempt = 0; ; attempt++) {
++    try { return await db.$transaction(fn, { isolationLevel: 'Serializable', maxWait: 10000, timeout: 15000 }); }
++    catch (error) {
++      const code = object(error) ? error.code : (error as { code?: string })?.code;
++      if ((code === 'P2034' || code === 'P2002') && attempt < 2) continue;
++      throw error;
++    }
++  }
++}
++
++export function createSyncMutationCommands(db: PrismaClient, adapters: Adapters) {
++  async function context(tx: Prisma.TransactionClient, userId: string, deviceId: string, command: SyncCommand, createDevice: boolean) {
++    const actor = await currentActor(tx, userId);
++    const device = await tx.syncDevice.findUnique({ where: { id: deviceId } });
++    if (device && device.userId !== userId) throw new HttpError(404, 'RECEIPT_UNAVAILABLE', '回执不可用');
++    if (!device && !createDevice) throw new HttpError(404, 'RECEIPT_UNAVAILABLE', '回执不可用');
++    // Current resource authorization precedes receipt lookup, even for an applied replay.
++    const authorized = await adapters.authorize(tx, actor, command);
++    if (!device) await tx.syncDevice.create({ data: { id: deviceId, userId } });
++    return { actor, authorized };
++  }
++
++  async function receipt(tx: Prisma.TransactionClient, userId: string, deviceId: string, command: SyncCommand) {
++    // Never lock somebody else's receipt. Scope/hash are checked after the owned row lock.
++    await tx.$queryRaw`SELECT id FROM sync_mutations WHERE client_mutation_id = ${command.clientMutationId}
++      AND user_id = ${userId} AND device_id = ${deviceId} FOR UPDATE`;
++    const hit = await tx.syncMutation.findUnique({ where: { clientMutationId: command.clientMutationId } });
++    if (!hit || hit.userId !== userId || hit.deviceId !== deviceId || hit.entity !== command.entity
++      || hit.entityId !== command.id || hit.op !== command.op || hit.resourceScope !== `project:${command.projectId}`
++      || hit.receiptVersion !== 1 || !hit.payloadHash || !hit.expiresAt) return null;
++    if (hit.payloadHash !== command.payloadHash) throw new HttpError(409, 'IDEMPOTENCY_PAYLOAD_MISMATCH', '同key不能改变原载荷');
++    if (command.receiptHandle && hit.id !== command.receiptHandle) return null;
++    return hit;
++  }
++
++  function requireStoredAuthority(actor: AuthActor, authorized: SyncContext, stored: unknown) {
++    if (!object(stored) || !Array.isArray(stored.requiredPermissions) || !Array.isArray(stored.requiredCapabilities)) {
++      throw new HttpError(404, 'RECEIPT_UNAVAILABLE', '回执不可用');
++    }
++    for (const permission of stored.requiredPermissions) {
++      if (typeof permission !== 'string' || !actor.permissions?.includes(permission)) throw new HttpError(403, 'PERMISSION_DENIED', '命令权限已撤销');
++    }
++    for (const capability of stored.requiredCapabilities) {
++      if (typeof capability !== 'string' || !authorized.access.capabilities.includes(capability)) throw new HttpError(403, 'PROJECT_CAPABILITY_DENIED', '命令能力已撤销');
++    }
++  }
++
++  async function reserve(userId: string, deviceId: string, command: SyncCommand): Promise<Outcome> {
++    return serial(db, async (tx) => {
++      const { actor, authorized } = await context(tx, userId, deviceId, command, true);
++      const hit = await receipt(tx, userId, deviceId, command);
++      const collision = hit ? null : await tx.syncMutation.findUnique({ where: { clientMutationId: command.clientMutationId } });
++      if (collision || (!hit && command.receiptHandle)) return unavailable(command);
++      if (hit) requireStoredAuthority(actor, authorized, hit.result);
++      else requireStoredAuthority(actor, authorized, authorized);
++      if (hit && hit.expiresAt! <= new Date()) return { ...base(command), status: 'expired' };
++      const row = hit ?? await tx.syncMutation.create({ data: { clientMutationId: command.clientMutationId,
++        userId, deviceId, entity: command.entity, entityId: command.id, op: command.op,
++        status: 'pending', receiptVersion: 1, resourceScope: `project:${command.projectId}`,
++        payloadHash: command.payloadHash, expiresAt: new Date(Date.now() + 24 * 3600 * 1000),
++        result: { requiredPermissions: authorized.requiredPermissions, requiredCapabilities: authorized.requiredCapabilities,
++          intendedAction: command.op === 'delete' ? 'deleted' : authorized.existing ? 'updated' : 'created' } } });
++      return { ...base(command), status: row.status, receiptHandle: row.id, payloadHash: row.payloadHash, expiresAt: row.expiresAt };
++    });
++  }
++
++  async function push(userId: string, deviceId: string, command: SyncCommand, c: unknown): Promise<Outcome> {
++    if (!command.receiptHandle) return { ...unavailable(command), code: 'UPGRADE_REQUIRED' };
++    return serial(db, async (tx) => {
++      const { actor, authorized } = await context(tx, userId, deviceId, command, false);
++      const hit = await receipt(tx, userId, deviceId, command);
++      if (!hit) return unavailable(command);
++      requireStoredAuthority(actor, authorized, hit.result);
++      if (hit.expiresAt! <= new Date()) return { ...base(command), status: 'expired' };
++      const stored = hit.result as Record<string, Json>;
++      if (hit.status === 'applied') return { ...(stored.response as Outcome), replayed: true };
++      if (command.op !== 'delete' && (stored.intendedAction === 'created') !== !authorized.existing) {
++        throw new HttpError(409, 'CONFLICT', '预约后的资源存在性已变化');
++      }
++      if (!['pending', 'conflict', 'rejected'].includes(hit.status)) return unavailable(command);
++      // Errors escape the transaction: never catch a failed ORM write and then commit partial business effects.
++      const outcome = await adapters.execute(tx, actor, command, authorized);
++      const record = JSON.parse(JSON.stringify({ ...base(command), ...outcome, receiptHandle: hit.id,
++        payloadHash: hit.payloadHash })) as Outcome;
++      if (outcome.status === 'applied') {
++        await writeAuditStrict(tx, { c, actorId: userId, actorName: actor.user?.displayName,
++          actorRole: actor.systemRole, action: command.op === 'delete' ? AUDIT_ACTIONS.DELETE : AUDIT_ACTIONS.UPDATE,
++          entityType: null, entityId: command.id, entityLabel: `sync:${command.entity}`,
++          metadata: { clientMutationId: command.clientMutationId, deviceId, payloadHash: hit.payloadHash,
++            resourceScope: hit.resourceScope, op: command.op, action: outcome.action, elevated: authorized.access.elevated } });
++      }
++      await tx.syncMutation.update({ where: { id: hit.id }, data: {
++        status: String(outcome.status), result: { ...stored, response: record } as Prisma.InputJsonObject } });
++      return record;
++    });
++  }
++
++  async function query(userId: string, deviceId: string, command: SyncCommand): Promise<Outcome> {
++    if (!command.receiptHandle) return unavailable(command);
++    try {
++      return await serial(db, async (tx) => {
++        const { actor, authorized } = await context(tx, userId, deviceId, command, false);
++        const hit = await receipt(tx, userId, deviceId, command);
++        if (!hit) return unavailable(command);
++        requireStoredAuthority(actor, authorized, hit.result);
++        if (hit.expiresAt! <= new Date()) return { ...base(command), status: 'expired' };
++        return { ...base(command), status: hit.status, result: (hit.result as Record<string, Json>).response ?? null, receiptHandle: hit.id, payloadHash: hit.payloadHash, expiresAt: hit.expiresAt };
++      });
++    } catch (error) {
++      // All denied/missing scopes share one result; a payload mismatch for a visible scope remains explicit.
++      if (error instanceof HttpError && [401, 403, 404].includes(error.status)) return unavailable(command);
++      throw error;
++    }
++  }
++  return { reserve, push, query };
++}
+--- before/rdpms-system/backend/prisma/schema.prisma
++++ after/rdpms-system/backend/prisma/schema.prisma
+@@ -493,6 +493,10 @@
+   op               String   @map("op") @db.VarChar(16)
+   status           String   @map("status") @db.VarChar(24) // applied / conflict / rejected
+   result           Json?    @map("result") @db.JsonB       // 回放用：原样返回首次处理结果
++  receiptVersion   Int?      @map("receipt_version")
++  resourceScope    String?   @map("resource_scope") @db.VarChar(200)
++  payloadHash      String?   @map("payload_hash") @db.Char(64)
++  expiresAt        DateTime? @map("expires_at") @db.Timestamptz(3)
+   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+ 
+   device SyncDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+--- before/rdpms-system/backend/prisma/migrations/20261005_sync_receipt_v1_scope/migration.sql
++++ after/rdpms-system/backend/prisma/migrations/20261005_sync_receipt_v1_scope/migration.sql
+@@ -0,0 +1,6 @@
++-- Approved T-RP-02-SCOPED-RESERVATION-V1: additive only, no legacy backfill.
++ALTER TABLE "sync_mutations"
++  ADD COLUMN "receipt_version" INTEGER,
++  ADD COLUMN "resource_scope" VARCHAR(200),
++  ADD COLUMN "payload_hash" CHAR(64),
++  ADD COLUMN "expires_at" TIMESTAMPTZ(3);
+--- before/rdpms-system/backend/tests/integration/rp09-scoped-receipt.integration.test.mjs
++++ after/rdpms-system/backend/tests/integration/rp09-scoped-receipt.integration.test.mjs
+@@ -0,0 +1,235 @@
++import { test, before, after } from 'node:test';
++import assert from 'node:assert/strict';
++import crypto from 'node:crypto';
++import fs from 'node:fs';
++import path from 'node:path';
++import bcrypt from 'bcryptjs';
++import { PrismaClient } from '@prisma/client';
++import { createApp } from '../../dist/bootstrap/createApp.js';
++import { parseSyncCommand } from '../../dist/modules/sync/syncMutationCommands.js';
++const url = new URL(process.env.DATABASE_URL);
++assert.equal(url.hostname, '127.0.0.1'); assert.equal(url.pathname.slice(1), process.env.RDPMS_EXEC_OWNED_DB); assert.match(url.pathname, /^\/rdpms_test_/);
++const db = new PrismaClient(); const app = createApp({ db });
++const uuid = () => crypto.randomUUID();
++let admin, other;
++const transportTrace = [];
++after(async () => {
++  try {
++    fs.writeFileSync(path.join(process.env.RDPMS_EXEC_EVIDENCE_DIR, 'persistent-state.json'), JSON.stringify({
++      transportTrace,
++      receipts: await db.syncMutation.findMany({ orderBy: { createdAt: 'asc' } }),
++      tasks: await db.task.findMany(), reports: await db.report.findMany(),
++      phases: await db.projectPhase.findMany(), projects: await db.project.findMany(),
++      milestones: await db.milestone.findMany(), progress: await db.monthlyProgress.findMany(),
++      members: await db.projectMember.findMany(),
++      strictAudits: await db.auditLog.findMany({ where: { entityLabel: { startsWith: 'sync:' } } }),
++    }, null, 2));
++  } finally { await db.$disconnect(); }
++}); // Append-only audit actors remain until whole owned DB drop.
++async function actor(role = 'SUPER_ADMIN', permissions) {
++  const password = 'Owned RP09 synthetic password 2026!';
++  const user = await db.user.create({ data: { username: `rp09-${uuid()}`, displayName: 'Synthetic RP09', passwordHash: await bcrypt.hash(password, 4), systemRole: role, status: 'ACTIVE' } });
++  if (permissions) {
++    const granted = await db.permission.findMany({ where: { code: { in: permissions } } }); assert.equal(granted.length, permissions.length);
++    const r = await db.role.create({ data: { code: `rp09_${uuid()}`, name: 'Synthetic RP09 grants', permissions: { create: granted.map((p) => ({ permissionId: p.id })) } } });
++    await db.userRole.create({ data: { userId: user.id, roleId: r.id } }); user.testRole = r;
++  }
++  const login = await app.request('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: user.username, password }) });
++  assert.equal(login.status, 200); const loginBody = await login.json(); assert.equal(loginBody.user.id, user.id);
++  const me = await app.request('/api/auth/me', { headers: { Authorization: `Bearer ${loginBody.accessToken}` } }); assert.equal(me.status, 200);
++  return { ...user, token: loginBody.accessToken };
++}
++before(async () => { admin = await actor(); other = await actor(); });
++async function project(who = admin) { return db.project.create({ data: { code: `RP09-${uuid()}`, name: 'Synthetic project', type: 'TESTING', managerId: who.id, createdById: who.id, members: { create: { userId: who.id, role: 'MANAGER' } } } }); }
++async function fixture(who = admin) {
++  const p = await project(who); const task = await db.task.create({ data: { projectId: p.id, title: 'before', createdById: who.id } });
++  return { p, task, who, device: `rp09-${uuid()}`, command: { clientMutationId: uuid(), entity: 'tasks', id: task.id, op: 'upsert', projectId: p.id, data: { title: `after-${uuid()}` }, baseUpdatedAt: task.updatedAt.toISOString() } };
++}
++async function call(path, changes, f, server = app, who = f.who) {
++  const response = await server.request(`/api/sync/${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${who.token}` }, body: JSON.stringify({ protocolVersion: 1, deviceId: f.device, changes }) });
++  const body = await response.json(); transportTrace.push({ path, actorId: who.id, deviceId: f.device, changes, httpStatus: response.status, body }); return { response, body };
++}
++async function reserve(f, command = f.command, server = app) {
++  const r = await call('receipts/reserve', [command], f, server); assert.equal(r.response.status, 200, JSON.stringify(r.body));
++  const row = r.body.results[0]; assert.equal(row.status, 'pending'); assert.ok(row.receiptHandle && row.payloadHash.length === 64);
++  return { ...command, receiptHandle: row.receiptHandle, payloadHash: row.payloadHash };
++}
++async function audits(key) { return db.auditLog.findMany({ where: { metadata: { path: ['clientMutationId'], equals: key } } }); }
++function proxy(wrap) { return new Proxy(db, { get(t, k) { if (k === '$transaction') return (fn, options) => t.$transaction((tx) => fn(wrap(tx)), options); const v = t[k]; return typeof v === 'function' ? v.bind(t) : v; } }); }
++function fault(model, method, afterWrite = false) { return createApp({ db: proxy((tx) => new Proxy(tx, { get(t, k) { if (k === model) return new Proxy(t[k], { get(m, op) { if (op === method) return async (args) => { if (afterWrite) await m[op](args); throw new Error('OWNED_RP09_FAULT'); }; const v = m[op]; return typeof v === 'function' ? v.bind(m) : v; } }); const v = t[k]; return typeof v === 'function' ? v.bind(t) : v; } })) }); }
++
++test('AC-B05/B06 real password/Bearer legal reserve→write→query→replay has one strict audit and bound receipt', async () => {
++  const f = await fixture(); const command = await reserve(f);
++  const before = await db.task.findUnique({ where: { id: f.task.id } }); assert.equal(before.title, 'before');
++  const r = await call('push', [command], f); assert.equal(r.response.status, 200); assert.equal(r.body.results[0].status, 'applied');
++  assert.equal((await db.task.findUnique({ where: { id: f.task.id } })).title, command.data.title);
++  const receipt = await db.syncMutation.findUnique({ where: { clientMutationId: command.clientMutationId } });
++  assert.equal(receipt.userId, admin.id); assert.equal(receipt.deviceId, f.device); assert.equal(receipt.resourceScope, `project:${f.p.id}`); assert.equal(receipt.receiptVersion, 1); assert.equal(receipt.payloadHash, command.payloadHash); assert.equal(receipt.status, 'applied');
++  assert.equal((await audits(command.clientMutationId)).length, 1);
++  const q = await call('receipts/query', [command], f); assert.equal(q.body.results[0].status, 'applied'); assert.deepEqual(q.body.results[0].result, r.body.results[0]);
++  const replay = await call('push', [command], f); assert.deepEqual(replay.body.results[0], { ...r.body.results[0], replayed: true });
++  assert.deepEqual(await db.syncMutation.findUnique({ where: { id: receipt.id } }), receipt); assert.equal((await audits(command.clientMutationId)).length, 1);
++});
++
++test('AC-B05-01 known key cross-actor/device/scope has no result leak or ownership overwrite', async () => {
++  const f = await fixture(); const c = await reserve(f); await call('push', [c], f);
++  const before = await db.syncMutation.findUnique({ where: { clientMutationId: c.clientMutationId } });
++  const foreign = { ...f, who: other, device: uuid() };
++  for (const x of [foreign, { ...f, device: uuid() }]) {
++    const q = await call('receipts/query', [c], x); assert.equal(q.body.results[0].status, 'unknown'); assert.equal(Object.hasOwn(q.body.results[0], 'result'), false);
++    const r = await call('receipts/reserve', [{ ...c, receiptHandle: undefined }], x); assert.equal(r.body.results[0].status, 'unknown');
++  }
++  const p2 = await project(); const mismatch = { ...c, projectId: p2.id, payloadHash: undefined };
++  const q = await call('receipts/query', [mismatch], f); assert.equal(q.body.results[0].status, 'unknown');
++  assert.deepEqual(await db.syncMutation.findUnique({ where: { id: before.id } }), before); assert.equal((await audits(c.clientMutationId)).length, 1);
++});
++
++test('foreign existing SyncDevice cannot be used or relabelled', async () => {
++  const f = await fixture(); await reserve(f); const old = await db.syncDevice.findUnique({ where: { id: f.device } });
++  const r = await call('receipts/reserve', [{ ...f.command, clientMutationId: uuid() }], { ...f, who: other }); assert.equal(r.response.status, 404);
++  assert.deepEqual(await db.syncDevice.findUnique({ where: { id: f.device } }), old);
++});
++
++test('AC-B05-02 same key changed payload is explicit409, no second DB/audit/receipt effects', async () => {
++  const f = await fixture(); const c = await reserve(f); await call('push', [c], f); const before = await db.task.findUnique({ where: { id: f.task.id } });
++  const bad = { ...c, payloadHash: undefined, data: { title: 'different' } }; const r = await call('push', [bad], f); assert.equal(r.response.status, 409); assert.equal(r.body.results[0].code, 'IDEMPOTENCY_PAYLOAD_MISMATCH');
++  assert.deepEqual(await db.task.findUnique({ where: { id: f.task.id } }), before); assert.equal((await audits(c.clientMutationId)).length, 1);
++});
++
++for (const [model, method, afterWrite] of [['task', 'updateMany', true], ['auditLog', 'create', false], ['syncMutation', 'update', true]]) {
++ test(`AC-B06-01 ${model}.${method} failpoint rolls back task/audit/applied receipt in real DB`, async () => {
++  const f = await fixture(); const c = await reserve(f); const before = await db.task.findUnique({ where: { id: f.task.id } }); const old = await db.syncMutation.findUnique({ where: { id: c.receiptHandle } });
++  const r = await call('push', [c], f, fault(model, method, afterWrite)); assert.equal(r.response.status, 500);
++  assert.deepEqual(await db.task.findUnique({ where: { id: f.task.id } }), before); assert.deepEqual(await db.syncMutation.findUnique({ where: { id: c.receiptHandle } }), old); assert.equal((await audits(c.clientMutationId)).length, 0);
++  assert.equal((await call('push', [c], f)).body.results[0].status, 'applied');
++ });
++}
++
++test('AC-B06-03 partial batch first commit/second receipt fault/third unprocessed; query reconstructs', async () => {
++  const f = await fixture(); const g = await fixture(); const third = await fixture(); const c1 = await reserve(f); const c2 = await reserve({ ...g, device: f.device }); const c3 = await reserve({ ...third, device: f.device });
++  let count = 0;
++  const server = createApp({ db: proxy((tx) => new Proxy(tx, { get(t, k) { if (k === 'syncMutation') return new Proxy(t[k], { get(m, op) { if (op === 'update') return async (args) => { if (++count === 2) throw new Error('OWNED_SECOND_ITEM_RECEIPT_FAULT'); return m.update(args); }; const v = m[op]; return typeof v === 'function' ? v.bind(m) : v; } }); const v = t[k]; return typeof v === 'function' ? v.bind(t) : v; } })) });
++  const r = await call('push', [c1, c2, c3], f, server); assert.equal(r.response.status, 500);
++  assert.equal((await db.task.findUnique({ where: { id: c1.id } })).title, c1.data.title);
++  for (const c of [c2, c3]) { assert.equal((await db.task.findUnique({ where: { id: c.id } })).title, 'before'); assert.equal((await db.syncMutation.findUnique({ where: { id: c.receiptHandle } })).status, 'pending'); }
++  const q = await call('receipts/query', [c1, c2, c3], f); assert.deepEqual(q.body.results.map((r) => r.status), ['applied', 'pending', 'pending']);
++});
++
++test('no-reservation legacy protocol and unknown handle cannot execute; null legacy columns unchanged', async () => {
++  const f = await fixture(); const legacy = await app.request('/api/sync/push', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${admin.token}` }, body: JSON.stringify({ deviceId: f.device, changes: [f.command] }) }); assert.equal(legacy.status, 426);
++  await db.syncDevice.create({ data: { id: f.device, userId: admin.id } });
++  const old = await db.syncMutation.create({ data: { clientMutationId: f.command.clientMutationId, deviceId: f.device, userId: admin.id, entity: 'tasks', entityId: f.task.id, op: 'upsert', status: 'applied', result: { private: 'legacy' } } });
++  const r = await call('push', [{ ...f.command, receiptHandle: old.id }], f); assert.equal(r.body.results[0].status, 'unknown');
++  assert.equal((await db.task.findUnique({ where: { id: f.task.id } })).title, 'before'); assert.deepEqual(await db.syncMutation.findUnique({ where: { id: old.id } }), old);
++});
++
++test('scalar validation precedes hashing/ORM, long keys not sliced and __proto__ stays hash input', async () => {
++  const f = await fixture(); const before = await db.syncMutation.count();
++  for (const bad of [{ clientMutationId: [] }, { clientMutationId: 'x'.repeat(65) }, { id: {} }, { op: 'other' }, { data: [] }, { baseUpdatedAt: {} }]) {
++    const r = await call('receipts/reserve', [{ ...f.command, ...bad }], f); assert.equal(r.response.status, 400);
++  }
++  assert.equal(await db.syncMutation.count(), before);
++  const c1 = parseSyncCommand({ ...f.command, data: JSON.parse('{"title":"x","__proto__":{"marker":1}}') }, { tasks: {} });
++  const c2 = parseSyncCommand({ ...f.command, data: { title: 'x' } }, { tasks: {} }); assert.notEqual(c1.payloadHash, c2.payloadHash);
++  assert.equal(parseSyncCommand({ ...f.command, data: { a: [1, 2], b: null } }, { tasks: {} }).payloadHash, parseSyncCommand({ ...f.command, data: { b: null, a: [1, 2] } }, { tasks: {} }).payloadHash);
++});
++
++test('current role/grant/member/ACTIVE withdrawal denies query/replay, not stale request auth', async () => {
++  const who = await actor('MEMBER', ['tasks.update']); const f = await fixture(who); const c = await reserve(f); await call('push', [c], f);
++  await db.rolePermission.deleteMany({ where: { roleId: who.testRole.id } });
++  assert.equal((await call('receipts/query', [c], f)).body.results[0].status, 'unknown'); assert.equal((await call('push', [c], f)).response.status, 403);
++  const permission = await db.permission.findUnique({ where: { code: 'tasks.update' } }); await db.rolePermission.create({ data: { roleId: who.testRole.id, permissionId: permission.id } });
++  await db.projectMember.update({ where: { projectId_userId: { projectId: f.p.id, userId: who.id } }, data: { leftAt: new Date() } });
++  assert.equal((await call('receipts/query', [c], f)).body.results[0].status, 'unknown');
++  await db.user.update({ where: { id: who.id }, data: { status: 'DISABLED' } }); assert.equal((await call('push', [c], f)).response.status, 401);
++});
++
++test('create-only role can replay its original create; permission upgrade cannot reinterpret reserved update as create', async () => {
++  const who = await actor('MEMBER', ['tasks.create']); const p = await project(who); const f = { p, who, device: uuid(), command: { clientMutationId: uuid(), entity: 'tasks', id: uuid(), projectId: p.id, op: 'upsert', data: { title: 'new synthetic' } } };
++  const c = await reserve(f); const first = await call('push', [c], f); assert.equal(first.body.results[0].action, 'created'); const replay = await call('push', [c], f); assert.equal(replay.body.results[0].replayed, true); assert.equal((await audits(c.clientMutationId)).length, 1);
++});
++
++const models = { projects: 'project', projectPhases: 'projectPhase', tasks: 'task', milestones: 'milestone', monthlyProgress: 'monthlyProgress', reports: 'report', projectMembers: 'projectMember' };
++for (const entity of Object.keys(models)) {
++ test(`TASK-RP09-T01 ${entity} legal update persists scoped receipt + strict audit`, async () => {
++  const p = await project(); let row; let patch;
++  if (entity === 'projects') { row = p; patch = { name: 'updated project' }; }
++  if (entity === 'projectPhases') { row = await db.projectPhase.create({ data: { projectId: p.id, code: 'P1', name: 'before', sortOrder: 1 } }); patch = { name: 'updated phase' }; }
++  if (entity === 'tasks') { row = await db.task.create({ data: { projectId: p.id, title: 'before' } }); patch = { title: 'updated task', status: 'IN_PROGRESS', assigneeId: other.id }; }
++  if (entity === 'milestones') { row = await db.milestone.create({ data: { projectId: p.id, name: 'before', dueDate: new Date('2026-11-01') } }); patch = { name: 'updated milestone' }; }
++  if (entity === 'monthlyProgress') { row = await db.monthlyProgress.create({ data: { projectId: p.id, periodKey: '2026-10', submittedById: admin.id } }); patch = { actualWork: 'updated progress' }; }
++  if (entity === 'reports') { row = await db.report.create({ data: { projectId: p.id, authorId: admin.id, reportType: 'MONTHLY', periodKey: '2026-10', content: {} } }); patch = { content: { marker: 'updated report' } }; }
++  if (entity === 'projectMembers') { row = await db.projectMember.create({ data: { projectId: p.id, userId: other.id, role: 'MEMBER' } }); patch = { role: 'VIEWER' }; }
++  const f = { p, who: admin, device: uuid(), command: { clientMutationId: uuid(), entity, id: row.id, op: 'upsert', projectId: p.id, data: patch } };
++  const c = await reserve(f); const r = await call('push', [c], f); assert.equal(r.response.status, 200, JSON.stringify(r.body)); assert.equal(r.body.results[0].status, 'applied');
++  const saved = await db[models[entity]].findUnique({ where: { id: row.id } }); for (const [key, value] of Object.entries(patch)) assert.deepEqual(saved[key], value);
++  assert.equal((await audits(c.clientMutationId)).length, 1); assert.equal((await db.syncMutation.findUnique({ where: { id: c.receiptHandle } })).status, 'applied');
++ });
++}
++
++test('report applied replay bypasses later state lock only after author/grant authorization; new key cannot overwrite submitted', async () => {
++  const p = await project(); const row = await db.report.create({ data: { projectId: p.id, authorId: admin.id, reportType: 'MONTHLY', periodKey: '2026-10', content: {} } });
++  const f = { p, who: admin, device: uuid(), command: { clientMutationId: uuid(), entity: 'reports', id: row.id, op: 'upsert', projectId: p.id, data: { content: { marker: 'original' } } } };
++  const c = await reserve(f); await call('push', [c], f); await db.report.update({ where: { id: row.id }, data: { status: 'SUBMITTED' } });
++  assert.equal((await call('push', [c], f)).body.results[0].replayed, true);
++  const fresh = await reserve(f, { ...f.command, clientMutationId: uuid(), data: { content: { marker: 'late' } } }); const r = await call('push', [fresh], f); assert.equal(r.response.status, 409); assert.equal(r.body.results[0].code, 'INVALID_STATE'); assert.deepEqual((await db.report.findUnique({ where: { id: row.id } })).content, { marker: 'original' }); assert.equal((await audits(fresh.clientMutationId)).length, 0);
++});
++
++test('T-RP-07 stale authorized delete wins; same/different key deletion does not move original tombstone', async () => {
++  const f = await fixture(); const c = await reserve(f, { ...f.command, op: 'delete', data: {}, baseUpdatedAt: '2000-01-01T00:00:00.000Z' });
++  assert.equal((await call('push', [c], f)).body.results[0].action, 'deleted'); const tombstone = await db.task.findUnique({ where: { id: f.task.id } }); assert.ok(tombstone.deletedAt);
++  assert.equal((await call('push', [c], f)).body.results[0].replayed, true);
++  const c2 = await reserve(f, { ...f.command, clientMutationId: uuid(), op: 'delete', data: {} }); assert.equal((await call('push', [c2], f)).body.results[0].action, 'noop');
++  assert.deepEqual(await db.task.findUnique({ where: { id: f.task.id } }), tombstone); assert.equal((await audits(c.clientMutationId)).length, 1);
++});
++
++for (const entity of Object.keys(models).filter((e) => e !== 'projects')) {
++ test(`TASK-RP09-T01 ${entity} legal offline create/replay and current delete contract`, async () => {
++  const p = await project(); let data;
++  if (entity === 'projectPhases') data = { code: 'P1', name: 'fresh phase', sortOrder: 1 };
++  if (entity === 'tasks') data = { title: 'fresh task' };
++  if (entity === 'milestones') data = { name: 'fresh milestone', dueDate: '2026-11-01T00:00:00.000Z' };
++  if (entity === 'monthlyProgress') data = { periodKey: '2026-10', actualWork: 'fresh progress' };
++  if (entity === 'reports') data = { reportType: 'MONTHLY', periodKey: '2026-10', content: { marker: 'fresh report' } };
++  if (entity === 'projectMembers') data = { userId: other.id, role: 'MEMBER' };
++  const f = { p, who: admin, device: uuid(), command: { clientMutationId: uuid(), entity, id: uuid(), projectId: p.id, op: 'upsert', data } };
++  const c = await reserve(f); const r = await call('push', [c], f); assert.equal(r.response.status, 200, JSON.stringify(r.body)); assert.equal(r.body.results[0].action, 'created');
++  const saved = await db[models[entity]].findUnique({ where: { id: c.id } }); assert.equal(saved.projectId, p.id);
++  if (entity === 'reports') assert.equal(saved.authorId, admin.id); if (entity === 'monthlyProgress') assert.equal(saved.submittedById, admin.id);
++  assert.equal((await call('push', [c], f)).body.results[0].replayed, true); assert.equal((await audits(c.clientMutationId)).length, 1);
++  if (['projectPhases', 'milestones', 'monthlyProgress'].includes(entity)) {
++    // The corresponding delete grants are frozen P1, absent from SUPER_ADMIN's
++    // current P0+unfrozen list. Do not manufacture new policy to pass a fixture.
++    const denied = await call('receipts/reserve', [{ ...f.command, clientMutationId: uuid(), op: 'delete', data: {} }], f);
++    assert.equal(denied.response.status, 403); assert.equal(denied.body.code, 'PERMISSION_DENIED');
++    assert.deepEqual(await db[models[entity]].findUnique({ where: { id: c.id } }), saved);
++    return;
++  }
++  const del = await reserve(f, { ...f.command, clientMutationId: uuid(), op: 'delete', data: {} }); const deleted = await call('push', [del], f); assert.equal(deleted.body.results[0].action, 'deleted', JSON.stringify(deleted.body));
++  const after = await db[models[entity]].findUnique({ where: { id: c.id } }); assert.ok(after[entity === 'projectMembers' ? 'leftAt' : 'deletedAt']);
++  assert.equal((await call('push', [del], f)).body.results[0].replayed, true);
++  const second = await reserve(f, { ...f.command, clientMutationId: uuid(), op: 'delete', data: {} }); assert.equal((await call('push', [second], f)).body.results[0].action, 'noop');
++  assert.deepEqual(await db[models[entity]].findUnique({ where: { id: c.id } }), after);
++ });
++}
++
++test('project delete preserves current project-not-visible replay denial and atomic first tombstone', async () => {
++  const p = await project(); const f = { p, who: admin, device: uuid(), command: { clientMutationId: uuid(), entity: 'projects', id: p.id, projectId: p.id, op: 'delete', data: {} } };
++  const c = await reserve(f); assert.equal((await call('push', [c], f)).body.results[0].action, 'deleted');
++  const after = await db.project.findUnique({ where: { id: p.id } }); assert.ok(after.deletedAt);
++  assert.equal((await call('receipts/query', [c], f)).body.results[0].status, 'unknown');
++  assert.equal((await call('push', [c], f)).response.status, 404); assert.deepEqual(await db.project.findUnique({ where: { id: p.id } }), after); assert.equal((await audits(c.clientMutationId)).length, 1);
++});
++
++test('device registration scalar and atomic owner filter protect foreign metadata', async () => {
++  const deviceId = uuid();
++  const deviceCall = (actor, body) => app.request('/api/sync/device', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${actor.token}` }, body: JSON.stringify(body) });
++  assert.equal((await deviceCall(admin, { deviceId, label: 'owned' })).status, 200);
++  const old = await db.syncDevice.findUnique({ where: { id: deviceId } }); assert.equal((await deviceCall(other, { deviceId, label: 'foreign' })).status, 404); assert.deepEqual(await db.syncDevice.findUnique({ where: { id: deviceId } }), old);
++  for (const bad of [[], {}, 'x'.repeat(65)]) assert.equal((await deviceCall(admin, { deviceId: bad })).status, 400);
++});
++
++test('same tx task fields/status/assignment rollback together after strict audit fault', async () => {
++  const f = await fixture(); const c = await reserve(f, { ...f.command, data: { title: 'compound', status: 'IN_PROGRESS', assigneeId: other.id } }); const before = await db.task.findUnique({ where: { id: f.task.id } });
++  const r = await call('push', [c], f, fault('auditLog', 'create')); assert.equal(r.response.status, 500); assert.deepEqual(await db.task.findUnique({ where: { id: f.task.id } }), before); assert.equal((await db.syncMutation.findUnique({ where: { id: c.receiptHandle } })).status, 'pending');
++});

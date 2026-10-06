@@ -1,0 +1,158 @@
+{
+  "kind": "REAL_READ_ONLY_CALCULATOR_WITH_SYNTHETIC_PLAN_DOCUMENTS",
+  "commands": [
+    {
+      "case": 1,
+      "exit": 0,
+      "stdout": "{\"result\": \"PASS\", \"blockerCount\": 0, \"eligibleForTargetReview\": true, \"release\": \"NOT_EVALUATED\"}\n",
+      "stderr": "",
+      "blockers": []
+    },
+    {
+      "case": 2,
+      "exit": 2,
+      "stdout": "{\"result\": \"PASS\", \"blockerCount\": 1, \"eligibleForTargetReview\": false, \"release\": \"NOT_EVALUATED\"}\n",
+      "stderr": "",
+      "blockers": [
+        {
+          "code": "IMPLEMENTATION_INCOMPLETE",
+          "taskId": "PREP",
+          "status": "IN_PROGRESS"
+        }
+      ]
+    },
+    {
+      "case": 3,
+      "exit": 2,
+      "stdout": "{\"result\": \"PASS\", \"blockerCount\": 1, \"eligibleForTargetReview\": false, \"release\": \"NOT_EVALUATED\"}\n",
+      "stderr": "",
+      "blockers": [
+        {
+          "code": "ACCEPTANCE_DEPENDENCY_PENDING",
+          "taskId": "DTO",
+          "dependency": "TOKEN",
+          "status": "NOT_RUN"
+        }
+      ]
+    },
+    {
+      "case": 4,
+      "exit": 0,
+      "stdout": "{\"result\": \"PASS\", \"blockerCount\": 0, \"eligibleForTargetReview\": true, \"release\": \"NOT_EVALUATED\"}\n",
+      "stderr": "",
+      "blockers": []
+    },
+    {
+      "case": 5,
+      "exit": 2,
+      "stdout": "{\"result\": \"PASS\", \"blockerCount\": 1, \"eligibleForTargetReview\": false, \"release\": \"NOT_EVALUATED\"}\n",
+      "stderr": "",
+      "blockers": [
+        {
+          "code": "GATE_CONDITION_UNKNOWN",
+          "taskId": "DTO",
+          "ref": "CUSTOM-ROLES",
+          "before": "IMPLEMENTATION",
+          "condition": "custom binding activated",
+          "applicable": null,
+          "result": "UNKNOWN"
+        }
+      ]
+    },
+    {
+      "case": 6,
+      "exit": 2,
+      "stdout": "{\"result\": \"PASS\", \"blockerCount\": 1, \"eligibleForTargetReview\": false, \"release\": \"NOT_EVALUATED\"}\n",
+      "stderr": "",
+      "blockers": [
+        {
+          "code": "CASE_NOT_PASSED_OR_UNBOUND",
+          "caseId": "DTO-OK",
+          "result": "PASS"
+        }
+      ]
+    },
+    {
+      "case": 7,
+      "exit": 2,
+      "stdout": "{\"result\": \"PASS\", \"blockerCount\": 1, \"eligibleForTargetReview\": false, \"release\": \"NOT_EVALUATED\"}\n",
+      "stderr": "",
+      "blockers": [
+        {
+          "code": "CASE_NOT_PASSED_OR_UNBOUND",
+          "caseId": "DTO-OK",
+          "result": "PASS"
+        }
+      ]
+    },
+    {
+      "case": 8,
+      "exit": 2,
+      "stdout": "{\"result\": \"PASS\", \"blockerCount\": 2, \"eligibleForTargetReview\": false, \"release\": \"NOT_EVALUATED\"}\n",
+      "stderr": "",
+      "blockers": [
+        {
+          "code": "CANDIDATE_BUILD_ID_MISMATCH"
+        },
+        {
+          "code": "SOURCE_OWNER_SCOPE_UNCOVERED",
+          "path": "source.js",
+          "owners": [
+            "TOKEN"
+          ]
+        }
+      ]
+    },
+    {
+      "case": 9,
+      "exit": 2,
+      "stdout": "{\"result\": \"PASS\", \"blockerCount\": 1, \"eligibleForTargetReview\": false, \"release\": \"NOT_EVALUATED\"}\n",
+      "stderr": "",
+      "blockers": [
+        {
+          "code": "CANDIDATE_SOURCE_DRIFT",
+          "path": "source.js"
+        }
+      ]
+    },
+    {
+      "case": 10,
+      "exit": 2,
+      "stdout": "{\"result\": \"PASS\", \"blockerCount\": 3, \"eligibleForTargetReview\": false, \"release\": \"NOT_EVALUATED\"}\n",
+      "stderr": "",
+      "blockers": [
+        {
+          "code": "RELEASE_FIELD_MISSING_OR_UNVERIFIED",
+          "field": "supportedClientWindow"
+        },
+        {
+          "code": "RELEASE_FIELD_MISSING_OR_UNVERIFIED",
+          "field": "environmentBudgets"
+        },
+        {
+          "code": "UNSAFE_OR_UNBOUND_ROLLBACK"
+        }
+      ]
+    },
+    {
+      "case": 11,
+      "exit": 2,
+      "stdout": "{\"result\": \"PASS\", \"blockerCount\": 2, \"eligibleForTargetReview\": false, \"release\": \"NOT_EVALUATED\"}\n",
+      "stderr": "",
+      "blockers": [
+        {
+          "code": "OPTIONAL_TASK_NOT_ACTIVATED",
+          "taskId": "OPTION"
+        },
+        {
+          "code": "CONTRACT_APPLICABILITY_UNKNOWN",
+          "contract": "PC-SHARED"
+        }
+      ]
+    }
+  ],
+  "cleanup": {
+    "ownedRootRemoved": true
+  },
+  "release": "NOT_EVALUATED"
+}

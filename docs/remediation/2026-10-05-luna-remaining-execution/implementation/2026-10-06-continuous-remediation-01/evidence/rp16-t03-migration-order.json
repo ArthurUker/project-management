@@ -1,0 +1,5 @@
+{
+  "old": "rdpms-system/backend/prisma/migrations/20261006_dataset_epoch_fences/migration.sql",
+  "new": "rdpms-system/backend/prisma/migrations/20261007_dataset_epoch_fences/migration.sql",
+  "reason": "New never successfully applied migration must sort after existing recovery-gate and securityVersion migrations. Failed owned attempt01 preserved; no applied historical migration edited."
+}

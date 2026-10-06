@@ -1,0 +1,984 @@
+--- before/rdpms-system/backend/src/kernel/backupRestore.js
++++ after/rdpms-system/backend/src/kernel/backupRestore.js
+@@ -1,3 +1,5 @@
++import bcrypt from 'bcryptjs';
++import crypto from 'node:crypto';
+ import { Prisma } from '@prisma/client';
+ import { prisma } from '../platform/db/client.js';
+ import { createRestoreRegistry, validateRestorePayload, restoreTuple } from './restoreSchemaRegistry.js';
+@@ -49,8 +51,34 @@
+         }
+         result.ok = result.errors.length === 0;
+     }
++    result.securityPolicy = { existingUsers: 'PRESERVE_CURRENT_AUTH_FIELDS', newUsers: 'PENDING_ACTIVATION_UNGUESSABLE_SECRET_MEMBER', allSessions: 'REVOKE_ON_SUCCESSFUL_RESTORE', binaryFilesVerified: false };
+     return result;
+ }
++const PROTECTED_USER_AUTH_FIELDS = ['username','passwordHash','mustChangePassword','passwordChangedAt','systemRole','status','deletedAt','securityVersion','failedLoginAttempts','lockedUntil','lastLoginAt','lastLoginIp'];
++async function safeRestoreData(tx, data) {
++  const effective = {...data}, ignoredSecurityFields = [];
++  if (data.users) {
++    effective.users = [];
++    for (const row of data.users) {
++      const current = await tx.user.findUnique({where:{id:row.id}}), next = {...row};
++      if (current) {
++        for (const field of PROTECTED_USER_AUTH_FIELDS) {
++          if (row[field] !== undefined && recoveryHash([row[field]]) !== recoveryHash([current[field]])) ignoredSecurityFields.push({userId:row.id,field});
++          next[field] = current[field];
++        }
++      } else {
++        next.passwordHash = await bcrypt.hash(crypto.randomBytes(48).toString('hex'),10);
++        next.status = 'PENDING_ACTIVATION'; next.systemRole = 'MEMBER'; next.mustChangePassword = true;
++        next.securityVersion = 0; next.deletedAt = null; next.failedLoginAttempts = 0;
++        next.lockedUntil = null; next.lastLoginAt = null; next.lastLoginIp = null; next.passwordChangedAt = null;
++        ignoredSecurityFields.push({userId:row.id,field:'IMPORTED_AUTHENTICATION_DISABLED'});
++      }
++      effective.users.push(next);
++    }
++  }
++  return {effective,ignoredSecurityFields};
++}
++
+ const CHUNK = 500;
+ const wherePk = (table, row) => table.pk.length === 1 ? { [table.pk[0]]: row[table.pk[0]] }
+     : { [table.pk.join('_')]: Object.fromEntries(table.pk.map((f) => [f, row[f]])) };
+@@ -141,8 +169,8 @@
+ /** Commit status is durable; reconciliation does not retry the original restore payload. */
+ export async function reconcileRestore({ db = prisma, actor, c, runId }) {
+     return db.$transaction(async (tx) => {
++        await tx.$queryRaw `SELECT id FROM data_recovery_state WHERE id = 1 FOR UPDATE`;
+         await requireRecoveryAdmin(tx, actor);
+-        await tx.$queryRaw `SELECT id FROM data_recovery_state WHERE id = 1 FOR UPDATE`;
+         const state = await tx.dataRecoveryState.findUniqueOrThrow({ where: { id: 1 } });
+         if (state.activeRunId !== runId || state.status !== 'RESTORE_NEEDS_RECONCILIATION')
+             throw new Error('RESTORE_RECONCILIATION_NOT_AVAILABLE');
+@@ -174,9 +202,10 @@
+                 err.validation = checked;
+                 throw err;
+             }
++            const {effective: data, ignoredSecurityFields} = await safeRestoreData(tx,payload.data);
+             const effects = [];
+             for (const t of included)
+-                effects.push({ key: t.key, planned: payload.data[t.key].length, totalBefore: await tx[t.model].count(), inserted: 0, created: 0, updated: 0, deleted: 0, unchanged: 0 });
++                effects.push({ key: t.key, planned: data[t.key].length, totalBefore: await tx[t.model].count(), inserted: 0, created: 0, updated: 0, deleted: 0, unchanged: 0 });
+             if (mode === 'replace')
+                 for (const t of [...included].reverse())
+                     if (!t.appendOnly) {
+@@ -185,10 +214,10 @@
+                     }
+             const available = new Map(), pending = [];
+             for (const t of included) {
+-                const existing = await findRows(tx, t, payload.data[t.key]);
++                const existing = await findRows(tx, t, data[t.key]);
+                 const byPk = new Map(existing.map((r) => [restoreTuple(t.pk, r), r]));
+                 available.set(t.key, existing);
+-                for (const row of payload.data[t.key])
++                for (const row of data[t.key])
+                     pending.push({ t, row, existing: byPk.get(restoreTuple(t.pk, row)) });
+             }
+             while (pending.length) {
+@@ -233,14 +262,19 @@
+                     group.forEach((n) => pending.splice(pending.indexOf(n), 1));
+                 }
+             }
+-            const manifest = await buildManifest(tx, included, payload.data, effects);
+-            const result = { runId, mode, tables: effects, created: effects.reduce((n, e) => n + e.inserted, 0), inserted: effects.reduce((n, e) => n + e.inserted, 0), updated: effects.reduce((n, e) => n + e.updated, 0), deleted: effects.reduce((n, e) => n + e.deleted, 0), unchanged: effects.reduce((n, e) => n + e.unchanged, 0), durationMs: Date.now() - startedAt, scope: checked.scope };
++            const securityUpdated = await tx.user.updateMany({data:{securityVersion:{increment:1}}});
++            const revoked = await tx.refreshToken.updateMany({where:{revokedAt:null},data:{revokedAt:new Date()}});
++            const datasetEpoch = crypto.randomUUID();
++            await tx.dataRecoveryState.update({where:{id:1},data:{epoch:datasetEpoch}});
++            const initiatingUser = await tx.user.findUniqueOrThrow({where:{id:actor.userId}});
++            const manifest = await buildManifest(tx, included, data, effects);
++            const result = { runId, mode, tables: effects, created: effects.reduce((n, e) => n + e.inserted, 0), inserted: effects.reduce((n, e) => n + e.inserted, 0), updated: effects.reduce((n, e) => n + e.updated, 0), deleted: effects.reduce((n, e) => n + e.deleted, 0), unchanged: effects.reduce((n, e) => n + e.unchanged, 0), durationMs: Date.now() - startedAt, scope: checked.scope, datasetEpoch, ignoredSecurityFields, securityEffects: { updatedUsers:securityUpdated.count, revokedRefreshTokens:revoked.count, initiatingVersion:initiatingUser.securityVersion, note:'Security housekeeping is separate from module input row changes' } };
+             await writeAuditStrict(tx, { c, actorId: actor.userId, actorName: actor.user.displayName, actorRole: 'SUPER_ADMIN', action: AUDIT_ACTIONS.RESTORE, entityType: 'BACKUP', entityId: runId, after: result, metadata: { operation: 'backup.restore.apply', permissionCode: 'data.restore', payloadHash: recoveryHash(payload), integrityManifest: manifest } });
+             await tx.dataRecoveryState.update({ where: { id: 1 }, data: { status: 'RESTORE_NEEDS_RECONCILIATION', manifest, summary: result } });
+             return result;
+         }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable, timeout: 180000, maxWait: 15000 });
+         committed = true;
+-        await reconcileRestore({ db, actor, c, runId });
++        await reconcileRestore({ db, actor: { ...actor, user: { ...actor.user, securityVersion: summary.securityEffects.initiatingVersion } }, c, runId });
+         return { ...summary, reconciled: true, status: 'READY', binaryFilesVerified: false };
+     }
+     catch (err) {
+--- before/rdpms-system/backend/src/platform/recovery/dataEpoch.ts
++++ after/rdpms-system/backend/src/platform/recovery/dataEpoch.ts
+@@ -29,11 +29,11 @@
+ export async function admitRestore(db: PrismaClient, actor: Actor, payloadHash: string): Promise<string> {
+   const runId = crypto.randomUUID();
+   await db.$transaction(async (tx) => {
++    await tx.$queryRaw`SELECT id FROM data_recovery_state WHERE id = 1 FOR UPDATE`;
+     await requireRecoveryAdmin(tx, actor);
+-    await tx.$queryRaw`SELECT id FROM data_recovery_state WHERE id = 1 FOR UPDATE`;
+     const state = await tx.dataRecoveryState.findUniqueOrThrow({ where: { id: 1 } });
+     if (state.status !== 'READY') throw new HttpError(409, 'RESTORE_ALREADY_ACTIVE', 'Existing restore needs reconciliation', { runId: state.activeRunId });
+-    await tx.dataRecoveryState.update({ where: { id: 1 }, data: { status: 'RESTORING', activeRunId: runId, payloadHash, manifest: Prisma.DbNull, summary: Prisma.DbNull, failureCode: null } });
++    await tx.dataRecoveryState.update({ where: { id: 1 }, data: { status: 'RESTORING', activeRunId: runId, previousEpoch: state.epoch, initiatorId: actor.userId, initiatorVersion: actor.user.securityVersion, payloadHash, manifest: Prisma.DbNull, summary: Prisma.DbNull, failureCode: null } });
+   }, { timeout: 15000, maxWait: 15000 });
+   return runId;
+ }
+--- before/rdpms-system/backend/src/kernel/rbac.js
++++ after/rdpms-system/backend/src/kernel/rbac.js
+@@ -8,6 +8,7 @@
+  *   4. JWT 只携带 userId + systemRole（不携带权限数组，防篡改）
+  */
+ import jwt from 'jsonwebtoken';
++import { setRequestDatasetEpoch } from '../platform/requestContext.js';
+ import { assertRecoveryAvailable } from '../platform/recovery/dataEpoch.js';
+ import { prisma } from '../platform/db/client.js';
+ import { P0_PERMISSIONS, P1_UNFROZEN } from './constants.js';
+@@ -40,7 +41,8 @@
+ 
+ export function signAccessToken(user) {
+   if (!Number.isSafeInteger(user.securityVersion) || user.securityVersion < 0) throw new Error('Current securityVersion required for token issuance');
+-  return jwt.sign({ userId: user.id, systemRole: user.systemRole, securityVersion: user.securityVersion }, JWT_SECRET, {
++  if (typeof user.datasetEpoch !== 'string' || ! /^[0-9a-f-]{36}$/i.test(user.datasetEpoch)) throw new Error('Current datasetEpoch required for token issuance');
++  return jwt.sign({ userId: user.id, systemRole: user.systemRole, securityVersion: user.securityVersion, datasetEpoch: user.datasetEpoch }, JWT_SECRET, {
+     expiresIn: ACCESS_TTL_SEC,
+   });
+ }
+@@ -102,7 +104,19 @@
+     throw unauthorized('SESSION_INVALID', '账号不存在或已停用');
+   }
+ 
+-  if (decoded.securityVersion !== user.securityVersion) throw unauthorized('SESSION_REVOKED', '会话已撤销，请重新登录');
++  const dataset = await prisma.dataRecoveryState.findUniqueOrThrow({ where: { id: 1 } });
++  const recoveryPath = c.req.method === 'GET' && c.req.path === '/api/backup/restore/status'
++    || c.req.method === 'POST' && c.req.path === '/api/backup/restore/reconcile';
++  const recoveryOnly = recoveryPath && dataset.status === 'RESTORE_NEEDS_RECONCILIATION'
++    && user.systemRole === 'SUPER_ADMIN' && !user.mustChangePassword
++    && dataset.initiatorId === user.id && dataset.initiatorVersion === decoded.securityVersion
++    && dataset.previousEpoch === decoded.datasetEpoch;
++  if (typeof decoded.datasetEpoch !== 'string') throw unauthorized('DATASET_EPOCH_REQUIRED', '请重新登录当前数据代际');
++  if (!recoveryOnly && decoded.datasetEpoch !== dataset.epoch) throw unauthorized('DATASET_EPOCH_CHANGED', '数据已恢复，请重新登录；原草稿必须保留');
++  if (!recoveryOnly && decoded.securityVersion !== user.securityVersion) throw unauthorized('SESSION_REVOKED', '会话已撤销，请重新登录');
++  user.datasetEpoch = dataset.epoch;
++  const operation = recoveryPath || c.req.method === 'POST' && c.req.path === '/api/backup/restore';
++  setRequestDatasetEpoch(dataset.epoch, operation);
+   enforceForcedPassword(c, user);
+   await assertRecoveryAvailable(prisma, c.req.method, c.req.path);
+   let permissions;
+@@ -121,6 +135,8 @@
+     userId: user.id,
+     user,
+     systemRole: user.systemRole,
++    datasetEpoch: dataset.epoch,
++    recoveryOnly,
+     permissions,
+   });
+   await next();
+--- before/rdpms-system/backend/src/routes/auth.js
++++ after/rdpms-system/backend/src/routes/auth.js
+@@ -1,4 +1,6 @@
+ import { Hono } from 'hono';
++import { setRequestDatasetEpoch } from '../platform/requestContext.js';
++import { assertRecoveryAvailable } from '../platform/recovery/dataEpoch.js';
+ import { prisma } from '../platform/db/client.js';
+ import bcrypt from 'bcryptjs';
+ import crypto from 'node:crypto';
+@@ -102,6 +104,9 @@
+ 
+ // ── 登录 ─────────────────────────────────────────────────────────────────────
+ auth.post('/login', async (c) => {
++  const dataset = await prisma.dataRecoveryState.findUniqueOrThrow({ where: { id: 1 } });
++  await assertRecoveryAvailable(prisma, c.req.method, c.req.path);
++  setRequestDatasetEpoch(dataset.epoch);
+   const body = await c.req.json().catch(() => null);
+   const username = typeof body?.username === 'string' ? body.username.trim().toLowerCase() : '';
+   const password = typeof body?.password === 'string' ? body.password : '';
+@@ -253,7 +258,7 @@
+     if (!current || current.deletedAt || current.status === 'DISABLED') throw unauthorized('ACCOUNT_DISABLED', '账号已停用');
+     if (current.passwordHash !== user.passwordHash || current.securityVersion !== user.securityVersion) throw unauthorized('LOGIN_STATE_CHANGED', '凭据已改变，请重新登录');
+     if (current.status === 'LOCKED' || current.lockedUntil && current.lockedUntil > new Date()) throw unauthorized('ACCOUNT_LOCKED', '账号已锁定');
+-    return { authenticatedUser: current, accessToken: signAccessToken(current), refreshToken: await issueRefreshToken(current.id, c, tx) };
++    return { authenticatedUser: current, accessToken: signAccessToken({ ...current, datasetEpoch: dataset.epoch }), refreshToken: await issueRefreshToken(current.id, c, tx) };
+   });
+ 
+   await writeAudit(prisma, {
+@@ -283,13 +288,16 @@
+ 
+ // ── 刷新 ─────────────────────────────────────────────────────────────────────
+ auth.post('/refresh', async (c) => {
++  const dataset = await prisma.dataRecoveryState.findUniqueOrThrow({ where: { id: 1 } });
++  await assertRecoveryAvailable(prisma, c.req.method, c.req.path);
++  setRequestDatasetEpoch(dataset.epoch);
+   const body = await c.req.json().catch(() => null);
+   const refreshToken = body?.refreshToken;
+   if (typeof refreshToken !== 'string' || !refreshToken.trim()) {
+     throw badRequest('VALIDATION_ERROR', 'refreshToken 必须是非空字符串');
+   }
+   const row = await prisma.refreshToken.findUnique({ where: { tokenHash: sha256(refreshToken) } });
+-  if (!row) throw unauthorized('INVALID_REFRESH_TOKEN', '刷新令牌无效或已过期');
++  if (!row || row.datasetEpoch !== dataset.epoch) throw unauthorized('INVALID_REFRESH_TOKEN', '刷新令牌无效或已过期');
+ 
+   const result = await prisma.$transaction(async (tx) => {
+     // Consistent lock order: current actor first, then conditional token consume.
+@@ -313,7 +321,7 @@
+       }
+       throw unauthorized('INVALID_REFRESH_TOKEN', '刷新令牌无效或已过期');
+     }
+-    const accessToken = signAccessToken(user);
++    const accessToken = signAccessToken({ ...user, datasetEpoch: dataset.epoch });
+     const newRefresh = await issueRefreshToken(user.id, c, tx, row.familyId);
+     await writeAuditStrict(tx, {
+       c,
+--- before/rdpms-system/backend/src/routes/sync.js
++++ after/rdpms-system/backend/src/routes/sync.js
+@@ -178,6 +178,9 @@
+ }
+ 
+ async function upsertSyncDevice(auth, deviceId, label, platform, db = prisma) {
++  const dataset = await db.dataRecoveryState.findUniqueOrThrow({where:{id:1}});
++  const original = await db.syncDevice.findUnique({where:{id:deviceId}});
++  if(original && original.userId===auth.userId && original.datasetEpoch!==dataset.epoch) throw new HttpError(409,'DATASET_EPOCH_CHANGED','Old dataset device retained; use a fresh dataset device for new commands only');
+   try {
+     return await db.syncDevice.upsert({
+       where: { id: deviceId, userId: auth.userId },
+@@ -411,10 +414,11 @@
+     pageState.since = since;
+     pageState.upperBound = upperBound;
+   }
++  if(pageToken && pageState.datasetEpoch !== acl.datasetEpoch) throw new HttpError(409,'DATASET_EPOCH_CHANGED','Old dataset page cursor cannot be reused');
+   if (pageToken && pageState.aclVersion !== acl.aclVersion) {
+     throw new HttpError(409, 'SYNC_ACL_CHANGED', '当前授权已变化，请保全待提交原文并重新获取快照');
+   }
+-  if (!pageToken && sinceRaw && c.req.query('aclVersion') !== acl.aclVersion) {
++  if (!pageToken && sinceRaw && (c.req.query('aclVersion') !== acl.aclVersion || c.req.query('datasetEpoch') !== acl.datasetEpoch)) {
+     pageState.since = new Date(0); pageState.full = true;
+   }
+   acl.writePolicy = Object.fromEntries(ENTITY_KEYS.map((entity) => {
+@@ -424,6 +428,7 @@
+       assign: def.assignPermission ?? null, capability: def.requireCapability ?? (entity === 'monthlyProgress' ? 'manage_members' : 'write') }];
+   }));
+   pageState.aclVersion = acl.aclVersion;
++  pageState.datasetEpoch = acl.datasetEpoch;
+   const { since, upperBound } = pageState;
+   const projectIds = acl.projectIds;
+   const projectIdSet = new Set(projectIds);
+@@ -497,6 +502,7 @@
+   }
+ 
+   return c.json({
++    datasetEpoch: acl.datasetEpoch,
+     serverTime,
+     // Before the last page, old clients retain their prior checkpoint and safely replay page one.
+     cursor: hasMore ? (pageState.checkpoint ?? since.toISOString()) : upperBound.toISOString(),
+@@ -655,7 +661,7 @@
+   }
+   // Metadata is not part of the per-item business commit. A failure here may be
+   // a 500 after committed items; exact receipt queries reconstruct those items.
+-  if (commands.length) await prisma.syncDevice.updateMany({ where: { id: deviceId, userId: getAuth(c).userId }, data: { lastPushAt: new Date() } });
++  if (commands.length) { const epoch = (await prisma.dataRecoveryState.findUniqueOrThrow({where:{id:1}})).epoch; await prisma.syncDevice.updateMany({ where: { id: deviceId, userId: getAuth(c).userId, datasetEpoch: epoch }, data: { lastPushAt: new Date() } }); }
+   const status = results.length === 1 && results[0].httpStatus ? results[0].httpStatus : 200;
+   return c.json({ protocolVersion: 1, serverTime: new Date().toISOString(), results,
+     conflictCount: results.filter((r) => r.status === 'conflict').length }, status);
+--- before/rdpms-system/backend/src/platform/db/client.js
++++ after/rdpms-system/backend/src/platform/db/client.js
+@@ -1,53 +1,53 @@
+-/**
+- * platform/db/client.js —— 数据库客户端解析入口（RF01 收尾：实例级注入）
+- *
+- * 目标（05_目标架构与重构契约 §1）：
+- *   createApp({db}) 注入的依赖只对该应用实例生效；导入应用模块不连接数据库。
+- *
+- * 现状迁移策略：
+- *   旧路由以 `import { prisma } from '../index.js'` 静态引用单例。RF01 起统一改为从本模块引用；
+- *   `prisma` 是「按当前请求作用域解析」的代理：
+- *     - 请求作用域内 → 解析到该应用实例注入的 db（实例级隔离）
+- *     - 作用域外     → 解析到惰性 fallback 客户端（worker/脚本应改为显式传参）
+- *   因此多个并存的应用实例不会串用依赖，也不存在进程级可变单例。
+- *
+- * 约束：
+- *   - 导入本模块不创建客户端、不建立连接。
+- *   - 只有 bootstrap/server.js 允许用 createPrismaClient() 构造真实客户端。
+- */
++/** Instance-scoped public Prisma facade. Authenticated requests retain their epoch. */
+ import { PrismaClient } from '@prisma/client';
+-import { resolveDb, setFallbackDbFactory, resetFallbackDb } from '../requestContext.js';
+-
+-/** 构造真实客户端（仅启动入口使用） */
+-export function createPrismaClient(options) {
+-  return new PrismaClient(options);
+-}
+-
+-// fallback 工厂：仅当代码脱离应用实例作用域时才会被调用
++import { resolveDb, setFallbackDbFactory, resetFallbackDb, currentContext } from '../requestContext.js';
++import { HttpError } from '../../kernel/http.js';
++export function createPrismaClient(options) { return new PrismaClient(options); }
+ setFallbackDbFactory(() => createPrismaClient());
+ 
+-/**
+- * 兼容旧路由的解析代理：属性访问与调用都转发到「当前作用域解析出的客户端」。
+- * 这样既保证实例级隔离，又不必一次改写全部旧路由（命令层落地后应改为显式传参）。
+- */
+-export const prisma = new Proxy(
+-  {},
+-  {
+-    get(_target, prop) {
+-      const client = resolveDb();
+-      const value = client[prop];
+-      return typeof value === 'function' ? value.bind(client) : value;
+-    },
+-    has(_target, prop) {
+-      return prop in resolveDb();
+-    },
++const DESCRIPTOR = Symbol('rdpms.publicQueryDescriptor');
++function fence() {
++  const ctx = currentContext();
++  return ctx?.datasetEpoch && !ctx.recoveryOperation ? ctx.datasetEpoch : null;
++}
++async function protectedTransaction(client, epoch, callback, options) {
++  return client.$transaction(async (tx) => {
++    await tx.$queryRaw`SELECT set_config('rdpms.dataset_epoch', ${epoch}, true)`;
++    const rows = await tx.$queryRaw`SELECT epoch, status FROM data_recovery_state WHERE id = 1 FOR SHARE`;
++    if (rows.length !== 1 || rows[0].status !== 'READY') throw new HttpError(503, 'RESTORE_NEEDS_RECONCILIATION', 'Dataset is not ready');
++    if (rows[0].epoch !== epoch) throw new HttpError(409, 'DATASET_EPOCH_CHANGED', 'Dataset changed; preserve original commands and reauthenticate');
++    return callback(tx);
++  }, options);
++}
++function descriptor(client, epoch, model, method, args) {
++  const execute = (target) => model === null ? target[method](...args) : target[model][method](...args);
++  let started;
++  const start = () => started ??= protectedTransaction(client, epoch, execute);
++  // Own public thenable, not a private Prisma engine object. Batch calls replay descriptors on one tx.
++  return { [DESCRIPTOR]: { client, epoch, execute, alreadyStarted: () => Boolean(started) },
++    then: (resolve, reject) => start().then(resolve, reject),
++    catch: (reject) => start().catch(reject), finally: (callback) => start().finally(callback),
++    [Symbol.toStringTag]: 'RdpmsEpochQuery' };
++}
++export const prisma = new Proxy({}, {
++  get(_target, prop) {
++    const client = resolveDb(), value = client[prop], epoch = fence();
++    if (!epoch) return typeof value === 'function' ? value.bind(client) : value;
++    if (prop === '$transaction') return (queries, options) => {
++      if (typeof queries === 'function') return protectedTransaction(client, epoch, queries, options);
++      if (!Array.isArray(queries)) throw new Error('INVALID_PUBLIC_TRANSACTION');
++      const list = queries.map((q) => q?.[DESCRIPTOR]);
++      if (list.some((q) => !q || q.client !== client || q.epoch !== epoch || q.alreadyStarted())) throw new Error('MIXED_OR_STARTED_TRANSACTION_BATCH');
++      return protectedTransaction(client, epoch, async(tx) => { const results=[]; for (const q of list) results.push(await q.execute(tx)); return results; }, options);
++    };
++    if (['$queryRaw','$executeRaw','$queryRawUnsafe','$executeRawUnsafe'].includes(prop)) return (...args) => descriptor(client,epoch,null,prop,args);
++    if (value && typeof value === 'object' && typeof value.findMany === 'function') return new Proxy(value, { get(model, method) {
++      const operation = model[method]; return typeof operation === 'function' ? (...args) => descriptor(client,epoch,prop,method,args) : operation;
++    } });
++    return typeof value === 'function' ? value.bind(client) : value;
+   },
+-);
+-
+-/** 显式解析当前作用域客户端（新代码优先使用，替代对 prisma 代理的隐式依赖） */
+-export function getScopedDb() {
+-  return resolveDb();
+-}
+-
+-/** 仅供测试：清空 fallback */
++  has(_target, prop) { return prop in resolveDb(); },
++});
++/** @returns {any} Public scoped facade also applies when typed commands take an explicit db. */
++export function getScopedDb() { return prisma; }
+ export { resetFallbackDb };
+--- before/rdpms-system/backend/src/platform/requestContext.js
++++ after/rdpms-system/backend/src/platform/requestContext.js
+@@ -76,3 +76,10 @@
+ export function resetFallbackDb() {
+   fallbackDb = null;
+ }
++
++/** HTTP correlation only; restore callbacks have their own durable gate/authority. */
++export function setRequestDatasetEpoch(epoch, recoveryOperation = false) {
++  const ctx = storage.getStore();
++  if (!ctx) throw new Error('REQUEST_EPOCH_CONTEXT_REQUIRED');
++  ctx.datasetEpoch = epoch; ctx.recoveryOperation = recoveryOperation;
++}
+--- before/rdpms-system/backend/src/platform/idempotency/receipts.js
++++ after/rdpms-system/backend/src/platform/idempotency/receipts.js
+@@ -47,7 +47,8 @@
+     || (flat.includes('actor_id') && flat.includes('command') && flat.includes('idempotency_key'));
+ }
+ 
+-function replayReceipt(receipt, payloadHash) {
++function replayReceipt(receipt, payloadHash, datasetEpoch) {
++  if (receipt.datasetEpoch !== datasetEpoch) throw new HttpError(409, 'DATASET_EPOCH_CHANGED', 'Old dataset receipt retained; no replay or implicit new key');
+   if (receipt.payloadHash !== payloadHash) {
+     throw new HttpError(
+       409,
+@@ -96,12 +97,13 @@
+   }
+ 
+   const payloadHash = hashPayload(payload);
++  const datasetEpoch = (await db.dataRecoveryState.findUniqueOrThrow({where:{id:1}})).epoch;
+ 
+   // 1) 回执查询：命中的回执直接回放——不进入事务、不重新校验状态
+   const existing = await db.mutationReceipt.findUnique({
+     where: scopeWhere(actor.userId, command, resourceScope, idempotencyKey),
+   });
+-  if (existing) return replayReceipt(existing, payloadHash);
++  if (existing) return replayReceipt(existing, payloadHash, datasetEpoch);
+ 
+   // 2) 新命令：事务内 validate → execute → 回填回执
+   try {
+@@ -113,6 +115,7 @@
+           resourceScope,
+           idempotencyKey,
+           payloadHash,
++          datasetEpoch,
+           responseStatus: 0,
+           responseBody: {},
+           expiresAt: new Date(Date.now() + RECEIPT_TTL_MS),
+@@ -134,7 +137,7 @@
+       const committed = await db.mutationReceipt.findUnique({
+         where: scopeWhere(actor.userId, command, resourceScope, idempotencyKey),
+       });
+-      if (committed) return replayReceipt(committed, payloadHash);
++      if (committed) return replayReceipt(committed, payloadHash, datasetEpoch);
+       // 先到者回滚（未留下回执）→ 本次请求未生效，可安全重试
+       throw new HttpError(409, 'IDEMPOTENCY_IN_PROGRESS', '相同幂等键的请求正在处理中，请稍后重试', {
+         retryable: true,
+--- before/rdpms-system/backend/src/modules/sync/syncMutationCommands.ts
++++ after/rdpms-system/backend/src/modules/sync/syncMutationCommands.ts
+@@ -108,8 +108,11 @@
+ 
+ export function createSyncMutationCommands(db: PrismaClient, adapters: Adapters) {
+   async function context(tx: Prisma.TransactionClient, userId: string, deviceId: string, command: SyncCommand, createDevice: boolean) {
++    const dataset = await tx.dataRecoveryState.findUniqueOrThrow({where:{id:1}});
++    if(dataset.status !== 'READY') throw new HttpError(503,'RESTORE_NEEDS_RECONCILIATION','Dataset is not reconciled');
+     const actor = await currentActor(tx, userId);
+     const device = await tx.syncDevice.findUnique({ where: { id: deviceId } });
++    if(device && device.userId===userId && device.datasetEpoch !== dataset.epoch) throw new HttpError(409,'DATASET_EPOCH_CHANGED','Old device/binding retained; cannot replay in new dataset');
+     if (device && device.userId !== userId) throw new HttpError(404, 'RECEIPT_UNAVAILABLE', '回执不可用');
+     if (!device && !createDevice) throw new HttpError(404, 'RECEIPT_UNAVAILABLE', '回执不可用');
+     // Current resource authorization precedes receipt lookup, even for an applied replay.
+--- before/rdpms-system/backend/src/modules/sync/syncReadPolicy.ts
++++ after/rdpms-system/backend/src/modules/sync/syncReadPolicy.ts
+@@ -6,6 +6,8 @@
+ 
+ /** Current grants and scope in the same DB snapshot as the returned projection. */
+ export async function readAclSnapshot(db: any, authenticated: any, injectedActor: boolean) {
++  const dataset = await db.dataRecoveryState.findUniqueOrThrow({where:{id:1}});
++  if(dataset.status !== 'READY') throw new HttpError(503,'RESTORE_NEEDS_RECONCILIATION','Dataset is not ready');
+   let auth = authenticated;
+   if (!injectedActor) {
+     const user = await db.user.findUnique({ where: { id: authenticated.userId }, select: {
+@@ -30,7 +32,7 @@
+       return { id: p.id, managerId: p.managerId, role: member?.role ?? null, joinedAt: member?.joinedAt ?? null, capabilities };
+     }).sort((a: any, b: any) => a.id.localeCompare(b.id));
+   const permissions = [...auth.permissions].sort();
+-  const aclVersion = crypto.createHash('sha256').update(JSON.stringify({ projectionVersion: 1, actorId: auth.userId,
++  const aclVersion = crypto.createHash('sha256').update(JSON.stringify({ datasetEpoch: dataset.epoch, projectionVersion: 1, actorId: auth.userId,
+     systemRole: auth.systemRole, securityVersion: auth.user?.securityVersion ?? null, permissions, projects })).digest('hex');
+-  return { auth, acl: { projectIds: projects.map((p: any) => p.id), projects, permissions: auth.permissions, aclVersion, projectionVersion: 1, writePolicy: {} as Record<string, unknown> } };
++  return { auth, acl: { datasetEpoch: dataset.epoch, projectIds: projects.map((p: any) => p.id), projects, permissions: auth.permissions, aclVersion, projectionVersion: 1, writePolicy: {} as Record<string, unknown> } };
+ }
+--- before/rdpms-system/backend/prisma/schema.prisma
++++ after/rdpms-system/backend/prisma/schema.prisma
+@@ -468,6 +468,7 @@
+ //       本组两张表只负责「设备登记」与「上行幂等键（clientMutationId）」。
+ 
+ model SyncDevice {
++  datasetEpoch String @default(dbgenerated("rdpms_current_dataset_epoch()")) @map("dataset_epoch") @db.Uuid
+   id         String    @id @map("id") @db.VarChar(64) // 客户端生成的设备标识（uuid）
+   userId     String    @map("user_id")
+   label      String?   @map("label") @db.VarChar(128)
+@@ -508,6 +509,7 @@
+ }
+ 
+ model RefreshToken {
++  datasetEpoch String @default(dbgenerated("rdpms_current_dataset_epoch()")) @map("dataset_epoch") @db.Uuid
+   id        String    @id @default(uuid()) @map("id")
+   userId    String    @map("user_id")
+   tokenHash String    @unique @map("token_hash") @db.VarChar(128)
+@@ -1603,6 +1605,7 @@
+ ///   - 同幂等键不同 payloadHash → 409，不得回放旧结果；
+ ///   - 数据修改、关键审计与回执在同一事务提交，失败不留下成功回执。
+ model MutationReceipt {
++  datasetEpoch String @default(dbgenerated("rdpms_current_dataset_epoch()")) @map("dataset_epoch") @db.Uuid
+   id             String                @id @default(uuid()) @map("id")
+   actorId        String                @map("actor_id")
+   command        String                @map("command") @db.VarChar(120)
+@@ -1625,6 +1628,9 @@
+ 
+ /// Local candidate restore containment; deliberately excluded from application JSON exports.
+ model DataRecoveryState {
++  previousEpoch String? @map("previous_epoch") @db.Uuid
++  initiatorId String? @map("initiator_id")
++  initiatorVersion Int? @map("initiator_version")
+   id             Int      @id
+   epoch          String   @default(uuid()) @db.Uuid
+   status         String   @default("READY") @db.VarChar(40)
+--- before/rdpms-system/backend/prisma/migrations/20261007_dataset_epoch_fences/migration.sql
++++ after/rdpms-system/backend/prisma/migrations/20261007_dataset_epoch_fences/migration.sql
+@@ -0,0 +1,19 @@
++ALTER TABLE data_recovery_state ADD COLUMN previous_epoch UUID, ADD COLUMN initiator_id TEXT, ADD COLUMN initiator_version INTEGER;
++CREATE FUNCTION rdpms_current_dataset_epoch() RETURNS UUID LANGUAGE SQL STABLE AS $$ SELECT epoch FROM public.data_recovery_state WHERE id = 1 $$;
++ALTER TABLE sync_devices ADD COLUMN dataset_epoch UUID NOT NULL DEFAULT rdpms_current_dataset_epoch();
++ALTER TABLE refresh_tokens ADD COLUMN dataset_epoch UUID NOT NULL DEFAULT rdpms_current_dataset_epoch();
++ALTER TABLE mutation_receipts ADD COLUMN dataset_epoch UUID NOT NULL DEFAULT rdpms_current_dataset_epoch();
++CREATE OR REPLACE FUNCTION rdpms_restore_write_gate() RETURNS trigger LANGUAGE plpgsql AS $$
++DECLARE recovery_status text; run_id uuid; current_epoch uuid; expected_epoch text;
++BEGIN
++  SELECT status, active_run_id, epoch INTO recovery_status, run_id, current_epoch FROM public.data_recovery_state WHERE id = 1 FOR SHARE;
++  IF recovery_status IS NULL THEN RAISE EXCEPTION 'RESTORE_GATE_UNAVAILABLE'; END IF;
++  IF recovery_status <> 'READY' AND (run_id IS NULL OR current_setting('rdpms.restore_run', true) IS DISTINCT FROM run_id::text) THEN
++    RAISE EXCEPTION 'RESTORE_WRITE_BLOCKED' USING ERRCODE = '55000';
++  END IF;
++  expected_epoch := current_setting('rdpms.dataset_epoch',true);
++  IF recovery_status = 'READY' AND expected_epoch IS NOT NULL AND expected_epoch <> '' AND expected_epoch <> current_epoch::text THEN
++    RAISE EXCEPTION 'DATASET_EPOCH_CHANGED' USING ERRCODE = '55000';
++  END IF;
++  RETURN NULL;
++END $$;
+--- before/rdpms-system/backend/tests/integration/rp16-restore-epoch.integration.test.mjs
++++ after/rdpms-system/backend/tests/integration/rp16-restore-epoch.integration.test.mjs
+@@ -0,0 +1,27 @@
++import {test,before,after} from 'node:test';
++import assert from 'node:assert/strict';
++import crypto from 'node:crypto';
++import bcrypt from 'bcryptjs';
++import jwt from 'jsonwebtoken';
++import fs from 'node:fs';import path from 'node:path';
++import {PrismaClient} from '@prisma/client';
++import {createApp} from '../../dist/bootstrap/createApp.js';
++const url=new URL(process.env.DATABASE_URL);assert.equal(url.hostname,'127.0.0.1');assert.equal(url.pathname.slice(1),process.env.RDPMS_EXEC_OWNED_DB);
++const db=new PrismaClient(),app=createApp({db}),id=()=>crypto.randomUUID(),trace=[],password='Owned Dataset Epoch 2026!';let admin,session,project;
++async function request(method,endpoint,body,who=session,server=app){const r=await server.request('/api'+endpoint,{method,headers:{Authorization:'Bearer '+who.accessToken,'Content-Type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});let v;try{v=await r.json();}catch{v={};}trace.push({method,endpoint,status:r.status,code:v.code??v.error?.code,body:endpoint.includes('/auth/')?undefined:v});return{r,v};}
++async function login(user=admin,pass=password){const r=await app.request('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user.username,password:pass})});const v=await r.json();assert.equal(r.status,200,JSON.stringify(v));assert.equal(v.user.id,user.id);return v;}
++async function restore(data,server=app){const result=await request('POST','/backup/restore',{backup:{version:'2.0',data}},session,server);if(result.r.status===200)session=await login();return result;}
++function txProxy(transform){let count=0;return new Proxy(db,{get(t,k){if(k==='$transaction')return(fn,opts)=>{count++;return transform(t,fn,opts,count);};return typeof t[k]==='function'?t[k].bind(t):t[k];}});}
++function wrapModel(tx,model,operation,fn){return new Proxy(tx,{get(t,k){if(k===model)return new Proxy(t[k],{get(m,key){return key===operation?fn(m):typeof m[key]==='function'?m[key].bind(m):m[key];}});return typeof t[k]==='function'?t[k].bind(t):t[k];}});}
++before(async()=>{admin=await db.user.create({data:{username:'epoch-'+id(),displayName:'Owned epoch admin',passwordHash:await bcrypt.hash(password,4),status:'ACTIVE',systemRole:'SUPER_ADMIN'}});session=await login();assert.equal((await request('GET','/auth/me')).r.status,200);project=await db.project.create({data:{code:'EPOCH-'+id(),name:'Owned epoch project',type:'TESTING',managerId:admin.id,members:{create:{userId:admin.id,role:'OWNER'}}}});});
++after(async()=>{try{fs.writeFileSync(path.join(process.env.RDPMS_EXEC_EVIDENCE_DIR,'epoch-persistent-state.json'),JSON.stringify({trace,state:await db.dataRecoveryState.findUnique({where:{id:1}}),users:(await db.user.findMany()).map(({passwordHash,...r})=>r),receipts:await db.mutationReceipt.findMany(),syncDevices:await db.syncDevice.findMany(),syncReceipts:await db.syncMutation.findMany(),refresh:(await db.refreshToken.findMany()).map(({tokenHash,...r})=>r)},null,2));}finally{await db.$disconnect();}});
++test('real login/refresh/JWT success then restore changes epoch and revokes old sessions without deleting refresh rows',async()=>{const old=session,claims=jwt.decode(old.accessToken),current=await db.user.findUnique({where:{id:admin.id}}),rows=await db.refreshToken.findMany();const r=await restore({roles:[{id:id(),code:'EPOCH_ROLE_'+id(),name:'Owned epoch role'}]});assert.equal(r.r.status,200,JSON.stringify(r.v));const state=await db.dataRecoveryState.findUnique({where:{id:1}});assert.notEqual(state.epoch,claims.datasetEpoch);assert.equal(jwt.decode(session.accessToken).datasetEpoch,state.epoch);assert.equal((await db.user.findUnique({where:{id:admin.id}})).securityVersion,current.securityVersion+1);assert.equal((await request('GET','/auth/me',null,old)).r.status,401);assert.equal((await request('POST','/auth/refresh',{refreshToken:old.refreshToken},old)).r.status,401);for(const row of rows)assert.ok((await db.refreshToken.findUnique({where:{id:row.id}})).revokedAt);assert.equal((await request('GET','/auth/me')).r.status,200);const fresh=await request('POST','/auth/refresh',{refreshToken:session.refreshToken});assert.equal(fresh.r.status,200,JSON.stringify(fresh.v));session={...session,...fresh.v};});
++test('existing user auth floor/password/disabled/deleted/forced/current rank cannot be revived by valid old backup fields',async()=>{const changed=await db.user.create({data:{username:'changed-'+id(),displayName:'before',passwordHash:await bcrypt.hash('Current Owned Password!',4),status:'ACTIVE',systemRole:'MEMBER',securityVersion:9,mustChangePassword:true}}),disabled=await db.user.create({data:{username:'disabled-'+id(),displayName:'disabled',passwordHash:await bcrypt.hash(password,4),status:'DISABLED',systemRole:'VIEWER',deletedAt:new Date(),securityVersion:17}});const olds=[changed,disabled].map(u=>({id:u.id,username:'old-'+id(),displayName:'restored profile',passwordHash:admin.passwordHash,status:'ACTIVE',systemRole:'SUPER_ADMIN',deletedAt:null,mustChangePassword:false,securityVersion:0,failedLoginAttempts:99}));const r=await restore({users:olds});assert.equal(r.r.status,200,JSON.stringify(r.v));for(const u of[changed,disabled]){const after=await db.user.findUnique({where:{id:u.id}});for(const f of['username','passwordHash','status','systemRole','deletedAt','mustChangePassword','failedLoginAttempts'])assert.deepEqual(after[f],u[f]);assert.equal(after.securityVersion,u.securityVersion+1);assert.equal(after.displayName,'restored profile');}const failed=await app.request('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:changed.username,password})});assert.equal(failed.status,401);assert.equal(await db.userRole.count({where:{userId:{in:[changed.id,disabled.id]}}}),0);});
++test('new imported user cannot inherit password or SUPER_ADMIN activation or bindings',async()=>{const imported={id:id(),username:'imported-'+id(),displayName:'Owned imported',passwordHash:admin.passwordHash,status:'ACTIVE',systemRole:'SUPER_ADMIN',securityVersion:99,mustChangePassword:false};const r=await restore({users:[imported]});assert.equal(r.r.status,200,JSON.stringify(r.v));const row=await db.user.findUnique({where:{id:imported.id}});assert.equal(row.status,'PENDING_ACTIVATION');assert.equal(row.systemRole,'MEMBER');assert.equal(row.mustChangePassword,true);assert.equal(row.securityVersion,1);assert.equal(await bcrypt.compare(password,row.passwordHash),false);assert.equal(await db.userRole.count({where:{userId:row.id}}),0);const fail=await app.request('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:row.username,password})});assert.equal(fail.status,401);});
++test('ordinary successful receipt survives but original key cannot replay into restored dataset',async()=>{const key=id(),body={content:{text:'Owned receipt epoch'},reportType:'DAILY',periodKey:'2026-10-06',projectId:project.id,clientMutationId:key};const created=await request('POST','/reports',body);assert.equal(created.r.status,201,JSON.stringify(created.v));const receipt=await db.mutationReceipt.findFirstOrThrow({where:{idempotencyKey:key}});assert.equal((await request('POST','/reports',body)).r.status,201);assert.equal(await db.report.count({where:{id:created.v.id}}),1);assert.equal((await restore({roles:[]})).r.status,200);const failed=await request('POST','/reports',body);assert.equal(failed.r.status,409,JSON.stringify(failed.v));assert.equal(failed.v.code,'DATASET_EPOCH_CHANGED');assert.deepEqual(await db.mutationReceipt.findUnique({where:{id:receipt.id}}),receipt);assert.equal(await db.report.count({where:{id:created.v.id}}),1);});
++test('old pending/applied sync bindings retained; old device cannot query/reserve/push after new login, new device legal',async()=>{const task=await db.task.create({data:{projectId:project.id,title:'before epoch',updatedAt:new Date('2020-01-01')}}),device=id();const command={clientMutationId:id(),entity:'tasks',id:task.id,projectId:project.id,op:'upsert',data:{title:'after epoch'},baseUpdatedAt:task.updatedAt.toISOString()};let r=await request('POST','/sync/receipts/reserve',{protocolVersion:1,deviceId:device,changes:[command]});assert.equal(r.r.status,200,JSON.stringify(r.v));assert.equal(r.v.results[0].status,'pending');const bound={...command,receiptHandle:r.v.results[0].receiptHandle,payloadHash:r.v.results[0].payloadHash};r=await request('POST','/sync/push',{protocolVersion:1,deviceId:device,changes:[bound]});assert.equal(r.v.results[0].status,'applied',JSON.stringify(r.v));const receipt=await db.syncMutation.findUnique({where:{id:bound.receiptHandle}}),oldDevice=await db.syncDevice.findUnique({where:{id:device}});const pending={...command,clientMutationId:id(),baseUpdatedAt:(await db.task.findUnique({where:{id:task.id}})).updatedAt.toISOString(),data:{title:'never replay pending'}};r=await request('POST','/sync/receipts/reserve',{protocolVersion:1,deviceId:device,changes:[pending]});assert.equal(r.v.results[0].status,'pending');const pendingRow=await db.syncMutation.findUnique({where:{id:r.v.results[0].receiptHandle}});assert.equal((await restore({roles:[]})).r.status,200);for(const endpoint of['receipts/query','receipts/reserve','push']){r=await request('POST','/sync/'+endpoint,{protocolVersion:1,deviceId:device,changes:[bound]});assert.equal(r.r.status,409,JSON.stringify(r.v));assert.equal(r.v.code??r.v.results?.[0]?.code,'DATASET_EPOCH_CHANGED');}assert.deepEqual(await db.syncMutation.findUnique({where:{id:receipt.id}}),receipt);assert.deepEqual(await db.syncMutation.findUnique({where:{id:pendingRow.id}}),pendingRow);assert.deepEqual(await db.syncDevice.findUnique({where:{id:device}}),oldDevice);const fresh={...pending,clientMutationId:id(),data:{title:'new epoch intent'}};r=await request('POST','/sync/receipts/reserve',{protocolVersion:1,deviceId:id(),changes:[fresh]});assert.equal(r.r.status,200,JSON.stringify(r.v));assert.equal(r.v.results[0].status,'pending');});
++test('epoch binds nonempty ACL/full pull; old pagination token and old device cannot continue, old ack forces full',async()=>{await db.task.createMany({data:Array.from({length:3001},(_,i)=>({projectId:project.id,title:'epoch page '+i}))});const device=id();const r=await request('GET','/sync/init?deviceId='+device+'&paginationVersion=1');assert.equal(r.r.status,200,JSON.stringify(r.v));assert.ok(r.v.changes.projects.upserts.length+r.v.changes.tasks.upserts.length);const old=r.v;assert.ok(old.datasetEpoch);assert.equal(old.acl.datasetEpoch,old.datasetEpoch);assert.equal((await restore({roles:[]})).r.status,200);assert.equal(old.pagination.hasMore,true);assert.ok(old.pagination.nextPageToken);{const page=await request('GET','/sync/init?deviceId='+device+'&pageToken='+encodeURIComponent(old.pagination.nextPageToken));assert.equal(page.r.status,409,JSON.stringify(page.v));}const next=await request('GET','/sync/init?paginationVersion=1&deviceId='+id()+'&since='+encodeURIComponent(old.cursor)+'&aclFingerprint='+old.acl.fingerprint+'&datasetEpoch='+old.datasetEpoch);assert.equal(next.r.status,200,JSON.stringify(next.v));assert.notEqual(next.v.datasetEpoch,old.datasetEpoch);assert.equal(next.v.full,true);assert.ok(next.v.changes.projects.upserts.length);});
++test('public Prisma batch is one native transaction: legal role links succeed; second-write fault rolls back deletion',async()=>{const role=await db.role.create({data:{code:'BATCH-'+id(),name:'Owned batch'}});const first=await request('POST','/roles/'+role.id+'/permissions',{permissionCodes:['tasks.view','tasks.update']});assert.equal(first.r.status,200,JSON.stringify(first.v));const rows=await db.rolePermission.findMany({where:{roleId:role.id},orderBy:{permissionId:'asc'}});assert.equal(rows.length,2);const server=createApp({db:txProxy((t,fn,opts)=>t.$transaction(tx=>fn(wrapModel(tx,'rolePermission','createMany',()=>async()=>{throw Error('OWNED_PUBLIC_BATCH_FAULT');})),opts))});const failed=await request('POST','/roles/'+role.id+'/permissions',{permissionCodes:['tasks.view']},session,server);assert.equal(failed.r.status,500);assert.deepEqual(await db.rolePermission.findMany({where:{roleId:role.id},orderBy:{permissionId:'asc'}}),rows);});
++test('late authenticated request pauses before actual epoch shared lock; completed restore rejects it with no task/audit/receipt',async()=>{let reached,release,armed=false;const entered=new Promise(r=>reached=r),gate=new Promise(r=>release=r);const server=createApp({db:txProxy((t,fn,opts)=>t.$transaction(tx=>fn(new Proxy(tx,{get(t,k){if(k==='$queryRaw')return async(...args)=>{if(!armed&&String(args[0]).includes('data_recovery_state')&&String(args[0]).includes('FOR SHARE')){armed=true;reached();await gate;}return t.$queryRaw(...args);};return typeof t[k]==='function'?t[k].bind(t):t[k];}})),opts))});const old=session,key=id(),body={title:'late old epoch '+id(),projectId:project.id,clientMutationId:key};const pending=request('POST','/tasks',body,old,server);let timer;try{await Promise.race([entered,new Promise((_,fail)=>timer=setTimeout(()=>fail(Error('REAL_EPOCH_BARRIER_NOT_REACHED')),5000))]);assert.equal((await restore({roles:[]})).r.status,200);}finally{clearTimeout(timer);release();await Promise.allSettled([pending]);}const result=await pending;assert.equal(result.r.status,409,JSON.stringify(result.v));assert.equal(result.v.code,'DATASET_EPOCH_CHANGED');assert.equal(await db.task.count({where:{title:body.title}}),0);assert.equal(await db.mutationReceipt.count({where:{idempotencyKey:key}}),0);trace.push({realBarrier:'public transaction SELECT dataset epoch FOR SHARE before native DB query',fired:armed});});
++test('postcommit failure keeps new epoch contained; only initiating original SUPER credential may diagnose/reconcile own run',async()=>{const old=session,other=await db.user.create({data:{username:'other-admin-'+id(),displayName:'Other current admin',passwordHash:await bcrypt.hash(password,4),status:'ACTIVE',systemRole:'SUPER_ADMIN'}}),otherSession=await login(other);const server=createApp({db:txProxy((t,fn,opts,index)=>t.$transaction(tx=>fn(index===3?wrapModel(tx,'role','findMany',()=>async()=>{throw Error('OWNED_EPOCH_POSTCOMMIT_FAULT');}):tx),opts))});const r=await restore({roles:[{id:id(),code:'PENDING-'+id(),name:'postcommit epoch'}]},server);assert.equal(r.r.status,503,JSON.stringify(r.v));assert.equal(r.v.committed,true);const state=await db.dataRecoveryState.findUnique({where:{id:1}});assert.equal(state.status,'RESTORE_NEEDS_RECONCILIATION');assert.notEqual(state.epoch,jwt.decode(old.accessToken).datasetEpoch);assert.equal((await request('GET','/auth/me',null,old)).r.status,401);assert.equal((await request('GET','/backup/restore/status',null,otherSession)).r.status,401);assert.equal((await request('GET','/backup/restore/status',null,old)).r.status,200);const denied=await app.request('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:admin.username,password})});assert.equal(denied.status,503);assert.equal((await request('POST','/backup/restore/reconcile',{runId:id()},old)).r.status,503);const fixed=await request('POST','/backup/restore/reconcile',{runId:state.activeRunId},old);assert.equal(fixed.r.status,200,JSON.stringify(fixed.v));session=await login();assert.equal((await request('GET','/backup/restore/status',null,old)).r.status,401);assert.equal((await db.dataRecoveryState.findUnique({where:{id:1}})).status,'READY');});
++test('precommit fault rolls back epoch/security/refresh/module changes, keeps originally valid session usable',async()=>{const old=session,state=await db.dataRecoveryState.findUnique({where:{id:1}}),user=await db.user.findUnique({where:{id:admin.id}}),tokens=await db.refreshToken.findMany(),fresh={id:id(),code:'ROLLBACK-E-'+id(),name:'never committed'};const server=createApp({db:txProxy((t,fn,opts,index)=>t.$transaction(tx=>fn(index===2?wrapModel(tx,'auditLog','create',()=>async()=>{throw Error('OWNED_EPOCH_PRECOMMIT_FAULT');}):tx),opts))});const r=await restore({roles:[fresh]},server);assert.equal(r.r.status,500);assert.equal(r.v.rolledBack,true);const after=await db.dataRecoveryState.findUnique({where:{id:1}});assert.equal(after.epoch,state.epoch);assert.equal(after.status,'READY');assert.equal((await db.user.findUnique({where:{id:admin.id}})).securityVersion,user.securityVersion);assert.deepEqual(await db.refreshToken.findMany(),tokens);assert.equal(await db.role.findUnique({where:{id:fresh.id}}),null);assert.equal((await request('GET','/auth/me',null,old)).r.status,200);});
+--- before/rdpms-system/backend/tests/integration/rp16-restore-apply.integration.test.mjs
++++ after/rdpms-system/backend/tests/integration/rp16-restore-apply.integration.test.mjs
+@@ -13,7 +13,8 @@
+ const db = new PrismaClient(), app = createApp({ db }), uuid = () => crypto.randomUUID(), trace = [];
+ let actor, token, project;
+ const backup = data => ({ version: '2.0', data }), json = v => JSON.parse(JSON.stringify(v));
+-async function req(data, server = app, endpoint = '/restore') { const r = await server.request('/api/backup' + endpoint, { method: data ? 'POST' : 'GET', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, ...(data ? { body: JSON.stringify(data) } : {}) }); const v = await r.json(); trace.push({ endpoint, status: r.status, response: v }); return { r, v }; }
++async function req(data, server = app, endpoint = '/restore') { const r = await server.request('/api/backup' + endpoint, { method: data ? 'POST' : 'GET', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, ...(data ? { body: JSON.stringify(data) } : {}) }); const v = await r.json(); trace.push({ endpoint, status: r.status, response: v });
++    if(r.status===200 && ['/restore','/restore/reconcile'].includes(endpoint)){ const login=await app.request('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:actor.username,password:'Owned Restore Apply 2026!'})});assert.equal(login.status,200);token=(await login.json()).accessToken; } return { r, v }; }
+ function txProxy(modifier) { let index = 0; return new Proxy(db, { get(t, k) { if (k === '$transaction')
+         return async (fn, opts) => { index++; return modifier(t, fn, opts, index); }; return typeof t[k] === 'function' ? t[k].bind(t) : t[k]; } }); }
+ function replaceModel(tx, model, override) { return new Proxy(tx, { get(t, k) { if (k === model)
+@@ -139,9 +140,9 @@
+     assert.equal(state.status, 'RESTORE_NEEDS_RECONCILIATION');
+     assert.ok(state.manifest);
+     const denied = await app.request('/api/projects/' + project.id, { method: 'PUT', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'must not write' }) });
+-    assert.equal(denied.status, 503);
++    assert.equal(denied.status, 401); assert.equal((await denied.json()).code,'DATASET_EPOCH_CHANGED');
+     await assert.rejects(() => db.role.create({ data: { code: 'blocked-' + uuid(), name: 'blocked' } }), /RESTORE_WRITE_BLOCKED/);
+-    assert.equal((await req({ backup: backup({ roles: [fresh] }) })).r.status, 503);
++    assert.equal((await req({ backup: backup({ roles: [fresh] }) })).r.status, 401);
+     const fixed = await req({ runId: state.activeRunId }, app, '/restore/reconcile');
+     assert.equal(fixed.r.status, 200);
+     assert.equal((await db.dataRecoveryState.findUnique({ where: { id: 1 } })).status, 'READY');
+--- before/rdpms-system/backend/tests/integration/rp14-scan-elevated-policy.integration.test.mjs
++++ after/rdpms-system/backend/tests/integration/rp14-scan-elevated-policy.integration.test.mjs
+@@ -27,7 +27,7 @@
+       permissions: { create: permissions.map((code) => ({ permission: { connect: { code } } })) } } });
+     await db.userRole.create({ data: { userId: user.id, roleId: role.id } });
+   }
+-  return { user, token: signAccessToken(user) };
++  return { user, token: signAccessToken({ ...user, datasetEpoch: (await db.dataRecoveryState.findUniqueOrThrow({where:{id:1}})).epoch }) };
+ }
+ function request(as, url, method = 'GET', server = app) {
+   return server.request(`/api${url}`, { method, headers: { Authorization: `Bearer ${as.token}` } });
+--- before/rdpms-system/backend/tests/integration/rp10-submit-state-policy.integration.test.mjs
++++ after/rdpms-system/backend/tests/integration/rp10-submit-state-policy.integration.test.mjs
+@@ -18,7 +18,7 @@
+     permissions: { create: ['reports.submit', 'reports.review', 'reports.update', 'reports.view']
+       .map((code) => ({ permission: { connect: { code } } })) } } });
+   await db.userRole.create({ data: { userId: user.id, roleId: role.id } });
+-  return { user, token: signAccessToken(user), role };
++  return { user, token: signAccessToken({ ...user, datasetEpoch: (await db.dataRecoveryState.findUniqueOrThrow({where:{id:1}})).epoch }), role };
+ }
+ async function report(status = 'DRAFT') {
+   const row = await db.report.create({ data: { projectId: project.id, authorId: author.user.id,
+--- before/rdpms-system/frontend/src/offline/idb.ts
++++ after/rdpms-system/frontend/src/offline/idb.ts
+@@ -9,7 +9,7 @@
+   data?: Record<string, unknown>; baseUpdatedAt?: string; createdAt: string; userId?: string; projectId?: string;
+   origin?: 'fresh-v1' | 'legacy-unverified'; sequence?: number; dependsOn?: string[];
+   deviceId?: string; payloadHash?: string; receiptHandle?: string; expiresAt?: string;
+-  scopeBlocked?: string;
++  scopeBlocked?: string; datasetEpoch?: string; datasetBlocked?: string;
+   attempt?: 'reserving' | 'bound' | 'pushed'; retryCount?: number; recoveryStatus?: 'pending' | 'unknown' | 'expired' | 'invalid';
+ }
+ export interface RecordRow {
+@@ -163,7 +163,7 @@
+   return rows.filter((r) => (r.ownerId ?? r.userId) === owner.userId);
+ }
+ function command(row: OutboxRecord) {
+-  return JSON.stringify([row.clientMutationId, row.entity, row.op, row.id, row.projectId ?? null, row.data ?? null, row.baseUpdatedAt === undefined ? ['absent'] : ['present', row.baseUpdatedAt]]);
++  return JSON.stringify([row.datasetEpoch ?? null, row.clientMutationId, row.entity, row.op, row.id, row.projectId ?? null, row.data ?? null, row.baseUpdatedAt === undefined ? ['absent'] : ['present', row.baseUpdatedAt]]);
+ }
+ function forOwner(owner: OfflineOwner) {
+   const fixed = Object.freeze({ ...owner });
+@@ -218,6 +218,17 @@
+     kvGet: <T>(key: string) => transaction<T | undefined>(fixed, ['kv'], 'readonly', (s, result) => request(s.kv.get(ownerKey(fixed, key)), (row) => result(row?.value as T | undefined))),
+     kvSet: (key: string, value: unknown) => transaction(fixed, ['kv'], 'readwrite', (s, result) => request(s.kv.put({ ownerId: fixed.userId, key, value }), result)),
+     kvDelete: (key: string) => transaction(fixed, ['kv'], 'readwrite', (s, result) => request(s.kv.delete(ownerKey(fixed, key)), result)),
++    resetDatasetEpoch: (epoch: string) => transaction<boolean>(fixed, ['records','kv','outbox'], 'readwrite', (s,result) => {
++      request(s.kv.get(ownerKey(fixed,'rdpms.sync.datasetEpoch')), (old) => {
++        if(old?.value===epoch){result(false);return;}
++        request(s.records.getAll(), (rows) => { ownedRows(rows,fixed).forEach(r=>s.records.delete(ownerKey(fixed,r.key))); });
++        request(s.kv.getAll(), (rows) => { ownedRows(rows,fixed).forEach(r=>{
++          if(r.key.startsWith('rdpms.sync.acl:') || r.key.startsWith('rdpms.sync.cursor:') || r.key.startsWith('rdpms.sync.applied:'))s.kv.delete(ownerKey(fixed,r.key));
++        }); });
++        request(s.outbox.getAll(), (rows) => { ownedRows(rows,fixed).forEach(r=>{ if(r.datasetEpoch!==epoch)s.outbox.put({...r,datasetBlocked:epoch}); }); });
++        s.kv.put({ownerId:fixed.userId,key:'rdpms.sync.datasetEpoch',value:epoch});result(true);
++      });
++    }),
+     publishPull: (rows: RecordRow[], tombstones: string[], full: boolean, aclKey: string, acl: unknown, cursorKey: string, cursor: string) => transaction<void>(fixed, ['records', 'kv'], 'readwrite', (s, result) => {
+       const commit = () => { rows.forEach(r => s.records.put({ ...r, ownerId: fixed.userId })); tombstones.forEach(key => s.records.delete(ownerKey(fixed, key)));
+         s.kv.put({ ownerId: fixed.userId, key: aclKey, value: acl }); s.kv.put({ ownerId: fixed.userId, key: cursorKey, value: cursor }); result(undefined); };
+--- before/rdpms-system/frontend/src/offline/engine.ts
++++ after/rdpms-system/frontend/src/offline/engine.ts
+@@ -49,7 +49,7 @@
+  * 生产代码不调用；默认行为与直接调用 syncAPI 完全一致。
+  */
+ export interface SyncTransport {
+-  init: (params: { since?: string; aclVersion?: string; deviceId: string; deviceLabel?: string; platform?: string; paginationVersion?: 1; pageToken?: string }) => Promise<SyncInitResponse>;
++  init: (params: { since?: string; aclVersion?: string; datasetEpoch?: string; deviceId: string; deviceLabel?: string; platform?: string; paginationVersion?: 1; pageToken?: string }) => Promise<SyncInitResponse>;
+   reserve: (payload: { protocolVersion: 1; deviceId: string; changes: SyncChange[] }) => Promise<{ protocolVersion: 1; results: SyncPushResult[] }>;
+   query: (payload: { protocolVersion: 1; deviceId: string; changes: SyncChange[] }) => Promise<{ protocolVersion: 1; results: SyncPushResult[] }>;
+   push: (payload: {
+@@ -168,7 +168,8 @@
+ 
+ export function getDeviceId(): string {
+   const actor = currentOwner?.userId; if (!actor) return '';
+-  const key = `${DEVICE_KEY}:${actor}`;
++  const epoch = tokenStore.datasetEpoch();
++  const key = `${DEVICE_KEY}:${actor}${epoch?':'+epoch:''}`;
+   let id = safeStorage.get(key);
+   if (!id) {
+     id = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `dev-${Date.now()}`;
+@@ -309,6 +310,8 @@
+ export async function enqueueChange(change: SyncChange): Promise<void> {
+   const owner = captureOwner(); const db = idb.forOwner(owner);
+   // A03：入队时标记主体归属——登出切换账号时不得把 A 的未同步内容并入 B
++  const datasetEpoch = tokenStore.datasetEpoch();
++  if(datasetEpoch) await db.resetDatasetEpoch(datasetEpoch);
+   const cached = await db.recordsAll();
+   const projectId = change.projectId ?? (typeof change.data?.projectId === 'string' ? change.data.projectId : undefined)
+     ?? (change.entity === 'projects' ? change.id : cached.find((r) => r.entity === change.entity && r.id === change.id)?.projectId ?? undefined);
+@@ -319,7 +322,7 @@
+       || (prior.entity === 'tasks' && prior.id === change.data?.parentId) || (prior.entity === 'projectPhases' && prior.id === change.data?.phaseId)) prerequisites.add(prior.clientMutationId);
+   }
+   const row: OutboxRecord = {
+-    ...change, projectId, dependsOn: [...prerequisites], origin: 'fresh-v1',
++    ...change, projectId, dependsOn: [...prerequisites], origin: 'fresh-v1', datasetEpoch,
+     createdAt: new Date().toISOString(),
+     userId: owner.userId,
+   };
+@@ -391,16 +394,20 @@
+   const isStale = () => myGen !== sessionGen || !sameOwner(owner);
+   const session: SyncSession = { userId: myUserId, owner, db, isStale };
+   try {
++    const datasetEpoch=tokenStore.datasetEpoch();
++    if(datasetEpoch && await db.resetDatasetEpoch(datasetEpoch)) await hydrate();
+     const since = await db.kvGet<string>(cursorKey(myUserId));
+     const oldAcl = await db.kvGet<SyncInitResponse['acl'] & { loginGeneration: string }>(aclKey(myUserId));
+     let firstPull = await transport.init({
+       since: since || undefined,
+       aclVersion: oldAcl?.aclVersion,
++      datasetEpoch,
+       deviceId,
+       paginationVersion: 1,
+       ...deviceMeta(),
+     });
+     if (isStale()) return;
++    if(datasetEpoch && firstPull.datasetEpoch!==datasetEpoch) throw new Error('DATASET_EPOCH_CHANGED');
+     if (!oldAcl || oldAcl.aclVersion !== firstPull.acl.aclVersion) await db.kvDelete(aclKey(myUserId));
+     if (since && !firstPull.full && (!oldAcl || oldAcl.aclVersion !== firstPull.acl.aclVersion || oldAcl.loginGeneration !== owner.loginGeneration)) {
+       firstPull = await transport.init({ deviceId, paginationVersion: 1, ...deviceMeta() });
+@@ -417,6 +424,7 @@
+     let pull = firstPull;
+     while (true) {
+       if (isStale()) return; // 旧会话的拉取结果不得落盘
++      if(datasetEpoch && pull.datasetEpoch!==datasetEpoch) throw new Error('DATASET_EPOCH_CHANGED');
+       const hasMore = Boolean(pull.pagination?.hasMore);
+       await applyPull(pull, session, !hasMore, accumulated);
+       if (!hasMore) break;
+@@ -432,6 +440,7 @@
+       if (isStale()) return;
+       const ready: OutboxRecord[] = [];
+       for (const row of queued) {
++        if(row.datasetBlocked || datasetEpoch && row.datasetEpoch!==datasetEpoch) continue;
+         const allowed = canSendWithAcl(row, res.acl);
+         if (!allowed) { if (row.scopeBlocked !== res.acl.aclVersion) await db.outboxTransport(row, { scopeBlocked: res.acl.aclVersion }); continue; }
+         if (row.scopeBlocked && !manual) continue;
+@@ -538,7 +547,7 @@
+   const pending = await db.outboxAll(); const conflicts = (await db.kvGet<ConflictRecord[]>(conflictKey(owner.userId))) ?? [];
+   const rejected = (await db.deadLettersForUser(owner.userId)) as DeadLetterRecord[]; const cache = await db.recordsAll();
+   const all: RecoveryItem[] = [
+-    ...pending.map((r) => ({ kind: 'pending' as const, key: r.clientMutationId, entity: r.entity, id: r.id, payload: r.data, baseUpdatedAt: r.baseUpdatedAt, reason: r.scopeBlocked ? '授权已变化；原文隔离保全，恢复授权后需主动核对' : r.recoveryStatus ? `回执状态：${r.recoveryStatus}，原文保留，禁止自动换键` : r.origin !== 'fresh-v1' ? '历史发送状态未确认，原文保留' : r.dependsOn?.length ? '等待前序操作确认' : undefined })),
++    ...pending.map((r) => ({ kind: 'pending' as const, key: r.clientMutationId, entity: r.entity, id: r.id, payload: r.data, baseUpdatedAt: r.baseUpdatedAt, reason: r.datasetBlocked ? '数据已经恢复；原 key、设备与正文隔离保全，禁止自动换键或直接重试' : r.scopeBlocked ? '授权已变化；原文隔离保全，恢复授权后需主动核对' : r.recoveryStatus ? `回执状态：${r.recoveryStatus}，原文保留，禁止自动换键` : r.origin !== 'fresh-v1' ? '历史发送状态未确认，原文保留' : r.dependsOn?.length ? '等待前序操作确认' : undefined })),
+     ...conflicts.map((r) => ({ kind: 'conflict' as const, key: r.clientMutationId, entity: r.entity, id: r.id, reason: r.reason, payload: r.change.data, baseUpdatedAt: r.change.baseUpdatedAt })),
+     ...rejected.map((r) => ({ kind: 'rejected' as const, key: r.clientMutationId, entity: r.entity, id: r.id, reason: r.reason, payload: r.payload, baseUpdatedAt: r.baseUpdatedAt })),
+   ];
+@@ -571,8 +580,10 @@
+   const owner = captureOwner(); await authorizedItem(owner, 'conflict', clientMutationId, true); const db = idb.forOwner(owner);
+   const values = (await db.kvGet<ConflictRecord[]>(conflictKey(owner.userId))) ?? [];
+   const target = values.find((r) => r.clientMutationId === clientMutationId); if (!target) return;
++  const datasetEpoch = tokenStore.datasetEpoch();
++  if (datasetEpoch && target.change.datasetEpoch !== datasetEpoch) throw new Error('DATASET_EPOCH_CHANGED');
+   const base = (target.server?.updatedAt as string | undefined) ?? target.change.baseUpdatedAt;
+-  await db.conflictResolve(conflictKey(owner.userId), clientMutationId, { entity: target.change.entity, id: target.change.id, op: target.change.op as 'upsert' | 'delete', data: target.change.data, projectId: target.change.projectId, userId: owner.userId, origin: 'fresh-v1',
++  await db.conflictResolve(conflictKey(owner.userId), clientMutationId, { entity: target.change.entity, id: target.change.id, op: target.change.op as 'upsert' | 'delete', data: target.change.data, projectId: target.change.projectId, userId: owner.userId, origin: 'fresh-v1', datasetEpoch,
+     clientMutationId: newClientMutationId(), baseUpdatedAt: base, createdAt: new Date().toISOString() });
+   if (sameOwner(owner)) { await hydrate(); if (state.online) void syncNow(); }
+ }
+@@ -580,6 +591,8 @@
+   const owner = captureOwner(); await authorizedItem(owner, 'rejected', clientMutationId, true); const db = idb.forOwner(owner);
+   const rows = (await db.deadLettersForUser(owner.userId)) as DeadLetterRecord[];
+   const record = rows.find((r) => r.clientMutationId === clientMutationId); if (!record) return false;
++  const datasetEpoch = tokenStore.datasetEpoch();
++  if (datasetEpoch && toOutboxRecord(record).datasetEpoch !== datasetEpoch) throw new Error('DATASET_EPOCH_CHANGED');
+   await db.deadLetterRetry(record.key, { ...toOutboxRecord(record), userId: owner.userId });
+   if (sameOwner(owner)) { await restoreDeadLetters(); await refreshPending(owner); if (state.online) void syncNow(); }
+   return true;
+@@ -631,6 +644,9 @@
+   set({ syncing: false, pending: 0, conflicts: [], rejections: [], lastSyncAt: null, lastError: null });
+   await idb.activateOwner(owner);
+   if (myGen !== sessionGen || !sameOwner(owner)) return;
++  const datasetEpoch = tokenStore.datasetEpoch();
++  if (datasetEpoch) await idb.forOwner(owner).resetDatasetEpoch(datasetEpoch);
++  if (myGen !== sessionGen || !sameOwner(owner)) return;
+   started = true;
+   await hydrate(); await restoreDeadLetters();
+   if (myGen !== sessionGen || !sameOwner(owner)) return;
+--- before/rdpms-system/frontend/src/auth/tokenStore.ts
++++ after/rdpms-system/frontend/src/auth/tokenStore.ts
+@@ -96,6 +96,12 @@
+   });
+ }
+ export const tokenStore = {
++  datasetEpoch(): string | undefined {
++    try { const token=state().session?.accessToken; if(!token)return undefined;
++      const claims=JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
++      return typeof claims.datasetEpoch==='string' && /^[0-9a-f-]{36}$/i.test(claims.datasetEpoch) ? claims.datasetEpoch : undefined;
++    } catch { return undefined; }
++  },
+   snapshot(): SessionSnapshot | null { const s = state().session; return s ? Object.freeze({ ...s }) : null; },
+   generation(): string { return state().generation; },
+   sameLogin,
+--- before/rdpms-system/frontend/src/api/endpoints/sync.ts
++++ after/rdpms-system/frontend/src/api/endpoints/sync.ts
+@@ -19,6 +19,8 @@
+ export type SyncOp = 'upsert' | 'delete';
+ 
+ export interface SyncChange {
++  /** Local provenance only; server validates its own epoch/device, not this client tag. */
++  datasetEpoch?: string;
+   clientMutationId: string;
+   entity: SyncEntityKey | string;
+   op: SyncOp;
+@@ -56,10 +58,11 @@
+ }
+ 
+ export interface SyncInitResponse {
++  datasetEpoch?: string;
+   serverTime: string;
+   cursor: string;
+   full: boolean;
+-  acl: { projectIds: string[]; permissions: string[]; aclVersion: string;
++  acl: { datasetEpoch?: string; projectIds: string[]; permissions: string[]; aclVersion: string;
+     projectionVersion?: number; projects?: Array<{ id: string; role: string | null; capabilities: string[] }>;
+     writePolicy?: Record<string, { read: string; update: string; create: string | null; delete: string; status: string | null; assign: string | null; capability: string }>;
+   };
+@@ -83,7 +86,7 @@
+ }
+ 
+ export const syncAPI = {
+-  init: (params: { since?: string; aclVersion?: string; deviceId: string; deviceLabel?: string; platform?: string; paginationVersion?: 1; pageToken?: string }) =>
++  init: (params: { since?: string; aclVersion?: string; datasetEpoch?: string; deviceId: string; deviceLabel?: string; platform?: string; paginationVersion?: 1; pageToken?: string }) =>
+     get<SyncInitResponse>('/sync/init', { params } as never),
+ 
+   push: (payload: { deviceId: string; deviceLabel?: string; platform?: string; changes: SyncChange[] }) =>
+--- before/rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx
++++ after/rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx
+@@ -11,6 +11,7 @@
+ import * as engine from '../engine';
+ import { idb, type OfflineOwner } from '../idb';
+ import Tasks from '../../pages/Tasks';
++import * as pendingDraft from '../pendingDraft';
+ 
+ const permissions = ['tasks.view', 'projects.view', 'reports.view', 'tasks.update', 'tasks.update_status'];
+ let auth: ReturnType<typeof useAuth>;
+@@ -36,8 +37,8 @@
+ let pullGate: { entered: Promise<void>; enter: () => void; released: Promise<void>; release: () => void } | null = null;
+ function deferred() { let resolve!: () => void; const promise = new Promise<void>((r) => { resolve = r; }); return { promise, resolve }; }
+ function response(actor: string) {
+-  return { serverTime: new Date().toISOString(), cursor: `cursor-${actor}`, full: true,
+-    acl: { projectIds: aclMode === 'nonmember' ? [] : ['shared-project'], permissions: aclMode === 'task-revoke' ? permissions.filter(p => p !== 'tasks.view') : permissions, aclVersion: `acl-${actor}-${aclMode}`,
++  return { datasetEpoch: tokenStore.datasetEpoch(), serverTime: new Date().toISOString(), cursor: `cursor-${actor}`, full: true,
++    acl: { datasetEpoch: tokenStore.datasetEpoch(), projectIds: aclMode === 'nonmember' ? [] : ['shared-project'], permissions: aclMode === 'task-revoke' ? permissions.filter(p => p !== 'tasks.view') : permissions, aclVersion: `acl-${actor}-${aclMode}`,
+       projects: aclMode === 'nonmember' ? [] : [{ id: 'shared-project', role: aclMode === 'role-viewer' ? 'VIEWER' : 'OWNER', capabilities: aclMode === 'role-viewer' ? ['read'] : ['read','write','delete','transition','assign','manage_members'] }],
+       writePolicy: { tasks: { read: 'tasks.view', update: 'tasks.update', create: null, delete: 'tasks.delete', status: 'tasks.change_status', assign: 'tasks.assign', capability: 'write' } } }, entities: ['tasks'],
+     changes: { tasks: { upserts: ['task-revoke','nonmember'].includes(aclMode) ? [] : [{ id: `task-${actor}`, projectId: 'shared-project', title: `VISIBLE-${actor}`, status: 'NOT_STARTED', priority: '中', updatedAt: '2026-10-06T00:00:00.000Z' }], tombstones: [] } } };
+@@ -153,6 +154,15 @@
+   abortUpgrade() { nativePut = IDBObjectStore.prototype.put; IDBObjectStore.prototype.put = function(...args) { const req = nativePut!.apply(this, args); if (this.name === 'legacyQuarantine') this.transaction.abort(); return req; }; },
+   armCloseUpgrade() { nativePut = IDBObjectStore.prototype.put; let fired = false; IDBObjectStore.prototype.put = function(...args) { const req = nativePut!.apply(this, args); if (!fired && this.name === 'legacyQuarantine') { fired = true; (window as unknown as { notifyUpgrade: (text: string) => void }).notifyUpgrade('NATIVE_UPGRADE_COPY_STARTED'); } return req; }; },
+   restoreNativePut() { if (nativePut) IDBObjectStore.prototype.put = nativePut; nativePut = null; },
++  epoch: () => tokenStore.datasetEpoch(),
++  resetEpoch: (epoch: string) => store().resetDatasetEpoch(epoch),
++  kv: async () => (await raw('ownerKv') as {ownerId:string}[]).filter(r=>r.ownerId===owner().userId),
++  async seedEpochMarkers() { await store().kvSet('rdpms.sync.applied:test-epoch', {original:'MARKER'}); },
++  savePending: (text: string) => pendingDraft.savePendingDraft(owner().userId, '2026-10', [{id:'owned-unbound',description:text}]),
++  loadPending: () => pendingDraft.loadPendingDraft(owner().userId),
++  clearPending: () => pendingDraft.clearPendingDraft(owner().userId),
++  abortEpochReset() { nativePut = IDBObjectStore.prototype.put; IDBObjectStore.prototype.put = function(...args) { const req=nativePut!.apply(this,args); if(this.name==='ownerKv' && (args[0] as {key?: string})?.key==='rdpms.sync.datasetEpoch') this.transaction.abort(); return req; }; },
++  async rebindEpoch(key: string, epoch: string) { const row=(await store().outboxAll()).find(r=>r.clientMutationId===key)!; await store().outboxPut({...row,datasetEpoch:epoch}); },
+   async loginNative(username: string, password: string, actorId: string) { network(false); await auth.login(username, password); await wait(() => auth.user?.id === actorId); await engine.start(actorId, auth.user?.permissions ?? []); return owner(); },
+   enqueueNative: engine.enqueueChange,
+   async manualSync() { Object.defineProperty(navigator, "onLine", { configurable: true, value: true }); await engine.syncNow(true); network(false); },
+--- before/rdpms-system/backend/tests/helpers/stubDeps.mjs
++++ after/rdpms-system/backend/tests/helpers/stubDeps.mjs
+@@ -101,6 +101,7 @@
+ 
+   const db = {
+     state,
++    dataRecoveryState: {findUniqueOrThrow: async()=>({id:1,status:'READY',epoch:'00000000-0000-4000-8000-000000000001'}),findUnique:async()=>({id:1,status:'READY',epoch:'00000000-0000-4000-8000-000000000001'})},
+     project: {
+       findUnique: async ({ where }) => {
+         // 钩子点：位于请求处理链路内部，用于构造「A 挂起时 B 完成」的交错场景
+--- before/rdpms-system/frontend/src/components/EditProjectModal.tsx
++++ after/rdpms-system/frontend/src/components/EditProjectModal.tsx
+@@ -41,7 +41,8 @@
+ const MILESTONE_STATUS_OPTIONS = ['待完成', 'IN_PROGRESS', 'COMPLETED'];
+ 
+ function getEditDraftKey(projectId: string, actorId: string) {
+-  return `rdpms_edit_project_draft_v2_${actorId}_${projectId}`;
++  const epoch = tokenStore.datasetEpoch();
++  return `rdpms_edit_project_draft_v2_${actorId}_${projectId}${epoch ? '_' + epoch : ''}`;
+ }
+ 
+ interface Phase {
+@@ -179,7 +180,7 @@
+         if (draftRaw) {
+           try {
+             const draft = JSON.parse(draftRaw);
+-            if (draft.ownerId !== session.actorId || draft.baseUpdatedAt !== full.updatedAt || !draft.snapshot || projectEditSnapshotSignature(draft.snapshot) !== projectEditSnapshotSignature(original.current!)) {
++            if ((tokenStore.datasetEpoch() && draft.datasetEpoch !== tokenStore.datasetEpoch()) || draft.ownerId !== session.actorId || draft.baseUpdatedAt !== full.updatedAt || !draft.snapshot || projectEditSnapshotSignature(draft.snapshot) !== projectEditSnapshotSignature(original.current!)) {
+               setDraftBlocked(true);
+               throw Error('暂存草稿基线已变化，草稿已保留，请先核对');
+             }
+@@ -466,6 +467,7 @@
+     if (!project?.id || !ownsSource() || !original.current || draftBlocked) return;
+     const draft = {
+       ownerId: sourceOwner.current!.actorId,
++      datasetEpoch: tokenStore.datasetEpoch(),
+       baseUpdatedAt: original.current.updatedAt,
+       snapshot: original.current,
+       projectId: project.id,
+--- before/rdpms-system/frontend/src/offline/pendingDraft.ts
++++ after/rdpms-system/frontend/src/offline/pendingDraft.ts
+@@ -32,12 +32,14 @@
+ export interface PendingDraftState {
+   userId: string;
+   periodKey: string;
++  datasetEpoch?: string;
+   savedAt: string;
+   records: PendingDraftRecord[];
+ }
+ 
+ export function pendingDraftKey(userId: string): string {
+-  return `rdpms.pendingDraft:${userId}`;
++  const epoch = tokenStore.datasetEpoch();
++  return `rdpms.pendingDraft:${userId}${epoch ? ':' + epoch : ''}`;
+ }
+ 
+ /** 记录身份：优先 id，其次 experimentNo，最后退化为内容哈希（保证同一记录可去重） */
+@@ -84,6 +86,7 @@
+ export async function loadPendingDraft(userId: string): Promise<PendingDraftState | null> {
+   if (!userId) return null;
+   const state = await storageFor(userId).kvGet<PendingDraftState>(pendingDraftKey(userId));
++  if (tokenStore.datasetEpoch() && state?.datasetEpoch !== tokenStore.datasetEpoch()) return null;
+   if (!state || !Array.isArray(state.records) || state.records.length === 0) return null;
+   return state;
+ }
+@@ -103,7 +106,7 @@
+     await storageFor(userId).kvDelete(pendingDraftKey(userId));
+     return;
+   }
+-  const state: PendingDraftState = { userId, periodKey, savedAt: now, records };
++  const state: PendingDraftState = { userId, periodKey, datasetEpoch: tokenStore.datasetEpoch(), savedAt: now, records };
+   await storageFor(userId).kvSet(pendingDraftKey(userId), state);
+ }
+ 
+--- before/rdpms-system/backend/tests/helpers/syncV1Fixture.mjs
++++ after/rdpms-system/backend/tests/helpers/syncV1Fixture.mjs
+@@ -15,10 +15,10 @@
+   db.syncDevice.findUnique = async ({ where }) => structuredClone(db.state.syncDevices.find(d => d.id === where.id) ?? null);
+   db.syncDevice.create = async ({ data }) => {
+     assert.ok(!db.state.syncDevices.some(d => d.id === data.id));
+-    const row = { ...data }; db.state.syncDevices.push(row); return structuredClone(row);
++    const row = { datasetEpoch: (await db.dataRecoveryState.findUniqueOrThrow({where:{id:1}})).epoch, ...data }; db.state.syncDevices.push(row); return structuredClone(row);
+   };
+   db.syncDevice.updateMany = async ({ where, data }) => {
+-    const rows = db.state.syncDevices.filter(d => d.id === where.id && d.userId === where.userId);
++    const rows = db.state.syncDevices.filter(d => d.id === where.id && d.userId === where.userId && (!where.datasetEpoch || d.datasetEpoch === where.datasetEpoch));
+     rows.forEach(d => Object.assign(d, data)); return { count: rows.length };
+   };
+   db.syncMutation.findUnique = async ({ where }) => structuredClone(db.state.syncMutations.find(r => where.id ? r.id === where.id : r.clientMutationId === where.clientMutationId) ?? null);
+--- before/rdpms-system/backend/tests/integration/rp03-security-version.integration.test.mjs
++++ after/rdpms-system/backend/tests/integration/rp03-security-version.integration.test.mjs
+@@ -15,7 +15,8 @@
+ async function refresh(token){return app.request('/api/auth/refresh',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({refreshToken:token})});}
+ async function revoked(u,tokens,version){const me=await request(app,tokens.accessToken,'GET','/api/auth/me');assert.equal(me.status,401);assert.equal((await refresh(tokens.refreshToken)).status,401);const current=await db.user.findUnique({where:{id:u.id}});assert.equal(current.securityVersion,version);assert.equal(await db.refreshToken.count({where:{userId:u.id,revokedAt:null}}),0);traces.push({userId:u.id,version,oldAccess:401,oldRefresh:401});}
+ function auditFaultApp(){return createApp({db:new Proxy(db,{get(target,key){if(key==='$transaction')return(fn,opts)=>target.$transaction(tx=>fn(new Proxy(tx,{get(t,k){if(k==='auditLog')return{create:async()=>{throw new Error('RP03_AUDIT_FAULT');}};const v=t[k];return typeof v==='function'?v.bind(t):v;}})),opts);const v=target[key];return typeof v==='function'?v.bind(target):v;}})});}
+-function loginGate(u){let enter,release;let hit=false;const reached=new Promise(r=>enter=r);const released=new Promise(r=>release=r);const client=new Proxy(db,{get(target,key){if(key==='user')return new Proxy(target.user,{get(model,m){if(m==='updateMany')return async args=>{if(!hit&&args.where.id===u.id&&args.data.lastLoginAt){hit=true;enter();await released;}return model.updateMany(args);};const v=model[m];return typeof v==='function'?v.bind(model):v;}});const v=target[key];return typeof v==='function'?v.bind(target):v;}});return{app:createApp({db:client}),reached,release,hit:()=>hit};}
++function loginGate(u){let enter,release;let hit=false;const reached=new Promise(r=>enter=r);const released=new Promise(r=>release=r);const wrap=target=>new Proxy(target,{get(t,key){if(key==='user')return new Proxy(t.user,{get(model,m){if(m==='updateMany')return async args=>{if(!hit&&args.where.id===u.id&&args.data.lastLoginAt){hit=true;enter();await released;}return model.updateMany(args);};const v=model[m];return typeof v==='function'?v.bind(model):v;}});const v=t[key];return typeof v==='function'?v.bind(t):v;}});const client=new Proxy(wrap(db),{get(t,key){if(key==='$transaction')return(fn,opts)=>db.$transaction(tx=>fn(wrap(tx)),opts);return t[key];}});return{app:createApp({db:client}),reached,release,hit:()=>hit};}
++
+ before(async()=>{app=createApp({db});admin=await makeUser('SUPER_ADMIN');adminTokens=await login(admin);assert.equal((await request(app,adminTokens.accessToken,'GET','/api/users')).status,200);});
+ after(async()=>{if(process.env.RDPMS_EXEC_EVIDENCE_DIR)fs.writeFileSync(path.join(process.env.RDPMS_EXEC_EVIDENCE_DIR,'rp03-version-state.json'),JSON.stringify({kind:'REAL_DB_AND_JWT',traces,noTokensPersisted:true,wholeDBCleanup:true},null,2));await db.$disconnect();});
+ 
+--- before/rdpms-system/backend/tests/integration/rp02-login-lock-ttl.integration.test.mjs
++++ after/rdpms-system/backend/tests/integration/rp02-login-lock-ttl.integration.test.mjs
+@@ -219,9 +219,10 @@
+   const client = new Proxy(db, {
+     get(target, prop) {
+       if (prop === 'user') return wrapModel(target.user);
+-      if (prop === '$transaction' && beforeAccountLock) return (fn, opts) => target.$transaction(tx => fn(new Proxy(tx, { get(inner, key) {
++      if (prop === '$transaction') return (fn, opts) => target.$transaction(tx => fn(new Proxy(tx, { get(inner, key) {
++        if (key === 'user') return wrapModel(inner.user);
+         if (key === '$queryRaw') return async (strings, ...values) => {
+-          if (!fired && strings.join('?').includes('ORDER BY id FOR UPDATE')) { fired = true; ready(); await released; }
++          if (beforeAccountLock && !fired && strings.join('?').includes('ORDER BY id FOR UPDATE')) { fired = true; ready(); await released; }
+           return inner.$queryRaw(strings, ...values);
+         };
+         const value = inner[key]; return typeof value === 'function' ? value.bind(inner) : value;
+--- before/rdpms-system/backend/tests/integration/rp09-receipt-recovery.integration.test.mjs
++++ after/rdpms-system/backend/tests/integration/rp09-receipt-recovery.integration.test.mjs
+@@ -105,7 +105,7 @@
+ 
+ test('lastPushAt failure yields500 AFTER complete items; lookup/replay preserves committed state', async () => {
+   const f = await fixture(); const c = await reserve(f);
+-  const client = new Proxy(db, { get(t, k) { if (k === 'syncDevice') return new Proxy(t[k], { get(m, op) { if (op === 'updateMany') return async () => { throw new Error('OWNED_LAST_PUSH_FAULT'); }; const v = m[op]; return typeof v === 'function' ? v.bind(m) : v; } }); const v = t[k]; return typeof v === 'function' ? v.bind(t) : v; } });
++  const client = proxy(tx => new Proxy(tx,{get(t,k){if(k==='syncDevice') return new Proxy(t[k],{get(m,op){if(op==='updateMany')return async(args)=>{if(args.data.lastPushAt)throw Error('OWNED_LAST_PUSH_FAULT');return m.updateMany(args);};return typeof m[op]==='function'?m[op].bind(m):m[op];}});return typeof t[k]==='function'?t[k].bind(t):t[k];}}));
+   assert.equal((await call('push', c, f, createApp({ db: client }))).r.status, 500); assert.equal((await db.task.findUnique({ where: { id: c.id } })).title, c.data.title); assert.equal((await call('receipts/query', c, f)).body.results[0].status, 'applied'); assert.equal((await call('push', c, f)).body.results[0].replayed, true); assert.equal(await audits(c), 1);
+ });
+ 
+@@ -130,13 +130,13 @@
+ 
+ test('concurrent distinct-key deletes preserve one tombstone timestamp and per-intent noops', async () => {
+   const f = await fixture(); const raw = { ...f.command, op: 'delete', data: {} }; const c1 = await reserve(f, raw); const c2 = await reserve(f, { ...raw, clientMutationId: id() });
+-  const g = barrier((model, op, args) => model === 'task' && op === 'updateMany' && args.where.id === f.task.id && Object.hasOwn(args.where, 'deletedAt')); const requests = [call('push', c1, f, g.app), call('push', c2, f, g.app)];
++  const g = barrier((model, op, args) => model === '$queryRaw' && args[0]?.strings?.join('?').includes('SELECT id FROM tasks WHERE id IN') && args[0]?.values?.includes(f.task.id)); const requests = [call('push', c1, f, g.app), call('push', c2, f, g.app)];
+   try { await reach(g); } finally { await settle(g, requests); } const rs = await Promise.all(requests); assert.deepEqual(rs.map((r) => r.body.results[0].action).sort(), ['deleted', 'noop']); const row = await db.task.findUnique({ where: { id: f.task.id } }); assert.ok(row.deletedAt); assert.equal(await audits(c1) + await audits(c2), 2);
+   await call('push', c1, f); await call('push', c2, f); assert.deepEqual(await db.task.findUnique({ where: { id: row.id } }), row);
+ });
+ 
+ test('delete/fixture-restore ordering: delayed delete wins, committed noop does not re-delete later restore', async () => {
+-  const f = await fixture(); const c = await reserve(f, { ...f.command, op: 'delete', data: {} }); const g = barrier((model, op, args) => model === 'task' && op === 'updateMany' && args.where.id === f.task.id, 1); const request = call('push', c, f, g.app);
++  const f = await fixture(); const c = await reserve(f, { ...f.command, op: 'delete', data: {} }); const g = barrier((model, op, args) => model === '$queryRaw' && args[0]?.strings?.join('?').includes('SELECT id FROM tasks WHERE id IN') && args[0]?.values?.includes(f.task.id), 1); const request = call('push', c, f, g.app);
+   try { await reach(g); await db.task.update({ where: { id: f.task.id }, data: { deletedAt: null, title: 'fixture restore/new edit' } }); } finally { await settle(g, [request]); }
+   assert.equal((await request).body.results[0].status, 'applied'); const row = await db.task.findUnique({ where: { id: f.task.id } }); assert.ok(row.deletedAt); assert.equal(row.title, 'fixture restore/new edit');
+   const noop = await reserve(f, { ...f.command, clientMutationId: id(), op: 'delete', data: {} }); assert.equal((await call('push', noop, f)).body.results[0].action, 'noop');

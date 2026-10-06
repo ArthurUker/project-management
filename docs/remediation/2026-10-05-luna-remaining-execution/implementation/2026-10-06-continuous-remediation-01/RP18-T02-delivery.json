@@ -1,0 +1,44 @@
+{
+  "files": [
+    "rdpms-system/deploy/scripts/deploy-control.py",
+    "rdpms-system/deploy/scripts/deploy.sh",
+    "rdpms-system/deploy/scripts/rdpms-start.sh",
+    "rdpms-system/deploy/scripts/rdpms-env",
+    "rdpms-system/backend/src/platform/config/configExec.ts",
+    "rdpms-system/backend/tests/integration/rp18-deploy-control.integration.test.mjs",
+    "rdpms-system/backend/src/platform/config/configCli.ts"
+  ],
+  "beforeDirectory": "before-RP18-T02",
+  "runs": [
+    "rp18-t02-control"
+  ],
+  "summary": "Actual FS process deployment lease, candidate/config/output/migration current drift checks, exact baseline CAS, same-FS atomic current pointer, persistent phase/effect records; explicit migration may-effect before invoking and stop/maintenance firstsafe fallback. Certified compatible safe artifact rollback only; unknown/unsafe old blocks. Compiled startup no src fallback, manifest+config fingerprint checks; literal env exec shared schema. Native1 test with10 owned FS/simulated service+DDL controls passed, no actual deploy/DDL/systemd/proxy.",
+  "compatibility": "--prepare preserved; --apply requires explicit target approval plus target gatePASS refs/hooks/compatibility. Missing live proofs denies beforeops. Current startup requires reviewed release manifest/dist, no unsafe src fallback. rdpms-env compiled literal loader, no shellsource. No destructive release cleanup. All current real service changes NOT_RUN.",
+  "rollback": "Default first-safe containment stopWrites+independent stopService, preserve current/schema/backup/manifest, no blind priorapp or migrate-down. Only separately security-safe/current-schema compatible artifact certified by target operator eligible; successrollback stillfaileddeploy. Partial stop is uncertain, never healthyprevious assertion.",
+  "casePass": {
+    "TASK-RP18-T02": "Actual FS process deployment lease, candidate/config/output/migration current drift checks, exact baseline CAS, same-FS atomic current pointer, persistent phase/effect records; explicit migration may-effect before invoking and stop/maintenance firstsafe fallback. Certified compatible safe artifact rollback only; unknown/unsafe old blocks. Compiled startup no src fallback, manifest+config fingerprint checks; literal env exec shared schema. Native1 test with10 owned FS/simulated service+DDL controls passed, no actual deploy/DDL/systemd/proxy.",
+    "DECISION-T-RP-13": "Actual FS process deployment lease, candidate/config/output/migration current drift checks, exact baseline CAS, same-FS atomic current pointer, persistent phase/effect records; explicit migration may-effect before invoking and stop/maintenance firstsafe fallback. Certified compatible safe artifact rollback only; unknown/unsafe old blocks. Compiled startup no src fallback, manifest+config fingerprint checks; literal env exec shared schema. Native1 test with10 owned FS/simulated service+DDL controls passed, no actual deploy/DDL/systemd/proxy."
+  },
+  "envBlocked": {
+    "PAC-RP18-03": "Actual app identity local proven RP18-T01; target restart/proxy/three-observation/smoke telemetry missing, controls synthetic.",
+    "PAC-RP18-04": "Exact migration hashes/matrix and failclosed control delivered; no target app×schema compatibility or independently safe rollback release supplied. Default firstsafe maintenance only.",
+    "PAC-RP18-05": "Local real lease/atomic pointer/10 synthetic serviceDDL failures passed; genuine target two-deploy/migration/restart/readiness failure proof absent.",
+    "GATE-S05-OI-05": "New proposed local operational runbook delivered; existing target §13/qualified target owner/signature/proxy/service proof not supplied, not fabricated."
+  },
+  "notRun": {
+    "INT-PC10-01": "Local protocol/FS/synthetic hook subset only; target candidate/real migration/service/maintenance/rollback jointly not executed."
+  },
+  "limits": [
+    "Actual owned OS lock/hash/symlink changes, service/DDL hooks transparently SIMULATED; no actual deploy, workerstop/proxy, production/sharedDB/realrestore.",
+    "Real pipeline must obtain explicit target approved change, qualified live writer barrier/paired verification, compatibility matrix and target §13; local broad implementation approval cannot armtarget CLI.",
+    "Defaultstop firstsafe selected locally, no safe priorartifact claimed. Target observation metrics/time/latency/queue/lag not certified; no release PASS.",
+    "Published release/source/dependency immutability applies verified bindings; target dependencyfile ownership/binary/library integrity/wholehost verification still target scope. Failed attempts retained (own temp canonical path fixture corrected)."
+  ],
+  "findings": [
+    "D02",
+    "D03"
+  ],
+  "validation": "PASS",
+  "next": "RP18-T03 actual owned candidate startup/config/identity plus external target ENV gate",
+  "nextTask": "RP18-T03"
+}

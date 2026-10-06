@@ -1,0 +1,24 @@
+{
+  "sessionId": "2026-10-05-receipt-approval-01",
+  "writerStopped": true,
+  "status": "PREPARATION_READY_FOR_REVIEW_AND_EXACT_DECISION",
+  "preparedTaskIds": [
+    "RP09-T01",
+    "RP09-T02"
+  ],
+  "manifestRef": {
+    "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/evidence/payload-manifest.json",
+    "sha256": "229c19fa713590c9c27f6726423fcd43f0089cb3df1e9a86d4966753ef5a0db8"
+  },
+  "protectedReadbackRef": {
+    "path": "docs/remediation/2026-10-05-luna-remaining-execution/preparation/2026-10-05-receipt-approval-01/evidence/final-readback.json",
+    "sha256": "0fe77d719c30868ddc492419f157647a9cb08af57142edf6936ada50ad51e209"
+  },
+  "manifestPayloadFilesVerified": 24,
+  "manifestPayloadDrift": [],
+  "implementation": "NOT_STARTED",
+  "dynamicValidation": "NOT_RUN",
+  "approval": "PROPOSED",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED"
+}

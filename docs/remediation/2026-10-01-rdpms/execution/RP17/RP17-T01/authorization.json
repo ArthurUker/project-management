@@ -1,0 +1,30 @@
+{
+  "taskId": "RP17-T01",
+  "packageId": "RP17",
+  "authorizedBy": "User continuation request on 2026-10-02 under EXECUTOR_PROMPT.md bounded local implementation authorization",
+  "executor": "Codex executor",
+  "allowedTaskIdsThisExecution": [
+    "RP17-T01"
+  ],
+  "sourceFiles": [
+    "rdpms-system/deploy/scripts/backup-pg.sh"
+  ],
+  "testFiles": [
+    "execution/RP17/RP17-T01/evidence/rp17-owned-fs-validation.sh"
+  ],
+  "prohibitedActions": [
+    "stage",
+    "commit",
+    "push",
+    "merge",
+    "deploy",
+    "production/shared database access or changes",
+    "real data restore",
+    "dependency upgrade",
+    "real account operations",
+    "approval of pending product/security/data rules"
+  ],
+  "databaseMigration": false,
+  "runtimeResourcesCreated": false,
+  "boundary": "RP17-T01 only. RP17-T02 requires T-RP-11 approval and is not activated."
+}

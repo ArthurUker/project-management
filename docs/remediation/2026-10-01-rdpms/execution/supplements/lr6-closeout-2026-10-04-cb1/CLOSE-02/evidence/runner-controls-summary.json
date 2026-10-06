@@ -1,0 +1,627 @@
+{
+  "runnerSha256": "36551b9281bc45209bdfb03f9912cba9e264b158c0b9599a4e0aacf3cb2a81a7",
+  "controlsKind": "SIMULATED_CONTROL_ALL_SUBPROCESSES_STUBBED",
+  "realDatabaseOrServerAccess": false,
+  "controls": [
+    {
+      "mode": "build-nonzero",
+      "observedExitCode": 1,
+      "runResultsWritten": true,
+      "fallbackLogWritten": false,
+      "primaryExceptions": [],
+      "criticalFailures": [
+        "backend-build did not succeed"
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_lr6_3fe6d8b8d1",
+          "ownedPort": 52982,
+          "ownedTempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-i9msq85o",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commandsInvoked": [
+        [
+          "/opt/homebrew/bin/initdb",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-i9msq85o/pg",
+          "-U",
+          "rdpms_exec",
+          "--auth=trust"
+        ],
+        [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-i9msq85o/pg",
+          "-l",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-i9msq85o/postgres.log",
+          "-o",
+          "-h 127.0.0.1 -p 52982 -k /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-i9msq85o/socket",
+          "-w",
+          "start"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "check"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "reset"
+        ],
+        [
+          "npm",
+          "run",
+          "build"
+        ],
+        [
+          "npm",
+          "run",
+          "typecheck"
+        ],
+        [
+          "npm",
+          "run",
+          "lint:undefined"
+        ],
+        [
+          "git",
+          "diff",
+          "--check"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "drop"
+        ],
+        [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-i9msq85o/pg",
+          "-m",
+          "fast",
+          "-w",
+          "stop"
+        ]
+      ]
+    },
+    {
+      "mode": "drop-exception",
+      "observedExitCode": 1,
+      "runResultsWritten": true,
+      "fallbackLogWritten": false,
+      "primaryExceptions": [
+        {
+          "label": "guard-drop",
+          "command": [
+            "node",
+            "scripts/test-db.mjs",
+            "drop"
+          ],
+          "exceptionType": "FileNotFoundError",
+          "message": "injected guard-drop spawn failure",
+          "exitCode": null,
+          "exitSemantics": "command could not be spawned",
+          "log": "guard-drop.log"
+        }
+      ],
+      "criticalFailures": [
+        "guard-drop could not be spawned: FileNotFoundError",
+        "guard-drop cleanup did not succeed"
+      ],
+      "cleanup": {
+        "guardDropExit": null,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_lr6_587d098c5e",
+          "ownedPort": 52983,
+          "ownedTempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-5u37j_tt",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commandsInvoked": [
+        [
+          "/opt/homebrew/bin/initdb",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-5u37j_tt/pg",
+          "-U",
+          "rdpms_exec",
+          "--auth=trust"
+        ],
+        [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-5u37j_tt/pg",
+          "-l",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-5u37j_tt/postgres.log",
+          "-o",
+          "-h 127.0.0.1 -p 52983 -k /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-5u37j_tt/socket",
+          "-w",
+          "start"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "check"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "reset"
+        ],
+        [
+          "npm",
+          "run",
+          "build"
+        ],
+        [
+          "node",
+          "--test",
+          "tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+        ],
+        [
+          "npm",
+          "run",
+          "typecheck"
+        ],
+        [
+          "npm",
+          "run",
+          "lint:undefined"
+        ],
+        [
+          "git",
+          "diff",
+          "--check"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "drop"
+        ],
+        [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-5u37j_tt/pg",
+          "-m",
+          "fast",
+          "-w",
+          "stop"
+        ]
+      ]
+    },
+    {
+      "mode": "stop-nonzero",
+      "observedExitCode": 1,
+      "runResultsWritten": true,
+      "fallbackLogWritten": false,
+      "primaryExceptions": [],
+      "criticalFailures": [
+        "cluster-stop cleanup did not succeed",
+        "cluster-stop failed, owned temp root preserved (release condition recorded)"
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 1,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": false,
+        "preservedOwnedTempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-1ovx3mhn",
+        "releaseCondition": "cluster-stop did not succeed; the owned temp root is preserved on purpose. Release: run pg_ctl -D <root>/pg -m fast -w stop, then remove the root. Never delete a root whose cluster may still be running.",
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_lr6_3d85cdfde1",
+          "ownedPort": 52984,
+          "ownedTempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-1ovx3mhn",
+          "rootExistsAfterCleanup": true,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commandsInvoked": [
+        [
+          "/opt/homebrew/bin/initdb",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-1ovx3mhn/pg",
+          "-U",
+          "rdpms_exec",
+          "--auth=trust"
+        ],
+        [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-1ovx3mhn/pg",
+          "-l",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-1ovx3mhn/postgres.log",
+          "-o",
+          "-h 127.0.0.1 -p 52984 -k /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-1ovx3mhn/socket",
+          "-w",
+          "start"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "check"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "reset"
+        ],
+        [
+          "npm",
+          "run",
+          "build"
+        ],
+        [
+          "node",
+          "--test",
+          "tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+        ],
+        [
+          "npm",
+          "run",
+          "typecheck"
+        ],
+        [
+          "npm",
+          "run",
+          "lint:undefined"
+        ],
+        [
+          "git",
+          "diff",
+          "--check"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "drop"
+        ],
+        [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-1ovx3mhn/pg",
+          "-m",
+          "fast",
+          "-w",
+          "stop"
+        ]
+      ]
+    },
+    {
+      "mode": "build-timeout",
+      "observedExitCode": 1,
+      "runResultsWritten": true,
+      "fallbackLogWritten": false,
+      "primaryExceptions": [
+        {
+          "label": "backend-build",
+          "command": [
+            "npm",
+            "run",
+            "build"
+          ],
+          "exceptionType": "TimeoutExpired",
+          "timeoutSeconds": 0.001,
+          "exitCode": null,
+          "exitSemantics": "primary launch timeout; command did not complete",
+          "log": "backend-build.log"
+        }
+      ],
+      "criticalFailures": [
+        "backend-build raised TimeoutExpired after 0.001s",
+        "backend-build did not succeed"
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_lr6_0543f8dfa7",
+          "ownedPort": 52985,
+          "ownedTempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-vl0ktaoj",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commandsInvoked": [
+        [
+          "/opt/homebrew/bin/initdb",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-vl0ktaoj/pg",
+          "-U",
+          "rdpms_exec",
+          "--auth=trust"
+        ],
+        [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-vl0ktaoj/pg",
+          "-l",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-vl0ktaoj/postgres.log",
+          "-o",
+          "-h 127.0.0.1 -p 52985 -k /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-vl0ktaoj/socket",
+          "-w",
+          "start"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "check"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "reset"
+        ],
+        [
+          "npm",
+          "run",
+          "build"
+        ],
+        [
+          "npm",
+          "run",
+          "typecheck"
+        ],
+        [
+          "npm",
+          "run",
+          "lint:undefined"
+        ],
+        [
+          "git",
+          "diff",
+          "--check"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "drop"
+        ],
+        [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-vl0ktaoj/pg",
+          "-m",
+          "fast",
+          "-w",
+          "stop"
+        ]
+      ]
+    },
+    {
+      "mode": "suite-spawn-exception",
+      "observedExitCode": 1,
+      "runResultsWritten": true,
+      "fallbackLogWritten": false,
+      "primaryExceptions": [
+        {
+          "label": "integration-suite",
+          "command": [
+            "node",
+            "--test",
+            "tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+          ],
+          "exceptionType": "FileNotFoundError",
+          "message": "injected primary suite spawn failure",
+          "exitCode": null,
+          "exitSemantics": "command could not be spawned",
+          "log": "integration-suite.log"
+        }
+      ],
+      "criticalFailures": [
+        "integration-suite could not be spawned: FileNotFoundError",
+        "integration-suite did not succeed"
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_lr6_8ed9094dd9",
+          "ownedPort": 52986,
+          "ownedTempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-19bq27ve",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commandsInvoked": [
+        [
+          "/opt/homebrew/bin/initdb",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-19bq27ve/pg",
+          "-U",
+          "rdpms_exec",
+          "--auth=trust"
+        ],
+        [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-19bq27ve/pg",
+          "-l",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-19bq27ve/postgres.log",
+          "-o",
+          "-h 127.0.0.1 -p 52986 -k /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-19bq27ve/socket",
+          "-w",
+          "start"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "check"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "reset"
+        ],
+        [
+          "npm",
+          "run",
+          "build"
+        ],
+        [
+          "node",
+          "--test",
+          "tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+        ],
+        [
+          "npm",
+          "run",
+          "typecheck"
+        ],
+        [
+          "npm",
+          "run",
+          "lint:undefined"
+        ],
+        [
+          "git",
+          "diff",
+          "--check"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "drop"
+        ],
+        [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-19bq27ve/pg",
+          "-m",
+          "fast",
+          "-w",
+          "stop"
+        ]
+      ]
+    },
+    {
+      "mode": "result-write-oserror",
+      "observedExitCode": 1,
+      "runResultsWritten": false,
+      "fallbackLogWritten": true,
+      "primaryExceptions": [],
+      "criticalFailures": [
+        "run-results write failed at /Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/run-results.json: OSError: injected result persistence failure"
+      ],
+      "cleanup": {
+        "guardDropExit": 0,
+        "clusterStopExit": 0,
+        "ownedDistRemoved": true,
+        "ownedTempRootRemoved": true,
+        "ownershipVerification": {
+          "ownedDatabase": "rdpms_test_lr6_e513da2c9d",
+          "ownedPort": 52987,
+          "ownedTempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-fr86dk3p",
+          "rootExistsAfterCleanup": false,
+          "postmasterPidExists": false,
+          "distExistsAfterCleanup": false,
+          "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+        }
+      },
+      "commandsInvoked": [
+        [
+          "/opt/homebrew/bin/initdb",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-fr86dk3p/pg",
+          "-U",
+          "rdpms_exec",
+          "--auth=trust"
+        ],
+        [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-fr86dk3p/pg",
+          "-l",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-fr86dk3p/postgres.log",
+          "-o",
+          "-h 127.0.0.1 -p 52987 -k /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-fr86dk3p/socket",
+          "-w",
+          "start"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "check"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "reset"
+        ],
+        [
+          "npm",
+          "run",
+          "build"
+        ],
+        [
+          "node",
+          "--test",
+          "tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+        ],
+        [
+          "npm",
+          "run",
+          "typecheck"
+        ],
+        [
+          "npm",
+          "run",
+          "lint:undefined"
+        ],
+        [
+          "git",
+          "diff",
+          "--check"
+        ],
+        [
+          "node",
+          "scripts/test-db.mjs",
+          "drop"
+        ],
+        [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-fr86dk3p/pg",
+          "-m",
+          "fast",
+          "-w",
+          "stop"
+        ]
+      ]
+    }
+  ],
+  "ownedTempRootsReleasedAfterControl": [
+    [],
+    [],
+    [
+      "/private/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-lr6-1ovx3mhn"
+    ],
+    [],
+    [],
+    []
+  ],
+  "distExistsAfterAllControls": false,
+  "supersededHarnessAttempts": "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/ (first harness run with wrong redirect layout; logs retained)"
+}

@@ -1,0 +1,2621 @@
+{
+  "sessionId": "lr6-closeout-2026-10-04-cb1",
+  "date": "2026-10-04",
+  "generator": "execution/supplements/lr6-closeout-2026-10-04-cb1/make-payload-manifest.py",
+  "excludedByDesign": {
+    "files": [
+      "EXECUTION_REVISION_HISTORY.json (PLAN)",
+      "REVISION_HISTORY.json (PLAN)",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/evidence/payload-manifest.json",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/final-integrity.json",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/post-seal-readback.json"
+    ],
+    "reason": "self, sealed-final, POST_SEAL_READBACK appendix and the two registries appended after this manifest is sealed; including them would create self/cross-hash cycles"
+  },
+  "excludedNamesPresentInSession": [
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/evidence/payload-manifest.json",
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/final-integrity.json",
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/post-seal-readback.json"
+  ],
+  "counts": {
+    "sessionFiles": 519,
+    "sessionRecords": 4,
+    "repoFiles": 4
+  },
+  "sessionFiles": {
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/acceptance.json": {
+      "pathBase": "SESSION",
+      "sha256": "217d9092644ea4299c11aa9e58efd713e1286440f5f0e50fe4c1be4cd5727045"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/authorization.json": {
+      "pathBase": "SESSION",
+      "sha256": "0926447b0ce7c95f034cec654281bf05198ddc5097d52b50e10f6b05359f8e18"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/change-summary.md": {
+      "pathBase": "SESSION",
+      "sha256": "8024feb51ff96a0f827de4b92274b78196ad7487f4ffaf73ba3c2d87fef4e6f0"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/evidence/draft-race-settle-control.json": {
+      "pathBase": "SESSION",
+      "sha256": "d522265a4c2a33791afb05909ebde097c6c7023ec0d44e3d3a1d2ecd81ccc075"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/evidence/draft-upsert-compat.json": {
+      "pathBase": "SESSION",
+      "sha256": "ed505d3543ab3b1debe80a6b79daf0eb8d74db5107968403dfbd924c3de02421"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/evidence/matcher-identity-control.json": {
+      "pathBase": "SESSION",
+      "sha256": "22793374a1d1166e1d56334e80bdef16d2e74deb1b37a3c758c036942f418d30"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/evidence/suite-run.json": {
+      "pathBase": "SESSION",
+      "sha256": "4a0e2353311b37315ede1204d28aa150570e31ae7758040b6e0accd6f4c68ab6"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/evidence/test-case-inventory.json": {
+      "pathBase": "SESSION",
+      "sha256": "908a487c30b3be252a14a825ed74050add658f0bbae941ccaeea65be8d15138a"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/handoff.md": {
+      "pathBase": "SESSION",
+      "sha256": "4996caf87be9e54345ff8599332126fe50932458d6c181bdd6e8f6a7028dc651"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/rollback.md": {
+      "pathBase": "SESSION",
+      "sha256": "c2cc2243f4c370eb070e1a8b2a6b702b556dad76a6f4390e55af34223ed9f7ff"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "d0f46d55143e4b8df65fb3ddf1d432f52082c7119604d6ed5b5c7f8c7c84f628"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "d6127b7816028617e3c2c32fad46137c1c18245675589b3d6a1f2ad0a032de0f"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "b6979d5284ad9578ae43b69d47cacc9e2e8973879488a0dcc34b6cb4790cb52f"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "793658bff19184cb30e5e757d394e53454adfa5beafe4324092c0351e577ad62"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "d7cffd1cd6d1375f7bc894ea40b425d16e2dc31e99329a5108dc6e42156486ba"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "8bb3c093db97a6377043c2e80af030ae81cf83cd59cdcb6b2fd05623f82c3fd4"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "5bbaa919effa9989f89eb3446b5ff366a6c21d4b68fe1d904d49023a2d3a2f48"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "b76c8c66f15f4086f9a466d6ffd6839b627025bad9a051792ed016a180e6242a"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "66afd0411ccc09366e99fdd99b85f21899c8d2d064f5835126859618802153ad"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "ca19178a35ab4153b75b494963b66ce8243e1b94c173107c87b44d09db23652d"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "49eeca9b74f4b0c4cf2ed093b840df90b3d3bda690216ca75a001e35ab977dfd"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "60c3e352b2e8c097ab7dc3cf5d8119980554ee87ab584141d977c1b1a363e30c"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "1b90b1076a5f9e538d67b9b0d3ce5385e69d87ce8ebf72f1520ca6e7c513a012"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "1a7d62ab6f45519b2b852c789b536c325203531e3ab001935a0a833098bbca70"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "ed98edec9fdc7c34d40c4606de1e033e3e5f54e0611b908e8376c3d4f5afeb6d"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "617978832333aafe5204cbb3ce6dbb572c7565f80eb6c107c66592114dadc736"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "b0af9149a6c1f8fadf9ecc2e96c013e38c65b2b44ef362b30d171e8e82f066d3"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/task-state.json": {
+      "pathBase": "SESSION",
+      "sha256": "19bb0dd8145830b22e80034b8f4077040117006914bcb5000119cd804b28d6f5"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-02/acceptance.json": {
+      "pathBase": "SESSION",
+      "sha256": "db01c394048d5cf8ce4268542494378eac61e051f9b4a36beb2c76b6eee234fe"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-02/authorization.json": {
+      "pathBase": "SESSION",
+      "sha256": "b36333c5e0ee3688f69c264412ea7505b5395151c31e34fee699c62926991178"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-02/change-summary.md": {
+      "pathBase": "SESSION",
+      "sha256": "2cc9a08b4f5ba69421a4f265bd477aa7413dd240741bbbc6253d83d12856ec76"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-02/evidence/runner-controls-summary.json": {
+      "pathBase": "SESSION",
+      "sha256": "4e6a4ca08a2739c1cd67dfca32a4a7472c756848090d128c1cfb10d4124203b7"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-02/handoff.md": {
+      "pathBase": "SESSION",
+      "sha256": "d9316ae18f1bdf1314677b2569134bac9a3c699c6194ba1690657bf7d0afc9dd"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-02/rollback.md": {
+      "pathBase": "SESSION",
+      "sha256": "11386ad95733c95c50305dc92dd8d1255fc1673133d468aadbcdbb16e72fe579"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-02/task-state.json": {
+      "pathBase": "SESSION",
+      "sha256": "fc8eb9072f7bd1559b093b74b0ff8164c25570c9a864396c62a82746df09dd0e"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-03/acceptance.json": {
+      "pathBase": "SESSION",
+      "sha256": "2ecd69945103bcbb4b1a342aa7d532a7100c1afe5e40aeef72a989f3daf44d31"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-03/authorization.json": {
+      "pathBase": "SESSION",
+      "sha256": "c83d0165d3c43b2484ffb2a8f07840c1cf244506a77aca49a2e6716401ab186a"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-03/change-summary.md": {
+      "pathBase": "SESSION",
+      "sha256": "05efa9a8268766534afb07e1430fd88d16291f1f4540e07008fbd5a597c7ce8d"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-03/handoff.md": {
+      "pathBase": "SESSION",
+      "sha256": "6cc2225e4ab1f21499df237957943c6e957667e341d3b4d5e40c41612b5fc6fa"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-03/rollback.md": {
+      "pathBase": "SESSION",
+      "sha256": "1f6aecc2efddb29f0a01537054acc95d7ad973fcee9424063a22fae662e23d7d"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-03/task-state.json": {
+      "pathBase": "SESSION",
+      "sha256": "ffee1add4d8a4c35035366c4ca194e5a5de638997295db9f9ddde63a4539cda1"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-04/acceptance.json": {
+      "pathBase": "SESSION",
+      "sha256": "50241d7cad1cdceed15b441254673bc0f4ad57926a1bc0379aff99c038cb2ca1"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-04/authorization.json": {
+      "pathBase": "SESSION",
+      "sha256": "64bb88ae94d87e27834ec6025b03e5cc1c8d93a8bbe34be61adb977d42212aa9"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-04/change-summary.md": {
+      "pathBase": "SESSION",
+      "sha256": "93ddbd3a54eb8ba4b552b554dc337818ae293dd154c59efb8259ff20243cf9aa"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-04/evidence/phase-scope-static-trace.json": {
+      "pathBase": "SESSION",
+      "sha256": "2c7d7bdde4f25a8f91dbda772a8f690193799ab2ce33de6db2e67b409be5c69a"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-04/handoff.md": {
+      "pathBase": "SESSION",
+      "sha256": "7399be0a8d45f07f2ce17bde505c02ec3f317621f74d0ec54e7dc42d5308ffea"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-04/rollback.md": {
+      "pathBase": "SESSION",
+      "sha256": "fe4b3b43d6dbb2d58b0c207f14f05fdc2c602fffc7458ee2b09aae659a90f2da"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-04/scope-errata.md": {
+      "pathBase": "SESSION",
+      "sha256": "3730137cb0e3b542c50297c986ccef76c9ca1aadfd4c495819ef259bda57a5ac"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-04/task-state.json": {
+      "pathBase": "SESSION",
+      "sha256": "45fa95c4d62353966d2525f7870f4e9c1da017fc281061d44bcb6566d773828a"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/REVIEW_ENTRY.md": {
+      "pathBase": "SESSION",
+      "sha256": "3a3521dd27884cf21bfecd76b2721c85ea0e0f9d9b41e6ec097b1cd9b3f6b76c"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/SESSION_SUMMARY.md": {
+      "pathBase": "SESSION",
+      "sha256": "30782df910c9a64b1e7b78a50b740165ce09b6599dc9a8707dbe19f0e1c579cc"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/append-history.py": {
+      "pathBase": "SESSION",
+      "sha256": "cd4251aa6f01d45b222ae8cb93ff67ec77dbb95a2e8c97916a2229c5b5f38de2"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/append-records.py": {
+      "pathBase": "SESSION",
+      "sha256": "92cf60c181a19cef9f081dfe324a126d6e1d9db3b00b59242fae9c89e3510fe2"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/authorization.json": {
+      "pathBase": "SESSION",
+      "sha256": "8e052e97002e5b87c90b44fa50bd9c84b825c73a3ed671c691971c435e468a32"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "0b8c4d4a4ef3479bf2eed74b6a936f36026577c8d716229e6b191ec9bb70a3b0"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/control-output.log": {
+      "pathBase": "SESSION",
+      "sha256": "529d33f58fb54f5d9694c67d9e2935d2fee07cd073d212611007613b7fb6d328"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/control-summary.json": {
+      "pathBase": "SESSION",
+      "sha256": "ec61596bc2059c354ebf7271cd683f28e714d494c5aa97a5f523c2ce198e8deb"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "0b8c4d4a4ef3479bf2eed74b6a936f36026577c8d716229e6b191ec9bb70a3b0"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "68218d11220a5566df4251f24d4fe8b83bf82ec30d4921564c2f45ad37789f4c"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "91f48c3988151779c8731cd07ef2ab91e98aa455a6d781eca58da846b6ed2202"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "27a850fe22c5b8365a84d1de4eea784405bd0abb480526b31f845f370f7ece55"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "b3eadacea654517b2263dbd7a632e7ea431502ab326e7c9ea0e772ca81aff6b6"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/control-output.log": {
+      "pathBase": "SESSION",
+      "sha256": "cbfd6a6ef1a482e06f371e9836a815d0f995dcfab0b8b06ee6e284fc120be573"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/control-summary.json": {
+      "pathBase": "SESSION",
+      "sha256": "308d7836d79eb3030a6f12e8a119f38b488e934a7e2d26c76fb4b9429371f8b2"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "f1ea0cc0c3f12aad57665f5ce1f21ac71818ac762bc3e6dfa44886734de621f4"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "db94617e0165c1f5b9a549eb74585137baa76b590626f127589af18441f898f3"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "9acf982609acc3c5a8441aef32f745c8bc13c036cc7ec0d5cb9746de5424a6d6"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "0554a5b9a568825136a7fca60098687a4046456a27b6c582102ec676a75f7e77"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/control-output.log": {
+      "pathBase": "SESSION",
+      "sha256": "8afef9794d88159fc50620bf6fc6286d5ac52d0710ddc83d1e880427aaee386a"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/control-summary.json": {
+      "pathBase": "SESSION",
+      "sha256": "47832de2147acfce092b51f4a9f20b6430c37a406cb806c80ba04d02a7f8526c"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "6e5b546e80301202fb2d98cb270e0dfb6a0402d3a862deb2eb6877175a07db4e"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "d13b33b609d4acd05ad1bc28eb510444efc49bfc480cc4059b00951979de152f"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "48c3e813a5a855c19ed32299c002d743e97347806f64f37a54c58f43e14294aa"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "37901cc09503adbc4f5930b2158733b74625d566de2f580f7ff9c1a5ca870707"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "d13b33b609d4acd05ad1bc28eb510444efc49bfc480cc4059b00951979de152f"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "740aff4dfe8fdead4ada0ebf4f61ac97b2497c72615d198d8905ac85c0a99776"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/control-output.log": {
+      "pathBase": "SESSION",
+      "sha256": "3dcfe4154ce1f32654645d3ba1c0df2930860aff01ff0c19d137c6f46ec352d4"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/control-summary.json": {
+      "pathBase": "SESSION",
+      "sha256": "6bf07bdd7ebcbc300479830dc95d297dfe6bec7063c77906b255f9fa35e71cef"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "157fba5e255414fc92bc2993982c5a36c50c0f4cc4c8a57ef24d541b2d054b8c"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "fbb0bf48c02ea45a6d9e7646f0dd926a2de27f2eb5d1fd8f5301a28227adb7c2"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/run-results-fallback.json": {
+      "pathBase": "SESSION",
+      "sha256": "0c99cff992d77ad1595da7131d37895d1f5a0e26e7061cc4a84301c75eec6f51"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "bf3be46bfdf1eb4154064a4bc7e06ecb0785c5fd5adc3fe3cf9d22c5076f4beb"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/control-output.log": {
+      "pathBase": "SESSION",
+      "sha256": "37c4f5dda8397ea0690c60e1fcc29b70ebb1cc5b8a517082efea38efdfa7225f"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/control-summary.json": {
+      "pathBase": "SESSION",
+      "sha256": "93c952870378181510971a3ba30dcd3bfbd91eca92b7f6a16101fbf218b75d20"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "bf3be46bfdf1eb4154064a4bc7e06ecb0785c5fd5adc3fe3cf9d22c5076f4beb"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "3bb7ea4158e8181f714e923576709f1946a4c32b0bac68bb5d3cebacc6262687"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "e7d58c49d71018f7df44c7258e5537a809f09c96e943a1b6d0216cb5d697a909"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "77423e8adfadc57c32e6b3874b06699577972d78f26cceec3d15a651b8b66b2e"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "81d29e59685ef6d2cdc3882c8ede56ae46539f7fb70697fda85cf3373cc03b48"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/control-output.log": {
+      "pathBase": "SESSION",
+      "sha256": "a135eef476b818ac2c5f3c6da36d79d344a6002bda388e595d743ee23ac04f5f"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/control-summary.json": {
+      "pathBase": "SESSION",
+      "sha256": "d73625ad5d2e1ab969d5e1c1b2b02598774ad573db5bd160ceca47567626f62d"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "ef2a70a10bf050f02c7001e7b0d0b9182cc5feda34529b468aacf3ef129ff0c6"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "6a51a2ee3eccf9cc7185e60280b252c15739b4f78cb04d026b77141e0288700c"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "dd8ba0d25691c9135077942aba123e72e06691bf8b1a08ca3c1178520f88eb8a"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "4b2688d2f3d72c18e1c1bf214fa5d2da780d36a910b280f209fbe255de8abfda"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "6a51a2ee3eccf9cc7185e60280b252c15739b4f78cb04d026b77141e0288700c"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "4d455deaeef67e7053be88c904e4bb030ecfa89dee4bdd1fbf1e18acf30b8a50"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "0b8c4d4a4ef3479bf2eed74b6a936f36026577c8d716229e6b191ec9bb70a3b0"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "d34b845777d306bc3eea0e9e4037025c488adfb7e06b4ad9cf38454db6ee3605"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "213072ee013d3e9f6386daf1e7d11711a5ddfb57b1b64808d244802d7b3ab8c3"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "0b8c4d4a4ef3479bf2eed74b6a936f36026577c8d716229e6b191ec9bb70a3b0"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "ba3ea8f92a39d18a48c4148f651320ff59a2bfccd007d5114f82d393a8620ba9"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "14436fa17175682520752ed80bba5cdc152a1f8b3fdff7cfb80488bfc5dee168"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "0b8c4d4a4ef3479bf2eed74b6a936f36026577c8d716229e6b191ec9bb70a3b0"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "00e7bda9a1410c46ce45e640b1c6cbdef78f6135449a93cd3cc8b87f18e6b641"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "80f35e15555a7b5039ce45931f5d7a50093e786d1df6a0b341140f8107c1d57b"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "0b8c4d4a4ef3479bf2eed74b6a936f36026577c8d716229e6b191ec9bb70a3b0"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "1d67721b566057205b2d2b84bafcae816bfc5045ef7e908a5d3f874232859b53"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "34fa81d6c80edb6f5b30adf5d26701cfbf3e987aca115a324ee291a84c28d664"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/control-output.log": {
+      "pathBase": "SESSION",
+      "sha256": "529d33f58fb54f5d9694c67d9e2935d2fee07cd073d212611007613b7fb6d328"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/control-summary.json": {
+      "pathBase": "SESSION",
+      "sha256": "9787b558285328fdfa2ebac0252d60c46b0547458040097e2390f37c7a7616e9"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "f3905a7c8e6b831f28c6d45aed7c8ade87453f5ac13c127f2a968fe822d1aa38"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "d10dea37d210ae238894ee144a654da6c5b6795454882390bda2749c048717c6"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "b9ea9dd02619922445007094c0305df04ad4a7d09be7997bed6381d899e4a015"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "3341ffe665117bb1faa898fad03fc45e4c2384437b7fc8e2c8a4784545c4b2e4"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "27fa4a36162310f4546236a37ec3800777fbe9e3ebb1b8f87479250f31e3b357"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "aaf4cf5bfceb64731aa59dc2d09c700d5335bbda78f5cb83a483f51e91fcd193"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "d56c0d2ca8ed7eea6d1b8d224c73be5bc21359ab505c840b8b46224911c2131f"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "f0f130642caaf7e3c393e9d143c84f9fb3bfd0a20dd1613a56a6d370ee566f44"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/control-output.log": {
+      "pathBase": "SESSION",
+      "sha256": "cbfd6a6ef1a482e06f371e9836a815d0f995dcfab0b8b06ee6e284fc120be573"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/control-summary.json": {
+      "pathBase": "SESSION",
+      "sha256": "7cde5062390b10ad3e10339e6228c9415b75deec5220b602fdd3653d9c5cb7d9"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "2b90852cfe21498361ec380b679c31b1a50c1dc271d4a822b89ab2a013d55514"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "d13b33b609d4acd05ad1bc28eb510444efc49bfc480cc4059b00951979de152f"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "949508e9aa0b26778d2a23791c1de0a0be80d9953ce5baf958ca568a6e1f3653"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "6795d32ada5ea642bf3d722ee7f23d1edd55b571dab9605f929897d68e67988f"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "d13b33b609d4acd05ad1bc28eb510444efc49bfc480cc4059b00951979de152f"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "10b73f40a3d37db681371c7dfef249c1b4e746889acd7a6b6a6a92ab75e68c55"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "f83b4952f0cc6bd2c2907e139f0c6b6c2a3fde7cb6f14109f077eab78774e255"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "d13b33b609d4acd05ad1bc28eb510444efc49bfc480cc4059b00951979de152f"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "d73371bb92b18a36adbb436d911c245b674c24c8c2cdab07313aff583b5336e3"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "6d2bb5c65e809e182b8cc13548b848cfaa637dd4013ec527308264ae64d0c586"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "d13b33b609d4acd05ad1bc28eb510444efc49bfc480cc4059b00951979de152f"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "92df104811b5968141118e2edf7a69c044d090d3a2a70ac5bdbbbc6f7fe5db6d"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/control-output.log": {
+      "pathBase": "SESSION",
+      "sha256": "8afef9794d88159fc50620bf6fc6286d5ac52d0710ddc83d1e880427aaee386a"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/control-summary.json": {
+      "pathBase": "SESSION",
+      "sha256": "d2f223c68838aff5de82f04afb3673c28e1372181eb0e677be762e188d9927a5"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "d1d75ac5f4c7b9b7f7a1954f958440758e1c3fa0b2ffe81899b943452af8ae21"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "26c67fd56622c79719cbf880cacd2ff738f9e73c9acec509aee3d126285942be"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "a29a272995559a94176f421547c3648dd9ec9fe164534e9f864e44c97dd1213f"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "662b5dc11129f3196278bb0f3d257f86d68a1554e77eb12c79b407020ced630a"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/control-output.log": {
+      "pathBase": "SESSION",
+      "sha256": "e6e52350bf2a6c41b9fa48832a1753769388920c733648007c866541f6e03820"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/control-summary.json": {
+      "pathBase": "SESSION",
+      "sha256": "f04ab66f44d223230997deeac43beba077102777b2a759431bb481e992f4f911"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/run-results-fallback.json": {
+      "pathBase": "SESSION",
+      "sha256": "febe93a85ccec78f1432075e23821ac5d43faa67156451ca6b12a1b212d29c84"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/run-runner-controls.py": {
+      "pathBase": "SESSION",
+      "sha256": "e7981f7e7f98e54481a1673342534b3b2811ada663703a9dc085f33c8f41cdc0"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/runner-controls.json": {
+      "pathBase": "SESSION",
+      "sha256": "136fbd258d0587468299c9d6cb3f373c65fe45359d5f919be3d29834d23eb075"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "bf3be46bfdf1eb4154064a4bc7e06ecb0785c5fd5adc3fe3cf9d22c5076f4beb"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "18e512956c9da28b73f6d55b9cd758c7b940bbff4468ab2812292cab6d42d980"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "4d796f3c87d16a7135e8468166e19b9f156b9144a853e32893385c66a80e0835"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "bf3be46bfdf1eb4154064a4bc7e06ecb0785c5fd5adc3fe3cf9d22c5076f4beb"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "71803ff8b2106bd59a69cc4296514616a2e744e9fc4313837249adea530524f5"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "b2ab2373e9df6c7034260c53f277dfb6f1d0ff3bfd157a270bea90117e2eeb34"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "bf3be46bfdf1eb4154064a4bc7e06ecb0785c5fd5adc3fe3cf9d22c5076f4beb"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e9df1d8b5f8764d0ec76f307148148df223d011c8bb94443ed914c9fc07b3746"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "6dde2da66fce770809ddc1214ccae0a7063eb342a927a058675acd4ea49f0f29"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "bf3be46bfdf1eb4154064a4bc7e06ecb0785c5fd5adc3fe3cf9d22c5076f4beb"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "9b0f3a06e0cb5a32d85cc8dd2a88ee016975d4425f5d9e6957ca3094960f2c5a"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "e2953a68e952a15d6a52f2d2264fb33c65dd6e9f2e9d92873db4a1d38f43b504"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/control-output.log": {
+      "pathBase": "SESSION",
+      "sha256": "37c4f5dda8397ea0690c60e1fcc29b70ebb1cc5b8a517082efea38efdfa7225f"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/control-summary.json": {
+      "pathBase": "SESSION",
+      "sha256": "8c1940d00807615fa02d11560816999f8d3ca388973ffa1b396780f146810243"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "76e1a6384370e1ebc708ecac1b36de9877462802f856655565c4a22011f4c189"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "6a51a2ee3eccf9cc7185e60280b252c15739b4f78cb04d026b77141e0288700c"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "ae80f618ae681cc1d3144bf009d578da0610fbd40944a93c1d1f64487a2e9906"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "914b5e0a38b2736549c96400b84ebf05f427489dd0aac37a751bd80d1b825f2d"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "6a51a2ee3eccf9cc7185e60280b252c15739b4f78cb04d026b77141e0288700c"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "0d23e09c5dc474248fca0714af30093617094f7bdd5afcc2bd50e548d3538c3e"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "418f2627bf67197c944cfe5ce660b0c021862622b3c9fb389854bbc8f0646f49"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "6a51a2ee3eccf9cc7185e60280b252c15739b4f78cb04d026b77141e0288700c"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "68b4654bb7bd2a27f1b9bcb7a503b7725a45ff1b0a1057f224a39400ec13e80c"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/backend-build.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/backend-typecheck.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/cluster-start.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/cluster-stop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/git-diff-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/guard-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "aa0e371c3830448e76f70b2e7983fab3d05754e2e4b4ab7df07ca1a895f838c8"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/guard-drop.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/guard-reset.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/initdb.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/integration-suite.log": {
+      "pathBase": "SESSION",
+      "sha256": "6a51a2ee3eccf9cc7185e60280b252c15739b4f78cb04d026b77141e0288700c"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/run-results.json": {
+      "pathBase": "SESSION",
+      "sha256": "64caab0accf5e63b75b4ac99e0c7fca8ba3f4886bdaaad2aff6737e474c85334"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/undefined-check.log": {
+      "pathBase": "SESSION",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/control-output.log": {
+      "pathBase": "SESSION",
+      "sha256": "a135eef476b818ac2c5f3c6da36d79d344a6002bda388e595d743ee23ac04f5f"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/control-summary.json": {
+      "pathBase": "SESSION",
+      "sha256": "1b355c4bb76443be2f4c06d5fbb016ec3c18bef7bd1d0223e14e4afd1e2288fd"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/evidence/make-baseline.py": {
+      "pathBase": "SESSION",
+      "sha256": "b3ecef8501aacfb2c2eb35ec26b5f34ef67d25b96393b0536de0b88edc79fd6c"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/evidence/pre-append-records/HANDOFF.md.pre": {
+      "pathBase": "SESSION",
+      "sha256": "0a20efbeaf36fc7eb327fe220fecd3a12decf9c06a0a051ac0ddf10fb9284af3"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/evidence/pre-append-records/IMPLEMENTATION_STATE.json.pre": {
+      "pathBase": "SESSION",
+      "sha256": "24531169f69fa3bc9919858c90a264e78db5054d147305e9a1729f6b4edf080c"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/evidence/pre-append-records/execution_handoff.md.pre": {
+      "pathBase": "SESSION",
+      "sha256": "0e6a507510023a6ec9a036e20efa91048d5d459f23351b4dd85f9595c738e3ec"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/evidence/pre-append-records/execution_state.json.pre": {
+      "pathBase": "SESSION",
+      "sha256": "b9a0027be232298d3fc97d31c29aabf63d37e298447f0b2c32f0fe976ca2bfa1"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/evidence/reconstruct-start-copy.py": {
+      "pathBase": "SESSION",
+      "sha256": "f16e42c9a05641ea0b82ef10323c60b14acad2976a0f74030515c7e105cb0101"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/evidence/reference-owned-review-runner.py": {
+      "pathBase": "SESSION",
+      "sha256": "7786bf30cc06f65daf2a487d0e56ad37fcc0d69ba3de990b08387a596e3faa7d"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/evidence/start-baseline.json": {
+      "pathBase": "SESSION",
+      "sha256": "3bb31432584c8ea331954b00a80bcd8a9b760670ddf10fea60d268a746da6f41"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/evidence/start-copies/rp10-report-submit-snapshot.integration.test.mjs.start": {
+      "pathBase": "SESSION",
+      "sha256": "95b70b11ab1b67021a07aebd6b02aca341f735b2926d969657310a183aa75c30"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/make-deliverables.py": {
+      "pathBase": "SESSION",
+      "sha256": "a31f25ab1df4088afa393c81a1514da3d40e6b708671adc06542d2900e7a5b29"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/make-final-integrity.py": {
+      "pathBase": "SESSION",
+      "sha256": "3d0ef5655603b91121b0868c8bd172ed12858fe78a475d8f138102ebb5551768"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/make-payload-manifest.py": {
+      "pathBase": "SESSION",
+      "sha256": "b0ce4301c72c2f8ef3f034022050970415e0b441196e7a8155cfb464364ccd59"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/make-post-seal-readback.py": {
+      "pathBase": "SESSION",
+      "sha256": "3d7d4f4933413588ed1ded29116e51983d08076b40a9ea87e1946d0a77e48024"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/next-business-inputs.md": {
+      "pathBase": "SESSION",
+      "sha256": "d480b4d7f3a3e1489b0de7b93fda339251f6119e40789c407aa99fcd3023ce12"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/resume.md": {
+      "pathBase": "SESSION",
+      "sha256": "02dac0face6c0e73b3bfab28995d15cdd0a2da3ab4f5df625b66ccb5c5891d01"
+    },
+    "execution/supplements/lr6-closeout-2026-10-04-cb1/run-suite.py": {
+      "pathBase": "SESSION",
+      "sha256": "36551b9281bc45209bdfb03f9912cba9e264b158c0b9599a4e0aacf3cb2a81a7"
+    }
+  },
+  "controlledRecordFiles": {
+    "IMPLEMENTATION_STATE.json": {
+      "pathBase": "PLAN",
+      "sha256": "5ca6dbbc11b532bcbf6fd9cab2e524f82a066c7ebd7b19c03d13523df5a8a659"
+    },
+    "execution/state.json": {
+      "pathBase": "PLAN",
+      "sha256": "2c9e559e71fa2439ce8c714721bf74f167a0f9ca54787c9fb860cfd8076fc4fb"
+    },
+    "HANDOFF.md": {
+      "pathBase": "PLAN",
+      "sha256": "13dcd82a15a3055b1aecb5fefd8143d688598b05950257847a71ae85a7ea91ae"
+    },
+    "execution/handoff.md": {
+      "pathBase": "PLAN",
+      "sha256": "5a349c30f9bc86b3e21d5d975bb12aa5dd06aa1854f5289f211a4281c610e077"
+    }
+  },
+  "repositoryFiles": {
+    "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs": {
+      "pathBase": "REPOSITORY",
+      "sha256": "23e4cff4da62cb2714bfc564ebc582e4c6245a7d3b535797273150ef314ad9e8",
+      "role": "the only existing code file modified this round"
+    },
+    "rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs": {
+      "pathBase": "REPOSITORY",
+      "sha256": "720c3f6a7b4badc3a7f8dfd754371467812b1c67cbe90358d504c2d2284d9fc7",
+      "role": "read-only reference; SUP-02 evidence reuse; unchanged"
+    },
+    "rdpms-system/backend/src/routes/phases.js": {
+      "pathBase": "REPOSITORY",
+      "sha256": "84822c76413e43dfb495242f2253bcc5aafabd9d7650c7bed87ee55c0586371e",
+      "role": "CLOSE-04 static reference; unchanged"
+    },
+    "rdpms-system/backend/src/kernel/projectAccess.js": {
+      "pathBase": "REPOSITORY",
+      "sha256": "53bbcf704b1d2c9df641e243ac952e333699431aedc8c6620308612d1262d339",
+      "role": "CLOSE-04 static reference; unchanged"
+    }
+  },
+  "runner": {
+    "path": "execution/supplements/lr6-closeout-2026-10-04-cb1/run-suite.py",
+    "pathBase": "SESSION",
+    "sha256": "36551b9281bc45209bdfb03f9912cba9e264b158c0b9599a4e0aacf3cb2a81a7"
+  },
+  "controls": {
+    "path": "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/run-runner-controls.py",
+    "pathBase": "SESSION",
+    "sha256": "e7981f7e7f98e54481a1673342534b3b2811ada663703a9dc085f33c8f41cdc0",
+    "summary": "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/runner-controls.json"
+  },
+  "logs": {
+    "paths": [
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/run-results.json",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/run-results.json",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/control-output.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/controls/controls/build-nonzero/attempt-02/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/control-output.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/controls/controls/build-timeout/attempt-02/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-timeout/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/control-output.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/controls/controls/drop-exception/attempt-02/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/drop-exception/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/control-output.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/controls/controls/result-write-oserror/attempt-02/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/result-write-oserror/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/control-output.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/controls/controls/stop-nonzero/attempt-02/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/stop-nonzero/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/control-output.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/controls/controls/suite-spawn-exception/attempt-02/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/suite-spawn-exception/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-01/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-02/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-03/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/attempt-04/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/control-output.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-01/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-02/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-03/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/attempt-04/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/control-output.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-01/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-02/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-03/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/attempt-04/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/control-output.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-01/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-02/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-03/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/attempt-04/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/control-output.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-01/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-02/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-03/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/attempt-04/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/control-output.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-01/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-02/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-03/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/backend-build.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/backend-typecheck.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/cluster-start.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/cluster-stop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/git-diff-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/guard-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/guard-drop.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/guard-reset.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/initdb.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/integration-suite.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/attempt-04/undefined-check.log",
+      "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/control-output.log"
+    ],
+    "keyLogs": {
+      "finalReportSuite": "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/integration-suite.log",
+      "finalReportSuiteResults": "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-02/run-results.json",
+      "failedAttempt01": "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/runs/rp10-suite/attempt-01/integration-suite.log",
+      "runnerControls": [
+        "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-nonzero/control-output.log",
+        "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/drop-exception/control-output.log",
+        "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/stop-nonzero/control-output.log",
+        "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/build-timeout/control-output.log",
+        "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/suite-spawn-exception/control-output.log",
+        "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/result-write-oserror/control-output.log"
+      ],
+      "supersededHarnessRun": "execution/supplements/lr6-closeout-2026-10-04-cb1/controls/_superseded-attempts/first-harness-run/build-nonzero/control-output.log"
+    }
+  },
+  "currentFormalTest": {
+    "path": "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs",
+    "pathBase": "REPOSITORY",
+    "sha256": "23e4cff4da62cb2714bfc564ebc582e4c6245a7d3b535797273150ef314ad9e8",
+    "preEditSha256": "95b70b11ab1b67021a07aebd6b02aca341f735b2926d969657310a183aa75c30"
+  },
+  "fourNonHistoryRecords": {
+    "IMPLEMENTATION_STATE.json": {
+      "pathBase": "PLAN",
+      "sha256": "5ca6dbbc11b532bcbf6fd9cab2e524f82a066c7ebd7b19c03d13523df5a8a659"
+    },
+    "execution/state.json": {
+      "pathBase": "PLAN",
+      "sha256": "2c9e559e71fa2439ce8c714721bf74f167a0f9ca54787c9fb860cfd8076fc4fb"
+    },
+    "HANDOFF.md": {
+      "pathBase": "PLAN",
+      "sha256": "13dcd82a15a3055b1aecb5fefd8143d688598b05950257847a71ae85a7ea91ae"
+    },
+    "execution/handoff.md": {
+      "pathBase": "PLAN",
+      "sha256": "5a349c30f9bc86b3e21d5d975bb12aa5dd06aa1854f5289f211a4281c610e077"
+    }
+  },
+  "pathBases": {
+    "REPOSITORY": "/Users/renkang/VS Code/project-management",
+    "PLAN": "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms",
+    "SESSION": "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-01-rdpms/execution/supplements/lr6-closeout-2026-10-04-cb1"
+  }
+}

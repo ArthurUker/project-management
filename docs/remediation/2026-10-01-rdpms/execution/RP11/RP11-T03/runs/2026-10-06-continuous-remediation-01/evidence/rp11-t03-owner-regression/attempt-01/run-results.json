@@ -1,0 +1,262 @@
+{
+  "layer": "REAL_CHROME_INDEXEDDB_PRODUCT_TASKS_SYNTHETIC_HTTP_AUTH",
+  "cases": [
+    {
+      "name": "LEGACY_UNKNOWN_RETAINED_NOT_ASSIGNED",
+      "result": "PASS",
+      "legacyUnknownRows": 1,
+      "ownerQueueRows": 1
+    },
+    {
+      "name": "BOOTSTRAP_PAUSE_PRESERVES_OWNER_QUEUE",
+      "result": "PASS",
+      "lostPayloads": 0
+    },
+    {
+      "name": "ACTUAL_AUTH_PROVIDER_SLOW_ME_BOOTSTRAP_PRESERVES_LAST_COPY",
+      "result": "PASS",
+      "actualProvider": true,
+      "profileResponseHeld": true,
+      "persistedOwnerDrafts": 1
+    },
+    {
+      "name": "ACTUAL_AUTH_PROVIDER_OFFLINE_ME_RELOAD_PRESERVES_LAST_COPY",
+      "result": "PASS",
+      "actualBrowserNetworkFault": "InternetDisconnected",
+      "failedProfileRequests": 1,
+      "payloadLost": false,
+      "authenticatedRecovery": true
+    },
+    {
+      "name": "EXPLICIT_LOGOUT_SWITCH_B_CANNOT_SEND_A_OR_UNKNOWN",
+      "result": "PASS",
+      "actualFixtureSentActors": [
+        {
+          "actorId": "B",
+          "mutationIds": [
+            "B-draft"
+          ]
+        }
+      ],
+      "retainedA": 1,
+      "retainedUnknown": 1
+    },
+    {
+      "name": "STALE_OWNER_READ_WRITE_LOGOUT_FENCED",
+      "result": "PASS",
+      "oldActorReadable": false,
+      "lateWriteApplied": false,
+      "currentBCache": 1
+    },
+    {
+      "name": "OWNER_CACHE_AND_ACTUAL_TASKS_FALLBACK",
+      "result": "PASS",
+      "actualProductTasksPage": true,
+      "visibleB": true,
+      "visibleA": false
+    },
+    {
+      "name": "ACTUAL_TASKS_PERMISSION_DENIAL_DOES_NOT_FALLBACK",
+      "result": "PASS",
+      "permissionDeniedOldCacheShown": false
+    },
+    {
+      "name": "CACHE_AUTHORIZATION_LEASE_EXPIRES_WITHOUT_DELETING_DRAFT",
+      "result": "PASS",
+      "expiredCacheRowsReturned": 0,
+      "pendingLastCopy": 1
+    },
+    {
+      "name": "SAME_ACTOR_NEW_LOGIN_RESTORES_DRAFT_AND_REJECTS_OLD_GENERATION",
+      "result": "PASS",
+      "originalDraftRecovered": true,
+      "oldLoginGenerationRejected": true
+    },
+    {
+      "name": "LATE_PULL_AFTER_SWITCH_HAS_NO_B_CACHE_EFFECT",
+      "result": "PASS",
+      "currentBCacheIds": [
+        "task-B"
+      ],
+      "oldPullAppliedToB": false
+    },
+    {
+      "name": "REAL_TWO_TAB_ACCOUNT_SWITCH_USES_SAME_OWNER_FENCE",
+      "result": "PASS",
+      "realSharedOriginTabs": 2,
+      "sharedCurrentActor": "A",
+      "oldBMutationApplied": false,
+      "AOriginalPayloadPresent": true
+    },
+    {
+      "name": "IMMUTABLE_KEY_AND_ANONYMOUS_ENQUEUE_PRESERVE_LAST_COPY",
+      "result": "PASS",
+      "sameKeyOverwriteRejected": true,
+      "anonymousEnqueueRejected": true,
+      "lastCopyPreserved": true
+    }
+  ],
+  "commands": [
+    {
+      "label": "frontend-typecheck",
+      "command": [
+        "/Users/renkang/.nvm/versions/node/v24.15.0/bin/node",
+        "/Users/renkang/VS Code/project-management/rdpms-system/frontend/node_modules/typescript/bin/tsc",
+        "--project",
+        "/Users/renkang/VS Code/project-management/rdpms-system/frontend/tsconfig.app.json",
+        "--noEmit"
+      ],
+      "exitCode": 0
+    },
+    {
+      "label": "git-diff-check",
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0
+    }
+  ],
+  "cleanup": {
+    "chromeExit": {
+      "code": 0,
+      "signal": null
+    },
+    "ownedServerClosed": true,
+    "ownedProfileRootRemoved": true
+  },
+  "limits": [
+    "Native JWT/backend DB/production release NOT_RUN",
+    "Actual current AuthProvider, SyncProvider, Tasks, tokenStore, engine and IDB; synthetic auth/pull/push fixtures explicitly identified",
+    "No dependency installation, target profile, real dotenv or SSH"
+  ],
+  "startSourceBindings": [
+    {
+      "path": "rdpms-system/frontend/src/offline/idb.ts",
+      "sha256": "636062414ee1a997cd614ad8c3509c19955a0ed3c455b05c6872d325ed358638"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/engine.ts",
+      "sha256": "c665024bb3e6ff3120b3180693f194f1c2eda7fb25ede30cd3b09f8126c24f26"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/SyncProvider.tsx",
+      "sha256": "13a247f7d20882a2e81ed01cfe7f06da4b7c40dd2eb8657ed7320f722a81d4a8"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/pendingDraft.ts",
+      "sha256": "0ccc3adcfc1fb352d438f9d77404ec2d03d82c2632d4e1cfb0129baf16cf8a92"
+    },
+    {
+      "path": "rdpms-system/frontend/src/pages/Tasks.tsx",
+      "sha256": "598498505a02be301a06581ea36dd814855f5c99e182cc5f2736dc8cdb2cc6b0"
+    },
+    {
+      "path": "rdpms-system/frontend/src/auth/AuthProvider.tsx",
+      "sha256": "5f5656325c39217d5a497bf9e8a583ae85b76e1720acc79793f57e4dc22462f7"
+    },
+    {
+      "path": "rdpms-system/frontend/src/auth/tokenStore.ts",
+      "sha256": "e8e207bff432c0dd08956e778206152c055b9b38a7d2d6b06f4c80825beea6a6"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx",
+      "sha256": "9f4c10315ebf15bef6c7d3c50f02e238d874918b233669d490cd0b82d5b5649e"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/RecoveryPanel.tsx",
+      "sha256": "6abc0db06e02cd0d24bac194b62bad5d63d4a5d2fa6f641c52fab7f6f20b203a"
+    },
+    {
+      "path": "rdpms-system/frontend/src/components/SyncConflictDialog.tsx",
+      "sha256": "8834b78e54eead86f2218c55ec055b61f8aa8667dcef17500cbf2e330a732728"
+    }
+  ],
+  "mainCommand": [
+    "/Users/renkang/.nvm/versions/node/v24.15.0/bin/node",
+    "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/run-offline-browser.mjs",
+    "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/evidence/rp11-t03-owner-regression"
+  ],
+  "lastEvaluation": "bridge.state()",
+  "persistentState": {
+    "ownerOutbox": [
+      {
+        "clientMutationId": "A-draft",
+        "entity": "tasks",
+        "op": "upsert",
+        "id": "synthetic-task",
+        "data": {
+          "title": "synthetic-last-copy",
+          "projectId": "shared-project"
+        },
+        "baseUpdatedAt": "2026-10-06T00:00:00.000Z",
+        "createdAt": "2026-10-05T18:06:34.134Z",
+        "userId": "A"
+      }
+    ],
+    "legacyOutbox": [
+      {
+        "clientMutationId": "legacy-unknown",
+        "entity": "tasks",
+        "op": "upsert",
+        "id": "old-task",
+        "data": {
+          "title": "unknown-last-copy"
+        },
+        "createdAt": "2026-10-05"
+      }
+    ],
+    "ownerRecordIds": [
+      {
+        "ownerId": "B",
+        "id": "task-B"
+      }
+    ],
+    "actualTasksText": "authenticated:A\n任务管理\n0 个任务\n看板\n列表\n优先级\n刷新\n全部\n0\n占比 100%\nIN_PROGRESS\n0\n占比 0%\nNOT_STARTED\n0\n占比 0%\nCOMPLETED\n0\n占比 0%\nBLOCKED\n0\n占比 0%\n已逾期\n0\n占比 0%\n全部项目\nSynthetic shared\n全部状态\nNOT_STARTED\nIN_PROGRESS\nCOMPLETED\nBLOCKED\n优先级：\n全部\n高\n中\n低\n共 0 条\nNOT_STARTED\n0\n添加任务\nIN_PROGRESS\n0\n添加任务\nCOMPLETED\n0\n添加任务\nBLOCKED\n0\n添加任务"
+  },
+  "result": "PASS",
+  "sourceBindings": [
+    {
+      "path": "rdpms-system/frontend/src/offline/idb.ts",
+      "sha256": "636062414ee1a997cd614ad8c3509c19955a0ed3c455b05c6872d325ed358638"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/engine.ts",
+      "sha256": "c665024bb3e6ff3120b3180693f194f1c2eda7fb25ede30cd3b09f8126c24f26"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/SyncProvider.tsx",
+      "sha256": "13a247f7d20882a2e81ed01cfe7f06da4b7c40dd2eb8657ed7320f722a81d4a8"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/pendingDraft.ts",
+      "sha256": "0ccc3adcfc1fb352d438f9d77404ec2d03d82c2632d4e1cfb0129baf16cf8a92"
+    },
+    {
+      "path": "rdpms-system/frontend/src/pages/Tasks.tsx",
+      "sha256": "598498505a02be301a06581ea36dd814855f5c99e182cc5f2736dc8cdb2cc6b0"
+    },
+    {
+      "path": "rdpms-system/frontend/src/auth/AuthProvider.tsx",
+      "sha256": "5f5656325c39217d5a497bf9e8a583ae85b76e1720acc79793f57e4dc22462f7"
+    },
+    {
+      "path": "rdpms-system/frontend/src/auth/tokenStore.ts",
+      "sha256": "e8e207bff432c0dd08956e778206152c055b9b38a7d2d6b06f4c80825beea6a6"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx",
+      "sha256": "9f4c10315ebf15bef6c7d3c50f02e238d874918b233669d490cd0b82d5b5649e"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/RecoveryPanel.tsx",
+      "sha256": "6abc0db06e02cd0d24bac194b62bad5d63d4a5d2fa6f641c52fab7f6f20b203a"
+    },
+    {
+      "path": "rdpms-system/frontend/src/components/SyncConflictDialog.tsx",
+      "sha256": "8834b78e54eead86f2218c55ec055b61f8aa8667dcef17500cbf2e330a732728"
+    }
+  ],
+  "sourceDrift": []
+}

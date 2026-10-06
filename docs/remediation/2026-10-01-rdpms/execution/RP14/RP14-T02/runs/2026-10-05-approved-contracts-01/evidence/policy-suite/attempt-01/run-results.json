@@ -1,0 +1,97 @@
+{
+  "sessionId": "2026-10-05-approved-contracts-01",
+  "executor": "Codex approved-contracts single executor",
+  "kind": "REAL_OWNED_DB_RUN",
+  "targets": [
+    "tests/integration/rp14-scan-elevated-policy.integration.test.mjs"
+  ],
+  "preflight": {
+    "ROOT": "/Users/renkang/VS Code/project-management",
+    "ROOTexists": true,
+    "gitDirExists": true,
+    "BACKEND": "/Users/renkang/VS Code/project-management/rdpms-system/backend",
+    "backendExists": true,
+    "guardScriptExists": true,
+    "compilerPath": "/Users/renkang/VS Code/project-management/rdpms-system/frontend/node_modules/.bin/tsc",
+    "compilerExists": true,
+    "initdbPath": "/opt/homebrew/bin/initdb",
+    "initdbExists": true,
+    "pgCtlPath": "/opt/homebrew/bin/pg_ctl",
+    "pgCtlExists": true,
+    "distExistsAtStart": false,
+    "targetsExist": {
+      "tests/integration/rp14-scan-elevated-policy.integration.test.mjs": true
+    },
+    "verdict": "OK"
+  },
+  "commands": [
+    {
+      "label": "initdb",
+      "command": [
+        "/opt/homebrew/bin/initdb",
+        "-D",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-approved-contracts-hh2hs5gp/pg",
+        "-U",
+        "rdpms_exec",
+        "--auth=trust"
+      ],
+      "exitCode": 0,
+      "log": "initdb.log"
+    },
+    {
+      "label": "cluster-start",
+      "command": [
+        "/opt/homebrew/bin/pg_ctl",
+        "-D",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-approved-contracts-hh2hs5gp/pg",
+        "-l",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-approved-contracts-hh2hs5gp/postgres.log",
+        "-o",
+        "-h 127.0.0.1 -p 65351 -k /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-approved-contracts-hh2hs5gp/socket",
+        "-w",
+        "start"
+      ],
+      "exitCode": 1,
+      "log": "cluster-start.log"
+    }
+  ],
+  "primaryExceptions": [],
+  "cleanup": {
+    "guardDropSkipped": "cluster never started",
+    "ownedDistRemoved": true,
+    "ownedTempRootRemoved": false,
+    "preservedOwnedTempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-approved-contracts-hh2hs5gp",
+    "releaseCondition": "cluster-stop did not succeed; the owned temp root is preserved on purpose. Release: run pg_ctl -D <root>/pg -m fast -w stop, then remove the root. Never delete a root whose cluster may still be running.",
+    "ownershipVerification": {
+      "ownedDatabase": "rdpms_test_approved_2da2f960a9",
+      "ownedPort": 65351,
+      "ownedTempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-approved-contracts-hh2hs5gp",
+      "rootExistsAfterCleanup": true,
+      "postmasterPidExists": false,
+      "distExistsAfterCleanup": false,
+      "note": "ownership is asserted from the owned db/port/root recorded above, not from a global process scan"
+    }
+  },
+  "criticalFailures": [
+    "cluster-start did not succeed",
+    "cluster-stop failed, owned temp root preserved (release condition recorded)"
+  ],
+  "notes": [],
+  "buildOutputOwnership": {
+    "path": "/Users/renkang/VS Code/project-management/rdpms-system/backend/dist",
+    "preExistingAtStart": false,
+    "ownershipDeclaredBeforeBuild": true,
+    "owner": "2026-10-05-approved-contracts-01"
+  },
+  "ownedResources": {
+    "database": "rdpms_test_approved_2da2f960a9",
+    "port": 65351,
+    "bindHost": "127.0.0.1",
+    "ownerRole": "rdpms_exec",
+    "tempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-approved-contracts-hh2hs5gp",
+    "envFileMode": "0600",
+    "dotenv": "new private env file only; repository dotenv files never read",
+    "compiler": "existing frontend TypeScript via PATH; no install/upgrade"
+  },
+  "exitReason": "critical failures: cluster-start did not succeed; cluster-stop failed, owned temp root preserved (release condition recorded)"
+}

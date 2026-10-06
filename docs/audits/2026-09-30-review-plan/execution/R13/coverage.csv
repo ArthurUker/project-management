@@ -1,0 +1,14 @@
+packet,file,symbol_or_route,question,review_status,evidence_ref,unreviewed_reason
+R13,rdpms-system/deploy/scripts/deploy.sh,Steps 1-10,Which object is checked or mutated at each stage and when does each failure occur?,REVIEWED,"review.md#发布阶段、目标与持久状态矩阵; source lines 94-182",No script execution per read-only boundary
+R13,rdpms-system/deploy/scripts/preflight.sh,REPO_ROOT APP_DIR WEB_DIR defaults,Does the preflight target current or candidate?,REVIEWED,"review.md#D02; lines 58-61",Candidate env override behavior not exercised
+R13,rdpms-system/deploy/scripts/deploy.sh,Step 1 / Step 3 / Step 5-8,Is candidate passed to preflight before migration and cutover?,REVIEWED,"review.md#D02; lines 94-152",No deployment run
+R13,rdpms-system/deploy/scripts/rdpms-start.sh,APP_DIR and dist/src branch,Can previous source-only release be selected by launcher?,REVIEWED,"review.md#回滚路径与演练状态; lines 22-35",No service restart or rollback executed
+R13,rdpms-system/deploy/scripts/smoke-test.sh,read-only/full guards and P-01/P-02,What post-cutover signals and side effects are checked?,REVIEWED,"review.md#发布阶段、目标与持久状态矩阵; lines 63-74,138-170,293-313",Smoke not run; detailed profile beyond deployment contract out of scope
+R13,rdpms-system/deploy/systemd/rdpms-api.service,EnvironmentFile and ExecStart,Which config is injected and how is process started?,REVIEWED,"review.md#D03; lines 12-26",Unit not loaded or restarted on target host
+R13,rdpms-system/backend/.env.example,CORS and export names,Do examples match preflight and runtime consumers?,REVIEWED,"review.md#D03; lines 29-48",Example only; real .env intentionally not read
+R13,rdpms-system/backend/src/bootstrap/createApp.js,CORS setup and ready/health,Does runtime consume documented vars and expose readiness identity?,REVIEWED,"review.md#D03 and 架构优化建议; lines 65-100",Runtime headers and endpoints not exercised
+R13,docs/audits/2026-09-29-rdpms/REPORT.md,D02 and D03,What prior evidence and bounds are inherited?,REVIEWED,"Historical findings D02/D03",No rerun because current source paths are unchanged at baseline
+R13,target Linux release tree and systemd service,manual rollback drill,Does prior release boot against migrated DB and recover routing?,PENDING,"review.md#回滚路径与演练状态",Requires disposable target-like host/service environment; no sudo/systemctl allowed
+R13,production /srv/rdpms/.env,actual deployed configuration,Are live values aligned with the checked template?,PENDING,"review.md#待决与未覆盖",Real secrets expressly out of scope
+R13,Prisma candidate migrations,old-release backward compatibility,Does an actual migration prevent code rollback?,PENDING,"review.md#发布阶段、目标与持久状态矩阵",No concrete incompatible migration found; plan only permits recording this as an established defect with migration evidence
+R13,CI/CD workflows and artifact registry,external candidate gates/signing,Are additional gates or artifact controls present?,PENDING,"review.md#待决与未覆盖",Not included in R13 primary file scope

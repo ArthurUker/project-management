@@ -1,0 +1,56 @@
+{
+  "taskId": "RP08-T01",
+  "baselineCommit": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "implementation": {
+    "LR-07": "RESOLVED_SCOPE_SELECTED_WITH_CONDITIONAL_GATE_NA"
+  },
+  "validation": "PASS",
+  "release": "NOT_EVALUATED",
+  "cases": [
+    {
+      "id": "AC-B04-01",
+      "status": "PASS",
+      "evidence": "evidence/attempt-02/integration-suite.log",
+      "scope": "授权project/task/report流与拒绝实体省略；不代表全JWT链"
+    },
+    {
+      "id": "AC-B04-02",
+      "status": "PARTIAL_NOT_RUN",
+      "evidence": "evidence/attempt-02/integration-suite.log",
+      "scope": "撤销reports.view后后续pull为空已验证；客户端IDB缓存清除属于RP08-T02未运行"
+    },
+    {
+      "id": "AC-B04-03",
+      "status": "PASS",
+      "evidence": "evidence/attempt-02/integration-suite.log",
+      "scope": "仅作者report真实行返回"
+    },
+    {
+      "id": "PAC-RP08-01",
+      "status": "PASS",
+      "evidence": "evidence/attempt-02/integration-suite.log",
+      "scope": "本地授权投影/own-only用例；不代表RP08包完成"
+    },
+    {
+      "id": "TASK-RP08-T01",
+      "status": "PASS",
+      "evidence": "evidence/attempt-02/run-results.json"
+    },
+    {
+      "id": "INT-PC02-01",
+      "status": "NOT_RUN",
+      "reason": "多包联合鉴权合同及决定仍未满足；当前用例注入可信测试身份"
+    },
+    {
+      "id": "GATE-D-S01-05",
+      "status": "NOT_APPLICABLE",
+      "reason": "未请求registration全局例外，condition=false；不得解释为批准或PASS"
+    },
+    {
+      "id": "DECISION-D-S01-05",
+      "status": "NOT_APPLICABLE",
+      "reason": "本任务未激活该条件例外"
+    }
+  ],
+  "overallBoundary": "Local task-scope result only; no target/deployment acceptance."
+}

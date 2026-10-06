@@ -1,0 +1,11 @@
+{
+  "allowedFiles": [
+    "rdpms-system/deploy/scripts/drill/paired-restore-check.py",
+    "rdpms-system/backend/tests/integration/rp19-paired-restore.integration.test.mjs"
+  ],
+  "scope": "Local owned synthetic paused-writer+actual DB restore-state barrier common-point proof, real pg_dump/pg_restore into newly guarded owned target with no overwritten source, full tablecounts/file ref sizehash, mismatch/hash refuse before restore; owned-only physical security seal preserves current same-ID user auth floor and policy, newepoch+refresh revoke+oldreceipts unchanged. Not general production restore or targetRPO/RTO acceptance.",
+  "gateRefs": [
+    "T-RP-10"
+  ],
+  "contracts": {}
+}

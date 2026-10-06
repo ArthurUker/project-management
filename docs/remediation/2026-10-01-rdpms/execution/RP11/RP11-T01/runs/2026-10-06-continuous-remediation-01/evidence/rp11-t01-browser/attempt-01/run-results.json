@@ -1,0 +1,99 @@
+{
+  "layer": "REAL_CHROME_INDEXEDDB_PRODUCT_TASKS_SYNTHETIC_HTTP_AUTH",
+  "cases": [
+    {
+      "name": "LEGACY_UNKNOWN_RETAINED_NOT_ASSIGNED",
+      "result": "PASS",
+      "legacyUnknownRows": 1,
+      "ownerQueueRows": 1
+    },
+    {
+      "name": "BOOTSTRAP_PAUSE_PRESERVES_OWNER_QUEUE",
+      "result": "PASS",
+      "lostPayloads": 0
+    },
+    {
+      "name": "EXPLICIT_LOGOUT_SWITCH_B_CANNOT_SEND_A_OR_UNKNOWN",
+      "result": "PASS",
+      "actualFixtureSentActors": [
+        {
+          "actorId": "B",
+          "mutationIds": [
+            "B-draft"
+          ]
+        }
+      ],
+      "retainedA": 1,
+      "retainedUnknown": 1
+    },
+    {
+      "name": "STALE_OWNER_READ_WRITE_LOGOUT_FENCED",
+      "result": "PASS",
+      "oldActorReadable": false,
+      "lateWriteApplied": false,
+      "currentBCache": 1
+    },
+    {
+      "name": "OWNER_CACHE_AND_ACTUAL_TASKS_FALLBACK",
+      "result": "PASS",
+      "actualProductTasksPage": true,
+      "visibleB": true,
+      "visibleA": false
+    },
+    {
+      "name": "ACTUAL_TASKS_PERMISSION_DENIAL_DOES_NOT_FALLBACK",
+      "result": "FAIL",
+      "error": "Error: Error: DENIAL_TIMEOUT\n    at <anonymous>:1:246"
+    }
+  ],
+  "commands": [],
+  "cleanup": {
+    "chromeExit": {
+      "code": 0,
+      "signal": null
+    },
+    "ownedServerClosed": true,
+    "ownedProfileRootRemoved": true
+  },
+  "limits": [
+    "Native JWT/backend DB/production release NOT_RUN",
+    "Actual current AuthProvider, SyncProvider, Tasks, tokenStore, engine and IDB; synthetic auth/pull/push fixtures explicitly identified",
+    "No dependency installation, target profile, real dotenv or SSH"
+  ],
+  "result": "FAIL",
+  "error": "Error: Error: DENIAL_TIMEOUT\n    at <anonymous>:1:246",
+  "sourceBindings": [
+    {
+      "path": "rdpms-system/frontend/src/offline/idb.ts",
+      "sha256": "99ec682e4fa53cc07a03261ab5f8996cf6241762a057435b8eb615eb4483d56c"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/engine.ts",
+      "sha256": "705159d3d4a117a4cc326a95a850dbe7e802971b05353ee5e9c70ae7a6ee6644"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/SyncProvider.tsx",
+      "sha256": "46873657c17e8f64ffb229569c7d3edc09170fdb206bce58abdaff23e04d07f6"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/pendingDraft.ts",
+      "sha256": "0ccc3adcfc1fb352d438f9d77404ec2d03d82c2632d4e1cfb0129baf16cf8a92"
+    },
+    {
+      "path": "rdpms-system/frontend/src/pages/Tasks.tsx",
+      "sha256": "d1cad4efd2c66916d4b2634aa226f5514d525cd2f3870f81f8a43c28b6ea2076"
+    },
+    {
+      "path": "rdpms-system/frontend/src/auth/AuthProvider.tsx",
+      "sha256": "5f5656325c39217d5a497bf9e8a583ae85b76e1720acc79793f57e4dc22462f7"
+    },
+    {
+      "path": "rdpms-system/frontend/src/auth/tokenStore.ts",
+      "sha256": "e8e207bff432c0dd08956e778206152c055b9b38a7d2d6b06f4c80825beea6a6"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx",
+      "sha256": "b00ee671e3bb84294cc8e4754843cb930805e4dc544a73b2e157f56d58b752bd"
+    }
+  ]
+}

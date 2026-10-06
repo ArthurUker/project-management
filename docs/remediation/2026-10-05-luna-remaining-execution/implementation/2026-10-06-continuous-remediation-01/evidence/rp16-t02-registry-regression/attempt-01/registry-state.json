@@ -1,0 +1,2629 @@
+{
+  "trace": [
+    {
+      "endpoint": "/restore/preview",
+      "status": 200,
+      "response": {
+        "ok": true,
+        "errors": [],
+        "warnings": [],
+        "tables": [
+          {
+            "key": "projects",
+            "rows": 1,
+            "existing": 1,
+            "new": 0,
+            "willDelete": 0,
+            "errors": [],
+            "warnings": []
+          }
+        ],
+        "includedKeys": [
+          "projects"
+        ],
+        "scope": {
+          "kind": "APPLICATION_MODULE_JSON",
+          "binaryFilesIncluded": false,
+          "supportedKeys": [
+            "users",
+            "roles",
+            "permissions",
+            "docCategories",
+            "taskTemplates",
+            "taskTemplateSteps",
+            "reagentMaterials",
+            "reagentLots",
+            "reagentFormulas",
+            "formulaComponents",
+            "prepRecords",
+            "projectTemplates",
+            "projects",
+            "projectMembers",
+            "tasks",
+            "taskDependencies",
+            "milestones",
+            "phaseTransitions",
+            "reports",
+            "reportVersions",
+            "monthlyProgress",
+            "docDocuments",
+            "docVersions",
+            "primers",
+            "sampleMaterials",
+            "rolePermissions",
+            "systemLogs"
+          ],
+          "unsupportedModels": [
+            "syncDevice",
+            "syncMutation",
+            "refreshToken",
+            "userRole",
+            "templateRole",
+            "templatePhase",
+            "templateTask",
+            "projectPhase",
+            "taskDocRef",
+            "regulatoryDocument",
+            "taskRegulatoryDocument",
+            "registrationProfile",
+            "detectionTarget",
+            "fileObject",
+            "attachment",
+            "auditLog",
+            "enumMeta",
+            "codeSequence",
+            "systemSetting",
+            "mutationReceipt",
+            "dataRecoveryState"
+          ],
+          "note": "Module JSON is not a complete database or file backup; external targets are only resolved against current DB state."
+        }
+      }
+    },
+    {
+      "endpoint": "/restore/tables",
+      "status": 200,
+      "response": {
+        "scope": {
+          "kind": "APPLICATION_MODULE_JSON",
+          "binaryFilesIncluded": false,
+          "supportedKeys": [
+            "users",
+            "roles",
+            "permissions",
+            "docCategories",
+            "taskTemplates",
+            "taskTemplateSteps",
+            "reagentMaterials",
+            "reagentLots",
+            "reagentFormulas",
+            "formulaComponents",
+            "prepRecords",
+            "projectTemplates",
+            "projects",
+            "projectMembers",
+            "tasks",
+            "taskDependencies",
+            "milestones",
+            "phaseTransitions",
+            "reports",
+            "reportVersions",
+            "monthlyProgress",
+            "docDocuments",
+            "docVersions",
+            "primers",
+            "sampleMaterials",
+            "rolePermissions",
+            "systemLogs"
+          ],
+          "unsupportedModels": [
+            "syncDevice",
+            "syncMutation",
+            "refreshToken",
+            "userRole",
+            "templateRole",
+            "templatePhase",
+            "templateTask",
+            "projectPhase",
+            "taskDocRef",
+            "regulatoryDocument",
+            "taskRegulatoryDocument",
+            "registrationProfile",
+            "detectionTarget",
+            "fileObject",
+            "attachment",
+            "auditLog",
+            "enumMeta",
+            "codeSequence",
+            "systemSetting",
+            "mutationReceipt",
+            "dataRecoveryState"
+          ],
+          "note": "Module JSON is not a complete database or file backup; external targets are only resolved against current DB state."
+        },
+        "tables": [
+          {
+            "key": "users",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "username"
+              ],
+              [
+                "email"
+              ],
+              [
+                "avatarFileId"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "avatarFileId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "fileObject",
+                "targetKey": null,
+                "nullable": [
+                  true
+                ]
+              },
+              {
+                "fields": [
+                  "createdById"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "user",
+                "targetKey": "users",
+                "nullable": [
+                  true
+                ]
+              },
+              {
+                "fields": [
+                  "updatedById"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "user",
+                "targetKey": "users",
+                "nullable": [
+                  true
+                ]
+              }
+            ]
+          },
+          {
+            "key": "roles",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "code"
+              ]
+            ],
+            "foreignKeys": []
+          },
+          {
+            "key": "permissions",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "code"
+              ]
+            ],
+            "foreignKeys": []
+          },
+          {
+            "key": "docCategories",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "code"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "parentId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "docCategory",
+                "targetKey": "docCategories",
+                "nullable": [
+                  true
+                ]
+              }
+            ]
+          },
+          {
+            "key": "taskTemplates",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "code"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "createdById"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "user",
+                "targetKey": "users",
+                "nullable": [
+                  true
+                ]
+              }
+            ]
+          },
+          {
+            "key": "taskTemplateSteps",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "templateId",
+                "sortOrder"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "templateId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "taskTemplate",
+                "targetKey": "taskTemplates",
+                "nullable": [
+                  false
+                ]
+              }
+            ]
+          },
+          {
+            "key": "reagentMaterials",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "code"
+              ]
+            ],
+            "foreignKeys": []
+          },
+          {
+            "key": "reagentLots",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "materialId",
+                "lotNo"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "materialId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "reagentMaterial",
+                "targetKey": "reagentMaterials",
+                "nullable": [
+                  false
+                ]
+              }
+            ]
+          },
+          {
+            "key": "reagentFormulas",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "code"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "createdById"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "user",
+                "targetKey": "users",
+                "nullable": [
+                  false
+                ]
+              },
+              {
+                "fields": [
+                  "projectId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "project",
+                "targetKey": "projects",
+                "nullable": [
+                  true
+                ]
+              }
+            ]
+          },
+          {
+            "key": "formulaComponents",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "formulaId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "reagentFormula",
+                "targetKey": "reagentFormulas",
+                "nullable": [
+                  false
+                ]
+              },
+              {
+                "fields": [
+                  "materialId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "reagentMaterial",
+                "targetKey": "reagentMaterials",
+                "nullable": [
+                  true
+                ]
+              }
+            ]
+          },
+          {
+            "key": "prepRecords",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "formulaId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "reagentFormula",
+                "targetKey": "reagentFormulas",
+                "nullable": [
+                  false
+                ]
+              },
+              {
+                "fields": [
+                  "createdById"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "user",
+                "targetKey": "users",
+                "nullable": [
+                  false
+                ]
+              }
+            ]
+          },
+          {
+            "key": "projectTemplates",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "code"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "parentId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "projectTemplate",
+                "targetKey": "projectTemplates",
+                "nullable": [
+                  true
+                ]
+              },
+              {
+                "fields": [
+                  "createdById"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "user",
+                "targetKey": "users",
+                "nullable": [
+                  false
+                ]
+              }
+            ]
+          },
+          {
+            "key": "projects",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "code"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "managerId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "user",
+                "targetKey": "users",
+                "nullable": [
+                  false
+                ]
+              },
+              {
+                "fields": [
+                  "templateId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "projectTemplate",
+                "targetKey": "projectTemplates",
+                "nullable": [
+                  true
+                ]
+              }
+            ]
+          },
+          {
+            "key": "projectMembers",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "projectId",
+                "userId"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "projectId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "project",
+                "targetKey": "projects",
+                "nullable": [
+                  false
+                ]
+              },
+              {
+                "fields": [
+                  "userId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "user",
+                "targetKey": "users",
+                "nullable": [
+                  false
+                ]
+              }
+            ]
+          },
+          {
+            "key": "tasks",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "projectId",
+                "code"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "projectId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "project",
+                "targetKey": "projects",
+                "nullable": [
+                  false
+                ]
+              },
+              {
+                "fields": [
+                  "phaseId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "projectPhase",
+                "targetKey": null,
+                "nullable": [
+                  true
+                ]
+              },
+              {
+                "fields": [
+                  "parentId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "task",
+                "targetKey": "tasks",
+                "nullable": [
+                  true
+                ]
+              },
+              {
+                "fields": [
+                  "assigneeId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "user",
+                "targetKey": "users",
+                "nullable": [
+                  true
+                ]
+              }
+            ]
+          },
+          {
+            "key": "taskDependencies",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "taskId",
+                "prerequisiteId"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "taskId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "task",
+                "targetKey": "tasks",
+                "nullable": [
+                  false
+                ]
+              },
+              {
+                "fields": [
+                  "prerequisiteId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "task",
+                "targetKey": "tasks",
+                "nullable": [
+                  false
+                ]
+              }
+            ]
+          },
+          {
+            "key": "milestones",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "projectId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "project",
+                "targetKey": "projects",
+                "nullable": [
+                  false
+                ]
+              },
+              {
+                "fields": [
+                  "phaseId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "projectPhase",
+                "targetKey": null,
+                "nullable": [
+                  true
+                ]
+              }
+            ]
+          },
+          {
+            "key": "phaseTransitions",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "fromPhaseId",
+                "toPhaseId"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "fromPhaseId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "projectPhase",
+                "targetKey": null,
+                "nullable": [
+                  false
+                ]
+              },
+              {
+                "fields": [
+                  "toPhaseId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "projectPhase",
+                "targetKey": null,
+                "nullable": [
+                  false
+                ]
+              }
+            ]
+          },
+          {
+            "key": "reports",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "projectId",
+                "authorId",
+                "reportType",
+                "periodKey"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "projectId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "project",
+                "targetKey": "projects",
+                "nullable": [
+                  false
+                ]
+              },
+              {
+                "fields": [
+                  "authorId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "user",
+                "targetKey": "users",
+                "nullable": [
+                  false
+                ]
+              },
+              {
+                "fields": [
+                  "reviewerId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "user",
+                "targetKey": "users",
+                "nullable": [
+                  true
+                ]
+              }
+            ]
+          },
+          {
+            "key": "reportVersions",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "reportId",
+                "version"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "reportId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "report",
+                "targetKey": "reports",
+                "nullable": [
+                  false
+                ]
+              },
+              {
+                "fields": [
+                  "createdById"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "user",
+                "targetKey": "users",
+                "nullable": [
+                  true
+                ]
+              }
+            ]
+          },
+          {
+            "key": "monthlyProgress",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "projectId",
+                "periodKey"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "projectId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "project",
+                "targetKey": "projects",
+                "nullable": [
+                  false
+                ]
+              },
+              {
+                "fields": [
+                  "submittedById"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "user",
+                "targetKey": "users",
+                "nullable": [
+                  false
+                ]
+              }
+            ]
+          },
+          {
+            "key": "docDocuments",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "code"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "categoryId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "docCategory",
+                "targetKey": "docCategories",
+                "nullable": [
+                  false
+                ]
+              },
+              {
+                "fields": [
+                  "ownerId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "user",
+                "targetKey": "users",
+                "nullable": [
+                  false
+                ]
+              },
+              {
+                "fields": [
+                  "reviewerId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "user",
+                "targetKey": "users",
+                "nullable": [
+                  true
+                ]
+              }
+            ]
+          },
+          {
+            "key": "docVersions",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "documentId",
+                "version"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "documentId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "docDocument",
+                "targetKey": "docDocuments",
+                "nullable": [
+                  false
+                ]
+              },
+              {
+                "fields": [
+                  "createdById"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "user",
+                "targetKey": "users",
+                "nullable": [
+                  false
+                ]
+              }
+            ]
+          },
+          {
+            "key": "primers",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "code"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "projectId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "project",
+                "targetKey": "projects",
+                "nullable": [
+                  true
+                ]
+              },
+              {
+                "fields": [
+                  "targetId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "detectionTarget",
+                "targetKey": null,
+                "nullable": [
+                  true
+                ]
+              },
+              {
+                "fields": [
+                  "createdById"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "user",
+                "targetKey": "users",
+                "nullable": [
+                  true
+                ]
+              }
+            ]
+          },
+          {
+            "key": "sampleMaterials",
+            "appendOnly": false,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ],
+              [
+                "sampleCode"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "projectId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "project",
+                "targetKey": "projects",
+                "nullable": [
+                  true
+                ]
+              },
+              {
+                "fields": [
+                  "createdById"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "user",
+                "targetKey": "users",
+                "nullable": [
+                  true
+                ]
+              }
+            ]
+          },
+          {
+            "key": "rolePermissions",
+            "appendOnly": false,
+            "pk": [
+              "roleId",
+              "permissionId"
+            ],
+            "uniqueConstraints": [
+              [
+                "roleId",
+                "permissionId"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "roleId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "role",
+                "targetKey": "roles",
+                "nullable": [
+                  false
+                ]
+              },
+              {
+                "fields": [
+                  "permissionId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "permission",
+                "targetKey": "permissions",
+                "nullable": [
+                  false
+                ]
+              }
+            ]
+          },
+          {
+            "key": "systemLogs",
+            "appendOnly": true,
+            "pk": [
+              "id"
+            ],
+            "uniqueConstraints": [
+              [
+                "id"
+              ]
+            ],
+            "foreignKeys": [
+              {
+                "fields": [
+                  "userId"
+                ],
+                "targetFields": [
+                  "id"
+                ],
+                "targetModel": "user",
+                "targetKey": "users",
+                "nullable": [
+                  true
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "allSchemaUniqueConstraintsExercised": 51
+    },
+    {
+      "endpoint": "/restore/preview",
+      "status": 200,
+      "response": {
+        "ok": true,
+        "errors": [],
+        "warnings": [],
+        "tables": [
+          {
+            "key": "roles",
+            "rows": 500,
+            "existing": 0,
+            "new": 500,
+            "willDelete": 0,
+            "errors": [],
+            "warnings": []
+          }
+        ],
+        "includedKeys": [
+          "roles"
+        ],
+        "scope": {
+          "kind": "APPLICATION_MODULE_JSON",
+          "binaryFilesIncluded": false,
+          "supportedKeys": [
+            "users",
+            "roles",
+            "permissions",
+            "docCategories",
+            "taskTemplates",
+            "taskTemplateSteps",
+            "reagentMaterials",
+            "reagentLots",
+            "reagentFormulas",
+            "formulaComponents",
+            "prepRecords",
+            "projectTemplates",
+            "projects",
+            "projectMembers",
+            "tasks",
+            "taskDependencies",
+            "milestones",
+            "phaseTransitions",
+            "reports",
+            "reportVersions",
+            "monthlyProgress",
+            "docDocuments",
+            "docVersions",
+            "primers",
+            "sampleMaterials",
+            "rolePermissions",
+            "systemLogs"
+          ],
+          "unsupportedModels": [
+            "syncDevice",
+            "syncMutation",
+            "refreshToken",
+            "userRole",
+            "templateRole",
+            "templatePhase",
+            "templateTask",
+            "projectPhase",
+            "taskDocRef",
+            "regulatoryDocument",
+            "taskRegulatoryDocument",
+            "registrationProfile",
+            "detectionTarget",
+            "fileObject",
+            "attachment",
+            "auditLog",
+            "enumMeta",
+            "codeSequence",
+            "systemSetting",
+            "mutationReceipt",
+            "dataRecoveryState"
+          ],
+          "note": "Module JSON is not a complete database or file backup; external targets are only resolved against current DB state."
+        }
+      }
+    },
+    {
+      "endpoint": "/restore/preview",
+      "status": 200,
+      "response": {
+        "ok": false,
+        "errors": [
+          "[roles] target unique conflict code"
+        ],
+        "warnings": [],
+        "tables": [
+          {
+            "key": "roles",
+            "rows": 501,
+            "existing": 0,
+            "new": 501,
+            "willDelete": 0,
+            "errors": [
+              "[roles] target unique conflict code"
+            ],
+            "warnings": []
+          }
+        ],
+        "includedKeys": [
+          "roles"
+        ],
+        "scope": {
+          "kind": "APPLICATION_MODULE_JSON",
+          "binaryFilesIncluded": false,
+          "supportedKeys": [
+            "users",
+            "roles",
+            "permissions",
+            "docCategories",
+            "taskTemplates",
+            "taskTemplateSteps",
+            "reagentMaterials",
+            "reagentLots",
+            "reagentFormulas",
+            "formulaComponents",
+            "prepRecords",
+            "projectTemplates",
+            "projects",
+            "projectMembers",
+            "tasks",
+            "taskDependencies",
+            "milestones",
+            "phaseTransitions",
+            "reports",
+            "reportVersions",
+            "monthlyProgress",
+            "docDocuments",
+            "docVersions",
+            "primers",
+            "sampleMaterials",
+            "rolePermissions",
+            "systemLogs"
+          ],
+          "unsupportedModels": [
+            "syncDevice",
+            "syncMutation",
+            "refreshToken",
+            "userRole",
+            "templateRole",
+            "templatePhase",
+            "templateTask",
+            "projectPhase",
+            "taskDocRef",
+            "regulatoryDocument",
+            "taskRegulatoryDocument",
+            "registrationProfile",
+            "detectionTarget",
+            "fileObject",
+            "attachment",
+            "auditLog",
+            "enumMeta",
+            "codeSequence",
+            "systemSetting",
+            "mutationReceipt",
+            "dataRecoveryState"
+          ],
+          "note": "Module JSON is not a complete database or file backup; external targets are only resolved against current DB state."
+        }
+      }
+    }
+  ],
+  "registry": [
+    {
+      "key": "users",
+      "model": "user",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "username"
+        ],
+        [
+          "email"
+        ],
+        [
+          "avatarFileId"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "avatarFileId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "fileObject",
+          "targetKey": null,
+          "nullable": [
+            true
+          ]
+        },
+        {
+          "fields": [
+            "createdById"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "user",
+          "targetKey": "users",
+          "nullable": [
+            true
+          ]
+        },
+        {
+          "fields": [
+            "updatedById"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "user",
+          "targetKey": "users",
+          "nullable": [
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "key": "roles",
+      "model": "role",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "code"
+        ]
+      ],
+      "foreignKeys": []
+    },
+    {
+      "key": "permissions",
+      "model": "permission",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "code"
+        ]
+      ],
+      "foreignKeys": []
+    },
+    {
+      "key": "docCategories",
+      "model": "docCategory",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "code"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "parentId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "docCategory",
+          "targetKey": "docCategories",
+          "nullable": [
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "key": "taskTemplates",
+      "model": "taskTemplate",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "code"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "createdById"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "user",
+          "targetKey": "users",
+          "nullable": [
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "key": "taskTemplateSteps",
+      "model": "taskTemplateStep",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "templateId",
+          "sortOrder"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "templateId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "taskTemplate",
+          "targetKey": "taskTemplates",
+          "nullable": [
+            false
+          ]
+        }
+      ]
+    },
+    {
+      "key": "reagentMaterials",
+      "model": "reagentMaterial",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "code"
+        ]
+      ],
+      "foreignKeys": []
+    },
+    {
+      "key": "reagentLots",
+      "model": "reagentLot",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "materialId",
+          "lotNo"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "materialId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "reagentMaterial",
+          "targetKey": "reagentMaterials",
+          "nullable": [
+            false
+          ]
+        }
+      ]
+    },
+    {
+      "key": "reagentFormulas",
+      "model": "reagentFormula",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "code"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "createdById"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "user",
+          "targetKey": "users",
+          "nullable": [
+            false
+          ]
+        },
+        {
+          "fields": [
+            "projectId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "project",
+          "targetKey": "projects",
+          "nullable": [
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "key": "formulaComponents",
+      "model": "formulaComponent",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "formulaId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "reagentFormula",
+          "targetKey": "reagentFormulas",
+          "nullable": [
+            false
+          ]
+        },
+        {
+          "fields": [
+            "materialId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "reagentMaterial",
+          "targetKey": "reagentMaterials",
+          "nullable": [
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "key": "prepRecords",
+      "model": "prepRecord",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "formulaId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "reagentFormula",
+          "targetKey": "reagentFormulas",
+          "nullable": [
+            false
+          ]
+        },
+        {
+          "fields": [
+            "createdById"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "user",
+          "targetKey": "users",
+          "nullable": [
+            false
+          ]
+        }
+      ]
+    },
+    {
+      "key": "projectTemplates",
+      "model": "projectTemplate",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "code"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "parentId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "projectTemplate",
+          "targetKey": "projectTemplates",
+          "nullable": [
+            true
+          ]
+        },
+        {
+          "fields": [
+            "createdById"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "user",
+          "targetKey": "users",
+          "nullable": [
+            false
+          ]
+        }
+      ]
+    },
+    {
+      "key": "projects",
+      "model": "project",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "code"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "managerId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "user",
+          "targetKey": "users",
+          "nullable": [
+            false
+          ]
+        },
+        {
+          "fields": [
+            "templateId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "projectTemplate",
+          "targetKey": "projectTemplates",
+          "nullable": [
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "key": "projectMembers",
+      "model": "projectMember",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "projectId",
+          "userId"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "projectId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "project",
+          "targetKey": "projects",
+          "nullable": [
+            false
+          ]
+        },
+        {
+          "fields": [
+            "userId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "user",
+          "targetKey": "users",
+          "nullable": [
+            false
+          ]
+        }
+      ]
+    },
+    {
+      "key": "tasks",
+      "model": "task",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "projectId",
+          "code"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "projectId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "project",
+          "targetKey": "projects",
+          "nullable": [
+            false
+          ]
+        },
+        {
+          "fields": [
+            "phaseId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "projectPhase",
+          "targetKey": null,
+          "nullable": [
+            true
+          ]
+        },
+        {
+          "fields": [
+            "parentId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "task",
+          "targetKey": "tasks",
+          "nullable": [
+            true
+          ]
+        },
+        {
+          "fields": [
+            "assigneeId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "user",
+          "targetKey": "users",
+          "nullable": [
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "key": "taskDependencies",
+      "model": "taskDependency",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "taskId",
+          "prerequisiteId"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "taskId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "task",
+          "targetKey": "tasks",
+          "nullable": [
+            false
+          ]
+        },
+        {
+          "fields": [
+            "prerequisiteId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "task",
+          "targetKey": "tasks",
+          "nullable": [
+            false
+          ]
+        }
+      ]
+    },
+    {
+      "key": "milestones",
+      "model": "milestone",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "projectId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "project",
+          "targetKey": "projects",
+          "nullable": [
+            false
+          ]
+        },
+        {
+          "fields": [
+            "phaseId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "projectPhase",
+          "targetKey": null,
+          "nullable": [
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "key": "phaseTransitions",
+      "model": "phaseTransition",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "fromPhaseId",
+          "toPhaseId"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "fromPhaseId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "projectPhase",
+          "targetKey": null,
+          "nullable": [
+            false
+          ]
+        },
+        {
+          "fields": [
+            "toPhaseId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "projectPhase",
+          "targetKey": null,
+          "nullable": [
+            false
+          ]
+        }
+      ]
+    },
+    {
+      "key": "reports",
+      "model": "report",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "projectId",
+          "authorId",
+          "reportType",
+          "periodKey"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "projectId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "project",
+          "targetKey": "projects",
+          "nullable": [
+            false
+          ]
+        },
+        {
+          "fields": [
+            "authorId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "user",
+          "targetKey": "users",
+          "nullable": [
+            false
+          ]
+        },
+        {
+          "fields": [
+            "reviewerId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "user",
+          "targetKey": "users",
+          "nullable": [
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "key": "reportVersions",
+      "model": "reportVersion",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "reportId",
+          "version"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "reportId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "report",
+          "targetKey": "reports",
+          "nullable": [
+            false
+          ]
+        },
+        {
+          "fields": [
+            "createdById"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "user",
+          "targetKey": "users",
+          "nullable": [
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "key": "monthlyProgress",
+      "model": "monthlyProgress",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "projectId",
+          "periodKey"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "projectId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "project",
+          "targetKey": "projects",
+          "nullable": [
+            false
+          ]
+        },
+        {
+          "fields": [
+            "submittedById"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "user",
+          "targetKey": "users",
+          "nullable": [
+            false
+          ]
+        }
+      ]
+    },
+    {
+      "key": "docDocuments",
+      "model": "docDocument",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "code"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "categoryId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "docCategory",
+          "targetKey": "docCategories",
+          "nullable": [
+            false
+          ]
+        },
+        {
+          "fields": [
+            "ownerId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "user",
+          "targetKey": "users",
+          "nullable": [
+            false
+          ]
+        },
+        {
+          "fields": [
+            "reviewerId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "user",
+          "targetKey": "users",
+          "nullable": [
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "key": "docVersions",
+      "model": "docVersion",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "documentId",
+          "version"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "documentId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "docDocument",
+          "targetKey": "docDocuments",
+          "nullable": [
+            false
+          ]
+        },
+        {
+          "fields": [
+            "createdById"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "user",
+          "targetKey": "users",
+          "nullable": [
+            false
+          ]
+        }
+      ]
+    },
+    {
+      "key": "primers",
+      "model": "primer",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "code"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "projectId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "project",
+          "targetKey": "projects",
+          "nullable": [
+            true
+          ]
+        },
+        {
+          "fields": [
+            "targetId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "detectionTarget",
+          "targetKey": null,
+          "nullable": [
+            true
+          ]
+        },
+        {
+          "fields": [
+            "createdById"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "user",
+          "targetKey": "users",
+          "nullable": [
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "key": "sampleMaterials",
+      "model": "sampleMaterial",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ],
+        [
+          "sampleCode"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "projectId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "project",
+          "targetKey": "projects",
+          "nullable": [
+            true
+          ]
+        },
+        {
+          "fields": [
+            "createdById"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "user",
+          "targetKey": "users",
+          "nullable": [
+            true
+          ]
+        }
+      ]
+    },
+    {
+      "key": "rolePermissions",
+      "model": "rolePermission",
+      "pk": [
+        "roleId",
+        "permissionId"
+      ],
+      "uniques": [
+        [
+          "roleId",
+          "permissionId"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "roleId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "role",
+          "targetKey": "roles",
+          "nullable": [
+            false
+          ]
+        },
+        {
+          "fields": [
+            "permissionId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "permission",
+          "targetKey": "permissions",
+          "nullable": [
+            false
+          ]
+        }
+      ]
+    },
+    {
+      "key": "systemLogs",
+      "model": "systemLog",
+      "pk": [
+        "id"
+      ],
+      "uniques": [
+        [
+          "id"
+        ]
+      ],
+      "foreignKeys": [
+        {
+          "fields": [
+            "userId"
+          ],
+          "targetFields": [
+            "id"
+          ],
+          "targetModel": "user",
+          "targetKey": "users",
+          "nullable": [
+            true
+          ]
+        }
+      ]
+    }
+  ],
+  "roles": [
+    {
+      "id": "68a0667d-5ba7-4976-ad27-fcb581ca4032",
+      "code": "SUPER_ADMIN",
+      "name": "超级管理员",
+      "description": "持有全部 P0 权限，系统内置不可删除",
+      "isSystem": true,
+      "sortOrder": 1,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T03:06:53.055Z",
+      "updatedAt": "2026-10-06T03:06:53.055Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "e90796ed-bc57-4e57-99e8-be53dafd8545",
+      "code": "ADMIN",
+      "name": "管理员",
+      "description": "系统管理；不持有 8 项高危、audit.export、system.logs.view",
+      "isSystem": true,
+      "sortOrder": 2,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T03:06:53.058Z",
+      "updatedAt": "2026-10-06T03:06:53.058Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "7c220395-df9c-44b0-9c1d-a3177a302d06",
+      "code": "MANAGER",
+      "name": "项目经理",
+      "description": "项目/阶段/任务/里程碑/汇报/文档/法规/注册/试剂全链路管理",
+      "isSystem": true,
+      "sortOrder": 3,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T03:06:53.059Z",
+      "updatedAt": "2026-10-06T03:06:53.059Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "363b08fb-2b04-4a5e-8a61-9cd8162c58f8",
+      "code": "MEMBER",
+      "name": "成员",
+      "description": "任务与汇报自写，其余只读",
+      "isSystem": true,
+      "sortOrder": 4,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T03:06:53.061Z",
+      "updatedAt": "2026-10-06T03:06:53.061Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "e30f2dbb-e7da-4e17-830f-4d1fb59b4ce9",
+      "code": "VIEWER",
+      "name": "只读",
+      "description": "仅查看与下载，不含任何写权限",
+      "isSystem": true,
+      "sortOrder": 5,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T03:06:53.062Z",
+      "updatedAt": "2026-10-06T03:06:53.062Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "f90d1dd7-fd7a-4961-85d8-51f00f97ef8c",
+      "code": "AUDITOR",
+      "name": "审计员",
+      "description": "恰好持有 audit.view + audit.export + system.logs.view",
+      "isSystem": true,
+      "sortOrder": 6,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T03:06:53.063Z",
+      "updatedAt": "2026-10-06T03:06:53.063Z",
+      "createdById": null,
+      "updatedById": null
+    },
+    {
+      "id": "3d151511-824c-411a-8d40-bc7c65891119",
+      "code": "TAIL-f78df14e-0fe8-4319-9e36-7e90ee22b519",
+      "name": "Occupied 501st",
+      "description": null,
+      "isSystem": false,
+      "sortOrder": 0,
+      "deletedAt": null,
+      "createdAt": "2026-10-06T03:06:55.293Z",
+      "updatedAt": "2026-10-06T03:06:55.293Z",
+      "createdById": null,
+      "updatedById": null
+    }
+  ],
+  "taskCount": 0,
+  "project": {
+    "id": "9fadf80e-c952-4903-bffc-2acb6e24f215",
+    "code": "RESTORE-c808ec6d-6204-43bb-9b51-5fd2578a126c",
+    "name": "Owned restore target",
+    "type": "TESTING",
+    "subtype": null,
+    "status": "PLANNING",
+    "isDraft": false,
+    "positioning": null,
+    "managerId": "4b681505-1d97-42da-8bc4-a7b84d332262",
+    "templateId": null,
+    "startDate": null,
+    "endDate": null,
+    "actualEndDate": null,
+    "metadata": null,
+    "deletedAt": null,
+    "createdAt": "2026-10-06T03:06:55.241Z",
+    "updatedAt": "2026-10-06T03:06:55.241Z",
+    "createdById": "4b681505-1d97-42da-8bc4-a7b84d332262",
+    "updatedById": null
+  }
+}

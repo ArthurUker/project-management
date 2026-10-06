@@ -1,0 +1,24 @@
+{
+  "kind": "REVIEW_AND_PROMPT_AUTHORING_READBACK",
+  "productTestsOrRunnerExecuted": false,
+  "rootRecordsOrWorkerModified": false,
+  "protectedFileCount": 283,
+  "workerInputFileCount": 938,
+  "protectedOrWorkerDrift": [],
+  "frozenPlanFileCount": 2335,
+  "frozenPlanDigestMatches": true,
+  "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "pathBase": "REPOSITORY",
+  "artifactHashes": {
+    "docs/remediation/2026-10-04-parallel-handoff-check/REVIEW_ENTRY.md": "53b7efe20caff9674cf5df6b782980aa93efcc8fb06260f7e60208ee3f3a1da9",
+    "docs/remediation/2026-10-04-parallel-handoff-check/A_READY_AMENDMENT_PROMPT.md": "e6a7f271878def2700c0a9a3b7af1b8a7efdd5956a0d6477f7ab65b734bfa07f",
+    "docs/remediation/2026-10-04-parallel-handoff-check/findings.json": "13aa1b548c23f13ce5f14c481e6bbb76d6d1a939fae2845baa2cf7f96722fa4b",
+    "docs/remediation/2026-10-04-parallel-handoff-check/REVIEW.md": "bd6b1745ec9b1f5620624d4c723a4ded45d3b24ab6c584702cf1d82c0277989b",
+    "docs/remediation/2026-10-04-parallel-handoff-check/INTEGRATOR_RESUME_PROMPT.md": "1a2ce164fa5a21291afebcf13a5a292d94cca04e4f97df44068e932088f4a715",
+    "docs/remediation/2026-10-04-parallel-handoff-check/evidence/readback.json": "67ca666cd1526bb7de5b91232f0be5d955a07c1e98db41c4633f7371ad2661b6"
+  },
+  "excludes": [
+    "authoring-readback.json (self)"
+  ],
+  "verdict": "PASS"
+}

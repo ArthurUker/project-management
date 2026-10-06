@@ -1,0 +1,12 @@
+{
+  "taskId":"RP15-T01",
+  "packageId":"RP15",
+  "implementation":"IN_PROGRESS",
+  "validation":"ENV_BLOCKED",
+  "release":"NOT_EVALUATED",
+  "owner":"Codex executor",
+  "allowedTaskIds":["RP15-T01"],
+  "evidence":["authorization.json","change-summary.md","acceptance.json","rollback.md","evidence/static-schema-inventory.json","evidence/read-only-anomaly-queries.sql"],
+  "findingDisposition":{"B02":"SUPPORTED / not FIX_ACCEPTED","B19":"SUPPORTED / not FIX_ACCEPTED"},
+  "stillOpen":["No authorized read-only DB copy or target migration-state evidence.","No counts for cross-project edges, orphans, cycles, or tombstone references.","No product/data-owner policy for any observed anomaly.","S04-OI-01 remains OPEN; do not begin RP15-T02 before its implementation gates." ]
+}

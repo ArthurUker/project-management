@@ -1,0 +1,77 @@
+{
+  "commands": [
+    {
+      "command": [
+        "python3",
+        "/Users/renkang/VS Code/project-management/rdpms-system/deploy/scripts/candidate-gate.py",
+        "--candidate",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-runtime-candidate-owned-Y5hexZ/candidate",
+        "--env-file",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-runtime-candidate-owned-Y5hexZ/synthetic.env",
+        "--evidence",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-runtime-candidate-owned-Y5hexZ/candidate-evidence"
+      ],
+      "exit": 0,
+      "stdout": "PREPARED_PRE_DDL\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "bash",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-runtime-candidate-owned-Y5hexZ/candidate/rdpms-system/deploy/scripts/rdpms-start.sh"
+      ],
+      "exit": null,
+      "stdout": "🚀 R&D PMS API starting on port 61669...\n✅ Server is running at http://localhost:61669\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "bash",
+        "/Users/renkang/VS Code/project-management/rdpms-system/deploy/scripts/rdpms-env",
+        "/Users/renkang/.nvm/versions/node/v24.15.0/bin/node",
+        "-e",
+        "require(\"node:fs\").writeFileSync(process.argv[1],JSON.stringify({literal:process.env.OWNED_LITERAL,transport:process.env.VITE_AUTH_MODE}))",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-runtime-candidate-owned-Y5hexZ/literal-child.json"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "observations": [
+    {
+      "endpoint": "/health",
+      "status": 200
+    },
+    {
+      "endpoint": "/api/ready",
+      "status": 200
+    },
+    {
+      "endpoint": "/api/auth/login",
+      "status": 200
+    },
+    {
+      "endpoint": "/api/auth/me",
+      "status": 200
+    },
+    {
+      "endpoint": "/api/auth/me",
+      "status": 401
+    },
+    {
+      "endpoint": "/api/auth/login",
+      "status": 204
+    }
+  ],
+  "buildId": "e8d91b243013c8521d8fcb535ba5cc4bdeec1e3f34dc26c208c4e44b25f04602",
+  "daemonLog": "🚀 R&D PMS API starting on port 61669...\n✅ Server is running at http://localhost:61669\n",
+  "cleanup": {
+    "daemonStopped": true,
+    "ownedCandidateRootRemoved": true
+  },
+  "limits": [
+    "Actual owned local candidate daemon/PG only, not target Linux/systemd/proxy",
+    "No production pointer/migration/deploy or supported deployed version matrix"
+  ]
+}

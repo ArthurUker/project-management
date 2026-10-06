@@ -1,0 +1,57 @@
+[
+  {
+    "path": "rdpms-system/backend/src/routes/sync.js",
+    "beforeSha256": "587a5c04199d9de610b7f980dc2f5d92c9c35b558ed3ba67def27cc5f5e197df",
+    "afterSha256": "8f768754d4388ef3276bf3580d807e94ae937061e1db55d896b69a3530b674e1"
+  },
+  {
+    "path": "rdpms-system/backend/prisma/schema.prisma",
+    "beforeSha256": "044b5531c327e8bdbe08cf4c73bef9ada8112e5182cf5025e85eaa58ac87e3f3",
+    "afterSha256": "d7448530caed4540c664ec9718adafe1677c0a31286295115e2c7fb3434ea2ab"
+  },
+  {
+    "path": "rdpms-system/backend/src/modules/sync/changePublisher.ts",
+    "beforeSha256": null,
+    "afterSha256": "79088749d5e8c57cbb3828227ca5a5ddff4191f2fb402caf29a3d9a25be60062"
+  },
+  {
+    "path": "rdpms-system/backend/prisma/migrations/20261008_sync_commit_journal/migration.sql",
+    "beforeSha256": null,
+    "afterSha256": "adc848df0079a694992acb317f925d3d0415616b6b05575958c9dcc9a3b9a08d"
+  },
+  {
+    "path": "rdpms-system/backend/tests/integration/rp13-commit-journal.integration.test.mjs",
+    "beforeSha256": null,
+    "afterSha256": "7fd8a621185ed987714fbcb18dad06d1c43335aa57513eaa758b4f8c9d5386db"
+  },
+  {
+    "path": "rdpms-system/frontend/src/offline/engine.ts",
+    "beforeSha256": "8591e4c2a1add01f7ba4c49bb7e613884aba93cef37747ac0d6275f44216ce9a",
+    "afterSha256": "abd8704771e484bf3549e2c5b4dfc6d6058f34690634ddfa2fc80f412f46b597"
+  },
+  {
+    "path": "rdpms-system/frontend/src/offline/idb.ts",
+    "beforeSha256": "4973866ee9dc03fa6c6a653ebcbb0127dbdc15aa466a085815ede6f218ea56fd",
+    "afterSha256": "d1ee2db5c78abbc337a2b15e1207dcf6a9c3185cfaae591ef07f8f7bcb27b310"
+  },
+  {
+    "path": "rdpms-system/frontend/src/api/endpoints/sync.ts",
+    "beforeSha256": "54de84bd76d747f9b133decf346c1cff1a66bca344c707df3132afcd71b5b688",
+    "afterSha256": "af48b87fdf00cb800425e097ed030c9d3ec195ab46a934f4bae2967e464820c9"
+  },
+  {
+    "path": "rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx",
+    "beforeSha256": "7ca5a90ca989a4eaf4a15c69189aba1a22c287f15c2ab1ab12e6f5dba6096ecb",
+    "afterSha256": "eec847c55967e57edadbae85a028edbc6f401884ee8b0cf118898a2eedf966c7"
+  },
+  {
+    "path": "rdpms-system/backend/tests/integration/rp08-acl-backfill.integration.test.mjs",
+    "beforeSha256": "9dc7d5e31bd67e35cc73c787d734760d739aeaa05c88d238e56d2ff1a2d952e1",
+    "afterSha256": "553d15da0b072009c4f22f25eeca759193f59fb2ca90c92cded2cf8d52f00d75"
+  },
+  {
+    "path": "rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs",
+    "beforeSha256": "352149021601f7e6ffc56e30b2b1da2e61cbedaedab89582b4a4e29d4a06027b",
+    "afterSha256": "e74536fdedafb32df8401bc0aec8762c60ae9296be0696cba969d48eda6fb4d3"
+  }
+]

@@ -1,0 +1,114 @@
+{
+  "date": "2026-10-03b",
+  "executor": "CodeBuddy (session 2026-10-03b)",
+  "database": "rdpms_test_rp01_exec_5be991f342",
+  "port": 64952,
+  "bindHost": "127.0.0.1",
+  "ownerRole": "rdpms_exec",
+  "dotenv": "new mode-0600 private environment only; repository dotenv files not read",
+  "compiler": "existing frontend TypeScript via PATH; no installation or upgrade",
+  "targets": [
+    "tests/integration/rf04-versions-access.integration.test.mjs"
+  ],
+  "commands": [
+    {
+      "label": "initdb",
+      "command": [
+        "/opt/homebrew/bin/initdb",
+        "-D",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-cb3b-suite-460n2ciz/pg",
+        "-U",
+        "rdpms_exec",
+        "--auth=trust"
+      ],
+      "exitCode": 0,
+      "log": "initdb.log"
+    },
+    {
+      "label": "cluster-start",
+      "command": [
+        "/opt/homebrew/bin/pg_ctl",
+        "-D",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-cb3b-suite-460n2ciz/pg",
+        "-l",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-cb3b-suite-460n2ciz/postgres.log",
+        "-o",
+        "-h 127.0.0.1 -p 64952 -k /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-cb3b-suite-460n2ciz/socket",
+        "-w",
+        "start"
+      ],
+      "exitCode": 0,
+      "log": "cluster-start.log"
+    },
+    {
+      "label": "guard-check",
+      "command": [
+        "node",
+        "scripts/test-db.mjs",
+        "check"
+      ],
+      "exitCode": 2,
+      "log": "guard-check.log"
+    },
+    {
+      "label": "guard-reset",
+      "command": [
+        "node",
+        "scripts/test-db.mjs",
+        "reset"
+      ],
+      "exitCode": 0,
+      "log": "guard-reset.log"
+    },
+    {
+      "label": "backend-build",
+      "command": [
+        "npm",
+        "run",
+        "build"
+      ],
+      "exitCode": 0,
+      "log": "backend-build.log"
+    },
+    {
+      "label": "integration-suite",
+      "command": [
+        "node",
+        "--test",
+        "tests/integration/rf04-versions-access.integration.test.mjs"
+      ],
+      "exitCode": 0,
+      "log": "integration-suite.log"
+    },
+    {
+      "label": "guard-drop",
+      "command": [
+        "node",
+        "scripts/test-db.mjs",
+        "drop"
+      ],
+      "exitCode": 0,
+      "log": "guard-drop.log"
+    },
+    {
+      "label": "cluster-stop",
+      "command": [
+        "/opt/homebrew/bin/pg_ctl",
+        "-D",
+        "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-cb3b-suite-460n2ciz/pg",
+        "-m",
+        "fast",
+        "-w",
+        "stop"
+      ],
+      "exitCode": 0,
+      "log": "cluster-stop.log"
+    }
+  ],
+  "cleanup": {
+    "guardDropExit": 0,
+    "clusterStopExit": 0,
+    "ownedDistRemoved": true,
+    "ownedTempRootRemoved": true
+  }
+}

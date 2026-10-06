@@ -1,0 +1,1042 @@
+--- before/rdpms-system/backend/src/modules/projects/projectChildren.ts
++++ after/rdpms-system/backend/src/modules/projects/projectChildren.ts
+@@ -0,0 +1,203 @@
++/** ID-preserving child commands. Absence is never a deletion instruction. */
++import { Prisma, TaskStatus, TaskPriority, TaskType, TaskApplicability } from '@prisma/client';
++import { badRequest, HttpError } from '../../kernel/http.js';
++import { assertActionPermission, assertProjectCapability, type AuthActor, type ProjectAccess } from '../access/writeGuards.js';
++import { updateTaskFields, changeTaskStatus, assignTask, type TaskWriteDb } from '../tasks/taskCommands.js';
++import { writeAuditStrict } from '../../platform/audit/strictAudit.js';
++import { GLOBAL_FORBIDDEN_FIELDS, AUDIT_ACTIONS } from '../../kernel/constants.js';
++/** Narrow adapter for the shared domain commands; no raw request reaches Prisma. */
++function taskCommandDb(tx: Prisma.TransactionClient): TaskWriteDb {
++    return { task: {
++            update: args => tx.task.update({ where: args.where, data: args.data as Prisma.TaskUncheckedUpdateInput }),
++            updateMany: args => tx.task.updateMany({ where: args.where as Prisma.TaskWhereInput, data: args.data as Prisma.TaskUncheckedUpdateManyInput }),
++            findUnique: args => tx.task.findUnique({ where: args.where }),
++        } };
++}
++const object = (v: unknown): v is Record<string, unknown> => Boolean(v && typeof v === 'object' && !Array.isArray(v));
++const statuses: Record<string, string> = { '待开始': 'NOT_STARTED', '未开始': 'NOT_STARTED', '进行中': 'IN_PROGRESS', '已完成': 'COMPLETED', '待完成': 'NOT_STARTED', '已阻塞': 'BLOCKED', '已取消': 'CANCELLED' };
++const priorities: Record<string, string> = { '低': 'LOW', '中': 'MEDIUM', '高': 'HIGH', '紧急': 'URGENT' };
++const idOf = (v: unknown): string => { if (typeof v !== 'string' || !v.trim() || v.length > 180)
++    throw badRequest('INVALID_REFERENCE', '子项ID无效'); return v; };
++const date = (v: unknown): Date | null => { if (v === null || v === '')
++    return null; if (typeof v !== 'string' || !Number.isFinite(Date.parse(v)))
++    throw badRequest('INVALID_DATE', '日期必须为有效字符串'); return new Date(v); };
++function entries(value: unknown): Record<string, unknown>[] { if (value === undefined)
++    return []; if (!Array.isArray(value) || value.length > 500 || !value.every(object))
++    throw badRequest('INVALID_CHILD_DELTA', '子项必须为最多500个对象'); return value; }
++function ids(value: unknown): string[] { if (value === undefined)
++    return []; if (!Array.isArray(value) || value.length > 500)
++    throw badRequest('INVALID_CHILD_DELTA', '删除ID必须为最多500项数组'); const parsed = value.map(idOf); if (new Set(parsed).size !== parsed.length)
++    throw badRequest('INVALID_CHILD_DELTA', '删除ID重复'); return parsed; }
++function patch(raw: Record<string, unknown>, kind: 'task' | 'milestone') {
++    // id/baseUpdatedAt are command envelope fields, never ORM payload fields.
++    const forbidden = GLOBAL_FORBIDDEN_FIELDS.filter((f: string) => f !== 'id' && Object.hasOwn(raw, f));
++    if (forbidden.length)
++        throw badRequest('INVALID_CHILD_DELTA', '子项包含服务端字段', { forbidden });
++    const fields: Record<string, unknown> = {};
++    const strings = kind === 'task' ? ['title', 'description', 'parentId', 'phaseId', 'assigneeId', 'expectedDeliverable', 'regulatoryNotes'] : ['name', 'description', 'phaseId'];
++    for (const key of strings)
++        if (Object.hasOwn(raw, key)) {
++            const v = raw[key];
++            if (v !== null && typeof v !== 'string')
++                throw badRequest('INVALID_CHILD_TYPE', `${key}必须为字符串`);
++            if (v === null && ['title', 'name'].includes(key))
++                throw badRequest('INVALID_CHILD_TYPE', `${key}不能为空`);
++            fields[key] = v;
++        }
++    if (raw.date !== undefined && raw.dueDate === undefined)
++        fields.dueDate = date(raw.date);
++    for (const key of ['dueDate', 'startDate'])
++        if (Object.hasOwn(raw, key))
++            fields[key] = date(raw[key]);
++    const enums: Record<string, string[]> = kind === 'task' ? { status: Object.values(TaskStatus), priority: Object.values(TaskPriority), taskType: Object.values(TaskType), applicability: Object.values(TaskApplicability) } : { status: Object.values(TaskStatus) };
++    for (const [key, allowed] of Object.entries(enums))
++        if (Object.hasOwn(raw, key)) {
++            const v = raw[key];
++            if (typeof v !== 'string')
++                throw badRequest('INVALID_CHILD_TYPE', `${key}必须为字符串`);
++            const normalized = (key === 'status' ? statuses[v] : key === 'priority' ? priorities[v] : undefined) ?? v;
++            if (!allowed.includes(normalized))
++                throw badRequest('INVALID_CHILD_ENUM', `${key}枚举无效`);
++            fields[key] = normalized;
++        }
++    for (const key of ['sortOrder', 'estimatedHours', 'progressPercent'])
++        if (Object.hasOwn(raw, key)) {
++            if (kind !== 'task')
++                throw badRequest('INVALID_CHILD_DELTA', '里程碑字段无效');
++            const v = raw[key];
++            if (typeof v !== 'number' || !Number.isFinite(v) || v < 0)
++                throw badRequest('INVALID_CHILD_TYPE', `${key}必须为非负数`);
++            fields[key] = v;
++        }
++    return fields;
++}
++export async function assertLiveTaskReferences(tx: Prisma.TransactionClient, projectId: string, data: Record<string, unknown>, taskId?: string) {
++    if (data.parentId !== undefined && data.parentId !== null) {
++        await tx.$queryRaw `SELECT id FROM tasks WHERE id = ${idOf(data.parentId)} FOR SHARE`;
++        const parent = await tx.task.findUnique({ where: { id: idOf(data.parentId) } });
++        if (!parent || parent.projectId !== projectId || parent.deletedAt || parent.id === taskId)
++            throw badRequest('INVALID_REFERENCE', '父任务必须为本项目有效任务');
++    }
++    if (data.phaseId !== undefined && data.phaseId !== null) {
++        await tx.$queryRaw `SELECT id FROM project_phases WHERE id = ${idOf(data.phaseId)} FOR SHARE`;
++        const phase = await tx.projectPhase.findUnique({ where: { id: idOf(data.phaseId) } });
++        if (!phase || phase.projectId !== projectId || phase.deletedAt)
++            throw badRequest('INVALID_REFERENCE', '阶段必须为本项目有效阶段');
++    }
++}
++export async function tombstoneTasks(tx: Prisma.TransactionClient, args: {
++    actor: AuthActor;
++    access: ProjectAccess;
++    projectId: string;
++    ids: string[];
++    c?: unknown;
++    audit?: boolean;
++}) {
++    assertActionPermission(args.actor, 'tasks.delete');
++    assertProjectCapability(args.access, 'delete', 'tasks.delete');
++    if (!args.ids.length)
++        return { count: 0 };
++    await tx.$queryRaw(Prisma.sql `SELECT id FROM tasks WHERE id IN (${Prisma.join(args.ids)}) ORDER BY id FOR UPDATE`);
++    const records = await tx.task.findMany({ where: { id: { in: args.ids } } });
++    if (records.length !== args.ids.length || records.some(t => t.projectId !== args.projectId))
++        throw badRequest('INVALID_REFERENCE', '删除子项不属于本项目');
++    const live = records.filter(t => !t.deletedAt).map(t => t.id);
++    if (!live.length)
++        return { count: 0 };
++    const child = await tx.task.findFirst({ where: { parentId: { in: live }, deletedAt: null, id: { notIn: live } }, select: { id: true, projectId: true } });
++    if (child)
++        throw new HttpError(409, 'LIVE_TASK_REFERENCE', '任务仍有有效子任务；须显式处理子任务后删除');
++    const dependency = await tx.taskDependency.findFirst({ where: { prerequisiteId: { in: live }, taskId: { notIn: live }, task: { deletedAt: null } } });
++    if (dependency)
++        throw new HttpError(409, 'LIVE_TASK_REFERENCE', '任务仍被有效任务依赖；须显式处理后删除');
++    const changed = await tx.task.updateMany({ where: { id: { in: live }, projectId: args.projectId, deletedAt: null }, data: { deletedAt: new Date(), updatedById: args.actor.userId } });
++    if (changed.count !== live.length)
++        throw new HttpError(409, 'CONFLICT', '任务删除状态已变化');
++    if (args.audit !== false)
++        await writeAuditStrict(tx, { c: args.c, actorId: args.actor.userId, actorName: args.actor.user?.displayName, actorRole: args.actor.systemRole, action: AUDIT_ACTIONS.DELETE, entityType: 'TASK', entityId: live[0], changedFields: ['deletedAt'], metadata: { permissionCode: 'tasks.delete', command: 'EXPLICIT_TASK_TOMBSTONE_V1', ids: live, projectId: args.projectId, elevated: Boolean(args.access.elevated) } });
++    return changed;
++}
++export async function applyProjectChildren(tx: Prisma.TransactionClient, args: {
++    actor: AuthActor;
++    access: ProjectAccess;
++    projectId: string;
++    body: Record<string, unknown>;
++    c: unknown;
++}) {
++    const tasks = entries(args.body.tasks), milestones = entries(args.body.milestones), deletedTasks = ids(args.body.deletedTaskIds), deletedMilestones = ids(args.body.deletedMilestoneIds);
++    if (!tasks.length && !milestones.length && !deletedTasks.length && !deletedMilestones.length)
++        return;
++    const project = await tx.project.findUniqueOrThrow({ where: { id: args.projectId } });
++    if (typeof args.body.baseUpdatedAt !== 'string' || !Number.isFinite(Date.parse(args.body.baseUpdatedAt)) || project.updatedAt.getTime() !== Date.parse(args.body.baseUpdatedAt))
++        throw new HttpError(409, 'CHILD_BASELINE_REQUIRED', '子项修改需要原读取项目基线');
++    for (const [kind, raws, deleted] of [['task', tasks, deletedTasks], ['milestone', milestones, deletedMilestones]] as const) {
++        const seen = new Set<string>();
++        for (const raw of raws) {
++            if (raw.id !== undefined) {
++                const id = idOf(raw.id);
++                if (seen.has(id) || deleted.includes(id))
++                    throw badRequest('INVALID_CHILD_DELTA', '子项重复或同时修改删除');
++                seen.add(id);
++            }
++        }
++        for (const raw of raws) {
++            const id = raw.id === undefined ? undefined : idOf(raw.id), fields = patch(raw, kind);
++            const current = id ? (kind === 'task' ? await tx.task.findUnique({ where: { id } }) : await tx.milestone.findUnique({ where: { id } })) : null;
++            if (id && (!current || current.projectId !== args.projectId || current.deletedAt))
++                throw badRequest('INVALID_REFERENCE', '子项必须为本项目当前有效记录');
++            if (current && (typeof raw.baseUpdatedAt !== 'string' || !Number.isFinite(Date.parse(raw.baseUpdatedAt)) || current.updatedAt.getTime() !== Date.parse(raw.baseUpdatedAt)))
++                throw new HttpError(409, 'CHILD_CONFLICT', '子项已变化或缺少原基线');
++            if (kind === 'task') {
++                await assertLiveTaskReferences(tx, args.projectId, fields, id);
++                if (!current) {
++                    assertActionPermission(args.actor, 'tasks.create');
++                    assertProjectCapability(args.access, 'write', 'tasks.create');
++                    if (typeof fields.title !== 'string' || !fields.title.trim())
++                        throw badRequest('INVALID_CHILD_DELTA', '新任务需要标题');
++                    await tx.task.create({ data: { ...fields, projectId: args.projectId, createdById: args.actor.userId } as Prisma.TaskUncheckedCreateInput });
++                }
++                else {
++                    const task = current as Awaited<ReturnType<typeof tx.task.findUniqueOrThrow>>;
++                    const nextStatus = fields.status, assignee = fields.assigneeId;
++                    delete fields.status;
++                    delete fields.assigneeId;
++                    let consumed = false;
++                    const cas = () => { if (consumed)
++                        return undefined; consumed = true; return { updatedAt: task.updatedAt, deletedAt: null, projectId: args.projectId }; };
++                    if (Object.keys(fields).length)
++                        await updateTaskFields(taskCommandDb(tx), { actor: args.actor, access: args.access, task, fields, cas: cas() });
++                    if (nextStatus !== undefined && nextStatus !== task.status)
++                        await changeTaskStatus(taskCommandDb(tx), { actor: args.actor, access: args.access, task, status: String(nextStatus), cas: cas() });
++                    if (assignee !== undefined && assignee !== task.assigneeId)
++                        await assignTask(taskCommandDb(tx), { actor: args.actor, access: args.access, task, assigneeId: assignee as string | null, cas: cas() });
++                }
++            }
++            else {
++                assertActionPermission(args.actor, current ? 'milestones.update' : 'milestones.create');
++                assertProjectCapability(args.access, 'write', 'milestones.update');
++                await assertLiveTaskReferences(tx, args.projectId, fields);
++                if (current) {
++                    const changed = await tx.milestone.updateMany({ where: { id: current.id, projectId: args.projectId, updatedAt: current.updatedAt, deletedAt: null }, data: { ...fields, updatedById: args.actor.userId } as Prisma.MilestoneUncheckedUpdateManyInput });
++                    if (changed.count !== 1)
++                        throw new HttpError(409, 'CHILD_CONFLICT', '里程碑已变化');
++                }
++                else {
++                    if (typeof fields.name !== 'string' || !fields.name.trim() || !(fields.dueDate instanceof Date))
++                        throw badRequest('INVALID_CHILD_DELTA', '新里程碑需要名称和到期日');
++                    await tx.milestone.create({ data: { ...fields, projectId: args.projectId, createdById: args.actor.userId } as Prisma.MilestoneUncheckedCreateInput });
++                }
++            }
++        }
++    }
++    if (deletedTasks.length)
++        await tombstoneTasks(tx, { ...args, ids: deletedTasks });
++    if (deletedMilestones.length) {
++        assertActionPermission(args.actor, 'milestones.delete');
++        assertProjectCapability(args.access, 'delete', 'milestones.delete');
++        const rows = await tx.milestone.findMany({ where: { id: { in: deletedMilestones } } });
++        if (rows.length !== deletedMilestones.length || rows.some(m => m.projectId !== args.projectId))
++            throw badRequest('INVALID_REFERENCE', '删除里程碑不属于本项目');
++        await tx.milestone.updateMany({ where: { id: { in: deletedMilestones }, projectId: args.projectId, deletedAt: null }, data: { deletedAt: new Date(), updatedById: args.actor.userId } });
++    }
++    await writeAuditStrict(tx, { c: args.c, actorId: args.actor.userId, actorName: args.actor.user?.displayName, actorRole: args.actor.systemRole, action: AUDIT_ACTIONS.UPDATE, entityType: 'PROJECT', entityId: args.projectId, changedFields: ['childDelta'], metadata: { command: 'PROJECT_CHILD_DELTA_V1', taskIds: tasks.map(t => t.id ?? null), milestoneIds: milestones.map(m => m.id ?? null), deletedTaskIds: deletedTasks, deletedMilestoneIds: deletedMilestones, elevated: Boolean(args.access.elevated) } });
++}
+--- before/rdpms-system/backend/src/routes/projects.js
++++ after/rdpms-system/backend/src/routes/projects.js
+@@ -1,3 +1,5 @@
++import { applyProjectChildren } from '../modules/projects/projectChildren.js';
++import { registrationActor as currentProjectActor } from '../modules/projects/registrationAccess.js';
+ import { Hono } from 'hono';
+ import { prisma } from '../platform/db/client.js';
+ import { authenticate as authMiddleware, requirePermission, getAuth } from '../kernel/rbac.js';
+@@ -495,7 +497,7 @@
+   const data = pickAllowed(raw, [
+     'name', 'positioning', 'status', 'managerId', 'startDate', 'endDate',
+     'type', 'subtype', 'isDraft', 'metadata',
+-  ], { entityLabel: '更新项目' });
++  ], { entityLabel: '更新项目', allowEmpty: ['tasks','milestones','deletedTaskIds','deletedMilestoneIds'].some(key => Object.hasOwn(raw ?? {}, key)) });
+ 
+   // 类型规范化（同创建）：中文别名→枚举；非法值丢弃而非报错，避免覆盖既有类型
+   if ('type' in data) {
+@@ -519,31 +521,48 @@
+   }
+   if (data.startDate !== undefined) data.startDate = data.startDate ? new Date(data.startDate) : null;
+   if (data.endDate !== undefined) data.endDate = data.endDate ? new Date(data.endDate) : null;
+-  if (Object.keys(data).length === 0 && !participantIds && !tasksInput && !milestonesInput) {
++  if (Object.keys(data).length === 0 && !participantIds && !tasksInput && !milestonesInput && raw?.deletedTaskIds === undefined && raw?.deletedMilestoneIds === undefined) {
+     throw badRequest('NO_VALID_FIELDS', '更新项目: 没有可写入的有效字段');
+   }
+ 
+   const requestedManagerId = data.managerId !== undefined ? managerTransferId(data.managerId) : undefined;
+   delete data.managerId;
+   await prisma.$transaction(async (tx) => {
+-    assertProjectCapability(access, 'write', 'projects.update');
+-    const effectiveManagerId = requestedManagerId ?? access.project.managerId;
+-    if (requestedManagerId && requestedManagerId !== access.project.managerId) {
+-      await transferProjectManager(tx, { actor: auth, projectId: id, managerId: requestedManagerId,
++    const childCommand = ['tasks','milestones','deletedTaskIds','deletedMilestoneIds'].some(key => Object.hasOwn(raw, key));
++    let currentAuth = auth, currentAccess = access;
++    if (childCommand) {
++      const targetId = requestedManagerId ?? auth.userId;
++      await tx.$queryRaw`SELECT id FROM users WHERE id IN (${auth.userId}, ${targetId}) ORDER BY id FOR UPDATE`;
++      await tx.$queryRaw`SELECT id FROM projects WHERE id = ${id} FOR UPDATE`;
++      currentAuth = await currentProjectActor(tx, auth);
++      assertActionPermission(currentAuth, 'projects.update');
++      currentAccess = await resolveProjectAccess(tx, currentAuth, id);
++      assertProjectCapability(currentAccess, 'write', 'projects.update');
++      if (data.status !== undefined) {
++        const current = await tx.project.findUniqueOrThrow({ where: { id } });
++        data.status = assertProjectStatusTransition({ actor: currentAuth, access: currentAccess, currentStatus: current.status, nextStatus: data.status });
++      }
++      // Child delta uses the original project base before any parent-field update.
++      await applyProjectChildren(tx, { actor: currentAuth, access: currentAccess, projectId: id, body: raw, c });
++    }
++    assertProjectCapability(currentAccess, 'write', 'projects.update');
++    const effectiveManagerId = requestedManagerId ?? currentAccess.project.managerId;
++    if (requestedManagerId && requestedManagerId !== currentAccess.project.managerId) {
++      await transferProjectManager(tx, { actor: currentAuth, projectId: id, managerId: requestedManagerId,
+         expectedUpdatedAt: raw?.baseUpdatedAt, entryPermission: 'projects.update', fields: data, c });
+-    } else await tx.project.update({ where: { id }, data: { ...data, updatedById: auth.userId } });
++    } else await tx.project.update({ where: { id }, data: { ...data, updatedById: currentAuth.userId } });
+ 
+     // 同步参与人（前端传 participantIds 时生效）
+     if (participantIds) {
+-      assertProjectCapability(access, 'manage_members', 'projects.manage_members');
++      assertProjectCapability(currentAccess, 'manage_members', 'projects.manage_members');
+       const normalized = [...new Set(participantIds.filter((uid) => typeof uid === 'string' && uid && uid !== effectiveManagerId))];
+       const desired = new Set([effectiveManagerId, ...normalized].filter(Boolean));
+       const existing = await tx.projectMember.findMany({ where: { projectId: id }, select: { userId: true, role: true, leftAt: true } });
+       // A transfer never implicitly removes the previous manager or active owners.
+       // Explicit membership-removal commands remain separate from this combined edit.
+-      if (requestedManagerId && requestedManagerId !== access.project.managerId) {
++      if (requestedManagerId && requestedManagerId !== currentAccess.project.managerId) {
+         for (const member of existing) {
+-          if (!member.leftAt && (member.role === 'OWNER' || member.userId === access.project.managerId)) desired.add(member.userId);
++          if (!member.leftAt && (member.role === 'OWNER' || member.userId === currentAccess.project.managerId)) desired.add(member.userId);
+         }
+       }
+       const existingIds = existing.map((m) => m.userId);
+@@ -554,7 +573,7 @@
+       }
+       if (toAdd.length > 0) {
+         await tx.projectMember.createMany({
+-          data: toAdd.map((uid) => ({ projectId: id, userId: uid, role: uid === effectiveManagerId ? 'MANAGER' : 'MEMBER', createdById: auth.userId })),
++          data: toAdd.map((uid) => ({ projectId: id, userId: uid, role: uid === effectiveManagerId ? 'MANAGER' : 'MEMBER', createdById: currentAuth.userId })),
+         });
+       }
+       if (normalized.length > 0) {
+@@ -562,84 +581,7 @@
+       }
+     }
+ 
+-    // 任务数组重建（旧中文枚举归一化；phase 字符串 → ProjectPhase 行）
+-    if (tasksInput) {
+-      assertActionPermission(auth, 'tasks.update');
+-      assertProjectCapability(access, 'write', 'tasks.update');
+-      const existingTasks = await tx.task.findMany({ where: { projectId: id }, select: { id: true } });
+-      const existingTaskIds = existingTasks.map((task) => task.id);
+-      if (existingTaskIds.length > 0) {
+-        const crossProjectChildren = await tx.task.findMany({
+-          where: { projectId: { not: id }, parentId: { in: existingTaskIds } },
+-          select: { id: true },
+-          take: 1,
+-        });
+-        if (crossProjectChildren.length > 0) {
+-          throw badRequest('CROSS_PROJECT_CHILD_EXISTS', '项目任务存在跨项目子任务，拒绝整批物理删除');
+-        }
+-        assertActionPermission(auth, 'tasks.delete');
+-        assertProjectCapability(access, 'delete', 'tasks.delete');
+-      }
+-      if (tasksInput.length > 0) assertActionPermission(auth, 'tasks.create');
+-      await tx.task.deleteMany({ where: { projectId: id } });
+-      if (tasksInput.length > 0) {
+-        const phaseKeySet = [...new Set(tasksInput.map((t) => t.phaseId || t.phaseKey || t.phase).filter(Boolean))];
+-        const phaseIdByKey = new Map();
+-        if (phaseKeySet.length > 0) assertActionPermission(auth, 'project_phases.create');
+-        for (const [idx, key] of phaseKeySet.entries()) {
+-          const row = await tx.projectPhase.create({
+-            data: { projectId: id, code: `PH-${id.slice(0, 8)}-${idx + 1}`, name: key, sortOrder: idx },
+-          });
+-          phaseIdByKey.set(key, row.id);
+-        }
+-        await tx.task.createMany({
+-          data: tasksInput.map((t, idx) => {
+-            const nt = normalizeTaskInput(t, idx);
+-            return {
+-              projectId: id,
+-              title: nt.title,
+-              description: nt.description,
+-              status: nt.status,
+-              priority: nt.priority,
+-              taskType: nt.taskType,
+-              applicability: nt.applicability,
+-              regulatoryPriority: nt.regulatoryPriority,
+-              expectedDeliverable: nt.expectedDeliverable,
+-              regulatoryNotes: nt.regulatoryNotes,
+-              dueDate: nt.dueDate,
+-              assigneeId: nt.assigneeId || effectiveManagerId || null,
+-              phaseId: phaseIdByKey.get(nt.phaseKey) ?? null,
+-              sortOrder: nt.sortOrder,
+-              createdById: auth.userId,
+-            };
+-          }),
+-        });
+-      }
+-    }
+-
+-    // 里程碑数组重建
+-    if (milestonesInput) {
+-      const existingMilestoneCount = await tx.milestone.count({ where: { projectId: id } });
+-      if (milestonesInput.length > 0) assertActionPermission(auth, 'milestones.create');
+-      if (existingMilestoneCount > 0) {
+-        assertActionPermission(auth, 'milestones.update');
+-        assertActionPermission(auth, 'milestones.delete');
+-        assertProjectCapability(access, 'delete', 'milestones.delete');
+-      }
+-      await tx.milestone.deleteMany({ where: { projectId: id } });
+-      if (milestonesInput.length > 0) {
+-        await tx.milestone.createMany({
+-          data: milestonesInput.map((m) => ({
+-            projectId: id,
+-            name: m.name || '未命名里程碑',
+-            phaseId: m.phaseId || null,
+-            dueDate: m.date ? new Date(m.date) : new Date(),
+-            status: normalizeStatus(m.status) || 'NOT_STARTED',
+-            createdById: auth.userId,
+-          })),
+-        });
+-      }
+-    }
++
+   });
+ 
+   const project = await prisma.project.findUnique({
+--- before/rdpms-system/backend/src/routes/tasks.js
++++ after/rdpms-system/backend/src/routes/tasks.js
+@@ -1,3 +1,6 @@
++import { assertActionPermission } from '../modules/access/writeGuards.js';
++import { assertLiveTaskReferences, tombstoneTasks } from '../modules/projects/projectChildren.js';
++import { registrationActor as currentProjectActor } from '../modules/projects/registrationAccess.js';
+ import { Hono } from 'hono';
+ import { prisma } from '../platform/db/client.js';
+ import { authenticate as authMiddleware, requirePermission, getAuth } from '../kernel/rbac.js';
+@@ -125,10 +128,24 @@
+   });
+   if (circular) throw badRequest('VALIDATION_ERROR', '检测到循环依赖，无法添加');
+ 
+-  const dep = await prisma.taskDependency.upsert({
+-    where: { taskId_prerequisiteId: { taskId: id, prerequisiteId } },
+-    update: { dependencyType },
+-    create: { taskId: id, prerequisiteId, dependencyType },
++  const dep = await prisma.$transaction(async (tx) => {
++    await tx.$queryRaw`SELECT id FROM users WHERE id = ${auth.userId} FOR UPDATE`;
++    const currentAuth = await currentProjectActor(tx, auth);
++    assertActionPermission(currentAuth, 'tasks.update');
++    const currentAccess = await resolveProjectAccess(tx, currentAuth, task.projectId);
++    assertProjectCapability(currentAccess, 'write', 'tasks.update');
++    await tx.$queryRaw`SELECT id FROM tasks WHERE id = ${id} FOR SHARE`;
++    const current = await tx.task.findUnique({ where: { id } });
++    if (!current || current.deletedAt || current.projectId !== task.projectId) throw notFound('TASK_NOT_FOUND', '任务不存在');
++    await assertLiveTaskReferences(tx, task.projectId, { parentId: prerequisiteId }, id);
++    if (!['FS','SS','FF','SF'].includes(dependencyType)) throw badRequest('VALIDATION_ERROR', '依赖类型无效');
++    // Existing reciprocal-edge check retained; this does not activate general DAG enforcement.
++    const reciprocal = await tx.taskDependency.findFirst({ where: { taskId: prerequisiteId, prerequisiteId: id } });
++    if (reciprocal) throw badRequest('VALIDATION_ERROR', '检测到循环依赖，无法添加');
++    return tx.taskDependency.upsert({
++      where: { taskId_prerequisiteId: { taskId: id, prerequisiteId } },
++      update: { dependencyType }, create: { taskId: id, prerequisiteId, dependencyType },
++    });
+   });
+   return c.json({ success: true, data: dep });
+ });
+@@ -204,7 +221,9 @@
+   }
+   await assertTaskParentInProject(data.parentId, data.projectId);
+ 
+-  const created = await prisma.task.create({
++  const created = await prisma.$transaction(async (tx) => {
++    await assertLiveTaskReferences(tx, data.projectId, data);
++    return tx.task.create({
+     data: {
+       projectId: data.projectId,
+       title: data.title,
+@@ -227,6 +246,7 @@
+       createdById: auth.userId,
+     },
+     include: TASK_INCLUDE,
++    });
+   });
+ 
+   await writeAudit(prisma, {
+@@ -299,6 +319,7 @@
+   // 同一事务内执行：混合字段（普通字段 + status + assigneeId）必须全成功或全不变，
+   // 不允许多个命令各自提交造成部分成功（RF04 验收）。
+   const updated = await prisma.$transaction(async (tx) => {
++    await assertLiveTaskReferences(tx, task.projectId, data, id);
+     if (Object.keys(data).length > 0) {
+       await updateTaskFields(tx, { actor: auth, access, task, fields: data });
+     }
+@@ -366,45 +387,16 @@
+ 
+ // ── 删除（tasks.delete，P1 批次二解冻；软删含全部后代任务，审计）──────────────
+ tasks.delete('/:id', requirePermission('tasks.delete'), async (c) => {
+-  const auth = getAuth(c);
+-  const id = c.req.param('id');
+-  const task = await prisma.task.findFirst({
+-    where: { id, deletedAt: null },
+-    select: { id: true, title: true, code: true, projectId: true },
+-  });
+-  if (!task) throw notFound('TASK_NOT_FOUND', '任务不存在');
+-
+-  const access = await resolveProjectAccess(prisma, auth, task.projectId);
+-  await auditElevatedIfNeeded(prisma, c, access, 'tasks.delete');
+-  assertProjectCapability(access, 'write', 'tasks.delete');
+-
+-  // 软删必须显式级联收集后代（FK Cascade 只在硬删时生效）
+-  const idsToDelete = [id];
+-  let frontier = [id];
+-  while (frontier.length) {
+-    // eslint-disable-next-line no-await-in-loop
+-    const children = await prisma.task.findMany({
+-      where: { parentId: { in: frontier }, deletedAt: null },
+-      select: { id: true },
+-    });
+-    frontier = children.map((ch) => ch.id).filter((cid) => !idsToDelete.includes(cid));
+-    idsToDelete.push(...frontier);
+-  }
+-  await prisma.task.updateMany({ where: { id: { in: idsToDelete } }, data: { deletedAt: new Date() } });
+-
+-  await writeAudit(prisma, {
+-    c,
+-    actorId: auth.userId,
+-    actorName: auth.user.displayName,
+-    actorRole: auth.systemRole,
+-    action: AUDIT_ACTIONS.DELETE,
+-    entityType: 'TASK',
+-    entityId: id,
+-    entityLabel: task.code || task.title,
+-    before: { title: task.title },
+-    metadata: { permissionCode: 'tasks.delete', softDelete: true, cascadedCount: idsToDelete.length, ids: idsToDelete },
+-  });
+-  return c.json({ success: true, id, softDeleted: true, cascaded: idsToDelete.length });
++  const authenticated = getAuth(c), id = c.req.param('id');
++  return prisma.$transaction(async (tx) => {
++    await tx.$queryRaw`SELECT id FROM users WHERE id = ${authenticated.userId} FOR UPDATE`;
++    const auth = await currentProjectActor(tx, authenticated);
++    const task = await tx.task.findUnique({ where: { id } });
++    if (!task) throw notFound('TASK_NOT_FOUND', '任务不存在');
++    const access = await resolveProjectAccess(tx, auth, task.projectId);
++    const changed = await tombstoneTasks(tx, { actor: auth, access, projectId: task.projectId, ids: [id], c });
++    return c.json({ success: true, id, softDeleted: true, cascaded: changed.count, noop: changed.count === 0 });
++  });
+ });
+ 
+ // ── 看板（tasks.view + ∩ read；英文枚举分组）────────────────────────────────
+--- before/rdpms-system/backend/src/routes/sync.js
++++ after/rdpms-system/backend/src/routes/sync.js
+@@ -1,3 +1,4 @@
++import { assertLiveTaskReferences, tombstoneTasks } from '../modules/projects/projectChildren.js';
+ import { readAclSnapshot } from '../modules/sync/syncReadPolicy.js';
+ import { getActorResolver } from '../platform/identity/actorResolver.js';
+ import { Hono } from 'hono';
+@@ -280,6 +281,8 @@
+   }
+ 
+   if (entity === 'tasks') {
++    if (op === 'delete') { assertProjectCapability(access, 'delete', 'tasks.delete'); return; }
++    await assertLiveTaskReferences(db, projectId, data, existing?.id);
+     if (existing && data.status !== undefined && data.status !== existing.status) {
+       assertTaskStatusChange(auth, access);
+     }
+@@ -527,6 +530,7 @@
+     if (!def.deletePermission) throw new HttpError(403, 'SYNC_DELETE_NOT_SUPPORTED', '不支持此实体离线删除');
+     assertActionPermission(actor, def.deletePermission);
+     requiredPermissions.push(def.deletePermission);
++    if (command.entity === 'tasks') { assertProjectCapability(access, 'delete', 'tasks.delete'); requiredCapabilities.push('delete'); }
+   } else {
+     // Before scoped lookup require some current write authority. After lookup,
+     // the stored original action's exact permissions/capabilities are checked.
+@@ -569,6 +573,11 @@
+   }
+   if (op === 'delete') {
+     if (!existing || existing[def.tombstoneField]) return { status: 'applied', action: 'noop', serverUpdatedAt: existing?.[tsField] ?? null };
++    if (entity === 'tasks') {
++      await tombstoneTasks(tx, { actor, access, projectId, ids: [id], c, audit: false });
++      const row = await tx.task.findUnique({ where: { id } });
++      return { status: 'applied', action: 'deleted', serverUpdatedAt: row.updatedAt };
++    }
+     const deleted = await tx[def.model].updateMany({ where: { id, [def.tombstoneField]: null },
+       data: { [def.tombstoneField]: new Date(), ...(def.touchUpdatedBy ? { updatedById: actor.userId } : {}) } });
+     if (deleted.count !== 1) throw new HttpError(409, 'CONFLICT', '删除状态已变化');
+--- before/rdpms-system/backend/tests/integration/rp05-child-delta.integration.test.mjs
++++ after/rdpms-system/backend/tests/integration/rp05-child-delta.integration.test.mjs
+@@ -0,0 +1,81 @@
++import { test, before, after } from 'node:test';
++import assert from 'node:assert/strict';
++import crypto from 'node:crypto';
++import fs from 'node:fs';
++import path from 'node:path';
++import { pathToFileURL } from 'node:url';
++import { createRequire } from 'node:module';
++import bcrypt from 'bcryptjs';
++import { PrismaClient } from '@prisma/client';
++import { createApp } from '../../dist/bootstrap/createApp.js';
++import { setRealSyncPermissions, syncV1Request, readSyncResult } from '../helpers/syncV1Fixture.mjs';
++const url = new URL(process.env.DATABASE_URL);
++assert.equal(url.hostname, '127.0.0.1');
++assert.equal(url.pathname.slice(1), process.env.RDPMS_EXEC_OWNED_DB);
++const db = new PrismaClient(), app = createApp({ db }), uuid = () => crypto.randomUUID(), trace = [];
++let actor, token, builder;
++const grants = ['projects.view', 'projects.update', 'projects.manage_members', 'tasks.view', 'tasks.create', 'tasks.update', 'tasks.delete', 'tasks.change_status', 'tasks.assign', 'milestones.view', 'milestones.create', 'milestones.update', 'milestones.delete', 'project_phases.view'];
++async function fixture() { const p = await db.project.create({ data: { code: 'DELTA-' + uuid(), name: 'Owned original project', type: 'TESTING', managerId: actor.id, createdById: actor.id, members: { create: { userId: actor.id, role: 'OWNER' } } } }); const phase = await db.projectPhase.create({ data: { projectId: p.id, code: 'P1', name: 'Original phase', sortOrder: 1 } }), a = await db.task.create({ data: { projectId: p.id, title: 'Original A', phaseId: phase.id, createdById: actor.id } }), b = await db.task.create({ data: { projectId: p.id, title: 'Original B', createdById: actor.id } }), m = await db.milestone.create({ data: { projectId: p.id, name: 'Original milestone', dueDate: new Date('2026-10-10') } }); const file = await db.fileObject.create({ data: { storageKey: 'owned-no-bytes-' + uuid(), originalName: 'synthetic metadata only', mimeType: 'text/plain', sizeBytes: 0, accessScope: 'PROJECT', ownerProjectId: p.id, ownerUserId: actor.id } }); await db.attachment.create({ data: { fileId: file.id, entityType: 'TASK', entityId: a.id } }); await db.taskDependency.create({ data: { taskId: b.id, prerequisiteId: a.id } }); return { p, a, b, m, phase, file }; }
++async function state(f) { return { project: await db.project.findUnique({ where: { id: f.p.id } }), tasks: await db.task.findMany({ where: { projectId: f.p.id }, orderBy: { id: 'asc' } }), milestones: await db.milestone.findMany({ where: { projectId: f.p.id }, orderBy: { id: 'asc' } }), attachments: await db.attachment.findMany({ where: { fileId: f.file.id } }), dependencies: await db.taskDependency.findMany({ where: { OR: [{ taskId: { in: [f.a.id, f.b.id] } }, { prerequisiteId: { in: [f.a.id, f.b.id] } }] } }), audits: await db.auditLog.findMany({ where: { entityId: f.p.id }, orderBy: { createdAt: 'asc' } }) }; }
++async function request(endpoint, method = 'PUT', body, server = app) { const r = await server.request('/api' + endpoint, { method, headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) }); const v = await r.json(); trace.push({ endpoint, method, body, status: r.status, response: v }); return { r, v }; }
++function fault() { return createApp({ db: new Proxy(db, { get(t, k) { if (k === '$transaction')
++            return (fn, opts) => t.$transaction(tx => fn(new Proxy(tx, { get(t, k) { if (k === 'auditLog')
++                    return new Proxy(t[k], { get(m, k) { if (k === 'create')
++                            return async () => { throw Error('OWNED_CHILD_AUDIT_FAULT'); }; return typeof m[k] === 'function' ? m[k].bind(m) : m[k]; } }); return typeof t[k] === 'function' ? t[k].bind(t) : t[k]; } })), opts); return typeof t[k] === 'function' ? t[k].bind(t) : t[k]; } }) }); }
++before(async () => { actor = await db.user.create({ data: { username: 'rp05delta-' + uuid(), displayName: 'Synthetic delta owner', systemRole: 'MEMBER', status: 'ACTIVE', passwordHash: await bcrypt.hash('Owned child fixture 2026!', 4) } }); await setRealSyncPermissions(db, actor.id, grants); const login = await app.request('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: actor.username, password: 'Owned child fixture 2026!' }) }); assert.equal(login.status, 200); const v = await login.json(); assert.equal(v.user.id, actor.id); token = v.accessToken; const req = createRequire(path.resolve('../frontend/package.json')); const esbuild = req('esbuild'); const module = path.join(process.env.RDPMS_EXEC_EVIDENCE_DIR, 'project-edit-command.mjs'); await esbuild.build({ entryPoints: [path.resolve('../frontend/src/shared/projectEditCommand.ts')], bundle: true, format: 'esm', platform: 'node', outfile: module }); builder = (await import(pathToFileURL(module).href)).buildProjectChildEdit; await esbuild.build({ entryPoints: [path.resolve('../frontend/src/components/EditProjectModal.tsx')], bundle: true, format: 'esm', platform: 'browser', outfile: path.join(process.env.RDPMS_EXEC_EVIDENCE_DIR, 'edit-modal-bundle.js'), tsconfig: path.resolve('../frontend/tsconfig.app.json') }); });
++after(async () => { try {
++    fs.writeFileSync(path.join(process.env.RDPMS_EXEC_EVIDENCE_DIR, 'persistent-state.json'), JSON.stringify({ trace, projects: await db.project.findMany(), tasks: await db.task.findMany(), milestones: await db.milestone.findMany(), attachments: await db.attachment.findMany(), dependencies: await db.taskDependency.findMany(), receipts: await db.syncMutation.findMany(), audits: await db.auditLog.findMany() }, null, 2));
++}
++finally {
++    await db.$disconnect();
++} });
++test('actual candidate serializer and native JWT command preserve original child IDs/attachment/dependency and only change explicit fields', async () => { const f = await fixture(), original = JSON.parse(JSON.stringify(await state(f))); const before = await state(f); const body = builder({ updatedAt: original.project.updatedAt, tasks: original.tasks, milestones: original.milestones }, original.tasks.map(t => ({ ...t, title: t.id === f.a.id ? 'Edited A' : t.title })), original.milestones); assert.equal(body.tasks.length, 1); assert.deepEqual(body.deletedTaskIds, []); assert.equal((await request('/projects/' + f.p.id, 'PUT', body)).r.status, 200); const now = await state(f); assert.equal(now.tasks.length, 2); assert.equal(now.tasks.find(t => t.id === f.a.id).title, 'Edited A'); assert.deepEqual(now.tasks.find(t => t.id === f.b.id), before.tasks.find(t => t.id === f.b.id)); assert.deepEqual(now.attachments, before.attachments); assert.deepEqual(now.dependencies, before.dependencies); assert.deepEqual(now.milestones, before.milestones); });
++test('legacy empty/omitted arrays preserve originals even without delete grant; explicit deletion denied without side effects', async () => { const f = await fixture(); await setRealSyncPermissions(db, actor.id, grants.filter(x => x !== 'tasks.delete')); for (const body of [{ name: 'safe legacy edit', tasks: [] }, { name: 'safe omission' }]) {
++    assert.equal((await request('/projects/' + f.p.id, 'PUT', body)).r.status, 200);
++    assert.equal(await db.task.count({ where: { projectId: f.p.id, deletedAt: null } }), 2);
++} const before = await state(f); const r = await request('/projects/' + f.p.id, 'PUT', { baseUpdatedAt: before.project.updatedAt.toISOString(), deletedTaskIds: [f.b.id] }); assert.equal(r.r.status, 403); assert.deepEqual(await state(f), before); await setRealSyncPermissions(db, actor.id, grants); });
++test('new task/milestone upserts succeed while stale/missing project/child baseline and unknown/cross IDs reject transaction', async () => { const f = await fixture(), outside = await fixture(); for (const body of [{ tasks: [{ title: 'missing project base' }] }, { baseUpdatedAt: '2000-01-01', tasks: [{ title: 'stale' }] }, { baseUpdatedAt: f.p.updatedAt.toISOString(), tasks: [{ id: f.a.id, title: 'missing child base' }] }, { baseUpdatedAt: f.p.updatedAt.toISOString(), tasks: [{ id: outside.a.id, baseUpdatedAt: outside.a.updatedAt.toISOString(), title: 'cross' }] }, { baseUpdatedAt: f.p.updatedAt.toISOString(), tasks: [{ id: uuid(), baseUpdatedAt: f.a.updatedAt.toISOString(), title: 'unknown' }] }]) {
++    const before = await state(f), r = await request('/projects/' + f.p.id, 'PUT', body);
++    assert.ok([400, 409].includes(r.r.status));
++    assert.deepEqual(await state(f), before);
++} assert.equal((await request('/projects/' + f.p.id, 'PUT', { baseUpdatedAt: f.p.updatedAt.toISOString(), tasks: [{ title: 'New legal task', phaseId: f.phase.id }], milestones: [{ name: 'New legal milestone', dueDate: '2026-10-12' }] })).r.status, 200); assert.equal(await db.task.count({ where: { projectId: f.p.id } }), 3); assert.equal(await db.milestone.count({ where: { projectId: f.p.id } }), 2); });
++test('scalar/enumeration/forbidden fields fail clearly and strict audit fault rolls back child and parent state', async () => { const f = await fixture(); for (const payload of [{ title: {} }, { title: 'bad status', status: {} }, { title: 'bad priority', priority: 'BAD' }, { title: 'bad date', dueDate: 12 }, { title: 'system inject', code: 'SERVER-CODE' }, { title: 'bad phase', phaseId: [] }]) {
++    const before = await state(f), r = await request('/projects/' + f.p.id, 'PUT', { baseUpdatedAt: f.p.updatedAt.toISOString(), tasks: [payload] });
++    assert.equal(r.r.status, 400);
++    assert.deepEqual(await state(f), before);
++} const before = await state(f); assert.equal((await request('/projects/' + f.p.id, 'PUT', { baseUpdatedAt: f.p.updatedAt.toISOString(), name: 'must roll back', tasks: [{ id: f.a.id, baseUpdatedAt: f.a.updatedAt.toISOString(), title: 'must roll back' }] }, fault())).r.status, 500); assert.deepEqual(await state(f), before); });
++test('explicit allowed tombstones are bounded, preserve attachment/dependency rows and appear in sync downlink', async () => { const f = await fixture(), before = await state(f); const denied = await request('/projects/' + f.p.id, 'PUT', { baseUpdatedAt: f.p.updatedAt.toISOString(), deletedTaskIds: [f.a.id] }); assert.equal(denied.r.status, 409); assert.deepEqual(await state(f), before); assert.equal((await request('/projects/' + f.p.id, 'PUT', { baseUpdatedAt: f.p.updatedAt.toISOString(), deletedTaskIds: [f.a.id, f.b.id], deletedMilestoneIds: [f.m.id] })).r.status, 200); const s = await state(f); assert.ok(s.tasks.every(t => t.deletedAt)); assert.ok(s.milestones[0].deletedAt); assert.deepEqual(s.attachments, before.attachments); assert.deepEqual(s.dependencies, before.dependencies); const pull = await request('/sync/init', 'GET'); assert.equal(pull.r.status, 200); for (const id of [f.a.id, f.b.id, f.m.id])
++    assert.ok(JSON.stringify(pull.v).includes(id)); });
++test('HTTP delete refuses anomalous cross-project child and keeps both projects; repeat owned leaf deletion stable noop', async () => { const f = await fixture(), other = await fixture(); await db.task.update({ where: { id: other.b.id }, data: { parentId: f.b.id } }); const before = await state(f), otherBefore = await state(other); assert.equal((await request('/tasks/' + f.b.id, 'DELETE')).r.status, 409); assert.deepEqual(await state(f), before); assert.deepEqual(await state(other), otherBefore); await db.task.update({ where: { id: other.b.id }, data: { parentId: null } }); assert.equal((await request('/tasks/' + f.b.id, 'DELETE')).r.status, 200); const tomb = await db.task.findUnique({ where: { id: f.b.id } }); const again = await request('/tasks/' + f.b.id, 'DELETE'); assert.equal(again.r.status, 200); assert.equal(again.v.noop, true); assert.equal((await db.task.findUnique({ where: { id: f.b.id } })).deletedAt.getTime(), tomb.deletedAt.getTime()); });
++test('original bound v1 task delete still deliberately delete-wins/replays once and forbids external child cascade', async () => { const f = await fixture(); const body = { deviceId: 'delta-device-' + uuid(), changes: [{ clientMutationId: uuid(), entity: 'tasks', id: f.b.id, projectId: f.p.id, op: 'delete', baseUpdatedAt: '2000-01-01', data: {} }] }; const opts = { method: 'POST', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }; const first = await syncV1Request(app, '/api/sync/push', opts, f.p.id); assert.equal(first.status, 200); assert.equal((await first.json()).results[0].status, 'applied'); const before = await db.task.findUnique({ where: { id: f.b.id } }); const auditBefore = await db.auditLog.count({ where: { entityId: f.b.id } }); const replay = await syncV1Request(app, '/api/sync/push', opts, f.p.id); assert.equal(replay.status, 200); assert.equal((await replay.json()).results[0].replayed, true); assert.equal((await db.task.findUnique({ where: { id: f.b.id } })).deletedAt.getTime(), before.deletedAt.getTime()); assert.equal(await db.auditLog.count({ where: { entityId: f.b.id } }), auditBefore); });
++test('newly bound parent/phase must be live for ordinary task and sync; no DAG policy is activated', async () => { const f = await fixture(); await db.task.update({ where: { id: f.a.id }, data: { deletedAt: new Date() } }); await db.projectPhase.update({ where: { id: f.phase.id }, data: { deletedAt: new Date() } }); for (const patch of [{ parentId: f.a.id }, { phaseId: f.phase.id }]) {
++    const before = await state(f);
++    assert.equal((await request('/tasks/' + f.b.id, 'PUT', patch)).r.status, 400);
++    const id = uuid(), body = { deviceId: 'live-ref-' + uuid(), changes: [{ clientMutationId: uuid(), entity: 'tasks', id, projectId: f.p.id, op: 'upsert', data: { title: 'denied new ref', ...patch } }] };
++    const r = await syncV1Request(app, '/api/sync/push', { method: 'POST', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify(body) }, f.p.id);
++    const v = await readSyncResult(r);
++    assert.equal(v.results[0].status, 'rejected');
++    assert.equal(await db.task.findUnique({ where: { id } }), null);
++    assert.deepEqual(await state(f), before);
++} });
++test('real delete-vs-new-child barrier rechecks live parent after row lock and preserves last safe state', async () => { const f = await fixture(); let deletionHit, releaseDelete, referenceHit; const reachedDelete = new Promise(r => deletionHit = r), deleteGate = new Promise(r => releaseDelete = r), reachedReference = new Promise(r => referenceHit = r); function proxy(mode) { return new Proxy(db, { get(t, k) { if (k === '$transaction')
++        return (fn, opts) => t.$transaction(tx => fn(new Proxy(tx, { get(t, k) { if (mode === 'delete' && k === 'task')
++                return new Proxy(t[k], { get(m, k) { if (k === 'findFirst')
++                        return async (...args) => { deletionHit(); await deleteGate; return m.findFirst(...args); }; return typeof m[k] === 'function' ? m[k].bind(m) : m[k]; } }); if (mode === 'child' && k === '$queryRaw')
++                return async (...args) => { if (String(args[0]).includes('FROM tasks'))
++                    referenceHit(); return t.$queryRaw(...args); }; return typeof t[k] === 'function' ? t[k].bind(t) : t[k]; } })), opts); return typeof t[k] === 'function' ? t[k].bind(t) : t[k]; } }); } const deleting = request('/tasks/' + f.b.id, 'DELETE', undefined, createApp({ db: proxy('delete') })); let timer, child; try {
++    await Promise.race([reachedDelete, new Promise((_, reject) => timer = setTimeout(() => reject(Error('delete row barrier not reached')), 5000))]);
++    clearTimeout(timer);
++    child = request('/tasks', 'POST', { projectId: f.p.id, parentId: f.b.id, title: 'late child cannot attach' }, createApp({ db: proxy('child') }));
++    await Promise.race([reachedReference, new Promise((_, reject) => timer = setTimeout(() => reject(Error('native shared lock not reached')), 5000))]);
++}
++finally {
++    clearTimeout(timer);
++    releaseDelete();
++} assert.equal((await deleting).r.status, 200); assert.equal((await child).r.status, 400); assert.equal(await db.task.count({ where: { projectId: f.p.id, title: 'late child cannot attach' } }), 0); assert.ok((await db.task.findUnique({ where: { id: f.b.id } })).deletedAt); });
++
++test('prerequisite producer refuses tombstoned source/target and retains existing relations', async () => {
++ const f = await fixture(); await db.task.update({where:{id:f.a.id},data:{deletedAt:new Date()}});
++ const before = await state(f); const result = await request('/tasks/'+f.b.id+'/prerequisites','POST',{prerequisiteId:f.a.id});
++ assert.ok([400,404].includes(result.r.status)); assert.deepEqual(await state(f),before);
++});
+--- before/rdpms-system/backend/tests/integration/rp05-parent-delete-guard.integration.test.mjs
++++ after/rdpms-system/backend/tests/integration/rp05-parent-delete-guard.integration.test.mjs
+@@ -3,6 +3,7 @@
+ import crypto from 'node:crypto';
+ import { PrismaClient } from '@prisma/client';
+ import { createApp } from '../../dist/bootstrap/createApp.js';
++import {setRealSyncPermissions,syncV1Request,readSyncResult} from '../helpers/syncV1Fixture.mjs';
+ 
+ // Run only against a newly created, task-owned throwaway PostgreSQL database.
+ const prisma = new PrismaClient();
+@@ -30,10 +31,11 @@
+   projectB = await createProject(suffix, 'B');
+   parentA = await createTask(projectA.id, 'A parent');
+   parentB = await createTask(projectB.id, 'B parent');
+-  app = buildApp(['projects.update', 'tasks.update', 'tasks.create']);
++  app = await buildApp(['projects.update', 'tasks.update', 'tasks.create']);
+ });
+ 
+-function buildApp(permissions) {
++async function buildApp(permissions) {
++  await setRealSyncPermissions(prisma, actor.id, permissions);
+   return createApp({ db: prisma, actorResolver: async () => ({
+     userId: actor.id,
+     user: { id: actor.id, username: actor.username, displayName: actor.displayName },
+@@ -69,19 +71,19 @@
+ });
+ 
+ async function request(path, method = 'GET', body, targetApp = app) {
+-  const response = await targetApp.request(`/api${path}`, {
++  const response = await syncV1Request(targetApp, `/api${path}`, {
+     method,
+     headers: { 'content-type': 'application/json' },
+     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+   });
+   let json;
+-  try { json = await response.json(); } catch { json = null; }
++  try { json = path === '/sync/push' ? await readSyncResult(response) : await response.json(); } catch { json = null; }
+   return { response, json };
+ }
+ 
+ test('RP05-T01 AC-B02 project PUT cannot physically remove tasks without tasks.delete', async () => {
+   const beforeTask = await prisma.task.findUnique({ where: { id: parentA.id } });
+-  const result = await request(`/projects/${projectA.id}`, 'PUT', { name: projectA.name, tasks: [] });
++  const result = await request(`/projects/${projectA.id}`, 'PUT', { baseUpdatedAt: projectA.updatedAt.toISOString(), deletedTaskIds: [parentA.id] });
+   assert.equal(result.response.status, 403, JSON.stringify(result.json));
+   const afterTask = await prisma.task.findUnique({ where: { id: parentA.id } });
+   assert.ok(afterTask);
+@@ -125,18 +127,18 @@
+       data: { projectId: projectB.id, title: 'RP05 cross-project sync child', parentId: parentA.id },
+     }],
+   });
+-  assert.equal(result.response.status, 200, JSON.stringify(result.json));
++  assert.ok([200,400].includes(result.response.status), JSON.stringify(result.json));
+   assert.equal(result.json.results[0].status, 'rejected');
+   assert.equal(await prisma.task.findUnique({ where: { id: childId } }), null);
+ });
+ 
+-test('RP05-T01 AC-B19-03 project array replacement cannot cascade-delete a cross-project child, even for an authorized deleter', async () => {
++test('RP05-T01 AC-B19-03 explicit project child deletion cannot cascade-delete a cross-project child, even for an authorized deleter', async () => {
+   const crossChild = await createTask(projectB.id, 'RP05 anomalous cross-project child');
+   await prisma.task.update({ where: { id: crossChild.id }, data: { parentId: parentA.id } });
+-  const authorizedDeleteApp = buildApp(['projects.update', 'tasks.update', 'tasks.create', 'tasks.delete']);
+-  const result = await request(`/projects/${projectA.id}`, 'PUT', { name: projectA.name, tasks: [] }, authorizedDeleteApp);
+-  assert.equal(result.response.status, 400, JSON.stringify(result.json));
+-  assert.equal(result.json.code, 'CROSS_PROJECT_CHILD_EXISTS');
++  const authorizedDeleteApp = await buildApp(['projects.update', 'tasks.update', 'tasks.create', 'tasks.delete']);
++  const result = await request(`/projects/${projectA.id}`, 'PUT', { baseUpdatedAt: projectA.updatedAt.toISOString(), deletedTaskIds: [parentA.id] }, authorizedDeleteApp);
++  assert.equal(result.response.status, 409, JSON.stringify(result.json));
++  assert.equal(result.json.code, 'LIVE_TASK_REFERENCE');
+   assert.ok(await prisma.task.findUnique({ where: { id: parentA.id } }));
+   const preservedChild = await prisma.task.findUnique({ where: { id: crossChild.id } });
+   assert.ok(preservedChild);
+--- before/rdpms-system/frontend/src/components/EditProjectModal.tsx
++++ after/rdpms-system/frontend/src/components/EditProjectModal.tsx
+@@ -1,5 +1,8 @@
+-import React, { useState, useEffect, useCallback } from 'react';
++import React, { useState, useEffect, useCallback, useRef } from 'react';
+ import { projectAPI, userAPI, projectTemplatesAPI } from '@/api';
++import { tokenStore, type SessionSnapshot } from '../auth/tokenStore';
++import { useAuth } from '../auth/useAuth';
++import { buildProjectChildEdit, projectEditSnapshotSignature, type ProjectEditSnapshot } from '../shared/projectEditCommand';
+ import { safeStorage } from '@/utils/safeStorage';
+ import { getAllowedTransitions } from '../constants/statusColors';
+ import { PROJECT_TYPE_OPTIONS, normalizeProjectType } from '../constants/projectType';
+@@ -34,11 +37,11 @@
+ }
+ 
+ const TYPE_OPTIONS = PROJECT_TYPE_OPTIONS;
+-const TASK_STATUS_OPTIONS = ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', '已暂停'];
++const TASK_STATUS_OPTIONS = ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'BLOCKED', 'CANCELLED'];
+ const MILESTONE_STATUS_OPTIONS = ['待完成', 'IN_PROGRESS', 'COMPLETED'];
+ 
+-function getEditDraftKey(projectId: string) {
+-  return `rdpms_edit_project_draft_${projectId}`;
++function getEditDraftKey(projectId: string, actorId: string) {
++  return `rdpms_edit_project_draft_v2_${actorId}_${projectId}`;
+ }
+ 
+ interface Phase {
+@@ -49,6 +52,12 @@
+ }
+ 
+ const EditProjectModal = ({ project, onClose, onSaved }: EditProjectModalProps) => {
++  const auth = useAuth();
++  const sourceOwner = useRef<SessionSnapshot | null>(null);
++  const original = useRef<ProjectEditSnapshot | null>(null);
++  const [draftBlocked, setDraftBlocked] = useState(false);
++  const generation = tokenStore.snapshot()?.loginGeneration;
++  const ownsSource = () => Boolean(sourceOwner.current && tokenStore.sameLogin(sourceOwner.current));
+   const [form, setForm] = useState({
+     name:      '',
+     type:      '',
+@@ -97,12 +106,19 @@
+   }, [project]);
+ 
+   useEffect(() => {
+-    if (!project?.id) return;
++    setPlanLoaded(false); setPlannedPhases([]); setPlannedMilestones([]); setParticipantIds([]); setDraftBlocked(false);
++    original.current = null; sourceOwner.current = null;
++    if (!project?.id || auth.status !== 'authenticated' || !auth.user?.id) return;
++    const session = tokenStore.snapshot();
++    if (!session || session.actorId !== auth.user.id) return;
++    sourceOwner.current = session;
+     const loadProjectDetail = async () => {
+       setLoadingPlan(true);
+       try {
+         const detail = await projectAPI.get(project.id) as any;
+         const full = detail?.data || detail;
++        if (!tokenStore.sameLogin(session)) return;
++        original.current = { updatedAt: full.updatedAt, tasks: full.tasks ?? [], milestones: full.milestones ?? [], managerId: full.managerId };
+         const manager = full?.managerId || project.managerId || '';
+         const memberIds = (full?.members || [])
+           .map((m: any) => m.userId || m.user?.id)
+@@ -116,11 +132,12 @@
+           title: t.title || `任务 ${idx + 1}`,
+           priority: t.priority || '中',
+           status: t.status || 'NOT_STARTED',
+-          phase: t.phase || '',
++          phase: t.phase?.name || '',
+           phaseId: t.phaseId || '',
+-          phaseOrder: t.phaseOrder ?? null,
++          phaseOrder: t.phase?.sortOrder ?? null,
+           estimatedDays: t.estimatedDays ?? 3,
+           dueDate: t.dueDate ? String(t.dueDate).slice(0, 10) : '',
++          assigneeId: t.assigneeId ?? null,
+         }));
+ 
+         const phaseMap = new Map<string, any[]>();
+@@ -148,7 +165,8 @@
+         const mappedMilestones = (full?.milestones || []).map((m: any, idx: number) => ({
+           id: m.id || `milestone_${idx}`,
+           name: m.name || `里程碑 ${idx + 1}`,
+-          date: m.date ? String(m.date).slice(0, 10) : '',
++          date: m.dueDate ? String(m.dueDate).slice(0, 10) : '',
++          phaseId: m.phaseId ?? null,
+           status: m.status || '待完成',
+         }));
+ 
+@@ -157,11 +175,16 @@
+         let nextFormTemplateId = full?.templateId || project.templateId || '';
+         let nextParticipantIds = Array.from(new Set(memberIds));
+ 
+-        const draftRaw = safeStorage.get(getEditDraftKey(project.id));
++        const draftRaw = safeStorage.get(getEditDraftKey(project.id, sourceOwner.current?.actorId ?? 'unverified'));
+         if (draftRaw) {
+           try {
+             const draft = JSON.parse(draftRaw);
+-            // 静默恢复编辑草稿，不弹窗询问
++            if (draft.ownerId !== session.actorId || draft.baseUpdatedAt !== full.updatedAt || !draft.snapshot || projectEditSnapshotSignature(draft.snapshot) !== projectEditSnapshotSignature(original.current!)) {
++              setDraftBlocked(true);
++              throw Error('暂存草稿基线已变化，草稿已保留，请先核对');
++            }
++            original.current = draft.snapshot;
++            // Restore only proven same-owner, unchanged original revision.
+             setForm((prev) => ({
+               ...prev,
+               name: draft.form?.name ?? prev.name,
+@@ -179,7 +202,7 @@
+             nextMilestones = Array.isArray(draft.plannedMilestones) ? draft.plannedMilestones : nextMilestones;
+             setShowPlanEditor(!!draft.showPlanEditor);
+           } catch {
+-            safeStorage.remove(getEditDraftKey(project.id));
++            setDraftBlocked(true); // Preserve unverified/corrupt original; never guess or erase ownership.
+           }
+         }
+ 
+@@ -190,13 +213,13 @@
+         setExpandedPhaseIds(new Set(nextPhases.map((p) => p.id)));
+         setPlanLoaded(true);
+       } catch {
+-        setPlanLoaded(false);
++        if (tokenStore.sameLogin(session)) setPlanLoaded(false);
+       } finally {
+-        setLoadingPlan(false);
++        if (tokenStore.sameLogin(session)) setLoadingPlan(false);
+       }
+     };
+     loadProjectDetail();
+-  }, [project?.id]);
++  }, [project?.id, auth.status, auth.user?.id, generation]);
+ 
+   useEffect(() => {
+     setParticipantIds((prev) => prev.filter((id) => id !== form.managerId));
+@@ -239,41 +262,28 @@
+     if (!project) return;
+     setSaving(true);
+     try {
+-      // 从阶段结构展开成平铺任务列表
+-      const flatTasks = plannedPhases.flatMap((phase) =>
+-        phase.tasks.map((t) => ({
+-          title: t.title,
+-          priority: t.priority || '中',
+-          status: t.status || 'NOT_STARTED',
+-          phase: phase.name || null,
+-          phaseId: phase.id || null,
+-          phaseOrder: phase.order ?? null,
+-          dueDate: t.dueDate ? new Date(t.dueDate).toISOString() : null,
+-          assigneeId: form.managerId || undefined,
+-        }))
+-      );
+-
++      if (!ownsSource() || !original.current || draftBlocked) throw Error('账号或草稿基线已变化，请重新核对');
++      const flatTasks = plannedPhases.flatMap(phase => phase.tasks.map(t => ({
++        id: t.id, title: t.title, priority: t.priority || 'MEDIUM', status: t.status || 'NOT_STARTED',
++        phaseId: t.phaseId || null, dueDate: t.dueDate || null, assigneeId: t.assigneeId ?? null,
++      })));
++      const childEdit = planLoaded ? buildProjectChildEdit(original.current, flatTasks, plannedMilestones) : null;
+       const payload = {
+         name:      form.name,
+         type:      form.type ? normalizeProjectType(form.type) : undefined,
+         status:    form.status    || undefined,
+-        position:  form.position  || undefined,
+-        managerId: form.managerId || undefined,
++        positioning: form.position || undefined,
++        managerId: form.managerId && form.managerId !== original.current.managerId ? form.managerId : undefined,
++        baseUpdatedAt: original.current.updatedAt,
+         participantIds,
+         startDate: form.startDate || null,
+         endDate:   form.endDate   || null,
+         templateId: form.templateId || undefined,
+-        ...(planLoaded ? {
+-          tasks: flatTasks,
+-          milestones: plannedMilestones.map((m) => ({
+-            name: m.name,
+-            date: m.date ? new Date(m.date).toISOString() : null,
+-            status: m.status || '待完成',
+-          })),
+-        } : {}),
++        ...(childEdit ?? {}),
+       };
+       await projectAPI.update(project.id, payload);
+-      safeStorage.remove(getEditDraftKey(project.id));
++      if (!ownsSource()) return;
++      safeStorage.remove(getEditDraftKey(project.id, sourceOwner.current!.actorId));
+       onSaved();
+       onClose();
+     } catch (err: any) {
+@@ -283,7 +293,7 @@
+     }
+   };
+ 
+-  if (!project) return null;
++  if (!project || auth.status !== 'authenticated' || !ownsSource()) return null;
+ 
+   const selectedTemplate = templates.find((t: any) => t.id === form.templateId);
+ 
+@@ -337,9 +347,10 @@
+           status: t.status || 'NOT_STARTED',
+           phase: phaseName,
+           phaseId: t.phaseId || '',
+-          phaseOrder: t.phaseOrder ?? null,
++          phaseOrder: t.phase?.sortOrder ?? null,
+           estimatedDays: t.estimatedDays ?? 3,
+           dueDate: t.dueDate ? String(t.dueDate).slice(0, 10) : '',
++          assigneeId: t.assigneeId ?? null,
+         });
+       });
+ 
+@@ -356,7 +367,8 @@
+       setPlannedMilestones(milestones.map((m: any, idx: number) => ({
+         id: `tpl_m_${idx}_${Date.now()}`,
+         name: m.name || `里程碑 ${idx + 1}`,
+-        date: m.date ? String(m.date).slice(0, 10) : '',
++        date: m.dueDate ? String(m.dueDate).slice(0, 10) : '',
++          phaseId: m.phaseId ?? null,
+         status: m.status || '待完成',
+       })));
+       setExpandedPhaseIds(new Set(phases.map((p) => p.id)));
+@@ -451,8 +463,11 @@
+   };
+ 
+   const saveDraft = () => {
+-    if (!project?.id) return;
++    if (!project?.id || !ownsSource() || !original.current || draftBlocked) return;
+     const draft = {
++      ownerId: sourceOwner.current!.actorId,
++      baseUpdatedAt: original.current.updatedAt,
++      snapshot: original.current,
+       projectId: project.id,
+       form,
+       participantIds,
+@@ -461,7 +476,7 @@
+       showPlanEditor,
+       savedAt: Date.now(),
+     };
+-    safeStorage.set(getEditDraftKey(project.id), JSON.stringify(draft));
++    safeStorage.set(getEditDraftKey(project.id, sourceOwner.current?.actorId ?? 'unverified'), JSON.stringify(draft));
+     alert('已暂存草稿，可稍后继续编辑');
+   };
+ 
+--- before/rdpms-system/frontend/src/api/endpoints/projects.ts
++++ after/rdpms-system/frontend/src/api/endpoints/projects.ts
+@@ -16,7 +16,7 @@
+ 
+   create: (data: CreateProjectDto) => post<Project>('/projects', data),
+ 
+-  update: (id: string, data: UpdateProjectDto) => put<Project>(`/projects/${id}`, data),
++  update: (id: string, data: UpdateProjectDto & { baseUpdatedAt?: string; deletedTaskIds?: string[]; deletedMilestoneIds?: string[] }) => put<Project>(`/projects/${id}`, data),
+ 
+   remove: (id: string) => del<{ id: string }>(`/projects/${id}`),
+ 
+--- before/rdpms-system/frontend/src/shared/projectEditCommand.ts
++++ after/rdpms-system/frontend/src/shared/projectEditCommand.ts
+@@ -0,0 +1,56 @@
++/** Candidate editor adapter: original read baseline and explicit removal intent. */
++type Row = Record<string, unknown>;
++export interface ProjectEditSnapshot {
++    updatedAt: string;
++    tasks: Row[];
++    milestones: Row[];
++    managerId?: string | null;
++}
++const statuses: Record<string, string> = { '待开始': 'NOT_STARTED', '未开始': 'NOT_STARTED', '待完成': 'NOT_STARTED', '进行中': 'IN_PROGRESS', '已完成': 'COMPLETED', '已阻塞': 'BLOCKED', '已取消': 'CANCELLED' };
++const priorities: Record<string, string> = { '低': 'LOW', '中': 'MEDIUM', '高': 'HIGH', '紧急': 'URGENT' };
++const normalized = (key: string, value: unknown) => key === 'status' ? (statuses[String(value)] ?? value) : key === 'priority' ? (priorities[String(value)] ?? value) : key === 'dueDate' ? (value ? String(value).slice(0, 10) : null) : value;
++function delta(original: Row[], planned: Row[], kind: 'task' | 'milestone') {
++    const byId = new Map(original.map(r => [String(r.id), r]));
++    const seen = new Set<string>();
++    const output: Row[] = [];
++    const keys = kind === 'task' ? ['title', 'priority', 'status', 'phaseId', 'dueDate', 'assigneeId'] : ['name', 'status', 'phaseId', 'dueDate'];
++    for (const row of planned) {
++        const id = String(row.id ?? '');
++        const before = byId.get(id);
++        if (before && seen.has(id))
++            throw Error('DUPLICATE_CHILD_ID');
++        if (!before && /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(id))
++            throw Error('UNPROVEN_CHILD_DRAFT_BASE');
++        if (before)
++            seen.add(id);
++        const patch: Row = {};
++        for (const key of keys) {
++            let value = row[key];
++            if (key === 'dueDate' && value === undefined)
++                value = row.date;
++            if (value === undefined)
++                continue;
++            value = normalized(key, value);
++            if (!before || normalized(key, before[key]) !== value)
++                patch[key] = value;
++        }
++        if (!before)
++            output.push(patch);
++        else if (Object.keys(patch).length) {
++            if (typeof before.updatedAt !== 'string')
++                throw Error('CHILD_BASELINE_REQUIRED');
++            output.push({ id, baseUpdatedAt: before.updatedAt, ...patch });
++        }
++    }
++    return { upserts: output, deleted: original.filter(r => !seen.has(String(r.id))).map(r => String(r.id)) };
++}
++export function buildProjectChildEdit(snapshot: ProjectEditSnapshot, tasks: Row[], milestones: Row[]) {
++    if (!snapshot.updatedAt || !Number.isFinite(Date.parse(snapshot.updatedAt)))
++        throw Error('PROJECT_BASELINE_REQUIRED');
++    const t = delta(snapshot.tasks, tasks, 'task'), m = delta(snapshot.milestones, milestones, 'milestone');
++    return { baseUpdatedAt: snapshot.updatedAt, tasks: t.upserts, milestones: m.upserts, deletedTaskIds: t.deleted, deletedMilestoneIds: m.deleted };
++}
++export function projectEditSnapshotSignature(snapshot: ProjectEditSnapshot) {
++    const refs = (rows: Row[]) => rows.map(r => [r.id, r.updatedAt]).sort((a, b) => String(a[0]).localeCompare(String(b[0])));
++    return JSON.stringify({ updatedAt: snapshot.updatedAt, tasks: refs(snapshot.tasks), milestones: refs(snapshot.milestones) });
++}
+--- before/rdpms-system/backend/src/kernel/constants.js
++++ after/rdpms-system/backend/src/kernel/constants.js
+@@ -72,6 +72,7 @@
+ export const P1_UNFROZEN = [
+   'projects.delete',
+   'tasks.delete',
++  'milestones.delete', // RP05-T02 explicit tombstone command; 2026-10-06 delegated policy
+   'reports.delete',
+   'docs.delete',
+   'project_templates.copy',
+--- before/rdpms-system/backend/prisma/seed.js
++++ after/rdpms-system/backend/prisma/seed.js
+@@ -198,6 +198,7 @@
+ const P1_UNFROZEN = [
+   'projects.delete',
+   'tasks.delete',
++  'milestones.delete', // RP05-T02 explicit tombstone command; 2026-10-06 delegated policy
+   'reports.delete',
+   'docs.delete',
+   'project_templates.copy',
+@@ -895,14 +896,14 @@
+       update: {
+         name: code,
+         module: moduleOf(code),
+-        isHighRisk: HIGH_RISK_CODES.includes(code),
++        isHighRisk: HIGH_RISK_CODES.includes(code) || code === 'milestones.delete',
+         sortOrder,
+       },
+       create: {
+         code,
+         name: code,
+         module: moduleOf(code),
+-        isHighRisk: HIGH_RISK_CODES.includes(code),
++        isHighRisk: HIGH_RISK_CODES.includes(code) || code === 'milestones.delete',
+         sortOrder,
+       },
+     });
+--- before/rdpms-system/backend/prisma/migrations/20261006_milestone_delete_permission/migration.sql
++++ after/rdpms-system/backend/prisma/migrations/20261006_milestone_delete_permission/migration.sql
+@@ -0,0 +1,5 @@
++-- RP05-T02: additive bootstrap for an explicit, independent high-risk action.
++-- No role grant; no other frozen action activated; retain this row on rollback.
++INSERT INTO permissions (id, code, name, module, is_high_risk, sort_order)
++VALUES ('39793795-a97d-4855-bf31-63c241c2c3b4', 'milestones.delete', 'milestones.delete', 'milestones', true, 999)
++ON CONFLICT (code) DO NOTHING;

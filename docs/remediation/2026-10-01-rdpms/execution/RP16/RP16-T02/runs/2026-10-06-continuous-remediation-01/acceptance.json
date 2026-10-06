@@ -1,0 +1,88 @@
+{
+  "taskId": "RP16-T02",
+  "approvalRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/approval.json",
+  "cases": [
+    {
+      "caseId": "AC-B13-01",
+      "result": "PASS",
+      "scope": "Native JWT/PG11/11 scoped module JSON counts/atomic validation/reconciliation and bound metadata; all27 unchanged and representative insert/update/replace modes, registry5/5, unit93/93. Full supported source/diff and fixture limitations explicit.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP16/RP16-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-B13-02",
+      "result": "PASS",
+      "scope": "Native JWT/PG11/11 scoped module JSON counts/atomic validation/reconciliation and bound metadata; all27 unchanged and representative insert/update/replace modes, registry5/5, unit93/93. Full supported source/diff and fixture limitations explicit.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP16/RP16-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-B13-03",
+      "result": "PASS",
+      "scope": "Native JWT/PG11/11 scoped module JSON counts/atomic validation/reconciliation and bound metadata; all27 unchanged and representative insert/update/replace modes, registry5/5, unit93/93. Full supported source/diff and fixture limitations explicit.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP16/RP16-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "AC-B13-04",
+      "result": "PASS",
+      "scope": "Native JWT/PG11/11 scoped module JSON counts/atomic validation/reconciliation and bound metadata; all27 unchanged and representative insert/update/replace modes, registry5/5, unit93/93. Full supported source/diff and fixture limitations explicit.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP16/RP16-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP16-01",
+      "result": "PASS",
+      "scope": "Native JWT/PG11/11 scoped module JSON counts/atomic validation/reconciliation and bound metadata; all27 unchanged and representative insert/update/replace modes, registry5/5, unit93/93. Full supported source/diff and fixture limitations explicit.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP16/RP16-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP16-02",
+      "result": "PASS",
+      "scope": "Native JWT/PG11/11 scoped module JSON counts/atomic validation/reconciliation and bound metadata; all27 unchanged and representative insert/update/replace modes, registry5/5, unit93/93. Full supported source/diff and fixture limitations explicit.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP16/RP16-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "PAC-RP16-03",
+      "result": "PASS",
+      "scope": "Native JWT/PG11/11 scoped module JSON counts/atomic validation/reconciliation and bound metadata; all27 unchanged and representative insert/update/replace modes, registry5/5, unit93/93. Full supported source/diff and fixture limitations explicit.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP16/RP16-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "TASK-RP16-T02",
+      "result": "PASS",
+      "scope": "Native JWT/PG11/11 scoped module JSON counts/atomic validation/reconciliation and bound metadata; all27 unchanged and representative insert/update/replace modes, registry5/5, unit93/93. Full supported source/diff and fixture limitations explicit.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP16/RP16-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "GATE-S05-OI-03",
+      "result": "PASS",
+      "scope": "Native JWT/PG11/11 scoped module JSON counts/atomic validation/reconciliation and bound metadata; all27 unchanged and representative insert/update/replace modes, registry5/5, unit93/93. Full supported source/diff and fixture limitations explicit.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP16/RP16-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "DECISION-T-RP-06",
+      "result": "PASS",
+      "scope": "Native JWT/PG11/11 scoped module JSON counts/atomic validation/reconciliation and bound metadata; all27 unchanged and representative insert/update/replace modes, registry5/5, unit93/93. Full supported source/diff and fixture limitations explicit.",
+      "evidence": "docs/remediation/2026-10-01-rdpms/execution/RP16/RP16-T02/runs/2026-10-06-continuous-remediation-01/evidence/validation-summary.json"
+    },
+    {
+      "caseId": "INT-PC07-01",
+      "result": "NOT_RUN",
+      "reason": "Full migration/DAG/HTTP/sync/restore joint matrix not fulfilled by restore subset."
+    },
+    {
+      "caseId": "PAC-RP16-05",
+      "result": "NOT_RUN",
+      "reason": "Dataset epoch/session/receipt/cursor policy implemented separately T03."
+    }
+  ],
+  "localValidation": "PASS",
+  "jointValidation": "NOT_RUN",
+  "targetValidation": "NOT_RUN",
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED",
+  "limits": [
+    "All27 table counts exercised for unchanged; insert/update/delete actual effects separately exercised on representative model/composite association/append-only records; not every model every CRUD permutation.",
+    "Files/attachments are nonempty metadata references with hashes. Physical binary bytes excluded, not verified; no wholeDB/file DR or target restore.",
+    "Singleton write-gate migration and table triggers tested only owned PostgreSQL; actual production lock latency and target migration budget unknown, no deployment acceptance.",
+    "Trusted actor unit/contract93/93 is not JWT acceptance; targeted restore11 uses actual JWT. Formal test-only extra case added after unit run, unit source/business sources unchanged and respective bindings retained.",
+    "JSON credential/session/receipt epoch reconciliation remains separate RP16-T03; do not deploy before it. Historical B13/SUPPORTED wider target open."
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "taskId": "RP10-T02",
+  "baselineCommit": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "implementation": {
+    "LR-07": "RESOLVED_SCOPE_SELECTED_WITH_ACCEPTANCE_DEPENDENCY_SEPARATED"
+  },
+  "validation": "PASS",
+  "release": "NOT_EVALUATED",
+  "cases": [
+    {
+      "id": "AC-B10-01",
+      "status": "NOT_RUN",
+      "reason": "通用双客户端普通/status/assignee CAS不属RP10-T02"
+    },
+    {
+      "id": "AC-B10-02",
+      "status": "PASS",
+      "evidence": "evidence/attempt-03/integration-suite.log",
+      "scope": "report更新持锁提交与submit交错；快照内容与已提交正文一致"
+    },
+    {
+      "id": "AC-B10-03",
+      "status": "PASS",
+      "evidence": "evidence/attempt-03/integration-suite.log",
+      "scope": "五个不同键并发，版本唯一递增/currentVersion匹配；当前来源状态语义保留"
+    },
+    {
+      "id": "PAC-RP10-02",
+      "status": "PASS",
+      "evidence": "evidence/attempt-03/run-results.json",
+      "scope": "仅snapshot/version本地子范围"
+    },
+    {
+      "id": "TASK-RP10-T02",
+      "status": "PASS",
+      "evidence": "evidence/attempt-03/run-results.json"
+    },
+    {
+      "id": "INT-PC03-01",
+      "status": "NOT_RUN",
+      "reason": "RP09-T01是验收依赖；联合回执/审计合同未运行"
+    },
+    {
+      "id": "GATE-D-S01-07",
+      "status": "NOT_APPLICABLE",
+      "reason": "未改变source-state行为，condition=false"
+    },
+    {
+      "id": "DECISION-D-S01-07",
+      "status": "NOT_APPLICABLE",
+      "reason": "保持既有submit/resubmit政策，不激活新政策"
+    }
+  ],
+  "overallBoundary": "Local task-scope result only; no target/deployment acceptance."
+}

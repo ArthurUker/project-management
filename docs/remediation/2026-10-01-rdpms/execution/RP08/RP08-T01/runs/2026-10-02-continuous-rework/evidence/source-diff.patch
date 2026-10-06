@@ -1,0 +1,338 @@
+diff --git a/rdpms-system/backend/src/routes/sync.js b/rdpms-system/backend/src/routes/sync.js
+index 9792796..ff7f54a 100644
+--- a/rdpms-system/backend/src/routes/sync.js
++++ b/rdpms-system/backend/src/routes/sync.js
+@@ -6,6 +6,7 @@ import { AUDIT_ACTIONS, PROJECT_CAPABILITIES } from '../kernel/constants.js';
+ import { writeAudit } from '../kernel/audit.js';
+ import { badRequest, HttpError } from '../kernel/http.js';
+ import { projectVisibilityFilter, assertProjectCapability } from '../kernel/projectAccess.js';
++import { assertProjectStatusTransition } from '../modules/projects/projectCommands.js';
+ import {
+   assertActionPermission,
+   assertTaskStatusChange,
+@@ -45,9 +46,11 @@ const SYNC_ENTITIES = {
+     createAllowed: false, // Project.code 由 CodeSequence 服务端发号，不做离线新建
+     tombstoneField: 'deletedAt',
+     touchUpdatedBy: true,
+-    fields: ['name', 'description', 'status', 'type', 'position', 'managerId', 'startDate', 'endDate', 'actualEndDate'],
+-    serverOwned: ['code', 'templateId', 'metadata'],
++    fields: ['name', 'description', 'type', 'position', 'startDate', 'endDate', 'actualEndDate'],
++    serverOwned: ['code', 'templateId', 'metadata', 'managerId'],
+     // RF04 补齐：项目属性编辑需 projects.update（离线不支持新建，编号由服务端发号）
++    readPermission: 'projects.view',
++    readFields: ['id', 'code', 'name', 'type', 'subtype', 'status', 'isDraft', 'positioning', 'managerId', 'templateId', 'startDate', 'endDate', 'actualEndDate', 'createdAt', 'updatedAt', 'manager'],
+     permission: 'projects.update',
+     deletePermission: 'projects.delete',
+     include: { manager: { select: { id: true, displayName: true } } },
+@@ -61,6 +64,8 @@ const SYNC_ENTITIES = {
+     fields: ['code', 'name', 'sortOrder', 'status', 'plannedStart', 'plannedEnd', 'actualStart', 'actualEnd', 'progressPercent', 'isMilestone', 'notes'],
+     serverOwned: [],
+     // RF04：阶段编辑/新建与状态流转分别校验动作权限
++    readPermission: 'project_phases.view',
++    readFields: ['id', 'projectId', 'templatePhaseId', 'code', 'name', 'sortOrder', 'status', 'plannedStart', 'plannedEnd', 'actualStart', 'actualEnd', 'progressPercent', 'isMilestone', 'notes', 'createdAt', 'updatedAt'],
+     permission: 'project_phases.update',
+     deletePermission: 'project_phases.delete',
+     createPermission: 'project_phases.create',
+@@ -75,6 +80,8 @@ const SYNC_ENTITIES = {
+     fields: ['title', 'description', 'status', 'priority', 'assigneeId', 'phaseId', 'parentId', 'taskType', 'applicability', 'regulatoryPriority', 'expectedDeliverable', 'regulatoryNotes', 'sortOrder', 'estimatedHours', 'actualHours', 'progressPercent', 'startDate', 'dueDate'],
+     serverOwned: ['code', 'completedAt', 'startedAt'],
+     // RF04/F07：同步不是后门——动作权限与普通 API 同源
++    readPermission: 'tasks.view',
++    readFields: ['id', 'projectId', 'phaseId', 'parentId', 'templateTaskId', 'code', 'title', 'description', 'assigneeId', 'status', 'priority', 'taskType', 'applicability', 'regulatoryPriority', 'expectedDeliverable', 'regulatoryNotes', 'sortOrder', 'estimatedHours', 'actualHours', 'progressPercent', 'startDate', 'dueDate', 'startedAt', 'completedAt', 'createdAt', 'updatedAt'],
+     permission: 'tasks.update',
+     deletePermission: 'tasks.delete',
+     createPermission: 'tasks.create',
+@@ -95,6 +102,8 @@ const SYNC_ENTITIES = {
+     fields: ['name', 'description', 'phaseId', 'dueDate', 'status'],
+     serverOwned: ['completedAt'],
+     // RF04 补齐：里程碑编辑/新建需 milestones.update / milestones.create
++    readPermission: 'milestones.view',
++    readFields: ['id', 'projectId', 'phaseId', 'name', 'description', 'dueDate', 'status', 'completedAt', 'createdAt', 'updatedAt'],
+     permission: 'milestones.update',
+     deletePermission: 'milestones.delete',
+     createPermission: 'milestones.create',
+@@ -111,6 +120,8 @@ const SYNC_ENTITIES = {
+     fields: ['periodKey', 'actualWork', 'completionPercent', 'nextPlan', 'risks', 'projectStatus'],
+     serverOwned: ['submittedById', 'submittedAt'],
+     // RF04 补齐：月度进展编辑/新建需 progress.update / progress.create（写出需项目 manage_members）
++    readPermission: 'progress.view',
++    readFields: ['id', 'projectId', 'periodKey', 'actualWork', 'completionPercent', 'nextPlan', 'risks', 'projectStatus', 'submittedById', 'submittedAt', 'createdAt', 'updatedAt'],
+     permission: 'progress.update',
+     deletePermission: 'progress.delete',
+     createPermission: 'progress.create',
+@@ -126,6 +137,8 @@ const SYNC_ENTITIES = {
+     // 服务端权威：审批/版本/归属——客户端上行一律忽略（审阅字段不可被覆盖）
+     serverOwned: ['authorId', 'reviewerId', 'status', 'currentVersion', 'submittedAt', 'reviewedAt', 'reviewNote'],
+     // RF04/F07：汇报的锁定与动作权限与普通 API 同源
++    readPermission: 'reports.view',
++    readFields: ['id', 'projectId', 'authorId', 'reportType', 'periodKey', 'periodStart', 'periodEnd', 'content', 'status', 'currentVersion', 'submittedAt', 'reviewedAt', 'reviewNote', 'createdAt', 'updatedAt'],
+     permission: 'reports.update',
+     deletePermission: 'reports.delete',
+     createPermission: 'reports.create',
+@@ -141,6 +154,8 @@ const SYNC_ENTITIES = {
+     fields: ['role', 'userId'], // userId 为离线新增成员所需（权限由 manage_members 约束）
+     serverOwned: [],
+     requireCapability: 'manage_members', // 成员调整需要管理成员能力
++    readPermission: 'projects.view',
++    readFields: ['id', 'projectId', 'userId', 'role', 'joinedAt'],
+     permission: 'projects.manage_members', // RF04 补齐：与普通 API 的成员管理权限同源
+     // 成员移除不是删除行，而是「退出」动作（写 leftAt 墓碑），因此沿用成员管理权限；
+     // 这是**显式策略**：该实体没有、也不会用 projects.update 之类的权限代替。
+@@ -195,7 +210,7 @@ async function loadSyncAccess(auth, projectId) {
+  * 实体动作级校验（RF04/F07）：同步与普通 API 调用同一组守卫，
+  * 保证「有项目 write 但无对应动作权限」的请求同样被拒绝。
+  */
+-async function assertSyncEntityActions({ entity, def, existing, data, auth, access, projectId, op }) {
++async function assertSyncEntityActions({ entity, def, existing, data, auth, access, projectId, op, rawData }) {
+   // 通用动作权限（所有实体统一执行）：
+   //   删除 → deletePermission（**独立权限码，绝不复用 update**）；未定义 = 不支持离线删除
+   //   更新 → permission；新建 → createPermission
+@@ -214,6 +229,22 @@ async function assertSyncEntityActions({ entity, def, existing, data, auth, acce
+     assertActionPermission(auth, def.createPermission);
+   }
+ 
++  if (entity === 'projects') {
++    if (op !== 'delete' && Object.prototype.hasOwnProperty.call(rawData, 'managerId')) {
++      throw badRequest('DECISION_REQUIRED', '项目负责人变更需按批准的负责人转移命令执行');
++    }
++    if (op !== 'delete' && Object.prototype.hasOwnProperty.call(rawData, 'status')) {
++      if (!existing) throw badRequest('INVALID_REFERENCE', '离线项目状态命令需要已存在的项目');
++      data.status = assertProjectStatusTransition({
++        actor: auth,
++        access,
++        currentStatus: existing.status,
++        nextStatus: rawData.status,
++      });
++    }
++    return;
++  }
++
+   if (entity === 'reports') {
+     if (op === 'delete') {
+       assertReportWritable(existing, auth, access, 'reports.delete');
+@@ -245,6 +276,15 @@ async function assertSyncEntityActions({ entity, def, existing, data, auth, acce
+     if (data.phaseId !== undefined && data.phaseId !== null) {
+       await assertPhaseBelongsToProject(prisma, data.phaseId, projectId);
+     }
++    if (op !== 'delete' && data.parentId !== undefined && data.parentId !== null) {
++      if (typeof data.parentId !== 'string' || !data.parentId.trim() || data.parentId === existing?.id) {
++        throw badRequest('INVALID_REFERENCE', 'parentId 无效', { field: 'parentId', projectId });
++      }
++      const parent = await prisma.task.findUnique({ where: { id: data.parentId }, select: { id: true, projectId: true } });
++      if (!parent || parent.projectId !== projectId) {
++        throw badRequest('INVALID_REFERENCE', 'parentId 不属于该项目', { field: 'parentId', projectId });
++      }
++    }
+     return;
+   }
+ 
+@@ -267,27 +307,119 @@ function aclVersionOf(projectIds, permissions) {
+     .slice(0, 16);
+ }
+ 
++const SYNC_UPSERT_PAGE_SIZE = 3000;
++const SYNC_TOMBSTONE_PAGE_SIZE = 5000;
++// Production binds page tokens to the configured auth secret. The process-local
++// fallback is only useful in development; a restart invalidates in-flight pages
++// safely because the client has not advanced its durable cursor yet.
++const SYNC_PAGE_TOKEN_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
++
++function signPageState(state) {
++  const payload = Buffer.from(JSON.stringify(state)).toString('base64url');
++  const signature = crypto.createHmac('sha256', SYNC_PAGE_TOKEN_SECRET).update(payload).digest('base64url');
++  return `${payload}.${signature}`;
++}
++
++function readPageState(token, auth, deviceId) {
++  if (token.length > 8192) throw badRequest('SYNC_PAGE_TOKEN_INVALID', '分页令牌无效');
++  const [payload, signature, extra] = token.split('.');
++  if (!payload || !signature || extra !== undefined) throw badRequest('SYNC_PAGE_TOKEN_INVALID', '分页令牌无效');
++  const expected = crypto.createHmac('sha256', SYNC_PAGE_TOKEN_SECRET).update(payload).digest();
++  let actual;
++  try { actual = Buffer.from(signature, 'base64url'); } catch { actual = Buffer.alloc(0); }
++  if (actual.length !== expected.length || !crypto.timingSafeEqual(actual, expected)) {
++    throw badRequest('SYNC_PAGE_TOKEN_INVALID', '分页令牌无效');
++  }
++  let state;
++  try { state = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')); } catch {
++    throw badRequest('SYNC_PAGE_TOKEN_INVALID', '分页令牌无效');
++  }
++  if (state?.version !== 1 || state.actorId !== auth.userId || state.deviceId !== deviceId
++    || !Array.isArray(state.cursors ? Object.keys(state.cursors) : null)) {
++    throw badRequest('SYNC_PAGE_TOKEN_INVALID', '分页令牌与当前用户或设备不匹配');
++  }
++  const since = new Date(state.since);
++  const upperBound = new Date(state.upperBound);
++  if (Number.isNaN(since.getTime()) || Number.isNaN(upperBound.getTime()) || upperBound < since) {
++    throw badRequest('SYNC_PAGE_TOKEN_INVALID', '分页令牌时间范围无效');
++  }
++  return { ...state, since, upperBound };
++}
++
++function streamPageWhere(scopeWhere, aliveFilter, timestampField, since, upperBound, last) {
++  const and = [
++    scopeWhere,
++    aliveFilter,
++    { [timestampField]: { gt: since, lte: upperBound } },
++  ];
++  if (last) {
++    const timestamp = new Date(last.timestamp);
++    if (!last.id || Number.isNaN(timestamp.getTime()) || timestamp < since || timestamp > upperBound) {
++      throw badRequest('SYNC_PAGE_TOKEN_INVALID', '分页位置无效');
++    }
++    and.push({ OR: [
++      { [timestampField]: { gt: timestamp } },
++      { [timestampField]: timestamp, id: { gt: last.id } },
++    ] });
++  }
++  return { AND: and };
++}
++
+ // ── 增量拉取 ─────────────────────────────────────────────────────────────────
+ sync.get('/init', async (c) => {
+   const auth = getAuth(c);
+   const sinceRaw = c.req.query('since');
+-  let since = new Date(0);
+-  if (sinceRaw) {
+-    since = new Date(sinceRaw);
+-    if (Number.isNaN(since.getTime())) throw badRequest('VALIDATION_ERROR', 'since 非法（需 ISO 时间）');
+-  }
+   const deviceId = String(c.req.query('deviceId') || '').slice(0, 64);
++  const pageToken = c.req.query('pageToken');
++  let pageState;
++  if (pageToken) {
++    pageState = readPageState(pageToken, auth, deviceId);
++    if (sinceRaw) {
++      const requestedSince = new Date(sinceRaw);
++      if (Number.isNaN(requestedSince.getTime()) || requestedSince.toISOString() !== pageState.since.toISOString()) {
++        throw badRequest('SYNC_PAGE_TOKEN_INVALID', '分页令牌与 since 不匹配');
++      }
++    }
++  } else {
++    let since = new Date(0);
++    if (sinceRaw) {
++      since = new Date(sinceRaw);
++      if (Number.isNaN(since.getTime())) throw badRequest('VALIDATION_ERROR', 'since 非法（需 ISO 时间）');
++    }
++    const upperBound = new Date();
++    pageState = {
++      version: 1,
++      actorId: auth.userId,
++      deviceId,
++      since: since.toISOString(),
++      upperBound: upperBound.toISOString(),
++      full: !sinceRaw,
++      cursors: {},
++    };
++    pageState.since = since;
++    pageState.upperBound = upperBound;
++  }
++  const { since, upperBound } = pageState;
+ 
+   const aclFilter = projectVisibilityFilter(auth);
+   const visibleProjects = await prisma.project.findMany({
+     where: { ...(aclFilter ?? {}), deletedAt: null },
+-    select: { id: true },
++    select: { id: true, managerId: true, members: { where: { userId: auth.userId, leftAt: null }, select: { role: true } } },
+   });
+-  const projectIds = visibleProjects.map((p) => p.id);
++  const projectIds = visibleProjects.filter((project) => auth.systemRole === 'SUPER_ADMIN'
++    || project.managerId === auth.userId
++    || project.members.some((member) => (PROJECT_CAPABILITIES[member.role] ?? []).includes('read')))
++    .map((project) => project.id);
+   const projectIdSet = new Set(projectIds);
+ 
+   const changes = {};
++  const nextCursors = { ...(pageState.cursors ?? {}) };
++  let hasMore = false;
+   for (const [entity, def] of Object.entries(SYNC_ENTITIES)) {
++    if (!auth.permissions.includes(def.readPermission)) {
++      changes[entity] = { upserts: [], tombstones: [] };
++      continue;
++    }
+     const scopeWhere = {};
+     if (def.scope === 'byProject') scopeWhere.projectId = { in: projectIds };
+     if (def.scope === 'projectSelf') scopeWhere.id = { in: projectIds };
+@@ -299,33 +431,61 @@ sync.get('/init', async (c) => {
+     const tsField = def.timestampField ?? 'updatedAt';
+ 
+     // eslint-disable-next-line no-await-in-loop
+-    const upserts = await prisma[def.model].findMany({
+-      where: { ...scopeWhere, ...aliveFilter, [tsField]: { gt: since } },
++    const entityCursors = nextCursors[entity] ?? {};
++    const upsertRows = await prisma[def.model].findMany({
++      where: streamPageWhere(scopeWhere, aliveFilter, tsField, since, upperBound, entityCursors.upsert),
+       ...(def.include ? { include: def.include } : {}),
+-      orderBy: { [tsField]: 'asc' },
+-      take: 3000,
++      orderBy: [{ [tsField]: 'asc' }, { id: 'asc' }],
++      take: SYNC_UPSERT_PAGE_SIZE + 1,
+     });
++    const upsertHasMore = upsertRows.length > SYNC_UPSERT_PAGE_SIZE;
++    const upserts = upsertRows.slice(0, SYNC_UPSERT_PAGE_SIZE).map((row) => pickFields(row, def.readFields));
++    if (upserts.length > 0) {
++      const last = upserts.at(-1);
++      entityCursors.upsert = { timestamp: last[tsField].toISOString(), id: last.id };
++    }
++    if (upsertHasMore) {
++      hasMore = true;
++    }
+ 
+     // eslint-disable-next-line no-await-in-loop
+-    const removed = await prisma[def.model].findMany({
+-      where: { ...scopeWhere, [def.tombstoneField]: { gt: since } },
+-      select: { id: true },
+-      take: 5000,
++    const removedRows = await prisma[def.model].findMany({
++      where: streamPageWhere(scopeWhere, { [def.tombstoneField]: { not: null } }, def.tombstoneField, since, upperBound, entityCursors.tombstone),
++      select: { id: true, [def.tombstoneField]: true },
++      orderBy: [{ [def.tombstoneField]: 'asc' }, { id: 'asc' }],
++      take: SYNC_TOMBSTONE_PAGE_SIZE + 1,
+     });
++    const tombstoneHasMore = removedRows.length > SYNC_TOMBSTONE_PAGE_SIZE;
++    const removed = removedRows.slice(0, SYNC_TOMBSTONE_PAGE_SIZE);
++    if (removed.length > 0) {
++      const last = removed.at(-1);
++      entityCursors.tombstone = { timestamp: last[def.tombstoneField].toISOString(), id: last.id };
++    }
++    if (tombstoneHasMore) {
++      hasMore = true;
++    }
++    nextCursors[entity] = entityCursors;
+ 
+     changes[entity] = { upserts, tombstones: removed.map((r) => r.id) };
+   }
+ 
+-  const serverTime = new Date().toISOString();
+-  if (deviceId) {
++  const serverTime = upperBound.toISOString();
++  if (deviceId && !hasMore) {
+     await upsertSyncDevice(auth, deviceId, c.req.query('deviceLabel'), c.req.query('platform'));
+     await prisma.syncDevice.update({ where: { id: deviceId }, data: { lastSyncAt: new Date() } });
+   }
+ 
++  const nextPageToken = hasMore ? signPageState({ ...pageState, cursors: nextCursors }) : null;
++  if (hasMore && !pageToken && c.req.query('paginationVersion') !== '1') {
++    throw new HttpError(409, 'SYNC_PAGINATION_REQUIRED', '同步结果超过单页上限，请升级支持 keyset pagination 的客户端后重试');
++  }
++
+   return c.json({
+     serverTime,
+-    cursor: serverTime, // 客户端下次带 since=cursor
+-    full: !sinceRaw,
++    // Before the last page, old clients retain their prior checkpoint and safely replay page one.
++    cursor: hasMore ? since.toISOString() : upperBound.toISOString(),
++    full: pageState.full,
++    pagination: { hasMore, nextPageToken },
+     acl: {
+       projectIds, // 客户端据此清除不再可见项目的本地数据
+       permissions: auth.permissions,
+@@ -418,7 +578,7 @@ sync.post('/push', async (c) => {
+         assertProjectCapability(syncAccess, def.requireCapability ?? 'write', def.permission ?? 'sync.write');
+         // eslint-disable-next-line no-await-in-loop
+         await assertSyncEntityActions({
+-          entity, def, existing, data, auth, access: syncAccess, projectId, op,
++          entity, def, existing, data, auth, access: syncAccess, projectId, op, rawData: raw?.data ?? {},
+         });
+ 
+         const tsField = def.timestampField ?? 'updatedAt';

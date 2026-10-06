@@ -1,0 +1,16 @@
+{
+  "id": "SUP-01",
+  "parentTask": "RP10-T02",
+  "finding": "LR4-01 / B10",
+  "mode": "TEST_ONLY",
+  "executor": "CodeBuddy (local isolated)",
+  "authorityRef": "CODEBUDDY_TEST_CONTRACT_EXECUTOR_PROMPT_2026-10-03.md + CODEBUDDY_TEST_CONTRACT_PROMPT_MANIFEST_2026-10-03.json + reviews/2026-10-03-codebuddy-followup",
+  "date": "2026-10-03",
+  "scope": "补强报告并发写入的确定性屏障（覆盖 create/upsert/updateMany/update 多写入原语），并固化一个仅在测试 DB 适配层把指定迟到新建转成真实无条件 upsert 的语义负对照。仅修改白名单测试文件，业务源码只读。",
+  "limits": "不修改业务源码 / schema / 迁移 / 共享 helper / 前端；负对照仅在测试适配层模拟，不临时改动业务源码再恢复；控制运行 exit 0 仅表示已确认预期坏结果，不得宣称为修复或发布 PASS。",
+  "release": "NOT_EVALUATED",
+  "testFile": "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs",
+  "targetHashesAtExecution": {
+    "rp10": "efd6c9d10180718778585ffdf92ea5660c2be405"
+  }
+}

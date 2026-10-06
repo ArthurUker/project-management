@@ -1,0 +1,336 @@
+[
+  {
+    "id": "B05",
+    "packet": "R06",
+    "origin": "BASELINE",
+    "baselineSeverity": "P2",
+    "currentSeverity": "P2",
+    "disposition": "SUPPORTED",
+    "title": "同步回执未绑定主体与载荷",
+    "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "workingTreeDigestRefs": [
+      "execution/R06/source-digests.json"
+    ],
+    "entrypoint": "POST /api/sync/push; successful SyncMutation replay branch",
+    "preconditions": [
+      "Actor is authenticated.",
+      "Actor knows an existing successful clientMutationId.",
+      "The stored mutation result is applied; payload or actor may differ from the original request."
+    ],
+    "source": [
+      {
+        "path": "rdpms-system/backend/src/routes/sync.js",
+        "lineStart": 340,
+        "lineEnd": 367,
+        "symbol": "push setup and global mutationId receipt prefetch"
+      },
+      {
+        "path": "rdpms-system/backend/src/routes/sync.js",
+        "lineStart": 379,
+        "lineEnd": 421,
+        "symbol": "successful receipt replay before per-entity authorization"
+      },
+      {
+        "path": "rdpms-system/backend/prisma/schema.prisma",
+        "lineStart": 486,
+        "lineEnd": 503,
+        "symbol": "SyncMutation globally unique clientMutationId and no payload hash"
+      },
+      {
+        "path": "rdpms-system/backend/src/platform/idempotency/receipts.js",
+        "lineStart": 33,
+        "lineEnd": 58,
+        "symbol": "HTTP scoped receipt and payload mismatch contract"
+      },
+      {
+        "path": "rdpms-system/backend/prisma/schema.prisma",
+        "lineStart": 1594,
+        "lineEnd": 1618,
+        "symbol": "MutationReceipt scope unique key and payloadHash"
+      }
+    ],
+    "callPath": [
+      "authenticate",
+      "device and visible project setup",
+      "find SyncMutation by clientMutationId globally",
+      "if applied return stored result",
+      "only otherwise read entity and check project/author/action authorization"
+    ],
+    "evidence": [
+      {
+        "level": "H",
+        "ref": "docs/audits/2026-09-29-rdpms/backend-results.json#B05_SYNC_REPLAY_SCOPE_AND_PAYLOAD",
+        "limitation": "Historical isolated PostgreSQL probe: same actor with different payload and an outsider replayed the known key; stored title stayed first-content. Not rerun; requires knowledge of the mutationId."
+      },
+      {
+        "level": "S",
+        "ref": "execution/R06/review.md#B05",
+        "limitation": "Current source confirms global lookup and authorization ordering; no evidence that random IDs are predictable or request body content is leaked."
+      }
+    ],
+    "counterevidenceChecked": [
+      "The sync router requires authentication.",
+      "A user must know the prior successful mutationId.",
+      "HTTP MutationReceipt uses actor, command, resourceScope, key, and payloadHash; that model is not used by sync push."
+    ],
+    "observedImpact": "Historical probe returned applied/replayed result metadata for a different payload and a different actor while leaving the original database title unchanged.",
+    "potentialImpact": "A client can falsely believe different unsaved content was accepted; the stored response exposes entity result metadata. Key guessing and body disclosure were not demonstrated.",
+    "verification": "HISTORICAL_ONLY",
+    "recommendation": "Bind sync receipts to actor, command, resource scope, idempotency key, and canonical payload hash; reauthorize the current resource before receipt lookup; return conflict for same-scope key reuse with different payload.",
+    "acceptanceCriteria": [
+      "Known key replay by another actor is denied after current resource authorization.",
+      "Same actor/resource/key with changed payload returns 409 and does not replay.",
+      "Same actor/resource/key with identical payload returns the original result."
+    ],
+    "pendingQuestions": [],
+    "supersedesOrRelated": []
+  },
+  {
+    "id": "B06",
+    "packet": "R06",
+    "origin": "BASELINE",
+    "baselineSeverity": "P1",
+    "currentSeverity": "P1",
+    "disposition": "SUPPORTED",
+    "title": "同步业务写入与成功回执非原子",
+    "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "workingTreeDigestRefs": [
+      "execution/R06/source-digests.json"
+    ],
+    "entrypoint": "POST /api/sync/push; entity write followed by SyncMutation upsert",
+    "preconditions": [
+      "A mutation reaches a successful business write.",
+      "Receipt persistence fails after that write."
+    ],
+    "source": [
+      {
+        "path": "rdpms-system/backend/src/routes/sync.js",
+        "lineStart": 457,
+        "lineEnd": 524,
+        "symbol": "business writes and task-only inner transaction"
+      },
+      {
+        "path": "rdpms-system/backend/src/routes/sync.js",
+        "lineStart": 543,
+        "lineEnd": 588,
+        "symbol": "receipt upsert, device update, and later aggregate audit"
+      },
+      {
+        "path": "rdpms-system/backend/src/platform/audit/strictAudit.js",
+        "lineStart": 17,
+        "lineEnd": 20,
+        "symbol": "strict audit requires transaction client"
+      },
+      {
+        "path": "rdpms-system/backend/src/platform/idempotency/receipts.js",
+        "lineStart": 106,
+        "lineEnd": 128,
+        "symbol": "HTTP receipt and execute in one transaction"
+      }
+    ],
+    "callPath": [
+      "authorize and validate item",
+      "commit item business write (task subcommands may have an inner transaction)",
+      "outside that transaction upsert SyncMutation",
+      "after loop update device and emit best-effort aggregate audit",
+      "return item outcomes"
+    ],
+    "evidence": [
+      {
+        "level": "H",
+        "ref": "docs/audits/2026-09-29-rdpms/backend-results.json#B06_SYNC_WRITE_RECEIPT_NOT_ATOMIC",
+        "limitation": "Historical isolated PostgreSQL fault injection after a real task SQL write: HTTP 500, committed title, zero receipt. Not rerun this turn."
+      },
+      {
+        "level": "S",
+        "ref": "execution/R06/review.md#B06",
+        "limitation": "Current route keeps task/report/generic business write and SyncMutation upsert outside one transaction; not every entity or failure point was fault-injected."
+      }
+    ],
+    "counterevidenceChecked": [
+      "Mixed existing-task fields/status/assignee writes share a transaction.",
+      "Report HTTP commands use strict audit and receipt in a transaction.",
+      "Sync push processes mutations individually; the plan does not assume the entire batch must be atomic."
+    ],
+    "observedImpact": "Historical injection caused an HTTP 500 after task content committed with no SyncMutation receipt, leaving client outcome ambiguous and permitting duplicate retry effects.",
+    "potentialImpact": "The same split may affect other sync entity writes if their subsequent receipt persistence fails; this was not separately reproduced for each entity.",
+    "verification": "HISTORICAL_ONLY",
+    "recommendation": "For each mutation, put command validation/write, required strict audit, and scoped receipt creation/update in one transaction; preserve per-item batch semantics and make each outcome recoverable after connection loss.",
+    "acceptanceCriteria": [
+      "Receipt persistence failure rolls back that mutation's business state and required audit.",
+      "Successful business write and success receipt commit together and can be replayed.",
+      "A partially completed multi-item batch reports/reconstructs each item without requiring all-batch rollback."
+    ],
+    "pendingQuestions": [
+      "Specify the client recovery/query contract when a push response is lost after some per-item outcomes have committed."
+    ],
+    "supersedesOrRelated": []
+  },
+  {
+    "id": "B09",
+    "packet": "R06",
+    "origin": "BASELINE",
+    "baselineSeverity": "P1",
+    "currentSeverity": "P1",
+    "disposition": "SUPPORTED",
+    "title": "同步项目状态写入绕过归档权限与状态转换",
+    "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "workingTreeDigestRefs": [
+      "execution/R06/source-digests.json"
+    ],
+    "entrypoint": "POST /api/sync/push with entity=projects and data.status",
+    "preconditions": [
+      "Authenticated project member has projects.update but lacks projects.archive.",
+      "A project is in PLANNING and mutation requests ARCHIVED."
+    ],
+    "source": [
+      {
+        "path": "rdpms-system/backend/src/routes/sync.js",
+        "lineStart": 42,
+        "lineEnd": 53,
+        "symbol": "project writable field list includes status and managerId"
+      },
+      {
+        "path": "rdpms-system/backend/src/routes/sync.js",
+        "lineStart": 198,
+        "lineEnd": 215,
+        "symbol": "generic entity action guard only checks configured update permission"
+      },
+      {
+        "path": "rdpms-system/backend/src/routes/sync.js",
+        "lineStart": 424,
+        "lineEnd": 435,
+        "symbol": "generic stale-base check"
+      },
+      {
+        "path": "rdpms-system/backend/src/routes/sync.js",
+        "lineStart": 457,
+        "lineEnd": 515,
+        "symbol": "generic CAS update path"
+      },
+      {
+        "path": "rdpms-system/backend/src/routes/projects.js",
+        "lineStart": 331,
+        "lineEnd": 347,
+        "symbol": "HTTP project status transition and archive permission checks"
+      }
+    ],
+    "callPath": [
+      "sync project registry accepts status",
+      "projects.update and project write guard",
+      "project status value is not handled by assertSyncEntityActions",
+      "generic CAS update writes status"
+    ],
+    "evidence": [
+      {
+        "level": "H",
+        "ref": "docs/audits/2026-09-29-rdpms/backend-results.json#B09_SYNC_ARCHIVE_WITHOUT_TRANSITION",
+        "limitation": "Historical isolated probe changed PLANNING to ARCHIVED for MEMBER with only projects.update; not rerun."
+      },
+      {
+        "level": "S",
+        "ref": "execution/R06/review.md#B09",
+        "limitation": "Current code confirms project status remains on generic field path and lacks the HTTP-specific project archive/transition check."
+      }
+    ],
+    "counterevidenceChecked": [
+      "Sync still requires authentication, visible project scope, membership capability, and projects.update.",
+      "HTTP project PUT checks projects.archive for archive and validates STATUS_TRANSITIONS."
+    ],
+    "observedImpact": "Historical probe applied PLANNING→ARCHIVED for a project MEMBER with only projects.update.",
+    "potentialImpact": "Other project status transitions may also bypass the HTTP transition allowlist; only the historical archive edge is dynamically established.",
+    "verification": "HISTORICAL_ONLY",
+    "recommendation": "Remove status from generic sync project patches and route it through the shared project transition command enforcing archive permission and allowed edges.",
+    "acceptanceCriteria": [
+      "A projects.update-only MEMBER cannot archive by sync.",
+      "An actor with archive permission still cannot take an edge absent from STATUS_TRANSITIONS.",
+      "HTTP and sync apply identical authorization and transition rules."
+    ],
+    "pendingQuestions": [],
+    "supersedesOrRelated": []
+  },
+  {
+    "id": "R06-N01",
+    "packet": "R06",
+    "origin": "NEW",
+    "baselineSeverity": null,
+    "currentSeverity": "P2",
+    "disposition": "SUPPORTED",
+    "title": "同步更新项目负责人时未同步负责人成员关系",
+    "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+    "workingTreeDigestRefs": [
+      "execution/R06/source-digests.json"
+    ],
+    "entrypoint": "POST /api/sync/push with entity=projects and data.managerId",
+    "preconditions": [
+      "Actor can write the project and has projects.update.",
+      "The new managerId differs from the current value."
+    ],
+    "source": [
+      {
+        "path": "rdpms-system/backend/src/routes/sync.js",
+        "lineStart": 42,
+        "lineEnd": 53,
+        "symbol": "project managerId allowed field"
+      },
+      {
+        "path": "rdpms-system/backend/src/routes/sync.js",
+        "lineStart": 453,
+        "lineEnd": 515,
+        "symbol": "project generic update has no ProjectMember transfer"
+      },
+      {
+        "path": "rdpms-system/backend/src/routes/projects.js",
+        "lineStart": 355,
+        "lineEnd": 378,
+        "symbol": "HTTP project update transaction upserts new manager and demotes prior manager"
+      },
+      {
+        "path": "rdpms-system/backend/src/kernel/projectAccess.js",
+        "lineStart": 21,
+        "lineEnd": 55,
+        "symbol": "project capability resolution requires active ProjectMember except SUPER_ADMIN"
+      },
+      {
+        "path": "rdpms-system/backend/src/kernel/projectAccess.js",
+        "lineStart": 94,
+        "lineEnd": 101,
+        "symbol": "managerId contributes to list visibility"
+      }
+    ],
+    "callPath": [
+      "sync project managerId passes writable field whitelist",
+      "projects.update authorization",
+      "generic Project row update",
+      "no ProjectMember role/leftAt update",
+      "managerId list visibility can differ from detail/write access resolved via active membership"
+    ],
+    "evidence": [
+      {
+        "level": "S",
+        "ref": "execution/R06/review.md#R06-N01",
+        "limitation": "Static comparison: HTTP explicitly synchronizes ProjectMember in same transaction whereas sync updates only Project. No dynamic manager-transfer probe this turn."
+      }
+    ],
+    "counterevidenceChecked": [
+      "HTTP update's membership transfer is an explicit source-level invariant and transactional side effect.",
+      "projectAccess resolves non-SUPER_ADMIN capabilities from active ProjectMember; managerId is a separate visibility condition."
+    ],
+    "observedImpact": "Source paths have divergent manager transfer semantics: sync changes Project.managerId without promoting the new manager or demoting the old one; capability resolution still requires active membership. No live request impact was dynamically measured.",
+    "potentialImpact": "The new manager may be listed as able to see the project but lack detail/write access; old manager membership/capabilities can remain. Business policy may define an intentional exception, not found in the reviewed HTTP path.",
+    "verification": "NOT_NEEDED",
+    "recommendation": "Route sync manager transfers through the same transactional command as HTTP, or document and consistently implement a policy allowing a manager without ProjectMember membership.",
+    "acceptanceCriteria": [
+      "Equivalent managerId changes from HTTP and sync leave project.managerId and active ProjectMember roles consistent.",
+      "Resolver visibility and capability access for the new and previous manager match the documented policy.",
+      "Failure during membership synchronization rolls back the managerId change."
+    ],
+    "pendingQuestions": [
+      "Confirm whether managerId is required to imply active MANAGER membership; current HTTP update/create paths implement that relationship."
+    ],
+    "supersedesOrRelated": [],
+    "aliases": [
+      "N-R06-01"
+    ]
+  }
+]

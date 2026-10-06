@@ -1,0 +1,30 @@
+{
+  "sessionId": "parallel-lr7-2026-10-05-seal-overlay-02",
+  "executor": "CodeBuddy (local bounded overlay executor)",
+  "authorizedPaths": [
+    "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-overlay-2026-10-05-02/**",
+    "docs/remediation/2026-10-01-rdpms/REVISION_HISTORY.json (append-only)",
+    "docs/remediation/2026-10-01-rdpms/EXECUTION_REVISION_HISTORY.json (append-only)"
+  ],
+  "readOnlyPaths": [
+    "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/integration/seal-correction-2026-10-05-01/**",
+    "docs/remediation/2026-10-01-rdpms/** (except the two history append entries)",
+    "docs/remediation/2026-10-05-seal-correction-review/**",
+    "A-F windows",
+    "business source/tests"
+  ],
+  "stopConditions": [
+    "any input drift vs canonical-reference-index -> BLOCKED",
+    "any precheck FAIL -> no history append, no PASS",
+    "after final readback: stop editing"
+  ],
+  "prohibited": [
+    "modify K/A-F/J/two-state/two-handoff/plan/decision/audit/memory",
+    "npm/build/test/runner/control/DB/JWT/IDB/browser/network",
+    "SSH/dotenv/credentials",
+    "subagent/model switch/stage/commit/push/merge/deploy/reset/clean/stash",
+    "memory writes",
+    "root state/handoff append",
+    "reopen A-F or redesign"
+  ]
+}

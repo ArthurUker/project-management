@@ -1,0 +1,141 @@
+{
+  "layer": "REAL_CHROME_INDEXEDDB_DATASET_EPOCH_SYNTHETIC_AUTH",
+  "cases": [
+    {
+      "name": "RESTORE_NEW_LOGIN_CLEARS_OLD_MIRROR_ATOMICALLY_PRESERVES_ORIGINAL_BINDING_NO_MANUAL_SEND",
+      "result": "PASS",
+      "actualIDBLastCopyPreserved": true,
+      "oldDatasetManualAndAutomaticSends": 0,
+      "durableAfterReload": true
+    },
+    {
+      "name": "NEW_DATASET_INTENT_AND_DEVICE_ONLY_SENDS_NEW_CURRENT_EPOCH",
+      "result": "FAIL",
+      "error": "Error: Error: 原文已保留：回执、历史发送状态、依赖或正文大小需要核对\n    at Object.sync (http://127.0.0.1:59527/bundle.js:32039:37)"
+    }
+  ],
+  "commands": [],
+  "cleanup": {
+    "chromeExit": {
+      "code": 0,
+      "signal": null
+    },
+    "ownedServerClosed": true,
+    "ownedProfileRootRemoved": true
+  },
+  "limits": [
+    "Native JWT/backend DB/production release NOT_RUN",
+    "Actual current AuthProvider, SyncProvider, Tasks, tokenStore, engine and IDB; synthetic auth/pull/push fixtures explicitly identified",
+    "No dependency installation, target profile, real dotenv or SSH"
+  ],
+  "startSourceBindings": [
+    {
+      "path": "rdpms-system/frontend/src/api/endpoints/sync.ts",
+      "sha256": "6580d1dbafcb3ca2b967504cee42cc088cc9db71cb7a79526b5aa4d9b11d3e62"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/deadLetter.ts",
+      "sha256": "4877eed9ec1726fe68cf8b6dd99b953e39d0f5fc2d5964bbde312e0619b75bdf"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/idb.ts",
+      "sha256": "4973866ee9dc03fa6c6a653ebcbb0127dbdc15aa466a085815ede6f218ea56fd"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/engine.ts",
+      "sha256": "5bfa559ab0992d3851eb31ee821f42be84d3eddeea4a9925d0a00a7a5a5ff99b"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/SyncProvider.tsx",
+      "sha256": "32da897ff24846012a01b77ced8ecb42b866601cbf80d5cd2349d7fb0865f6e8"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/pendingDraft.ts",
+      "sha256": "13d3005d3b433b79c5ceed4fae55f6f54137197245ac1ae8af982ffabd9b6857"
+    },
+    {
+      "path": "rdpms-system/frontend/src/pages/Tasks.tsx",
+      "sha256": "598498505a02be301a06581ea36dd814855f5c99e182cc5f2736dc8cdb2cc6b0"
+    },
+    {
+      "path": "rdpms-system/frontend/src/auth/AuthProvider.tsx",
+      "sha256": "5f5656325c39217d5a497bf9e8a583ae85b76e1720acc79793f57e4dc22462f7"
+    },
+    {
+      "path": "rdpms-system/frontend/src/auth/tokenStore.ts",
+      "sha256": "630b83141771839757ba96e7969213565a69e4b49e7164b07fb3f19d53f725b0"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx",
+      "sha256": "ac440f00b9b0c1c5a8ecf231af6d7ae89e6c6639ec061396789707b2f97b8232"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/RecoveryPanel.tsx",
+      "sha256": "6abc0db06e02cd0d24bac194b62bad5d63d4a5d2fa6f641c52fab7f6f20b203a"
+    },
+    {
+      "path": "rdpms-system/frontend/src/components/SyncConflictDialog.tsx",
+      "sha256": "8834b78e54eead86f2218c55ec055b61f8aa8667dcef17500cbf2e330a732728"
+    }
+  ],
+  "mainCommand": [
+    "/Users/renkang/.nvm/versions/node/v24.15.0/bin/node",
+    "/Users/renkang/VS Code/project-management/docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/run-offline-browser.mjs",
+    "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/evidence/rp16-t03-browser",
+    "epoch"
+  ],
+  "lastEvaluation": "bridge.sync()",
+  "result": "FAIL",
+  "error": "Error: Error: 原文已保留：回执、历史发送状态、依赖或正文大小需要核对\n    at Object.sync (http://127.0.0.1:59527/bundle.js:32039:37)",
+  "sourceBindings": [
+    {
+      "path": "rdpms-system/frontend/src/api/endpoints/sync.ts",
+      "sha256": "6580d1dbafcb3ca2b967504cee42cc088cc9db71cb7a79526b5aa4d9b11d3e62"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/deadLetter.ts",
+      "sha256": "4877eed9ec1726fe68cf8b6dd99b953e39d0f5fc2d5964bbde312e0619b75bdf"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/idb.ts",
+      "sha256": "4973866ee9dc03fa6c6a653ebcbb0127dbdc15aa466a085815ede6f218ea56fd"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/engine.ts",
+      "sha256": "5bfa559ab0992d3851eb31ee821f42be84d3eddeea4a9925d0a00a7a5a5ff99b"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/SyncProvider.tsx",
+      "sha256": "32da897ff24846012a01b77ced8ecb42b866601cbf80d5cd2349d7fb0865f6e8"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/pendingDraft.ts",
+      "sha256": "13d3005d3b433b79c5ceed4fae55f6f54137197245ac1ae8af982ffabd9b6857"
+    },
+    {
+      "path": "rdpms-system/frontend/src/pages/Tasks.tsx",
+      "sha256": "598498505a02be301a06581ea36dd814855f5c99e182cc5f2736dc8cdb2cc6b0"
+    },
+    {
+      "path": "rdpms-system/frontend/src/auth/AuthProvider.tsx",
+      "sha256": "5f5656325c39217d5a497bf9e8a583ae85b76e1720acc79793f57e4dc22462f7"
+    },
+    {
+      "path": "rdpms-system/frontend/src/auth/tokenStore.ts",
+      "sha256": "630b83141771839757ba96e7969213565a69e4b49e7164b07fb3f19d53f725b0"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx",
+      "sha256": "ac440f00b9b0c1c5a8ecf231af6d7ae89e6c6639ec061396789707b2f97b8232"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/RecoveryPanel.tsx",
+      "sha256": "6abc0db06e02cd0d24bac194b62bad5d63d4a5d2fa6f641c52fab7f6f20b203a"
+    },
+    {
+      "path": "rdpms-system/frontend/src/components/SyncConflictDialog.tsx",
+      "sha256": "8834b78e54eead86f2218c55ec055b61f8aa8667dcef17500cbf2e330a732728"
+    }
+  ],
+  "sourceDrift": []
+}

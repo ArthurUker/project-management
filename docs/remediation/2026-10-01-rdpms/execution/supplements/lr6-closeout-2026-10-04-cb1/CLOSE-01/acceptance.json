@@ -1,0 +1,62 @@
+{
+  "closeId": "CLOSE-01",
+  "finding": "LR6-01",
+  "supplement": "SUP-01",
+  "parentTask": "RP10-T02",
+  "cases": [
+    {
+      "caseId": "LR6-01-a",
+      "meaning": "完整业务键或 target id + 必需 marker",
+      "layer": "HELPER_STATIC",
+      "applicability": "APPLICABLE",
+      "status": "PASS",
+      "evidenceRef": "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/evidence/matcher-identity-control.json",
+      "finalHash": "23e4cff4da62cb2714bfc564ebc582e4c6245a7d3b535797273150ef314ad9e8"
+    },
+    {
+      "caseId": "LR6-01-b",
+      "meaning": "draftWriteBarrier 真实 upsert create/update 形状命中",
+      "layer": "REAL_DB",
+      "applicability": "APPLICABLE",
+      "status": "PASS",
+      "evidenceRef": "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/evidence/draft-upsert-compat.json",
+      "finalHash": "23e4cff4da62cb2714bfc564ebc582e4c6245a7d3b535797273150ef314ad9e8"
+    },
+    {
+      "caseId": "LR6-01-c",
+      "meaning": "legacy/modern/sync 草稿竞争异常下收束与 timer 清理",
+      "layer": "REAL_DB_CONTROL",
+      "applicability": "APPLICABLE",
+      "status": "PASS",
+      "evidenceRef": "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/evidence/draft-race-settle-control.json",
+      "finalHash": "23e4cff4da62cb2714bfc564ebc582e4c6245a7d3b535797273150ef314ad9e8"
+    },
+    {
+      "caseId": "LR6-01-d",
+      "meaning": "保留原 22 条用例/断言并跑完整报告套件",
+      "layer": "REAL_DB",
+      "applicability": "APPLICABLE",
+      "status": "PASS",
+      "evidenceRef": "execution/supplements/lr6-closeout-2026-10-04-cb1/CLOSE-01/evidence/suite-run.json; evidence/test-case-inventory.json",
+      "finalHash": "23e4cff4da62cb2714bfc564ebc582e4c6245a7d3b535797273150ef314ad9e8",
+      "detail": "25/25 pass, fail 0"
+    }
+  ],
+  "requiredChecks": {
+    "build": 0,
+    "typecheck": 0,
+    "lint:undefined": 0,
+    "git diff --check": 0,
+    "guard drop": 0,
+    "cluster stop": 0
+  },
+  "implementationVsValidation": "implementation = test-only precision fix; validation = local real owned DB pass; neither is product fix acceptance",
+  "uncovered": [
+    "AC-B10-02 / INT-PC03-01",
+    "JWT 全链",
+    "前端 IDB / UI",
+    "目标环境 / 部署"
+  ],
+  "release": "NOT_EVALUATED",
+  "independentReview": "PENDING"
+}

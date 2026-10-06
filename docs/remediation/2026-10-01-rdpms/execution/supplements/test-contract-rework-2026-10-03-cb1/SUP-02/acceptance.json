@@ -1,0 +1,60 @@
+{
+  "supplementId": "SUP-02",
+  "parentTaskIds": [
+    "RP08-T01"
+  ],
+  "kind": "TEST_ONLY",
+  "originalFinding": "LR4-02",
+  "currentFindings": [
+    "LR5-02",
+    "LR5-04",
+    "LR5-05"
+  ],
+  "cases": [
+    {
+      "id": "SUP-02-01",
+      "meaning": "七实体非空相同行",
+      "status": "PASS",
+      "kind": "REAL_OWNED_DB",
+      "evidence": "SUP-02/evidence/field-trace.json"
+    },
+    {
+      "id": "SUP-02-02",
+      "meaning": "逐键逐值 + 正确禁止字段",
+      "status": "PASS",
+      "kind": "REAL_OWNED_DB",
+      "evidence": "SUP-02/deliverables/field-comparison.csv; SUP-02/evidence/field-trace.json"
+    },
+    {
+      "id": "SUP-02-03",
+      "meaning": "同 actor 仅移除目标读权限",
+      "status": "PASS",
+      "kind": "REAL_OWNED_DB",
+      "evidence": "SUP-02/evidence/field-trace.json"
+    },
+    {
+      "id": "SUP-02-04",
+      "meaning": "原套件完整回归及边界",
+      "status": "PASS",
+      "kind": "REAL_OWNED_DB",
+      "evidence": "SUP-02/evidence/suite-run.json",
+      "detail": "整套件 12/12 通过，原业务范围保留"
+    }
+  ],
+  "requiredChecks": {
+    "backend build": "exit 0",
+    "typecheck": "exit 0",
+    "lint:undefined": "exit 0",
+    "git diff --check": "exit 0",
+    "guard check contract": "GUARD_CONTRACT_OK",
+    "guard drop": 0,
+    "cluster stop": 0
+  },
+  "uncovered": [
+    "RP08-T02 缓存撤权 / 历史回填 / IndexedDB：未执行",
+    "AC-B04-02 / PAC-RP08-02/03/04：未完成",
+    "独立产品/安全字段政策批准：NOT_EVALUATED",
+    "condition=false 的门禁为 NOT_APPLICABLE（非 PASS、非批准）"
+  ],
+  "businessAcceptanceImpact": "none; RP08-T01 原本地接受不因本轮自动撤销或升级"
+}

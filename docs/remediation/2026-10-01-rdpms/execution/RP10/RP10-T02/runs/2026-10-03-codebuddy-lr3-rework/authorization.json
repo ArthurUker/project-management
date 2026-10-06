@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-03 (session 2)",
+  "executor": "CodeBuddy",
+  "taskId": "RP10-T02",
+  "run": "2026-10-03-codebuddy-lr3-rework",
+  "kind": "REWORK",
+  "authorizationSource": "execution/authorization-2026-10-03b-codebuddy.json; user message 2026-10-03; execution/CODEBUDDY_NEXT_EXECUTOR_PROMPT_2026-10-03.md",
+  "baselineCommit": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "startWorktreeState": "dirty worktree from earlier uncommitted rounds; protected, not reset/cleaned/stashed",
+  "reviewFindings": ["LR3-01"],
+  "historicalFinding": "B10",
+  "allowedSourceFiles": [
+    "rdpms-system/backend/src/routes/reports.js",
+    "rdpms-system/backend/src/modules/reports/reportCommands.ts"
+  ],
+  "allowedTestFile": "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs",
+  "applicableImplementationGates": [],
+  "gateD-S01-07": "NOT_APPLICABLE (condition=false; submit source-state behavior unchanged)",
+  "rp09-T01": "acceptance dependency only; does not block this rework",
+  "prohibited": [
+    "commit/stage/push/merge/deploy",
+    "production or shared database, real accounts, real restore data",
+    "dependency install or upgrade",
+    "new business migration",
+    "worktree reset/clean/stash",
+    "RP10-T01 / RP10-T03 implementation, T-RP-03, S03-OI-09 work",
+    "new delete-wins / restore / resubmit policy"
+  ],
+  "runner": "execution/codebuddy-run-2026-10-03b/owned-suite-runner.py",
+  "cleanup": "guard drop -> cluster stop -> owned dist removal -> temp root removal (exit codes in evidence/attempt-XX/run-results.json)"
+}

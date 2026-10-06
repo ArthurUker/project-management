@@ -1,0 +1,34 @@
+{
+  "createdAt": "2026-10-05T22:58:24.060476+08:00",
+  "executor": "Codex single serial executor",
+  "source": "Current user approval + existing continuous local implementation authorization",
+  "allowedTaskIds": [
+    "RP09-T01",
+    "RP09-T02"
+  ],
+  "approvalRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/approval.json",
+  "allowedFiles": [
+    "rdpms-system/backend/src/routes/sync.js",
+    "rdpms-system/backend/prisma/schema.prisma",
+    "rdpms-system/backend/src/modules/sync/syncMutationCommands.ts",
+    "rdpms-system/backend/prisma/migrations/20261005_sync_receipt_v1_scope/migration.sql",
+    "rdpms-system/backend/tests/integration/rp09-scoped-receipt.integration.test.mjs",
+    "rdpms-system/backend/tests/integration/rp09-receipt-recovery.integration.test.mjs"
+  ],
+  "prohibited": [
+    "subagents/model switch",
+    "install/upgrade",
+    "stage/commit/push/merge/deploy",
+    "production/shared DB/accounts",
+    "real dotenv/SSH",
+    "reset/clean/stash",
+    "unapproved other decisions"
+  ],
+  "activeTask": null,
+  "completedLocalTaskIds": [
+    "RP09-T01",
+    "RP09-T02"
+  ],
+  "closedAt": "2026-10-05T23:53:39.349922+08:00",
+  "remainingScope": "No automatic expansion to another business task; independent review pending; CI FAIL"
+}

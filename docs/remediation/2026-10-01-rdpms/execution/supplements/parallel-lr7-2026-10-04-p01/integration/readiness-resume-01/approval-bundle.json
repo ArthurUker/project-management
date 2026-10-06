@@ -1,0 +1,88 @@
+{
+  "bundleId": "parallel-lr7-2026-10-04-p01-approval-bundle",
+  "date": "2026-10-04",
+  "statusNote": "All decisions PROPOSED; no signature, approval, or release performed by this integration. Signatures/approvals are the responsibility of named owners per each decision's approval-request.",
+  "decisions": [
+    {
+      "id": "T-RP-02",
+      "window": "C",
+      "status": "PROPOSED",
+      "approvedBy": null, "approvedAt": null, "evidenceRef": null,
+      "recommended": "OPT-A: extend SyncMutation to scoped receipt aligned with mutationReceipt",
+      "approvalItems": [
+        {"id":"A1","item":"overall approach","recommended":"OPT-A","alternatives":["OPT-B reuse withIdempotency","OPT-C new SyncReceipt table"]},
+        {"id":"A2","item":"scope unique key shape","recommended":"actorId+deviceId+clientMutationId+resourceScope","alternatives":["global clientMutationId + forced actor+device filter"]},
+        {"id":"A3","item":"payloadHash binding","recommended":"required (canonicalize+sha256)","alternatives":["optional during compat window"]},
+        {"id":"A4","item":"single-transaction boundary","recommended":"business write + receipt + audit in one tx","alternatives":["keep separated (not recommended; B06 recurrence)"]},
+        {"id":"N1","item":"receipt retention window","recommended":"24h (align RECEIPT_TTL_MS)","sourceBasis":"suggested, awaiting product/ops"},
+        {"id":"N2","item":"max offline window","recommended":"= retention window","sourceBasis":"suggested"},
+        {"id":"N3","item":"compat window (payloadHash optional)","recommended":"1 release cycle","sourceBasis":"suggested"},
+        {"id":"N4","item":"retention cleanup job frequency","recommended":"OPEN_INPUT (S03-OI-04)","sourceBasis":"no current job"}
+      ],
+      "owners": ["backend lead","product lead","ops lead"],
+      "openInputs": ["exact retention/offline hours","final unique-key decision","cleanup owner/frequency (S03-OI-04)","T-RP-07/S03-OI-05 delete-scope interaction","C-D/F interface confirmation"],
+      "sourceRefs": ["window-c-receipts/decision-draft.md","window-c-receipts/approval-request.md","window-c-receipts/interface-notes.md"]
+    },
+    {
+      "id": "T-RP-09",
+      "window": "D",
+      "status": "PROPOSED",
+      "approvedBy": null, "approvedAt": null, "evidenceRef": null,
+      "recommended": "maintain Bearer/body as sole transport; cookie remains unsupported; define single-use/family fail semantics, frontend generation fence + replay attribution, compat/rollback",
+      "approvalItems": [
+        {"id":"PC01-a","item":"cross-tab coordination & rollback","owners":["security lead","auth lead","frontend lead"]},
+        {"id":"PC01-b","item":"refresh single-use / family replay / theft response / rotation retry idempotency / failure recovery","owners":["security lead","auth lead"]},
+        {"id":"OBS-05","item":"frontend generation fence storage & fail-closed trigger","owners":["frontend lead"]},
+        {"id":"TRANSPORT","item":"supported transport / clients / compat window / residual risks / approval date+evidence","owners":["named approver"]}
+      ],
+      "independentGates": ["D-S01-04 (access JWT revocation) PENDING", "T-RP-09/PC01/PC04/PC09/T-RP-12 not approved by this material"],
+      "openInputs": ["named security/auth/frontend owner selections","named approver record (supported transport/clients, compat window, residual risks, date/evidence)","C/E/F interface alignment"],
+      "sourceRefs": ["window-d-auth/decision-draft.md","window-d-auth/approval-request.md","window-d-auth/interface-notes.md"]
+    },
+    {
+      "id": "T-RP-03",
+      "window": "E",
+      "status": "PROPOSED",
+      "approvedBy": null, "approvedAt": null, "evidenceRef": null,
+      "recommended": "P1 extend reports-style contract to tasks; P2 missing-base 400/409; P3 409 interaction; P4 upgrade window; P5 full-chain scope",
+      "approvalItems": [
+        {"id":"P1-P5","item":"chosen options + precise scope","owners":["product/frontend lead"]},
+        {"id":"RA-1","item":"risk acceptance for legacy no-baseline stale-overwrite exposure during compat window","owners":["named approver"]}
+      ],
+      "openItems": ["S03-OI-09 OPEN/NOT_RUN until external client evidence filled","deployed versions DV-1/DV-2","product window PV-1/PV-2","cutoff UC-1/UC-2"],
+      "sourceRefs": ["window-e-revision/decision-draft.md","window-e-revision/external-client-evidence-request.md"]
+    },
+    {
+      "id": "T-RP-04",
+      "window": "F",
+      "status": "PROPOSED",
+      "approvedBy": null, "approvedAt": null, "evidenceRef": null,
+      "recommended": "O3: transactional outbox + commit-visible publish sequence",
+      "approvalItems": [
+        {"id":"O3","item":"selected option + named approval","owners":["db/architecture lead"]},
+        {"id":"COMPAT","item":"compatible client/schema window (SyncInitResponse epoch)","owners":["db/architecture lead"]},
+        {"id":"BARRIER","item":"barrier evidence (S03-OI-01)","owners":["db/architecture lead"]},
+        {"id":"COVERAGE","item":"producer coverage across all write paths","owners":["db/architecture lead"]}
+      ],
+      "openInputs": ["T-RP-10 restore epoch PROPOSED (coupled)","T-RP-11 budget/monitoring unmeasured","S03-OI-01 OPEN (prereq)","RP13-T03 gated"],
+      "sourceRefs": ["window-f-cache/watermark-options.md","window-f-cache/approval-request.md"]
+    },
+    {
+      "id": "T-RP-12",
+      "window": "F",
+      "status": "PROPOSED",
+      "approvedBy": null, "approvedAt": null, "evidenceRef": null,
+      "recommended": "five explicit recoverable states + last-copy preservation + current-authorization check",
+      "approvalItems": [
+        {"id":"STATES","item":"selected option","owners":["product/data/frontend lead"]},
+        {"id":"SCHEMA","item":"SyncPushResult unknown + oversize/quarantine + dead-letter fields","owners":["product/data/frontend lead"]},
+        {"id":"RUNTIME","item":"real IDB multi-tab acceptance","owners":["frontend lead"]}
+      ],
+      "openInputs": ["T-RP-10 PROPOSED","S03-OI-01 OPEN","RP13-T03 gated"],
+      "sourceRefs": ["window-f-cache/cache-recovery-matrix.csv","window-f-cache/approval-request.md"]
+    }
+  ],
+  "crossDecisionDependencies": ["T-RP-10 (epoch) couples T-RP-04","T-RP-11 (budget) unmeasured","RP13-T03 gated by T-RP-04/T-RP-10","D-S01-04 independent of T-RP-09"],
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED"
+}

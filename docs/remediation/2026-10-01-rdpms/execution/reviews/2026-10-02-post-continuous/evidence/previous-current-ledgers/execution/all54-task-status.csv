@@ -1,0 +1,55 @@
+taskId,packageId,implementation,validation,implementationDependencies,unmetImplementationDependencies_current,implementationGates_before_IMPLEMENTATION,acceptanceDependencies_validation_only,readinessAndNextCondition
+RP00-T01,RP00,COMPLETE,ENV_BLOCKED,,,[],,implementation COMPLETE; validation=ENV_BLOCKED
+RP00-T02,RP00,COMPLETE,PASS,RP00-T01,,[],,implementation COMPLETE; validation=PASS
+RP00-T03,RP00,COMPLETE,NOT_RUN,RP00-T01,,[],,implementation COMPLETE; validation=NOT_RUN
+RP00-T04,RP00,COMPLETE,NOT_RUN,RP00-T01,,[],,implementation COMPLETE; validation=NOT_RUN
+RP00-T05,RP00,COMPLETE,NOT_RUN,RP00-T01,,[],,implementation COMPLETE; validation=NOT_RUN
+RP01-T01,RP01,COMPLETE,PASS,RP00-T01,,[],,implementation COMPLETE; validation=PASS
+RP01-T02,RP01,NOT_STARTED,NOT_RUN,RP00-T01,,"[{""ref"":""D-S01-01"",""before"":""IMPLEMENTATION"",""condition"":""always""},{""ref"":""D-S01-02"",""before"":""IMPLEMENTATION"",""condition"":""only forced-password-change/business allowlist sub-scope; rank/reset protection uses D-S01-01 independently""}]",,wait for applicable implementation gate(s) listed
+RP01-T03,RP01,NOT_STARTED,NOT_RUN,RP01-T01,,"[{""ref"":""D-S01-03"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,optional task remains disabled; do not activate without decision approval
+RP02-T01,RP02,COMPLETE,PASS,RP00-T01,,[],,implementation COMPLETE; validation=PASS
+RP02-T02,RP02,NOT_STARTED,NOT_RUN,RP00-T04,,"[{""ref"":""T-RP-09"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",RP03-T01,wait for applicable implementation gate(s) listed
+RP03-T01,RP03,NOT_STARTED,NOT_RUN,RP00-T04,,"[{""ref"":""T-RP-09"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,wait for applicable implementation gate(s) listed
+RP03-T02,RP03,NOT_STARTED,NOT_RUN,RP00-T01,,"[{""ref"":""D-S01-04"",""before"":""IMPLEMENTATION"",""condition"":""always""},{""ref"":""T-RP-09"",""before"":""IMPLEMENTATION"",""condition"":""always""},{""ref"":""S03-OI-06"",""before"":""IMPLEMENTATION"",""condition"":""same D-S01-04 approval; no second approval required""}]",RP02-T02,wait for applicable implementation gate(s) listed
+RP04-T01,RP04,COMPLETE,PASS,RP00-T01,,[],,implementation COMPLETE; validation=PASS
+RP04-T02,RP04,COMPLETE,PASS,RP00-T01,,[],RP09-T01,implementation COMPLETE; validation=PASS
+RP05-T01,RP05,COMPLETE,PASS,RP00-T01,,[],,implementation COMPLETE; validation=PASS
+RP05-T02,RP05,NOT_STARTED,NOT_RUN,RP05-T01,,"[{""ref"":""D-S01-08"",""before"":""IMPLEMENTATION"",""condition"":""always""},{""ref"":""T-RP-07"",""before"":""IMPLEMENTATION"",""condition"":""always""},{""ref"":""S03-OI-05"",""before"":""IMPLEMENTATION"",""condition"":""only if stale/delete command adapter is changed; no gate on unrelated task fields or report snapshot""}]",,wait for applicable implementation gate(s) listed
+RP05-T03,RP05,NOT_STARTED,NOT_RUN,RP05-T02,RP05-T02,"[{""ref"":""D-S01-08"",""before"":""IMPLEMENTATION"",""condition"":""DAG/live policy approved""}]",,optional task remains disabled; do not activate without decision approval
+RP06-T01,RP06,NOT_STARTED,NOT_RUN,RP00-T01,,"[{""ref"":""D-S01-05"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,wait for applicable implementation gate(s) listed
+RP06-T02,RP06,NOT_STARTED,NOT_RUN,RP06-T01;RP07-T02,RP06-T01;RP07-T02,"[{""ref"":""D-S01-06"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,"wait for implementation dependencies: RP06-T01, RP07-T02"
+RP07-T01,RP07,COMPLETE,PASS,RP04-T01,,[],,implementation COMPLETE; validation=PASS
+RP07-T02,RP07,NOT_STARTED,NOT_RUN,RP00-T01,,"[{""ref"":""D-S01-06"",""before"":""IMPLEMENTATION"",""condition"":""always""},{""ref"":""S03-OI-07"",""before"":""IMPLEMENTATION"",""condition"":""same D-S01-06 approval; no second approval required""}]",,wait for applicable implementation gate(s) listed
+RP08-T01,RP08,COMPLETE,PASS,RP00-T01,,"[{""ref"":""D-S01-05"",""before"":""IMPLEMENTATION"",""condition"":""only if registration global exception is requested""}]",,implementation COMPLETE; validation=PASS
+RP08-T02,RP08,NOT_STARTED,NOT_RUN,RP08-T01,,"[{""ref"":""T-RP-04"",""before"":""IMPLEMENTATION"",""condition"":""always""},{""ref"":""T-RP-12"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",RP11-T01,wait for applicable implementation gate(s) listed
+RP09-T01,RP09,NOT_STARTED,NOT_RUN,RP00-T02,,"[{""ref"":""T-RP-02"",""before"":""IMPLEMENTATION"",""condition"":""always""},{""ref"":""T-RP-07"",""before"":""IMPLEMENTATION"",""condition"":""delete command adapter modified""},{""ref"":""S03-OI-05"",""before"":""IMPLEMENTATION"",""condition"":""only if stale/delete command adapter is changed; no gate on unrelated task fields or report snapshot""}]",,wait for applicable implementation gate(s) listed
+RP09-T02,RP09,NOT_STARTED,NOT_RUN,RP09-T01,RP09-T01,"[{""ref"":""T-RP-02"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,wait for implementation dependencies: RP09-T01
+RP10-T01,RP10,NOT_STARTED,NOT_RUN,RP00-T03,,"[{""ref"":""T-RP-03"",""before"":""IMPLEMENTATION"",""condition"":""always""},{""ref"":""S03-OI-05"",""before"":""IMPLEMENTATION"",""condition"":""only if stale/delete command adapter is changed; no gate on unrelated task fields or report snapshot""}]",,wait for applicable implementation gate(s) listed
+RP10-T02,RP10,COMPLETE,PASS,RP00-T01,,"[{""ref"":""D-S01-07"",""before"":""IMPLEMENTATION"",""condition"":""source-state behavior changed""}]",RP09-T01,implementation COMPLETE; validation=PASS
+RP10-T03,RP10,NOT_STARTED,NOT_RUN,RP10-T02,,"[{""ref"":""D-S01-07"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,wait for applicable implementation gate(s) listed
+RP11-T01,RP11,NOT_STARTED,NOT_RUN,RP00-T01,,"[{""ref"":""T-RP-09"",""before"":""IMPLEMENTATION"",""condition"":""always""},{""ref"":""T-RP-12"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,wait for applicable implementation gate(s) listed
+RP11-T02,RP11,NOT_STARTED,NOT_RUN,RP11-T01,RP11-T01,"[{""ref"":""T-RP-01"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,wait for implementation dependencies: RP11-T01
+RP11-T03,RP11,NOT_STARTED,NOT_RUN,RP11-T01,RP11-T01,"[{""ref"":""T-RP-12"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,wait for implementation dependencies: RP11-T01
+RP12-T01,RP12,NOT_STARTED,NOT_RUN,RP00-T02;RP11-T01,RP11-T01,"[{""ref"":""T-RP-11"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,wait for implementation dependencies: RP11-T01
+RP12-T02,RP12,NOT_STARTED,NOT_RUN,RP12-T01;RP09-T01;RP11-T03,RP12-T01;RP09-T01;RP11-T03,"[{""ref"":""T-RP-02"",""before"":""IMPLEMENTATION"",""condition"":""always""},{""ref"":""T-RP-12"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,"wait for implementation dependencies: RP12-T01, RP09-T01, RP11-T03"
+RP13-T01,RP13,COMPLETE,ENV_BLOCKED,RP00-T01,,[],RP11-T01,implementation COMPLETE; validation=ENV_BLOCKED
+RP13-T02,RP13,COMPLETE,ENV_BLOCKED,RP13-T01,,[],,implementation COMPLETE; validation=ENV_BLOCKED
+RP13-T03,RP13,NOT_STARTED,NOT_RUN,RP13-T02;RP09-T01;RP08-T02;RP11-T02,RP09-T01;RP08-T02;RP11-T02,"[{""ref"":""T-RP-04"",""before"":""IMPLEMENTATION"",""condition"":""always""},{""ref"":""T-RP-10"",""before"":""IMPLEMENTATION"",""condition"":""always""},{""ref"":""D-S01-08"",""before"":""IMPLEMENTATION"",""condition"":""only when approved delete/live-reference/tombstone semantics are changed""}]",,"wait for implementation dependencies: RP09-T01, RP08-T02, RP11-T02"
+RP14-T01,RP14,COMPLETE,PASS,RP00-T01,,[],,implementation COMPLETE; validation=PASS
+RP14-T02,RP14,NOT_STARTED,NOT_RUN,RP14-T01,,"[{""ref"":""T-RP-05"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,wait for applicable implementation gate(s) listed
+RP15-T01,RP15,IN_PROGRESS,ENV_BLOCKED,RP00-T01,,[],,actual read-only target snapshot/schema required; static query preparation already exists
+RP15-T02,RP15,NOT_STARTED,NOT_RUN,RP15-T01;RP05-T01,RP15-T01,"[{""ref"":""D-S01-08"",""before"":""IMPLEMENTATION"",""condition"":""always""},{""ref"":""T-RP-11"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,wait for implementation dependencies: RP15-T01
+RP15-T03,RP15,NOT_STARTED,NOT_RUN,RP15-T02,RP15-T02,"[{""ref"":""D-S01-08"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,wait for implementation dependencies: RP15-T02
+RP16-T01,RP16,NOT_STARTED,NOT_RUN,RP00-T01,,"[{""ref"":""T-RP-06"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,wait for applicable implementation gate(s) listed
+RP16-T02,RP16,NOT_STARTED,NOT_RUN,RP16-T01,RP16-T01,"[{""ref"":""T-RP-06"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,wait for implementation dependencies: RP16-T01
+RP16-T03,RP16,NOT_STARTED,NOT_RUN,RP16-T02,RP16-T02,"[{""ref"":""T-RP-10"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,wait for implementation dependencies: RP16-T02
+RP17-T01,RP17,COMPLETE,ENV_BLOCKED,RP00-T01,,[],,implementation COMPLETE; validation=ENV_BLOCKED
+RP17-T02,RP17,NOT_STARTED,NOT_RUN,RP17-T01,,"[{""ref"":""T-RP-11"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,wait for applicable implementation gate(s) listed
+RP17-T03,RP17,NOT_STARTED,NOT_RUN,RP17-T02,RP17-T02,[],,wait for implementation dependencies: RP17-T02
+RP18-T01,RP18,NOT_STARTED,NOT_RUN,RP00-T01,,"[{""ref"":""T-RP-08"",""before"":""IMPLEMENTATION"",""condition"":""always""},{""ref"":""T-RP-09"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,wait for applicable implementation gate(s) listed
+RP18-T02,RP18,NOT_STARTED,NOT_RUN,RP18-T01,RP18-T01,"[{""ref"":""T-RP-13"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,wait for implementation dependencies: RP18-T01
+RP18-T03,RP18,NOT_STARTED,NOT_RUN,RP18-T02,RP18-T02,"[{""ref"":""T-RP-08"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,wait for implementation dependencies: RP18-T02
+RP19-T01,RP19,COMPLETE,ENV_BLOCKED,RP00-T01,,[],,implementation COMPLETE; validation=ENV_BLOCKED
+RP19-T02,RP19,NOT_STARTED,NOT_RUN,RP19-T01;RP17-T02;RP18-T01,RP17-T02;RP18-T01,"[{""ref"":""T-RP-10"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,"wait for implementation dependencies: RP17-T02, RP18-T01"
+RP19-T03,RP19,NOT_STARTED,NOT_RUN,RP18-T02;RP17-T03;RP00-T05,RP18-T02;RP17-T03,"[{""ref"":""T-RP-13"",""before"":""IMPLEMENTATION"",""condition"":""always""}]",,"wait for implementation dependencies: RP18-T02, RP17-T03"
+RP19-T04,RP19,IN_PROGRESS,ENV_BLOCKED,RP00-T01,,[],,final reconciliation is deferred until supporting tasks and candidate disposition are complete

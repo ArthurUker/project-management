@@ -1,0 +1,477 @@
+--- HASH_VERIFIED_RECONSTRUCTED_PRE_EDIT
++++ CURRENT_23e4cff4
+@@ -99,23 +99,43 @@
+   return value && typeof value === 'object' && typeof value.revision === 'string' ? value.revision : null;
+ }
+ 
++const FULL_BUSINESS_KEY_FIELDS = ['projectId', 'authorId', 'reportType', 'periodKey'];
++
++/** 从**同一个**目标写入的参数里取身份候选（不跨原语拼接） */
++function candidateIdentityOf(method, { data, where, create }) {
++  const compound = where?.projectId_authorId_reportType_periodKey;
++  if (method === 'create') return data ?? null;
++  if (method === 'upsert') return compound ?? create ?? null;
++  return compound ?? where ?? null;
++}
++
++/** 从**同一个**目标写入的参数里取 payload 标记候选（upsert 的 create/update 都算） */
++function candidatePayloadsOf(method, { data, create, update }) {
++  if (method === 'create') return [data?.content];
++  if (method === 'upsert') return [create?.content, update?.content];
++  return [data?.content];
++}
++
+ /**
+- * 统一匹配器：必须命中「报告 id」或「业务唯一键」，且必须命中指定 payload 标记。
+- * selector: { reportId?, periodKey?, marker? }
++ * 统一匹配器（LR6-01 收紧）。
++ * selector: { reportId?, projectId?, authorId?, reportType?, periodKey?, marker }
++ * 规则：
++ *   * marker 必填；未给出 marker 一律不命中（不能 marker 缺省后放宽）；
++ *   * 身份必须命中「目标 reportId」或**完整**业务唯一键 projectId+authorId+reportType+periodKey；
++ *     只给 periodKey 之类的部分键不命中；
++ *   * 身份与标记取自同一个目标写入的参数（create/data；upsert where/create/update；update(Many) where/data）。
+  */
+ function matchReportWrite(selector) {
++  const hasFullKey = FULL_BUSINESS_KEY_FIELDS.every((field) => selector[field] !== undefined);
+   return ({ method, data, where, create, update }) => {
+-    const compound = where?.projectId_authorId_reportType_periodKey;
+-    const keyHit = (selector.reportId !== undefined && where?.id === selector.reportId)
+-      || (selector.periodKey !== undefined && (
+-        data?.periodKey === selector.periodKey
+-        || create?.periodKey === selector.periodKey
+-        || compound?.periodKey === selector.periodKey
+-        || where?.periodKey === selector.periodKey
+-      ));
+-    if (!keyHit) return false;
+-    if (selector.marker === undefined) return true;
+-    return [data?.content, create?.content, update?.content]
++    if (selector.marker === undefined) return false;
++    const identity = candidateIdentityOf(method, { data, where, create });
++    const idHit = selector.reportId !== undefined
++      && (where?.id === selector.reportId || identity?.id === selector.reportId);
++    const fullKeyHit = hasFullKey && identity !== null
++      && FULL_BUSINESS_KEY_FIELDS.every((field) => identity[field] === selector[field]);
++    if (!idHit && !fullKeyHit) return false;
++    return candidatePayloadsOf(method, { data, create, update })
+       .some((content) => contentMarkerOf(content) === selector.marker);
+   };
+ }
+@@ -207,11 +227,14 @@
+   return { reached, release, ready, released };
+ }
+ 
+-/** 屏障式保存：命中 reportId 的第一次真实写入暂停在写入前（create/upsert/update/updateMany 均可） */
+-function draftWriteBarrier(reportId) {
+-  const gate = gateReportWrite(prisma, ['updateMany', 'update', 'upsert'],
+-    ({ data, where }) => where?.id === reportId && data?.content !== undefined);
+-  return { client: gate.client, barrier: { reached: gate.reached, release: gate.release }, fired: gate.fired };
++/**
++ * 屏障式保存：命中 reportId + 该请求唯一 payload 标记的第一次真实写入暂停在写入前。
++ * 复用统一匹配器，因此 upsert 的 create/update payload（data 为 null）同样能命中；
++ * 不能只把 upsert 加进 methods 却仍只检查 data.content。
++ */
++function draftWriteBarrier(reportId, marker) {
++  return gateReportWrite(prisma, ['updateMany', 'update', 'upsert'],
++    matchReportWrite({ reportId, marker }));
+ }
+ 
+ function makeApp(client, permissions) {
+@@ -255,22 +278,27 @@
+ 
+ test('submit commits first: legacy draft save already past validation is rejected and leaves no business/audit/receipt change', async () => {
+   const target = await makeReport(`rp10-legacy-late-${suffix}`, '2026-13', { revision: 'submit-source' });
+-  const { client, barrier, fired } = draftWriteBarrier(target.id);
+-  const app = makeApp(client, WRITE_PERMS);
+-
+-  const lateSave = app.request(`/api/reports/${target.id}`, {
+-    method: 'PUT', headers: { 'content-type': 'application/json' },
+-    body: JSON.stringify({ content: { revision: 'late-draft-write' }, clientMutationId: `rp10-legacy-late-${suffix}` }),
+-  });
+-  await Promise.race([barrier.reached, new Promise((_, reject) => setTimeout(() => reject(new Error('draft write barrier not reached')), 10000))]);
+-  assert.equal(fired(), true, 'late save must reach the real ORM write before submit commits');
+-
+-  const submitted = await app.request(`/api/reports/${target.id}/submit`, {
+-    method: 'POST', headers: { 'content-type': 'application/json' },
+-    body: JSON.stringify({ clientMutationId: `rp10-legacy-late-submit-${suffix}` }),
+-  });
+-  assert.equal(submitted.status, 200, JSON.stringify(await submitted.json()));
+-  barrier.release();
++  const gate = draftWriteBarrier(target.id, 'late-draft-write');
++  const app = makeApp(gate.client, WRITE_PERMS);
++
++  let lateSave;
++  try {
++    lateSave = app.request(`/api/reports/${target.id}`, {
++      method: 'PUT', headers: { 'content-type': 'application/json' },
++      body: JSON.stringify({ content: { revision: 'late-draft-write' }, clientMutationId: `rp10-legacy-late-${suffix}` }),
++    });
++    await reachBarrier(gate, 'legacy draft race');
++    assert.equal(gate.fired(), true, 'late save must reach the real ORM write before submit commits');
++    assert.equal(gate.firedMethod(), 'updateMany', 'the legacy draft save must be intercepted as updateMany');
++
++    const submitted = await app.request(`/api/reports/${target.id}/submit`, {
++      method: 'POST', headers: { 'content-type': 'application/json' },
++      body: JSON.stringify({ clientMutationId: `rp10-legacy-late-submit-${suffix}` }),
++    });
++    assert.equal(submitted.status, 200, JSON.stringify(await submitted.json()));
++  } finally {
++    await settleGate(gate, lateSave);
++  }
+ 
+   const response = await lateSave;
+   const body = await response.json();
+@@ -294,27 +322,31 @@
+ test('submit commits first: modern CAS draft save with a stale baseline is rejected with INVALID_STATE', async () => {
+   const target = await makeReport(`rp10-modern-late-${suffix}`, '2026-14', { revision: 'submit-source' });
+   const baseline = target.updatedAt.toISOString();
+-  const { client, barrier, fired } = draftWriteBarrier(target.id);
+-  const app = makeApp(client, WRITE_PERMS);
+-
+-  const lateSave = app.request(`/api/reports/${target.id}`, {
+-    method: 'PUT', headers: { 'content-type': 'application/json' },
+-    body: JSON.stringify({
+-      content: { revision: 'late-modern-write' },
+-      expectedUpdatedAt: baseline,
+-      clientContract: 'modern',
+-      clientMutationId: `rp10-modern-late-${suffix}`,
+-    }),
+-  });
+-  await Promise.race([barrier.reached, new Promise((_, reject) => setTimeout(() => reject(new Error('draft write barrier not reached')), 10000))]);
+-  assert.equal(fired(), true);
+-
+-  const submitted = await app.request(`/api/reports/${target.id}/submit`, {
+-    method: 'POST', headers: { 'content-type': 'application/json' },
+-    body: JSON.stringify({ clientMutationId: `rp10-modern-late-submit-${suffix}` }),
+-  });
+-  assert.equal(submitted.status, 200, JSON.stringify(await submitted.json()));
+-  barrier.release();
++  const gate = draftWriteBarrier(target.id, 'late-modern-write');
++  const app = makeApp(gate.client, WRITE_PERMS);
++
++  let lateSave;
++  try {
++    lateSave = app.request(`/api/reports/${target.id}`, {
++      method: 'PUT', headers: { 'content-type': 'application/json' },
++      body: JSON.stringify({
++        content: { revision: 'late-modern-write' },
++        expectedUpdatedAt: baseline,
++        clientContract: 'modern',
++        clientMutationId: `rp10-modern-late-${suffix}`,
++      }),
++    });
++    await reachBarrier(gate, 'modern draft race');
++    assert.equal(gate.fired(), true);
++
++    const submitted = await app.request(`/api/reports/${target.id}/submit`, {
++      method: 'POST', headers: { 'content-type': 'application/json' },
++      body: JSON.stringify({ clientMutationId: `rp10-modern-late-submit-${suffix}` }),
++    });
++    assert.equal(submitted.status, 200, JSON.stringify(await submitted.json()));
++  } finally {
++    await settleGate(gate, lateSave);
++  }
+ 
+   const response = await lateSave;
+   const body = await response.json();
+@@ -328,33 +360,37 @@
+ 
+ test('sync push shares the same write boundary: late offline report save after submit is rejected', async () => {
+   const target = await makeReport(`rp10-sync-late-${suffix}`, '2026-15', { revision: 'submit-source' });
+-  const { client, barrier, fired } = draftWriteBarrier(target.id);
+-  const app = makeApp(client, WRITE_PERMS);
++  const gate = draftWriteBarrier(target.id, 'late-sync-write');
++  const app = makeApp(gate.client, WRITE_PERMS);
+   const deviceId = `rp10-device-${suffix}`;
+ 
+-  const push = app.request('/api/sync/push', {
+-    method: 'POST', headers: { 'content-type': 'application/json' },
+-    body: JSON.stringify({
+-      deviceId,
+-      changes: [{
+-        clientMutationId: `rp10-sync-late-${suffix}`,
+-        entity: 'reports',
+-        id: target.id,
+-        op: 'upsert',
+-        baseUpdatedAt: target.updatedAt.toISOString(),
+-        data: { content: { revision: 'late-sync-write' } },
+-      }],
+-    }),
+-  });
+-  await Promise.race([barrier.reached, new Promise((_, reject) => setTimeout(() => reject(new Error('sync write barrier not reached')), 10000))]);
+-  assert.equal(fired(), true);
+-
+-  const submitted = await app.request(`/api/reports/${target.id}/submit`, {
+-    method: 'POST', headers: { 'content-type': 'application/json' },
+-    body: JSON.stringify({ clientMutationId: `rp10-sync-late-submit-${suffix}` }),
+-  });
+-  assert.equal(submitted.status, 200, JSON.stringify(await submitted.json()));
+-  barrier.release();
++  let push;
++  try {
++    push = app.request('/api/sync/push', {
++      method: 'POST', headers: { 'content-type': 'application/json' },
++      body: JSON.stringify({
++        deviceId,
++        changes: [{
++          clientMutationId: `rp10-sync-late-${suffix}`,
++          entity: 'reports',
++          id: target.id,
++          op: 'upsert',
++          baseUpdatedAt: target.updatedAt.toISOString(),
++          data: { content: { revision: 'late-sync-write' } },
++        }],
++      }),
++    });
++    await reachBarrier(gate, 'sync draft race');
++    assert.equal(gate.fired(), true);
++
++    const submitted = await app.request(`/api/reports/${target.id}/submit`, {
++      method: 'POST', headers: { 'content-type': 'application/json' },
++      body: JSON.stringify({ clientMutationId: `rp10-sync-late-submit-${suffix}` }),
++    });
++    assert.equal(submitted.status, 200, JSON.stringify(await submitted.json()));
++  } finally {
++    await settleGate(gate, push);
++  }
+ 
+   const response = await push;
+   const body = await response.json();
+@@ -528,7 +564,7 @@
+ test('RP10 LR3-01 A02 absent-row POST loses the race to a competing create+submit and is rejected without side effects', async () => {
+   const plain = makeApp(prisma, POST_PERMS);
+   const gate = gateReportWrite(prisma, ['create', 'upsert'],
+-    matchReportWrite({ periodKey: PERIOD(2), marker: 'late-new-POST' }));
++    matchReportWrite({ projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: PERIOD(2), marker: 'late-new-POST' }));
+   const gated = makeApp(gate.client, POST_PERMS);
+   const firstKey = `rp10-a02-first-${suffix}`;
+   const winnerKey = `rp10-a02-winner-${suffix}`;
+@@ -579,7 +615,7 @@
+ test('RP10 LR3-01 A03 two different keys racing the same business key: one succeeds, the loser is a 409 conflict', async () => {
+   const plain = makeApp(prisma, POST_PERMS);
+   const gate = gateReportWrite(prisma, ['create', 'upsert'],
+-    matchReportWrite({ periodKey: PERIOD(3), marker: 'first-writer' }));
++    matchReportWrite({ projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: PERIOD(3), marker: 'first-writer' }));
+   const gated = makeApp(gate.client, POST_PERMS);
+   const firstKey = `rp10-a03-first-${suffix}`;
+   const secondKey = `rp10-a03-second-${suffix}`;
+@@ -619,7 +655,7 @@
+ test('RP10 LR3-01 A03b an actor holding only reports.create cannot overwrite a draft that appears during the window', async () => {
+   const plain = makeApp(prisma, POST_PERMS);
+   const gate = gateReportWrite(prisma, ['create', 'upsert'],
+-    matchReportWrite({ periodKey: PERIOD(4), marker: 'create-only-late' }));
++    matchReportWrite({ projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: PERIOD(4), marker: 'create-only-late' }));
+   const createOnly = makeApp(gate.client, ['reports.create', 'reports.submit']);
+   const createOnlyKey = `rp10-a03b-first-${suffix}`;
+   const winnerKey = `rp10-a03b-winner-${suffix}`;
+@@ -841,7 +877,7 @@
+   const plain = makeApp(prisma, POST_PERMS);
+   const period = PERIOD(10);
+   const gate = gateReportWrite(prisma, REPORT_WRITE_METHODS,
+-    matchReportWrite({ periodKey: period, marker: 'late-new-POST' }));
++    matchReportWrite({ projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: period, marker: 'late-new-POST' }));
+   const gated = makeApp(gate.client, POST_PERMS);
+   const firstKey = `rp10-s01-first-${suffix}`;
+   let pending;
+@@ -897,7 +933,7 @@
+   const period = PERIOD(12);
+   const lateKey = `rp10-neg-ctrl-${suffix}`;
+   const gate = gateReportWrite(prisma, ['create', 'upsert'],
+-    matchReportWrite({ periodKey: period, marker: 'control-late' }), { emulateUpsert: true });
++    matchReportWrite({ projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: period, marker: 'control-late' }), { emulateUpsert: true });
+   const gated = makeApp(gate.client, POST_PERMS);
+ 
+   let pending;
+@@ -972,7 +1008,7 @@
+       } });
+     }
+     const gate = gateReportWrite(prisma, [primitive],
+-      matchReportWrite({ reportId: seed?.id, periodKey: period, marker }));
++      matchReportWrite({ reportId: seed?.id, projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: period, marker }));
+     const model = gate.client.report;
+     let call;
+     try {
+@@ -1098,7 +1134,7 @@
+ test('RP10 LR5-01 SUP-01-04 barrier release/settle control: a mid-race failure still releases and settles', async () => {
+   const period = '2028-06';
+   const gate = gateReportWrite(prisma, REPORT_WRITE_METHODS,
+-    matchReportWrite({ periodKey: period, marker: 'settle-control' }));
++    matchReportWrite({ projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: period, marker: 'settle-control' }));
+   const gated = makeApp(gate.client, POST_PERMS);
+   const key = `rp10-s01-04-${suffix}`;
+   let pending;
+@@ -1131,3 +1167,174 @@
+     reportId: lateBody.id, settledContent: row.content,
+   })}`);
+ });
++
++// ══ CLOSE-01 / LR6-01：屏障匹配完整性与草稿竞争收束补正 ═══════════════════════════
++//
++// 层次声明：SUP-01-05 是**纯 helper 控制**（内存参数对象，不访问数据库）；
++// SUP-01-06/07 是真实自有库中的真实 Prisma/HTTP 调用，但仍属测试工具级验证，
++// 不是产品安全验收、不是新的业务修复通过。
++
++test('RP10 LR6-01 SUP-01-05 report write matcher requires the full business identity or target id plus a mandatory marker', async () => {
++  const fullKey = { projectId: 'p-1', authorId: 'a-1', reportType: 'MONTHLY', periodKey: '2028-01' };
++  const marker = 'm-1';
++  const asWrite = (method, args) => ({ method, args, ...writeTargetOf(method, args) });
++  const createArgs = (overrides = {}, content = { revision: marker }) => ({
++    data: { ...fullKey, ...overrides, content },
++  });
++  const cases = [
++    { label: 'full key + marker (create)', selector: { ...fullKey, marker }, method: 'create', args: createArgs(), expected: true },
++    { label: 'wrong projectId', selector: { ...fullKey, marker }, method: 'create', args: createArgs({ projectId: 'p-2' }), expected: false },
++    { label: 'wrong authorId', selector: { ...fullKey, marker }, method: 'create', args: createArgs({ authorId: 'a-2' }), expected: false },
++    { label: 'wrong reportType', selector: { ...fullKey, marker }, method: 'create', args: createArgs({ reportType: 'ANNUAL' }), expected: false },
++    { label: 'wrong periodKey', selector: { ...fullKey, marker }, method: 'create', args: createArgs({ periodKey: '2028-02' }), expected: false },
++    { label: 'wrong marker', selector: { ...fullKey, marker }, method: 'create', args: createArgs({}, { revision: 'other' }), expected: false },
++    { label: 'missing authorId in write', selector: { ...fullKey, marker }, method: 'create', args: { data: { projectId: 'p-1', reportType: 'MONTHLY', periodKey: '2028-01', content: { revision: marker } } }, expected: false },
++    { label: 'missing periodKey in write', selector: { ...fullKey, marker }, method: 'create', args: { data: { projectId: 'p-1', authorId: 'a-1', reportType: 'MONTHLY', content: { revision: marker } } }, expected: false },
++    { label: 'partial selector (periodKey only) must not fire', selector: { periodKey: '2028-01', marker }, method: 'create', args: createArgs(), expected: false },
++    { label: 'selector without marker must not fire', selector: { ...fullKey }, method: 'create', args: createArgs(), expected: false },
++    { label: 'target id + marker (updateMany where.id)', selector: { reportId: 'r-1', marker }, method: 'updateMany', args: { where: { id: 'r-1' }, data: { content: { revision: marker } } }, expected: true },
++    { label: 'target id + wrong marker', selector: { reportId: 'r-1', marker }, method: 'updateMany', args: { where: { id: 'r-1' }, data: { content: { revision: 'other' } } }, expected: false },
++    { label: 'different id + same marker', selector: { reportId: 'r-1', marker }, method: 'updateMany', args: { where: { id: 'r-2' }, data: { content: { revision: marker } } }, expected: false },
++    { label: 'upsert compound key + update payload marker', selector: { ...fullKey, marker }, method: 'upsert', args: { where: { projectId_authorId_reportType_periodKey: { ...fullKey } }, create: { ...fullKey, content: { revision: marker } }, update: { content: { revision: marker } } }, expected: true },
++    { label: 'upsert compound key with wrong authorId', selector: { ...fullKey, marker }, method: 'upsert', args: { where: { projectId_authorId_reportType_periodKey: { ...fullKey, authorId: 'a-9' } }, create: { ...fullKey, content: { revision: marker } }, update: { content: { revision: marker } } }, expected: false },
++    { label: 'upsert where.id + update payload marker', selector: { reportId: 'r-1', marker }, method: 'upsert', args: { where: { id: 'r-1' }, create: { ...fullKey, content: { revision: marker } }, update: { content: { revision: marker } } }, expected: true },
++  ];
++  const observed = [];
++  for (const item of cases) {
++    const matcher = matchReportWrite(item.selector);
++    const hit = matcher(asWrite(item.method, item.args));
++    assert.equal(hit, item.expected, `${item.label}: expected ${item.expected} but got ${hit}`);
++    observed.push({ label: item.label, method: item.method, expected: item.expected, hit });
++  }
++  console.log(`SUP0105_TRACE ${JSON.stringify(observed)}`);
++  assert.equal(observed.filter((row) => row.expected).every((row) => row.hit), true);
++  assert.equal(observed.filter((row) => !row.expected).every((row) => row.hit === false), true);
++});
++
++test('RP10 LR6-01 SUP-01-06 draftWriteBarrier hits a real Prisma upsert where.id with create/update payload, and rejects wrong id or marker', async () => {
++  const period = '2028-07';
++  const marker = 'upsert-proof';
++  const target = await makeReport(`rp10-s0106-${suffix}`, period, { revision: 'upsert-source' });
++
++  const gate = draftWriteBarrier(target.id, marker);
++  let call;
++  try {
++    call = gate.client.report.upsert({
++      where: { id: target.id },
++      create: { projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: period, content: { revision: marker }, status: 'DRAFT', createdById: actor.id },
++      update: { content: { revision: marker } },
++    });
++    await reachBarrier(gate, 'SUP-01-06:upsert');
++    assert.equal(gate.fired(), true,
++      'draftWriteBarrier must hit a real upsert: upsert data is null and the payload lives in create/update');
++    assert.equal(gate.firedMethod(), 'upsert', 'the intercepted primitive must be upsert');
++  } finally {
++    await settleGate(gate, call);
++  }
++  const released = await call;
++  assert.equal(released.id, target.id);
++  const row = await prisma.report.findUnique({ where: { id: target.id } });
++  assert.deepEqual(row.content, { revision: marker }, 'the released upsert must persist its payload');
++
++  // 负例 1：不同 reportId、相同 marker 不得命中
++  const otherPeriod = '2028-08';
++  const other = await makeReport(`rp10-s0106-other-${suffix}`, otherPeriod, { revision: 'other-source' });
++  const otherGate = draftWriteBarrier(target.id, marker);
++  const otherCall = otherGate.client.report.upsert({
++    where: { id: other.id },
++    create: { projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: otherPeriod, content: { revision: marker }, status: 'DRAFT', createdById: actor.id },
++    update: { content: { revision: marker } },
++  });
++  await otherCall;
++  assert.equal(otherGate.fired(), false, 'a different report id with the same marker must not fire the barrier');
++  const otherRow = await prisma.report.findUnique({ where: { id: other.id } });
++  assert.deepEqual(otherRow.content, { revision: marker }, 'the non-matching upsert must still execute normally');
++
++  // 负例 2：相同 reportId、不同 marker 不得命中
++  const wrongMarkerGate = draftWriteBarrier(target.id, 'not-the-marker');
++  const wrongMarkerCall = wrongMarkerGate.client.report.upsert({
++    where: { id: target.id },
++    create: { projectId: project.id, authorId: actor.id, reportType: 'MONTHLY', periodKey: period, content: { revision: 'another-revision' }, status: 'DRAFT', createdById: actor.id },
++    update: { content: { revision: 'another-revision' } },
++  });
++  await wrongMarkerCall;
++  assert.equal(wrongMarkerGate.fired(), false, 'a different payload marker must not fire the barrier');
++  const afterWrongMarker = await prisma.report.findUnique({ where: { id: target.id } });
++  assert.deepEqual(afterWrongMarker.content, { revision: 'another-revision' });
++  console.log(`SUP0106_TRACE ${JSON.stringify({
++    case: 'SUP-01-06', reportId: target.id, firedMethod: 'upsert', fired: true,
++    persistedAfterRelease: row.content,
++    wrongIdFired: otherGate.fired(), wrongMarkerFired: wrongMarkerGate.fired(),
++  })}`);
++});
++
++test('RP10 LR6-01 SUP-01-07 legacy/modern/sync draft races release, clear timers and settle on an intermediate exception', async () => {
++  const flavors = [
++    { name: 'legacy', period: '2028-09', marker: 'exc-legacy',
++      request: (app, id) => app.request(`/api/reports/${id}`, {
++        method: 'PUT', headers: { 'content-type': 'application/json' },
++        body: JSON.stringify({ content: { revision: 'exc-legacy' }, clientMutationId: `rp10-s0107-legacy-${suffix}` }),
++      }) },
++    { name: 'modern', period: '2028-10', marker: 'exc-modern',
++      request: (app, id, baseline) => app.request(`/api/reports/${id}`, {
++        method: 'PUT', headers: { 'content-type': 'application/json' },
++        body: JSON.stringify({ content: { revision: 'exc-modern' }, expectedUpdatedAt: baseline, clientContract: 'modern', clientMutationId: `rp10-s0107-modern-${suffix}` }),
++      }) },
++    { name: 'sync', period: '2028-11', marker: 'exc-sync',
++      request: (app, id, baseline) => app.request('/api/sync/push', {
++        method: 'POST', headers: { 'content-type': 'application/json' },
++        body: JSON.stringify({ deviceId: `rp10-s0107-device-${suffix}`, changes: [{
++          clientMutationId: `rp10-s0107-sync-${suffix}`, entity: 'reports', id, op: 'upsert',
++          baseUpdatedAt: baseline, data: { content: { revision: 'exc-sync' } },
++        }] }),
++      }) },
++  ];
++  const traces = [];
++  for (const flavor of flavors) {
++    const target = await makeReport(`rp10-s0107-${flavor.name}-${suffix}`, flavor.period, { revision: 'exc-source' });
++    const baseline = target.updatedAt.toISOString();
++    const gate = draftWriteBarrier(target.id, flavor.marker);
++    const app = makeApp(gate.client, WRITE_PERMS);
++    let pending = null;
++    let timer = null;
++    let timerCleared = false;
++    let observed = null;
++    try {
++      pending = flavor.request(app, target.id, baseline);
++      try {
++        await Promise.race([gate.reached, new Promise((_, reject) => {
++          timer = setTimeout(() => reject(new Error(`${flavor.name}: BARRIER_NOT_REACHED`)), 10000);
++        })]);
++        assert.equal(gate.fired(), true,
++          `${flavor.name}: the draft race must reach the real write before the simulated failure`);
++        assert.equal(gate.firedMethod(), 'updateMany', `${flavor.name}: draft saves write with updateMany`);
++        throw new Error(`${flavor.name}: simulated mid-race failure`);
++      } finally {
++        if (timer) { clearTimeout(timer); timerCleared = true; }
++      }
++    } catch (error) {
++      observed = error;
++    } finally {
++      await settleGate(gate, pending);
++    }
++    assert.ok(observed, `${flavor.name}: the simulated mid-race failure must be observable`);
++    assert.equal(timerCleared, true, `${flavor.name}: the barrier timeout timer must be cleared`);
++    const settled = await pending;
++    const body = await settled.json();
++    // 该控制内没有竞争 submit，因此放行后的草稿写入应当真实生效。
++    assert.equal(settled.status, 200, `${flavor.name}: ${JSON.stringify(body)}`);
++    if (flavor.name === 'sync') {
++      assert.equal(body.results[0].status, 'applied', JSON.stringify(body));
++    }
++    const row = await prisma.report.findUnique({ where: { id: target.id } });
++    assert.deepEqual(row.content, { revision: flavor.marker }, `${flavor.name}: the released write must persist`);
++    traces.push({
++      flavor: flavor.name, fired: gate.fired(), firedMethod: gate.firedMethod(),
++      simulatedFailure: observed.message, timerCleared, settled: true,
++      lateStatus: settled.status, persistedContent: row.content,
++    });
++  }
++  console.log(`SUP0107_TRACE ${JSON.stringify(traces)}`);
++  assert.deepEqual(traces.map((row) => row.flavor), ['legacy', 'modern', 'sync']);
++  assert.ok(traces.every((row) => row.timerCleared && row.settled && row.firedMethod === 'updateMany'));
++});

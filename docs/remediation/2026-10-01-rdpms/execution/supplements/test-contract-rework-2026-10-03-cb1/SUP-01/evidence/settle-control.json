@@ -1,0 +1,16 @@
+{
+  "kind": "REAL_OWNED_DB_TRACE",
+  "case": "SUP-01-04",
+  "logRef": "SUP-01/runs/rp10-suite/attempt-05/integration-suite.log",
+  "trace": {
+    "case": "SUP-01-04",
+    "simulatedFailure": "SUP-01-04: simulated assertion failure after the barrier",
+    "settled": true,
+    "lateStatus": 201,
+    "reportId": "4683ee83-435c-4dbb-a563-b9688cbd7651",
+    "settledContent": {
+      "revision": "settle-control"
+    }
+  },
+  "meaning": "屏障后中途失败仍释放并收束；挂起请求完成（201），不留悬挂请求/事务"
+}

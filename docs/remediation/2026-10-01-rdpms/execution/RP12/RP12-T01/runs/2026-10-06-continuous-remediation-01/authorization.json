@@ -1,0 +1,12 @@
+{
+  "taskId": "RP12-T01",
+  "allowedFiles": [
+    "rdpms-system/frontend/src/offline/engine.ts",
+    "rdpms-system/frontend/src/api/endpoints/sync.ts",
+    "rdpms-system/frontend/src/offline/idb.ts",
+    "rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx"
+  ],
+  "authority": "USER_DELEGATED_OPTION_SELECTION",
+  "sessionAuthorization": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/authorization.json",
+  "release": "NOT_EVALUATED"
+}

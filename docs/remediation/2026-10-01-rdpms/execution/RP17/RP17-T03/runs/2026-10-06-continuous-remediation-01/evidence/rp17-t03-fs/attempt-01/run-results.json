@@ -1,0 +1,66 @@
+{
+  "kind": "REAL_OWNED_FS_RUN",
+  "platform": "macOS-27.0.1-arm64-arm-64bit",
+  "targetLinux": false,
+  "commands": [
+    {
+      "command": [
+        "rdpms-system/deploy/scripts/drill/backup-filesystem-check.py",
+        "--parent",
+        "/private/tmp",
+        "--output",
+        "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/evidence/rp17-t03-fs/attempt-01/run-results.json",
+        "--require-linux"
+      ],
+      "exitCode": 2
+    }
+  ],
+  "cases": [
+    {
+      "name": "REAL_DIRECTORY_SAME_FS",
+      "result": "PASS"
+    },
+    {
+      "name": "TWO_ROUND_ADD_CHANGE_DELETE_IMMUTABLE",
+      "result": "PASS"
+    },
+    {
+      "name": "INODE_AND_METADATA_COPY_ISOLATION",
+      "result": "PASS"
+    },
+    {
+      "name": "ATOMIC_POINTER_AND_REAL_RENAME_FAILURE",
+      "result": "PASS"
+    },
+    {
+      "name": "EXISTING_PUBLICATION_COLLISION_REJECTED",
+      "result": "PASS"
+    }
+  ],
+  "cleanup": {
+    "ownedRootRemoved": true
+  },
+  "limits": [
+    "New synthetic files only; no database/common restore point",
+    "xattr/ACL/access policy/target capacity/restore remain separately unverified"
+  ],
+  "criticalFailures": [],
+  "owner": {
+    "root": "/private/tmp/rdpms-fs-proof-cv5d37c1",
+    "runId": "32ddf9fb7ca546619b0602d408ca9bd1",
+    "createdByThisInvocation": true,
+    "parentDevice": 16777231
+  },
+  "filesystem": {
+    "device": 16777231,
+    "blockSize": 1048576,
+    "availableBytes": 130183155712,
+    "inodeEvidence": {
+      "change": 53842850,
+      "gone": 53842851,
+      "same": 53842852
+    }
+  },
+  "result": "ENV_BLOCKED",
+  "targetValidation": "ENV_BLOCKED"
+}

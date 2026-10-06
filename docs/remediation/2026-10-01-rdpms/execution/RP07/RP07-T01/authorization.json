@@ -1,0 +1,14 @@
+{
+  "taskId":"RP07-T01",
+  "packageId":"RP07",
+  "authorizedBy":"User message on 2026-10-02: continue until all tasks are complete, under EXECUTOR_PROMPT.md bounded local implementation authorization",
+  "executor":"Codex executor",
+  "allowedTaskIdsThisExecution":["RP07-T01"],
+  "sourceFiles":["rdpms-system/backend/src/routes/projects.js","rdpms-system/backend/src/routes/sync.js","rdpms-system/backend/src/modules/projects/projectCommands.ts"],
+  "testFiles":["rdpms-system/backend/tests/integration/rp07-project-status-shared.integration.test.mjs"],
+  "prohibitedActions":["stage","commit","push","merge","deploy","production/shared database access or changes","real data restore","dependency upgrade","real account operations","approval of pending product/security/data rules"],
+  "databaseMigration":false,
+  "runtimeResourcesCreated":false,
+  "decisionBoundary":{"D-S01-06":"PENDING; manager transfer workflow not implemented","S03-OI-07":"OPEN; not resolved by status guard","T-RP-09":"PROPOSED; unrelated to status transition implementation","PC03":"PROPOSED; cross-package receipt/audit acceptance remains NOT_RUN"},
+  "authorizationDoesNotApproveBusinessOrSecurityRules":true
+}

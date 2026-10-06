@@ -1,0 +1,2362 @@
+{
+  "version": "v2",
+  "taskCount": 54,
+  "dependencySemantics": "implementationDependencies authorize order; acceptanceDependencies block validation only; integrated contracts are joint gates, not cyclic task execution edges",
+  "tasks": [
+    {
+      "id": "RP00-T01",
+      "packageId": "RP00",
+      "title": "基线/逐包范围/合成隔离及合法前提登记",
+      "implementationDependencies": [],
+      "gateRequirements": [
+        {
+          "ref": "S00-OI-01",
+          "before": "VALIDATION",
+          "condition": "archive disposition only; missing historic startHead does not block any business task"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "IN_PROGRESS",
+      "validation": "ENV_BLOCKED",
+      "owner": "Codex executor",
+      "deliverable": "baseline/env-ownership/actor-and-fixture precondition manifest; no automatic business execution",
+      "implementationStatus": "COMPLETE",
+      "validationStatus": "ENV_BLOCKED",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "PAC-RP00-01",
+        "PAC-RP00-03",
+        "PAC-RP00-04",
+        "TASK-RP00-T01",
+        "INT-PC09-01",
+        "INT-PC11-01",
+        "GATE-S00-OI-01"
+      ],
+      "contractRefs": [
+        "PC09",
+        "PC11"
+      ]
+    },
+    {
+      "id": "RP00-T02",
+      "packageId": "RP00",
+      "title": "500恢复合同定向静态补审",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "S03-OI-03",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "COMPLETE",
+      "validation": "PASS",
+      "owner": "Codex executor",
+      "deliverable": "failure-point to DB/receipt/outbox/retry matrix",
+      "implementationStatus": "COMPLETE",
+      "validationStatus": "PASS",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "PAC-RP00-02",
+        "TASK-RP00-T02",
+        "INT-PC03-01",
+        "GATE-S03-OI-03"
+      ],
+      "contractRefs": [
+        "PC03"
+      ]
+    },
+    {
+      "id": "RP00-T03",
+      "packageId": "RP00",
+      "title": "任务revision全支持端矩阵",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "S03-OI-09",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "owner": "Codex executor",
+      "deliverable": "client/DTO/route/command/field/status/assignee compatibility matrix",
+      "implementationStatus": "COMPLETE",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "PAC-RP00-02",
+        "TASK-RP00-T03",
+        "GATE-S03-OI-09"
+      ],
+      "contractRefs": []
+    },
+    {
+      "id": "RP00-T04",
+      "packageId": "RP00",
+      "title": "refresh/auth transport与generation合同",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-09",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "owner": "Codex executor",
+      "deliverable": "joint RP02/RP03 contract before either implementation; not completion of RP03",
+      "implementationStatus": "COMPLETE",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "TASK-RP00-T04",
+        "INT-PC01-01",
+        "DECISION-T-RP-09"
+      ],
+      "contractRefs": [
+        "PC01"
+      ]
+    },
+    {
+      "id": "RP00-T05",
+      "packageId": "RP00",
+      "title": "目标预算/监控/候选范围准备",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-11",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "ref": "T-RP-13",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "IN_PROGRESS",
+      "validation": "NOT_RUN",
+      "owner": "Codex executor",
+      "deliverable": "approved thresholds and rollback/target owner before release; not global block on drafting",
+      "implementationStatus": "COMPLETE",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "TASK-RP00-T05",
+        "INT-PC11-01",
+        "DECISION-T-RP-11",
+        "DECISION-T-RP-13"
+      ],
+      "contractRefs": [
+        "PC11"
+      ]
+    },
+    {
+      "id": "RP01-T01",
+      "packageId": "RP01",
+      "title": "合法角色创建DTO",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "COMPLETE",
+      "validation": "PASS",
+      "owner": "Codex executor",
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "COMPLETE",
+      "validationStatus": "PASS",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B17-01",
+        "AC-B17-02",
+        "AC-B17-03",
+        "PAC-RP01-03",
+        "TASK-RP01-T01"
+      ],
+      "contractRefs": [],
+      "executionEvidence": "execution/RP01/RP01-T01/runs/2026-10-02-continuous-rework/task-state.json"
+    },
+    {
+      "id": "RP01-T02",
+      "packageId": "RP01",
+      "title": "账号等级保护与强制改密",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "D-S01-01",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "D-S01-02",
+          "before": "IMPLEMENTATION",
+          "condition": "only forced-password-change/business allowlist sub-scope; rank/reset protection uses D-S01-01 independently"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B01-01",
+        "AC-B01-02",
+        "AC-B01-03",
+        "AC-B01-04",
+        "PAC-RP01-01",
+        "PAC-RP01-02",
+        "PAC-RP01-04",
+        "PAC-RP01-05",
+        "TASK-RP01-T02",
+        "INT-PC02-01",
+        "GATE-D-S01-01",
+        "GATE-D-S01-02",
+        "DECISION-D-S01-01",
+        "DECISION-D-S01-02"
+      ],
+      "contractRefs": [
+        "PC02"
+      ]
+    },
+    {
+      "id": "RP01-T03",
+      "packageId": "RP01",
+      "title": "自定义角色绑定扩展（仅获准需求）",
+      "implementationDependencies": [
+        "RP01-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "D-S01-03",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "CONDITIONAL_NOT_APPROVED",
+      "requiredForPackageCompletion": false,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "TASK-RP01-T03",
+        "GATE-D-S01-03",
+        "DECISION-D-S01-03"
+      ],
+      "contractRefs": []
+    },
+    {
+      "id": "RP02-T01",
+      "packageId": "RP02",
+      "title": "临时锁/管理员停用与真实TTL",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "COMPLETE",
+      "validation": "PASS",
+      "owner": "Codex executor",
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "COMPLETE",
+      "validationStatus": "PASS",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B14-01",
+        "AC-B14-02",
+        "AC-B14-03",
+        "AC-B14-04",
+        "PAC-RP02-01",
+        "PAC-RP02-04",
+        "TASK-RP02-T01"
+      ],
+      "contractRefs": [],
+      "executionEvidence": "execution/RP02/RP02-T01/runs/2026-10-03-codebuddy-lr3-testonly/",
+      "reviewFindings": [
+        "OBS-RP02-FENCE"
+      ],
+      "reviewEvidenceRef": "execution/reviews/2026-10-03-codebuddy-followup/findings.json",
+      "latestReviewRef": "execution/reviews/2026-10-03-codebuddy-followup/REVIEW.md",
+      "executionNote": "Permanent C01 conditional-reset fence verified in source and executor 12/12, independently repeated after real bcrypt positive login. Protected admin actor injected; no full JWT-chain acceptance or session-policy change.",
+      "latestRun": "execution/RP02/RP02-T01/runs/2026-10-03-codebuddy-lr3-testonly/",
+      "sourceHashes": {
+        "rdpms-system/backend/src/routes/auth.js": "8f736619a1526247",
+        "rdpms-system/backend/src/routes/users.js": "1b54ba1ec58ed92a"
+      },
+      "reviewFindingDisposition": "Prior defect/coverage locally accepted; see independent limits",
+      "previousReviewFindings": [
+        "LR2-04"
+      ]
+    },
+    {
+      "id": "RP02-T02",
+      "packageId": "RP02",
+      "title": "refresh单次消费和family重放合同",
+      "implementationDependencies": [
+        "RP00-T04"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [
+        "RP03-T01"
+      ],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B15-01",
+        "AC-B15-02",
+        "AC-B15-03",
+        "AC-B15-04",
+        "PAC-RP02-02",
+        "PAC-RP02-03",
+        "PAC-RP02-04",
+        "PAC-RP02-05",
+        "TASK-RP02-T02",
+        "INT-PC01-01",
+        "DECISION-T-RP-09"
+      ],
+      "contractRefs": [
+        "PC01"
+      ]
+    },
+    {
+      "id": "RP03-T01",
+      "packageId": "RP03",
+      "title": "跨tab/跨身份成功失败响应与原请求重放",
+      "implementationDependencies": [
+        "RP00-T04"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S02-OPEN-05",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-N-R02-01-01",
+        "AC-N-R02-01-02",
+        "PAC-RP03-01",
+        "PAC-RP03-02",
+        "PAC-RP03-05",
+        "TASK-RP03-T01",
+        "INT-PC01-01",
+        "GATE-S02-OPEN-05",
+        "DECISION-T-RP-09"
+      ],
+      "contractRefs": [
+        "PC01"
+      ]
+    },
+    {
+      "id": "RP03-T02",
+      "packageId": "RP03",
+      "title": "获准会话撤销/security version",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "D-S01-04",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S03-OI-06",
+          "before": "IMPLEMENTATION",
+          "condition": "same D-S01-04 approval; no second approval required"
+        }
+      ],
+      "acceptanceDependencies": [
+        "RP02-T02"
+      ],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-N-R02-02-01",
+        "AC-N-R02-02-02",
+        "PAC-RP03-03",
+        "PAC-RP03-04",
+        "TASK-RP03-T02",
+        "INT-PC01-01",
+        "INT-PC06-01",
+        "GATE-D-S01-04",
+        "GATE-S03-OI-06",
+        "DECISION-D-S01-04",
+        "DECISION-T-RP-09"
+      ],
+      "contractRefs": [
+        "PC01",
+        "PC06"
+      ]
+    },
+    {
+      "id": "RP04-T01",
+      "packageId": "RP04",
+      "title": "业务快照/状态日期/活跃查询",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "owner": "Codex executor",
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "COMPLETE",
+      "validationStatus": "PASS",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B03-01",
+        "AC-B03-02",
+        "AC-B03-03",
+        "AC-B20-01",
+        "AC-B20-02",
+        "AC-B20-03",
+        "PAC-RP04-01",
+        "PAC-RP04-03",
+        "TASK-RP04-T01"
+      ],
+      "contractRefs": []
+    },
+    {
+      "id": "RP04-T02",
+      "packageId": "RP04",
+      "title": "创建聚合单事务及审计/idempotency",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [],
+      "acceptanceDependencies": [
+        "RP09-T01"
+      ],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "COMPLETE",
+      "validation": "PASS",
+      "owner": "Codex executor",
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "COMPLETE",
+      "validationStatus": "PASS",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B18-01",
+        "AC-B18-02",
+        "AC-B18-03",
+        "PAC-RP04-02",
+        "PAC-RP04-04",
+        "TASK-RP04-T02",
+        "INT-PC03-01"
+      ],
+      "contractRefs": [
+        "PC03"
+      ],
+      "executionEvidence": "execution/RP04/RP04-T02/runs/2026-10-02-continuous-rework/task-state.json",
+      "reviewFindings": [
+        "LR2-02"
+      ],
+      "reviewEvidenceRef": "execution/reviews/2026-10-02-post-continuous/findings.json",
+      "reviewRequirements": [
+        "PLAN_ADJUSTMENTS.md sections 1/2; follow original task dependencies, gates and contracts; no new policy approval inferred"
+      ],
+      "latestReviewRef": "execution/reviews/2026-10-03-codebuddy/REVIEW.md",
+      "executionNote": "CodeBuddy 5/5 plus independent invalid top-level type inverse acceptance passed; PC03 remains NOT_RUN. No business fix in review."
+    },
+    {
+      "id": "RP05-T01",
+      "packageId": "RP05",
+      "title": "阻断无授权硬删/跨项目parent",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "owner": "Codex executor",
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "COMPLETE",
+      "validationStatus": "PASS",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B02-01",
+        "AC-B02-02",
+        "AC-B02-03",
+        "AC-B19-01",
+        "AC-B19-02",
+        "AC-B19-03",
+        "AC-B19-04",
+        "PAC-RP05-01",
+        "PAC-RP05-02",
+        "PAC-RP05-03",
+        "TASK-RP05-T01",
+        "INT-PC07-01"
+      ],
+      "contractRefs": [
+        "PC07"
+      ],
+      "executionEvidence": "execution/RP05/RP05-T01/runs/2026-10-02-continuous-rework/task-state.json"
+    },
+    {
+      "id": "RP05-T02",
+      "packageId": "RP05",
+      "title": "保留ID的差量/删除/旧客户端适配",
+      "implementationDependencies": [
+        "RP05-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "T-RP-07",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S03-OI-05",
+          "before": "IMPLEMENTATION",
+          "condition": "only if stale/delete command adapter is changed; no gate on unrelated task fields or report snapshot"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B02-01",
+        "AC-B02-02",
+        "AC-B02-03",
+        "PAC-RP05-04",
+        "TASK-RP05-T02",
+        "INT-PC03-01",
+        "GATE-D-S01-08",
+        "GATE-S03-OI-05",
+        "DECISION-D-S01-08",
+        "DECISION-T-RP-07"
+      ],
+      "contractRefs": [
+        "PC03"
+      ]
+    },
+    {
+      "id": "RP05-T03",
+      "packageId": "RP05",
+      "title": "获准DAG/live引用的并发验证",
+      "implementationDependencies": [
+        "RP05-T02"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "DAG/live policy approved"
+        },
+        {
+          "ref": "T-RP-11",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "CONDITIONAL_NOT_APPROVED",
+      "requiredForPackageCompletion": false,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "PAC-RP05-05",
+        "TASK-RP05-T03",
+        "INT-PC07-01",
+        "GATE-D-S01-08",
+        "DECISION-D-S01-08",
+        "DECISION-T-RP-11"
+      ],
+      "contractRefs": [
+        "PC07"
+      ]
+    },
+    {
+      "id": "RP06-T01",
+      "packageId": "RP06",
+      "title": "registration全入口scope",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "D-S01-05",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B21-01",
+        "AC-B21-02",
+        "AC-B21-03",
+        "AC-B21-04",
+        "PAC-RP06-01",
+        "PAC-RP06-02",
+        "PAC-RP06-03",
+        "PAC-RP06-04",
+        "TASK-RP06-T01",
+        "INT-PC02-01",
+        "GATE-D-S01-05",
+        "DECISION-D-S01-05"
+      ],
+      "contractRefs": [
+        "PC02"
+      ]
+    },
+    {
+      "id": "RP06-T02",
+      "packageId": "RP06",
+      "title": "registration负责人共享适配",
+      "implementationDependencies": [
+        "RP06-T01",
+        "RP07-T02"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "D-S01-06",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B21-01",
+        "AC-B21-02",
+        "AC-B21-03",
+        "AC-B21-04",
+        "TASK-RP06-T02",
+        "GATE-D-S01-06",
+        "DECISION-D-S01-06"
+      ],
+      "contractRefs": []
+    },
+    {
+      "id": "RP07-T01",
+      "packageId": "RP07",
+      "title": "状态共享命令和archive权限",
+      "implementationDependencies": [
+        "RP04-T01"
+      ],
+      "gateRequirements": [],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "owner": "Codex executor",
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "COMPLETE",
+      "validationStatus": "PASS",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B09-01",
+        "AC-B09-02",
+        "AC-B09-03",
+        "PAC-RP07-01",
+        "PAC-RP07-02",
+        "TASK-RP07-T01",
+        "INT-PC03-01"
+      ],
+      "contractRefs": [
+        "PC03"
+      ]
+    },
+    {
+      "id": "RP07-T02",
+      "packageId": "RP07",
+      "title": "负责人转移一致性",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "D-S01-06",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S03-OI-07",
+          "before": "IMPLEMENTATION",
+          "condition": "same D-S01-06 approval; no second approval required"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-R06-N01-01",
+        "AC-R06-N01-02",
+        "AC-R06-N01-03",
+        "PAC-RP07-02",
+        "PAC-RP07-03",
+        "PAC-RP07-04",
+        "TASK-RP07-T02",
+        "INT-PC02-01",
+        "GATE-D-S01-06",
+        "GATE-S03-OI-07",
+        "DECISION-D-S01-06"
+      ],
+      "contractRefs": [
+        "PC02"
+      ]
+    },
+    {
+      "id": "RP08-T01",
+      "packageId": "RP08",
+      "title": "每实体/字段/own-only读取授权",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "D-S01-05",
+          "before": "IMPLEMENTATION",
+          "condition": "only if registration global exception is requested"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "COMPLETE",
+      "validation": "PASS",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "COMPLETE",
+      "validationStatus": "PASS",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B04-01",
+        "AC-B04-02",
+        "AC-B04-03",
+        "PAC-RP08-01",
+        "TASK-RP08-T01",
+        "INT-PC02-01",
+        "GATE-D-S01-05",
+        "DECISION-D-S01-05"
+      ],
+      "contractRefs": [
+        "PC02"
+      ],
+      "executionEvidence": "execution/RP08/RP08-T01/runs/2026-10-03-codebuddy-lr3-validation/",
+      "reviewFindings": [
+        "LR3-02",
+        "LR4-02"
+      ],
+      "reviewEvidenceRef": "execution/reviews/2026-10-03-codebuddy-followup/findings.json",
+      "latestReviewRef": "execution/reviews/2026-10-03-codebuddy-followup/REVIEW.md",
+      "executionNote": "Current ordinary-API local comparison accepted using executor 11/11 plus independent exact-row key/value/permission contrast across all seven entities. Phase ordinary view returns deleted rows: contract erratum, not sync unauthorized leakage. Independent product/security field policy NOT_EVALUATED; cache/backfill/IDB remain NOT_RUN.",
+      "latestRun": "execution/RP08/RP08-T01/runs/2026-10-03-codebuddy-lr3-validation/",
+      "sourceHashes": {
+        "rdpms-system/backend/src/routes/sync.js": "ad41610a6036f054"
+      },
+      "reviewFindingDisposition": "Prior defect/coverage locally accepted; see independent limits",
+      "previousReviewFindings": [
+        "LR2-04"
+      ]
+    },
+    {
+      "id": "RP08-T02",
+      "packageId": "RP08",
+      "title": "ACL角色版本/回填/撤权及outbox隔离",
+      "implementationDependencies": [
+        "RP08-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-04",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "T-RP-12",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S02-OPEN-02",
+          "before": "VALIDATION",
+          "condition": "joint authorized cache/page fallback acceptance"
+        }
+      ],
+      "acceptanceDependencies": [
+        "RP11-T01"
+      ],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B08-01",
+        "AC-B08-02",
+        "AC-B08-03",
+        "PAC-RP08-02",
+        "PAC-RP08-03",
+        "PAC-RP08-04",
+        "TASK-RP08-T02",
+        "INT-PC05-01",
+        "GATE-S02-OPEN-02",
+        "DECISION-T-RP-04",
+        "DECISION-T-RP-12"
+      ],
+      "contractRefs": [
+        "PC05"
+      ]
+    },
+    {
+      "id": "RP09-T01",
+      "packageId": "RP09",
+      "title": "单项授权/CAS/audit/receipt原子提交",
+      "implementationDependencies": [
+        "RP00-T02"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-02",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "T-RP-07",
+          "before": "IMPLEMENTATION",
+          "condition": "delete command adapter modified"
+        },
+        {
+          "ref": "S03-OI-05",
+          "before": "IMPLEMENTATION",
+          "condition": "only if stale/delete command adapter is changed; no gate on unrelated task fields or report snapshot"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B05-01",
+        "AC-B05-02",
+        "AC-B05-03",
+        "AC-B06-01",
+        "AC-B06-02",
+        "AC-B06-03",
+        "PAC-RP09-01",
+        "PAC-RP09-02",
+        "PAC-RP09-04",
+        "TASK-RP09-T01",
+        "INT-PC02-01",
+        "INT-PC03-01",
+        "INT-PC05-01",
+        "GATE-S03-OI-05",
+        "DECISION-T-RP-02",
+        "DECISION-T-RP-07"
+      ],
+      "contractRefs": [
+        "PC02",
+        "PC03",
+        "PC05"
+      ]
+    },
+    {
+      "id": "RP09-T02",
+      "packageId": "RP09",
+      "title": "同key竞争/unknown恢复/保留清理",
+      "implementationDependencies": [
+        "RP09-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "S03-OI-02",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S03-OI-04",
+          "before": "RELEASE",
+          "condition": "always"
+        },
+        {
+          "ref": "T-RP-02",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B06-01",
+        "AC-B06-02",
+        "AC-B06-03",
+        "PAC-RP09-03",
+        "PAC-RP09-04",
+        "PAC-RP09-05",
+        "TASK-RP09-T02",
+        "INT-PC03-01",
+        "INT-PC06-01",
+        "GATE-S03-OI-02",
+        "GATE-S03-OI-04",
+        "DECISION-T-RP-02"
+      ],
+      "contractRefs": [
+        "PC03",
+        "PC06"
+      ]
+    },
+    {
+      "id": "RP10-T01",
+      "packageId": "RP10",
+      "title": "任务全部支持端CAS链",
+      "implementationDependencies": [
+        "RP00-T03"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-03",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S03-OI-05",
+          "before": "IMPLEMENTATION",
+          "condition": "only if stale/delete command adapter is changed; no gate on unrelated task fields or report snapshot"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B16-01",
+        "AC-B16-02",
+        "AC-B16-03",
+        "PAC-RP10-01",
+        "PAC-RP10-04",
+        "PAC-RP10-05",
+        "TASK-RP10-T01",
+        "GATE-S03-OI-05",
+        "DECISION-T-RP-03"
+      ],
+      "contractRefs": []
+    },
+    {
+      "id": "RP10-T02",
+      "packageId": "RP10",
+      "title": "汇报同修订snapshot与版本原子性",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "D-S01-07",
+          "before": "IMPLEMENTATION",
+          "condition": "source-state behavior changed"
+        }
+      ],
+      "acceptanceDependencies": [
+        "RP09-T01"
+      ],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "COMPLETE",
+      "validation": "PASS",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "COMPLETE",
+      "validationStatus": "PASS",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B10-01",
+        "AC-B10-02",
+        "AC-B10-03",
+        "PAC-RP10-02",
+        "TASK-RP10-T02",
+        "INT-PC03-01",
+        "GATE-D-S01-07",
+        "DECISION-D-S01-07"
+      ],
+      "contractRefs": [
+        "PC03"
+      ],
+      "executionEvidence": "execution/RP10/RP10-T02/runs/2026-10-03-codebuddy-lr3-rework/",
+      "reviewFindings": [
+        "LR3-01",
+        "LR4-03"
+      ],
+      "reviewEvidenceRef": "execution/reviews/2026-10-03-codebuddy-followup/findings.json",
+      "reviewRequirements": [
+        "PLAN_ADJUSTMENTS.md sections 1/2; follow original task dependencies, gates and contracts; no new policy approval inferred"
+      ],
+      "latestReviewRef": "execution/reviews/2026-10-03-codebuddy-followup/REVIEW.md",
+      "executionNote": "Local current-code acceptance: create rejects absent-row race 409; tombstone restore rejects after competing restore+submit; no losing receipts/content/version divergence. Original negative control had barrier timeouts; independent semantic SQL control supplied. Wider source-state/revision/joint/target scope remains open.",
+      "latestRun": "execution/RP10/RP10-T02/runs/2026-10-03-codebuddy-lr3-rework/",
+      "sourceHashes": {
+        "rdpms-system/backend/src/routes/reports.js": "1bcbef68fcf01cb3",
+        "rdpms-system/backend/src/modules/reports/reportCommands.ts": "758cb5010beda8d5"
+      },
+      "reviewFindingDisposition": "Prior defect/coverage locally accepted; see independent limits",
+      "previousReviewFindings": [
+        "LR2-01",
+        "LR2-03"
+      ]
+    },
+    {
+      "id": "RP10-T03",
+      "packageId": "RP10",
+      "title": "获准submit/resubmit状态及竞争",
+      "implementationDependencies": [
+        "RP10-T02"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "D-S01-07",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S03-OI-08",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "COMPLETE",
+      "validation": "PASS",
+      "owner": "Codex single executor",
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "COMPLETE",
+      "validationStatus": "PASS",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B10-01",
+        "AC-B10-02",
+        "AC-B10-03",
+        "PAC-RP10-03",
+        "TASK-RP10-T03",
+        "GATE-D-S01-07",
+        "GATE-S03-OI-08",
+        "DECISION-D-S01-07"
+      ],
+      "contractRefs": [],
+      "latestRun": "execution/RP10/RP10-T03/runs/2026-10-05-approved-contracts-01"
+    },
+    {
+      "id": "RP11-T01",
+      "packageId": "RP11",
+      "title": "身份阶段/owner命名空间/ACL安全回退",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "T-RP-12",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S02-OPEN-01",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S02-OPEN-02",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-F01-01",
+        "AC-F01-02",
+        "AC-F01-03",
+        "AC-F03-01",
+        "AC-F03-02",
+        "AC-F03-03",
+        "AC-N-S02-01-01",
+        "AC-N-S02-01-02",
+        "AC-N-S02-01-03",
+        "PAC-RP11-01",
+        "PAC-RP11-03",
+        "PAC-RP11-05",
+        "TASK-RP11-T01",
+        "INT-PC01-01",
+        "INT-PC04-01",
+        "GATE-S02-OPEN-01",
+        "GATE-S02-OPEN-02",
+        "DECISION-T-RP-09",
+        "DECISION-T-RP-12"
+      ],
+      "contractRefs": [
+        "PC01",
+        "PC04"
+      ]
+    },
+    {
+      "id": "RP11-T02",
+      "packageId": "RP11",
+      "title": "旧IDB行隔离迁移与多tab升级",
+      "implementationDependencies": [
+        "RP11-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-01",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S02-OPEN-06",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S02-OPEN-07",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-N-S02-01-01",
+        "AC-N-S02-01-02",
+        "AC-N-S02-01-03",
+        "PAC-RP11-04",
+        "PAC-RP11-05",
+        "TASK-RP11-T02",
+        "INT-PC04-01",
+        "GATE-S02-OPEN-06",
+        "GATE-S02-OPEN-07",
+        "DECISION-T-RP-01"
+      ],
+      "contractRefs": [
+        "PC04"
+      ]
+    },
+    {
+      "id": "RP11-T03",
+      "packageId": "RP11",
+      "title": "冲突原子移动/用户恢复和最后副本",
+      "implementationDependencies": [
+        "RP11-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-12",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S02-OPEN-03",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-F02-01",
+        "AC-F02-02",
+        "PAC-RP11-02",
+        "PAC-RP11-05",
+        "TASK-RP11-T03",
+        "INT-PC04-01",
+        "INT-PC06-01",
+        "INT-PC12-01",
+        "GATE-S02-OPEN-03",
+        "DECISION-T-RP-12"
+      ],
+      "contractRefs": [
+        "PC04",
+        "PC06",
+        "PC12"
+      ]
+    },
+    {
+      "id": "RP12-T01",
+      "packageId": "RP12",
+      "title": "条数/bytes/依赖与不可变发送批次",
+      "implementationDependencies": [
+        "RP00-T02",
+        "RP11-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "S02-OPEN-04",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "ref": "T-RP-11",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-F04-01",
+        "AC-F04-02",
+        "AC-F04-03",
+        "PAC-RP12-01",
+        "PAC-RP12-04",
+        "TASK-RP12-T01",
+        "INT-PC04-01",
+        "GATE-S02-OPEN-04",
+        "DECISION-T-RP-11"
+      ],
+      "contractRefs": [
+        "PC04"
+      ]
+    },
+    {
+      "id": "RP12-T02",
+      "packageId": "RP12",
+      "title": "按key验证结果及partial retry",
+      "implementationDependencies": [
+        "RP12-T01",
+        "RP09-T01",
+        "RP11-T03"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-02",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "T-RP-12",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-F04-01",
+        "AC-F04-02",
+        "AC-F04-03",
+        "PAC-RP12-02",
+        "PAC-RP12-03",
+        "PAC-RP12-04",
+        "TASK-RP12-T02",
+        "INT-PC03-01",
+        "INT-PC12-01",
+        "DECISION-T-RP-02",
+        "DECISION-T-RP-12"
+      ],
+      "contractRefs": [
+        "PC03",
+        "PC12"
+      ]
+    },
+    {
+      "id": "RP13-T01",
+      "packageId": "RP13",
+      "title": "已证截断的稳定分页子修复",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [],
+      "acceptanceDependencies": [
+        "RP11-T01"
+      ],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "owner": "Codex executor",
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "COMPLETE",
+      "validationStatus": "ENV_BLOCKED",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B07-01",
+        "AC-B07-02",
+        "AC-B07-03",
+        "PAC-RP13-01",
+        "TASK-RP13-T01"
+      ],
+      "contractRefs": []
+    },
+    {
+      "id": "RP13-T02",
+      "packageId": "RP13",
+      "title": "safe-watermark/事件revision/epoch ADR",
+      "implementationDependencies": [
+        "RP13-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-04",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "ref": "T-RP-10",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S03-OI-01",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "COMPLETE",
+      "validation": "NOT_RUN",
+      "owner": "Codex executor",
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "COMPLETE",
+      "validationStatus": "ENV_BLOCKED",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B07-01",
+        "AC-B07-02",
+        "AC-B07-03",
+        "PAC-RP13-02",
+        "TASK-RP13-T02",
+        "INT-PC05-01",
+        "GATE-S03-OI-01",
+        "DECISION-T-RP-04",
+        "DECISION-T-RP-10"
+      ],
+      "contractRefs": [
+        "PC05"
+      ],
+      "executionEvidence": "execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/task-state.json"
+    },
+    {
+      "id": "RP13-T03",
+      "packageId": "RP13",
+      "title": "生产者coverage/bootstrap/ACL/过期重建",
+      "implementationDependencies": [
+        "RP13-T02",
+        "RP09-T01",
+        "RP08-T02",
+        "RP11-T02"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-04",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "T-RP-10",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S03-OI-04",
+          "before": "RELEASE",
+          "condition": "always"
+        },
+        {
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "only when approved delete/live-reference/tombstone semantics are changed"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B07-01",
+        "AC-B07-02",
+        "AC-B07-03",
+        "PAC-RP13-03",
+        "PAC-RP13-04",
+        "PAC-RP13-05",
+        "TASK-RP13-T03",
+        "INT-PC04-01",
+        "INT-PC05-01",
+        "INT-PC06-01",
+        "INT-PC12-01",
+        "GATE-D-S01-08",
+        "GATE-S03-OI-04",
+        "DECISION-D-S01-08",
+        "DECISION-T-RP-04",
+        "DECISION-T-RP-10"
+      ],
+      "contractRefs": [
+        "PC04",
+        "PC05",
+        "PC06",
+        "PC12"
+      ]
+    },
+    {
+      "id": "RP14-T01",
+      "packageId": "RP14",
+      "title": "感染字节出口统一阻断",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "owner": "Codex executor",
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "COMPLETE",
+      "validationStatus": "PASS",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B11-01",
+        "AC-B11-02",
+        "AC-B11-03",
+        "PAC-RP14-01",
+        "PAC-RP14-03",
+        "PAC-RP14-04",
+        "TASK-RP14-T01"
+      ],
+      "contractRefs": []
+    },
+    {
+      "id": "RP14-T02",
+      "packageId": "RP14",
+      "title": "elevated/其他scan状态/审计",
+      "implementationDependencies": [
+        "RP14-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-05",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "COMPLETE",
+      "validation": "PASS",
+      "owner": "Codex single executor",
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "COMPLETE",
+      "validationStatus": "PASS",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B12-01",
+        "AC-B12-02",
+        "AC-B12-03",
+        "PAC-RP14-02",
+        "PAC-RP14-03",
+        "TASK-RP14-T02",
+        "INT-PC02-01",
+        "DECISION-T-RP-05"
+      ],
+      "contractRefs": [
+        "PC02"
+      ],
+      "latestRun": "execution/RP14/RP14-T02/runs/2026-10-05-approved-contracts-01"
+    },
+    {
+      "id": "RP15-T01",
+      "packageId": "RP15",
+      "title": "实际schema与历史异常只读核查",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "S04-OI-01",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "IN_PROGRESS",
+      "validation": "ENV_BLOCKED",
+      "owner": "Codex executor",
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "IN_PROGRESS",
+      "validationStatus": "ENV_BLOCKED",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "PAC-RP15-01",
+        "PAC-RP15-04",
+        "TASK-RP15-T01",
+        "INT-PC07-01",
+        "GATE-S04-OI-01"
+      ],
+      "contractRefs": [
+        "PC07"
+      ]
+    },
+    {
+      "id": "RP15-T02",
+      "packageId": "RP15",
+      "title": "获准异常处置与迁移锁/关系设计",
+      "implementationDependencies": [
+        "RP15-T01",
+        "RP05-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "T-RP-11",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "PAC-RP15-01",
+        "PAC-RP15-04",
+        "TASK-RP15-T02",
+        "INT-PC07-01",
+        "GATE-D-S01-08",
+        "DECISION-D-S01-08",
+        "DECISION-T-RP-11"
+      ],
+      "contractRefs": [
+        "PC07"
+      ]
+    },
+    {
+      "id": "RP15-T03",
+      "packageId": "RP15",
+      "title": "expand/validate/contract隔离演练",
+      "implementationDependencies": [
+        "RP15-T02"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "D-S01-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "T-RP-11",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "PAC-RP15-02",
+        "PAC-RP15-03",
+        "PAC-RP15-04",
+        "TASK-RP15-T03",
+        "INT-PC07-01",
+        "GATE-D-S01-08",
+        "DECISION-D-S01-08",
+        "DECISION-T-RP-11"
+      ],
+      "contractRefs": [
+        "PC07"
+      ]
+    },
+    {
+      "id": "RP16-T01",
+      "packageId": "RP16",
+      "title": "支持模块完整unique/FK registry",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-06",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B13-01",
+        "AC-B13-02",
+        "AC-B13-03",
+        "AC-B13-04",
+        "PAC-RP16-01",
+        "PAC-RP16-04",
+        "TASK-RP16-T01",
+        "DECISION-T-RP-06"
+      ],
+      "contractRefs": []
+    },
+    {
+      "id": "RP16-T02",
+      "packageId": "RP16",
+      "title": "apply/真实计数/提交失败状态",
+      "implementationDependencies": [
+        "RP16-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-06",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S05-OI-03",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B13-01",
+        "AC-B13-02",
+        "AC-B13-03",
+        "AC-B13-04",
+        "PAC-RP16-01",
+        "PAC-RP16-02",
+        "PAC-RP16-03",
+        "TASK-RP16-T02",
+        "INT-PC07-01",
+        "GATE-S05-OI-03",
+        "DECISION-T-RP-06"
+      ],
+      "contractRefs": [
+        "PC07"
+      ]
+    },
+    {
+      "id": "RP16-T03",
+      "packageId": "RP16",
+      "title": "恢复epoch/session/receipt/sync写入影响",
+      "implementationDependencies": [
+        "RP16-T02"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-10",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-B13-01",
+        "AC-B13-02",
+        "AC-B13-03",
+        "AC-B13-04",
+        "PAC-RP16-05",
+        "TASK-RP16-T03",
+        "INT-PC06-01",
+        "DECISION-T-RP-10"
+      ],
+      "contractRefs": [
+        "PC06"
+      ]
+    },
+    {
+      "id": "RP17-T01",
+      "packageId": "RP17",
+      "title": "实际目录staging与不可变发布",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "COMPLETE",
+      "validation": "ENV_BLOCKED",
+      "owner": "Codex executor",
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "COMPLETE",
+      "validationStatus": "ENV_BLOCKED",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-D01-01",
+        "PAC-RP17-01",
+        "PAC-RP17-02",
+        "TASK-RP17-T01",
+        "INT-PC08-01"
+      ],
+      "contractRefs": [
+        "PC08"
+      ]
+    },
+    {
+      "id": "RP17-T02",
+      "packageId": "RP17",
+      "title": "并发备份run锁/manifest/pair保留",
+      "implementationDependencies": [
+        "RP17-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-11",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-D01-01",
+        "PAC-RP17-04",
+        "TASK-RP17-T02",
+        "INT-PC08-01",
+        "DECISION-T-RP-11"
+      ],
+      "contractRefs": [
+        "PC08"
+      ]
+    },
+    {
+      "id": "RP17-T03",
+      "packageId": "RP17",
+      "title": "目标Linux/inode/metadata及失败验收",
+      "implementationDependencies": [
+        "RP17-T02"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "S05-OI-01",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-D01-01",
+        "PAC-RP17-03",
+        "PAC-RP17-04",
+        "TASK-RP17-T03",
+        "INT-PC08-01",
+        "GATE-S05-OI-01"
+      ],
+      "contractRefs": [
+        "PC08"
+      ]
+    },
+    {
+      "id": "RP18-T01",
+      "packageId": "RP18",
+      "title": "先build candidate/config CLI后gate/DDL",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "T-RP-09",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-D02-01",
+        "AC-D02-02",
+        "AC-D03-01",
+        "AC-D03-02",
+        "AC-D03-03",
+        "PAC-RP18-01",
+        "PAC-RP18-02",
+        "PAC-RP18-05",
+        "TASK-RP18-T01",
+        "INT-PC01-01",
+        "INT-PC09-01",
+        "DECISION-T-RP-08",
+        "DECISION-T-RP-09"
+      ],
+      "contractRefs": [
+        "PC01",
+        "PC09"
+      ]
+    },
+    {
+      "id": "RP18-T02",
+      "packageId": "RP18",
+      "title": "部署锁/原子切流/first-safe rollback",
+      "implementationDependencies": [
+        "RP18-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-13",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S05-OI-05",
+          "before": "RELEASE",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-D02-01",
+        "AC-D02-02",
+        "PAC-RP18-03",
+        "PAC-RP18-04",
+        "PAC-RP18-05",
+        "TASK-RP18-T02",
+        "INT-PC10-01",
+        "GATE-S05-OI-05",
+        "DECISION-T-RP-13"
+      ],
+      "contractRefs": [
+        "PC10"
+      ]
+    },
+    {
+      "id": "RP18-T03",
+      "packageId": "RP18",
+      "title": "目标运行配置/版本兼容验证",
+      "implementationDependencies": [
+        "RP18-T02"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "S05-OI-04",
+          "before": "VALIDATION",
+          "condition": "always"
+        },
+        {
+          "ref": "T-RP-08",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-D03-01",
+        "AC-D03-02",
+        "AC-D03-03",
+        "PAC-RP18-02",
+        "PAC-RP18-03",
+        "PAC-RP18-04",
+        "TASK-RP18-T03",
+        "INT-PC09-01",
+        "GATE-S05-OI-04",
+        "DECISION-T-RP-08"
+      ],
+      "contractRefs": [
+        "PC09"
+      ]
+    },
+    {
+      "id": "RP19-T01",
+      "packageId": "RP19",
+      "title": "R12-N01候选外部协调证据裁定",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "S05-OI-02",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "IN_PROGRESS",
+      "validation": "ENV_BLOCKED",
+      "owner": "Codex executor",
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "COMPLETE",
+      "validationStatus": "ENV_BLOCKED",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-R12-N01-01",
+        "PAC-RP19-01",
+        "TASK-RP19-T01",
+        "GATE-S05-OI-02"
+      ],
+      "contractRefs": []
+    },
+    {
+      "id": "RP19-T02",
+      "packageId": "RP19",
+      "title": "配对恢复/一致时点/epoch演练",
+      "implementationDependencies": [
+        "RP19-T01",
+        "RP17-T02",
+        "RP18-T01"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "T-RP-10",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        },
+        {
+          "ref": "S05-OI-02",
+          "before": "VALIDATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "AC-R12-N01-01",
+        "PAC-RP19-02",
+        "TASK-RP19-T02",
+        "INT-PC06-01",
+        "INT-PC08-01",
+        "GATE-S05-OI-02",
+        "DECISION-T-RP-10"
+      ],
+      "contractRefs": [
+        "PC06",
+        "PC08"
+      ]
+    },
+    {
+      "id": "RP19-T03",
+      "packageId": "RP19",
+      "title": "按具体candidate范围计算release gates",
+      "implementationDependencies": [
+        "RP18-T02",
+        "RP17-T03",
+        "RP00-T05"
+      ],
+      "gateRequirements": [
+        {
+          "ref": "S05-OI-04",
+          "before": "RELEASE",
+          "condition": "always"
+        },
+        {
+          "ref": "S05-OI-05",
+          "before": "RELEASE",
+          "condition": "always"
+        },
+        {
+          "ref": "T-RP-13",
+          "before": "IMPLEMENTATION",
+          "condition": "always"
+        }
+      ],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "NOT_STARTED",
+      "validation": "NOT_RUN",
+      "owner": null,
+      "deliverable": "design/implementation/evidence per approved scope",
+      "implementationStatus": "NOT_STARTED",
+      "validationStatus": "NOT_RUN",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "PAC-RP19-03",
+        "PAC-RP19-05",
+        "TASK-RP19-T03",
+        "INT-PC09-01",
+        "INT-PC10-01",
+        "INT-PC11-01",
+        "INT-PC12-01",
+        "GATE-S05-OI-04",
+        "GATE-S05-OI-05",
+        "DECISION-T-RP-13"
+      ],
+      "contractRefs": [
+        "PC09",
+        "PC10",
+        "PC11",
+        "PC12"
+      ]
+    },
+    {
+      "id": "RP19-T04",
+      "packageId": "RP19",
+      "title": "32confirmed+candidate总体处置对账",
+      "implementationDependencies": [
+        "RP00-T01"
+      ],
+      "gateRequirements": [],
+      "acceptanceDependencies": [],
+      "activation": "STANDARD_WHEN_IMPLEMENTATION_AUTHORIZED",
+      "requiredForPackageCompletion": true,
+      "status": "IN_PROGRESS",
+      "validation": "ENV_BLOCKED",
+      "owner": "Codex executor",
+      "deliverable": "programme closure checks all confirmed, supporting data tasks and candidate outcome; accepted risk != FIXED",
+      "implementationStatus": "IN_PROGRESS",
+      "validationStatus": "ENV_BLOCKED",
+      "releaseStatus": "NOT_EVALUATED",
+      "completionRule": "Approved activated scope implemented and applicable evidence passed; conditional unapproved scope is not assumed.",
+      "acceptanceCaseIds": [
+        "PAC-RP19-04",
+        "TASK-RP19-T04"
+      ],
+      "contractRefs": []
+    }
+  ],
+  "gateSemantics": {
+    "IMPLEMENTATION": "Blocks business/schema changes in the specified approved scope; drafting options, read-only review and documenting decisions can proceed.",
+    "VALIDATION": "Blocks acceptance/completion of applicable task or artifact, not drafting the design.",
+    "RELEASE": "Blocks only affected candidate release.",
+    "conditions": "Resolve per task/candidate; condition false or unapproved optional scope is recorded NOT_APPLICABLE, never automatically PASS.",
+    "referenceSemantics": "Case decision_refs/gate_refs are trace links; enforce only its task conditional_gate_requirements plus explicitly stated joint requirements."
+  },
+  "executionStatusUpdatedAt": "2026-10-05T09:19:07.599661+00:00",
+  "executionStatusSource": "IMPLEMENTATION_STATE.json / execution/reviews/2026-10-03-codebuddy-followup/REVIEW.md"
+}

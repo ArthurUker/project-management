@@ -1,0 +1,311 @@
+--- before/rdpms-system/deploy/scripts/backup-pg.sh
++++ after/rdpms-system/deploy/scripts/backup-pg.sh
+@@ -1,145 +1,9 @@
+ #!/usr/bin/env bash
+-#
+-# backup-pg.sh — RDPMS 备份（P0 硬要求）
+-#
+-# 总控裁定落实：
+-#   #7  RPO <= 24h / RTO <= 4h；WAL/PITR 为 P1 增强，不在本脚本内
+-#   #20 使用 postgres 本地 peer 备份，不读取含密码的 DIRECT_URL
+-#   #10 备份日志保留 180 天；pg_dump 日 30 / 周 12 / 月 12
+-#   #6  异地同步为 P1；未配置则 WARN，不阻断
+-#
+-# 用法：
+-#   sudo /usr/local/bin/rdpms-backup.sh daily
+-#   sudo /usr/local/bin/rdpms-backup.sh predeploy
+-#   KIND=weekly  sudo /usr/local/bin/rdpms-backup.sh
+-#
+-# 注意：
+-#   数据库备份不包含 /srv/rdpms/uploads（文件二进制不入库），两者必须同频率备份。
+-#
++# Complete immutable pair publication only. Consistent restore eligibility is separate RP19.
++# No sourcing real dotenv; production PostgreSQL uses local postgres peer.
++# Install backup-pair.py beside this wrapper, retain both at identical reviewed version.
+ set -Eeuo pipefail
+-
+-# 支持同机 staging：
+-#   sudo env DB_NAME=rdpms_staging \
+-#            UPLOAD_SRC=/srv/rdpms/uploads-staging \
+-#            UP_DIR=/srv/rdpms/backups/uploads-staging \
+-#            /usr/local/bin/rdpms-backup.sh daily
+-KIND="${1:-${KIND:-daily}}"
+-DB_NAME="${DB_NAME:-rdpms}"
+-PG_DIR="${PG_DIR:-/srv/rdpms/backups/pg}"
+-UP_DIR="${UP_DIR:-/srv/rdpms/backups/uploads}"
+-UPLOAD_SRC="${UPLOAD_SRC:-/srv/rdpms/uploads}"
+-LOG="${LOG:-/var/log/rdpms/backup.log}"
+-KEEP_DAILY="${KEEP_DAILY:-30}"
+-KEEP_WEEKLY="${KEEP_WEEKLY:-84}"
+-KEEP_MONTHLY="${KEEP_MONTHLY:-365}"
+-KEEP_UPLOADS="${KEEP_UPLOADS:-30}"
+-
+-case "$KIND" in
+-  daily|weekly|monthly|predeploy) ;;
+-  *) printf '[backup] 未知 KIND=%s（可选 daily|weekly|monthly|predeploy）\n' "$KIND" >&2; exit 2 ;;
+-esac
+-
+-mkdir -p "$PG_DIR/$KIND" "$UP_DIR" "$(dirname "$LOG")"
+-log() { printf '%s [%s][%s] %s\n' "$(date +%Y-%m-%dT%H:%M:%S%z)" "$KIND" "$DB_NAME" "$*" | tee -a "$LOG"; }
+-fail() { printf '%s [%s][%s][FATAL] %s\n' "$(date +%Y-%m-%dT%H:%M:%S%z)" "$KIND" "$DB_NAME" "$*" | tee -a "$LOG" >&2; exit 1; }
+-
+-command -v pg_dump   >/dev/null 2>&1 || fail "未找到 pg_dump"
+-command -v pg_restore >/dev/null 2>&1 || fail "未找到 pg_restore"
+-command -v rsync     >/dev/null 2>&1 || fail "未找到 rsync"
+-
+-TS="$(date +%Y%m%d-%H%M%S)"
+-STAGING=""
+-cleanup_staging() {
+-  if [ -n "$STAGING" ] && [ -d "$STAGING" ]; then
+-    sudo rm -rf "$STAGING"
+-  fi
+-}
+-trap cleanup_staging EXIT
+-
+-# ── 1) 数据库逻辑备份 ─────────────────────────────────────
+-# 文件名带库名，staging / production 备份可共存于同一目录
+-DUMP="$PG_DIR/$KIND/${DB_NAME}-$TS.dump"
+ umask 077
+-if ! sudo -u postgres pg_dump -Fc -Z 6 -d "$DB_NAME" -f "$DUMP"; then
+-  fail "pg_dump 失败"
+-fi
+-log "dump 完成: $DUMP ($(du -h "$DUMP" | cut -f1))"
+-
+-# ── 2) 立即可恢复性校验 ───────────────────────────────────
+-if ! sudo -u postgres pg_restore -l "$DUMP" >/dev/null 2>&1; then
+-  fail "dump 不可读，备份无效"
+-fi
+-sha256sum "$DUMP" | sudo tee "$DUMP.sha256" >/dev/null
+-log "dump 校验通过（pg_restore -l OK，已生成 sha256）"
+-
+-# ── 3) uploads 备份（staging → manifest → 同FS原子发布）────────
+-SNAP="$UP_DIR/$TS"
+-if [ -e "$SNAP" ] || [ -L "$SNAP" ]; then
+-  fail "uploads 快照目标已存在（时间戳冲突），拒绝覆盖: $SNAP"
+-fi
+-UP_DIR_REAL="$(cd "$UP_DIR" && pwd -P)"
+-if [ -L "$UP_DIR/latest" ]; then
+-  LINK_TARGET="$(readlink "$UP_DIR/latest" 2>/dev/null || true)"
+-  case "$LINK_TARGET" in
+-    /*) PREVIOUS_CANDIDATE="$LINK_TARGET" ;;
+-    *) PREVIOUS_CANDIDATE="$UP_DIR/$LINK_TARGET" ;;
+-  esac
+-  PREVIOUS="$(cd "$PREVIOUS_CANDIDATE" 2>/dev/null && pwd -P || true)"
+-  [ -n "$PREVIOUS" ] && [ -d "$PREVIOUS" ] || fail "latest 指向的快照不存在或不是目录"
+-  case "$PREVIOUS" in
+-    "$UP_DIR_REAL"/*) ;;
+-    *) fail "latest 指向 UP_DIR 之外，拒绝用作 link-dest: $PREVIOUS" ;;
+-  esac
+-elif [ -e "$UP_DIR/latest" ]; then
+-  fail "latest 存在但不是软链接，拒绝覆盖"
+-else
+-  PREVIOUS=""
+-fi
+-
+-# staging 位于 UP_DIR 内，确保最终目录改名和 latest 软链替换都发生在同一文件系统。
+-STAGING="$(sudo mktemp -d "$UP_DIR/.staging-$TS.XXXXXX")"
+-if [ -n "$PREVIOUS" ]; then
+-  sudo rsync -a --delete --link-dest="$PREVIOUS" "$UPLOAD_SRC/" "$STAGING/"
+-else
+-  sudo rsync -a --delete "$UPLOAD_SRC/" "$STAGING/"
+-fi
+-
+-# Reserved metadata filename; refuse a source collision instead of silently replacing user data.
+-MANIFEST_NAME=".rdpms-snapshot-manifest.sha256"
+-if [ -e "$STAGING/$MANIFEST_NAME" ]; then
+-  fail "uploads 源包含保留清单名 $MANIFEST_NAME，拒绝覆盖"
+-fi
+-sudo bash -c 'cd "$1" && find . -type f ! -name "$2" -print0 | sort -z | xargs -0 -r sha256sum > "$1/$2"' _ "$STAGING" "$MANIFEST_NAME"
+-sudo test -f "$STAGING/$MANIFEST_NAME" || fail "uploads 文件清单未生成"
+-
+-# Rename staged snapshot only after rsync and manifest succeed. Existing published data is immutable.
+-sudo mv -T "$STAGING" "$SNAP"
+-STAGING=""
+-LATEST_TMP="$UP_DIR/.latest-$TS-$$"
+-sudo ln -s "$SNAP" "$LATEST_TMP"
+-if ! sudo mv -Tf "$LATEST_TMP" "$UP_DIR/latest"; then
+-  sudo rm -f -- "$LATEST_TMP"
+-  fail "快照已发布但 latest 原子更新失败；保留已发布快照和原 latest"
+-fi
+-log "uploads 备份完成: $SNAP"
+-
+-# ── 4) 保留策略 ──────────────────────────────────────────
+-find "$PG_DIR/daily"   -name '*.dump*' -mtime "+${KEEP_DAILY}"   -delete 2>/dev/null || true
+-find "$PG_DIR/weekly"  -name '*.dump*' -mtime "+${KEEP_WEEKLY}"  -delete 2>/dev/null || true
+-find "$PG_DIR/monthly" -name '*.dump*' -mtime "+${KEEP_MONTHLY}" -delete 2>/dev/null || true
+-find "$UP_DIR" -maxdepth 1 -type d -name '20*' -mtime "+${KEEP_UPLOADS}" -exec rm -rf {} + 2>/dev/null || true
+-log "保留策略已执行（日 ${KEEP_DAILY} / 周 ${KEEP_WEEKLY} / 月 ${KEEP_MONTHLY} / uploads ${KEEP_UPLOADS} 天）"
+-
+-# ── 5) 异地同步（P1 增强，未配置仅 WARN）───────────────────
+-if [ -n "${COS_TARGET:-}" ] && command -v coscli >/dev/null 2>&1; then
+-  if coscli sync "$PG_DIR/$KIND" "$COS_TARGET/pg/$KIND/" \
+-     && coscli sync "$SNAP" "$COS_TARGET/uploads/$TS/"; then
+-    log "异地同步完成 -> $COS_TARGET"
+-  else
+-    log "WARN 异地同步失败（本地备份仍然有效）"
+-  fi
+-else
+-  log "WARN 未配置异地同步，备份仅存本地（同机风险；正式生产必须配置 COS_TARGET）"
+-fi
+-
+-log "备份流程结束"
++SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
++command -v python3 >/dev/null || { printf 'backup requires python3\n' >&2; exit 1; }
++exec python3 "$SCRIPT_DIR/backup-pair.py" "${1:-${KIND:-daily}}"
+--- before/rdpms-system/deploy/scripts/backup-pair.py
++++ after/rdpms-system/deploy/scripts/backup-pair.py
+@@ -0,0 +1,134 @@
++#!/usr/bin/env python3
++"""Immutable paired artifacts. Local manifests prove bytes/pairing, NOT a live common point.
++The scheduler must use the separately verified consistent-point barrier before restore eligibility.
++"""
++import argparse,datetime,fcntl,hashlib,json,os,pathlib,re,shutil,stat,subprocess,sys,tempfile,uuid
++
++def sha(p):
++ h=hashlib.sha256()
++ with p.open('rb') as f:
++  for block in iter(lambda:f.read(1024*1024),b''):h.update(block)
++ return h.hexdigest()
++def atomic_json(p,data):
++ tmp=p.with_name('.'+p.name+'.'+uuid.uuid4().hex)
++ with tmp.open('x') as f:json.dump(data,f,sort_keys=True,indent=2);f.write('\n');f.flush();os.fsync(f.fileno())
++ os.replace(tmp,p)
++ fd=os.open(p.parent,os.O_RDONLY)
++ try:os.fsync(fd)
++ finally:os.close(fd)
++def directory(p):
++ p=pathlib.Path(p).absolute()
++ if p.is_symlink():raise ValueError('DIRECTORY_SYMLINK_REJECTED')
++ p.mkdir(parents=True,exist_ok=True)
++ return p.resolve()
++def files(root):
++ entries=[]
++ for p in sorted(root.rglob('*')):
++  if p.name=='.rdpms-snapshot-manifest.json' and p.parent==root:continue
++  s=p.lstat();r={'path':p.relative_to(root).as_posix(),'mode':stat.S_IMODE(s.st_mode),'uid':s.st_uid,'gid':s.st_gid,'mtimeNs':s.st_mtime_ns}
++  if p.is_symlink():
++   if not p.resolve().is_relative_to(root):raise ValueError('UPLOAD_SYMLINK_OUTSIDE_SNAPSHOT')
++   r.update(kind='symlink',target=os.readlink(p))
++  elif p.is_file():r.update(kind='file',size=s.st_size,sha256=sha(p))
++  elif p.is_dir():r.update(kind='directory')
++  else:raise ValueError('UPLOAD_SPECIAL_FILE_REJECTED')
++  entries.append(r)
++ return entries
++
++def pg_argv(command):
++ # Owned test mode is resource-proven, never a production authentication bypass.
++ owned=os.environ.get('RDPMS_EXEC_OWNED_DB')
++ if owned:
++  if os.environ.get('PGHOST')!='127.0.0.1' or os.environ.get('DB_NAME')!=owned or not owned.startswith('rdpms_test_'):raise ValueError('OWNED_PG_TARGET_MISMATCH')
++  return [command]
++ return ['sudo','-u','postgres',command]
++def command(argv):
++ r=subprocess.run(argv,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE,text=True)
++ if r.returncode:raise RuntimeError('BACKUP_SUBPROCESS_FAILED:'+pathlib.Path(argv[0]).name+':'+str(r.returncode))
++
++def check_pair(pair,up_root):
++ m=json.loads((pair/'pair.json').read_text());run=m['runId'];snap=up_root/run
++ if m['state']!='PUBLISHED' or m['formatVersion']!=1 or pair.name!=run or not re.fullmatch(r'[A-Za-z0-9_-]{1,100}',run):raise ValueError('PAIR_NOT_PUBLISHED')
++ if snap.is_symlink() or not snap.is_dir() or pair.is_symlink():raise ValueError('PAIR_PATH_INVALID')
++ if sha(pair/'database.dump')!=m['dumpSha256'] or sha(snap/'.rdpms-snapshot-manifest.json')!=m['fileManifestSha256']:raise ValueError('PAIR_HASH_MISMATCH')
++ manifest=json.loads((snap/'.rdpms-snapshot-manifest.json').read_text())
++ if manifest['runId']!=run or manifest['entries']!=files(snap):raise ValueError('PAIR_FILES_CHANGED')
++ return m,snap
++
++def execute(kind):
++ os.umask(0o077)
++ db=os.environ.get('DB_NAME','rdpms');run=os.environ.get('RUN_ID') or datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'-'+uuid.uuid4().hex[:12]
++ if not re.fullmatch(r'[A-Za-z0-9_-]{1,100}',run) or not re.fullmatch(r'[A-Za-z0-9_-]+',db):raise ValueError('INVALID_BACKUP_ID')
++ if kind not in ['daily','weekly','monthly','predeploy']:raise ValueError('INVALID_BACKUP_KIND')
++ source=pathlib.Path(os.environ.get('UPLOAD_SRC','/srv/rdpms/uploads')).absolute()
++ if source.is_symlink() or not source.is_dir():raise ValueError('UPLOAD_SOURCE_NOT_DIRECTORY')
++ source=source.resolve();pg=directory(os.environ.get('PG_DIR','/srv/rdpms/backups/pg'));up=directory(os.environ.get('UP_DIR','/srv/rdpms/backups/uploads'));pairs=directory(pg/'pairs')
++ if source==up or source.is_relative_to(up) or up.is_relative_to(source) or pg.is_relative_to(source) or source.is_relative_to(pg):raise ValueError('BACKUP_SOURCE_OVERLAP')
++ lock=pairs/'.backup.lock';fd=os.open(lock,os.O_CREAT|os.O_RDWR|getattr(os,'O_NOFOLLOW',0),0o600)
++ with os.fdopen(fd,'a+') as lease:
++  try:fcntl.flock(lease,fcntl.LOCK_EX|fcntl.LOCK_NB)
++  except BlockingIOError:raise RuntimeError('BACKUP_RUN_BUSY')
++  days={k:int(os.environ.get('KEEP_'+k.upper(),v)) for k,v in [('daily','30'),('weekly','84'),('monthly','365'),('predeploy','0')]}
++  if any(v<0 for v in days.values()):raise ValueError('INVALID_RETENTION')
++  binding={'dbName':db,'kind':kind,'source':str(source),'pgRoot':str(pg),'uploadRoot':str(up)}
++  pair=pairs/run;snap=up/run;latest=up/'latest';previous=None
++  if pair.exists() or snap.exists():
++   m,_=check_pair(pair,up)
++   if m['binding']!=binding:raise ValueError('RUN_ID_BINDING_CONFLICT')
++   return {'runId':run,'state':'ALREADY_PUBLISHED','pair':str(pair),'snapshot':str(snap),'consistentPoint':m['consistentPoint']}
++  if latest.is_symlink():
++   previous=latest.resolve()
++   if previous.parent!=up:raise ValueError('LATEST_OUTSIDE_UPLOAD_ROOT')
++   check_pair(pairs/previous.name,up)
++  elif latest.exists():raise ValueError('LATEST_NOT_SYMLINK')
++  dump_stage=pathlib.Path(tempfile.mkdtemp(prefix='.staging-'+run+'-',dir=pairs));file_stage=pathlib.Path(tempfile.mkdtemp(prefix='.staging-'+run+'-',dir=up));owned=[dump_stage,file_stage]
++  try:
++   atomic_json(dump_stage/'lease.json',{'runId':run,'binding':binding,'pid':os.getpid(),'ownedStages':[str(x) for x in owned]})
++   dump=dump_stage/'database.dump';command(pg_argv('pg_dump')+['-Fc','-Z','6','-d',db,'-f',str(dump)]);command(pg_argv('pg_restore')+['-l',str(dump)])
++   if (source/'.rdpms-snapshot-manifest.json').exists():raise ValueError('RESERVED_FILE_MANIFEST_COLLISION')
++   # Do NOT rely on openrsync link-dest metadata: verified owned counterexample.
++   source_entries=files(source)
++   shutil.copytree(source,file_stage,symlinks=True,dirs_exist_ok=True)
++   for entry in source_entries:
++    dst=file_stage/entry['path'];st=dst.lstat()
++    if (st.st_uid,st.st_gid)!=(entry['uid'],entry['gid']):os.chown(dst,entry['uid'],entry['gid'],follow_symlinks=False)
++   copied=files(file_stage)
++   if copied!=source_entries or files(source)!=source_entries:raise ValueError('UPLOAD_SOURCE_CHANGED_OR_METADATA_COPY_MISMATCH')
++   if previous and previous.stat().st_dev==file_stage.stat().st_dev:
++    old_entries={r['path']:r for r in json.loads((previous/'.rdpms-snapshot-manifest.json').read_text())['entries']}
++    for entry in copied:
++     if entry['kind']=='file' and old_entries.get(entry['path'])==entry:
++      dst=file_stage/entry['path'];dst.unlink();os.link(previous/entry['path'],dst)
++   atomic_json(file_stage/'.rdpms-snapshot-manifest.json',{'runId':run,'entries':copied})
++   manifest={'formatVersion':1,'runId':run,'state':'PUBLISHED','createdAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'binding':binding,'dumpSha256':sha(dump),'fileManifestSha256':sha(file_stage/'.rdpms-snapshot-manifest.json'),'consistentPoint':'NOT_VERIFIED','restoreEligible':False,'previousRunId':previous.name if previous else None}
++   # Publish complete directory paths first, commit marker last. Interrupted orphans aren't eligible.
++   os.rename(file_stage,snap);os.rename(dump_stage,pair);atomic_json(pair/'pair.json',manifest)
++   check_pair(pair,up)
++   pointer=up/('.latest-'+run+'-'+uuid.uuid4().hex);pointer.symlink_to(run)
++   try:os.replace(pointer,latest)
++   finally:
++    if pointer.is_symlink():pointer.unlink()
++   # Lease protects backup and retention; no unknown/orphan/legacy tree is ever deleted.
++   completed=[]
++   for p in pairs.iterdir():
++    if p.is_dir() and not p.is_symlink() and (p/'pair.json').is_file():
++     try:m,ss=check_pair(p,up);completed.append((m,p,ss))
++     except Exception:continue # Corrupt pair is preserved for investigation, not link-dest.
++   completed.sort(key=lambda x:x[0]['createdAt'],reverse=True);protected={x[0]['runId'] for x in completed[:2]}|{run}|({previous.name} if previous else set())
++   verified=[x for x in completed if x[0].get('restoreVerified') is True and x[0]['binding']['dbName']==db]
++   if verified:protected.add(verified[0][0]['runId'])
++   removed=[]
++   for m,p,ss in completed:
++    age=(datetime.datetime.now(datetime.timezone.utc)-datetime.datetime.fromisoformat(m['createdAt'])).total_seconds()/86400;keep=days[m['binding']['kind']]
++    if m['runId'] in protected or (p/'PINNED').exists() or m['binding']['dbName']!=db or keep==0 or age<=keep:continue
++    # Marker disappears BEFORE either member; never leave a claimed complete broken pair.
++    os.rename(p/'pair.json',p/'retiring.json');shutil.rmtree(ss);shutil.rmtree(p);removed.append(m['runId'])
++   return {'runId':run,'state':'PUBLISHED','pair':str(pair),'snapshot':str(snap),'consistentPoint':'NOT_VERIFIED','retiredPairs':removed}
++  finally:
++   for p in owned:
++    if p.exists() and not p.is_symlink() and p.name.startswith('.staging-'+run+'-'):shutil.rmtree(p)
++
++if __name__=='__main__':
++ parser=argparse.ArgumentParser();parser.add_argument('kind',nargs='?',default=os.environ.get('KIND','daily'));args=parser.parse_args()
++ try:print(json.dumps(execute(args.kind),sort_keys=True))
++ except Exception as exc:print('BACKUP_FAILED:'+str(exc),file=sys.stderr);sys.exit(1)
+--- before/rdpms-system/backend/tests/integration/rp17-backup-pair.integration.test.mjs
++++ after/rdpms-system/backend/tests/integration/rp17-backup-pair.integration.test.mjs
+@@ -0,0 +1,17 @@
++import {test,before,after} from 'node:test';import assert from 'node:assert/strict';import crypto from 'node:crypto';import fs from 'node:fs/promises';import path from 'node:path';import os from 'node:os';import {spawn} from 'node:child_process';import {PrismaClient} from '@prisma/client';
++const db=new PrismaClient(),url=new URL(process.env.DATABASE_URL);assert.equal(url.hostname,'127.0.0.1');assert.equal(url.pathname.slice(1),process.env.RDPMS_EXEC_OWNED_DB);const helper=path.resolve('../deploy/scripts/backup-pair.py');let root,env;const trace=[];
++const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
++async function command(args,extra={}){let stdout='',stderr='';const p=spawn('python3',[helper,...args],{env:{...env,...extra}});p.stdout.on('data',b=>stdout+=b);p.stderr.on('data',b=>stderr+=b);const exit=await new Promise((resolve,reject)=>{p.on('error',reject);p.on('exit',resolve)});trace.push({args,runId:extra.RUN_ID,exit,stdout,stderr});return {exit,stdout,stderr,value:exit===0?JSON.parse(stdout):null};}
++async function run(id,extra={}){const r=await command(['daily'],{RUN_ID:id,...extra});assert.equal(r.exit,0,r.stderr);return r.value;}
++async function pair(id){return JSON.parse(await fs.readFile(path.join(root,'pg/pairs',id,'pair.json')));}
++async function file(id,name){return fs.readFile(path.join(root,'uploads',id,name));}
++before(async()=>{root=await fs.mkdtemp(path.join(os.tmpdir(),'rdpms-pair-owned-'));await fs.mkdir(path.join(root,'source'));await fs.writeFile(path.join(root,'source/a.txt'),'FIRST-IMMUTABLE');await fs.writeFile(path.join(root,'source/gone.txt'),'DELETE-ME');await db.project.create({data:{code:'OWNED-PAIR-'+crypto.randomUUID(),name:'Dump nonempty',type:'TESTING',manager:{create:{username:'pair-'+crypto.randomUUID(),displayName:'Owned pair actor',passwordHash:'synthetic-disabled',status:'DISABLED'}}}});env={...process.env,DB_NAME:process.env.RDPMS_EXEC_OWNED_DB,PGHOST:url.hostname,PGPORT:url.port,PGUSER:decodeURIComponent(url.username),PG_DIR:path.join(root,'pg'),UP_DIR:path.join(root,'uploads'),UPLOAD_SRC:path.join(root,'source')};});
++after(async()=>{await db.$disconnect();const bytes=trace;await fs.rm(root,{recursive:true});await fs.writeFile(path.join(process.env.RDPMS_EXEC_EVIDENCE_DIR,'backup-pair-state.json'),JSON.stringify({trace:bytes,ownedRootRemoved:!(await fs.stat(root).catch(()=>null)),limits:['macOS owned filesystem, not targetLinux','Pair tags/hashes do not prove common DB/file live point; restoreEligible false']},null,2));});
++test('two add/change/delete rounds retain first bytes and metadata, complete pair before latest and real dump readable',async()=>{const first=await run('fixed-timestamp-a');assert.equal(first.state,'PUBLISHED');assert.equal(await fs.readlink(path.join(root,'uploads/latest')),'fixed-timestamp-a');const m=await pair('fixed-timestamp-a');assert.equal(m.restoreEligible,false);const old=await file('fixed-timestamp-a','a.txt'),manifest=await file('fixed-timestamp-a','.rdpms-snapshot-manifest.json');await fs.writeFile(path.join(root,'source/a.txt'),'SECOND');await fs.unlink(path.join(root,'source/gone.txt'));await fs.writeFile(path.join(root,'source/new.txt'),'NEW');await run('fixed-timestamp-b');assert.deepEqual(await file('fixed-timestamp-a','a.txt'),old);assert.deepEqual(await file('fixed-timestamp-a','.rdpms-snapshot-manifest.json'),manifest);assert.equal((await file('fixed-timestamp-a','gone.txt')).toString(),'DELETE-ME');assert.equal((await file('fixed-timestamp-b','a.txt')).toString(),'SECOND');assert.equal((await file('fixed-timestamp-b','new.txt')).toString(),'NEW');assert.equal(await fs.stat(path.join(root,'uploads/fixed-timestamp-b/gone.txt')).catch(()=>null),null);assert.equal(await fs.readlink(path.join(root,'uploads/latest')),'fixed-timestamp-b');assert.ok((await fs.stat(path.join(root,'pg/pairs/fixed-timestamp-b/database.dump'))).size>1000);});
++test('same run id completed verifies idempotently, different kind binding refuses and original pair untouched',async()=>{const before=await pair('fixed-timestamp-b');const again=await run('fixed-timestamp-b');assert.equal(again.state,'ALREADY_PUBLISHED');const conflict=await command(['weekly'],{RUN_ID:'fixed-timestamp-b'});assert.equal(conflict.exit,1);assert.match(conflict.stderr,/RUN_ID_BINDING_CONFLICT/);assert.deepEqual(await pair('fixed-timestamp-b'),before);});
++test('unchanged files may share inode; metadata/content changes do not change any published predecessor',async()=>{await run('unchanged-c');const b=await fs.stat(path.join(root,'uploads/fixed-timestamp-b/new.txt')),c=await fs.stat(path.join(root,'uploads/unchanged-c/new.txt'));assert.equal(b.ino,c.ino);await fs.chmod(path.join(root,'source/new.txt'),0o640);await run('metadata-d');const after=await fs.stat(path.join(root,'uploads/metadata-d/new.txt'));assert.equal(after.mode&0o777,0o640);assert.equal((await fs.stat(path.join(root,'uploads/unchanged-c/new.txt'))).mode&0o777,b.mode&0o777);assert.notEqual(after.ino,b.ino);});
++test('living OS run lease rejects backup/cleanup contender without source or latest change',async()=>{const hit=path.join(root,'lease-held');const p=spawn('python3',['-c','import fcntl,sys,pathlib;f=open(sys.argv[1],"a+");fcntl.flock(f,fcntl.LOCK_EX);pathlib.Path(sys.argv[2]).write_text("ready");sys.stdin.read()',path.join(root,'pg/pairs/.backup.lock'),hit]);try{for(let i=0;i<100&&!await fs.stat(hit).catch(()=>null);i++)await new Promise(r=>setTimeout(r,10));assert.ok(await fs.stat(hit));const latest=await fs.readlink(path.join(root,'uploads/latest'));const result=await command(['daily'],{RUN_ID:'lease-contender'});assert.equal(result.exit,1);assert.match(result.stderr,/BACKUP_RUN_BUSY/);assert.equal(await fs.readlink(path.join(root,'uploads/latest')),latest);assert.equal(await fs.stat(path.join(root,'pg/pairs/lease-contender')).catch(()=>null),null);}finally{p.stdin.end();await new Promise(r=>p.once('exit',r));}});
++test('reserved manifest copy failure preserves old latest and cleans only own uncommitted stages',async()=>{const latest=await fs.readlink(path.join(root,'uploads/latest'));await fs.writeFile(path.join(root,'source/.rdpms-snapshot-manifest.json'),'user collision');const bad=await command(['daily'],{RUN_ID:'failed-copy'});assert.equal(bad.exit,1);assert.match(bad.stderr,/RESERVED_FILE_MANIFEST_COLLISION/);assert.equal(await fs.readlink(path.join(root,'uploads/latest')),latest);assert.deepEqual((await fs.readdir(path.join(root,'pg/pairs'))).filter(n=>n.startsWith('.staging-')),[]);assert.deepEqual((await fs.readdir(path.join(root,'uploads'))).filter(n=>n.startsWith('.staging-')),[]);await fs.unlink(path.join(root,'source/.rdpms-snapshot-manifest.json'));});
++test('pair retention preserves last verified/latest/pinned/unknown and expires only complete matched pair',async()=>{const ids=['fixed-timestamp-a','fixed-timestamp-b','unchanged-c','metadata-d'];for(const id of ids){const p=path.join(root,'pg/pairs',id,'pair.json'),m=JSON.parse(await fs.readFile(p));m.createdAt='2000-01-0'+(ids.indexOf(id)+1)+'T00:00:00+00:00';if(id==='fixed-timestamp-a')m.restoreVerified=true;await fs.writeFile(p,JSON.stringify(m));}await fs.writeFile(path.join(root,'pg/pairs/fixed-timestamp-b/PINNED'),'fixture retention pin');await fs.mkdir(path.join(root,'uploads/legacy-unknown'));await fs.writeFile(path.join(root,'uploads/legacy-unknown/last-copy'),'KEEP');await run('retention-e',{KEEP_DAILY:'1'});assert.ok(await fs.stat(path.join(root,'pg/pairs/fixed-timestamp-a')));assert.ok(await fs.stat(path.join(root,'pg/pairs/fixed-timestamp-b')));assert.ok(await fs.stat(path.join(root,'uploads/legacy-unknown/last-copy')));assert.equal(await fs.stat(path.join(root,'pg/pairs/unchanged-c')).catch(()=>null),null);assert.equal(await fs.stat(path.join(root,'uploads/unchanged-c')).catch(()=>null),null);const invalid=await command(['daily'],{RUN_ID:'bad-retention',KEEP_DAILY:'-1'});assert.equal(invalid.exit,1);assert.equal(await fs.stat(path.join(root,'pg/pairs/bad-retention')).catch(()=>null),null);});
++test('corrupt completed latest refuses link-dest and never overwrites files or claims success',async()=>{const latest=await fs.readlink(path.join(root,'uploads/latest')),p=path.join(root,'uploads',latest,'a.txt'),before=await fs.readFile(p);await fs.writeFile(p,'OWNED-CORRUPTION');const bad=await command(['daily'],{RUN_ID:'corruption-contender'});assert.equal(bad.exit,1);assert.match(bad.stderr,/PAIR_FILES_CHANGED/);assert.equal(await fs.readlink(path.join(root,'uploads/latest')),latest);await fs.writeFile(p,before); // This fixture intentionally damaged only owned current snapshot, not restore evidence.
++});

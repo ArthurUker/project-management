@@ -1,0 +1,10 @@
+{
+  "taskId": "RP19-T01",
+  "source": "User's continuing local remediation authorization in this conversation, under docs/remediation/2026-10-01-rdpms/EXECUTOR_PROMPT.md",
+  "allowedTaskIds": ["RP19-T01"],
+  "owner": "Codex executor",
+  "allowedActions": ["Read frozen audit evidence", "Inspect current backup script", "Write task evidence and state artifacts"],
+  "prohibitedActions": ["Production/shared host or database access", "Real restore", "Business code changes", "Approving operational decisions", "Commit/stage/deploy"],
+  "baseline": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "scopeNote": "This task adjudicates available evidence only; no runtime environment or external operations records were supplied."
+}

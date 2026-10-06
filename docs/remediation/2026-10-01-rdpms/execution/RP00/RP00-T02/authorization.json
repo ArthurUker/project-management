@@ -1,0 +1,26 @@
+{
+  "createdAt": "2026-10-02",
+  "executor": "Codex executor",
+  "authorizationSource": "User continuation message: “继续按照计划做”, continuing the explicit bounded local authorization in the immediately preceding execution request.",
+  "baselineCommit": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "allowedTaskIds": [
+    "RP00-T02"
+  ],
+  "allowedActivities": [
+    "static targeted code review",
+    "read-only source/history inspection",
+    "write RP00-T02 execution artifacts and synchronize runtime state fields"
+  ],
+  "prohibited": [
+    "business-code changes",
+    "commit/stage/push/merge/deploy",
+    "production/shared DB",
+    "real data restore",
+    "dependency upgrade",
+    "real accounts",
+    "tests/build/runtime fault injection for this static task",
+    "subagents/model switch"
+  ],
+  "owner": "Codex executor",
+  "decisionBoundary": "No approval of PC03 or any product/security/business decision; PC03 remains PROPOSED."
+}

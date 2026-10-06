@@ -1,0 +1,128 @@
+{
+  "reviewId": "CODEBUDDY-REVIEW-2026-10-03",
+  "baseline": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "findings": [
+    {
+      "id": "LR3-01",
+      "severity": "P1",
+      "type": "CONFIRMED_UNRESOLVED_DEFECT",
+      "tasks": [
+        "RP10-T02"
+      ],
+      "historicalFindings": [
+        "B10"
+      ],
+      "location": [
+        {
+          "file": "rdpms-system/backend/src/routes/reports.js",
+          "line": 177
+        },
+        {
+          "file": "rdpms-system/backend/src/routes/reports.js",
+          "line": 242
+        },
+        {
+          "file": "rdpms-system/backend/src/routes/reports.js",
+          "line": 245
+        }
+      ],
+      "trigger": "POST validates absent report; pauses before real upsert; distinct-key POST creates same business key and submit commits; first upsert resumes.",
+      "chain": "POST reports -> validate(null) -> execute upsert unconditional update branch; bypasses shared saveReportDraft",
+      "existingProtection": "Atomic shared status/CAS succeeds for PUT and existing live-draft POST; replay/submit row lock/unique business key do not protect absent-row POST window.",
+      "provenImpact": "Late POST 201 overwrites SUBMITTED/currentVersion=1 live content; ReportVersion retains winner body; two successful POST receipts and create/submit/create audit.",
+      "evidence": [
+        "evidence/observations.json#late-POST-after-absent-row-validation",
+        "evidence/dynamic-probes/attempt-01/run-results.json"
+      ],
+      "recommendation": "Eliminate unconditional upsert overwrite on row appearing after absence; create plus conflict rejection or consistent business-key serialization/re-read with authority/status/CAS. Preserve existing restore and source-state contracts.",
+      "acceptance": "Inverse deterministic absent-row POST race; existing draft, tombstone boundary, replay, CAS, PUT/sync and version allocation all protected; rejected late write leaves no success receipt/audit/content change.",
+      "status": "SUPPORTED",
+      "disposition": "REOPENED",
+      "gate": "D-S01-07 condition=false if source-state behavior unchanged; RP09 acceptance dependency only"
+    },
+    {
+      "id": "LR3-02",
+      "severity": "P2",
+      "type": "CONFIRMED_REQUIRED_COVERAGE_GAP",
+      "tasks": [
+        "RP08-T01"
+      ],
+      "historicalFindings": [
+        "B04"
+      ],
+      "location": [
+        {
+          "file": "rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs",
+          "line": 49
+        },
+        {
+          "file": "rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs",
+          "line": 181
+        },
+        {
+          "file": "rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs",
+          "line": 226
+        },
+        {
+          "file": "rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs",
+          "line": 293
+        }
+      ],
+      "provenImpact": "5/5 current-sync matrix is real but equivalent ordinary-API entity/field contrast absent; superAdmin own report set empty; tombstone success fixture and incremental pull unexecuted. Whole AC-B04-01/PAC-RP08-01/TASK PASS unsupported. No new code leak proven.",
+      "evidence": [
+        "evidence/delivery-check.json",
+        "../../RP08/RP08-T01/runs/2026-10-03-codebuddy-b04-validation/acceptance.json"
+      ],
+      "recommendation": "Pair ordinary API and sync/init/pull on persisted fixtures and exact permission/field contract; add nonempty elevated own-report and tombstone positives then negatives. No new policy or RP08-T02 activation.",
+      "status": "SUPPORTED",
+      "disposition": "VALIDATION_REQUIRED",
+      "gate": "D-S01-05 condition=false for ordinary scope"
+    },
+    {
+      "id": "LR3-03",
+      "severity": "P2",
+      "type": "CONFIRMED_LEDGER_AND_PROVENANCE_DRIFT",
+      "tasks": [
+        "RP10-T02",
+        "RP04-T02",
+        "RP02-T01",
+        "RP08-T01"
+      ],
+      "location": [
+        {
+          "file": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "line": 296
+        },
+        {
+          "file": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "line": 507
+        },
+        {
+          "file": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "line": 839
+        },
+        {
+          "file": "docs/remediation/2026-10-01-rdpms/TASK_GRAPH.json",
+          "line": 1093
+        }
+      ],
+      "provenImpact": "Six implementation/validation axis differences between graph and implementation ledger; package task mirrors stale; execution revision history missing this delivery; changed report source still references old source hash baseline.",
+      "evidence": [
+        "evidence/delivery-check.json",
+        "evidence/previous-current-ledgers/"
+      ],
+      "recommendation": "Append current independent assessment, reconcile mutable runtime mirrors, preserve historical runs/checkpoints, bind current source hashes and both version histories.",
+      "status": "SUPPORTED",
+      "disposition": "RECORDS_RECONCILED_NOT_PRODUCT_ACCEPTANCE"
+    }
+  ],
+  "observations": [
+    {
+      "id": "OBS-RP02-FENCE",
+      "severity": "P2 evidence gap only",
+      "executorCoverage": "Barrier before findFirst does not exercise stale ACTIVE conditional reset.",
+      "independentEvidence": "Real bcrypt checked, paused before actual user.updateMany; disable200 then login403; no refresh/login audit/token or lastLogin state mutation.",
+      "currentDisposition": "Local task PASS supported by existing suite plus new independent fence; formalize probe in permanent regression."
+    }
+  ]
+}

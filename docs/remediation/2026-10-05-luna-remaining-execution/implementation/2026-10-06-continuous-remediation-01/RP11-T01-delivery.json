@@ -1,0 +1,55 @@
+{
+  "files": [
+    "rdpms-system/frontend/src/offline/idb.ts",
+    "rdpms-system/frontend/src/offline/engine.ts",
+    "rdpms-system/frontend/src/offline/SyncProvider.tsx",
+    "rdpms-system/frontend/src/pages/Tasks.tsx",
+    "rdpms-system/frontend/src/offline/deadLetter.ts",
+    "rdpms-system/frontend/src/offline/tests/rp11-owner.browser.tsx",
+    "rdpms-system/frontend/src/offline/pendingDraft.ts"
+  ],
+  "beforeDirectory": "before-RP11-T01",
+  "runs": [
+    "rp11-t01-browser"
+  ],
+  "casePass": {
+    "AC-F01-01": "Current real Chrome IndexedDB + actual AuthProvider/SyncProvider/Tasks,13 owned browser cases; synthetic HTTP auth and pull/push transport explicitly distinguished. Runtime source hashes/evidence in final attempt07; user-delegated exact owner/cache contract.",
+    "AC-F01-02": "Current real Chrome IndexedDB + actual AuthProvider/SyncProvider/Tasks,13 owned browser cases; synthetic HTTP auth and pull/push transport explicitly distinguished. Runtime source hashes/evidence in final attempt07; user-delegated exact owner/cache contract.",
+    "AC-F01-03": "Current real Chrome IndexedDB + actual AuthProvider/SyncProvider/Tasks,13 owned browser cases; synthetic HTTP auth and pull/push transport explicitly distinguished. Runtime source hashes/evidence in final attempt07; user-delegated exact owner/cache contract.",
+    "AC-F03-01": "Current real Chrome IndexedDB + actual AuthProvider/SyncProvider/Tasks,13 owned browser cases; synthetic HTTP auth and pull/push transport explicitly distinguished. Runtime source hashes/evidence in final attempt07; user-delegated exact owner/cache contract.",
+    "AC-F03-02": "Current real Chrome IndexedDB + actual AuthProvider/SyncProvider/Tasks,13 owned browser cases; synthetic HTTP auth and pull/push transport explicitly distinguished. Runtime source hashes/evidence in final attempt07; user-delegated exact owner/cache contract.",
+    "PAC-RP11-01": "Current real Chrome IndexedDB + actual AuthProvider/SyncProvider/Tasks,13 owned browser cases; synthetic HTTP auth and pull/push transport explicitly distinguished. Runtime source hashes/evidence in final attempt07; user-delegated exact owner/cache contract.",
+    "PAC-RP11-03": "Current real Chrome IndexedDB + actual AuthProvider/SyncProvider/Tasks,13 owned browser cases; synthetic HTTP auth and pull/push transport explicitly distinguished. Runtime source hashes/evidence in final attempt07; user-delegated exact owner/cache contract.",
+    "TASK-RP11-T01": "Current real Chrome IndexedDB + actual AuthProvider/SyncProvider/Tasks,13 owned browser cases; synthetic HTTP auth and pull/push transport explicitly distinguished. Runtime source hashes/evidence in final attempt07; user-delegated exact owner/cache contract.",
+    "GATE-S02-OPEN-01": "Current real Chrome IndexedDB + actual AuthProvider/SyncProvider/Tasks,13 owned browser cases; synthetic HTTP auth and pull/push transport explicitly distinguished. Runtime source hashes/evidence in final attempt07; user-delegated exact owner/cache contract.",
+    "GATE-S02-OPEN-02": "Current real Chrome IndexedDB + actual AuthProvider/SyncProvider/Tasks,13 owned browser cases; synthetic HTTP auth and pull/push transport explicitly distinguished. Runtime source hashes/evidence in final attempt07; user-delegated exact owner/cache contract.",
+    "DECISION-T-RP-09": "Current real Chrome IndexedDB + actual AuthProvider/SyncProvider/Tasks,13 owned browser cases; synthetic HTTP auth and pull/push transport explicitly distinguished. Runtime source hashes/evidence in final attempt07; user-delegated exact owner/cache contract.",
+    "DECISION-T-RP-12": "Current real Chrome IndexedDB + actual AuthProvider/SyncProvider/Tasks,13 owned browser cases; synthetic HTTP auth and pull/push transport explicitly distinguished. Runtime source hashes/evidence in final attempt07; user-delegated exact owner/cache contract."
+  },
+  "notRun": {
+    "AC-F03-03": "A cache ownership and pending recovery proven; complete legacy migration acceptance belongs RP11-T02; combined case not PASS yet.",
+    "AC-N-S02-01-01": "Legacy unknown preserved and hidden proven; complete migration accepted only after RP11-T02.",
+    "AC-N-S02-01-02": "Unknown owner automatic assignment prohibited; owner claim/export contract and UI not yet delivered.",
+    "AC-N-S02-01-03": "Upgrade abort/reentry not yet exercised.",
+    "PAC-RP11-05": "Two-tab switch real; blocked upgrade/quota/closure and recovery UI acceptance pending RP11-T02/T03.",
+    "INT-PC01-01": "Current owner browser tested with synthetic HTTP; native backend JWT two-tab joint not rerun.",
+    "INT-PC04-01": "Real IDB owner cases passed, full legacy/abort/quota joint not yet run."
+  },
+  "limits": [
+    "13 real Chrome/IDB and product Tasks scenarios; synthetic auth/pull/push, NOT backend/native JWT joint evidence",
+    "Database version3 adds owner stores and retains legacy stores byte-data; legacy transfer/recovery UI delivered next",
+    "Native sync v1 reservation client integration remains RP12; current no-reserve native pushes retain payload but cannot be accepted",
+    "Only current candidate browser/localhost owned profile; no deployment or supported legacy target matrix"
+  ],
+  "summary": "Authenticated tokenStore actor/login generation fences every IndexedDB operation; durable per-owner records/outbox/kv/dead letters, actor-scoped device identity. Bootstrap/logout hides rather than destroys drafts. Generation-bound hydration/recovery; start coalesces initialization and stop cancels old tails. Tasks cancels old actor responses and never falls back on401/403/404. Current owner/project/permission cache lease max5min; definitive denial invalidates mirror authorization only. Legacy stores retained without ownership inference. Current13 real-browser cases passed including slow/offline /me, two tabs, late writes/cleanup/pull and actual Tasks page.",
+  "compatibility": "IDB additive version3 stores; legacy stores unchanged/read-protected. Ownerless storage calls no longer exposed; pendingDraft uses captured current actor. Existing HTTP unchanged; cache denial now hides stale mirror.",
+  "rollback": "Do not clear IDB or run ownerless client. Retain old stores and owner stores; compatible scoped client/containment only. Full target rollback not run.",
+  "next": "RP11-T02 legacy-owner quarantine/copy verification and blocked/aborted upgrade recovery under delegated precise T-RP-01 policy",
+  "nextTask": "RP11-T02",
+  "findings": [
+    "F01",
+    "F03",
+    "N-S02-01"
+  ],
+  "validation": "PASS"
+}

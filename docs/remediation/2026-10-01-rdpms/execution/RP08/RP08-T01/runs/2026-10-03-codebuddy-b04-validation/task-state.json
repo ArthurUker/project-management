@@ -1,0 +1,42 @@
+{
+  "taskId": "RP08-T01",
+  "packageId": "RP08",
+  "run": "2026-10-03-codebuddy-b04-validation",
+  "kind": "VALIDATION_ONLY",
+  "implementation": "COMPLETE",
+  "validation": "PASS",
+  "release": "NOT_EVALUATED",
+  "sourceChanges": "none (tests only)",
+  "fixAcceptance": {
+    "localScoped": "PASS",
+    "targetEnvironment": "NOT_RUN",
+    "B04": "SUPPORTED; entity gating, field projection and own-only now executed for member/VIEWER/outsider/zero-permission/SUPER_ADMIN; cache eviction and historical backfill remain RP08-T02; not FIX_ACCEPTED at target/release level"
+  },
+  "reviewFindingDisposition": {
+    "LR2-04 (RP08 side)": "COVERAGE_COMPLETED (real VIEWER/elevated/zero-permission fixtures, per-entity permission gate, per-entity field allowlist, reports own-only matrix, JWT-chain boundary recorded)"
+  },
+  "oldFindingDisposition": {
+    "B04": "SUPPORTED / not FIX_ACCEPTED at target or release level; 31 frozen audit open items unchanged"
+  },
+  "decisionBoundary": "No decision approved or signed; D-S01-05 condition=false (not recorded as PASS); T-RP-04 / T-RP-12 remain PROPOSED; RP08-T02 not activated.",
+  "stateMapping": {
+    "implementation": "COMPLETE (unchanged)",
+    "validation": "PASS (previous NOT_RUN for the required matrix now executed locally; still not target acceptance)",
+    "release": "NOT_EVALUATED (unchanged)"
+  },
+  "evidence": {
+    "suite": "evidence/attempt-03/integration-suite.log",
+    "runResults": "evidence/attempt-03/run-results.json",
+    "earlierAttempts": [
+      "evidence/attempt-01/integration-suite.log (synthetic username violated the lowercase check constraint)",
+      "evidence/attempt-02/integration-suite.log (test expectation corrections: tasks.readFields includes startDate; own-only compared against the actor's own report set)"
+    ]
+  },
+  "notRun": [
+    "AC-B04-02 cache eviction after permission revocation (RP08-T02, T-RP-04/T-RP-12)",
+    "PAC-RP08-02/03/04 joint cache/version/pagination fallback",
+    "full JWT-chain requests",
+    "frontend IndexedDB offline cache behaviour",
+    "target/candidate environment acceptance"
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "windowId": "F",
+  "decisionIds": ["T-RP-04", "T-RP-12"],
+  "implementation": "PREPARATION_ONLY",
+  "validation": "NOT_RUN",
+  "release": "NOT_EVALUATED",
+  "independentReview": "PENDING",
+  "owner": "CodeBuddy window-F worker (preparation)",
+  "deliverables": [
+    "authorization.json",
+    "change-summary.md",
+    "evidence/reused-evidence.md",
+    "evidence/source-facts.md",
+    "acceptance.json",
+    "rollback.md",
+    "handoff.md",
+    "REVIEW_ENTRY.md",
+    "watermark-options.md",
+    "cache-recovery-matrix.csv",
+    "decision-draft-T-RP-04.json",
+    "decision-draft-T-RP-04.md",
+    "decision-draft-T-RP-12.json",
+    "decision-draft-T-RP-12.md",
+    "acceptance-draft.csv",
+    "approval-request.md",
+    "interface-notes.md"
+  ],
+  "gates": {
+    "T-RP-04": "PROPOSED",
+    "T-RP-12": "PROPOSED"
+  },
+  "statusOfProposals": "All options PROPOSED; no production scheme selected; approvedBy/approvedAt/evidenceRef remain null.",
+  "reusedEvidenceRefs": [
+    "execution/RP13/RP13-T02/evidence/WATERMARK_ADR_DRAFT.md",
+    "execution/RP13/RP13-T02/runs/2026-10-02-continuous-rework/evidence/attempt-02/barrier-summary.json"
+  ],
+  "notRun": [
+    "real DB transaction barrier test (S03-OI-01 owned PostgreSQL)",
+    "IDB multi-tab runtime acceptance",
+    "non-empty ACL revoke / role change runtime acceptance",
+    "publisher / ACL / epoch / IDB migration / cache deletion implementation"
+  ],
+  "writerStopped": true
+}

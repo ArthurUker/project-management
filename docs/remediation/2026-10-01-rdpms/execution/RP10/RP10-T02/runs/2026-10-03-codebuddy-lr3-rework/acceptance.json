@@ -1,0 +1,151 @@
+{
+  "taskId": "RP10-T02",
+  "run": "2026-10-03-codebuddy-lr3-rework",
+  "kind": "REWORK",
+  "executor": "CodeBuddy",
+  "baselineCommit": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "reviewFindings": [
+    "LR3-01"
+  ],
+  "historicalFinding": "B10",
+  "gateDisposition": {
+    "D-S01-07": "NOT_APPLICABLE (condition=false; submit source-state behavior unchanged)",
+    "RP09-T01": "acceptance dependency only",
+    "INT-PC03-01": "NOT_RUN (PC03 PROPOSED, RP09-T01 not delivered)"
+  },
+  "subScenarios": [
+    {
+      "id": "A01",
+      "status": "PASS",
+      "desc": "authorized POST create 201; author/project/period/content/status=DRAFT/deletedAt=null correct; one create audit; one success receipt",
+      "evidence": "evidence/attempt-05/integration-suite.log"
+    },
+    {
+      "id": "A02",
+      "status": "PASS",
+      "desc": "absent-row validate -> barrier before real create -> competing POST 201 + submit 200 -> first POST resumes: 409 (not 500/201); content/status/currentVersion/ReportVersion untouched; no extra create audit; no success receipt for the loser",
+      "evidence": "evidence/attempt-05/integration-suite.log"
+    },
+    {
+      "id": "A03",
+      "status": "PASS",
+      "desc": "two distinct keys on the same business key: winner 201, loser 409 DUPLICATE_PERIOD_KEY, exactly one row, no duplicate audit/receipt",
+      "evidence": "evidence/attempt-05/integration-suite.log"
+    },
+    {
+      "id": "A03b",
+      "status": "PASS",
+      "desc": "actor holding only reports.create cannot overwrite a draft that appears during the window (409, content unchanged)",
+      "evidence": "evidence/attempt-05/integration-suite.log"
+    },
+    {
+      "id": "A04",
+      "status": "PASS",
+      "desc": "existing editable draft: authorized save 200; reports.update missing -> 403; stale baseline -> 409 CONFLICT with no audit/success-receipt residue",
+      "evidence": "evidence/attempt-05/integration-suite.log"
+    },
+    {
+      "id": "A04b",
+      "status": "PASS",
+      "desc": "POST already validated on an editable draft is rejected 409 INVALID_STATE when submit commits first; no receipt",
+      "evidence": "evidence/attempt-05/integration-suite.log"
+    },
+    {
+      "id": "A05",
+      "status": "PASS",
+      "desc": "same-key replay after submit returns the original success status with Idempotent-Replay and no duplicate audit/receipt; a new key is rejected 409 INVALID_STATE",
+      "evidence": "evidence/attempt-05/integration-suite.log"
+    },
+    {
+      "id": "A06",
+      "status": "PASS",
+      "desc": "tombstone restore positive: 201, same row, deletedAt=null, status/currentVersion unchanged, restoredFromTombstone audit, no version rows touched",
+      "evidence": "evidence/attempt-05/integration-suite.log"
+    },
+    {
+      "id": "A06b",
+      "status": "PASS",
+      "desc": "tombstone restored by another request during the window -> 409 (not 500), content remains the competitor's, no success receipt",
+      "evidence": "evidence/attempt-05/integration-suite.log"
+    },
+    {
+      "id": "A07",
+      "status": "PASS",
+      "desc": "pre-existing protections re-verified in the same suite: late PUT legacy 409 INVALID_STATE, modern CAS 409, sync late save rejected, save-first snapshot equals the saved revision, stale baseline 409 CONFLICT, five distinct submit keys allocate versions 1..5 with currentVersion=5, submit waits for a concurrent writer lock",
+      "evidence": "evidence/attempt-05/integration-suite.log"
+    }
+  ],
+  "cases": [
+    {
+      "id": "AC-B10-01",
+      "definition": "控制保存与提交交错时快照与成功提交同一 revision 一致；过期基线返回 409 且不留版本/receipt",
+      "status": "PASS",
+      "scope": "local owned PostgreSQL, both directions, deterministic barriers at real ORM calls; POST branches now included",
+      "evidence": [
+        "evidence/attempt-05/integration-suite.log",
+        "evidence/negative-control/attempt-01/integration-suite.log"
+      ]
+    },
+    {
+      "id": "AC-B10-02",
+      "definition": "已 SUBMITTED 记录以新幂等键提交按状态规则拒绝（待批准的重提来源状态规则）",
+      "status": "NOT_RUN",
+      "reason": "D-S01-07 unapproved; this rework does not change submit/resubmit source-state policy"
+    },
+    {
+      "id": "AC-B10-03",
+      "definition": "并发版本分配不会产生重复版本或部分状态",
+      "status": "PASS",
+      "scope": "five distinct submit keys: versions 1..5 unique, currentVersion=5, snapshots equal the committed body",
+      "evidence": [
+        "evidence/attempt-05/integration-suite.log"
+      ]
+    },
+    {
+      "id": "PAC-RP10-02",
+      "definition": "保存与提交屏障交错 snapshot 等于成功提交正文 revision，失败无 version/receipt",
+      "status": "PASS",
+      "scope": "local task sub-scope; package PAC remains limited by RP10-T01/T03 and D-S01-07",
+      "evidence": [
+        "evidence/attempt-05/integration-suite.log"
+      ]
+    },
+    {
+      "id": "TASK-RP10-T02",
+      "definition": "本任务：设计/实现/证据按批准范围完成，适用合同通过",
+      "status": "PASS",
+      "scope": "17/17 targeted suite + 6 directed regression suites each in its own database + typecheck/build",
+      "evidence": [
+        "evidence/attempt-05/integration-suite.log",
+        "evidence/regression/"
+      ]
+    },
+    {
+      "id": "LR3-01",
+      "status": "FIXED_LOCAL_SCOPED",
+      "evidence": [
+        "evidence/attempt-05/integration-suite.log",
+        "evidence/negative-control/attempt-01/integration-suite.log"
+      ],
+      "notes": "negative control (unconditional upsert restored) fails A02/A03/A03b/A06/A06b"
+    },
+    {
+      "id": "LR2-01",
+      "status": "STILL_FIXED_LOCAL_SCOPED",
+      "notes": "PUT/sync protections unchanged and re-verified in A07"
+    },
+    {
+      "id": "INT-PC03-01",
+      "status": "NOT_RUN",
+      "reason": "PC03 joint receipt/audit contract remains PROPOSED"
+    }
+  ],
+  "notRun": [
+    "target/candidate environment acceptance",
+    "full JWT-chain concurrency (injected trusted actor used)",
+    "frontend IndexedDB offline replay",
+    "AC-B10-02 / D-S01-07 resubmit source-state policy",
+    "RP10-T01 legacy client matrix (S03-OI-09 / T-RP-03)"
+  ],
+  "overallBoundary": "Local task-scope result only; release NOT_EVALUATED; B10 remains SUPPORTED and is not closed."
+}

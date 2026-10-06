@@ -1,0 +1,594 @@
+{
+  "SUP-01/runs/rp10-suite/attempt-02": {
+    "path": "execution/supplements/test-contract-2026-10-03/SUP-01/runs/rp10-suite/attempt-02",
+    "resultsExist": true,
+    "commands": [
+      {
+        "label": "initdb",
+        "command": [
+          "/opt/homebrew/bin/initdb",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-zywzviwh/pg",
+          "-U",
+          "rdpms_exec",
+          "--auth=trust"
+        ],
+        "exitCode": 0,
+        "log": "initdb.log"
+      },
+      {
+        "label": "cluster-start",
+        "command": [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-zywzviwh/pg",
+          "-l",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-zywzviwh/postgres.log",
+          "-o",
+          "-h 127.0.0.1 -p 64377 -k /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-zywzviwh/socket",
+          "-w",
+          "start"
+        ],
+        "exitCode": 0,
+        "log": "cluster-start.log"
+      },
+      {
+        "label": "guard-check",
+        "command": [
+          "node",
+          "scripts/test-db.mjs",
+          "check"
+        ],
+        "exitCode": 2,
+        "log": "guard-check.log"
+      },
+      {
+        "label": "guard-reset",
+        "command": [
+          "node",
+          "scripts/test-db.mjs",
+          "reset"
+        ],
+        "exitCode": 0,
+        "log": "guard-reset.log"
+      },
+      {
+        "label": "backend-build",
+        "command": [
+          "npm",
+          "run",
+          "build"
+        ],
+        "exitCode": 0,
+        "log": "backend-build.log"
+      },
+      {
+        "label": "integration-suite",
+        "command": [
+          "node",
+          "--test",
+          "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+        ],
+        "exitCode": 1,
+        "log": "integration-suite.log"
+      },
+      {
+        "label": "guard-drop",
+        "command": [
+          "node",
+          "scripts/test-db.mjs",
+          "drop"
+        ],
+        "exitCode": 0,
+        "log": "guard-drop.log"
+      },
+      {
+        "label": "cluster-stop",
+        "command": [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-zywzviwh/pg",
+          "-m",
+          "fast",
+          "-w",
+          "stop"
+        ],
+        "exitCode": 0,
+        "log": "cluster-stop.log"
+      }
+    ],
+    "cleanup": {
+      "guardDropExit": 0,
+      "clusterStopExit": 0,
+      "ownedDistRemoved": true,
+      "ownedTempRootRemoved": true
+    },
+    "tempRoots": [
+      {
+        "path": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-zywzviwh",
+        "existsNow": false
+      }
+    ],
+    "testSummary": {}
+  },
+  "SUP-01/runs/rp10-suite/attempt-03": {
+    "path": "execution/supplements/test-contract-2026-10-03/SUP-01/runs/rp10-suite/attempt-03",
+    "resultsExist": true,
+    "commands": [
+      {
+        "label": "initdb",
+        "command": [
+          "/opt/homebrew/bin/initdb",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-ypxslwt0/pg",
+          "-U",
+          "rdpms_exec",
+          "--auth=trust"
+        ],
+        "exitCode": 0,
+        "log": "initdb.log"
+      },
+      {
+        "label": "cluster-start",
+        "command": [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-ypxslwt0/pg",
+          "-l",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-ypxslwt0/postgres.log",
+          "-o",
+          "-h 127.0.0.1 -p 64429 -k /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-ypxslwt0/socket",
+          "-w",
+          "start"
+        ],
+        "exitCode": 0,
+        "log": "cluster-start.log"
+      },
+      {
+        "label": "guard-check",
+        "command": [
+          "node",
+          "scripts/test-db.mjs",
+          "check"
+        ],
+        "exitCode": 2,
+        "log": "guard-check.log"
+      },
+      {
+        "label": "guard-reset",
+        "command": [
+          "node",
+          "scripts/test-db.mjs",
+          "reset"
+        ],
+        "exitCode": 0,
+        "log": "guard-reset.log"
+      },
+      {
+        "label": "backend-build",
+        "command": [
+          "npm",
+          "run",
+          "build"
+        ],
+        "exitCode": 0,
+        "log": "backend-build.log"
+      },
+      {
+        "label": "integration-suite",
+        "command": [
+          "node",
+          "--test",
+          "tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+        ],
+        "exitCode": 1,
+        "log": "integration-suite.log"
+      },
+      {
+        "label": "guard-drop",
+        "command": [
+          "node",
+          "scripts/test-db.mjs",
+          "drop"
+        ],
+        "exitCode": 0,
+        "log": "guard-drop.log"
+      },
+      {
+        "label": "cluster-stop",
+        "command": [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-ypxslwt0/pg",
+          "-m",
+          "fast",
+          "-w",
+          "stop"
+        ],
+        "exitCode": 0,
+        "log": "cluster-stop.log"
+      }
+    ],
+    "cleanup": {
+      "guardDropExit": 0,
+      "clusterStopExit": 0,
+      "ownedDistRemoved": true,
+      "ownedTempRootRemoved": true
+    },
+    "tempRoots": [
+      {
+        "path": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-ypxslwt0",
+        "existsNow": false
+      }
+    ],
+    "testSummary": {
+      "tests": 19,
+      "pass": 17,
+      "fail": 2,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  "SUP-01/runs/rp10-suite/attempt-04": {
+    "path": "execution/supplements/test-contract-2026-10-03/SUP-01/runs/rp10-suite/attempt-04",
+    "resultsExist": true,
+    "commands": [
+      {
+        "label": "initdb",
+        "command": [
+          "/opt/homebrew/bin/initdb",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-z2w3l0h8/pg",
+          "-U",
+          "rdpms_exec",
+          "--auth=trust"
+        ],
+        "exitCode": 0,
+        "log": "initdb.log"
+      },
+      {
+        "label": "cluster-start",
+        "command": [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-z2w3l0h8/pg",
+          "-l",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-z2w3l0h8/postgres.log",
+          "-o",
+          "-h 127.0.0.1 -p 64589 -k /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-z2w3l0h8/socket",
+          "-w",
+          "start"
+        ],
+        "exitCode": 0,
+        "log": "cluster-start.log"
+      },
+      {
+        "label": "guard-check",
+        "command": [
+          "node",
+          "scripts/test-db.mjs",
+          "check"
+        ],
+        "exitCode": 2,
+        "log": "guard-check.log"
+      },
+      {
+        "label": "guard-reset",
+        "command": [
+          "node",
+          "scripts/test-db.mjs",
+          "reset"
+        ],
+        "exitCode": 0,
+        "log": "guard-reset.log"
+      },
+      {
+        "label": "backend-build",
+        "command": [
+          "npm",
+          "run",
+          "build"
+        ],
+        "exitCode": 0,
+        "log": "backend-build.log"
+      },
+      {
+        "label": "integration-suite",
+        "command": [
+          "node",
+          "--test",
+          "tests/integration/rp10-report-submit-snapshot.integration.test.mjs"
+        ],
+        "exitCode": 0,
+        "log": "integration-suite.log"
+      },
+      {
+        "label": "guard-drop",
+        "command": [
+          "node",
+          "scripts/test-db.mjs",
+          "drop"
+        ],
+        "exitCode": 0,
+        "log": "guard-drop.log"
+      },
+      {
+        "label": "cluster-stop",
+        "command": [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-z2w3l0h8/pg",
+          "-m",
+          "fast",
+          "-w",
+          "stop"
+        ],
+        "exitCode": 0,
+        "log": "cluster-stop.log"
+      }
+    ],
+    "cleanup": {
+      "guardDropExit": 0,
+      "clusterStopExit": 0,
+      "ownedDistRemoved": true,
+      "ownedTempRootRemoved": true
+    },
+    "tempRoots": [
+      {
+        "path": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-z2w3l0h8",
+        "existsNow": false
+      }
+    ],
+    "testSummary": {
+      "tests": 19,
+      "pass": 19,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  "SUP-01/runs/rp10-suite/attempt-01": {
+    "path": "execution/supplements/test-contract-2026-10-03/SUP-01/runs/rp10-suite/attempt-01",
+    "resultsExist": false
+  },
+  "SUP-02/runs/rp08-suite/attempt-02": {
+    "path": "execution/supplements/test-contract-2026-10-03/SUP-02/runs/rp08-suite/attempt-02",
+    "resultsExist": true,
+    "commands": [
+      {
+        "label": "initdb",
+        "command": [
+          "/opt/homebrew/bin/initdb",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-n8vcew4t/pg",
+          "-U",
+          "rdpms_exec",
+          "--auth=trust"
+        ],
+        "exitCode": 0,
+        "log": "initdb.log"
+      },
+      {
+        "label": "cluster-start",
+        "command": [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-n8vcew4t/pg",
+          "-l",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-n8vcew4t/postgres.log",
+          "-o",
+          "-h 127.0.0.1 -p 64807 -k /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-n8vcew4t/socket",
+          "-w",
+          "start"
+        ],
+        "exitCode": 0,
+        "log": "cluster-start.log"
+      },
+      {
+        "label": "guard-check",
+        "command": [
+          "node",
+          "scripts/test-db.mjs",
+          "check"
+        ],
+        "exitCode": 2,
+        "log": "guard-check.log"
+      },
+      {
+        "label": "guard-reset",
+        "command": [
+          "node",
+          "scripts/test-db.mjs",
+          "reset"
+        ],
+        "exitCode": 0,
+        "log": "guard-reset.log"
+      },
+      {
+        "label": "backend-build",
+        "command": [
+          "npm",
+          "run",
+          "build"
+        ],
+        "exitCode": 0,
+        "log": "backend-build.log"
+      },
+      {
+        "label": "integration-suite",
+        "command": [
+          "node",
+          "--test",
+          "tests/integration/rp08-sync-read-authorization.integration.test.mjs"
+        ],
+        "exitCode": 0,
+        "log": "integration-suite.log"
+      },
+      {
+        "label": "guard-drop",
+        "command": [
+          "node",
+          "scripts/test-db.mjs",
+          "drop"
+        ],
+        "exitCode": 0,
+        "log": "guard-drop.log"
+      },
+      {
+        "label": "cluster-stop",
+        "command": [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-n8vcew4t/pg",
+          "-m",
+          "fast",
+          "-w",
+          "stop"
+        ],
+        "exitCode": 0,
+        "log": "cluster-stop.log"
+      }
+    ],
+    "cleanup": {
+      "guardDropExit": 0,
+      "clusterStopExit": 0,
+      "ownedDistRemoved": true,
+      "ownedTempRootRemoved": true
+    },
+    "tempRoots": [
+      {
+        "path": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-n8vcew4t",
+        "existsNow": false
+      }
+    ],
+    "testSummary": {
+      "tests": 12,
+      "pass": 12,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  },
+  "SUP-02/runs/rp08-suite/attempt-01": {
+    "path": "execution/supplements/test-contract-2026-10-03/SUP-02/runs/rp08-suite/attempt-01",
+    "resultsExist": true,
+    "commands": [
+      {
+        "label": "initdb",
+        "command": [
+          "/opt/homebrew/bin/initdb",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-4q8o3ts4/pg",
+          "-U",
+          "rdpms_exec",
+          "--auth=trust"
+        ],
+        "exitCode": 0,
+        "log": "initdb.log"
+      },
+      {
+        "label": "cluster-start",
+        "command": [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-4q8o3ts4/pg",
+          "-l",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-4q8o3ts4/postgres.log",
+          "-o",
+          "-h 127.0.0.1 -p 64658 -k /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-4q8o3ts4/socket",
+          "-w",
+          "start"
+        ],
+        "exitCode": 0,
+        "log": "cluster-start.log"
+      },
+      {
+        "label": "guard-check",
+        "command": [
+          "node",
+          "scripts/test-db.mjs",
+          "check"
+        ],
+        "exitCode": 2,
+        "log": "guard-check.log"
+      },
+      {
+        "label": "guard-reset",
+        "command": [
+          "node",
+          "scripts/test-db.mjs",
+          "reset"
+        ],
+        "exitCode": 0,
+        "log": "guard-reset.log"
+      },
+      {
+        "label": "backend-build",
+        "command": [
+          "npm",
+          "run",
+          "build"
+        ],
+        "exitCode": 0,
+        "log": "backend-build.log"
+      },
+      {
+        "label": "integration-suite",
+        "command": [
+          "node",
+          "--test",
+          "tests/integration/rp08-sync-read-authorization.integration.test.mjs"
+        ],
+        "exitCode": 1,
+        "log": "integration-suite.log"
+      },
+      {
+        "label": "guard-drop",
+        "command": [
+          "node",
+          "scripts/test-db.mjs",
+          "drop"
+        ],
+        "exitCode": 0,
+        "log": "guard-drop.log"
+      },
+      {
+        "label": "cluster-stop",
+        "command": [
+          "/opt/homebrew/bin/pg_ctl",
+          "-D",
+          "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-4q8o3ts4/pg",
+          "-m",
+          "fast",
+          "-w",
+          "stop"
+        ],
+        "exitCode": 0,
+        "log": "cluster-stop.log"
+      }
+    ],
+    "cleanup": {
+      "guardDropExit": 0,
+      "clusterStopExit": 0,
+      "ownedDistRemoved": true,
+      "ownedTempRootRemoved": true
+    },
+    "tempRoots": [
+      {
+        "path": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-tc3-suite-4q8o3ts4",
+        "existsNow": false
+      }
+    ],
+    "testSummary": {
+      "tests": 12,
+      "pass": 11,
+      "fail": 1,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    }
+  }
+}

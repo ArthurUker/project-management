@@ -1,0 +1,39 @@
+{
+  "allowedFiles": [
+    "rdpms-system/backend/src/modules/projects/projectChildren.ts",
+    "rdpms-system/backend/src/routes/projects.js",
+    "rdpms-system/backend/src/routes/tasks.js",
+    "rdpms-system/backend/src/routes/sync.js",
+    "rdpms-system/backend/tests/integration/rp05-child-delta.integration.test.mjs",
+    "rdpms-system/backend/tests/integration/rp05-parent-delete-guard.integration.test.mjs",
+    "rdpms-system/frontend/src/components/EditProjectModal.tsx",
+    "rdpms-system/frontend/src/api/endpoints/projects.ts",
+    "rdpms-system/frontend/src/shared/projectEditCommand.ts",
+    "rdpms-system/backend/src/kernel/constants.js",
+    "rdpms-system/backend/prisma/seed.js",
+    "rdpms-system/backend/prisma/migrations/20261006_milestone_delete_permission/migration.sql"
+  ],
+  "gateRefs": [
+    "D-S01-08",
+    "T-RP-07"
+  ],
+  "scope": "STANDARD RP05-T02 ID-preserving child delta and explicit tombstones, current HTTP/sync reference fences and candidate editor serializer; exact milestones.delete P1 activation plus additive permission-row migration only. No other P1/default-role grant/DAG/historical cleanup/dependency change.",
+  "contracts": {
+    "D-S01-08": {
+      "proposal": "SINGLE_RESOURCE_EXPLICIT_TOMBSTONE_LIVE_REFERENCES_V1",
+      "rules": "ID-preserving tasks/milestones array upserts, omission always preserves originals. Explicit deletedTaskIds/deletedMilestoneIds only legal delete intent; all changed-child aggregates exact baseUpdatedAt and each existing update item baseUpdatedAt for child CAS. New records server-generated IDs, never hard delete/recreate. Current actor/version/grants + project/member capability rechecked inside locked command. Distinct create/update/delete and status/assign system/cap guards. References newly written must same-project/live; existing anomalies retained, not silently reparented or bulk-cleaned. Delete is single-resource authorized tombstone with existing deliberate delete-wins compatibility for HTTP/sync; refuse live children/dependencies unless explicitly tombstoned separately first, no recursive cross-project destruction. Repeated bound sync uses existing samekey/receipt, differentkey same tombstone stable noop; HTTP existing owned tombstone same stable noop. No new restore endpoint/retention garbage collection, no optional general DAG activation. Candidate modal preserves IDs and original read baselines, explicit removal lists; restored legacy drafts without provable baseline rejected409, not silently rebound to freshserver.",
+      "excluded": "General DAG/custom roles/historical cleanup optional/other planned tasks remain separate.",
+      "permissionRefinement": "Native successful fixture blocked because existing milestones.delete is still frozen/not seeded; exact explicit milestone tombstone path needs its independent permission. Activate only this existing P1 code (P0/P1 manifest unchanged), no implicit grant to default ordinary roles. Additive permission-row bootstrap migration + seed/runtime synchronization, high-risk metadata. No other P1 activation. Ownerdeletecap still mandatory. No historical seed run or realDB change."
+    },
+    "T-RP-07": {
+      "proposal": "RP05_EXPLICIT_ID_DELTA_DELETE_WINS_COMPAT_V1",
+      "rules": "ID-preserving tasks/milestones array upserts, omission always preserves originals. Explicit deletedTaskIds/deletedMilestoneIds only legal delete intent; all changed-child aggregates exact baseUpdatedAt and each existing update item baseUpdatedAt for child CAS. New records server-generated IDs, never hard delete/recreate. Current actor/version/grants + project/member capability rechecked inside locked command. Distinct create/update/delete and status/assign system/cap guards. References newly written must same-project/live; existing anomalies retained, not silently reparented or bulk-cleaned. Delete is single-resource authorized tombstone with existing deliberate delete-wins compatibility for HTTP/sync; refuse live children/dependencies unless explicitly tombstoned separately first, no recursive cross-project destruction. Repeated bound sync uses existing samekey/receipt, differentkey same tombstone stable noop; HTTP existing owned tombstone same stable noop. No new restore endpoint/retention garbage collection, no optional general DAG activation. Candidate modal preserves IDs and original read baselines, explicit removal lists; restored legacy drafts without provable baseline rejected409, not silently rebound to freshserver.",
+      "compatibility": "Extends deliberate existing syncdeletewins to scopedHTTPtask tombstone; aggregateediting strictreadbase and updateschildCAS, no oldarray omission-delete. No deployed client catalog claim; safe409 on unproven draft/base."
+    },
+    "S03-OI-05": {
+      "proposal": "RP05_CURRENT_ADAPTER_DELETE_WINS_STABLE_NOOP",
+      "rules": "ID-preserving tasks/milestones array upserts, omission always preserves originals. Explicit deletedTaskIds/deletedMilestoneIds only legal delete intent; all changed-child aggregates exact baseUpdatedAt and each existing update item baseUpdatedAt for child CAS. New records server-generated IDs, never hard delete/recreate. Current actor/version/grants + project/member capability rechecked inside locked command. Distinct create/update/delete and status/assign system/cap guards. References newly written must same-project/live; existing anomalies retained, not silently reparented or bulk-cleaned. Delete is single-resource authorized tombstone with existing deliberate delete-wins compatibility for HTTP/sync; refuse live children/dependencies unless explicitly tombstoned separately first, no recursive cross-project destruction. Repeated bound sync uses existing samekey/receipt, differentkey same tombstone stable noop; HTTP existing owned tombstone same stable noop. No new restore endpoint/retention garbage collection, no optional general DAG activation. Candidate modal preserves IDs and original read baselines, explicit removal lists; restored legacy drafts without provable baseline rejected409, not silently rebound to freshserver."
+    }
+  },
+  "scopeAmendment": "Native successful fixture blocked because existing milestones.delete is still frozen/not seeded; exact explicit milestone tombstone path needs its independent permission. Activate only this existing P1 code (P0/P1 manifest unchanged), no implicit grant to default ordinary roles. Additive permission-row bootstrap migration + seed/runtime synchronization, high-risk metadata. No other P1 activation. Ownerdeletecap still mandatory. No historical seed run or realDB change."
+}

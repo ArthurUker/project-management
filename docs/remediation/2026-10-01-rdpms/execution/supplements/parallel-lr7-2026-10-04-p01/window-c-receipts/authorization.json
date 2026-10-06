@@ -1,0 +1,44 @@
+{
+  "windowId": "C",
+  "partition": "window-c-receipts",
+  "batchId": "parallel-lr7-2026-10-04-p01",
+  "mode": "PROPOSED_APPROVAL_PREPARATION_ONLY",
+  "decisionIds": ["T-RP-02"],
+  "parentTasks": ["RP09-T01", "RP09-T02", "RP12-T02"],
+  "contractedBy": "docs/remediation/2026-10-01-rdpms/execution/parallel-2026-10-04/WINDOW_C_RECEIPTS.md + COMMON_RULES.md",
+  "executor": "RDPMS parallel-window-C executor (CodeBuddy)",
+  "authorizationMeaning": "Only prompt authoring/preparation. No business gate approval, no root-record writing, no implementation.",
+  "allowedWritePrefix": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-c-receipts/",
+  "prohibited": [
+    "modify any business source, test, shared helper, schema, guard, seed, dependency, deploy script or config",
+    "update DECISION_REGISTER, TASK_GRAPH, IMPLEMENTATION_STATE, OPEN_ITEM_GATES, CROSS_PACKAGE_CONTRACTS or any root ledger",
+    "implement RP09-T01/T02 or RP12-T02 business code",
+    "run real DB, build, browser, JWT/IDB, or any fault-injection/fault test",
+    "contact named owners / approvers / maintainers",
+    "commit, push, merge, deploy, reset, clean or stage"
+  ],
+  "resources": {
+    "readOnlySources": [
+      "rdpms-system/backend/src/routes/sync.js",
+      "rdpms-system/backend/src/platform/idempotency/receipts.js",
+      "rdpms-system/backend/src/platform/idempotency/payloadHash.js",
+      "rdpms-system/backend/prisma/schema.prisma"
+    ],
+    "readOnlyEvidence": [
+      "execution/RP00/RP00-T02/evidence/failure-point-matrix.json",
+      "execution/RP00/RP00-T02/change-summary.md",
+      "execution/RP00/RP00-T02/handoff.md",
+      "execution/RP00/RP00-T02/acceptance.json",
+      "execution/reviews/2026-10-04-codebuddy-lr6-closeout/{REVIEW,CONTRACT_ERRATA,NEXT_EXECUTION,findings,validation-summary}.{md,json}",
+      "CROSS_PACKAGE_CONTRACTS.json (PC03)",
+      "DECISION_REGISTER.json (T-RP-02)",
+      "TASK_GRAPH.json (RP00-T02, RP09-T01, RP09-T02, RP12-T02)"
+    ]
+  },
+  "stopConditions": [
+    "if asked to implement RP09/RP12 or modify source/tests/ledgers",
+    "if required to approve or sign any gate/decision",
+    "if a genuine execution blocker appears that cannot be recorded as OPEN_INPUT"
+  ],
+  "deliverableStatus": "PREPARATION_ONLY; recommended plan stays PROPOSED; approvals null"
+}

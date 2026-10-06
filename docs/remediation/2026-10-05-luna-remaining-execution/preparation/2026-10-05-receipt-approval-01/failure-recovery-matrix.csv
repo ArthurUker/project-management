@@ -1,0 +1,12 @@
+id,failure_point,persistent_truth_required,recovery_rule,result
+F01,reserve insert fails,No reservation or business effects,same key fresh-intent reserve may retry; no push without handle,NOT_RUN
+F02,reserve commits response lost,"Bound pending record exists, business absent",same exact reserve reads original handle; do not allocate new key,NOT_RUN
+F03,write/audit/applied receipt fails before item commit,Item business/audit rolled back; bound receipt prior state persists,existing unexpired binding permits retry; missing record is unknown,NOT_RUN
+F04,item commit succeeds response lost,business/audit/applied receipt all committed,query/replay exact authorized original key/hash/handle,NOT_RUN
+F05,"first item commit, second item failure","First persists, second rolls back; third may not run","per-item query, no whole-batch rollback",NOT_RUN
+F06,lastPushAt update fails after all commits,Items remain committed irrespective of HTTP500,"query each item, metadata failure separate",NOT_RUN
+F07,same key contenders,"One serialized business effect, no failed contender overwrite",read winner only after aborted tx ends,NOT_RUN
+F08,receipt missing/legacy/expired,No trusted proof for execution,"unknown/expired, retain last copy, no implicit reserve or new key",NOT_RUN
+F09,actor/device/member permission changes,Never cross-owner replay/body leak,current tx authorization fence; if unable prove ordering leave acceptance NOT_RUN,NOT_RUN
+F10,client conflict/delete-before-save or IDB fault,Backend contract does not prove client last copy safe,"RP12/T12 true IDB required, joint case NOT_RUN",NOT_RUN
+F11,target restore to older backup,Some reservations/receipts may be absent,no recovery permission from absence; PC06/epoch/client reset external gate,NOT_RUN

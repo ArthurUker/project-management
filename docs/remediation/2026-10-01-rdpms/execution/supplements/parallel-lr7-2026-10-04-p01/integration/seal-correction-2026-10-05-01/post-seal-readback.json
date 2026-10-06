@@ -1,0 +1,36 @@
+{
+  "pathBase": "REPOSITORY",
+  "generatedAt": "2026-10-05",
+  "batchId": "parallel-lr7-2026-10-04-p01",
+  "purpose": "Strict readback after bounded seal-correction. Verifies every declared path/hash per declared base, old six records preserved (only two history correction entries appended), new IDs unique, corrected refs resolve, and no self/cross-history final hash embedded.",
+  "payloadManifest": {
+    "relativePath": "n/supplements/parallel-lr7-2026-10-04-p01/integration/seal-correction-2026-10-05-01/payload-manifest.json",
+    "sha256": "fd2c9e6d6b83e118e1d9a2238f226c54129623668d52b1d52c607fe9db366d09"
+  },
+  "verifications": {
+    "manifestEntryCount": 20,
+    "manifestEntriesAllMatch": true,
+    "mismatches": [],
+    "revisionHistoryNewVersion": "parallel-lr7-2026-10-05-seal-correction-01",
+    "revisionHistoryNewIndex": 27,
+    "executionRevisionHistoryNewId": "EXEC-parallel-lr7-2026-10-05-seal-correction-01",
+    "executionRevisionHistoryNewIndex": 18,
+    "executionEntryUsesRealIdNotVersion": true,
+    "newIdsUnique": true,
+    "sealedArtifactHashesMatch": true,
+    "correctedRefsResolve": true,
+    "correctedRefsBad": [],
+    "reviewEvidenceRefsResolve": true,
+    "oldSixRecordsPreservedAdditive": "append-only; two state + two handoff + other fields of all six root records unchanged; only two history correction entries added"
+  },
+  "revisionHistoryFinalSha": "24433e058b38809784c2c95908361dbbe810d4c2fba209a5e5c576fe4119d0f3",
+  "executionRevisionHistoryFinalSha": "7002cbbd79fa9a368c5f01454ca3aa26e407b79d45e697246ff0ea328fe5d7c8",
+  "excludedFromSelf": [
+    "payload-manifest.json",
+    "final-integrity.json",
+    "post-seal-readback.json",
+    "REVISION_HISTORY.json",
+    "EXECUTION_REVISION_HISTORY.json"
+  ],
+  "overall": "PASS"
+}

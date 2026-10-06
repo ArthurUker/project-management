@@ -1,0 +1,632 @@
+{
+  "layer": "REAL_CHROME_SHARED_ORIGIN_HTTP_JWT_POSTGRES",
+  "cases": [
+    {
+      "name": "NORMAL_TWO_TAB",
+      "status": "PASS",
+      "refreshCalls": 1,
+      "actualActor": "dc0437e4-7532-436d-86ce-f920c005d50d"
+    },
+    {
+      "name": "LATE_OLD_FAILURE_AFTER_SUCCESSOR",
+      "status": "PASS",
+      "realTabs": 2,
+      "caller": "explicit legacy/uncoordinated real-HTTP competitor"
+    },
+    {
+      "name": "A_TO_B_LATE_REFRESH_SUCCESS",
+      "status": "PASS",
+      "actualACommandApplications": 0,
+      "newerActor": "f03b5251-b57c-4d46-881c-667458c1f1bd"
+    },
+    {
+      "name": "A_TO_B_LATE_REFRESH_FAILURE",
+      "status": "PASS",
+      "actualACommandApplications": 0,
+      "newerActor": "f03b5251-b57c-4d46-881c-667458c1f1bd"
+    },
+    {
+      "name": "AUTH_PROVIDER_LATE_PROFILE",
+      "status": "PASS",
+      "currentActor": "f03b5251-b57c-4d46-881c-667458c1f1bd"
+    },
+    {
+      "name": "AUTH_PROVIDER_LATE_LOGOUT",
+      "status": "PASS",
+      "currentActor": "f03b5251-b57c-4d46-881c-667458c1f1bd"
+    },
+    {
+      "name": "INVALID_CURRENT_REFRESH",
+      "status": "PASS",
+      "currentSessionCleared": true,
+      "noMutation": true
+    },
+    {
+      "name": "CURRENT_PERMISSION_AND_NETWORK",
+      "status": "PASS",
+      "refreshCalls": 0,
+      "unauthorizedWrites": 0
+    },
+    {
+      "name": "CAPABILITY_FALLBACK",
+      "status": "PASS",
+      "sharedBUnchanged": true,
+      "automaticRefreshes": 0,
+      "lastCopyMarkerPreserved": true
+    }
+  ],
+  "resources": {
+    "browser": "Existing Chrome, owned unique headless profile",
+    "tempRoot": "/var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-auth-browser-nynWny",
+    "bindHost": "127.0.0.1",
+    "database": "rdpms_test_approved_53986d1c2a",
+    "sameOrigin": "http://127.0.0.1:64587",
+    "twoTabs": true
+  },
+  "cleanup": {
+    "chromeExit": {
+      "code": 0,
+      "signal": null
+    },
+    "ownedProfileRemoved": true,
+    "serverClosed": true
+  },
+  "limits": [
+    "Own minimal React harness mounts current candidate AuthProvider; not full product pages or release UI.",
+    "Expiry token endpoint and protected mutation probe are owned test endpoints; use real signer/authenticate/current DB permissions. Not production routes.",
+    "One stale-response test uses an explicit uncoordinated competing real HTTP caller to represent old/legacy traffic; normal two-tab locking is a separate test.",
+    "No IndexedDB acceptance, no target/legacy deployment matrix, no D-S01-04 security-version policy acceptance."
+  ],
+  "actualMutationActors": [
+    {
+      "actorId": "dc0437e4-7532-436d-86ce-f920c005d50d",
+      "commandKey": "normal-tab1"
+    },
+    {
+      "actorId": "dc0437e4-7532-436d-86ce-f920c005d50d",
+      "commandKey": "normal-tab2"
+    },
+    {
+      "actorId": "dc0437e4-7532-436d-86ce-f920c005d50d",
+      "commandKey": "late-old-loser"
+    }
+  ],
+  "serverCalls": [
+    {
+      "path": "/api/auth/login",
+      "method": "POST",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/testing/expired-access",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/probe",
+      "method": "POST",
+      "barrierPath": "/api/auth/refresh",
+      "barrierHit": false,
+      "point": "after",
+      "status": 401
+    },
+    {
+      "path": "/api/auth/refresh",
+      "method": "POST",
+      "barrierPath": "/api/auth/refresh",
+      "barrierHit": true,
+      "point": "after",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/probe",
+      "method": "POST",
+      "barrierPath": "/api/auth/refresh",
+      "barrierHit": false,
+      "point": "after",
+      "status": 401
+    },
+    {
+      "path": "/api/auth/probe",
+      "method": "POST",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/probe",
+      "method": "POST",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/login",
+      "method": "POST",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/testing/expired-access",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/probe",
+      "method": "POST",
+      "barrierPath": "/api/auth/refresh",
+      "barrierHit": false,
+      "point": "before",
+      "status": 401
+    },
+    {
+      "path": "/api/auth/refresh",
+      "method": "POST",
+      "barrierPath": "/api/auth/refresh",
+      "barrierHit": true,
+      "point": "before",
+      "status": 401
+    },
+    {
+      "path": "/api/auth/refresh",
+      "method": "POST",
+      "barrierPath": "/api/auth/refresh",
+      "barrierHit": false,
+      "point": "before",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/probe",
+      "method": "POST",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/login",
+      "method": "POST",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/testing/expired-access",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/probe",
+      "method": "POST",
+      "barrierPath": "/api/auth/refresh",
+      "barrierHit": false,
+      "point": "after",
+      "status": 401
+    },
+    {
+      "path": "/api/auth/refresh",
+      "method": "POST",
+      "barrierPath": "/api/auth/refresh",
+      "barrierHit": true,
+      "point": "after",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/login",
+      "method": "POST",
+      "barrierPath": "/api/auth/refresh",
+      "barrierHit": false,
+      "point": "after",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": "/api/auth/refresh",
+      "barrierHit": false,
+      "point": "after",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": "/api/auth/refresh",
+      "barrierHit": false,
+      "point": "after",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/login",
+      "method": "POST",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/testing/expired-access",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/probe",
+      "method": "POST",
+      "barrierPath": "/api/auth/refresh",
+      "barrierHit": false,
+      "point": "before",
+      "status": 401
+    },
+    {
+      "path": "/api/auth/refresh",
+      "method": "POST",
+      "barrierPath": "/api/auth/refresh",
+      "barrierHit": true,
+      "point": "before",
+      "status": 401
+    },
+    {
+      "path": "/api/auth/login",
+      "method": "POST",
+      "barrierPath": "/api/auth/refresh",
+      "barrierHit": false,
+      "point": "before",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": "/api/auth/refresh",
+      "barrierHit": false,
+      "point": "before",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": "/api/auth/refresh",
+      "barrierHit": false,
+      "point": "before",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/login",
+      "method": "POST",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": "/api/auth/me",
+      "barrierHit": true,
+      "point": "after",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/login",
+      "method": "POST",
+      "barrierPath": "/api/auth/me",
+      "barrierHit": false,
+      "point": "after",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": "/api/auth/me",
+      "barrierHit": false,
+      "point": "after",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": "/api/auth/me",
+      "barrierHit": false,
+      "point": "after",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/login",
+      "method": "POST",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/logout",
+      "method": "POST",
+      "barrierPath": "/api/auth/logout",
+      "barrierHit": true,
+      "point": "after",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/login",
+      "method": "POST",
+      "barrierPath": "/api/auth/logout",
+      "barrierHit": false,
+      "point": "after",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": "/api/auth/logout",
+      "barrierHit": false,
+      "point": "after",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": "/api/auth/logout",
+      "barrierHit": false,
+      "point": "after",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/login",
+      "method": "POST",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/testing/expired-access",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/probe",
+      "method": "POST",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 401
+    },
+    {
+      "path": "/api/auth/refresh",
+      "method": "POST",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 401
+    },
+    {
+      "path": "/api/auth/login",
+      "method": "POST",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/probe",
+      "method": "POST",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 403
+    },
+    {
+      "path": "/api/auth/login",
+      "method": "POST",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/login",
+      "method": "POST",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/testing/expired-access",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 200
+    },
+    {
+      "path": "/api/auth/me",
+      "method": "GET",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 401
+    },
+    {
+      "path": "/api/auth/probe",
+      "method": "POST",
+      "barrierPath": null,
+      "barrierHit": false,
+      "point": null,
+      "status": 401
+    }
+  ]
+}

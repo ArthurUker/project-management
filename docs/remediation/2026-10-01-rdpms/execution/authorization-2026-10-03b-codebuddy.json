@@ -1,0 +1,54 @@
+{
+  "createdAt": "2026-10-03 (session 2, after review CODEBUDDY-REVIEW-2026-10-03)",
+  "sessionId": "2026-10-03b-codebuddy-lr3",
+  "executor": "CodeBuddy (no subagents, no model switch)",
+  "authorizationSource": "User message 2026-10-03 (second round) referencing execution/CODEBUDDY_NEXT_EXECUTOR_PROMPT_2026-10-03.md; supersedes the previous prompt's first-round pointer, one-task-per-round limit, wait-for-continue rule and the previous four-task scope",
+  "baselineCommit": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "latestReviewRef": "execution/reviews/2026-10-03-codebuddy/",
+  "taskIds": [
+    {"taskId": "RP10-T02", "kind": "REWORK", "findings": ["LR3-01"], "historicalFindings": ["B10"]},
+    {"taskId": "RP08-T01", "kind": "VALIDATION_ONLY", "findings": ["LR3-02"], "historicalFindings": ["B04"]},
+    {"taskId": "RP02-T01", "kind": "TEST_ONLY", "findings": ["OBS-RP02-FENCE"], "historicalFindings": ["B14"]}
+  ],
+  "allowedFiles": {
+    "RP10-T02": [
+      "rdpms-system/backend/src/routes/reports.js",
+      "rdpms-system/backend/src/modules/reports/reportCommands.ts",
+      "rdpms-system/backend/tests/integration/rp10-report-submit-snapshot.integration.test.mjs",
+      "rdpms-system/backend/tests/integration/rp10-*.integration.test.mjs (new files require prior registration)"
+    ],
+    "RP08-T01": [
+      "rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs",
+      "rdpms-system/backend/tests/integration/rp08-*.integration.test.mjs",
+      "read-contract-matrix.csv/.md and evidence files inside this round's run directory"
+    ],
+    "RP02-T01": [
+      "rdpms-system/backend/tests/integration/rp02-login-lock-ttl.integration.test.mjs"
+    ],
+    "shared": [
+      "plan-directory current run mirrors (IMPLEMENTATION_STATE, execution/state, TASK_GRAPH, PACKAGES, FINDING_TO_PACKAGE, ACCEPTANCE_MATRIX, all54-task-status.csv, remaining-task-gates.csv, both HANDOFF files)",
+      "REVISION_HISTORY.json and EXECUTION_REVISION_HISTORY.json (append only)",
+      "new self-owned runner/probe files under this round's run directory",
+      "REVIEW_ENTRY.md at the plan root"
+    ]
+  },
+  "explicitlyNotAllowed": [
+    "sync.js, ordinary API routes, frontend business code, auth.js, users.js, RBAC, session/refresh policy",
+    "shared test helpers (stubDeps) unless a fixture defect is proven, and then only inside this round's tests",
+    "new business database migration, dependency install/upgrade",
+    "production or shared database access, real accounts, real data restore",
+    "stage/commit/push/merge/deploy; reset/clean/stash of the worktree",
+    "rewriting original audits, manifests, revisions/v1, any prior run or failure log, or the three review evidence sets",
+    "approving any PENDING/PROPOSED product, security, data or technical decision"
+  ],
+  "resourceOwnership": "One newly created local PostgreSQL cluster per suite in a fresh mkdtemp root (127.0.0.1 only, role rdpms_exec), one generated rdpms_test_* database per suite, synthetic accounts only, private mode-0600 env file outside the checkout; backend/dist must not pre-exist and is removed only when this round generated it.",
+  "stopConditions": [
+    "Ownership of a resource cannot be established",
+    "A required business rule has no named approval -> stop that branch, record the exact gap, continue independent work",
+    "Out-of-scope code change would be required -> record path/reason/minimal extension request and pause that branch",
+    "New business failure found in B (validation only) -> record as FAIL with evidence, do not fix sync/ordinary API/frontend"
+  ],
+  "cleanup": "guard drop -> cluster stop -> owned dist removal -> temp root removal, with exit codes and post-run absence proof per suite",
+  "releaseStatus": "NOT_EVALUATED for all tasks and packages",
+  "businessApproval": "This authorization covers ordinary local implementation, tests and synthetic fixtures only. D-S01-07 stays condition=false, D-S01-05 condition=false, T-RP-04/T-RP-09/T-RP-12 stay PROPOSED; the executor signs nothing."
+}

@@ -1,0 +1,10 @@
+packet,file,symbol_or_route,question,review_status,evidence_ref,unreviewed_reason
+R05,rdpms-system/backend/src/routes/sync.js,GET /init,What auth scope and per-entity query filters apply?,REVIEWED,review.md#拉取范围矩阵; sync.js:271-337,
+R05,rdpms-system/backend/src/routes/sync.js,SYNC_ENTITIES,Which sync entities and permission/timestamp/tombstone settings exist?,REVIEWED,review.md#拉取范围矩阵; sync.js:41-149,
+R05,rdpms-system/backend/src/kernel/projectAccess.js,projectVisibilityFilter,How is visible project scope derived?,REVIEWED,review.md#B04; projectAccess.js:92-105,
+R05,rdpms-system/backend/prisma/schema.prisma,ProjectMember,Which membership timestamps and ACL-change fields exist?,REVIEWED,review.md#B08; schema.prisma:634-648,
+R05,rdpms-system/frontend/src/offline/engine.ts,applyPull,How are cursor and ACL changes stored and local data purged?,REVIEWED,review.md#B04/#B08; engine.ts:189-239,
+R05,rdpms-system/frontend/src/api/endpoints/sync.ts,SyncInitResponse,What client contract exposes cursor and ACL?,REVIEWED,"review.md#拉取范围矩阵; sync.ts:48-55,71-74",
+R05,docs/audits/2026-09-29-rdpms/backend-results.json,B04/B07/B08,Which historical outcomes may be inherited?,REVIEWED,review.md#B04/#B07/#B08,
+R05,database transaction commit ordering and timestamp semantics,concurrent write around pull/cursor,Does database visibility order guarantee no late commit falls behind cursor?,PENDING,review.md#游标和 ACL 协议需要明确的决策,No transaction-level interleaving was run; database semantic uncertainty remains.
+R05,sync tombstone query stream,more than 5000 removals,Does tombstone cap lose rows the same way as upsert cap?,PENDING,review.md#B07,Current source shows take=5000; historical dynamic evidence only demonstrated the 3000 upsert cap.

@@ -1,0 +1,81 @@
+{
+  "SUP-01": {
+    "requiredFinding": "LR4-03",
+    "reportedFinding": "LR4-01",
+    "unchangedOldHelper": "gateOnReportMethod (line379) still matches a single method",
+    "unchangedOldCallSites": {
+      "A02": 477,
+      "A03": 522,
+      "A03b": 557,
+      "A06b": 722
+    },
+    "newGenericHelper": 762,
+    "newGenericCase": 818,
+    "semanticControlCase": 867,
+    "actualNewGatePrimitiveExercised": "create; semantic control calls model.upsert after create gate is already fired",
+    "missingCoverage": [
+      "Restore gate updateMany/update/upsert compatibility",
+      "Existing race cases still use old single-method gate",
+      "try/finally release and settle on failure absent in added cases",
+      "Formal A06b competitor only restores to active DRAFT; does not submit before releasing delayed restore as SUP-01-02b requires"
+    ],
+    "businessFailureProven": false
+  },
+  "SUP-02": {
+    "requiredFinding": "LR4-02",
+    "test": 629,
+    "positiveActor": "actorFor(fixtures, member, [pair.permission])",
+    "negativeActor": "actorFor(fixtures, zero, [])",
+    "userIdentityChanges": true,
+    "sameActorPermissionRemovalCoveredByNewTest": false,
+    "preciseSevenEntityFieldComparison": "Executed and independently rerun PASS",
+    "fieldDocContradictions": {
+      "projects": [
+        "code",
+        "templateId"
+      ],
+      "milestones": [
+        "completedAt"
+      ],
+      "monthlyProgress": [
+        "submittedById"
+      ],
+      "reports": [
+        "reviewNote",
+        "reviewedAt"
+      ]
+    },
+    "fieldDocMissing": [
+      "CSV",
+      "target row IDs",
+      "per-entity field count",
+      "source lines",
+      "exact case/log mapping"
+    ]
+  },
+  "SUP-03": {
+    "requiredFinding": "LR4-02",
+    "reportedFinding": "LR4-04 (absent from original findings)",
+    "missingReadEntrypoints": [
+      {
+        "file": "rdpms-system/backend/src/routes/projects.js",
+        "line": 341,
+        "path": "GET /api/projects/:id embedded phases without deletedAt filter"
+      },
+      {
+        "file": "rdpms-system/backend/src/routes/phases.js",
+        "line": 45,
+        "path": "GET /api/phases without projectId"
+      }
+    ],
+    "clientEvidenceCorrection": {
+      "apiWrapper": "frontend/src/api/endpoints/projects.ts:39 only defines accessor; direct use of this accessor not found by targeted search",
+      "actualProjectDetailCaller": "frontend/src/pages/ProjectDetail.tsx:51 projectAPI.get(id)",
+      "renderedPhaseProgress": "ProjectDetail.tsx:198 -> PhaseProgressBar template/tasks props; PhaseProgressBar.tsx:40 derives template.content.phases, not the instance phase-list accessor",
+      "uiVisibility": "NOT_RUN; wrapper existence alone is not UI-display evidence"
+    },
+    "deleteScopeCorrection": "phases.js has DELETE transition edge route at line194, but no phase-resource DELETE; these must be distinguished",
+    "B20Boundary": "Original AC-B20-01..03 and PAC-RP04-03 describe deleted projects, not phase filtering",
+    "policyApproval": "No attributable named approval provided; existing implementation comparison cannot be called approved phase policy"
+  }
+}

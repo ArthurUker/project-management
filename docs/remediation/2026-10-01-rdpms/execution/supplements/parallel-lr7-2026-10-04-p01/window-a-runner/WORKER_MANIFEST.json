@@ -1,0 +1,36 @@
+{
+  "window": "A",
+  "taskId": "LR7-01",
+  "taskTitle": "修正隔离集成运行器——九条安全模拟路径实际上报",
+  "status": "COMPLETE",
+  "kind": "SIMULATED_CONTROL_ALL_SUBPROCESSES_STUBBED",
+  "createdAt": "2026-10-04",
+  "completedAt": "2026-10-04",
+  "rootFileWrites": 0,
+  "sharedLedgerWrites": 0,
+  "otherWindowWrites": 0,
+  "pathBase": "docs/remediation/2026-10-01-rdpms/execution/supplements/parallel-lr7-2026-10-04-p01/window-a-runner/",
+  "runnerSha256": "718d760649934d3351c8e0071e12470cbba50f23861fefb45a94d83f818064ce",
+  "controlSha256": "14b554172c847819798e229d7bfd6158f814e2041d3c88193f54dd5c6c39a9ac",
+  "files": {
+    "run-suite.py": "718d760649934d3351c8e0071e12470cbba50f23861fefb45a94d83f818064ce",
+    "runner-controls.py": "14b554172c847819798e229d7bfd6158f814e2041d3c88193f54dd5c6c39a9ac",
+    "authorization.json": "dda0c95fd5b6c0a0798c362825e895545cbfdda27bc0ad3f3be1d75bc7134da9",
+    "change-summary.md": "bd2fab82a4e17f73b06775e532b194d389570c874267ee1ee510fe6803c6d8be",
+    "acceptance.json": "6ddeccdde937d358d10d5d129b5360407c1aa06b2604a0f51f3d8266b35116d3",
+    "rollback.md": "6eb25d71157eb09ac28c5f20160a4254f122d77f1a894e281f782c6bc8c1b9a3",
+    "task-state.json": "4fcc44be64946c6ac9994ffbe47c8746edbc117b2861cb0fb6e364fe99faa254",
+    "handoff.md": "1c1ef92afe2022195fe7b1b3c3cf8a6d604244472f822cbb5ce089eb24a4e1f8",
+    "REVIEW_ENTRY.md": "2422530308acfeb5fe593690121c5b7ba6c5ff0d2e598a61d5a442d1be2ffd14",
+    "evidence/PATH_MATRIX.md": "8582dae4a413b5023cef6ff5076bc232dd892dda334552dd908be8d861169b11",
+    "evidence/runner-controls-summary.json": "f9b432a52c25a45b65af6531bec405220b70df7e76ae6ba8fd95c711487d9464"
+  },
+  "paths": {
+    "total": 9,
+    "passed": 9,
+    "failed": 0,
+    "list": ["normal", "build-nonzero", "drop-exception", "stop-nonzero", "build-timeout", "suite-spawn-exception", "result-write-oserror", "normal-log-ioerror", "timeout-log-ioerror"]
+  },
+  "readiness": "READY_FOR_AGGREGATION",
+  "notes": "九条路径全 stub 执行并通过；正常路径退出0；八条失败路径各自预定故障实际命中；无假成功、无逃逸异常、无自有资源或 dist 泄漏。仅本窗口新增，未改动正式运行器/代码/测试/共享台账/其他窗口。"
+}

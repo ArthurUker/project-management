@@ -1,0 +1,113 @@
+{
+  "baseline": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "currentHead": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "files": [
+    {
+      "path": "rdpms-system/backend/src/routes/sync.js",
+      "sha256": "9d9408f5e39e3dc18f8dc14c6d73dcaf8ac2a0c34bc765fd4630dcfb04af6af0",
+      "frozenS03Sha256": "9d9408f5e39e3dc18f8dc14c6d73dcaf8ac2a0c34bc765fd4630dcfb04af6af0",
+      "matchesFrozenS03": true,
+      "classification": "frozen S03 input"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/engine.ts",
+      "sha256": "faf33f07bda3778b1a3e8bb69a05acf54d89b2d90f197ec8b7bd28a4ebb8e457",
+      "frozenS03Sha256": "faf33f07bda3778b1a3e8bb69a05acf54d89b2d90f197ec8b7bd28a4ebb8e457",
+      "matchesFrozenS03": true,
+      "classification": "frozen S03 input"
+    },
+    {
+      "path": "rdpms-system/backend/src/routes/tasks.js",
+      "sha256": "7a6ea7e695695248a3007f22badeb00f6334be4481bec91937a8575aaa3e3f99",
+      "frozenS03Sha256": "7a6ea7e695695248a3007f22badeb00f6334be4481bec91937a8575aaa3e3f99",
+      "matchesFrozenS03": true,
+      "classification": "frozen S03 input"
+    },
+    {
+      "path": "rdpms-system/backend/src/routes/reports.js",
+      "sha256": "5423eac5c42199475f261c76e1d2bb36ce956d3a7102a8aaecdea33aabc83a19",
+      "frozenS03Sha256": "5423eac5c42199475f261c76e1d2bb36ce956d3a7102a8aaecdea33aabc83a19",
+      "matchesFrozenS03": true,
+      "classification": "frozen S03 input"
+    },
+    {
+      "path": "rdpms-system/backend/src/platform/idempotency/receipts.js",
+      "sha256": "5fedecb6fcdb9fb8878d7c331ba5c22ad23519a6e1486ae1da680f3806226c05",
+      "frozenS03Sha256": "5fedecb6fcdb9fb8878d7c331ba5c22ad23519a6e1486ae1da680f3806226c05",
+      "matchesFrozenS03": true,
+      "classification": "frozen S03 input"
+    },
+    {
+      "path": "rdpms-system/backend/prisma/schema.prisma",
+      "sha256": "fac40301f61926686ae1466b83e6b71b9c4bf8be9f519bf11dde32a04d967f22",
+      "frozenS03Sha256": "fac40301f61926686ae1466b83e6b71b9c4bf8be9f519bf11dde32a04d967f22",
+      "matchesFrozenS03": true,
+      "classification": "frozen S03 input"
+    },
+    {
+      "path": "rdpms-system/backend/src/modules/tasks/taskCommands.ts",
+      "sha256": "c020284c147fb555bad6680567b8a3a90580bd84476749692f5775c76d1c1ae1",
+      "frozenS03Sha256": "c020284c147fb555bad6680567b8a3a90580bd84476749692f5775c76d1c1ae1",
+      "matchesFrozenS03": true,
+      "classification": "frozen S03 input"
+    },
+    {
+      "path": "rdpms-system/backend/src/modules/reports/reportCommands.ts",
+      "sha256": "5f77c313c542c2aeeef3dfb06b60cfb32ee23f5d9e06ca42534a1f5b3b0f6c66",
+      "frozenS03Sha256": "5f77c313c542c2aeeef3dfb06b60cfb32ee23f5d9e06ca42534a1f5b3b0f6c66",
+      "matchesFrozenS03": true,
+      "classification": "frozen S03 input"
+    },
+    {
+      "path": "rdpms-system/frontend/src/pages/Tasks.tsx",
+      "sha256": "227de13df99e848fb4ba99e01e1905c65d88423ddc0e56dbeca53392a5c6d22f",
+      "frozenS03Sha256": "227de13df99e848fb4ba99e01e1905c65d88423ddc0e56dbeca53392a5c6d22f",
+      "matchesFrozenS03": true,
+      "classification": "frozen S03 input"
+    },
+    {
+      "path": "rdpms-system/frontend/src/components/KanbanBoard.tsx",
+      "sha256": "16865a13252c6482ed1119d8b509cc4e7b65655623a29125d0fb41756eb3b0f9",
+      "frozenS03Sha256": "16865a13252c6482ed1119d8b509cc4e7b65655623a29125d0fb41756eb3b0f9",
+      "matchesFrozenS03": true,
+      "classification": "frozen S03 input"
+    },
+    {
+      "path": "rdpms-system/frontend/src/api/endpoints/sync.ts",
+      "sha256": "8ecae0c95c67e77aac20f50d812f81466f38cac582c8f95e7514a7f8aa58b4d8",
+      "frozenS03Sha256": null,
+      "matchesFrozenS03": null,
+      "classification": "targeted call-chain supplement"
+    },
+    {
+      "path": "rdpms-system/frontend/src/api/request.ts",
+      "sha256": "58ac5fcd44cca67884362a327f93d861c0fdd62b381e2e807af9364ca527fbdf",
+      "frozenS03Sha256": null,
+      "matchesFrozenS03": null,
+      "classification": "targeted call-chain supplement"
+    },
+    {
+      "path": "rdpms-system/frontend/src/api/http.ts",
+      "sha256": "ddc1df339ee119566375a32e36c94d6cae7c89b05aea4142749a20e80882d9a7",
+      "frozenS03Sha256": null,
+      "matchesFrozenS03": null,
+      "classification": "targeted call-chain supplement"
+    },
+    {
+      "path": "rdpms-system/frontend/src/offline/idb.ts",
+      "sha256": "82898e79c5e89849ef8db288c3aa2157a8aee006e5a9916578ea667cca382020",
+      "frozenS03Sha256": null,
+      "matchesFrozenS03": null,
+      "classification": "targeted call-chain supplement"
+    },
+    {
+      "path": "rdpms-system/backend/src/bootstrap/createApp.js",
+      "sha256": "78aaeaf543649f712d51fe1782069026533d7e166ce5a04ab3b38c414ca3f894",
+      "frozenS03Sha256": null,
+      "matchesFrozenS03": null,
+      "classification": "targeted call-chain supplement"
+    }
+  ],
+  "allFrozenRelevantSourcesMatch": true,
+  "worktreeBoundary": "Existing unrelated roles.js/B17 test/docs changes preserved; no sync/recovery source file changed."
+}

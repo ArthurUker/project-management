@@ -1,0 +1,11 @@
+{
+  "source": "docs/audits/2026-09-30-review-plan/execution/R02/review.md",
+  "baseline": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
+  "reusedEvidence": [
+    {"finding":"B15","status":"SUPPORTED / HISTORICAL_ONLY","claim":"same refresh token was read before either revoke; two refresh requests each returned 200 and created a successor; prior run also recorded response TTL mismatch.","reference":"R02/review.md:29-42,60-64"},
+    {"finding":"N-R02-01","status":"SUPPORTED / static current-source finding","claim":"tab-local inflight coordination plus unconditional shared localStorage clear allows a stale refresh failure to clear a newer session; browser race not dynamically run.","reference":"R02/review.md:66-73"},
+    {"finding":"N-R02-02","status":"SUPPORTED / static current-source finding","claim":"passwordChangedAt is not checked by access authentication; exact invalidation window remains subject to D-S01-04.","reference":"R02/review.md:75-82"}
+  ],
+  "historicalDynamicEvidenceRerun": false,
+  "arbitration": "No history status, severity, or closure changed. RP00-T04 maps requirements and does not re-adjudicate prior findings."
+}

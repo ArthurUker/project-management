@@ -1,0 +1,143 @@
+{
+  "status": "PROPOSED_NOT_RUN",
+  "originalCaseCount": 24,
+  "checks": [
+    {
+      "id": "V01",
+      "caseRefs": [
+        "AC-B05-01",
+        "PAC-RP09-01"
+      ],
+      "scenario": "actor/device/scope mismatch, known key and revoked ACL",
+      "requiredEvidence": "Real authenticated legal success first; other actor and device denied/no replay body; DB receipt owner/hash unchanged",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "V02",
+      "caseRefs": [
+        "AC-B05-02"
+      ],
+      "scenario": "same actor/device/key different payload",
+      "requiredEvidence": "409 before mutation; compare title/content/version, audit, receipt binding",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "V03",
+      "caseRefs": [
+        "AC-B05-03",
+        "AC-B06-02"
+      ],
+      "scenario": "same identical applied replay",
+      "requiredEvidence": "Original stored result; no second business write or business audit; real DB",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "V04",
+      "caseRefs": [
+        "AC-B06-01",
+        "PAC-RP09-02"
+      ],
+      "scenario": "business/audit/receipt failpoints",
+      "requiredEvidence": "Barrier at each actual ORM boundary; item business/audit/result rolled back; bound pending reservation remains; no transaction abandonment query",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "V05",
+      "caseRefs": [
+        "AC-B06-03",
+        "PAC-RP09-04"
+      ],
+      "scenario": "batch partial success/lastPushAt fault",
+      "requiredEvidence": "First row/receipt/audit persist; failing item unchanged, later items unprocessed; lookup reconstructs each; no all-batch rollback assertion",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "V06",
+      "caseRefs": [
+        "PAC-RP09-03",
+        "GATE-S03-OI-02"
+      ],
+      "scenario": "same key same/different payload concurrent",
+      "requiredEvidence": "Deterministic independent DB clients; true row-lock/unique winner; both responses and one DB effect/receipt/audit; barrier finally release",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "V07",
+      "caseRefs": [
+        "PAC-RP09-04"
+      ],
+      "scenario": "commit succeeds then response lost",
+      "requiredEvidence": "Real HTTP/JWT owned server transport disconnect after commit; exact key/hash/handle replay returns committed effect; no automatic new key",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "V08",
+      "caseRefs": [
+        "PAC-RP09-05"
+      ],
+      "scenario": "24h expiry, missing handle, null legacy",
+      "requiredEvidence": "Both applied and pending expired; unknown after synthetic owned record loss; no implicit reserve/execution, preserve original request fixture",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "V09",
+      "caseRefs": [
+        "GATE-S03-OI-05",
+        "DECISION-T-RP-07"
+      ],
+      "scenario": "delete-wins/noop/races",
+      "requiredEvidence": "Active deletion with old base explicitly succeeds if authorized; repeat key no audit/write; new key on tombstone stable time; nonexistent owned scope noop; revoke and concurrent restore/delete cases",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "V10",
+      "caseRefs": [
+        "TASK-RP09-T01"
+      ],
+      "scenario": "seven entity/shared-command adapter",
+      "requiredEvidence": "Exercise legal authorized create/update/delete/noop applicable entity paths; preserve project status and manager/member, task fields/status/assignment, report draft CAS/locked statuses; receipt and strict audit atomic",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "V11",
+      "caseRefs": [
+        "TASK-RP09-T02"
+      ],
+      "scenario": "reserve/query/recovery/rollback",
+      "requiredEvidence": "Lost reservation response yields exact handle via same reserve; other actor device cannot claim; no applied overwrite; authorized lookup; rollback write-disabled path leaves copies/records",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "V12",
+      "caseRefs": [
+        "INT-PC03-01",
+        "INT-PC02-01"
+      ],
+      "scenario": "joint client/auth",
+      "requiredEvidence": "Backend portion only with explicit v1 producer may pass; actual existing frontend/IDB dequeue and full multi-entry access require independent evidence, NOT_RUN until run",
+      "result": "NOT_RUN"
+    },
+    {
+      "id": "V13",
+      "caseRefs": [
+        "INT-PC05-01",
+        "INT-PC06-01",
+        "INT-PC11-01",
+        "GATE-S03-OI-04"
+      ],
+      "scenario": "watermark/restore/target/retention",
+      "requiredEvidence": "Only scoped owned evidence; external approved epoch/watermark/budgets/client matrix/job facts missing; never infer joint/target PASS",
+      "result": "NOT_RUN"
+    }
+  ],
+  "validationDiscipline": [
+    "real JWT legal fixture before negatives",
+    "owned unique PG DB and filesystem; guard target then migrations, no real dotenv",
+    "true persistent DB/audit/receipt state and per-item hashes",
+    "reverse-semantic negative controls in owned temporary copies only; freeze all failed attempts",
+    "no mock substitution for DB/JWT/IDB/file tests",
+    "build/typecheck relevant regressions after actual changes; no dependency installation",
+    "cleanup owned full database not audit rows/trigger disable",
+    "backend and complete client/target acceptance distinct"
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "verdict": "AGGREGATION_BLOCKED_DELIVERY_PROTOCOL",
+  "findings": [
+    {
+      "id": "PH-01",
+      "severity": "P2_DELIVERY",
+      "status": "SUPPORTED",
+      "scope": "A readiness and input coverage",
+      "missingFields": [
+        "batchId",
+        "windowId",
+        "scope",
+        "workerManifest",
+        "actualResults",
+        "notRun",
+        "pendingApprovals",
+        "independentReview",
+        "release",
+        "writerStopped"
+      ],
+      "unlistedFiles": 830,
+      "recommendation": "Append new A amendment without changing original bytes; original author confirms stopped writes."
+    },
+    {
+      "id": "PH-02",
+      "severity": "P2_DELIVERY",
+      "status": "SUPPORTED",
+      "scope": "D READY manifest binding",
+      "actualManifestSha256": "0f7a93bd42126776409ce2ad33ce1c3d3c8f3aa7711086b767b4acd144e66d54",
+      "recommendation": "Integrator new explicit computed binding; original placeholder remains nonconforming."
+    },
+    {
+      "id": "PH-03",
+      "severity": "P3_DELIVERY",
+      "status": "SUPPORTED",
+      "scope": "B manifest generator input omission",
+      "unlistedFile": "window-b-paths/make-worker-manifest.py",
+      "recommendation": "Seal current bytes as aggregator-captured input; no worker rewrite/rerun."
+    },
+    {
+      "id": "PH-04",
+      "severity": "P3_PROTOCOL",
+      "status": "SUPPORTED",
+      "scope": "pendingApprovals exact schema vs notApproved worker fields",
+      "recommendation": "Transparent source-bound normalization only; no approval inferred."
+    }
+  ],
+  "productChanges": false,
+  "businessApprovals": false,
+  "productDynamicTestsRun": false,
+  "remainingImplementationTasks": 36
+}

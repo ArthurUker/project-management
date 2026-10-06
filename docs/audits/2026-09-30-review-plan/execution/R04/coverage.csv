@@ -1,0 +1,14 @@
+packet,file,symbol_or_route,question,review_status,evidence_ref,unreviewed_reason
+R04,rdpms-system/backend/src/routes/registrations.js,GET /,System permission and membership scope?,REVIEWED,"review.md#入口矩阵; registrations.js:137-186",
+R04,rdpms-system/backend/src/routes/registrations.js,GET /stats,Is aggregate scoped to actor-visible projects?,REVIEWED,"review.md#入口矩阵; registrations.js:189-209",
+R04,rdpms-system/backend/src/routes/registrations.js,GET /templates,Is this project-specific or global catalog?,REVIEWED,"review.md#入口矩阵; registrations.js:211-219",
+R04,rdpms-system/backend/src/routes/registrations.js,GET /:id,Membership and returned private associations?,REVIEWED,"review.md#B21; registrations.js:222-260",
+R04,rdpms-system/backend/src/routes/registrations.js,POST /,Creation/manager member behavior?,REVIEWED,"review.md#入口矩阵; registrations.js:263-322",
+R04,rdpms-system/backend/src/routes/registrations.js,PUT /:id,Membership/capability and manager transfer?,REVIEWED,"review.md#B21; registrations.js:325-394",
+R04,rdpms-system/backend/src/routes/registrations.js,PATCH /:id/stage,Project scope and transition guard?,REVIEWED,"review.md#入口矩阵; registrations.js:397-446",
+R04,rdpms-system/backend/src/routes/registrations.js,PATCH /:id/profile,Project scope and stage guard?,REVIEWED,"review.md#入口矩阵; registrations.js:448-485",
+R04,rdpms-system/backend/src/kernel/projectAccess.js,resolveProjectAccess/projectVisibilityFilter,What policy does ordinary project access enforce?,REVIEWED,"review.md#B21; projectAccess.js:1-55,92-105",
+R04,rdpms-system/backend/src/routes/projects.js,ordinary list/detail/update,How does normal project authorization differ?,REVIEWED,"review.md#B21; projects.js:107-125,164-170,306-314",
+R04,rdpms-system/backend/prisma/seed.js,MANAGER/MEMBER/VIEWER,Which defaults make route permissions reachable?,REVIEWED,"review.md#B21; seed.js:314-323,360-413",
+R04,rdpms-system/frontend/src/api/endpoints/registrations.ts,registrationsAPI,Do frontend endpoint paths correspond to reviewed backend routes?,REVIEWED,"review.md#入口矩阵; registrations.ts:43-64",
+R04,rdpms-system/frontend/src/api/endpoints/registrations.ts,remove,Is DELETE mounted/used elsewhere?,NOT_APPLICABLE,"review.md#覆盖缺口与验证边界", "Full application mount and callers are outside this package scope."

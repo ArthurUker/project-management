@@ -1,0 +1,45 @@
+{
+  "status": "CURRENT_INDEPENDENT_LOCAL_SCOPE_DELIVERED_EXTERNAL_INPUT_PENDING",
+  "counts": {
+    "tasks": 54,
+    "implementation": {
+      "COMPLETE": 48,
+      "NOT_STARTED": 5,
+      "IN_PROGRESS": 1
+    },
+    "validation": {
+      "ENV_BLOCKED": 12,
+      "PASS": 34,
+      "NOT_RUN": 8
+    },
+    "release": "NOT_EVALUATED for all tasks",
+    "incompleteImplementation": 6,
+    "note": "Implementation/local/target/release are separate; original planning checkpoints preserved"
+  },
+  "cases": {
+    "PASS": 223,
+    "NOT_RUN": 40,
+    "ENV_BLOCKED": 43
+  },
+  "release": "NOT_EVALUATED",
+  "programme": "NOT_CLOSED",
+  "nextReadyTask": null,
+  "standardRemaining": [
+    "RP10-T01",
+    "RP15-T01",
+    "RP15-T02",
+    "RP15-T03"
+  ],
+  "optionalInactive": [
+    "RP01-T03",
+    "RP05-T03"
+  ],
+  "candidateBlockerGroups": {
+    "GATE_EVIDENCE_REQUIRED": 32,
+    "CASE_NOT_PASSED_OR_UNBOUND": 70,
+    "STAGED_ARTIFACT_UNAVAILABLE": 1,
+    "RELEASE_FIELD_MISSING_OR_UNVERIFIED": 8,
+    "CONTAINMENT_TARGET_NOT_VERIFIED": 1
+  },
+  "writerStopped": "READY issued only after seal"
+}
