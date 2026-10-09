@@ -1,7 +1,7 @@
 # RDPMS — 研发项目管理系统
 
 > R&D Project Management System · 面向 IVD（体外诊断）/ 诊断试剂研发的科研项目全过程管理平台
-> 最新版本：`v1.0.0`（分支 `tencent_CVM/rdpm`）
+> 分支：`main` · 部署形态：原地部署（代码目录 = 运行目录，见 §8）
 
 ---
 
@@ -55,9 +55,10 @@ RDPMS 是一套面向**诊断试剂 / IVD 研发团队**的研发项目全过程
 
 ### 1.3 部署形态
 
-- **单实例生产**：一台 Ubuntu 22.04 服务器，Nginx 托管前端静态文件并反向代理 `/api` 到本机 Hono 后端；后端连 PostgreSQL。
-- **离线优先**：前端内置 Dexie 本地库，登录态与同步时间戳存 localStorage；弱网 / 离线时可继续操作，恢复网络后增量同步（`/api/sync`）。
-- **无状态后端**：JWT 鉴权，后端不依赖 Redis / 会话存储，可水平扩展（见 §8）。
+- **单实例原地部署**：一台 Ubuntu 服务器上，**Caddy** 终止 TLS（`rdpms.digifluidic.com`）、托管前端静态产物并反代 `/api` 到本机 Hono 后端；后端连 PostgreSQL。
+  代码目录 `/opt/rdpms/app` **同时是运行目录与开发目录** —— 没有 releases/current 多版本机制，发布即原地更新（详见 §8）。
+- **离线优先**：前端使用自研 IndexedDB 层（`src/offline/`，按登录主体分片），登录态与同步游标按主体存储；弱网 / 离线时可继续操作，恢复后经 `/api/sync` 增量同步。
+- **无状态后端**：JWT 鉴权（access token 15 分钟 + refresh 轮转），不依赖 Redis / 服务端会话存储。
 
 ---
 
@@ -86,24 +87,29 @@ RDPMS 是一套面向**诊断试剂 / IVD 研发团队**的研发项目全过程
 | 语言 | TypeScript | ^5.3.3 | 类型安全（构建门禁：`tsc -b`） |
 | 构建 | Vite | ^5.1.0 | 开发服务器 / 生产打包 |
 | 路由 | react-router-dom | ^6.22.0 | 前端路由 + 守卫 |
-| 状态 | Zustand | ^4.5.0 | 全局状态 + 持久化 |
-| 离线库 | Dexie | ^3.2.5 | 浏览器 IndexedDB 本地库 |
-| HTTP | axios | ^1.6.7 | API 客户端 / 拦截器 |
+| 状态 | Zustand | ^4.5.0 | 全局 UI 状态 |
+| 离线与本地存储 | **自研 IndexedDB 层** | — | `src/offline/`（按登录主体分片；早期版本用 Dexie，已移除） |
+| 会话 | 自研 tokenStore | — | `src/auth/tokenStore.ts`（access/refresh 轮转、跨标签锁） |
+| HTTP | axios | ^1.6.7 | API 客户端 / 拦截器（`src/api/http.ts`） |
 | 样式 | TailwindCSS | ^3.4.19 | 原子化 CSS |
+| 组件原子 | @radix-ui/react-* | ^1/2 | avatar / dialog / dropdown / progress / select / tabs |
 | 图标 | lucide-react | ^1.8.0 | 图标 |
 | 图表 | recharts | ^2.12.0 | 统计图表 |
 | 流程图 | @xyflow/react | ^12.10.2 | 阶段 / 流程可视化 |
 | 看板拖拽 | @dnd-kit/* | ^6/9/10 | 任务看板拖拽 |
-| 导出 | jspdf / html2canvas | — | 页面 / 报表导出 |
+| 导出 | jspdf / html2canvas | ^2.5.1 / ^1.4.1 | 页面 / 报表导出 |
 | 图布局 | @dagrejs/dagre | ^3.0.0 | 流程图自动布局 |
+| 工具 | clsx / dayjs | ^2.1.0 / ^1.11.10 | 类名拼接 / 日期处理 |
 
 ### 2.3 运维
 
 | 分类 | 技术 | 用途 |
 |------|------|------|
-| 进程守护 | systemd | 后端服务管理、开机自启、崩溃重启 |
-| 反向代理 / 静态 | Nginx（或 Caddy） | 前端托管 + `/api` 反代 + gzip |
-| 数据库 | PostgreSQL 14 | 主存储 + 逻辑备份（`pg_dump`） |
+| 进程守护 | systemd（`rdpms-api.service`） | 后端服务管理、开机自启、崩溃重启；启动入口 `/usr/local/bin/rdpms-start.sh` |
+| 反向代理 / 静态 | **Caddy** | TLS 终止（自动证书）+ 前端托管 + `/api` 反代；站点片段 `/etc/caddy/sites/rdpms.caddy` |
+| 数据库 | PostgreSQL 14 | 主存储 |
+| 备份 | `rdpms-backup.sh` | pg_dump + uploads 快照 + sha256 校验 + 保留策略（日 30 / 周 84 / 月 365） |
+| 发布 | `rdpms-deploy.sh` | 原地发布：fetch → 按需装依赖 → migrate → 构建 → 重启（见 §8.3） |
 
 ---
 
@@ -113,38 +119,39 @@ RDPMS 是一套面向**诊断试剂 / IVD 研发团队**的研发项目全过程
 
 ```mermaid
 flowchart LR
-  U[浏览器 / 用户] -->|HTTP 80| NG[Nginx<br/>静态资源 + 反代]
-  NG -->|/api → 127.0.0.1:3000| BE[Hono 后端<br/>systemd: rdpms-backend]
+  U[浏览器 / 用户] -->|HTTPS 443| CD[Caddy<br/>TLS + 静态资源 + 反代]
+  CD -->|/api → 127.0.0.1:3000| BE[Hono 后端<br/>systemd: rdpms-api]
   BE -->|Prisma| PG[(PostgreSQL 14)]
-  BE -->|审计写入| SL[(SystemLog 表)]
-  U -.离线可用.-> DX[(Dexie 本地库<br/>IndexedDB)]
-  DX -.恢复网络后增量同步.-> NG
+  BE -->|严格审计| AL[(audit_logs)]
+  U -.离线可用.-> DX[(离线层<br/>IndexedDB 按主体分片)]
+  DX -.恢复网络后增量同步.-> CD
 ```
 
-- 公网仅暴露 80（后续 443）；后端 3000 端口**仅本机**可达，不对外。
-- 前端为纯静态 SPA，所有 `/api` 请求经同源 Nginx 转发，避免跨域。
+- 公网暴露 **443**（Caddy 自动申请证书）；后端 3000 端口**仅本机**可达，不对外。
+- 前端为纯静态 SPA，`/api` 经同源反代，避免跨域。
 
 ### 3.2 组件与请求链路
 
 ```mermaid
 flowchart TB
   subgraph 前端
-    SPA[React SPA] --> STORE[Zustand Store]
-    STORE --> DEXIE[(Dexie)]
+    SPA[React SPA] --> STORE[Zustand + 离线引擎]
+    STORE --> OFF[(离线层 IndexedDB<br/>按主体分片)]
     SPA --> AXIOS[Axios API 客户端<br/>注入 Bearer Token]
+    SPA --> SESS[tokenStore<br/>access / refresh 轮转]
   end
-  AXIOS -->|HTTPS?/HTTP| NG
-  NG --> BE
+  AXIOS -->|HTTPS| CD[Caddy]
+  CD --> BE
   subgraph 后端
     BE --> CORS[CORS 中间件]
-    CORS --> IDEMP[幂等中间件 PUT]
-    IDEMP --> AUTH[authMiddleware]
-    AUTH --> ROUTES[21 个路由模块]
+    CORS --> IDEMP[幂等回执<br/>mutation_receipts 表]
+    IDEMP --> AUTH[authMiddleware<br/>校验 securityVersion]
+    AUTH --> ROUTES[28 个路由模块]
     ROUTES --> JWT[jwt 校验/签发]
     ROUTES --> BC[bcrypt 校验]
     ROUTES --> PRISMA[Prisma Client]
   end
-  PRISMA --> PG
+  PRISMA --> PG[(PostgreSQL)]
 ```
 
 ### 3.3 目录结构
@@ -152,30 +159,43 @@ flowchart TB
 ```
 project-management/
 ├── README.md                       # 本文件
-├── docs/
-│   ├── CODE_REVIEW.md              # 代码审查清单（43 项，已收敛）
-│   └── deployment/deploy-guide.md  # 部署执行手册
+├── docs/                           # 文档
+│   ├── review/codebuddy/deepseek/  # CodeBuddy 审阅资料归档（含 open-items.md）
+│   ├── remediation/                # RP 整改包产出
+│   ├── audits/                     # 审计记录
+│   └── port/                       # 重构实施记录与证据
+├── specs/
 └── rdpms-system/
-    ├── backend/                    # Hono 后端
+    ├── backend/                    # Hono 后端（TypeScript）
     │   ├── prisma/
-    │   │   ├── schema.prisma       # 数据模型（provider=postgresql）
-    │   │   └── seed.js             # 种子数据
+    │   │   ├── schema.prisma       # 数据模型
+    │   │   ├── migrations/         # 版本化迁移（13 个）
+    │   │   └── seed.js             # 种子数据（口令外置，见 §11）
     │   ├── src/
-    │   │   ├── index.js            # 入口：中间件 + 路由注册 + 启动
-    │   │   ├── routes/             # 21 个路由模块
-    │   │   ├── middleware/         # idempotency.js
+    │   │   ├── index.js            # 入口：仅转发到 bootstrap/
+    │   │   ├── bootstrap/          # createApp.js（装配）/ server.js（监听 + 生产密钥守卫）
+    │   │   ├── routes/             # 28 个路由模块
+    │   │   ├── kernel/             # 核心：rbac / audit / 状态机 / 常量
+    │   │   ├── platform/           # 平台层：db client / 幂等回执 / 严格审计 / 配置 / 恢复
+    │   │   ├── modules/            # 业务模块：access / reports / projects / sync / files …
     │   │   ├── data/               # 任务模板种子等
-    │   │   └── utils/              # 工具（状态机、权限等）
+    │   │   └── utils/
+    │   ├── tests/                  # unit / contract / integration
     │   └── package.json
-    └── frontend/                   # React SPA
-        ├── src/
-        │   ├── App.tsx             # 路由 + 守卫
-        │   ├── api/client.ts       # Axios 客户端 + 拦截器
-        │   ├── store/appStore.ts   # Zustand + Dexie 同步
-        │   ├── utils/permissions.ts# 前端权限位
-        │   ├── pages/              # 页面（含 knowledge/、reagent-formula/）
-        │   └── components/         # 布局与复用组件
-        └── package.json
+    ├── frontend/                   # React SPA
+    │   ├── src/
+    │   │   ├── App.tsx             # 路由 + 守卫
+    │   │   ├── api/                # http.ts / endpoints/ / adapters/
+    │   │   ├── auth/               # tokenStore.ts（会话与轮转）
+    │   │   ├── offline/            # IndexedDB 层 / 同步引擎 / 恢复面板
+    │   │   ├── shared/             # 与后端共用的规则（如 reportPeriod）
+    │   │   └── pages/ components/ hooks/ config/ types/
+    │   ├── tests/                  # unit（node:test）+ browser（playwright）
+    │   └── package.json
+    └── deploy/                     # 部署脚本
+        ├── rdpms-api.service       # systemd 单元模板
+        ├── scripts/rdpms-start.sh  # 启动入口（校验 dist 后 exec）
+        └── scripts/rdpms-deploy.sh # 原地发布脚本
 ```
 
 ---
@@ -271,7 +291,7 @@ erDiagram
 
 ### 5.1 通用约定
 
-- **Base URL**：`/api`（生产经 Nginx 同域反代；前端默认 `VITE_API_URL` 未设时即 `/api`）。
+- **Base URL**：`/api`（生产经 Caddy 同域反代；前端取 `VITE_API_BASE_URL`，未设时即 `/api`）。
 - **认证**：除 `POST /api/auth/login` 外，所有接口需在请求头携带 `Authorization: Bearer <token>`。
 - **鉴权图例**：
   - 🔓 `auth`：需登录（`authMiddleware`）
@@ -529,171 +549,200 @@ const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE |
 
 ### 7.1 JWT 结构
 
-- **签发**（`/api/auth/login` 成功）：`jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: '7d' })`。
-- **Payload**：`{ userId: string, role: 'admin'|'manager'|'member' }`，有效期 7 天，**无刷新令牌**（见技术债务）。
-- **校验**：`authMiddleware` 解析 `Authorization: Bearer <token>`，写入 `c.set('userId'/'userRole')` 供后续处理。
-- **密钥**：优先 `JWT_SECRET` 环境变量；未配置则运行时生成一次性密钥并告警（重启后旧 token 失效，禁止用于生产）。
+- **签发**（`/api/auth/login` 成功）：`jwt.sign({ userId, systemRole, securityVersion, datasetEpoch }, JWT_SECRET, { expiresIn: ACCESS_TTL_SEC })`。
+- **Payload**：`{ userId, systemRole, securityVersion, datasetEpoch }`；`systemRole` 取值
+  `SUPER_ADMIN | ADMIN | MANAGER | MEMBER | VIEWER | AUDITOR`（DB 枚举 `SystemRole`）。
+- **有效期**：access token 默认 **900 秒（15 分钟）**，可用 `JWT_ACCESS_TTL`（带单位）或 `JWT_ACCESS_TTL_SEC` 覆盖；
+  过期经 `POST /api/auth/refresh` 轮换（返回新 access + 新 refresh）。
+- **失效与重放**：`securityVersion` 与库中不一致（改密 / 会话撤销）→ 401 `SESSION_REVOKED`；
+  refresh token 被重复使用 → `REFRESH_TOKEN_REPLAYED`。
+- **校验**：`authMiddleware` 解析 `Authorization: Bearer <token>`，并校验上述字段与账号状态。
+- **密钥**：`JWT_SECRET` 生产强制配置；`configSchema` 在 `NODE_ENV=production` 下要求长度 ≥32、
+  且不命中弱口令黑名单，否则拒绝启动。
 
-### 7.2 RBAC 角色权限矩阵
+### 7.2 RBAC 权限模型
 
-权限位（`permissions.ts` / 后端 `ROLE_PERMISSIONS`）：
+权限模型为**表驱动**（`Role` / `Permission` / `UserRole` + `RolePermission`），不再是代码内硬编码矩阵：
 
-| 权限位 | admin | manager | member |
-|--------|:-----:|:-------:|:------:|
-| `projects.create` | ✅ | ✅ | — |
-| `projects.edit` | ✅ | ✅ | — |
-| `projects.delete` | ✅ | — | — |
-| `projects.update_status` | ✅ | ✅ | — |
-| `projects.manage_members` | ✅ | ✅ | — |
-| `tasks.create` | ✅ | ✅ | ✅ |
-| `tasks.update_status` | ✅ | ✅ | ✅ |
-| `tasks.delete` | ✅ | ✅ | — |
-| `users.manage` | ✅ | — | — |
-| `templates.create` | ✅ | — | — |
-| `templates.edit` | ✅ | ✅ | — |
-| `registrations.view` | ✅ | ✅ | ✅ |
-| `registrations.edit` | ✅ | ✅ | — |
-| `registrations.approve` | ✅ | — | — |
+- `User.systemRole`（枚举 `SystemRole`）决定系统级身份：
+  `SUPER_ADMIN | ADMIN | MANAGER | MEMBER | VIEWER | AUDITOR`；
+- 业务权限通过 `UserRole → Role → RolePermission → Permission.code` 绑定，
+  权限位形如 `projects.edit`、`tasks.assign`、`reports.submit`；
+- 写入口的授权真源在 `src/modules/access/writeGuards.js`
+  （`assertActionPermission` / `assertTaskEdit` / `assertTaskStatusChange` / `assertTaskAssign` /
+  `assertPhaseStatusChange` / `assertReportWritable` …），**普通 API 与同步接口必须调用同一组守卫**；
+- `SUPER_ADMIN` 视为持有全部 P0 权限（`kernel/constants.js` 的 `P0_PERMISSIONS`）。
 
-> 后端为安全权威（所有写操作经中间件/权限位校验）；前端 `permissions.ts` 仅用于按钮显隐（非安全边界）。`registrations` / `regulatory-documents` 模块用 `registrations.view/edit/approve` 三个权限位在接口内细粒度判断。
-
+> 后端是唯一安全边界；前端仅做按钮显隐，不构成安全控制。
 ### 7.3 中间件链
 
 ```
-请求 → CORS 中间件（origin 白名单，credentials:true）
-     → Idempotency 中间件（仅 PUT，按 Idempotency-Key 去重，24h）
-     → 路由模块级 authMiddleware（全局需登录）
-         ├─ adminMiddleware（部分端点）
-         └─ adminOrManagerMiddleware（部分端点）
+请求 → CORS 中间件（ALLOWED_ORIGINS 白名单）
+     → 幂等回执 withIdempotency（actor + command + 资源作用域 + key + payloadHash）
+     → authMiddleware（令牌 + securityVersion + 账号状态）
+     → 路由模块级鉴权（writeGuards / 权限位）
      → 业务处理器
      → onError / notFound 统一处理
 ```
 
-- **CORS**：`CORS_ORIGINS` 逗号分隔白名单；同源（无 origin）或命中放行，否则拒绝（避免 `*` + credentials 风险）。
-- **幂等**：`Idempotency-Key` 头命中缓存（内存 Map，重启失效）→ 直接返回上次结果，防弱网重传重复写入（生产建议换 Redis，见 §10）。
+- **CORS**：`ALLOWED_ORIGINS` 逗号分隔白名单；旧别名 `CORS_ORIGINS` 与之同设时必须完全一致，
+  否则 `configSchema` 拒绝启动。不使用通配 `*`。
+- **幂等**：作用域键在 `mutation_receipts` 表上有唯一索引，**跨实例安全**；
+  业务写入、严格审计与回执在同一事务提交，失败不留下成功回执；
+  同键不同 payload 返回 409 `IDEMPOTENCY_PAYLOAD_MISMATCH`。
 
 ---
 
 ## 8. 部署架构
 
-> 当前标准化部署为 **Nginx + systemd + PostgreSQL**（详见 `docs/deployment/deploy-guide.md`）。按需求同时提供 **Caddy** 等价配置（见 8.5）。
+> **原地部署**（2026-10-08 起）：代码目录 `/opt/rdpms/app` **同时是运行目录与开发目录**，
+> 没有 `releases/<ts>` 快照与 `current` 软链。发布即原地更新，见 §8.3。
 
-### 8.1 多实例隔离方式
+### 8.1 部署形态与目录
 
-- **后端无状态**：JWT 鉴权不依赖服务端会话，多个后端实例可共享同一 PostgreSQL，前置 Nginx / 负载均衡即可水平扩展。
-- **进程隔离**：后端以专用系统用户 `rdpms` 运行，`systemd` 设 `MemoryMax=512M`、`Restart=on-failure` 防止异常占用与崩溃。
-- **数据库隔离**：专用 PostgreSQL 角色 `rdpms` + 独立库 `rdpms`，仅本机 127.0.0.1 可达；应用与数据库网络隔离（不在同一暴露面）。
-- **端口隔离**：对外仅 80（后 443）；后端 3000 仅监听本机，Nginx 反代抵达，公网不可直接访问。
-- **已知限制（多实例注意）**：幂等缓存当前为**单实例内存 Map**，多实例下重复 PUT 可能命中不同实例——需改用 Redis 等共享存储（见 §10）。
+`/opt/rdpms`、`/srv/rdpms` 均为 `/mnt/datadisk0/rdpms` 的软链，部署根内容：
 
-### 8.2 环境变量清单
+```
+/mnt/datadisk0/rdpms/
+├── app/                    # 代码（git 仓库，main 分支）= 运行目录 = 开发目录
+├── backups/                # 数据库与 uploads 备份（rdpms 属主）
+├── logs/                   # 服务日志（systemd append 目标）
+├── uploads/                # 用户上传（服务读写）
+├── .env                    # 生产配置（root:rdpms 640）
+└── .codebuddy/  .vscode/   # 工具配置
+```
 
-**后端 `backend/.env`**：
+**为什么这样**：单实例 + 单人开发场景下，多版本快照带来的回滚能力不足以抵消它的复杂度
+（目录累积、残留进程、manifest 校验链）。**代价是失去秒级回滚**，见 §8.4。
 
-| 变量 | 必填 | 说明 | 示例 |
-|------|------|------|------|
-| `DATABASE_URL` | ✅ | PostgreSQL 连接串 | `postgresql://rdpms:密码@localhost:5432/rdpms?schema=public` |
-| `JWT_SECRET` | ✅ | JWT 强密钥（≥64 位 hex） | `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"` |
-| `PORT` | 否 | 后端监听端口 | `3000` |
-| `CORS_ORIGINS` | 否 | 允许来源（逗号分隔） | `http://111.231.166.161` |
-| `NODE_ENV` | 否 | 运行环境 | `production` |
+- **进程隔离**：后端以专用系统用户 `rdpms` 运行；`systemd` 设 `MemoryMax=1024M`、`Restart=always`。
+- **数据库隔离**：专用 PostgreSQL 角色 + 独立库 `rdpms`，仅本机 127.0.0.1 可达。
+- **端口隔离**：对外仅 443（Caddy）；后端 3000 仅监听本机。
+- **属主**：`app/` 归 `ubuntu`（开发与构建身份），服务以 `rdpms` 身份**只读**运行代码与产物；
+  发布脚本以 ubuntu 执行，内部通过 `sudo` 重启服务。
 
-**前端（构建期）**：`VITE_API_URL` / `VITE_API_BASE`（可选，默认 `/api`；独立域名部署时设完整基址且含 `/api` 后缀）。
+### 8.2 环境变量（`/srv/rdpms/.env`）
 
-### 8.3 systemd 服务（`/etc/systemd/system/rdpms-backend.service`）
+后端配置集中在 `/srv/rdpms/.env`（`root:rdpms` 640，经 systemd `EnvironmentFile` 注入）。
+
+| 变量 | 必填 | 说明 |
+|------|:----:|------|
+| `DATABASE_URL` | ✅ | PostgreSQL 连接串（可带 `?schema=public`） |
+| `DIRECT_URL` | ✅ | Prisma 直连串（迁移用；与 `DATABASE_URL` 同库同主机） |
+| `JWT_SECRET` | ✅ | ≥32 字符且不命中弱口令黑名单，否则生产拒绝启动 |
+| `ALLOWED_ORIGINS` | ✅（生产） | CORS 白名单，逗号分隔 |
+| `CORS_ORIGINS` | — | 旧别名；与 `ALLOWED_ORIGINS` 同设时必须完全一致 |
+| `UPLOAD_DIR` | ✅（生产） | 上传根目录，须为绝对路径且不在代码目录内 |
+| `NODE_ENV` / `HOST` / `PORT` | — | 生产下 `HOST` 必须为回环地址 |
+| `STORAGE_DRIVER` | — | 仅支持 `local` |
+| `TRUST_PROXY_HOPS` | — | 仅支持 `1`（当前未实现代理信任策略，该值仅作兼容） |
+| `ENABLE_BACKUP_EXPORT` | — | 仅容忍 `false`；导出权限由审计过的 SUPER_ADMIN 权限控制，不由该变量控制 |
+| `MAX_UPLOAD_MB` / `SEED_*` | — | 上传展示预算 / 种子账号与口令 |
+
+> 以上由 `src/platform/config/configSchema.ts` 在启动时校验，**不合规直接拒绝启动**（fail fast）。
+
+**前端（构建期）**：`VITE_API_BASE_URL`（默认 `/api`，同域反代时无需修改）。
+
+### 8.3 服务与发布
+
+**systemd 单元** `/etc/systemd/system/rdpms-api.service`（模板见仓库 `rdpms-system/deploy/rdpms-api.service`）：
 
 ```ini
 [Unit]
-Description=RDPMS Backend (Hono)
-After=network.target postgresql.service
-Wants=postgresql.service
+Description=RDPMS API (Hono + Prisma + PostgreSQL)
+After=network-online.target postgresql.service
+Wants=network-online.target
+RequiresMountsFor=/mnt/datadisk0
+StartLimitIntervalSec=300
 
 [Service]
 Type=simple
 User=rdpms
 Group=rdpms
-WorkingDirectory=/opt/rdpms/backend
-EnvironmentFile=/opt/rdpms/backend/.env
-ExecStart=/usr/bin/node /opt/rdpms/backend/src/index.js
-Restart=on-failure
-RestartSec=3
-MemoryMax=512M
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=rdpms-backend
-
-[Install]
-WantedBy=multi-user.target
+WorkingDirectory=/opt/rdpms/app/rdpms-system/backend
+EnvironmentFile=/srv/rdpms/.env
+ExecStart=/usr/local/bin/rdpms-start.sh
+MemoryMax=1024M
+Restart=always
+RestartSec=5
+StandardOutput=append:/mnt/datadisk0/rdpms/logs/app.out.log
+StandardError=append:/mnt/datadisk0/rdpms/logs/app.err.log
+# 其余加固项见单元模板：NoNewPrivileges / ProtectSystem / ReadWritePaths 等
 ```
+
+- `RequiresMountsFor=/mnt/datadisk0`：数据盘未就绪时不启动（否则代码目录断链、日志也无处可写）。
+- `ExecStart` 指向启动包装 `/usr/local/bin/rdpms-start.sh`：**校验 `dist/index.js` 存在后 exec**，
+  缺失即失败退出。不做 src 回退 —— `src/` 下是 TypeScript，node 无法直接执行，
+  回退只会把"构建没跑"这种部署事故变成更难排查的启动错误。
+
+**发布（一条命令）**：
 
 ```bash
+cd /opt/rdpms/app
+bash rdpms-system/deploy/scripts/rdpms-deploy.sh          # 默认 main 分支
+```
+
+流程：`git fetch` → `merge --ff-only` → **按需** `npm ci`（仅当对应 `package-lock.json` 实际变化，
+避免每次发布都等一轮网络安装）→ `prisma generate` + `migrate deploy` → 前后端构建 →
+`systemctl restart rdpms-api`。实测一次完整发布约 **53 秒**（依赖无变化时）。
+
+**启动脚本与单元的安装**：
+
+```bash
+cd /opt/rdpms/app
+sudo cp rdpms-system/deploy/scripts/rdpms-start.sh /usr/local/bin/rdpms-start.sh
+sudo chown root:rdpms /usr/local/bin/rdpms-start.sh && sudo chmod 750 /usr/local/bin/rdpms-start.sh
+sudo cp rdpms-system/deploy/rdpms-api.service /etc/systemd/system/rdpms-api.service
 sudo systemctl daemon-reload
-sudo systemctl enable --now rdpms-backend
-journalctl -u rdpms-backend -f   # 查看日志
 ```
 
-### 8.4 Nginx 配置（`/etc/nginx/sites-available/rdpms`）
+### 8.4 回滚
 
-```nginx
-server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
-    server_name _;
+原地部署**没有**"切回上一个 release"这种秒级动作，回滚是"改代码 + 重新构建"：
 
-    root /opt/rdpms/frontend/dist;
-    index index.html;
-
-    gzip on;
-    gzip_min_length 1024;
-    gzip_comp_level 6;
-    gzip_vary on;
-    gzip_types text/plain text/css text/javascript application/javascript application/json application/x-javascript image/svg+xml;
-
-    location /assets/ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-        add_header X-Content-Type-Options nosniff;
-    }
-    location ~* \.(ico|png|svg|jpg|jpeg|gif|json|woff2?)$ { expires 30d; add_header Cache-Control "public"; }
-    location / { try_files $uri $uri/ /index.html; add_header Cache-Control "no-cache, no-store, must-revalidate"; }
-
-    location /api/ {
-        proxy_pass         http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header   Host              $host;
-        proxy_set_header   X-Real-IP         $remote_addr;
-        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Proto $scheme;
-        proxy_read_timeout 60s;
-    }
-}
+```bash
+cd /opt/rdpms/app
+git log --oneline -5                                # 找到回退目标
+git checkout <commit>                               # 或 git revert <commit>
+bash rdpms-system/deploy/scripts/rdpms-deploy.sh    # 重新构建 + 重启
 ```
 
-### 8.5 Caddy 等价配置（替代 Nginx）
+注意两点：
 
-若选用 Caddy，删除 Nginx 配置后使用以下 `Caddyfile`（`sudo caddy reload`）：
+1. **数据库迁移是前滚的**，回退代码不等于回退数据库。本项目现有迁移均为 additive
+   （新增表 / 列 / 触发器），对旧代码兼容，因此代码回退通常可行；涉及数据语义变更的迁移需单独评估。
+2. 回滚目标若是**旧提交**，需确认该提交的 `dist` 能被重新构建（`npm run build` 通过）。
+
+### 8.5 反向代理（Caddy）
+
+站点片段 `/etc/caddy/sites/rdpms.caddy`：
 
 ```caddyfile
-:80 {
-    root * /opt/rdpms/frontend/dist
+rdpms.digifluidic.com {
+    tls <邮箱>
     encode gzip
 
-    # SPA 回退
-    try_files {path} /index.html
-    file_server
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "no-referrer"
+        X-Frame-Options "SAMEORIGIN"
+        -Server
+    }
 
-    # API 反代到本机后端
     handle /api/* {
         reverse_proxy 127.0.0.1:3000
     }
 
-    # 静态资源长缓存
-    @assets path /assets/*
-    header @assets Cache-Control "public, immutable"
+    handle {
+        root * /opt/rdpms/app/rdpms-system/frontend/dist
+        try_files {path} /index.html
+        file_server
+    }
 }
 ```
 
-> Caddy 自动处理 gzip、`try_files`、健康检查；后续启用 HTTPS 仅需将 `:80` 改为你的域名，Caddy 自动申请 Let's Encrypt 证书。
+改配置后：`sudo caddy validate --config /etc/caddy/Caddyfile && sudo systemctl reload caddy`。
 
 ---
 
@@ -701,57 +750,68 @@ server {
 
 ### 9.1 认证与令牌
 
-- JWT 无状态、7 天有效期；密钥强制生产配置（`JWT_SECRET`），缺失即告警并拒绝作为生产凭据。
-- 密码以 bcrypt（cost 10）单向哈希存储，登录用 `bcrypt.compare` 校验，响应中**绝不返回 password 字段**。
-- 账号 `status='disabled'` 时拒绝登录（403）。
+- JWT 无状态：access token 默认 **15 分钟**（`JWT_ACCESS_TTL` / `JWT_ACCESS_TTL_SEC` 可覆盖），
+  配 refresh token 轮换；`JWT_SECRET` 生产强制配置（`configSchema` 校验长度与弱口令黑名单，不合规拒绝启动）。
+- 令牌携带 `securityVersion`：改密或会话撤销后版本递增，旧令牌立即失效（401 `SESSION_REVOKED`）。
+- 密码以 bcrypt 单向哈希存储，登录用 `bcrypt.compare` 校验，响应中**绝不返回 password 字段**。
+- 账号非 `ACTIVE`（如 `DISABLED`）时拒绝登录；连续失败 **5 次锁定 15 分钟**（原子计数，防并发绕过）。
 
 ### 9.2 鉴权与越权防护
 
-- 后端为唯一安全边界：`adminMiddleware` / `adminOrManagerMiddleware` 拦截敏感写操作；`registrations` / `regulatory-documents` 按权限位细粒度校验（含"不可删自己""不可移负责人"等特例）。
-- CORS 白名单 + `credentials:true` 组合，避免通配 `*` 带来的凭证泄露。
+- 后端为唯一安全边界：写操作统一经 `src/modules/access/writeGuards.js` 的守卫
+  （`assertActionPermission` / `assertTaskEdit` / `assertTaskStatusChange` / `assertTaskAssign` /
+  `assertPhaseStatusChange` / `assertReportWritable` …），**普通 API 与同步接口共用同一组守卫**；
+  `registrations` / `regulatory-documents` 另有权限位细粒度校验。
+- CORS 使用 `ALLOWED_ORIGINS` 白名单匹配来源，不使用通配 `*`。
 
 ### 9.3 密码策略
 
-- 修改密码要求 `newPassword.length >= 6`（前端 + 后端双重校验）。
-- 管理员可重置成员密码；禁用明文传输（HTTPS 阶段强化，见 §10）。
+- 后端要求新密码 `length >= 12`（创建用户、管理员重置、用户自助改密三处一致）。
+- 管理员可重置成员密码；重置与改密都会递增该用户的 `securityVersion`，使既有会话全部失效。
+- 前端 `Settings.tsx` 仍为 ≥6 位的旧校验 —— **前后端不一致，已登记为待办**。
 
-### 9.4 审计日志（`SystemLog`）
+### 9.4 审计日志（`audit_logs`）
 
-- 记录 `login` / `logout` / `report_submit` / `report_approve` 等关键动作，字段：`action, userId, targetId, detail, ip, createdAt`。
-- `ip` 取自 `X-Forwarded-For`（经 Nginx 反代），支撑事后追溯。
+- 关键动作写入 `audit_logs`，字段含 `action, userId, targetId, detail, ip, createdAt`。
+- **两级审计**：业务证据必须走 `platform/audit/strictAudit.js` 的 `writeAuditStrict(tx, entry)`
+  （与业务同事务，失败一并回滚）；`kernel/audit.js` 的 `writeAudit` 会吞掉错误，**不得用于业务证据**。
+- `audit_logs` 由数据库触发器强制 append-only（UPDATE / DELETE 报 `P0001`），
+  因此测试断言一律用**增量**而非全表计数。
+- `ip` 取自 `X-Forwarded-For` 首值（经 Caddy 反代）。
 
 ### 9.5 限流 / 防重放
 
-- **幂等中间件**：PUT 请求携带 `Idempotency-Key` 时去重（24h 内存缓存），防弱网重传重复写入。
-- **全局限流**：⚠️ 当前**未实现**统一速率限制（如登录爆破防护），属待办（见 §10）。
+- **幂等回执**：写请求按「actor + command + 资源作用域 + key + payloadHash」落 `mutation_receipts` 表
+  （唯一索引保证并发安全），防弱网重传重复写入；同键不同内容返回 409。
+- **登录防爆破**：连续失败 5 次锁定 15 分钟（见 9.1）。
+- **全局限流**：⚠️ 当前**未实现**统一速率限制，属待办。
 
 ### 9.6 其他
 
-- 数据库凭据独立于应用，专用低权角色；端口最小化暴露（仅 80/443）。
-- 种子账号 `admin/admin123` 首次登录后应强制改密（运营规范，非系统强制）。
+- 数据库凭据独立于应用（专用角色），端口最小化暴露（对外仅 443，后端 3000 仅本机）。
+- 种子账号由 `SEED_SUPER_ADMIN_USERNAME` / `SEED_ADMIN_USERNAME` 指定，
+  **口令必须外置**（`SEED_SUPER_ADMIN_PASSWORD` / `SEED_ADMIN_PASSWORD`），代码内不再有默认弱口令。
 
 ---
 
 ## 10. 已知技术债务与待办
 
-| 类别 | 项 | 说明 / 建议 |
-|------|----|--------------|
-| 鉴权 | 无刷新令牌 | JWT 7 天固定有效期，过期需重新登录；建议引入 refresh token。 |
-| 安全 | 无全局限流 | 登录/API 缺速率限制，存在爆破风险；建议加中间件或网关限流。 |
-| 安全 | 尚未启用 HTTPS | 当前公网 HTTP；建议绑定域名后启用 TLS（Caddy 可自动签发）。 |
-| 安全 | 密码策略偏弱 | 仅最小 6 位，无复杂度/历史校验；建议增强。 |
-| 可靠性 | 幂等缓存单实例 | `idempotency` 用内存 Map，多实例失效；建议换 Redis。 |
-| 数据 | 用 `db push` 而非 migration | 无版本化迁移历史，团队协作/回滚不便；建议改用 `prisma migrate`。 |
-| 数据 | 状态字段为字符串 | `role/status/reportType` 等为字符串，缺 DB 层枚举约束；建议评估 enum 或查表。 |
-| 前端 | 大组件 | `TemplateEditor`(~123KB)、`ProcessFlowDiagram`(~61KB)、`CreateProjectModal`(~57KB) 体积大，影响首屏；建议拆分/懒加载。 |
-| 工程化 | 缺自动化测试 | 后端/前端均无单测与 E2E；建议补关键路径测试。 |
-| 工程化 | 缺 CI/CD | 无流水线；建议加 lint + tsc + test + build 门禁。 |
-| 工程化 | 缺输入校验层 | 依赖各路由手动 `if` 判断，易遗漏；建议引入 zod 等 schema 校验。 |
-| 兼容性 | SQLite/PG 漂移 | 已统一为 PostgreSQL 以消除大小写等差异；若本地仍用 SQLite 需保持同步。 |
-| 运维 | 备份未加密传输 | `pg_dump` 明文；建议加密备份并异地存储。 |
-| 体验 | Dexie 升级需硬刷新 | schema 版本升级时旧本地库需用户硬刷新（Cmd/Ctrl+Shift+R）触发迁移。 |
+> 完整清单（含验证记录与下一步）见 `docs/review/codebuddy/deepseek/open-items.md`。
 
-> 代码质量审查（`docs/CODE_REVIEW.md`）列出的 43 项问题**已全部收敛**（含 ApiResponse 弱类型、CORS、`[key:string]:any` 索引等）。
+| 类别 | 项 | 说明 |
+|------|----|------|
+| 测试 | **前端 4 项单测未解决** | `offlineAccountSwitch.test.ts` 引擎时序套件：`A03-E4` 尚未定性（缺陷 or 旧预期冲突），`A03-E2` / `A03-E3` / `RP13-T01` 为夹具时序问题 |
+| 安全 | 无统一速率限制 | 仅有登录失败锁定（5 次 / 15 分钟），无全局限流 |
+| 安全 | 密码策略前后端不一致 | 后端 ≥12 位，前端 `Settings.tsx` 仍为 ≥6 位 |
+| 安全 | 备份未加密、未异地 | `rdpms-backup.sh` 产出明文 `pg_dump`，且仅存本机（脚本自身会告警） |
+| 数据 | 部分状态字段为字符串 | `role` / `status` / `reportType` 等缺 DB 层枚举约束 |
+| 工程化 | 缺 CI/CD 流水线 | 已有 `test:ci`（lint + typecheck + test）脚本，但没有自动化流水线 |
+| 工程化 | 输入校验层仍不完整 | 部分路由靠手写 `if` 判断 |
+| 前端 | 大组件 | `TemplateEditor`、`ProcessFlowDiagram` 等体积大，影响首屏 |
+| 兼容性 | IndexedDB v2→v4 迁移 | 旧库原始数据转入 `legacyQuarantine`，离线草稿需经 RecoveryPanel 恢复；**缺真实浏览器 UI 验证** |
+| 运维 | 部署死代码 | `deploy/scripts/` 下 RP18 门禁体系（`deploy-control.py` / `candidate-gate.py` / `drill/`）已不参与流程 |
+| 运维 | 系统盘占用偏高 | 77%（50G 用 37G）；与 rdpms 无关，但会影响同机所有服务 |
+| 运维 | 日志不轮转 | systemd `append:` 直写文件，需人工关注体积 |
 
 ---
 
@@ -759,22 +819,25 @@ server {
 
 ### 11.1 前置
 
-- Node.js 20 LTS、`npm`
-- PostgreSQL 14（本地）或 Docker：`docker run -d --name rdpms-pg -p 5432:5432 -e POSTGRES_PASSWORD=本地密码 postgres:14`
+- Node.js 20 LTS、`npm`、`python3`（部署脚本用）
+- PostgreSQL 14（本地或容器）
+- 前端 TS 编译器位于 `frontend/node_modules`（后端不自带 `tsc`）
 
 ### 11.2 后端
 
 ```bash
 cd rdpms-system/backend
 npm install
-createdb rdpms                              # 或 psql 建库
-# 编辑 .env
-# DATABASE_URL="postgresql://postgres:本地密码@localhost:5432/rdpms?schema=public"
-# JWT_SECRET="rdpms-local-dev-secret"
+cp .env.example .env          # 填 DATABASE_URL / DIRECT_URL / JWT_SECRET（≥32 字符）
 npx prisma generate
-npx prisma db push --accept-data-loss      # 建表
-node prisma/seed.js                         # 种子：admin/admin123 等
-npm run dev                                 # nodemon 启动，端口 3000
+npx prisma migrate deploy     # 版本化迁移；禁止 db push（部署流程不接受）
+npm run dev                   # nodemon，端口 3000
+```
+
+种子数据（口令必须外置，代码内无默认口令）：
+
+```bash
+SEED_SUPER_ADMIN_PASSWORD='...' SEED_ADMIN_PASSWORD='...' node prisma/seed.js
 ```
 
 ### 11.3 前端
@@ -782,15 +845,32 @@ npm run dev                                 # nodemon 启动，端口 3000
 ```bash
 cd rdpms-system/frontend
 npm install
-npm run dev                                 # Vite，端口 5173，代理 /api → :3000
+npm run dev                   # Vite，默认 5173，代理 /api → :3000
 ```
-
-> 或使用仓库根 `start-dev.sh` 一键拉起（杀旧进程 → `db push` → seed → 起后端 → 起前端 → 健康检查）。
 
 ### 11.4 验证
 
-- 浏览器打开 `http://localhost:5173/`，用 `admin / admin123` 登录。
-- `curl http://localhost:3000/api/health` 应返回 `{"status":"ok"}`。
+- 浏览器打开 `http://localhost:5173/`，用 seed 时设置的管理员账号登录。
+- `curl http://localhost:3000/health` 应返回健康响应。
+
+### 11.5 测试
+
+| 层次 | 命令 | 连库 |
+|------|------|:----:|
+| 后端未定义标识符 | `npm run lint:undefined` | 否 |
+| 后端完整类型 | `npm run typecheck`（`tsc --noEmit`） | 否 |
+| 后端类型报告 | `npm run typecheck:report`（实际是 `check-undefined.mjs --full`，**不是**类型检查） | 否 |
+| 后端单元 + 契约 | `npm test` | 否 |
+| 后端集成 | `npm run test:integration` | **是**（`rdpms_test`） |
+| 隔离库生命周期 | `npm run test:db:reset` / `check` / `drop` | 管理通道 |
+| 前端完整类型 + 构建 | `npm run build`（`tsc -b && vite build`） | 否 |
+| 前端纯逻辑单测 | `npm test` | 否 |
+| 浏览器用例 | `node tests/browser/<name>.e2e.mjs` | **是**（`rdpms_test`） |
+
+集成测试使用隔离库 `rdpms_test`（配置 `<repo>/.env.test.local`，由
+`backend/scripts/lib/testDbGuard.mjs` 强制校验库名形状），**绝不连生产库**。
+
+> 仓库根 `start-dev.sh` 可一键拉起本地开发栈（清理旧进程 → 迁移 → seed → 起前后端 → 健康检查）。
 
 ---
 
@@ -798,61 +878,68 @@ npm run dev                                 # Vite，端口 5173，代理 /api �
 
 ### 12.1 备份
 
-**数据库（推荐，每日 cron）**：
+统一入口（发布流程与外层脚本都调它）：
 
 ```bash
-pg_dump "postgresql://rdpms:密码@localhost:5432/rdpms" -F c -f /opt/rdpms/backups/rdpms_$(date +%Y%m%d_%H%M%S).dump
-# 恢复：pg_restore -d rdpms -c /opt/rdpms/backups/rdpms_xxx.dump
+sudo /usr/local/bin/rdpms-backup.sh predeploy
 ```
 
-**应用层备份/恢复**（无需数据库权限，管理员在 `/backup` 页面或 API 操作）：
+产出 `/srv/rdpms/backups/pg/predeploy/rdpms-<ts>.dump`（含 `.sha256`，并做 `pg_restore -l` 校验）
+与 `/srv/rdpms/backups/uploads/<ts>` 上传快照，随后执行保留策略（日 30 / 周 84 / 月 365）。
+脚本会告警"未配置异地同步"——当前备份**仅存本机**。
+
+手工恢复（示例）：
 
 ```bash
-curl -H "Authorization: Bearer $TOKEN" http://localhost:3000/api/backup/export?modules=projects,reports > backup.json
-curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
-     --data @backup.json http://localhost:3000/api/backup/restore
+pg_restore -d rdpms -c /srv/rdpms/backups/pg/predeploy/rdpms-<ts>.dump
 ```
 
-### 12.2 日志查看
+应用层导出/恢复（管理员，经 `/api/backup`，权限由审计过的 SUPER_ADMIN 权限控制）：
 
 ```bash
-sudo journalctl -u rdpms-backend -f           # 后端日志
-sudo tail -f /var/log/nginx/error.log         # Nginx 错误
-sudo tail -f /var/log/nginx/access.log        # Nginx 访问
+curl -H "Authorization: Bearer $TOKEN" \
+  "http://localhost:3000/api/backup/export?modules=projects,reports" > backup.json
 ```
+
+### 12.2 日志
+
+```bash
+sudo tail -f /mnt/datadisk0/rdpms/logs/app.out.log     # 后端 stdout
+sudo tail -f /mnt/datadisk0/rdpms/logs/app.err.log     # 后端 stderr
+sudo journalctl -u rdpms-api -n 100                    # systemd 视角（启动失败先看这里）
+sudo journalctl -u caddy -n 50                         # Caddy
+```
+
+注意：应用日志是**追加写、不轮转**的（systemd `append:`），体积需人工关注。
 
 ### 12.3 重启 / 发布
 
 ```bash
-# 后端
-sudo systemctl restart rdpms-backend
-# Nginx 改配置后
-sudo nginx -t && sudo systemctl reload nginx   # 或 Caddy: sudo caddy reload
-```
+# 仅重启（代码未变）
+sudo systemctl restart rdpms-api
 
-代码更新（git 流程）：
+# 发布（取码 + 依赖 + 迁移 + 构建 + 重启，一条命令）
+cd /opt/rdpms/app && bash rdpms-system/deploy/scripts/rdpms-deploy.sh
 
-```bash
-cd /opt/rdpms && git pull
-cd backend && npm install --omit=dev && npx prisma generate && node prisma/seed.js   # 全新库才需 seed
-sudo systemctl restart rdpms-backend
-cd ../frontend && npm install && npm run build
-sudo systemctl reload nginx
+# 回滚
+cd /opt/rdpms/app && git checkout <旧提交> && bash rdpms-system/deploy/scripts/rdpms-deploy.sh
 ```
 
 ### 12.4 故障排查
 
 | 现象 | 可能原因 | 处置 |
 |------|----------|------|
-| 前端登录报 Dexie/IndexedDB `object stores was not found` | 本地库 schema 版本升级（`appStore` 已升 v2）但旧库未迁移 | 浏览器**硬刷新**（Cmd/Ctrl+Shift+R）触发 Dexie 升级 |
-| `502 Bad Gateway` | 后端未起 / 端口错 | `systemctl status rdpms-backend`；查 `journalctl` |
-| `/api` 404 或 CORS 报错 | Nginx 反代未生效 / `CORS_ORIGINS` 未含来源 | 检查 `location /api/` 与后端 `CORS_ORIGINS` |
-| 登录报 `用户名或密码错误` 但密码正确 | `JWT_SECRET` 与旧 token 不一致（重启后一次性密钥） | 生产务必固定 `JWT_SECRET`；清 localStorage 重新登录 |
-| `PrismaClientInitializationError` | `DATABASE_URL` 错 / PG 未起 | 校验连接串、`systemctl status postgresql` |
-| 公网无法访问 | 腾讯云安全组未放通 80/443 | 控制台放通入站 TCP 80（HTTPS 阶段 443） |
-| 静态资源无 gzip | Nginx gzip 未开 | 确认 `gzip on;` 与 `gzip_types` |
-| 弱网重复提交产生重复数据 | 非 PUT 请求无幂等保护 | 前端对写操作加 `Idempotency-Key`（PUT） |
+| 服务起不来且 `app.err.log` 无内容 | 数据盘未挂载，日志目标目录不存在 | `mountpoint /mnt/datadisk0`；`journalctl -u rdpms-api` |
+| 启动报"缺少构建产物 dist/index.js" | 拉了代码但没构建 | 跑 `rdpms-deploy.sh`（或 `npm run build`） |
+| 全员 401 `SESSION_REVOKED` | `securityVersion` 变更（改密 / 会话撤销 / 版本升级） | 重新登录；属预期行为 |
+| 页面 502 或打不开 | 后端未起 / 端口错 | `systemctl status rdpms-api`；`curl 127.0.0.1:3000/health` |
+| 前端仍是旧页面 | 浏览器缓存，或 Caddy `root` 未指向新产物 | 硬刷新；核对 `rdpms.caddy` 的 `root` 与 `ls .../frontend/dist/assets/` |
+| `/api` 404 或 CORS 报错 | Caddy `handle /api/*` 未生效 / `ALLOWED_ORIGINS` 不含来源 | `caddy validate --config /etc/caddy/Caddyfile`；核对 `.env` |
+| 频繁提示会话过期 | access token 仅 15 分钟 | 正常；刷新页面自动轮换，失败则重新登录 |
+| 离线草稿"不见了" | IndexedDB 升级后原数据转入 `legacyQuarantine` | 经 RecoveryPanel 恢复 |
+| 数据库连不上 | `DATABASE_URL` 错 / PG 未起 | 校验连接串；`systemctl status postgresql` |
+| 公网无法访问 | 云安全组未放通 443 | 控制台放通入站 TCP 443 |
 
 ---
 
-*文档版本：v1.0.0 · 生成于 2026-07-14 · 对应分支 `tencent_CVM/rdpm`*
+*文档版本：2026-10-09 修订 · 对应分支 `main`*
