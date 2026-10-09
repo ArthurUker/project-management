@@ -20,11 +20,15 @@
 
 ## artifacts/
 
-| 文件 | 说明 |
-|---|---|
-| `test-only-fix-63d243b.patch` | 前端测试补正（12/16 项修复），**基线 `63d243b`** |
-| `cand-63d243b-tests-20261007.tar.gz` | 补正后的完整 `tests/unit` 目录 |
-| `cand-evidence-20261007.tar.gz` | 候选门禁证据（`candidate-manifest.json` + 构建日志，buildId `58bf3d1c…`） |
+| 文件 | 说明 | 是否入库 |
+|---|---|---|
+| `test-only-fix-63d243b.patch` | 前端测试补正（12/16 项修复），**基线 `63d243b`** | ✅ 已入库 |
+| `cand-63d243b-tests-20261007.tar.gz` | 补正后的完整 `tests/unit` 目录 | ❌ 未入库 |
+| `cand-evidence-20261007.tar.gz` | 候选门禁证据（`candidate-manifest.json` + 构建日志，buildId `58bf3d1c…`） | ❌ 未入库 |
+
+两个 `.tar.gz` 被仓库 `.gitignore` 的 `*.tar.gz` 规则挡下（该规则用于防止备份/压缩包入库），
+**未强制加入**：测试包的内容与 patch 重叠，候选证据对应的门禁机制已被否决，
+二者都没有独立留存价值。原始文件保留在服务器 `/mnt/datadisk0/rdpms-review/review-inputs/`。
 
 ## 边界说明
 
