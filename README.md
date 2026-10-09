@@ -867,13 +867,25 @@ cd /opt/rdpms/app
 bash rdpms-system/deploy/scripts/rdpms-deploy.sh          # 默认 main 分支
 ```
 
-流程：`git fetch` → `merge --ff-only` → **按需** `npm ci`（仅当对应 `package-lock.json` 实际变化，
-避免每次发布都等一轮网络安装）→ `prisma generate` + `migrate deploy` → 前后端构建 →
-`systemctl restart rdpms-api`。服务器执行者报告一次完整发布约 **53 秒**（依赖无变化时）；本地文档核对未重新验证服务器耗时。
+```bash
+cd /opt/rdpms/app
+bash rdpms-system/deploy/scripts/rdpms-deploy.sh                  # 发布 origin/main 最新
+bash rdpms-system/deploy/scripts/rdpms-deploy.sh --commit <sha>   # 部署指定提交（回退，见 §8.4）
+```
 
-**脚本能力边界**：当前脚本不自动备份、不停写、不运行测试，不校验 HTTP health/ready 或实际 UI；
-重启后的检查仅为等待 3 秒再检查 systemd active。它也不会自动安装改动后的启动包装和 systemd 单元。
-构建或迁移失败时不会自动恢复数据库与产物，操作前需安排备份和失败处置。
+九步：取码（`fetch` + `ff-only`）→ **按需** `npm ci`（lockfile 变化**或** `node_modules` 缺失时，
+避免每次发布都等一轮网络安装）→ **发布前备份**（`rdpms-backup.sh predeploy`，失败即中止）→
+`prisma generate` → 前后端构建 → `migrate deploy` → 重启 + active 校验 + **HTTP health 检查**。
+
+**顺序说明**：迁移放在构建**之后** —— 构建失败时不触碰数据库，可直接排查后重试；
+若先迁移再构建，一旦构建失败就会留下「已前滚的数据库 + 旧代码」这种最难处理的状态。
+
+**实测**（2026-10-09，本机）：正向发布约 **54 秒**（依赖无变化时）；
+`--commit` 路径同样实测通过（约 53 秒，health 返回 200）。两者均含备份与健康检查。
+
+**脚本边界**：不停写、不运行测试、不校验 `/api/ready` 或实际 UI；不会自动安装改动后的
+启动包装与 systemd 单元（安装命令见本节末尾）。构建或迁移失败不会自动回滚已改动的内容；
+迁移本身是前滚的（见 §8.4）。
 
 **启动脚本与单元的安装**：
 
@@ -887,14 +899,26 @@ sudo systemctl daemon-reload
 
 ### 8.4 回退与失败处理
 
-当前原地发布脚本没有独立回退模式。**不要执行 `git checkout <旧提交>` 后再运行
-`rdpms-deploy.sh` 来回退**：脚本仍会 fetch 并合入 `origin/main`，旧代码可能再次被更新。
+**回退代码** —— 脚本支持指定提交（2026-10-09 起，已实测）：
 
-数据库迁移先于构建执行，任一后续步骤失败都不会自动撤销已完成的迁移。
-新增列、表或触发器也不自动证明旧应用兼容；必须逐项核对数据语义、安全版本、epoch 和权限。
+```bash
+cd /opt/rdpms/app
+bash rdpms-system/deploy/scripts/rdpms-deploy.sh --commit <旧提交>
+```
 
-需要回退时，应先确定具体目标提交、依赖、数据库兼容性、停写范围和恢复方案，
-再制定并审核专用操作步骤。当前文档不提供未经目标验证的一键回退命令。
+`--commit` 会**跳过取码**、直接检出该提交后走完整流程（备份 → 构建 → 迁移 → 重启 → 健康检查），
+因此不会被 `origin/main` 覆盖。执行后仓库处于 detached HEAD（回退时的正常状态）；
+恢复正常跟踪：`git checkout main`。
+
+> ⚠ **不要**用「先 `git checkout <旧提交>`、再运行不带参数的 `rdpms-deploy.sh`」来回退 ——
+> 不带参数时脚本第一步就是 `fetch + merge origin/main`，会把刚检出的旧提交快进回最新，
+> 等于把回退撤销掉。回退必须走 `--commit`。
+
+**数据库不可回退**：迁移是前滚的，回退代码不会回退数据库结构。新增列/表/触发器**不自动证明**
+旧应用兼容；涉及数据语义、`securityVersion`、数据集 epoch 与权限的迁移必须逐项核对后再决定是否回退。
+
+**失败处理**：迁移之前的中止（取码 / 依赖 / 备份 / 构建）不会改动数据库，排查后重跑即可；
+迁移已执行后失败，先确认目标提交的旧代码能否在新库结构上运行，再决定前滚修复还是按上述方式回退。
 
 ### 8.5 反向代理（Caddy）
 
@@ -1065,10 +1089,22 @@ systemd 模板把 stdout/stderr append 到数据盘日志文件；仓库未配�
 
 ### 12.2 发布、备份与恢复
 
-生产发布、启动包装和单元安装参考 §8；当前脚本会直接更改数据库、依赖和运行产物，不能当成只读检查。
-服务器外置备份入口曾记录为 `/usr/local/bin/rdpms-backup.sh`，但文件不在仓库，本轮无法核对其保留策略、校验或恢复能力。
-操作前应验证实际脚本、数据库与文件一致点、备份可恢复性和失败处置；不要照搬旧文档的一条 pg_restore -c 覆盖生产。
-模块 JSON 恢复与物理整库/文件恢复须分别验收，恢复后重新核对安全版本、凭据、epoch 和旧离线队列。
+生产发布、启动包装和单元安装见 §8；发布脚本会改动数据库、依赖与运行产物，不是只读操作。
+
+**发布前备份**：由发布脚本第 4 步自动调用，失败即中止发布（除非显式 `SKIP_BACKUP=1`）。
+
+```bash
+sudo /usr/local/bin/rdpms-backup.sh predeploy
+```
+
+**2026-10-09 实测**（本机）：产出 `/srv/rdpms/backups/pg/predeploy/rdpms-<时间戳>.dump`
+（含 `.sha256`，并执行 `pg_restore -l` 校验）+ `/srv/rdpms/backups/uploads/<时间戳>` 快照，
+随后应用保留策略（日 30 / 周 84 / 月 365）。
+脚本自身会告警 **未配置异地同步（COS_TARGET）——备份目前仅存本机，属同机风险**。
+
+恢复：模块 JSON 恢复与物理整库/文件恢复须分别验收；恢复后重新核对安全版本、凭据、
+数据集 epoch 与旧离线队列。**不要照搬本文档的一条 `pg_restore -c` 直接覆盖生产**。
+（备份脚本不在仓库内，属服务器安装副本；其行为以上述实测为准。）
 
 ### 12.3 维护入口与资料优先级
 
