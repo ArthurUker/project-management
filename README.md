@@ -383,210 +383,364 @@ erDiagram
 
 - **Base URL**：`/api`（生产经 Caddy 同域反代；前端取 `VITE_API_BASE_URL`，未设时即 `/api`）。
 - **认证**：除 `POST /api/auth/login` 外，所有接口需在请求头携带 `Authorization: Bearer <token>`。
-- **鉴权图例**：
-  - 🔓 `auth`：需登录（`authMiddleware`）
-  - 👤 `admin`：需管理员（`adminMiddleware`）
-  - 🧑‍💼 `admin|manager`：需管理员或项目经理（`adminOrManagerMiddleware`）
-  - `角色权限`：在接口内按 `registrations.*` / `regulatory-documents.*` 权限位判断（admin 全有，manager 有 view+edit，member 仅 view）
+- **鉴权**：以**权限位**为准（如 `requirePermission('reports.view')`），
+  权限经 `UserRole → Role → RolePermission → Permission` 解析（见 §7.2）。
+  下表中「权限」列即该接口要求的权限位：`登录` 表示仅需有效会话，`超管` 表示要求超级管理员。
+- **令牌**：access token 默认 15 分钟有效，过期用 `POST /api/auth/refresh` 轮换（见 §7.1）。
 - **统一响应**：`{ success, message?, data?, list?, total?, page?, pageSize?, ... }`（前端 `ApiResponse<T>`）。错误返回 `{ error, code }` + 对应 HTTP 状态码。
 
-### 5.2 认证与用户 `/api/auth`、`/api/users`
+### 5.2 端点清单
 
-| 方法 | 路径 | 鉴权 | 功能 | 请求体 / 参数 |
-|------|------|------|------|----------------|
-| POST | `/api/auth/login` | 否 | 登录签发 JWT | `{username,password}` → `{token,user{...,permissions}}` |
-| POST | `/api/auth/verify` | 🔓 | 校验 Token | — |
-| POST | `/api/auth/logout` | 🔓 | 登出（写日志） | — |
-| GET | `/api/auth/profile` | 🔓 | 当前用户资料 | — |
-| PUT | `/api/auth/password` | 🔓 | 改密（新密码≥6） | `{oldPassword,newPassword}` |
-| GET | `/api/users` | 🔓 | 用户列表 | query: `page,pageSize,department,role,status` |
-| GET | `/api/users/:id` | 🔓 | 用户详情 | — |
-| POST | `/api/users` | 👤 | 创建用户 | `{username,password,name,position,department,role}` |
-| PUT | `/api/users/:id` | 🔓 | 更新（非管理员仅改自己） | 用户字段 |
-| PUT | `/api/users/:id/reset-password` | 👤 | 管理员重置密码 | `{newPassword}` |
-| DELETE | `/api/users/:id` | 👤 | 删除（不可删自己） | — |
-| POST | `/api/users/batch` | 👤 | 批量导入 | `{users:[...]}` |
+> 本节由路由代码自动核对生成（`src/routes/*.js` 定义 + `bootstrap/createApp.js` 挂载前缀），
+> 共 **28 个模块 / 202 个端点**。「功能」列取自各路由的源码注释。**改动路由后请同步更新本节。**
+>
+> 说明：`/api/audit-logs` 与 `/api/system-logs` 由挂在 `/api` 根下的两个路由模块提供，因此分组标题显示为 `/api`。
 
-### 5.3 项目与成员 `/api/projects`
+#### 审计 —— `/api`
 
-| 方法 | 路径 | 鉴权 | 功能 |
+| 方法 | 路径 | 权限 | 功能 |
 |------|------|------|------|
-| GET | `/api/projects` | 🔓 | 项目列表（分页/筛选） |
-| GET | `/api/projects/:id` | 🔓 | 项目详情（含成员/任务/里程碑/进展） |
-| POST | `/api/projects` | 🔓 | 创建（支持草稿，自动建成员/任务/里程碑） |
-| PUT | `/api/projects/:id` | 🔓 | 更新（状态机校验 + 成员/任务重建） |
-| DELETE | `/api/projects/:id` | 🧑‍💼 | 删除项目 |
-| GET | `/api/projects/:id/members` | 🔓 | 成员列表 |
-| POST | `/api/projects/:id/members` | 🧑‍💼 | 添加成员 |
-| DELETE | `/api/projects/:id/members/:userId` | 🧑‍💼 | 移除成员（不可移负责人） |
-| GET | `/api/projects/stats/types` | 🔓 | 按类型统计 |
-| GET | `/api/projects/stats/status` | 🔓 | 按状态统计 |
-| POST | `/api/projects/:id/apply-template` | 🧑‍💼 | 套用模板生成任务/里程碑 |
-| POST | `/api/projects/batch-delete` | 🧑‍💼 | 批量删除 |
-| POST | `/api/projects/batch-update-status` | 🧑‍💼 | 批量改状态 |
+| GET | `/api/audit-logs` | `audit.view` |  |
+| POST | `/api/audit-logs/export` | `audit.export` |  |
+| GET | `/api/audit/entity/:type/:id/summary` | `audit.view` |  |
 
-### 5.4 汇报 `/api/reports`
+#### 认证 —— `/api/auth`
 
-| 方法 | 路径 | 鉴权 | 功能 |
+| 方法 | 路径 | 权限 | 功能 |
 |------|------|------|------|
-| GET | `/api/reports` | 🔓 | 汇报列表（分页/筛选） |
-| GET | `/api/reports/:id` | 🔓 | 汇报详情（含版本） |
-| POST | `/api/reports` | 🔓 | 创建/更新（按唯一约束 upsert） |
-| PUT | `/api/reports/:id` | 🔓 | 更新（仅本人） |
-| POST | `/api/reports/:id/submit` | 🔓 | 提交（生成版本） |
-| POST | `/api/reports/:id/approve` | 🔓(admin/manager) | 审阅"已阅" |
-| POST | `/api/reports/:id/reject` | 🔓(admin/manager) | 批示"需修改" |
-| GET | `/api/reports/:id/versions` | 🔓 | 版本历史 |
+| POST | `/api/auth/login` | 登录 | 登录 |
+| POST | `/api/auth/refresh` | 登录 | 刷新 |
+| POST | `/api/auth/logout` | 登录 | 登出 |
+| GET | `/api/auth/me` | 登录 | 当前用户（M-1 权限唯一出口） |
+| POST | `/api/auth/verify` | 登录 | 旧端点兼容：/verify 返回与 /me 一致 |
+| GET | `/api/auth/profile` | 登录 |  |
+| GET | `/api/auth/plainOldPassword` | 登录 |  |
+| PUT | `/api/auth/password` | 登录 |  |
+| PUT | `/api/auth/password/force` | 登录 | 首登强制改密：无需旧密码，但仅当 mustChangePassword=true |
 
-### 5.5 任务 `/api/tasks`
+#### 备份 —— `/api/backup`
 
-| 方法 | 路径 | 鉴权 | 功能 |
+| 方法 | 路径 | 权限 | 功能 |
 |------|------|------|------|
-| GET | `/api/tasks/` | 🔓 | 任务列表（筛选/分页） |
-| POST | `/api/tasks/` | 🔓 | 创建任务 |
-| GET | `/api/tasks/:id` | 🔓 | 任务详情（含前置/法规） |
-| PUT | `/api/tasks/:id` | 🔓 | 更新 |
-| PATCH | `/api/tasks/:id/status` | 🔓 | 改状态（看板拖拽） |
-| DELETE | `/api/tasks/:id` | 🧑‍💼 | 删除 |
-| POST | `/api/tasks/:id/prerequisites` | 🔓 | 加前置（环检测） |
-| DELETE | `/api/tasks/:id/prerequisites/:prerequisiteId` | 🔓 | 删前置 |
-| GET | `/api/tasks/board/:projectId` | 🔓 | 看板分组数据 |
-| POST | `/api/tasks/batch/status` | 🧑‍💼 | 批量改状态 |
+| GET | `/api/backup/export` | `data.export` |  |
+| GET | `/api/backup/restore/tables` | 登录 | 可恢复表清单（供前端展示模块与表映射） |
+| POST | `/api/backup/restore/preview` | 登录 | 只读校验 + 差异统计 |
+| POST | `/api/backup/restore` | 登录 | 单事务应用（失败整体回滚） |
+| GET | `/api/backup/restore/status` | 登录 |  |
+| POST | `/api/backup/restore/reconcile` | 登录 |  |
 
-### 5.6 月度进展 `/api/progress`
+#### 字典 —— `/api/dict`
 
-| 方法 | 路径 | 鉴权 | 功能 |
+| 方法 | 路径 | 权限 | 功能 |
 |------|------|------|------|
-| GET | `/api/progress/project/:projectId` | 🔓 | 某项目月度进展 |
-| POST | `/api/progress/project/:projectId` | 🔓 | 填写/更新月度进展 |
-| GET | `/api/progress/all/:month` | 🔓 | 某月全部项目进展 |
-| GET | `/api/progress/export/:month` | 🔓 | 导出月报 |
+| GET | `/api/dict` | 登录 |  |
+| GET | `/api/dict/:enumName` | 登录 |  |
 
-### 5.7 同步 `/api/sync`
+#### 知识库与文档 —— `/api/docs`
 
-| 方法 | 路径 | 鉴权 | 功能 |
+| 方法 | 路径 | 权限 | 功能 |
 |------|------|------|------|
-| GET | `/api/sync/init` | 🔓 | 增量拉取当前用户可访问数据 |
-| POST | `/api/sync/push` | 🔓 | 上行推送本地变更（含权限校验） |
+| GET | `/api/docs/categories` | `docs.view` | 分类（docs.view / docs.categories.manage） |
+| POST | `/api/docs/categories` | `docs.categories.manage` |  |
+| PUT | `/api/docs/categories/:id` | `docs.categories.manage` |  |
+| DELETE | `/api/docs/categories/:id` | `docs.categories.manage` |  |
+| GET | `/api/docs/documents` | `docs.view` | 文档（docs.view / docs.create / docs.update） |
+| GET | `/api/docs/documents/:id` | `docs.view` |  |
+| POST | `/api/docs/documents` | `docs.create` |  |
+| PUT | `/api/docs/documents/:id` | `docs.update` |  |
+| DELETE | `/api/docs/documents/:id` | `docs.delete` | 删除文档（docs.delete，P1 批次二解冻；软删+审计） |
+| GET | `/api/docs/documents/:id/versions` | `docs.view` |  |
+| GET | `/api/docs/search` | `docs.view` | 关键词搜索（供日报快速引用） |
 
-### 5.8 统计 `/api/stats`
+#### 文件 —— `/api/files`
 
-| 方法 | 路径 | 鉴权 | 功能 |
+| 方法 | 路径 | 权限 | 功能 |
 |------|------|------|------|
-| GET | `/api/stats/dashboard` | 🔓 | 仪表盘统计 |
-| GET | `/api/stats/projects` | 🔓 | 项目统计（含完成率） |
-| GET | `/api/stats/users/:userId/workload` | 🔓 | 个人工作量 |
-| GET | `/api/stats/reports` | 🔓 | 汇报统计 |
+| GET | `/api/files` | `files.download` | 列表（按作用域过滤；files.download） |
+| POST | `/api/files` | `files.upload` | 上传（files.upload）：一律先落私有暂存，绑定后才可见 |
+| GET | `/api/files/:id/metadata` | `files.download` | 元数据 |
+| GET | `/api/files/:id/download` | `files.download` |  |
+| GET | `/api/files/:id` | `files.download`、`files.delete` |  |
+| PATCH | `/api/files/:id/scope` | `files.delete` | 人工分类（历史无归属文件）：仅超管 |
+| DELETE | `/api/files/:id` | `files.delete` | 软删除（被已发布证据引用时只允许解绑，不允许整体删除） |
+| POST | `/api/files/:id/restore` | `files.delete` | 仅超管且持 files.delete 可执行，且必须留审计（软删只隐藏，不物理删除）。 |
 
-### 5.9 知识库与文档 `/api/docs`
+#### 配方 —— `/api/formulas`
 
-| 方法 | 路径 | 鉴权 | 功能 |
+| 方法 | 路径 | 权限 | 功能 |
 |------|------|------|------|
-| GET | `/api/docs/categories` | 🔓 | 分类列表 |
-| POST | `/api/docs/categories` | 🔓 | 建分类 |
-| PUT | `/api/docs/categories/:id` | 🔓 | 改分类 |
-| DELETE | `/api/docs/categories/:id` | 🧑‍💼 | 删分类 |
-| GET | `/api/docs/documents` | 🔓 | 文档列表 |
-| GET | `/api/docs/documents/:id` | 🔓 | 文档详情（含版本） |
-| POST | `/api/docs/documents` | 🔓 | 建文档 |
-| PUT | `/api/docs/documents/:id` | 🔓 | 改文档（建版本） |
-| DELETE | `/api/docs/documents/:id` | 🧑‍💼 | 删文档 |
-| GET | `/api/docs/documents/:id/versions` | 🔓 | 版本历史 |
-| GET | `/api/docs/search` | 🔓 | 关键词搜索 |
+| GET | `/api/formulas` | `formulas.view` | 列表（?type=&materialId=） |
+| GET | `/api/formulas/:id` | `formulas.view` | 详情 |
+| POST | `/api/formulas` | `formulas.create` | 新建（编号走 CodeSequence 原子发号） |
+| PUT | `/api/formulas/:id` | `formulas.update` | 更新（组分整体重建） |
+| DELETE | `/api/formulas/:id` | 登录 | M-1：formulas.delete 为 P1 后置权限，冻结桩（Tencent 为硬删，解冻时改软删+审计） |
+| POST | `/api/formulas/:id/duplicate` | `formulas.create` | 复制（formulas.create） |
 
-### 5.10 项目模板 `/api/project-templates`
+#### 阶段流转 —— `/api/phases`
 
-| 方法 | 路径 | 鉴权 | 功能 |
+| 方法 | 路径 | 权限 | 功能 |
 |------|------|------|------|
-| GET | `/api/project-templates/` | 🔓 | 模板列表 |
-| GET | `/api/project-templates/:id` | 🔓 | 模板详情（含子/阶段） |
-| POST | `/api/project-templates/` | 👤 | 建模板 |
-| PUT / PATCH | `/api/project-templates/:id` | 🧑‍💼 | 更新模板 |
-| DELETE | `/api/project-templates/:id` | 👤 | 删模板 |
-| POST | `/api/project-templates/:id/copy` | 👤 | 复制 |
-| GET | `/api/project-templates/:id/preview` | 🔓 | 预览阶段结构 |
-| POST | `/api/project-templates/:id/apply` | 🔓 | 应用生成数据 |
-| GET/POST/PUT/DELETE | `/api/project-templates/:templateId/roles[/:roleId]` | 🔓/🧑‍💼 | 模板角色 CRUD + 批量 |
+| GET | `/api/phases` | `project_phases.view` | 阶段列表（project_phases.view + ∩ read） |
+| POST | `/api/phases` | `project_phases.create` | 创建阶段（project_phases.create + ∩ write） |
+| GET | `/api/phases/:id` | `project_phases.view` | 详情 |
+| PUT | `/api/phases/:id` | `project_phases.update` | 更新（project_phases.update + ∩ write） |
+| PATCH | `/api/phases/:id/status` | `project_phases.change_status` | 阶段状态流转（project_phases.change_status + ∩ transition） |
+| POST | `/api/phases/:id/transitions` | `project_phases.update` | 建立阶段流转（project_phases.update + ∩ write） |
+| DELETE | `/api/phases/:id/transitions/:toPhaseId` | `project_phases.update` | 删除阶段流转 |
 
-### 5.11 阶段流转 `/api/phases`
+#### 配制 —— `/api/prep`
 
-| 方法 | 路径 | 鉴权 | 功能 |
+| 方法 | 路径 | 权限 | 功能 |
 |------|------|------|------|
-| POST | `/api/phases/:id/transitions` | 🔓 | 建阶段流转（环检测） |
-| DELETE | `/api/phases/:id/transitions/:toPhaseId` | 🔓 | 删阶段流转 |
+| POST | `/api/prep/calculate` | `formulas.view` | 试算 |
+| POST | `/api/prep/records` | `prep_records.create` | 保存配制记录 |
+| GET | `/api/prep/records` | `prep_records.view` |  |
+| GET | `/api/prep/records/:id` | `prep_records.view` |  |
 
-### 5.12 试剂 / 原料 / 配方 / 配制 `/api/reagents`、`/api/reagent-materials`、`/api/formulas`、`/api/prep`
+#### 引物 —— `/api/primers`
 
-| 方法 | 路径 | 前缀 | 鉴权 | 功能 |
-|------|------|------|------|------|
-| GET/POST/PUT/DELETE | `/api/reagents/` `:id` | reagents | 🔓 | 试剂 CRUD（删时查配方引用） |
-| GET | `/api/reagents/:id/formulas` | reagents | 🔓 | 引用该试剂的配方 |
-| GET/POST/PUT/DELETE | `/api/reagent-materials/` `:id` | reagent-materials | 🔓 | 原料 CRUD + `bulk-delete` |
-| GET/POST/PUT/DELETE | `/api/formulas/` `:id` | formulas | 🔓 | 配方 CRUD（含组分）+ `:id/duplicate` |
-| POST | `/api/prep/calculate` | prep | 🔓 | 配制计算（不落库） |
-| POST/GET | `/api/prep/records` | prep | 🔓 | 保存 / 列表配制记录 |
-| GET | `/api/prep/records/:id` | prep | 🔓 | 配制记录详情 |
+| 方法 | 路径 | 权限 | 功能 |
+|------|------|------|------|
+| GET | `/api/primers` | `primers.view` | 列表（keyword / projectId / targetGene / status） |
+| GET | `/api/primers/:id` | `primers.view` |  |
+| POST | `/api/primers` | `primers.create` |  |
+| PUT | `/api/primers/:id` | `primers.update` |  |
+| DELETE | `/api/primers/:id` | `primers.delete` | 删除（primers.delete，P1 批次二解冻；软删+审计） |
+| POST | `/api/primers/batch-import` | `primers.import` | 前端解析 CSV 后传 rows 数组，逐行校验、逐行 CodeSequence 发号，失败行不阻断整批） |
 
-### 5.13 任务模板 / 引物 / 样本 `/api/task-templates`、`/api/primers`、`/api/samples`
+#### 月度进展 —— `/api/progress`
 
-| 方法 | 路径 | 前缀 | 鉴权 | 功能 |
-|------|------|------|------|------|
-| GET/POST/PUT/DELETE | `/api/task-templates/` `:id` | task-templates | 🔓 | 任务模板 CRUD + `bulk-delete` |
-| POST | `/api/task-templates/seed` | task-templates | 👤 | 预置标准模板 |
-| GET/POST/PUT/DELETE | `/api/primers/` `:id` | primers | 🔓 | 引物/探针 CRUD + `batch-import` |
-| GET/POST/PUT/DELETE | `/api/samples/` `:id` | samples | 🔓 | 样本 CRUD（自动编号） |
+| 方法 | 路径 | 权限 | 功能 |
+|------|------|------|------|
+| GET | `/api/progress/project/:projectId` | `progress.view` | 项目月度进展 |
+| POST | `/api/progress/project/:projectId` | `progress.create` | 填写/更新月度进展 |
+| GET | `/api/progress/all/:periodKey` | `progress.view` | 全部项目月度进展（progress.view；按可见项目过滤） |
+| GET | `/api/progress/export/:periodKey` | `progress.view` | 导出月度进展（progress.view；M-1 无 progress.export 码，导出读权限沿用） |
+| GET | `/api/progress` | `progress.view` | 兼容挂载（progress.view） |
 
-### 5.14 注册申报与法规 `/api/registrations`、`/api/regulatory-documents`
+#### 项目模板 —— `/api/project-templates`
 
-| 方法 | 路径 | 前缀 | 鉴权 | 功能 |
-|------|------|------|------|------|
-| GET | `/api/registrations/` | registrations | 角色(view) | 列表（含到期预警） |
-| GET | `/api/registrations/stats` | registrations | 角色(view) | 统计 |
-| GET | `/api/registrations/templates` | registrations | 角色(view) | 可用模板 |
-| GET | `/api/registrations/:id` | registrations | 角色(view) | 详情 |
-| POST | `/api/registrations/` | registrations | 角色(edit) | 创建（含档案/任务/里程碑） |
-| PUT | `/api/registrations/:id` | registrations | 角色(edit) | 更新 |
-| PATCH | `/api/registrations/:id/stage` | registrations | 角色(edit) | 阶段推进（状态机，approve 可越级） |
-| PATCH | `/api/registrations/:id/profile` | registrations | 角色(edit) | 更新档案 |
-| GET/POST/PUT/DELETE | `/api/regulatory-documents/` `:id` | regulatory-documents | 角色(view/edit) | 法规 CRUD + `import`(base64) |
-| POST | `/api/regulatory-documents/seed` | regulatory-documents | 👤 | 预置种子法规库 |
-| POST/GET | `/api/regulatory-documents/:id/original-file` | regulatory-documents | 角色(edit/view) | 上传 / 下载原文件 |
+| 方法 | 路径 | 权限 | 功能 |
+|------|------|------|------|
+| GET | `/api/project-templates` | `project_templates.view` | 列表 |
+| GET | `/api/project-templates/:id` | `project_templates.view` | 详情 |
+| POST | `/api/project-templates` | `project_templates.create` | 创建 |
+| PUT | `/api/project-templates/:id` | `project_templates.update` | 更新 |
+| PATCH | `/api/project-templates/:id` | `project_templates.update` |  |
+| DELETE | `/api/project-templates/:id` | `project_templates.delete` | 删除（project_templates.delete 为 P0；软删 + 引用检查） |
+| POST | `/api/project-templates/:id/copy` | `project_templates.copy` | 复制（project_templates.copy，P1 批次二解冻；roles/phases/tasks 深拷贝） |
+| GET | `/api/project-templates/:id/preview` | `project_templates.view` | 预览 |
+| POST | `/api/project-templates/:id/apply` | `project_templates.view` | 应用预览（前端创建项目时预览生成结果） |
+| GET | `/api/project-templates/:templateId/roles` | `project_templates.view` | 模板角色（templateRole；code 必填） |
+| POST | `/api/project-templates/:templateId/roles` | `project_templates.update` |  |
+| PUT | `/api/project-templates/:templateId/roles/:roleId` | `project_templates.update` |  |
+| DELETE | `/api/project-templates/:templateId/roles/:roleId` | `project_templates.update` |  |
+| POST | `/api/project-templates/:templateId/roles/batch` | `project_templates.update` |  |
 
-### 5.15 备份 `/api/backup`（均 👤 管理员）
+#### 项目与成员 —— `/api/projects`
 
-| 方法 | 路径 | 功能 |
-|------|------|------|
-| GET | `/api/backup/export` | 导出备份（`?modules=` 选择性导出） |
-| POST | `/api/backup/restore` | 从 JSON 备份事务恢复 |
+| 方法 | 路径 | 权限 | 功能 |
+|------|------|------|------|
+| GET | `/api/projects` | `projects.view` | 列表（projects.view；非 SUPER_ADMIN 按成员/负责人过滤） |
+| GET | `/api/projects/:id` | `projects.view` | 详情（projects.view + ∩：非成员 404；SA 非成员访问写 elevated 审计） |
+| POST | `/api/projects` | `projects.create` | 创建（projects.create；编号走 CodeSequence 原子发号） |
+| PUT | `/api/projects/:id` | `projects.update` | 更新（projects.update + ∩ write；状态流转走 transition；归档需 projects.archive） |
+| DELETE | `/api/projects/:id` | `projects.delete` | 删除（projects.delete，P1 批次二解冻；软删+审计） |
+| GET | `/api/projects/:id/members` | `projects.view` | 成员管理（projects.manage_members + ∩ manage_members） |
+| POST | `/api/projects/:id/members` | `projects.manage_members` |  |
+| DELETE | `/api/projects/:id/members/:userId` | `projects.manage_members` |  |
+| GET | `/api/projects/:id/tasks` | `tasks.view` | 项目内资源（嵌套只读；read 能力 + 对应系统权限） |
+| GET | `/api/projects/:id/reports` | `reports.view` |  |
+| GET | `/api/projects/:id/milestones` | `milestones.view` |  |
+| GET | `/api/projects/:id/phases` | `project_phases.view` |  |
+| GET | `/api/projects/stats/types` | `projects.view` | 统计（带可见性过滤） |
+| GET | `/api/projects/stats/status` | `projects.view` |  |
+| POST | `/api/projects/:id/apply-template` | `projects.update` | 套用模板（projects.update + write；模板结构来自 TemplatePhase/TemplateTask 行） |
+| POST | `/api/projects/batch-delete` | `projects.delete` | 批量删除（projects.delete；软删+审计，Tencent POST /projects/batch-delete 复刻） |
+| POST | `/api/projects/batch-update-status` | `projects.update` | 批量更新状态（逐项目 ∩ transition 校验） |
 
-### 5.16 文件 / 审计 / 角色 / 字典 / 设置 / 试剂批次 / 系统日志
+#### 试剂批次 —— `/api/reagent-lots`
 
-**文件 `/api/files`** —— 授权依据见 §4.2 文件域（`accessScope` 是唯一依据）
+| 方法 | 路径 | 权限 | 功能 |
+|------|------|------|------|
+| GET | `/api/reagent-lots` | `reagents.view` |  |
+| POST | `/api/reagent-lots` | `reagents.create` |  |
+| PATCH | `/api/reagent-lots/:id` | `reagents.update` |  |
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/files` | 列表；`?needsClassification=true` 筛选待分类 |
-| POST | `/api/files` | 上传（先入 `PRIVATE_STAGING` 暂存态，绑定后才生效） |
-| GET | `/api/files/:id` · `/:id/metadata` · `/:id/download` | 元数据 / 下载（与 list 同一套授权判定） |
-| PATCH | `/api/files/:id/scope` | 调整访问作用域与归属（分类） |
-| DELETE | `/api/files/:id` | 删除；被证据引用时返回 **409 `FILE_REFERENCED_BY_EVIDENCE`** |
-| POST | `/api/files/:id/restore` | 恢复软删（超级管理员） |
+#### 原料 —— `/api/reagent-materials`
 
-**审计 `/api/audit`**：`GET /api/audit-logs`（查询）、`GET /api/audit/entity/:type/:id/summary`（实体操作摘要）、`POST /api/audit-logs/export`（导出）
+| 方法 | 路径 | 权限 | 功能 |
+|------|------|------|------|
+| GET | `/api/reagent-materials` | `reagent_materials.view` | 列表 |
+| GET | `/api/reagent-materials/:id` | `reagent_materials.view` |  |
+| POST | `/api/reagent-materials` | `reagent_materials.create` |  |
+| PUT | `/api/reagent-materials/:id` | `reagent_materials.update` |  |
+| DELETE | `/api/reagent-materials/:id` | `reagent_materials.delete` | 删除（reagent_materials.delete，P1 批次二解冻；软删+审计） |
+| POST | `/api/reagent-materials/bulk-delete` | `reagent_materials.delete` | 批量软删（reagent_materials.delete） |
 
-**角色 `/api/roles`**：`GET /`、`GET /permission-catalog`、`POST /`、`PATCH /:id`、`DELETE /:id`、`POST /:id/permissions`（表驱动 RBAC 的维护入口，见 §7.2）
+#### 试剂 —— `/api/reagents`
 
-**字典 `/api/dict`**：`GET /`、`GET /:enumName`
+| 方法 | 路径 | 权限 | 功能 |
+|------|------|------|------|
+| POST | `/api/reagents` | 登录 | 此处不注册 POST /:id（无业务意义且会按注册顺序抢先匹配 /export）。 |
+| PUT | `/api/reagents/:id` | 登录 |  |
+| PATCH | `/api/reagents/:id` | 登录 |  |
+| DELETE | `/api/reagents/:id` | 登录 |  |
+| GET | `/api/reagents` | `reagents.view` | 聚合列表 |
+| GET | `/api/reagents/:id` | `reagents.view` | 聚合详情 |
+| GET | `/api/reagents/export` | `reagents.export` |  |
+| POST | `/api/reagents/export` | `reagents.export` |  |
 
-**设置 `/api/settings`**：`GET /`、`PATCH /`
+#### 注册申报 —— `/api/registrations`
 
-**试剂批次 `/api/reagent-lots`**：`GET /`、`POST /`、`PATCH /:id`
+| 方法 | 路径 | 权限 | 功能 |
+|------|------|------|------|
+| GET | `/api/registrations` | `registrations.view` | 注册项目列表（registrations.view） |
+| GET | `/api/registrations/stats` | `registrations.view` | 统计 |
+| GET | `/api/registrations/templates` | `registrations.view` | 可用模板（project_templates.view 亦可，保持 registrations.view 以兼容原页面） |
+| GET | `/api/registrations/:id` | `registrations.view` | 详情（registrations.view） |
+| POST | `/api/registrations` | `registrations.create` | 创建（registrations.create；编号走 CodeSequence） |
+| PUT | `/api/registrations/:id` | `registrations.update` | 更新（registrations.update） |
+| PATCH | `/api/registrations/:id/stage` | `registrations.change_stage` | 阶段推进（registrations.change_stage；严格状态机） |
+| PATCH | `/api/registrations/:id/profile` | `registrations.update` | 单独更新档案（不含阶段） |
 
-**系统日志 `/api/system-logs`**：`GET /api/system-logs`（与 `audit_logs` 相互独立，见 §4.2 审计与配置）
+#### 法规文档 —— `/api/regulatory-documents`
+
+| 方法 | 路径 | 权限 | 功能 |
+|------|------|------|------|
+| GET | `/api/regulatory-documents/auth` | 登录 |  |
+| GET | `/api/regulatory-documents` | `regulatory_documents.view` |  |
+| GET | `/api/regulatory-documents/auth` | 登录 |  |
+| GET | `/api/regulatory-documents/:id` | `regulatory_documents.view` |  |
+| GET | `/api/regulatory-documents/auth` | 登录 |  |
+| POST | `/api/regulatory-documents` | `regulatory_documents.create` |  |
+| GET | `/api/regulatory-documents/auth` | 登录 |  |
+| PUT | `/api/regulatory-documents/:id` | `regulatory_documents.update` |  |
+| GET | `/api/regulatory-documents/auth` | 登录 |  |
+| DELETE | `/api/regulatory-documents/:id` | `regulatory_documents.delete` |  |
+| GET | `/api/regulatory-documents/auth` | 登录 |  |
+| POST | `/api/regulatory-documents/import` | 登录 |  |
+| GET | `/api/regulatory-documents/auth` | 登录 |  |
+| POST | `/api/regulatory-documents/seed` | `regulatory_documents.create` |  |
+| POST | `/api/regulatory-documents/:id/original-file` | 登录 | 兼容入口：base64 直传原文（新前端一律走 POST /api/files + PUT originalFileId） |
+| GET | `/api/regulatory-documents/auth` | 登录 |  |
+| GET | `/api/regulatory-documents/:id/original-file` | 登录 |  |
+| GET | `/api/regulatory-documents/auth` | 登录 |  |
+
+#### 汇报 —— `/api/reports`
+
+| 方法 | 路径 | 权限 | 功能 |
+|------|------|------|------|
+| GET | `/api/reports` | `reports.view` | 列表（reports.view；按可见项目过滤） |
+| GET | `/api/reports/:id` | `reports.view` | 详情（reports.view + ∩ read） |
+| POST | `/api/reports` | `reports.create` | RF03：本接口只负责「保存草稿」——周期键按类型严格校验，状态由提交命令负责。 |
+| PUT | `/api/reports/:id` | `reports.update` | 业务写入、严格审计、回执在同一事务提交（失败不留回执）。 |
+| POST | `/api/reports/:id/submit` | `reports.submit` | RF02：版本快照、状态、严格审计、幂等回执全部在同一事务；失败不留半成品与回执。 |
+| POST | `/api/reports/:id/approve` | `reports.review` | 审阅通过（reports.review + ∩ transition） |
+| POST | `/api/reports/:id/reject` | `reports.review` | 批示需修改（reports.review + ∩ transition） |
+| GET | `/api/reports/:id/versions` | `reports.view` | 历史版本 |
+| GET | `/api/reports/export/month/:month` | `reports.export` | 导出（reports.export） |
+| DELETE | `/api/reports/:id` | `reports.delete` | Tencent 语义：只能删草稿；enh 额外由 reports.delete 权限码把关 |
+| PATCH | `/api/reports/:id/recall` | `reports.update` | 撤回（作者本人；SUBMITTED → DRAFT） |
+
+#### 角色 —— `/api/roles`
+
+| 方法 | 路径 | 权限 | 功能 |
+|------|------|------|------|
+| GET | `/api/roles/permission-catalog` | `roles.view` | P0 权限目录（roles.view；权限分配弹窗数据源） |
+| GET | `/api/roles` | `roles.view` |  |
+| POST | `/api/roles` | `roles.create` |  |
+| PATCH | `/api/roles/:id` | `roles.update` |  |
+| DELETE | `/api/roles/:id` | `roles.delete` |  |
+| POST | `/api/roles/:id/permissions` | `roles.assign_permissions` |  |
+
+#### 样本 —— `/api/samples`
+
+| 方法 | 路径 | 权限 | 功能 |
+|------|------|------|------|
+| GET | `/api/samples` | `samples.view` | 列表 |
+| GET | `/api/samples/:id` | `samples.view` | 详情 |
+| POST | `/api/samples` | `samples.create` | 创建（编号竞态修复：CodeSequence 原子发号） |
+| PUT | `/api/samples/:id` | `samples.update` | 更新（白名单；禁止改编号） |
+| DELETE | `/api/samples/:id` | 登录 | 删除（M-1：samples.delete 为 P1 后置权限，冻结桩；解冻时软删+审计） |
+
+#### 设置 —— `/api/settings`
+
+| 方法 | 路径 | 权限 | 功能 |
+|------|------|------|------|
+| GET | `/api/settings` | `settings.view` |  |
+| PATCH | `/api/settings` | `settings.update` |  |
+
+#### 统计 —— `/api/stats`
+
+| 方法 | 路径 | 权限 | 功能 |
+|------|------|------|------|
+| GET | `/api/stats/dashboard` | `dashboard.view` | 仪表盘统计 |
+| GET | `/api/stats/projects` | `dashboard.view` | 项目统计（dashboard.view 即可访问；完成率改单查询聚合） |
+| GET | `/api/stats/users/:userId/workload` | `dashboard.view` | 个人工作量统计 |
+| GET | `/api/stats/reports` | `dashboard.view` | 汇报统计 |
+
+#### 同步 —— `/api/sync`
+
+| 方法 | 路径 | 权限 | 功能 |
+|------|------|------|------|
+| GET | `/api/sync/init` | 登录 | 增量拉取 |
+| POST | `/api/sync/receipts/reserve` | 登录 |  |
+| POST | `/api/sync/receipts/query` | 登录 |  |
+| POST | `/api/sync/push` | 登录 |  |
+| POST | `/api/sync/device` | 登录 | 设备登记 |
+| GET | `/api/sync/status` | 登录 | 同步状态 |
+
+#### 系统日志 —— `/api`
+
+| 方法 | 路径 | 权限 | 功能 |
+|------|------|------|------|
+| GET | `/api/system-logs` | `system.logs.view` |  |
+
+#### 任务模板 —— `/api/task-templates`
+
+| 方法 | 路径 | 权限 | 功能 |
+|------|------|------|------|
+| GET | `/api/task-templates` | `task_templates.view` | 列表 |
+| GET | `/api/task-templates/:id` | `task_templates.view` |  |
+| POST | `/api/task-templates` | `task_templates.create` |  |
+| PUT | `/api/task-templates/:id` | `task_templates.update` |  |
+| DELETE | `/api/task-templates/:id` | `task_templates.delete` | 为 P0） |
+| POST | `/api/task-templates/bulk-delete` | `task_templates.delete` | 批量软删（Tencent 复刻；任一被项目引用则整批拒绝，语义与单删一致） |
+| POST | `/api/task-templates/seed` | `task_templates.create` | 一键预置标准模板（task_templates.create） |
+
+#### 任务 —— `/api/tasks`
+
+| 方法 | 路径 | 权限 | 功能 |
+|------|------|------|------|
+| GET | `/api/tasks` | `tasks.view` | 列表（tasks.view；按可见项目过滤） |
+| POST | `/api/tasks/:id/prerequisites` | `tasks.update` | 前置任务依赖（tasks.update + ∩ write） |
+| DELETE | `/api/tasks/:id/prerequisites/:prerequisiteId` | `tasks.update` |  |
+| GET | `/api/tasks/:id` | `tasks.view` | 详情（tasks.view + ∩ read） |
+| POST | `/api/tasks` | `tasks.create` | 创建（tasks.create + ∩ write） |
+| PUT | `/api/tasks/:id` | `tasks.update` | 更新（tasks.update + ∩ write；定位任务 → projectId → ∩） |
+| PATCH | `/api/tasks/:id/status` | `tasks.change_status` | 状态流转（tasks.change_status + ∩ transition；Kanban 拖拽） |
+| DELETE | `/api/tasks/:id` | `tasks.delete` | 删除（tasks.delete，P1 批次二解冻；软删含全部后代任务，审计） |
+| GET | `/api/tasks/board/:projectId` | `tasks.view` | 看板（tasks.view + ∩ read；英文枚举分组） |
+| POST | `/api/tasks/batch/status` | `tasks.change_status` | 批量更新状态（逐任务 ∩ transition） |
+
+#### 用户 —— `/api/users`
+
+| 方法 | 路径 | 权限 | 功能 |
+|------|------|------|------|
+| GET | `/api/users` | `users.view` | 列表（users.view） |
+| GET | `/api/users/:id` | `users.view` | 单个（users.view） |
+| POST | `/api/users` | `users.create` | 创建（users.create；systemRole 由服务端固定 MEMBER，M-1 §7.3） |
+| POST | `/api/users/batch` | `users.create` | 批量导入（users.create；Tencent POST /users/batch 复刻，逐条校验逐条落库） |
+| PUT | `/api/users/:id` | `users.update` | 更新（users.update；白名单 M-1 §6.3） |
+| PATCH | `/api/users/:id/status` | 登录 | 启停（users.enable / users.disable） |
+| PUT | `/api/users/:id/roles` | `roles.assign_user` | 角色绑定唯一入口（roles.assign_user；M-1 §6.3） |
+| PUT | `/api/users/:id/reset-password` | `users.reset_password` | 重置密码（users.reset_password） |
+| DELETE | `/api/users/:id` | `users.delete` | 删除（users.delete，8 项高危之一，仅 SUPER_ADMIN 持有） |
 
 ---
 
-### 5.17 登录请求/响应示例
+### 5.3 登录请求/响应示例
 
 ```http
 POST /api/auth/login
