@@ -1,6 +1,0 @@
-{
-  "suite": "rp14-infected-file-read",
-  "path": "../final-regression-2026-10-02/RP14/rp14-infected-file-read/attempt-01",
-  "result": "PASS",
-  "limitations": "See acceptance.json; ENV_BLOCKED means broader required evidence remains."
-}

@@ -1,8 +1,0 @@
-{
-  "attempt01Snapshot": "Original executed script reconstructed from exact two-line patch; log unchanged",
-  "attempt02Snapshot": "Current exact script copied while attempt02 runs",
-  "sha256": {
-    "attempt-01-seven-probes.mjs": "56da675e0149bb514d9f1e895abcf8cb7a571ea87eb7887692312b00efee9a9d",
-    "attempt-02-nine-probes.mjs": "4f19c2685b77156c080fea09e101ab205b96430f36976a8e66a9cdc406ce9288"
-  }
-}

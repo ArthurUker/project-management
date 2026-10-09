@@ -1,7 +1,0 @@
-{
-  "reason": "Real deterministic owned DB race proved Prisma raw lock surfaces SQL40001 as P2010, not P2034. Exact approved R05/R05b bounded retry must recognize only40001/40P01; no blanket raw-error retry. Bind24h expiry exactly to createdAt server timestamp perR07.",
-  "allowedFile": "rdpms-system/backend/src/modules/sync/syncMutationCommands.ts",
-  "beforeSnapshot": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-sync-receipts-01/before-RP09-T02/rdpms-system/backend/src/modules/sync/syncMutationCommands.ts",
-  "oldFailureEvidence": "evidence/rp09-t02/attempt-01",
-  "outsideScopeChanges": false
-}

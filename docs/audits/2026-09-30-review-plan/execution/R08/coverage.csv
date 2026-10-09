@@ -1,9 +1,0 @@
-packet,file,symbol_or_route,question,review_status,evidence_ref,unreviewed_reason
-R08,rdpms-system/frontend/src/offline/engine.ts,syncNow applied/conflict/rejected branches,What state is deleted or persisted for each response and in what order,REVIEWED,execution/R08/review.md#三类结果及持久化顺序,
-R08,rdpms-system/frontend/src/offline/engine.ts,conflict merge and kvSet,Is conflict persistence atomic with outbox deletion,REVIEWED,execution/R08/review.md#F02：冲突先出队后持久化,
-R08,rdpms-system/frontend/src/offline/idb.ts,run/outboxDelete/kvSet/deadLetterMove,Which writes share an IndexedDB transaction and await commit,REVIEWED,execution/R08/review.md#三类结果及持久化顺序,
-R08,rdpms-system/frontend/src/offline/engine.ts,outboxAll and push payload,Does client chunk by server limit or byte budget,REVIEWED,execution/R08/review.md#F04：超过服务器单批 500 条后队列无法推进,
-R08,rdpms-system/backend/src/routes/sync.js,/push body parsing and 500 change cap,What count limit applies before per-item processing,REVIEWED,execution/R08/review.md#F04：超过服务器单批 500 条后队列无法推进,
-R08,rdpms-system/backend/src/routes/sync.js,per-item mutation and syncMutation.upsert,Are business writes and idempotency receipts atomic,REVIEWED,execution/R08/review.md#事务、重试、依赖与恢复边界,Fault injection not run; transaction gap recorded as unverified risk
-R08,rdpms-system/frontend/src/api/endpoints/sync.ts,SyncChange/push DTO,Are dependency sequence and response status represented/validated,REVIEWED,execution/R08/review.md#事务、重试、依赖与恢复边界,Runtime response validation is not present in inspected path
-R08,docs/audits/2026-09-29-rdpms/offline-results.json,F02/F04 historical evidence,What was reproduced and under which harness,REVIEWED,offline-results.json#F02_CONFLICT_DELETED_BEFORE_PERSISTENCE;offline-results.json#F04_OUTBOX_NOT_CHUNKED_TO_SERVER_LIMIT,Historical harness only; no browser or full network E2E

@@ -1,9 +1,0 @@
-{
-  "head": "138cf2da1b63195cef7e884f69bdf8ded6ed3c21",
-  "files": [
-    {"path": "rdpms-system/backend/src/routes/registrations.js", "sha256": "5e2cbbca4643e628eb8b94d7bf2eaa7e89147e31d9c9c2256a20d1d14fa991b2"},
-    {"path": "rdpms-system/backend/src/kernel/projectAccess.js", "sha256": "53bbcf704b1d2c9df641e243ac952e333699431aedc8c6620308612d1262d339"},
-    {"path": "rdpms-system/backend/prisma/seed.js", "sha256": "0fbb7b9db94ab71f430e83b7be8c2f3c0cf59a875760c0e90ab064c1d62fd845"},
-    {"path": "rdpms-system/frontend/src/api/endpoints/registrations.ts", "sha256": "81eeef3a144393b7c853d07a9d8ccfbe6ac09534e2b9652cec767d96263d7913"}
-  ]
-}

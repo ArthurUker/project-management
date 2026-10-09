@@ -1,787 +1,671 @@
 # RDPMS — 研发项目管理系统
 
-> R&D Project Management System · 面向 IVD（体外诊断）/ 诊断试剂研发的科研项目全过程管理平台
-> 分支：`main` · 部署形态：原地部署（代码目录 = 运行目录，见 §8）
+R&D Project Management System，面向 IVD / 诊断试剂研发团队，覆盖项目、任务、进展汇报、注册申报、法规资料与实验知识管理。
 
----
+> 文档更新：**2026-10-09**。源码核对基线：`289d340`，包含部署改造提交 `f8ccb06`。
+> 本文描述当前仓库行为；服务器路径与部署形态依据入库运维记录，未在本轮连接服务器重验。
+> 文档更新不代表测试重新通过、历史发现全部关闭或生产发布验收完成。当前文档入口见 [docs/README.md](docs/README.md)。
 
 ## 目录
 
 1. [系统概述](#1-系统概述)
 2. [技术栈总览](#2-技术栈总览)
-3. [系统架构](#3-系统架构)
+3. [系统架构与关键数据流](#3-系统架构与关键数据流)
 4. [数据库设计](#4-数据库设计)
-5. [API 接口文档](#5-api-接口文档)
-6. [前端模块设计](#6-前端模块设计)
-7. [认证与权限设计](#7-认证与权限设计)
+5. [API 约定与路由索引](#5-api-约定与路由索引)
+6. [前端模块与离线同步](#6-前端模块与离线同步)
+7. [认证与权限](#7-认证与权限)
 8. [部署架构](#8-部署架构)
-9. [安全设计](#9-安全设计)
-10. [已知技术债务与待办](#10-已知技术债务与待办)
-11. [开发环境搭建指南](#11-开发环境搭建指南)
-12. [运维手册](#12-运维手册)
-
----
+9. [文件审计与恢复边界](#9-文件审计与恢复边界)
+10. [当前待办与验证状态](#10-当前待办与验证状态)
+11. [本地开发与验证](#11-本地开发与验证)
+12. [运维检查与文档维护](#12-运维检查与文档维护)
 
 ## 1. 系统概述
 
-### 1.1 业务定位
+### 1.1 业务范围
 
-RDPMS 是一套面向**诊断试剂 / IVD 研发团队**的研发项目全过程管理系统，覆盖从项目立项、阶段流转、任务执行、进展汇报到注册申报、知识沉淀的完整链路。核心解决"研发过程不可视、汇报靠手工、法规与配方散落、注册进度难追踪"的痛点。
+| 业务域 | 当前代码提供的能力 | 主要入口 |
+|---|---|---|
+| 项目与阶段 | 项目聚合创建、模板应用、成员、负责人转移、状态流转 | projects / phases / registrations |
+| 任务 | 看板、指派、状态、前置依赖、子任务增量、法规引用 | tasks / task-templates |
+| 研发汇报 | 日/周/月报、草稿、提交、审阅、驳回、版本快照 | reports / reportCommands |
+| 月度进展 | 项目月份记录、完成度、计划与风险 | progress |
+| 注册与法规 | 注册档案、阶段工作流、法规文件、导入来源 | registrations / regulatory-documents |
+| 知识与模板 | 文档分类/版本、项目模板、任务模板 | docs / project-templates / task-templates |
+| 实验资料 | 试剂原料、批次、配方、配制、引物探针、样本 | reagent-materials / reagent-lots / formulas / prep / primers / samples |
+| 平台管理 | 账号、角色、文件、审计、系统日志、模块导出恢复 | users / roles / files / audit / backup |
 
-包含以下业务域：
+路由存在不表示所有操作均有独立页面，也不表示均支持离线写入。
+试剂聚合接口 `reagents` 与批次写入口 `reagent-lots` 分离；具体写能力以路由中的拒绝和授权逻辑为准。
 
-| 业务域 | 说明 |
-|--------|------|
-| 项目管理 | 项目立项 / 草稿、阶段流转状态机、成员管理、套用模板自动生成任务与里程碑 |
-| 任务管理 | 任务看板（拖拽改状态）、前置依赖（环检测）、阶段/优先级/法规适用性标签 |
-| 研发汇报 | 日报 / 周报 / 月报，版本历史，提交 / 审阅（已阅）/ 驳回（需修改）工作流 |
-| 月度进展 | 按项目 + 月份填写实际工作、完成度、下月计划、风险 |
-| 试剂与配方 | 试剂库、试剂原料库、配方编辑器、配制计算器（含配制记录） |
-| 引物探针 | 引物 / 探针序列库，CSV 批量导入 |
-| 样本库 | 实验样本管理，关联项目 |
-| 法规文档 | 法规文件库（适用性 / 优先级标签），关联任务；支持原文件上传与 PDF 导入 |
-| 注册申报 | IVD 注册全流程（资料准备 / 送检受理 / 技术审评 / 行政审批 / 取证归档），阶段状态机，合规负责人，到期预警 |
-| 知识库 | 文档分类 + 文档版本管理，支持富文本 / Markdown |
-| 模板库 | 项目模板（含阶段 / 角色 / 任务结构）、任务模板（含步骤） |
+### 1.2 身份与业务职责
 
-### 1.2 目标用户
+系统身份为 `SUPER_ADMIN / ADMIN / MANAGER / MEMBER / VIEWER / AUDITOR`，不是旧的三个小写角色码。
+业务权限来自角色绑定；项目内权限还取决于当前成员关系、负责人及 capability。
+质量、注册等职责可通过权限与项目角色表达，不能仅由前端菜单或身份名称推断。
 
-| 角色 | 代码 | 典型职责 |
-|------|------|----------|
-| 系统管理员 | `admin` | 用户 / 权限管理、模板维护、系统备份恢复、注册法规种子数据 |
-| 项目经理 | `manager` | 创建与管理项目、增删成员、审阅汇报、推进注册阶段、编辑模板 |
-| 研发成员 | `member` | 认领 / 更新任务、提交汇报、填写月度进展、查看注册与法规 |
-| 质量 / 注册合规 | 归属上述角色，通过 `registrations.*` 权限位区分 | 维护注册档案、上传法规原文件 |
+### 1.3 当前运行方式
 
-### 1.3 部署形态
-
-- **单实例原地部署**：一台 Ubuntu 服务器上，**Caddy** 终止 TLS（`rdpms.digifluidic.com`）、托管前端静态产物并反代 `/api` 到本机 Hono 后端；后端连 PostgreSQL。
-  代码目录 `/opt/rdpms/app` **同时是运行目录与开发目录** —— 没有 releases/current 多版本机制，发布即原地更新（详见 §8）。
-- **离线优先**：前端使用自研 IndexedDB 层（`src/offline/`，按登录主体分片），登录态与同步游标按主体存储；弱网 / 离线时可继续操作，恢复后经 `/api/sync` 增量同步。
-- **无状态后端**：JWT 鉴权（access token 15 分钟 + refresh 轮转），不依赖 Redis / 服务端会话存储。
-
----
+- **服务端**：PostgreSQL-only，Hono 单实例，systemd 守护；当前发布采用原地更新。
+- **浏览器**：React SPA，Bearer access token + JSON body refresh；不采用 cookie 会话。
+- **离线**：指定同步实体在 IndexedDB 中保留镜像和待提交命令；恢复网络后按权限拉取与提交。
+- **服务状态**：JWT 是自包含凭证，但账号版本、refresh、回执、恢复状态和同步水位均依赖数据库，不能称为完全无状态后端。
 
 ## 2. 技术栈总览
 
-### 2.1 后端
+版本表取当前 lockfile 的解析值，不代表服务器实际安装版本；安装应遵循各端 package-lock.json。
 
-| 分类 | 技术 | 版本 | 用途 |
-|------|------|------|------|
-| 运行时 | Node.js | 20 LTS | 服务运行时 |
-| Web 框架 | Hono | ^4.0.0 | HTTP 路由 / 中间件 |
-| 服务适配器 | @hono/node-server | ^1.8.0 | Node 原生 HTTP 适配 |
-| ORM | Prisma | ^5.10.0 | 数据库访问 / 迁移 |
-| 数据库 | PostgreSQL | 14 | 主存储（本地可 SQLite，生产统一 PG） |
-| 密码哈希 | bcryptjs | ^2.4.3 | 口令单向哈希（cost 10） |
-| 令牌 | jsonwebtoken | ^9.0.2 | JWT 签发 / 校验 |
-| CORS | cors | ^2.8.5 | 跨域白名单 |
-| ID 生成 | nanoid | ^5.0.4 | 短 ID（部分场景） |
-| 报表导出 | pdfkit | ^0.14.0 | PDF 生成 |
+| 层次 | 技术 | 锁定版本/方式 |
+|---|---|---|
+| 运行时 | Node.js | 项目运行与构建按 Node 20 系列准备；目标实际版本另行核对 |
+| 后端 | Hono / @hono/node-server | Hono 4.12.12；Node HTTP 适配 |
+| 数据访问 | Prisma / @prisma/client | 5.22.0 / 5.22.0；PostgreSQL |
+| 后端语言 | JavaScript + TypeScript | TypeScript 5.9.3；NodeNext、allowJs=true、checkJs=false |
+| 前端 | React / React Router | React 18.3.1；BrowserRouter |
+| 前端构建 | Vite / TypeScript | 5.4.21 / 5.9.3；tsc -b + Vite |
+| UI | Tailwind、Radix、Lucide、Recharts | 样式、组件原子、图标与图表 |
+| 图与拖拽 | @xyflow/react、dagre、dnd-kit | 流程/阶段布局、任务看板 |
+| 本地状态 | Zustand、原生 IndexedDB 封装 | UI 状态与业务离线存储分离，无 Dexie 依赖 |
+| 网络与身份 | axios、jsonwebtoken、bcryptjs | 统一客户端、JWT、密码哈希 |
+| 测试 | node:test、esbuild、fake-indexeddb、playwright-core | 后端测试、前端 TS 单测与独立浏览器脚本 |
+| 运维 | systemd、Caddy、PostgreSQL 工具 | 运行模板及发布脚本见 §8 |
 
-### 2.2 前端
+后端 `npm run typecheck` 检查当前 TS 编译项目；由于 `checkJs=false`，不能把通过结果当作全部旧 JS 已严格类型检查。
+CORS 实际使用 `hono/cors`，不是因为 package.json 仍有 `cors` 依赖就使用 Express CORS 中间件。
 
-| 分类 | 技术 | 版本 | 用途 |
-|------|------|------|------|
-| UI 框架 | React | ^18.2.0 | 视图层 |
-| 语言 | TypeScript | ^5.3.3 | 类型安全（构建门禁：`tsc -b`） |
-| 构建 | Vite | ^5.1.0 | 开发服务器 / 生产打包 |
-| 路由 | react-router-dom | ^6.22.0 | 前端路由 + 守卫 |
-| 状态 | Zustand | ^4.5.0 | 全局 UI 状态 |
-| 离线与本地存储 | **自研 IndexedDB 层** | — | `src/offline/`（按登录主体分片；早期版本用 Dexie，已移除） |
-| 会话 | 自研 tokenStore | — | `src/auth/tokenStore.ts`（access/refresh 轮转、跨标签锁） |
-| HTTP | axios | ^1.6.7 | API 客户端 / 拦截器（`src/api/http.ts`） |
-| 样式 | TailwindCSS | ^3.4.19 | 原子化 CSS |
-| 组件原子 | @radix-ui/react-* | ^1/2 | avatar / dialog / dropdown / progress / select / tabs |
-| 图标 | lucide-react | ^1.8.0 | 图标 |
-| 图表 | recharts | ^2.12.0 | 统计图表 |
-| 流程图 | @xyflow/react | ^12.10.2 | 阶段 / 流程可视化 |
-| 看板拖拽 | @dnd-kit/* | ^6/9/10 | 任务看板拖拽 |
-| 导出 | jspdf / html2canvas | ^2.5.1 / ^1.4.1 | 页面 / 报表导出 |
-| 图布局 | @dagrejs/dagre | ^3.0.0 | 流程图自动布局 |
-| 工具 | clsx / dayjs | ^2.1.0 / ^1.11.10 | 类名拼接 / 日期处理 |
+## 3. 系统架构与关键数据流
 
-### 2.3 运维
-
-| 分类 | 技术 | 用途 |
-|------|------|------|
-| 进程守护 | systemd（`rdpms-api.service`） | 后端服务管理、开机自启、崩溃重启；启动入口 `/usr/local/bin/rdpms-start.sh` |
-| 反向代理 / 静态 | **Caddy** | TLS 终止（自动证书）+ 前端托管 + `/api` 反代；站点片段 `/etc/caddy/sites/rdpms.caddy` |
-| 数据库 | PostgreSQL 14 | 主存储 |
-| 备份 | `rdpms-backup.sh` | pg_dump + uploads 快照 + sha256 校验 + 保留策略（日 30 / 周 84 / 月 365） |
-| 发布 | `rdpms-deploy.sh` | 原地发布：fetch → 按需装依赖 → migrate → 构建 → 重启（见 §8.3） |
-
----
-
-## 3. 系统架构
-
-### 3.1 部署拓扑
+### 3.1 分层与依赖
 
 ```mermaid
-flowchart LR
-  U[浏览器 / 用户] -->|HTTPS 443| CD[Caddy<br/>TLS + 静态资源 + 反代]
-  CD -->|/api → 127.0.0.1:3000| BE[Hono 后端<br/>systemd: rdpms-api]
-  BE -->|Prisma| PG[(PostgreSQL 14)]
-  BE -->|严格审计| AL[(audit_logs)]
-  U -.离线可用.-> DX[(离线层<br/>IndexedDB 按主体分片)]
-  DX -.恢复网络后增量同步.-> CD
+flowchart TD
+  UI[React 页面与组件] --> HTTP[api/http 与业务 endpoints]
+  UI --> OFF[offline engine / owner IDB]
+  OFF --> HTTP
+  HTTP --> AUTH[Hono 路由：认证与权限]
+  AUTH --> CMD[业务命令 / writeGuards / 文件策略]
+  CMD --> TX[Prisma 事务]
+  TX --> DB[(PostgreSQL 业务表)]
+  TX --> AUDIT[(严格审计与幂等回执)]
+  DB --> EVENTS[(触发器捕获同步事件)]
+  EVENTS --> PUB[已提交事件发布与签名分页]
+  PUB --> OFF
 ```
 
-- 公网暴露 **443**（Caddy 自动申请证书）；后端 3000 端口**仅本机**可达，不对外。
-- 前端为纯静态 SPA，`/api` 经同源反代，避免跨域。
+| 层 | 源码 | 职责 |
+|---|---|---|
+| 装配 | `backend/src/bootstrap/createApp.js` | 挂载路由、CORS、依赖作用域、health/ready、错误处理；不监听端口 |
+| 启动 | `backend/src/index.js` → `bootstrap/server.js` | 配置/密钥守卫、创建 Prisma Client、监听回环端口 |
+| 请求平台 | `platform/requestContext.js`、`platform/db/client.js` | 请求级依赖与数据库访问，传播数据集上下文 |
+| 授权 | `kernel/rbac.js`、`modules/access/writeGuards.ts` | 认证、权限装载、当前资源写入资格 |
+| 业务命令 | `modules/projects/`、`modules/reports/`、`modules/sync/` | 聚合、报告原子操作、同步命令与读投影 |
+| 横切保护 | `platform/idempotency/`、`platform/recovery/`、严格审计 | 回执、数据恢复围栏、关键写入追溯 |
+| 前端基础 | `api/`、`auth/`、`offline/`、`shared/` | HTTP 会话、账号分区、恢复、内容/周期规则 |
 
-### 3.2 组件与请求链路
+当前是模块化单体；路由仍承担部分业务逻辑，并非所有写接口都已抽成独立命令。
+
+### 3.2 在线写入
+
+1. 客户端在请求发出时捕获会话，附带 Bearer 凭证。
+2. 后端验证当前账号、securityVersion、datasetEpoch，并装载当前权限。
+3. 入口根据权限、项目关系、资源状态和动作执行守卫。
+4. 支持回执的命令在授权后进入幂等处理，将业务变更、关键审计与成功回执放在同一事务。
+5. 同键同内容可按当前授权回放；同键异内容返回冲突。未采用该封装的接口不能自动继承上述保证。
+
+**幂等回放不在认证之前执行**；不能按裸 key 回放他人或旧数据集的响应。
+
+### 3.3 报告保存与提交
+
+`reports` 路由和同步命令共享报告规则。草稿保存将可编辑状态与并发基线合并进条件 UPDATE；
+提交在事务中保护报告行、生成 ReportVersion 并更新 currentVersion/状态。
+POST 的新建与墓碑恢复分支分别使用 create 与受条件约束的恢复，不能用无条件 upsert 覆盖已经提交的正文。
+冲突是客户端需要处理的结果，不能用重试覆盖新版本；legacy 输入支持不等于所有已部署客户端都通过兼容验证。
+
+### 3.4 离线往返
 
 ```mermaid
-flowchart TB
-  subgraph 前端
-    SPA[React SPA] --> STORE[Zustand + 离线引擎]
-    STORE --> OFF[(离线层 IndexedDB<br/>按主体分片)]
-    SPA --> AXIOS[Axios API 客户端<br/>注入 Bearer Token]
-    SPA --> SESS[tokenStore<br/>access / refresh 轮转]
-  end
-  AXIOS -->|HTTPS| CD[Caddy]
-  CD --> BE
-  subgraph 后端
-    BE --> CORS[CORS 中间件]
-    CORS --> IDEMP[幂等回执<br/>mutation_receipts 表]
-    IDEMP --> AUTH[authMiddleware<br/>校验 securityVersion]
-    AUTH --> ROUTES[28 个路由模块]
-    ROUTES --> JWT[jwt 校验/签发]
-    ROUTES --> BC[bcrypt 校验]
-    ROUTES --> PRISMA[Prisma Client]
-  end
-  PRISMA --> PG[(PostgreSQL)]
+sequenceDiagram
+  participant U as 当前账号
+  participant I as owner IDB
+  participant E as 同步引擎
+  participant S as /api/sync
+  participant P as PostgreSQL
+  U->>I: 保留原始命令与并发基线
+  E->>S: reserve / query / push（上行 v1）
+  S->>P: 当前授权 + 事务回执 + 业务写入
+  P-->>S: 持久结果
+  S-->>E: 对应命令结果或冲突/拒绝
+  E->>I: 按原命令核对并原子更新队列
+  E->>S: init?pullProtocol=2（下行）
+  S->>P: 发布已提交事件，按当前 ACL/字段投影分页
+  S-->>E: 签名分页与 checkpoint
+  E->>I: 合并 revision，末页后提交 checkpoint
 ```
 
-### 3.3 目录结构
+上行 `protocolVersion=1`、下行 `pullProtocol=2`、IndexedDB schema v4 是三个不同版本维度。
 
-```
+### 3.5 目录结构
+
+```text
 project-management/
-├── README.md                       # 本文件
-├── docs/                           # 文档
-│   ├── review/codebuddy/deepseek/  # CodeBuddy 审阅资料归档（含 open-items.md）
-│   ├── remediation/                # RP 整改包产出
-│   ├── audits/                     # 审计记录
-│   └── port/                       # 重构实施记录与证据
-├── specs/
+├── README.md
+├── docs/                         # 当前指南、合同、必要补正证据、清理索引
+├── specs/                        # 设计材料；适用性以当前源码为准
+├── start-dev.sh                  # 旧开发快捷脚本，有杀进程/db push 副作用，见 §11
 └── rdpms-system/
-    ├── backend/                    # Hono 后端（TypeScript）
-    │   ├── prisma/
-    │   │   ├── schema.prisma       # 数据模型
-    │   │   ├── migrations/         # 版本化迁移（13 个）
-    │   │   └── seed.js             # 种子数据（口令外置，见 §11）
+    ├── backend/
+    │   ├── prisma/               # schema、版本化迁移、seed
     │   ├── src/
-    │   │   ├── index.js            # 入口：仅转发到 bootstrap/
-    │   │   ├── bootstrap/          # createApp.js（装配）/ server.js（监听 + 生产密钥守卫）
-    │   │   ├── routes/             # 28 个路由模块
-    │   │   ├── kernel/             # 核心：rbac / audit / 状态机 / 常量
-    │   │   ├── platform/           # 平台层：db client / 幂等回执 / 严格审计 / 配置 / 恢复
-    │   │   ├── modules/            # 业务模块：access / reports / projects / sync / files …
-    │   │   ├── data/               # 任务模板种子等
-    │   │   └── utils/
-    │   ├── tests/                  # unit / contract / integration
-    │   └── package.json
-    ├── frontend/                   # React SPA
-    │   ├── src/
-    │   │   ├── App.tsx             # 路由 + 守卫
-    │   │   ├── api/                # http.ts / endpoints/ / adapters/
-    │   │   ├── auth/               # tokenStore.ts（会话与轮转）
-    │   │   ├── offline/            # IndexedDB 层 / 同步引擎 / 恢复面板
-    │   │   ├── shared/             # 与后端共用的规则（如 reportPeriod）
-    │   │   └── pages/ components/ hooks/ config/ types/
-    │   ├── tests/                  # unit（node:test）+ browser（playwright）
-    │   └── package.json
-    └── deploy/                     # 部署脚本
-        ├── rdpms-api.service       # systemd 单元模板
-        ├── scripts/rdpms-start.sh  # 启动入口（校验 dist 后 exec）
-        └── scripts/rdpms-deploy.sh # 原地发布脚本
+    │   │   ├── bootstrap/        # 装配与启动分离
+    │   │   ├── routes/           # HTTP 入口
+    │   │   ├── kernel/           # 认证、常量、审计、恢复等
+    │   │   ├── platform/         # db、配置、身份、幂等、恢复上下文
+    │   │   └── modules/          # access/auth/projects/reports/sync/files
+    │   └── tests/                # unit、contract、integration
+    ├── frontend/
+    │   ├── src/                  # App、pages、components、api、auth、offline、shared
+    │   ├── scripts/              # 前端单测运行器
+    │   └── tests/                # unit 与 browser
+    └── deploy/
+        ├── rdpms-api.service
+        └── scripts/              # 当前 start/deploy 与仍被测试引用的旧工具
 ```
-
----
 
 ## 4. 数据库设计
 
-### 4.1 ER 关系图
+### 4.1 数据模型与关系
+
+唯一模型真源为 [schema.prisma](rdpms-system/backend/prisma/schema.prisma)；当前 **51 个 Prisma model、12 个 SQL 迁移目录**。
+Prisma model 数不是某次服务器盘点的实际表数，也不包括 `_prisma_migrations` 等平台表。
 
 ```mermaid
 erDiagram
-  USER ||--o{ USERROLE : has
-  ROLE ||--o{ USERROLE : assigned
-  ROLE ||--o{ ROLEPERMISSION : grants
-  PERMISSION ||--o{ ROLEPERMISSION : "in"
-  USER ||--o{ REFRESHTOKEN : owns
-  USER ||--o{ SYNCDEVICE : registers
-  USER ||--o{ PROJECT : manages
-  USER ||--o{ PROJECTMEMBER : joins
-  USER ||--o{ REPORT : authors
-  USER ||--o{ MONTHLYPROGRESS : submits
-
-  PROJECT ||--o{ PROJECTMEMBER : has
-  PROJECT ||--o{ PROJECTPHASE : has
-  PROJECT ||--o{ TASK : has
-  PROJECT ||--o{ MILESTONE : has
-  PROJECT ||--o{ REPORT : has
-  PROJECT ||--o{ MONTHLYPROGRESS : has
-  PROJECT ||--|| REGISTRATIONPROFILE : "has(1-1)"
-  PROJECT ||--o{ FILEOBJECT : "owns(ownerProjectId)"
-  PROJECT }o--|| PROJECTTEMPLATE : "applied(templateId)"
-
-  PROJECTTEMPLATE ||--o{ TEMPLATEPHASE : defines
-  PROJECTTEMPLATE ||--o{ TEMPLATETASK : defines
-  PROJECTTEMPLATE ||--o{ TEMPLATEROLE : defines
-
-  PROJECTPHASE ||--o{ TASK : groups
-  PROJECTPHASE ||--o{ MILESTONE : contains
-  PROJECTPHASE ||--o{ PHASETRANSITION : "from/to"
-
-  TASK ||--o{ TASKDEPENDENCY : "prerequisite"
-  TASK ||--o{ TASKDOCREF : links
-  TASK ||--o{ TASKREGULATORYDOCUMENT : links
-  TASK ||--o{ ATTACHMENT : has
-  REGULATORYDOCUMENT ||--o{ TASKREGULATORYDOCUMENT : links
-
-  REPORT ||--o{ REPORTVERSION : has
-  FILEOBJECT ||--o{ ATTACHMENT : "referenced by"
-
-  REAGENTMATERIAL ||--o{ REAGENTLOT : has
-  REAGENTFORMULA ||--o{ FORMULACOMPONENT : has
-  REAGENTMATERIAL ||--o{ FORMULACOMPONENT : "used in"
-  REAGENTFORMULA ||--o{ PREPRECORD : has
-  DOCCATEGORY ||--o{ DOCDOCUMENT : contains
-  DOCDOCUMENT ||--o{ DOCVERSION : has
+  User ||--o{ UserRole : binds
+  Role ||--o{ UserRole : assigned
+  Role ||--o{ RolePermission : grants
+  Permission ||--o{ RolePermission : contains
+  Project ||--o{ ProjectMember : includes
+  User ||--o{ ProjectMember : joins
+  Project ||--o{ ProjectPhase : stages
+  Project ||--o{ Task : owns
+  Project ||--o{ Report : receives
+  Report ||--o{ ReportVersion : snapshots
+  Task ||--o{ TaskDependency : depends
 ```
 
-### 4.2 数据表清单
-
-> 约定：**表名与列名统一 snake_case**（Prisma `@@map` / `@map`），模型名保持 PascalCase（括号内）。
-> 主键均为 `TEXT`（UUID，由应用生成）。共 **51 个模型**，按域分组如下。
-
-**身份与权限（6）**
-
-| 表（模型） | 关键字段 | 约束 |
-|------------|----------|------|
-| `users` (User) | id, username, password, name, systemRole, status, securityVersion, lastLoginAt?, deletedAt? | UQ `username` |
-| `roles` (Role) | id, code, name, description?, isSystem | UQ `code` |
-| `permissions` (Permission) | id, code, name, category, riskLevel | UQ `code` |
-| `role_permissions` (RolePermission) | roleId, permissionId | PK[roleId, permissionId] |
-| `user_roles` (UserRole) | id, userId, roleId, scopeType?, scopeId? | UQ[userId, roleId, …] |
-| `refresh_tokens` (RefreshToken) | id, userId, tokenHash, expiresAt, revokedAt?, datasetEpoch | 索引 userId |
-
-**项目与模板（8）**
-
-| 表（模型） | 关键字段 | 约束 |
-|------------|----------|------|
-| `projects` (Project) | id, code, name, type, status, managerId, templateId?, startDate?, endDate?, deletedAt? | UQ `code` |
-| `project_members` (ProjectMember) | id, projectId, userId, role, joinedAt | UQ[projectId, userId] |
-| `project_templates` (ProjectTemplate) | id, code, name, category, parentId?(自引用), content, isMaster | UQ `code` |
-| `template_roles` (TemplateRole) | id, templateId, name, permissions | 索引 templateId |
-| `template_phases` (TemplatePhase) | id, templateId, code, name, sortOrder | 索引 templateId |
-| `template_tasks` (TemplateTask) | id, templatePhaseId, code, title, estimatedDays | 索引 templatePhaseId |
-| `project_phases` (ProjectPhase) | id, projectId, templatePhaseId?, code, name, sortOrder, status, plannedStart/End?, actualStart/End?, progressPercent, deletedAt? | 索引 projectId |
-| `phase_transitions` (PhaseTransition) | id, projectId, fromPhaseId, toPhaseId, actorId, createdAt | — |
-
-**任务与里程碑（6）**
-
-| 表（模型） | 关键字段 | 约束 |
-|------------|----------|------|
-| `tasks` (Task) | id, projectId, phaseId?, parentId?, templateTaskId?, code, title, assigneeId?, status, priority, taskType, applicability, dueDate?, completedAt?, deletedAt? | 索引 projectId / phaseId |
-| `task_dependencies` (TaskDependency) | id, taskId, prerequisiteId | UQ[taskId, prerequisiteId] |
-| `task_doc_refs` (TaskDocRef) | id, taskId, documentId | 索引 taskId |
-| `task_templates` (TaskTemplate) | id, name, category?, estimatedDays, priority | UQ `name` |
-| `task_template_steps` (TaskTemplateStep) | id, templateId, order, title | 索引 templateId |
-| `milestones` (Milestone) | id, projectId, phaseId?, name, date, status, completedAt? | 索引 projectId |
-
-**汇报与进展（4）**
-
-| 表（模型） | 关键字段 | 约束 |
-|------------|----------|------|
-| `reports` (Report) | id, projectId, authorId, reviewerId?, reportType, periodKey, periodStart, periodEnd, content, status, currentVersion, submittedAt?, reviewedAt?, deletedAt? | UQ[authorId, projectId, periodKey, reportType] |
-| `report_versions` (ReportVersion) | id, reportId, version, content, createdAt | UQ[reportId, version] |
-| `monthly_progress` (MonthlyProgress) | id, projectId, month, completion, submittedBy | UQ[projectId, month] |
-| `registration_profiles` (RegistrationProfile) | id, projectId, registrationType, currentStage?, riskLevel, complianceOwnerId? | UQ `projectId`（1-1） |
-
-**法规与文档（5）**
-
-| 表（模型） | 关键字段 | 约束 |
-|------------|----------|------|
-| `regulatory_documents` (RegulatoryDocument) | id, dispatchNo, title, category?, applicability, priorityLevel | UQ `dispatchNo` |
-| `task_regulatory_documents` (TaskRegulatoryDocument) | taskId, regulatoryDocumentId, relationType | PK[taskId, regulatoryDocumentId] |
-| `doc_categories` (DocCategory) | id, name, icon?, sortOrder | — |
-| `doc_documents` (DocDocument) | id, categoryId, code, title, docType, version, status, createdBy | UQ `code` |
-| `doc_versions` (DocVersion) | id, documentId, version, content, createdBy | UQ[documentId, version] |
-
-**试剂与样品（8）**
-
-| 表（模型） | 关键字段 | 约束 |
-|------------|----------|------|
-| `reagent_materials` (ReagentMaterial) | id, commonName, chineseName?, category, casNumber?, mw?, purity? | UQ `commonName` |
-| `reagent_lots` (ReagentLot) | id, materialId, lotNo, status(LotStatus), expiryDate? | 索引 materialId |
-| `reagent_formulas` (ReagentFormula) | id, code, name?, type, pH?, status, projectId? | UQ `code` |
-| `formula_components` (FormulaComponent) | id, formulaId, reagentMaterialId?, componentName?, concentration, unit | 索引 formulaId |
-| `prep_records` (PrepRecord) | id, formulaId, targetVolume, calcResult, prepDate, createdBy | 索引 formulaId |
-| `detection_targets` (DetectionTarget) | id, name, category, … | — |
-| `primers` (Primer) | id, name, sequence, targetGene?, detectionTarget? | 索引 name |
-| `sample_materials` (SampleMaterial) | id, sampleCode, sampleName, sampleType, species?, status, projectId? | UQ `sampleCode` |
-
-**文件（2）**
-
-| 表（模型） | 关键字段 | 约束 |
-|------------|----------|------|
-| `file_objects` (FileObject) | id, storageKey, provider, bucket, originalName, mimeType, sizeBytes, checksum, scanStatus, isPublic, uploadedById, **accessScope**, ownerUserId?, ownerProjectId?, sharedReadPermission? | 索引 accessScope / ownerUserId |
-| `attachments` (Attachment) | id, fileId, entityType, entityId, createdBy | 索引 [entityType, entityId] |
-
-> 文件访问的**唯一授权依据**是 `file_objects.accessScope`
-> （`PRIVATE_STAGING` / `PROJECT` / `SHARED_LIBRARY` / `PUBLIC`）+ 归属字段；
-> **不存在"有一条附件关系就放行"的路径**（`modules/files/fileAccessPolicy.ts`）。
-
-**审计与配置（5）**
-
-| 表（模型） | 关键字段 | 约束 |
-|------------|----------|------|
-| `audit_logs` (AuditLog) | id, action, userId, targetType?, targetId?, detail?, ip?, createdAt | **append-only（DB 触发器）** |
-| `system_logs` (SystemLog) | id, action, userId, targetId?, detail?, ip?, createdAt | — |
-| `enum_meta` (EnumMeta) | id, domain, code, label, sortOrder | — |
-| `code_sequences` (CodeSequence) | id, scope, nextValue | UQ `scope` |
-| `system_settings` (SystemSetting) | id, key, value | UQ `key` |
-
-**同步与幂等（7）**
-
-| 表（模型） | 关键字段 | 约束 |
-|------------|----------|------|
-| `sync_devices` (SyncDevice) | id, userId, deviceId, datasetEpoch, lastCursor? | 索引 userId |
-| `sync_mutations` (SyncMutation) | id, actorId, command, resourceScope, idempotencyKey, payloadHash, status | 索引 actorId |
-| `mutation_receipts` (MutationReceipt) | id, datasetEpoch, actorId, command, resourceScope, idempotencyKey, payloadHash, status, responseStatus, responseBody, expiresAt | **UQ[actorId, command, resourceScope, idempotencyKey, …]** |
-| `sync_publication_state` (SyncPublicationState) | epoch, sequence, initialized | PK `epoch` |
-| `sync_source_revisions` (SyncSourceRevision) | id, entity, entityId, revision | — |
-| `sync_change_events` (SyncChangeEvent) | id, epoch, sequence, entity, entityId, operation, actorId | **append-only（触发器）** |
-| `data_recovery_state` (DataRecoveryState) | id(=1), status, epoch, updatedAt | 单行表 |
-
-### 4.3 设计要点
-
-- **命名规范**：表与列统一 **snake_case**（`@@map` / `@map`），Prisma 模型名保持 PascalCase。
-- **主键为 TEXT（UUID）**，由应用生成。**手写迁移不要用 `UUID` 类型** —— 会与既有 `TEXT` 外键不兼容。
-- **外键级联**：删除项目（`Cascade`）清理成员 / 阶段 / 任务 / 里程碑 / 汇报 / 进展 / 注册档案；
-  删除用户（`Cascade`）清理其创建物，负责人与指派人用 `SetNull`。
-- **软删除**：`projects` / `tasks` / `reports` / `project_phases` 等带 `deletedAt`，查询必须过滤。
-- **枚举使用**：身份与资源状态用 DB enum（`SystemRole`、`UserStatus`、`LotStatus`、`FileAccessScope` 等）；
-  任务与汇报的业务状态仍为字符串常量（见 §10 技术债务）。
-- **审计 append-only**：`audit_logs` 由触发器禁止 UPDATE / DELETE（报 `P0001`），
-  因此测试断言一律用**增量**，不能全表计数或清理。
-- **幂等回执**：`mutation_receipts` 的作用域键有唯一索引，**跨实例安全**；
-  业务写入 + 严格审计 + 回执在同一事务提交。
-- **同步日志**：`sync_change_events` 由 7 类业务表（projects / phases / tasks / milestones /
-  monthly_progress / reports / project_members）的 AFTER 行级触发器写入，不可变且禁止 TRUNCATE。
-- **恢复门禁**：`data_recovery_state` 为单行表；其状态非 `READY` 时，
-  `rdpms_restore_write_gate()` 触发器会拒绝**所有**业务写入。
-
----
-
-## 5. API 接口文档
-
-### 5.1 通用约定
-
-- **Base URL**：`/api`（生产经 Caddy 同域反代；前端取 `VITE_API_BASE_URL`，未设时即 `/api`）。
-- **认证**：除 `POST /api/auth/login` 外，所有接口需在请求头携带 `Authorization: Bearer <token>`。
-- **鉴权**：以**权限位**为准（如 `requirePermission('reports.view')`），
-  权限经 `UserRole → Role → RolePermission → Permission` 解析（见 §7.2）。
-  下表中「权限」列即该接口要求的权限位：`登录` 表示仅需有效会话，`超管` 表示要求超级管理员。
-- **令牌**：access token 默认 15 分钟有效，过期用 `POST /api/auth/refresh` 轮换（见 §7.1）。
-- **统一响应**：`{ success, message?, data?, list?, total?, page?, pageSize?, ... }`（前端 `ApiResponse<T>`）。错误返回 `{ error, code }` + 对应 HTTP 状态码。
-
-### 5.2 端点清单
-
-> 本节由路由代码自动核对生成（`src/routes/*.js` 定义 + `bootstrap/createApp.js` 挂载前缀），
-> 共 **28 个模块 / 202 个端点**。「功能」列取自各路由的源码注释。**改动路由后请同步更新本节。**
->
-> 说明：`/api/audit-logs` 与 `/api/system-logs` 由挂在 `/api` 根下的两个路由模块提供，因此分组标题显示为 `/api`。
-
-#### 审计 —— `/api`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/audit-logs` | `audit.view` |  |
-| POST | `/api/audit-logs/export` | `audit.export` |  |
-| GET | `/api/audit/entity/:type/:id/summary` | `audit.view` |  |
-
-#### 认证 —— `/api/auth`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| POST | `/api/auth/login` | 登录 | 登录 |
-| POST | `/api/auth/refresh` | 登录 | 刷新 |
-| POST | `/api/auth/logout` | 登录 | 登出 |
-| GET | `/api/auth/me` | 登录 | 当前用户（M-1 权限唯一出口） |
-| POST | `/api/auth/verify` | 登录 | 旧端点兼容：/verify 返回与 /me 一致 |
-| GET | `/api/auth/profile` | 登录 |  |
-| GET | `/api/auth/plainOldPassword` | 登录 |  |
-| PUT | `/api/auth/password` | 登录 |  |
-| PUT | `/api/auth/password/force` | 登录 | 首登强制改密：无需旧密码，但仅当 mustChangePassword=true |
-
-#### 备份 —— `/api/backup`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/backup/export` | `data.export` |  |
-| GET | `/api/backup/restore/tables` | 登录 | 可恢复表清单（供前端展示模块与表映射） |
-| POST | `/api/backup/restore/preview` | 登录 | 只读校验 + 差异统计 |
-| POST | `/api/backup/restore` | 登录 | 单事务应用（失败整体回滚） |
-| GET | `/api/backup/restore/status` | 登录 |  |
-| POST | `/api/backup/restore/reconcile` | 登录 |  |
-
-#### 字典 —— `/api/dict`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/dict` | 登录 |  |
-| GET | `/api/dict/:enumName` | 登录 |  |
-
-#### 知识库与文档 —— `/api/docs`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/docs/categories` | `docs.view` | 分类（docs.view / docs.categories.manage） |
-| POST | `/api/docs/categories` | `docs.categories.manage` |  |
-| PUT | `/api/docs/categories/:id` | `docs.categories.manage` |  |
-| DELETE | `/api/docs/categories/:id` | `docs.categories.manage` |  |
-| GET | `/api/docs/documents` | `docs.view` | 文档（docs.view / docs.create / docs.update） |
-| GET | `/api/docs/documents/:id` | `docs.view` |  |
-| POST | `/api/docs/documents` | `docs.create` |  |
-| PUT | `/api/docs/documents/:id` | `docs.update` |  |
-| DELETE | `/api/docs/documents/:id` | `docs.delete` | 删除文档（docs.delete，P1 批次二解冻；软删+审计） |
-| GET | `/api/docs/documents/:id/versions` | `docs.view` |  |
-| GET | `/api/docs/search` | `docs.view` | 关键词搜索（供日报快速引用） |
-
-#### 文件 —— `/api/files`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/files` | `files.download` | 列表（按作用域过滤；files.download） |
-| POST | `/api/files` | `files.upload` | 上传（files.upload）：一律先落私有暂存，绑定后才可见 |
-| GET | `/api/files/:id/metadata` | `files.download` | 元数据 |
-| GET | `/api/files/:id/download` | `files.download` |  |
-| GET | `/api/files/:id` | `files.download`、`files.delete` |  |
-| PATCH | `/api/files/:id/scope` | `files.delete` | 人工分类（历史无归属文件）：仅超管 |
-| DELETE | `/api/files/:id` | `files.delete` | 软删除（被已发布证据引用时只允许解绑，不允许整体删除） |
-| POST | `/api/files/:id/restore` | `files.delete` | 仅超管且持 files.delete 可执行，且必须留审计（软删只隐藏，不物理删除）。 |
-
-#### 配方 —— `/api/formulas`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/formulas` | `formulas.view` | 列表（?type=&materialId=） |
-| GET | `/api/formulas/:id` | `formulas.view` | 详情 |
-| POST | `/api/formulas` | `formulas.create` | 新建（编号走 CodeSequence 原子发号） |
-| PUT | `/api/formulas/:id` | `formulas.update` | 更新（组分整体重建） |
-| DELETE | `/api/formulas/:id` | 登录 | M-1：formulas.delete 为 P1 后置权限，冻结桩（Tencent 为硬删，解冻时改软删+审计） |
-| POST | `/api/formulas/:id/duplicate` | `formulas.create` | 复制（formulas.create） |
-
-#### 阶段流转 —— `/api/phases`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/phases` | `project_phases.view` | 阶段列表（project_phases.view + ∩ read） |
-| POST | `/api/phases` | `project_phases.create` | 创建阶段（project_phases.create + ∩ write） |
-| GET | `/api/phases/:id` | `project_phases.view` | 详情 |
-| PUT | `/api/phases/:id` | `project_phases.update` | 更新（project_phases.update + ∩ write） |
-| PATCH | `/api/phases/:id/status` | `project_phases.change_status` | 阶段状态流转（project_phases.change_status + ∩ transition） |
-| POST | `/api/phases/:id/transitions` | `project_phases.update` | 建立阶段流转（project_phases.update + ∩ write） |
-| DELETE | `/api/phases/:id/transitions/:toPhaseId` | `project_phases.update` | 删除阶段流转 |
-
-#### 配制 —— `/api/prep`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| POST | `/api/prep/calculate` | `formulas.view` | 试算 |
-| POST | `/api/prep/records` | `prep_records.create` | 保存配制记录 |
-| GET | `/api/prep/records` | `prep_records.view` |  |
-| GET | `/api/prep/records/:id` | `prep_records.view` |  |
-
-#### 引物 —— `/api/primers`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/primers` | `primers.view` | 列表（keyword / projectId / targetGene / status） |
-| GET | `/api/primers/:id` | `primers.view` |  |
-| POST | `/api/primers` | `primers.create` |  |
-| PUT | `/api/primers/:id` | `primers.update` |  |
-| DELETE | `/api/primers/:id` | `primers.delete` | 删除（primers.delete，P1 批次二解冻；软删+审计） |
-| POST | `/api/primers/batch-import` | `primers.import` | 前端解析 CSV 后传 rows 数组，逐行校验、逐行 CodeSequence 发号，失败行不阻断整批） |
-
-#### 月度进展 —— `/api/progress`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/progress/project/:projectId` | `progress.view` | 项目月度进展 |
-| POST | `/api/progress/project/:projectId` | `progress.create` | 填写/更新月度进展 |
-| GET | `/api/progress/all/:periodKey` | `progress.view` | 全部项目月度进展（progress.view；按可见项目过滤） |
-| GET | `/api/progress/export/:periodKey` | `progress.view` | 导出月度进展（progress.view；M-1 无 progress.export 码，导出读权限沿用） |
-| GET | `/api/progress` | `progress.view` | 兼容挂载（progress.view） |
-
-#### 项目模板 —— `/api/project-templates`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/project-templates` | `project_templates.view` | 列表 |
-| GET | `/api/project-templates/:id` | `project_templates.view` | 详情 |
-| POST | `/api/project-templates` | `project_templates.create` | 创建 |
-| PUT | `/api/project-templates/:id` | `project_templates.update` | 更新 |
-| PATCH | `/api/project-templates/:id` | `project_templates.update` |  |
-| DELETE | `/api/project-templates/:id` | `project_templates.delete` | 删除（project_templates.delete 为 P0；软删 + 引用检查） |
-| POST | `/api/project-templates/:id/copy` | `project_templates.copy` | 复制（project_templates.copy，P1 批次二解冻；roles/phases/tasks 深拷贝） |
-| GET | `/api/project-templates/:id/preview` | `project_templates.view` | 预览 |
-| POST | `/api/project-templates/:id/apply` | `project_templates.view` | 应用预览（前端创建项目时预览生成结果） |
-| GET | `/api/project-templates/:templateId/roles` | `project_templates.view` | 模板角色（templateRole；code 必填） |
-| POST | `/api/project-templates/:templateId/roles` | `project_templates.update` |  |
-| PUT | `/api/project-templates/:templateId/roles/:roleId` | `project_templates.update` |  |
-| DELETE | `/api/project-templates/:templateId/roles/:roleId` | `project_templates.update` |  |
-| POST | `/api/project-templates/:templateId/roles/batch` | `project_templates.update` |  |
-
-#### 项目与成员 —— `/api/projects`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/projects` | `projects.view` | 列表（projects.view；非 SUPER_ADMIN 按成员/负责人过滤） |
-| GET | `/api/projects/:id` | `projects.view` | 详情（projects.view + ∩：非成员 404；SA 非成员访问写 elevated 审计） |
-| POST | `/api/projects` | `projects.create` | 创建（projects.create；编号走 CodeSequence 原子发号） |
-| PUT | `/api/projects/:id` | `projects.update` | 更新（projects.update + ∩ write；状态流转走 transition；归档需 projects.archive） |
-| DELETE | `/api/projects/:id` | `projects.delete` | 删除（projects.delete，P1 批次二解冻；软删+审计） |
-| GET | `/api/projects/:id/members` | `projects.view` | 成员管理（projects.manage_members + ∩ manage_members） |
-| POST | `/api/projects/:id/members` | `projects.manage_members` |  |
-| DELETE | `/api/projects/:id/members/:userId` | `projects.manage_members` |  |
-| GET | `/api/projects/:id/tasks` | `tasks.view` | 项目内资源（嵌套只读；read 能力 + 对应系统权限） |
-| GET | `/api/projects/:id/reports` | `reports.view` |  |
-| GET | `/api/projects/:id/milestones` | `milestones.view` |  |
-| GET | `/api/projects/:id/phases` | `project_phases.view` |  |
-| GET | `/api/projects/stats/types` | `projects.view` | 统计（带可见性过滤） |
-| GET | `/api/projects/stats/status` | `projects.view` |  |
-| POST | `/api/projects/:id/apply-template` | `projects.update` | 套用模板（projects.update + write；模板结构来自 TemplatePhase/TemplateTask 行） |
-| POST | `/api/projects/batch-delete` | `projects.delete` | 批量删除（projects.delete；软删+审计，Tencent POST /projects/batch-delete 复刻） |
-| POST | `/api/projects/batch-update-status` | `projects.update` | 批量更新状态（逐项目 ∩ transition 校验） |
-
-#### 试剂批次 —— `/api/reagent-lots`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/reagent-lots` | `reagents.view` |  |
-| POST | `/api/reagent-lots` | `reagents.create` |  |
-| PATCH | `/api/reagent-lots/:id` | `reagents.update` |  |
-
-#### 原料 —— `/api/reagent-materials`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/reagent-materials` | `reagent_materials.view` | 列表 |
-| GET | `/api/reagent-materials/:id` | `reagent_materials.view` |  |
-| POST | `/api/reagent-materials` | `reagent_materials.create` |  |
-| PUT | `/api/reagent-materials/:id` | `reagent_materials.update` |  |
-| DELETE | `/api/reagent-materials/:id` | `reagent_materials.delete` | 删除（reagent_materials.delete，P1 批次二解冻；软删+审计） |
-| POST | `/api/reagent-materials/bulk-delete` | `reagent_materials.delete` | 批量软删（reagent_materials.delete） |
-
-#### 试剂 —— `/api/reagents`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| POST | `/api/reagents` | 登录 | 此处不注册 POST /:id（无业务意义且会按注册顺序抢先匹配 /export）。 |
-| PUT | `/api/reagents/:id` | 登录 |  |
-| PATCH | `/api/reagents/:id` | 登录 |  |
-| DELETE | `/api/reagents/:id` | 登录 |  |
-| GET | `/api/reagents` | `reagents.view` | 聚合列表 |
-| GET | `/api/reagents/:id` | `reagents.view` | 聚合详情 |
-| GET | `/api/reagents/export` | `reagents.export` |  |
-| POST | `/api/reagents/export` | `reagents.export` |  |
-
-#### 注册申报 —— `/api/registrations`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/registrations` | `registrations.view` | 注册项目列表（registrations.view） |
-| GET | `/api/registrations/stats` | `registrations.view` | 统计 |
-| GET | `/api/registrations/templates` | `registrations.view` | 可用模板（project_templates.view 亦可，保持 registrations.view 以兼容原页面） |
-| GET | `/api/registrations/:id` | `registrations.view` | 详情（registrations.view） |
-| POST | `/api/registrations` | `registrations.create` | 创建（registrations.create；编号走 CodeSequence） |
-| PUT | `/api/registrations/:id` | `registrations.update` | 更新（registrations.update） |
-| PATCH | `/api/registrations/:id/stage` | `registrations.change_stage` | 阶段推进（registrations.change_stage；严格状态机） |
-| PATCH | `/api/registrations/:id/profile` | `registrations.update` | 单独更新档案（不含阶段） |
-
-#### 法规文档 —— `/api/regulatory-documents`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/regulatory-documents/auth` | 登录 |  |
-| GET | `/api/regulatory-documents` | `regulatory_documents.view` |  |
-| GET | `/api/regulatory-documents/auth` | 登录 |  |
-| GET | `/api/regulatory-documents/:id` | `regulatory_documents.view` |  |
-| GET | `/api/regulatory-documents/auth` | 登录 |  |
-| POST | `/api/regulatory-documents` | `regulatory_documents.create` |  |
-| GET | `/api/regulatory-documents/auth` | 登录 |  |
-| PUT | `/api/regulatory-documents/:id` | `regulatory_documents.update` |  |
-| GET | `/api/regulatory-documents/auth` | 登录 |  |
-| DELETE | `/api/regulatory-documents/:id` | `regulatory_documents.delete` |  |
-| GET | `/api/regulatory-documents/auth` | 登录 |  |
-| POST | `/api/regulatory-documents/import` | 登录 |  |
-| GET | `/api/regulatory-documents/auth` | 登录 |  |
-| POST | `/api/regulatory-documents/seed` | `regulatory_documents.create` |  |
-| POST | `/api/regulatory-documents/:id/original-file` | 登录 | 兼容入口：base64 直传原文（新前端一律走 POST /api/files + PUT originalFileId） |
-| GET | `/api/regulatory-documents/auth` | 登录 |  |
-| GET | `/api/regulatory-documents/:id/original-file` | 登录 |  |
-| GET | `/api/regulatory-documents/auth` | 登录 |  |
-
-#### 汇报 —— `/api/reports`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/reports` | `reports.view` | 列表（reports.view；按可见项目过滤） |
-| GET | `/api/reports/:id` | `reports.view` | 详情（reports.view + ∩ read） |
-| POST | `/api/reports` | `reports.create` | RF03：本接口只负责「保存草稿」——周期键按类型严格校验，状态由提交命令负责。 |
-| PUT | `/api/reports/:id` | `reports.update` | 业务写入、严格审计、回执在同一事务提交（失败不留回执）。 |
-| POST | `/api/reports/:id/submit` | `reports.submit` | RF02：版本快照、状态、严格审计、幂等回执全部在同一事务；失败不留半成品与回执。 |
-| POST | `/api/reports/:id/approve` | `reports.review` | 审阅通过（reports.review + ∩ transition） |
-| POST | `/api/reports/:id/reject` | `reports.review` | 批示需修改（reports.review + ∩ transition） |
-| GET | `/api/reports/:id/versions` | `reports.view` | 历史版本 |
-| GET | `/api/reports/export/month/:month` | `reports.export` | 导出（reports.export） |
-| DELETE | `/api/reports/:id` | `reports.delete` | Tencent 语义：只能删草稿；enh 额外由 reports.delete 权限码把关 |
-| PATCH | `/api/reports/:id/recall` | `reports.update` | 撤回（作者本人；SUBMITTED → DRAFT） |
-
-#### 角色 —— `/api/roles`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/roles/permission-catalog` | `roles.view` | P0 权限目录（roles.view；权限分配弹窗数据源） |
-| GET | `/api/roles` | `roles.view` |  |
-| POST | `/api/roles` | `roles.create` |  |
-| PATCH | `/api/roles/:id` | `roles.update` |  |
-| DELETE | `/api/roles/:id` | `roles.delete` |  |
-| POST | `/api/roles/:id/permissions` | `roles.assign_permissions` |  |
-
-#### 样本 —— `/api/samples`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/samples` | `samples.view` | 列表 |
-| GET | `/api/samples/:id` | `samples.view` | 详情 |
-| POST | `/api/samples` | `samples.create` | 创建（编号竞态修复：CodeSequence 原子发号） |
-| PUT | `/api/samples/:id` | `samples.update` | 更新（白名单；禁止改编号） |
-| DELETE | `/api/samples/:id` | 登录 | 删除（M-1：samples.delete 为 P1 后置权限，冻结桩；解冻时软删+审计） |
-
-#### 设置 —— `/api/settings`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/settings` | `settings.view` |  |
-| PATCH | `/api/settings` | `settings.update` |  |
-
-#### 统计 —— `/api/stats`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/stats/dashboard` | `dashboard.view` | 仪表盘统计 |
-| GET | `/api/stats/projects` | `dashboard.view` | 项目统计（dashboard.view 即可访问；完成率改单查询聚合） |
-| GET | `/api/stats/users/:userId/workload` | `dashboard.view` | 个人工作量统计 |
-| GET | `/api/stats/reports` | `dashboard.view` | 汇报统计 |
-
-#### 同步 —— `/api/sync`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/sync/init` | 登录 | 增量拉取 |
-| POST | `/api/sync/receipts/reserve` | 登录 |  |
-| POST | `/api/sync/receipts/query` | 登录 |  |
-| POST | `/api/sync/push` | 登录 |  |
-| POST | `/api/sync/device` | 登录 | 设备登记 |
-| GET | `/api/sync/status` | 登录 | 同步状态 |
-
-#### 系统日志 —— `/api`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/system-logs` | `system.logs.view` |  |
-
-#### 任务模板 —— `/api/task-templates`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/task-templates` | `task_templates.view` | 列表 |
-| GET | `/api/task-templates/:id` | `task_templates.view` |  |
-| POST | `/api/task-templates` | `task_templates.create` |  |
-| PUT | `/api/task-templates/:id` | `task_templates.update` |  |
-| DELETE | `/api/task-templates/:id` | `task_templates.delete` | 为 P0） |
-| POST | `/api/task-templates/bulk-delete` | `task_templates.delete` | 批量软删（Tencent 复刻；任一被项目引用则整批拒绝，语义与单删一致） |
-| POST | `/api/task-templates/seed` | `task_templates.create` | 一键预置标准模板（task_templates.create） |
-
-#### 任务 —— `/api/tasks`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/tasks` | `tasks.view` | 列表（tasks.view；按可见项目过滤） |
-| POST | `/api/tasks/:id/prerequisites` | `tasks.update` | 前置任务依赖（tasks.update + ∩ write） |
-| DELETE | `/api/tasks/:id/prerequisites/:prerequisiteId` | `tasks.update` |  |
-| GET | `/api/tasks/:id` | `tasks.view` | 详情（tasks.view + ∩ read） |
-| POST | `/api/tasks` | `tasks.create` | 创建（tasks.create + ∩ write） |
-| PUT | `/api/tasks/:id` | `tasks.update` | 更新（tasks.update + ∩ write；定位任务 → projectId → ∩） |
-| PATCH | `/api/tasks/:id/status` | `tasks.change_status` | 状态流转（tasks.change_status + ∩ transition；Kanban 拖拽） |
-| DELETE | `/api/tasks/:id` | `tasks.delete` | 删除（tasks.delete，P1 批次二解冻；软删含全部后代任务，审计） |
-| GET | `/api/tasks/board/:projectId` | `tasks.view` | 看板（tasks.view + ∩ read；英文枚举分组） |
-| POST | `/api/tasks/batch/status` | `tasks.change_status` | 批量更新状态（逐任务 ∩ transition） |
-
-#### 用户 —— `/api/users`
-
-| 方法 | 路径 | 权限 | 功能 |
-|------|------|------|------|
-| GET | `/api/users` | `users.view` | 列表（users.view） |
-| GET | `/api/users/:id` | `users.view` | 单个（users.view） |
-| POST | `/api/users` | `users.create` | 创建（users.create；systemRole 由服务端固定 MEMBER，M-1 §7.3） |
-| POST | `/api/users/batch` | `users.create` | 批量导入（users.create；Tencent POST /users/batch 复刻，逐条校验逐条落库） |
-| PUT | `/api/users/:id` | `users.update` | 更新（users.update；白名单 M-1 §6.3） |
-| PATCH | `/api/users/:id/status` | 登录 | 启停（users.enable / users.disable） |
-| PUT | `/api/users/:id/roles` | `roles.assign_user` | 角色绑定唯一入口（roles.assign_user；M-1 §6.3） |
-| PUT | `/api/users/:id/reset-password` | `users.reset_password` | 重置密码（users.reset_password） |
-| DELETE | `/api/users/:id` | `users.delete` | 删除（users.delete，8 项高危之一，仅 SUPER_ADMIN 持有） |
-
----
-
-### 5.3 登录请求/响应示例
+图为主要关系摘要，不列出所有外键、删除动作与恢复表；完整约束以 schema 和迁移 SQL 为准。
+
+### 4.2 模型索引
+
+以下由当前 schema 提取：字段列仅列身份、归属、状态、版本等关键标量；并非完整列定义。
+“复合键”仅列 schema 的 @@id/@@unique，单字段唯一性与 SQL 手工约束仍需查看源文件。
+
+| Prisma 模型 | 数据表 | 关键字段及类型 | 复合键 |
+|---|---|---|---|
+| `User` | `users` | `id: String`, `securityVersion: Int`, `systemRole: SystemRole`, `status: UserStatus` | 见 schema |
+| `SyncDevice` | `sync_devices` | `datasetEpoch: String`, `id: String`, `userId: String` | 见 schema |
+| `SyncMutation` | `sync_mutations` | `id: String`, `userId: String`, `entity: String`, `entityId: String`, `status: String` | 见 schema |
+| `RefreshToken` | `refresh_tokens` | `datasetEpoch: String`, `id: String`, `userId: String` | 见 schema |
+| `Role` | `roles` | `id: String` | 见 schema |
+| `Permission` | `permissions` | `id: String` | 见 schema |
+| `RolePermission` | `role_permissions` |  | `[roleId, permissionId]` |
+| `UserRole` | `user_roles` | `userId: String` | `[userId, roleId]` |
+| `Project` | `projects` | `id: String`, `status: ProjectStatus` | 见 schema |
+| `ProjectMember` | `project_members` | `id: String`, `projectId: String`, `userId: String` | `[projectId, userId]` |
+| `ProjectTemplate` | `project_templates` | `id: String`, `status: TemplateStatus` | 见 schema |
+| `TemplateRole` | `template_roles` | `id: String` | `[templateId, code]` |
+| `TemplatePhase` | `template_phases` | `id: String` | `[templateId, code]` |
+| `TemplateTask` | `template_tasks` | `id: String` | `[templatePhaseId, sortOrder, title]` |
+| `ProjectPhase` | `project_phases` | `id: String`, `projectId: String`, `status: PhaseStatus` | `[projectId, code]` |
+| `PhaseTransition` | `phase_transitions` | `id: String` | `[fromPhaseId, toPhaseId]` |
+| `Milestone` | `milestones` | `id: String`, `projectId: String`, `status: TaskStatus` | 见 schema |
+| `Task` | `tasks` | `id: String`, `projectId: String`, `status: TaskStatus` | `[projectId, code]` |
+| `TaskDependency` | `task_dependencies` | `id: String` | `[taskId, prerequisiteId]` |
+| `TaskDocRef` | `task_doc_refs` |  | `[taskId, docDocumentId]` |
+| `TaskTemplate` | `task_templates` | `id: String` | 见 schema |
+| `TaskTemplateStep` | `task_template_steps` | `id: String` | `[templateId, sortOrder]` |
+| `RegulatoryDocument` | `regulatory_documents` | `id: String`, `status: RegulatoryDocStatus` | 见 schema |
+| `TaskRegulatoryDocument` | `task_regulatory_documents` |  | `[taskId, regulatoryDocumentId]` |
+| `RegistrationProfile` | `registration_profiles` | `id: String`, `projectId: String` | 见 schema |
+| `Report` | `reports` | `id: String`, `projectId: String`, `authorId: String`, `status: ReportStatus`, `currentVersion: Int` | `[projectId, authorId, reportType, periodKey]` |
+| `ReportVersion` | `report_versions` | `id: String` | `[reportId, version]` |
+| `MonthlyProgress` | `monthly_progress` | `id: String`, `projectId: String` | `[projectId, periodKey]` |
+| `DocCategory` | `doc_categories` | `id: String`, `status: DocumentStatus` | 见 schema |
+| `DocDocument` | `doc_documents` | `id: String`, `currentVersion: String`, `status: DocumentStatus` | 见 schema |
+| `DocVersion` | `doc_versions` | `id: String` | `[documentId, version]` |
+| `ReagentMaterial` | `reagent_materials` | `id: String`, `status: DocumentStatus` | 见 schema |
+| `ReagentLot` | `reagent_lots` | `id: String`, `status: LotStatus` | `[materialId, lotNo]` |
+| `ReagentFormula` | `reagent_formulas` | `id: String`, `status: FormulaStatus`, `projectId: String?` | 见 schema |
+| `FormulaComponent` | `formula_components` | `id: String` | 见 schema |
+| `PrepRecord` | `prep_records` | `id: String` | 见 schema |
+| `DetectionTarget` | `detection_targets` | `id: String`, `status: DocumentStatus` | 见 schema |
+| `Primer` | `primers` | `id: String`, `projectId: String?`, `status: DocumentStatus` | 见 schema |
+| `SampleMaterial` | `sample_materials` | `id: String`, `projectId: String?`, `status: SampleStatus` | 见 schema |
+| `FileObject` | `file_objects` | `id: String`, `scanStatus: FileScanStatus`, `accessScope: FileAccessScope` | 见 schema |
+| `Attachment` | `attachments` | `id: String`, `entityId: String` | 见 schema |
+| `AuditLog` | `audit_logs` | `id: String`, `action: String`, `entityId: String?` | 见 schema |
+| `SystemLog` | `system_logs` | `id: String`, `action: String`, `userId: String?` | 见 schema |
+| `EnumMeta` | `enum_meta` | `id: String` | `[enumName, code]` |
+| `CodeSequence` | `code_sequences` | `id: String` | `[scope, periodKey]` |
+| `SystemSetting` | `system_settings` | `key: String` | 见 schema |
+| `MutationReceipt` | `mutation_receipts` | `datasetEpoch: String`, `id: String`, `status: MutationReceiptStatus` | `[actorId, command, resourceScope, idempotencyKey]` |
+| `DataRecoveryState` | `data_recovery_state` | `id: Int`, `epoch: String`, `status: String` | 见 schema |
+| `SyncPublicationState` | `sync_publication_state` | `epoch: String`, `head: BigInt`, `floor: BigInt`, `initialized: Boolean` | 见 schema |
+| `SyncSourceRevision` | `sync_source_revisions` | `epoch: String`, `entity: String`, `entityId: String`, `revision: BigInt` | `[epoch,entity,entityId]` |
+| `SyncChangeEvent` | `sync_change_events` | `id: String`, `epoch: String`, `entity: String`, `entityId: String`, `projectId: String`, `authorId: String?`, `revision: BigInt`, `action: String`, `publishedSequence: BigInt?` | `[epoch,publishedSequence]`；`[epoch,entity,entityId,revision]` |
+
+### 4.3 数据一致性约束
+
+- 表列映射主要采用 snake_case；普通业务 id 多为 String/TEXT，**epoch 与部分日志 id 明确使用 PostgreSQL UUID**，不能笼统规定手写迁移一律禁用 UUID。
+- ProjectStatus、TaskStatus、TaskPriority、ReportType、ReportStatus 等已有 DB enum；部分其他领域状态仍为 String，须逐字段判断。
+- 核心业务采用软删/退出标记；物理外键 Cascade 不代表业务 DELETE 可以绕过状态、权限、审计或保留规则。
+- `audit_logs` append-only；不得为清理测试账号关闭触发器或删除审计行，合成账号可随明确自有整库销毁。
+- `mutation_receipts` 的唯一作用域用于命令幂等；`sync_mutations` 另保留同步协议状态，二者不能混为一个缓存。
+- 七类同步源表触发器捕获变更，源 revision 与 publication sequence 分工；日志只允许受约束地分配 publication sequence，不能称为完全不可 UPDATE。
+- 恢复门禁覆盖迁移中登记的表；仅受控恢复 run 可在恢复状态写入，不能声称任何状态下一律拒绝所有写入。
+- Prisma schema 之外还有函数、触发器与约束。`db push` 不能替代版本化迁移及自定义对象校验。
+
+## 5. API 约定与路由索引
+
+### 5.1 请求、授权与响应
+
+- 默认 API base 为 `/api`，前端只从 `config/env.ts` 读取 `VITE_API_BASE_URL`。
+- 公开入口包括登录、refresh，以及 health/ready；refresh 在 JSON body 提交 refresh token。其余业务路由按挂载中间件认证与授权。
+- 一般使用 `Authorization: Bearer <accessToken>`；权限表只是动作门槛，还需资源作用域、当前状态、账号版本与 epoch 校验。
+- **没有统一成功信封**：各路由返回对象、数组或 `{ list, total, ... }`；前端 endpoints/adapters 负责对应读取，不能统一按 `{ success, data }` 解包。
+- 常见错误体为 `{ error, code }`；客户端会兼容其他历史形态。`400/401/403/404/409/503` 的具体 code 以路由为准。
+- 分页、过滤、日期、幂等 key 和并发基线是端点合同，不存在一个对所有接口通用的默认值。
+- 无访问资格时部分资源返回 404 隐藏存在性；不能把空列表、401 或 404 当作业务成功证明。
+
+### 5.2 登录与刷新示例
 
 ```http
 POST /api/auth/login
 Content-Type: application/json
 
-{ "username": "<SEED_ADMIN_USERNAME 指定的账号>", "password": "<seed 时设置的口令>" }
+{ "username": "<合成或已授权账号>", "password": "<该账号口令>" }
 ```
 
-> 代码内**不再有默认弱口令**，种子账号与口令均由 `SEED_*` 环境变量提供（见 §11.2）。
+成功响应主要字段如下（示意，不是可使用的凭据；省略个人资料字段）：
 
 ```json
 {
-  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "refreshToken": "…",
+  "accessToken": "<access JWT>",
+  "refreshToken": "<opaque refresh token>",
   "expiresIn": 900,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token": "<access JWT compatibility alias>",
   "user": {
-    "id": "uuid",
-    "username": "…",
-    "name": "管理员",
-    "systemRole": "ADMIN",
+    "id": "<user id>",
+    "username": "<username>",
+    "name": "<display name>",
+    "displayName": "<display name>",
+    "systemRole": "MEMBER",
     "status": "ACTIVE",
-    "permissions": ["projects.create", "users.manage", "registrations.approve", "..."]
+    "mustChangePassword": false,
+    "permissions": ["reports.view"]
   }
 }
 ```
 
-- `expiresIn` 为 access token 剩余秒数（默认 900）；`token` 是 `accessToken` 的兼容别名，供旧客户端使用。
-- 令牌过期后调 `POST /api/auth/refresh`（body 带 `refreshToken`）换取新的一对令牌。
+`expiresIn` 根据实际 token 剩余时间计算，900 是默认 TTL；refresh 返回新的 token 对，并消费旧 refresh。
+强制改密账号需先完成 `PUT /api/auth/password/force`，不能用普通业务请求跳过。
 
----
+### 5.3 路由清单
 
-## 6. 前端模块设计
+从 createApp 挂载和 routes 中的直接方法声明提取，共 **28 个模块、192 个声明端点**，另有根路径与健康就绪入口。
+计数仅包含 get/post/put/patch/delete 等静态方法声明，不含 files 的 all 方法兜底、中间件及根健康入口。
+此索引不解析运行时授权、不等于 OpenAPI schema，也不把中间件或测试注入身份当成完整认证证明。
+每个条目的参数、权限、校验和状态码请沿对应源文件读取。
+
+| 方法 | 公开/根入口 | 说明 |
+|---|---|---|
+| GET | `/` | 服务名称和版本 |
+| GET | `/health`、`/api/health` | liveness |
+| GET | `/api/ready` | 数据库和恢复状态检查 |
+
+#### `/api/auth` — [auth.js](rdpms-system/backend/src/routes/auth.js)
+
+| 方法 | 路径 |
+|---|---|
+| POST | `/api/auth/login` |
+| POST | `/api/auth/refresh` |
+| POST | `/api/auth/logout` |
+| GET | `/api/auth/me` |
+| POST | `/api/auth/verify` |
+| GET | `/api/auth/profile` |
+| PUT | `/api/auth/password` |
+| PUT | `/api/auth/password/force` |
+
+#### `/api/users` — [users.js](rdpms-system/backend/src/routes/users.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/users` |
+| GET | `/api/users/:id` |
+| POST | `/api/users` |
+| POST | `/api/users/batch` |
+| PUT | `/api/users/:id` |
+| PATCH | `/api/users/:id/status` |
+| PUT | `/api/users/:id/roles` |
+| PUT | `/api/users/:id/reset-password` |
+| DELETE | `/api/users/:id` |
+
+#### `/api/roles` — [roles.js](rdpms-system/backend/src/routes/roles.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/roles/permission-catalog` |
+| GET | `/api/roles` |
+| POST | `/api/roles` |
+| PATCH | `/api/roles/:id` |
+| DELETE | `/api/roles/:id` |
+| POST | `/api/roles/:id/permissions` |
+
+#### `/api/projects` — [projects.js](rdpms-system/backend/src/routes/projects.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/projects` |
+| GET | `/api/projects/:id` |
+| POST | `/api/projects` |
+| PUT | `/api/projects/:id` |
+| DELETE | `/api/projects/:id` |
+| GET | `/api/projects/:id/members` |
+| POST | `/api/projects/:id/members` |
+| DELETE | `/api/projects/:id/members/:userId` |
+| GET | `/api/projects/:id/tasks` |
+| GET | `/api/projects/:id/reports` |
+| GET | `/api/projects/:id/milestones` |
+| GET | `/api/projects/:id/phases` |
+| GET | `/api/projects/stats/types` |
+| GET | `/api/projects/stats/status` |
+| POST | `/api/projects/:id/apply-template` |
+| POST | `/api/projects/batch-delete` |
+| POST | `/api/projects/batch-update-status` |
+
+#### `/api/phases` — [phases.js](rdpms-system/backend/src/routes/phases.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/phases` |
+| POST | `/api/phases` |
+| GET | `/api/phases/:id` |
+| PUT | `/api/phases/:id` |
+| PATCH | `/api/phases/:id/status` |
+| POST | `/api/phases/:id/transitions` |
+| DELETE | `/api/phases/:id/transitions/:toPhaseId` |
+
+#### `/api/tasks` — [tasks.js](rdpms-system/backend/src/routes/tasks.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/tasks` |
+| POST | `/api/tasks/:id/prerequisites` |
+| DELETE | `/api/tasks/:id/prerequisites/:prerequisiteId` |
+| GET | `/api/tasks/:id` |
+| POST | `/api/tasks` |
+| PUT | `/api/tasks/:id` |
+| PATCH | `/api/tasks/:id/status` |
+| DELETE | `/api/tasks/:id` |
+| GET | `/api/tasks/board/:projectId` |
+| POST | `/api/tasks/batch/status` |
+
+#### `/api/reports` — [reports.js](rdpms-system/backend/src/routes/reports.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/reports` |
+| GET | `/api/reports/:id` |
+| POST | `/api/reports` |
+| PUT | `/api/reports/:id` |
+| POST | `/api/reports/:id/submit` |
+| POST | `/api/reports/:id/approve` |
+| POST | `/api/reports/:id/reject` |
+| GET | `/api/reports/:id/versions` |
+| GET | `/api/reports/export/month/:month` |
+| DELETE | `/api/reports/:id` |
+| PATCH | `/api/reports/:id/recall` |
+
+#### `/api/progress` — [progress.js](rdpms-system/backend/src/routes/progress.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/progress/project/:projectId` |
+| POST | `/api/progress/project/:projectId` |
+| GET | `/api/progress/all/:periodKey` |
+| GET | `/api/progress/export/:periodKey` |
+| GET | `/api/progress` |
+
+#### `/api/docs` — [docs.js](rdpms-system/backend/src/routes/docs.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/docs/categories` |
+| POST | `/api/docs/categories` |
+| PUT | `/api/docs/categories/:id` |
+| DELETE | `/api/docs/categories/:id` |
+| GET | `/api/docs/documents` |
+| GET | `/api/docs/documents/:id` |
+| POST | `/api/docs/documents` |
+| PUT | `/api/docs/documents/:id` |
+| DELETE | `/api/docs/documents/:id` |
+| GET | `/api/docs/documents/:id/versions` |
+| GET | `/api/docs/search` |
+
+#### `/api/samples` — [samples.js](rdpms-system/backend/src/routes/samples.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/samples` |
+| GET | `/api/samples/:id` |
+| POST | `/api/samples` |
+| PUT | `/api/samples/:id` |
+| DELETE | `/api/samples/:id` |
+
+#### `/api/primers` — [primers.js](rdpms-system/backend/src/routes/primers.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/primers` |
+| GET | `/api/primers/:id` |
+| POST | `/api/primers` |
+| PUT | `/api/primers/:id` |
+| DELETE | `/api/primers/:id` |
+| POST | `/api/primers/batch-import` |
+
+#### `/api/reagents` — [reagents.js](rdpms-system/backend/src/routes/reagents.js)
+
+| 方法 | 路径 |
+|---|---|
+| POST | `/api/reagents` |
+| PUT | `/api/reagents/:id` |
+| PATCH | `/api/reagents/:id` |
+| DELETE | `/api/reagents/:id` |
+| GET | `/api/reagents` |
+| GET | `/api/reagents/:id` |
+| GET | `/api/reagents/export` |
+| POST | `/api/reagents/export` |
+
+#### `/api/reagent-lots` — [reagent-lots.js](rdpms-system/backend/src/routes/reagent-lots.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/reagent-lots` |
+| POST | `/api/reagent-lots` |
+| PATCH | `/api/reagent-lots/:id` |
+
+#### `/api/reagent-materials` — [reagentMaterials.js](rdpms-system/backend/src/routes/reagentMaterials.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/reagent-materials` |
+| GET | `/api/reagent-materials/:id` |
+| POST | `/api/reagent-materials` |
+| PUT | `/api/reagent-materials/:id` |
+| DELETE | `/api/reagent-materials/:id` |
+| POST | `/api/reagent-materials/bulk-delete` |
+
+#### `/api/formulas` — [formulas.js](rdpms-system/backend/src/routes/formulas.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/formulas` |
+| GET | `/api/formulas/:id` |
+| POST | `/api/formulas` |
+| PUT | `/api/formulas/:id` |
+| DELETE | `/api/formulas/:id` |
+| POST | `/api/formulas/:id/duplicate` |
+
+#### `/api/prep` — [prep-calculator.js](rdpms-system/backend/src/routes/prep-calculator.js)
+
+| 方法 | 路径 |
+|---|---|
+| POST | `/api/prep/calculate` |
+| POST | `/api/prep/records` |
+| GET | `/api/prep/records` |
+| GET | `/api/prep/records/:id` |
+
+#### `/api/project-templates` — [projectTemplates.js](rdpms-system/backend/src/routes/projectTemplates.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/project-templates` |
+| GET | `/api/project-templates/:id` |
+| POST | `/api/project-templates` |
+| PUT | `/api/project-templates/:id` |
+| PATCH | `/api/project-templates/:id` |
+| DELETE | `/api/project-templates/:id` |
+| POST | `/api/project-templates/:id/copy` |
+| GET | `/api/project-templates/:id/preview` |
+| POST | `/api/project-templates/:id/apply` |
+| GET | `/api/project-templates/:templateId/roles` |
+| POST | `/api/project-templates/:templateId/roles` |
+| PUT | `/api/project-templates/:templateId/roles/:roleId` |
+| DELETE | `/api/project-templates/:templateId/roles/:roleId` |
+| POST | `/api/project-templates/:templateId/roles/batch` |
+
+#### `/api/task-templates` — [taskTemplates.js](rdpms-system/backend/src/routes/taskTemplates.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/task-templates` |
+| GET | `/api/task-templates/:id` |
+| POST | `/api/task-templates` |
+| PUT | `/api/task-templates/:id` |
+| DELETE | `/api/task-templates/:id` |
+| POST | `/api/task-templates/bulk-delete` |
+| POST | `/api/task-templates/seed` |
+
+#### `/api/registrations` — [registrations.js](rdpms-system/backend/src/routes/registrations.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/registrations` |
+| GET | `/api/registrations/stats` |
+| GET | `/api/registrations/templates` |
+| GET | `/api/registrations/:id` |
+| POST | `/api/registrations` |
+| PUT | `/api/registrations/:id` |
+| PATCH | `/api/registrations/:id/stage` |
+| PATCH | `/api/registrations/:id/profile` |
+
+#### `/api/regulatory-documents` — [regulatory-documents.js](rdpms-system/backend/src/routes/regulatory-documents.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/regulatory-documents` |
+| GET | `/api/regulatory-documents/:id` |
+| POST | `/api/regulatory-documents` |
+| PUT | `/api/regulatory-documents/:id` |
+| DELETE | `/api/regulatory-documents/:id` |
+| POST | `/api/regulatory-documents/import` |
+| POST | `/api/regulatory-documents/seed` |
+| POST | `/api/regulatory-documents/:id/original-file` |
+| GET | `/api/regulatory-documents/:id/original-file` |
+
+#### `/api` — [audit.js](rdpms-system/backend/src/routes/audit.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/audit-logs` |
+| POST | `/api/audit-logs/export` |
+| GET | `/api/audit/entity/:type/:id/summary` |
+
+#### `/api` — [system-logs.js](rdpms-system/backend/src/routes/system-logs.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/system-logs` |
+
+#### `/api/settings` — [settings.js](rdpms-system/backend/src/routes/settings.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/settings` |
+| PATCH | `/api/settings` |
+
+#### `/api/dict` — [dict.js](rdpms-system/backend/src/routes/dict.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/dict` |
+| GET | `/api/dict/:enumName` |
+
+#### `/api/files` — [files.js](rdpms-system/backend/src/routes/files.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/files` |
+| POST | `/api/files` |
+| GET | `/api/files/:id/metadata` |
+| GET | `/api/files/:id/download` |
+| GET | `/api/files/:id` |
+| PATCH | `/api/files/:id/scope` |
+| DELETE | `/api/files/:id` |
+| POST | `/api/files/:id/restore` |
+
+#### `/api/stats` — [stats.js](rdpms-system/backend/src/routes/stats.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/stats/dashboard` |
+| GET | `/api/stats/projects` |
+| GET | `/api/stats/users/:userId/workload` |
+| GET | `/api/stats/reports` |
+
+#### `/api/backup` — [backup.js](rdpms-system/backend/src/routes/backup.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/backup/export` |
+| GET | `/api/backup/restore/tables` |
+| POST | `/api/backup/restore/preview` |
+| POST | `/api/backup/restore` |
+| GET | `/api/backup/restore/status` |
+| POST | `/api/backup/restore/reconcile` |
+
+#### `/api/sync` — [sync.js](rdpms-system/backend/src/routes/sync.js)
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/sync/init` |
+| POST | `/api/sync/receipts/reserve` |
+| POST | `/api/sync/receipts/query` |
+| POST | `/api/sync/push` |
+| POST | `/api/sync/device` |
+| GET | `/api/sync/status` |
+
+## 6. 前端模块与离线同步
 
 ### 6.1 路由结构（`src/App.tsx`）
 
 两层守卫：
 
 - **`AuthGuard`**：未登录（或会话失效）时重定向 `/login`；
-- **`RoleGuard perm={PERMS.XXX}`**：按权限位控制访问，无权限渲染 `403`；
-- 响应拦截器遇 401 会清理会话并跳登录，与守卫形成双重保护。
+- **`RoleGuard perm={PERMS.XXX}`**：按权限位控制访问，无权限默认跳转 `/403`，或呈现指定 fallback；
+- AuthGuard 在 bootstrap 期间等待身份确认；强制改密账号转向 `/change-password`；
+- HTTP 层只在匹配条件时有界刷新，不因任意 401 清除后来登录的会话。
 
 | 路径 | 组件 | 守卫 |
 |------|------|------|
@@ -805,118 +689,92 @@ Content-Type: application/json
 | `roles` | `Roles` | `ROLES_VIEW` |
 | `settings` | `Settings` | `SETTINGS_VIEW` |
 | `change-password` | `ChangePassword` | AuthGuard |
-| `403` | `Forbidden` | — |
-| `*` | `NotFound` | — |
+| `403` | `Forbidden` | AuthGuard |
+| `*` | `NotFound` | AuthGuard |
 
-### 6.2 状态、会话与离线
+### 6.2 页面、组件与会话
 
-全局 UI 状态用 Zustand；**业务数据与离线能力不在 store 里**，而是拆成三层：
+`App.tsx` 装配 AuthProvider / SyncProvider，AuthGuard 确认会话，RoleGuard 处理声明的页面权限；
+页面显示权限不是后端授权的替代。`Layout` 承载导航，业务页面按项目、报告、注册、知识和实验资料组织。
+部分库页面嵌入知识模块，并非每个 pages/ 文件都有独立路由。
 
-| 模块 | 职责 |
-|------|------|
-| `src/auth/tokenStore.ts` | 会话真源：access / refresh 令牌、登录代际 `loginGeneration`、跨标签轮换协调 |
-| `src/offline/idb.ts` | IndexedDB 层，**按登录主体分片**（`activateOwner` / `forOwner`）；每次存储操作校验 userId + loginGeneration + 当前会话 + 已登记的活动会话 |
-| `src/offline/engine.ts` | 同步引擎：分页拉取与 checkpoint 提交、上行、冲突与拒绝区、数据集 epoch 围栏 |
-| `src/offline/pendingDraft.ts` | 缺项目等暂不可提交内容的本地留存与恢复 |
-| `src/offline/deadLetter.ts` | 被拒变更的持久留存（保留最早 payload；同键不同内容另记 `payloadConflict`） |
+| 模块 | 责任 |
+|---|---|
+| `api/http.ts` | 请求时捕获会话；同一登录代际协调 refresh；拒绝把迟到响应写入新账号会话 |
+| `auth/tokenStore.ts` | actorId、loginGeneration、tokenRevision、access/refresh；使用 Web Locks 时协调标签页 |
+| `offline/idb.ts` | schema v4、owner 分区、事务内当前会话与活动 owner 围栏 |
+| `offline/engine.ts` | 调度、读投影、分页、回执恢复、冲突/拒绝及 epoch 变化 |
+| `offline/RecoveryPanel.tsx` | 当前账号可验证原文的查看、导出、重试、冲突处理与显式放弃 |
+| `shared/reportContent.ts` | 历史内容兼容与读取失败保全，不能将解析失败当空内容回写 |
+| `shared/projectEditCommand.ts` | 项目编辑命令 DTO 组织 |
 
-离线引擎的不变量（改动时必须保持）：无主体不同步、`resetOnLogout` 的状态切换先于任何 `await`、
-拉取/下行落盘前后都检查会话代次、缓存键按主体分片。
+跨标签协调依赖浏览器能力；不满足安全共享条件时 tokenStore 可退回进程内 memory 模式，不能宣称所有浏览器均有持久共享会话。
+401 只有符合客户端识别条件时才尝试有界 refresh，不能概括为“所有 401 自动刷新”。403 不由 HTTP 层自动跳转。
 
-> 早期版本使用 `src/store/appStore.ts` + Dexie（IndexedDB `RDPatabase` v2，7 个 object store）。
-> 该方案已在账号隔离改造中替换：**Dexie 依赖已移除，`appStore` 不再存在**。
+### 6.3 七实体下行与水位
 
-### 6.3 组件划分
+同步实体为 `projects / projectPhases / tasks / milestones / monthlyProgress / reports / projectMembers`。
+读取先执行实体读权限、当前项目 ACL、字段投影；reports 还有 own-only 约束，不能把普通 API 返回集合直接等同于同步集合。
 
-- **布局**：`components/Layout.tsx`（侧边栏 + 顶栏，包裹受保护路由）。
-- **离线与同步反馈**：`components/OfflineBanner`、`SyncStatusIndicator`、`SyncConflictDialog`、`ErrorBoundary`、`FullPageSpinner`。
-- **业务组件**（`components/`，共 20 个）：`KanbanBoard`、`PhaseTaskPanel`、`PhaseProgressBar`、
-  `ProcessFlowDiagram`、`MindMapView`、`HierarchicalTaskList`、`ProjectCard`、`CreateProjectModal`、
-  `EditProjectModal`、`AddMemberModal`、`DocReference`、`ProjectTemplateEditor`、`ReagentDailyReport`、
-  `VisualTableEditor`（其余为上面已列的布局与离线反馈组件）。
-- **页面**（`pages/` 顶层，每个路由目标一个文件）：`Dashboard`、`Projects`、`ProjectDetail`、
-  `Reports`、`ReportEdit`、`ReportReview`、`Tasks`、`Users`、`Roles`、`Settings`、`AuditLogs`、
-  `SystemLogs`、`BackupManager`、`ChangePassword`、`Login`、`Forbidden`、`NotFound`、
-  `Docs`、`KnowledgeDetail`、`RegistrationProjects`、`RegistrationProjectDetail`、
-  `RegulatoryDocumentsPage`、`TemplateLibrary`、`TemplateEditor`。
-- **页面域子目录**：
-  - `pages/knowledge/`：`ReagentLibrary`、`PrimerLibrary`、`AmplificationReagentLibrary`、
-    `SampleLibrary`、`TaskTemplateLibrary`
-  - `pages/reagent-formula/`：`index.tsx`（配方列表，默认导出为 `FormulaList`）、
-    `FormulaEditor`、`FormulaBatchEditor`、`PrepCalculator`
+v2 init 先调用 publisher：事务内 upsert 当前 epoch 的 publication state，必要时锁源表捕获初始快照，
+再发布已提交事件。**首次拉取不依赖业务写入来创建水位行**。
+分页绑定 actor/device/epoch/aclVersion 与固定上界，checkpoint 在一轮完成后推进；旧 revision 不得覆盖已应用的新 revision。
+遗留时间戳协议仍有兼容路径，但不具有 v2 的完整合同，旧客户端矩阵仍待补齐。
+初始化存在批量捕获与锁成本；当前代码发布批量上限为 10,000，不能推断任意规模无阻塞。
 
-### 6.4 API 客户端（`src/api/`）
+### 6.4 上行与恢复
 
-```
-src/api/
-├── http.ts        # axios 实例：BASE_URL、请求/响应拦截器
-├── request.ts     # 统一请求封装（错误归一）
-├── error.ts       # 错误类型与判定
-├── files.ts       # 文件上传/下载专用（表单与 blob）
-├── index.ts       # 汇总导出
-├── types.ts       # 通用 API 类型
-├── adapters/      # 后端 DTO ↔ 前端模型（如 report.ts 的 reportContent）
-└── endpoints/     # 按业务域拆分：auth / backup / knowledge / projects / reagents /
-                   # registrations / regulatoryDocuments / reports / roles / stats /
-                   # sync / system / tasks / templates
-```
+- 原始 payload、幂等 key、基线和 actor 必须保留；回执 reserve/query/push 绑定命令作用域。
+- 超时或响应不确定时先核对回执，不得自动生成新 key 重做一次业务写入。
+- 冲突、拒绝和未知结果进入相应保全/恢复路径；入队不等于服务器已接受。
+- 登出使旧 owner 失效，不等于删除所有分区。重新登录同一用户可以在当前授权下恢复其保留内容。
+- 旧库迁入 legacyQuarantine；缺可靠账号归属的内容不能按当前账号自动认领、导出或删除。
+- dataset epoch 改变后不得直接把旧命令当作新数据集命令提交。UI 应明确保留原文与重新核对。
+- 浏览器本地存储仍可能被用户清理或受设备损坏影响，不是云端备份。
 
-- 基础地址取 `import.meta.env.VITE_API_BASE_URL`，默认 `/api`。
-- 请求拦截器注入 `Authorization: Bearer <access token>`；401 触发会话轮换或跳登录。
-- **汇报内容统一经 `src/shared/reportContent.ts` + `api/adapters/report.ts` 读取**
-  （历史形态有对象与字符串两种，都要支持）；解析失败时保留 `contentReadError`，**禁止回写空表**。
-- **共享规则**（如汇报周期计算）在 `src/shared/reportPeriod.ts`，
-  与后端 `src/modules/reports/reportRules.js` 必须同步修改。
+## 7. 认证与权限
 
----
+### 7.1 会话生命周期
 
-## 7. 认证与权限设计
+access JWT 包含 `userId / systemRole / securityVersion / datasetEpoch`，默认 900 秒。
+`JWT_ACCESS_TTL` 优先于 `JWT_ACCESS_TTL_SEC`；refresh 默认 7 天，可配置 `JWT_REFRESH_TTL`。
+服务端保存 refresh 的 tokenHash、family 与消费状态；refresh 重复使用返回 `REFRESH_TOKEN_REPLAYED`，不把普通竞争自动认定为盗用并撤销赢家。
 
-### 7.1 JWT 结构
+认证每次读取当前账号与数据集状态，权限不是相信 token 中的旧角色快照：
 
-- **签发**（`/api/auth/login` 成功）：`jwt.sign({ userId, systemRole, securityVersion, datasetEpoch }, JWT_SECRET, { expiresIn: ACCESS_TTL_SEC })`。
-- **Payload**：`{ userId, systemRole, securityVersion, datasetEpoch }`；`systemRole` 取值
-  `SUPER_ADMIN | ADMIN | MANAGER | MEMBER | VIEWER | AUDITOR`（DB 枚举 `SystemRole`）。
-- **有效期**：access token 默认 **900 秒（15 分钟）**，可用 `JWT_ACCESS_TTL`（带单位）或 `JWT_ACCESS_TTL_SEC` 覆盖；
-  过期经 `POST /api/auth/refresh` 轮换（返回新 access + 新 refresh）。
-- **失效与重放**：`securityVersion` 与库中不一致（改密 / 会话撤销）→ 401 `SESSION_REVOKED`；
-  refresh token 被重复使用 → `REFRESH_TOKEN_REPLAYED`。
-- **校验**：`authMiddleware` 解析 `Authorization: Bearer <token>`，并校验上述字段与账号状态。
-- **密钥**：`JWT_SECRET` 生产强制配置；`configSchema` 在 `NODE_ENV=production` 下要求长度 ≥32、
-  且不命中弱口令黑名单，否则拒绝启动。
+| 条件 | 常见结果 |
+|---|---|
+| access 签名/期限无效 | `INVALID_TOKEN` |
+| 旧 token 缺有效 securityVersion | `SESSION_VERSION_REQUIRED` |
+| securityVersion 不匹配 | `SESSION_REVOKED` |
+| datasetEpoch 缺失/不匹配 | `DATASET_EPOCH_REQUIRED` / `DATASET_EPOCH_CHANGED` |
+| 账号停用/删除 | `SESSION_INVALID` |
+| 尚需强制改密 | 按限制路径处理，普通业务不可跳过 |
 
-### 7.2 RBAC 权限模型
+新客户端不自动采用旧双键 token，会话升级需重新登录；原始离线内容仍应保全。
 
-权限模型为**表驱动**（`Role` / `Permission` / `UserRole` + `RolePermission`），不再是代码内硬编码矩阵：
+### 7.2 当前授权链
 
-- `User.systemRole`（枚举 `SystemRole`）决定系统级身份：
-  `SUPER_ADMIN | ADMIN | MANAGER | MEMBER | VIEWER | AUDITOR`；
-- 业务权限通过 `UserRole → Role → RolePermission → Permission.code` 绑定，
-  权限位形如 `projects.edit`、`tasks.assign`、`reports.submit`；
-- 写入口的授权真源在 `src/modules/access/writeGuards.js`
-  （`assertActionPermission` / `assertTaskEdit` / `assertTaskStatusChange` / `assertTaskAssign` /
-  `assertPhaseStatusChange` / `assertReportWritable` …），**普通 API 与同步接口必须调用同一组守卫**；
-- `SUPER_ADMIN` 视为持有全部 P0 权限（`kernel/constants.js` 的 `P0_PERMISSIONS`）。
-
-> 后端是唯一安全边界；前端仅做按钮显隐，不构成安全控制。
-### 7.3 中间件链
-
-```
-请求 → CORS 中间件（ALLOWED_ORIGINS 白名单）
-     → 幂等回执 withIdempotency（actor + command + 资源作用域 + key + payloadHash）
-     → authMiddleware（令牌 + securityVersion + 账号状态）
-     → 路由模块级鉴权（writeGuards / 权限位）
-     → 业务处理器
-     → onError / notFound 统一处理
+```text
+请求作用域 / CORS
+  → authMiddleware：JWT + 当前账号 + securityVersion + datasetEpoch
+  → 当前权限：UserRole → RolePermission → Permission
+  → 资源/项目 capability / 状态守卫
+  → 对应业务命令（适用时：幂等 + 事务 + 关键审计）
 ```
 
-- **CORS**：`ALLOWED_ORIGINS` 逗号分隔白名单；旧别名 `CORS_ORIGINS` 与之同设时必须完全一致，
-  否则 `configSchema` 拒绝启动。不使用通配 `*`。
-- **幂等**：作用域键在 `mutation_receipts` 表上有唯一索引，**跨实例安全**；
-  业务写入、严格审计与回执在同一事务提交，失败不留下成功回执；
-  同键不同 payload 返回 409 `IDEMPOTENCY_PAYLOAD_MISMATCH`。
+SUPER_ADMIN 从 P0_PERMISSIONS 与 P1_UNFROZEN 获取权限集，不是任意未来权限码都自动放行。
+`modules/auth/accountPolicy.ts` 对账号命令采用当前 actor/target 锁定与等级保护；
+普通管理入口不能授予同级/更高级身份，不能绕过目标保护或强制改密。
+角色定义创建与自定义角色绑定扩展是不同能力，不能因创建入口存在就宣布所有绑定策略已启用。
 
----
+### 7.3 登录、密码与边界
+
+错误密码达到阈值触发临时锁定（当前 5 次、15 分钟）；待激活账号的锁期限同样约束登录，不能自动激活。
+临时到期恢复与手工锁、停用分开处理；并发凭据/账号变化需重新核对。
+当前账号创建、改密和重置入口要求口令至少 12 位；种子口令必须外置，不提供默认生产口令。
+密码使用 bcrypt；不同历史入口/记录可能采用不同 cost，不能笼统标成 cost 10。
+当前没有统一全局限流，也不能仅凭密码哈希或前端守卫宣称已防护所有攻击。
 
 ## 8. 部署架构
 
@@ -939,6 +797,8 @@ src/api/
 
 **为什么这样**：单实例 + 单人开发场景下，多版本快照带来的回滚能力不足以抵消它的复杂度
 （目录累积、残留进程、manifest 校验链）。**代价是失去秒级回滚**，见 §8.4。
+
+以下为仓库服务模板与入库服务器记录的约定，实际安装副本需另外核对。
 
 - **进程隔离**：后端以专用系统用户 `rdpms` 运行；`systemd` 设 `MemoryMax=1024M`、`Restart=always`。
 - **数据库隔离**：专用 PostgreSQL 角色 + 独立库 `rdpms`，仅本机 127.0.0.1 可达。
@@ -1009,7 +869,11 @@ bash rdpms-system/deploy/scripts/rdpms-deploy.sh          # 默认 main 分支
 
 流程：`git fetch` → `merge --ff-only` → **按需** `npm ci`（仅当对应 `package-lock.json` 实际变化，
 避免每次发布都等一轮网络安装）→ `prisma generate` + `migrate deploy` → 前后端构建 →
-`systemctl restart rdpms-api`。实测一次完整发布约 **53 秒**（依赖无变化时）。
+`systemctl restart rdpms-api`。服务器执行者报告一次完整发布约 **53 秒**（依赖无变化时）；本地文档核对未重新验证服务器耗时。
+
+**脚本能力边界**：当前脚本不自动备份、不停写、不运行测试，不校验 HTTP health/ready 或实际 UI；
+重启后的检查仅为等待 3 秒再检查 systemd active。它也不会自动安装改动后的启动包装和 systemd 单元。
+构建或迁移失败时不会自动恢复数据库与产物，操作前需安排备份和失败处置。
 
 **启动脚本与单元的安装**：
 
@@ -1021,22 +885,16 @@ sudo cp rdpms-system/deploy/rdpms-api.service /etc/systemd/system/rdpms-api.serv
 sudo systemctl daemon-reload
 ```
 
-### 8.4 回滚
+### 8.4 回退与失败处理
 
-原地部署**没有**"切回上一个 release"这种秒级动作，回滚是"改代码 + 重新构建"：
+当前原地发布脚本没有独立回退模式。**不要执行 `git checkout <旧提交>` 后再运行
+`rdpms-deploy.sh` 来回退**：脚本仍会 fetch 并合入 `origin/main`，旧代码可能再次被更新。
 
-```bash
-cd /opt/rdpms/app
-git log --oneline -5                                # 找到回退目标
-git checkout <commit>                               # 或 git revert <commit>
-bash rdpms-system/deploy/scripts/rdpms-deploy.sh    # 重新构建 + 重启
-```
+数据库迁移先于构建执行，任一后续步骤失败都不会自动撤销已完成的迁移。
+新增列、表或触发器也不自动证明旧应用兼容；必须逐项核对数据语义、安全版本、epoch 和权限。
 
-注意两点：
-
-1. **数据库迁移是前滚的**，回退代码不等于回退数据库。本项目现有迁移均为 additive
-   （新增表 / 列 / 触发器），对旧代码兼容，因此代码回退通常可行；涉及数据语义变更的迁移需单独评估。
-2. 回滚目标若是**旧提交**，需确认该提交的 `dist` 能被重新构建（`npm run build` 通过）。
+需要回退时，应先确定具体目标提交、依赖、数据库兼容性、停写范围和恢复方案，
+再制定并审核专用操作步骤。当前文档不提供未经目标验证的一键回退命令。
 
 ### 8.5 反向代理（Caddy）
 
@@ -1071,200 +929,157 @@ rdpms.digifluidic.com {
 
 ---
 
-## 9. 安全设计
+## 9. 文件审计与恢复边界
 
-### 9.1 认证与令牌
+### 9.1 文件访问
 
-- JWT 无状态：access token 默认 **15 分钟**（`JWT_ACCESS_TTL` / `JWT_ACCESS_TTL_SEC` 可覆盖），
-  配 refresh token 轮换；`JWT_SECRET` 生产强制配置（`configSchema` 校验长度与弱口令黑名单，不合规拒绝启动）。
-- 令牌携带 `securityVersion`：改密或会话撤销后版本递增，旧令牌立即失效（401 `SESSION_REVOKED`）。
-- 密码以 bcrypt 单向哈希存储，登录用 `bcrypt.compare` 校验，响应中**绝不返回 password 字段**。
-- 账号非 `ACTIVE`（如 `DISABLED`）时拒绝登录；连续失败 **5 次锁定 15 分钟**（原子计数，防并发绕过）。
+FileObject 明确区分 `PRIVATE_STAGING / PROJECT / SHARED_LIBRARY / PUBLIC`，
+按 owner、项目资格或声明的共享读权限判断；关联到附件不自动产生访问资格。
+list、metadata、download、delete 和 import-source 应经过各自动作的统一策略。
+历史归属不明不能自动公开，分类仍需实际数据清单和负责人确认。
 
-### 9.2 鉴权与越权防护
+**字节读取另外要求 scanStatus=CLEAN**；INFECTED 及非 CLEAN 状态均拒绝，超管不绕过。
+策略存在不代表已有可用扫描服务，实际上传/扫描配置及历史文件状态需要目标环境核对。
+`isPublic` 也不意味着整个 files 路由不需认证；以路由和动作策略为准。
 
-- 后端为唯一安全边界：写操作统一经 `src/modules/access/writeGuards.js` 的守卫
-  （`assertActionPermission` / `assertTaskEdit` / `assertTaskStatusChange` / `assertTaskAssign` /
-  `assertPhaseStatusChange` / `assertReportWritable` …），**普通 API 与同步接口共用同一组守卫**；
-  `registrations` / `regulatory-documents` 另有权限位细粒度校验。
-- CORS 使用 `ALLOWED_ORIGINS` 白名单匹配来源，不使用通配 `*`。
+### 9.2 审计与回执
 
-### 9.3 密码策略
+关键命令采用严格审计并与业务同事务，普通操作也有非严格日志路径；不能把所有日志都描述为提交前置条件。
+审计表 append-only，包含 actor/action/entity 等追溯信息；成功回执只证明对应事务结果，不等于实际 UI 已更新。
+当前未声明日志加密、无限期保留或异地备份保证。
 
-- 后端要求新密码 `length >= 12`（创建用户、管理员重置、用户自助改密三处一致）。
-- 管理员可重置成员密码；重置与改密都会递增该用户的 `securityVersion`，使既有会话全部失效。
-- 前端 `Settings.tsx` 仍为 ≥6 位的旧校验 —— **前后端不一致，已登记为待办**。
+### 9.3 模块恢复与整库恢复
 
-### 9.4 审计日志（`audit_logs`）
+`/api/backup` 的 JSON 导出/校验/应用覆盖选定模块，恢复注册表显式定义顺序和字段。
+恢复 apply 后进入 `RESTORE_NEEDS_RECONCILIATION`，由对应恢复资格核对后回到 READY；
+新 epoch 防止旧 token、设备与回执误用于新数据集。
+模块恢复 manifest 为 `MODULE_JSON_METADATA_ONLY`，**不包含二进制文件完整恢复证明**。
 
-- 关键动作写入 `audit_logs`，字段含 `action, userId, targetId, detail, ip, createdAt`。
-- **两级审计**：业务证据必须走 `platform/audit/strictAudit.js` 的 `writeAuditStrict(tx, entry)`
-  （与业务同事务，失败一并回滚）；`kernel/audit.js` 的 `writeAudit` 会吞掉错误，**不得用于业务证据**。
-- `audit_logs` 由数据库触发器强制 append-only（UPDATE / DELETE 报 `P0001`），
-  因此测试断言一律用**增量**而非全表计数。
-- `ip` 取自 `X-Forwarded-For` 首值（经 Caddy 反代）。
+运维 pg_dump/pg_restore + uploads 是另一种恢复范围。需要共同恢复点、文件关联、凭据/账号安全下限和 epoch 核对。
+仓库内旧配对恢复工具的自有演练，不能替代当前服务器外置备份脚本的恢复验收。
 
-### 9.5 限流 / 防重放
+## 10. 当前待办与验证状态
 
-- **幂等回执**：写请求按「actor + command + 资源作用域 + key + payloadHash」落 `mutation_receipts` 表
-  （唯一索引保证并发安全），防弱网重传重复写入；同键不同内容返回 409。
-- **登录防爆破**：连续失败 5 次锁定 15 分钟（见 9.1）。
-- **全局限流**：⚠️ 当前**未实现**统一速率限制，属待办。
+本 README 不汇总历次测试为一个“全部通过”。当前部署相关跟踪见 [open-items.md](docs/review/codebuddy/deepseek/open-items.md)。
 
-### 9.6 其他
+| 项目 | 当前已知事实 | 下一步 |
+|---|---|---|
+| 前端正式单测 | 正式文件仍调用旧无 owner IDB API；服务器补丁报告 60/64，但尚未合入正式文件 | 审阅 patch、对齐 owner/session 与协议夹具，保留竞争断言后全套复验 |
+| 四项候选失败 | A03-E4 未定性，其余时序原因是执行者定位，不是本轮复现结论 | 用确定性屏障确认失败原因，不顺带放宽业务规则 |
+| v2 首拉 | 源码有懒初始化，撤回“缺 publication state 必然报错”判断 | 在新建自有库验证首次 API、批量与锁等待 |
+| legacy 客户端 | 缺受支持部署版本/producer/revision/旧队列矩阵 | 提供真实客户端矩阵，不能据合成用例关闭兼容性项 |
+| IDB 升级与恢复 UI | schema v4 / quarantine / RecoveryPanel 已实现 | 补可见 UI 与原文留存验收，截图文件名不是证明 |
+| 历史文件分类 | 策略已实现，实际历史归属未因策略自动补齐 | 数据所有者提供最小只读清单并核对修复映射 |
+| 原地发布 | 无自动备份/停写/测试/HTTP ready 检查，无专用回退模式 | 补运行控制与失败处置；不把 active 当业务正常 |
+| 依赖安装 | 仅 lockfile 差异触发；缺依赖、安装失败重试可能被跳过 | 专项核对安装状态与重试合同 |
+| 旧部署工具 | 退出生产入口但仍被专项集成测试调用 | 分清测试范围，不能直接当死代码删除 |
+| 外置备份与日志 | 服务器脚本未入库；systemd 模板为 append 日志 | 核对恢复、加密/异地与轮转，避免据旧文档推定已实现 |
+| 密码提示 | Settings 页面仍提示至少 6 位；不能代替服务端口令策略 | 按当前服务端合同统一提示与校验 |
+| 全局限流 | 当前未实现统一入口速率限制 | 按实际风险单独设计与验收 |
 
-- 数据库凭据独立于应用（专用角色），端口最小化暴露（对外仅 443，后端 3000 仅本机）。
-- 种子账号由 `SEED_SUPER_ADMIN_USERNAME` / `SEED_ADMIN_USERNAME` 指定，
-  **口令必须外置**（`SEED_SUPER_ADMIN_PASSWORD` / `SEED_ADMIN_PASSWORD`），代码内不再有默认弱口令。
+旧审计与整改过程已按用户要求移出工作树，保留 Git 历史和本地归档；删除报告不关闭其未完成事项。
+归档范围见 [清理记录](docs/maintenance/2026-10-09/cleanup-manifest.json)，本地归档不是异地备份。
 
----
+## 11. 本地开发与验证
 
-## 10. 已知技术债务与待办
+### 11.1 前置与安全范围
 
-> 完整清单（含验证记录与下一步）见 `docs/review/codebuddy/deepseek/open-items.md`。
-
-| 类别 | 项 | 说明 |
-|------|----|------|
-| 测试 | **前端 4 项单测未解决** | `offlineAccountSwitch.test.ts` 引擎时序套件：`A03-E4` 尚未定性（缺陷 or 旧预期冲突），`A03-E2` / `A03-E3` / `RP13-T01` 为夹具时序问题 |
-| 安全 | 无统一速率限制 | 仅有登录失败锁定（5 次 / 15 分钟），无全局限流 |
-| 安全 | 密码策略前后端不一致 | 后端 ≥12 位，前端 `Settings.tsx` 仍为 ≥6 位 |
-| 安全 | 备份未加密、未异地 | `rdpms-backup.sh` 产出明文 `pg_dump`，且仅存本机（脚本自身会告警） |
-| 数据 | 部分状态字段为字符串 | `role` / `status` / `reportType` 等缺 DB 层枚举约束 |
-| 工程化 | 缺 CI/CD 流水线 | 已有 `test:ci`（lint + typecheck + test）脚本，但没有自动化流水线 |
-| 工程化 | 输入校验层仍不完整 | 部分路由靠手写 `if` 判断 |
-| 前端 | 大组件 | `TemplateEditor`、`ProcessFlowDiagram` 等体积大，影响首屏 |
-| 兼容性 | IndexedDB v2→v4 迁移 | 旧库原始数据转入 `legacyQuarantine`，离线草稿需经 RecoveryPanel 恢复；**缺真实浏览器 UI 验证** |
-| 运维 | 部署死代码 | `deploy/scripts/` 下 RP18 门禁体系（`deploy-control.py` / `candidate-gate.py` / `drill/`）已不参与流程 |
-| 运维 | 系统盘占用偏高 | 77%（50G 用 37G）；与 rdpms 无关，但会影响同机所有服务 |
-| 运维 | 日志不轮转 | systemd `append:` 直写文件，需人工关注体积 |
-
----
-
-## 11. 开发环境搭建指南
-
-### 11.1 前置
-
-- Node.js 20 LTS、`npm`、`python3`（部署脚本用）
-- PostgreSQL 14（本地或容器）
-- 前端 TS 编译器位于 `frontend/node_modules`（后端不自带 `tsc`）
+准备 Node 20、npm、PostgreSQL 及各端锁定依赖；部分运维/演练工具需要 Python3。
+后端 package.json 已声明 TypeScript devDependency；缺 tsc 应先核对实际安装，不能默认从前端借编译器。
+以下命令是开发参考，**只可用于明确自有的本地环境**；配置中的库名、路径和口令须自行设置。
+禁止将真实 dotenv、凭据、上传目录或生产库用于测试。
 
 ### 11.2 后端
 
 ```bash
 cd rdpms-system/backend
-npm install
-cp .env.example .env          # 填 DATABASE_URL / DIRECT_URL / JWT_SECRET（≥32 字符）
-npx prisma generate
-npx prisma migrate deploy     # 版本化迁移；禁止 db push（部署流程不接受）
-npm run dev                   # nodemon，端口 3000
+npm ci
+cp .env.example .env
+# 编辑本地 .env：DATABASE_URL / DIRECT_URL / JWT_SECRET，以及需要的 SEED_*。
+# 确认两个连接目标是自有开发库后执行：
+npx --no-install prisma generate
+npx --no-install prisma migrate deploy
+npm run build
+node --env-file=.env dist/index.js
 ```
 
-种子数据（口令必须外置，代码内无默认口令）：
-
-```bash
-SEED_SUPER_ADMIN_PASSWORD='...' SEED_ADMIN_PASSWORD='...' node prisma/seed.js
-```
+`node --env-file` 需要支持该参数的 Node 20 版本。运行入口没有自动 dotenv 加载；
+已有环境注入时可用 `npm run dev`（nodemon 自动 build）。不能因为 Prisma CLI 读到了 .env，就推断 node 运行进程也读到了它。
+seed 仅用于明确的新建环境，设置外置口令后可执行 `node --env-file=.env prisma/seed.js`；不要对现有生产库重复初始化。
 
 ### 11.3 前端
 
 ```bash
 cd rdpms-system/frontend
-npm install
-npm run dev                   # Vite，默认 5173，代理 /api → :3000
+npm ci
+VITE_API_PROXY_TARGET=http://127.0.0.1:3000 npm run dev
 ```
 
-### 11.4 验证
+Vite 默认 5173；配置里的默认后端代理是 `http://[::1]:3000`，而后端默认监听 127.0.0.1，
+因此示例显式指定 IPv4 目标。浏览器访问开发端口，先核对认证、权限和合法成功请求。
+`VITE_API_BASE_URL` 默认 `/api`，不要把数据库 URL 或服务端密钥写入 VITE_*。
 
-- 浏览器打开 `http://localhost:5173/`，用 seed 时设置的管理员账号登录。
-- `curl http://localhost:3000/health` 应返回健康响应。
+**不要把根目录 start-dev.sh 作为安全默认入口**：当前它会按端口 kill -9 进程、执行 db push --accept-data-loss 和 seed，
+且不经过专用测试库 guard。仅能在充分确认自有资源与副作用后使用，不能用于生产或共享工作环境。
 
-### 11.5 测试
+### 11.4 验证命令及含义
 
-| 层次 | 命令 | 连库 |
-|------|------|:----:|
-| 后端未定义标识符 | `npm run lint:undefined` | 否 |
-| 后端完整类型 | `npm run typecheck`（`tsc --noEmit`） | 否 |
-| 后端类型报告 | `npm run typecheck:report`（实际是 `check-undefined.mjs --full`，**不是**类型检查） | 否 |
-| 后端单元 + 契约 | `npm test` | 否 |
-| 后端集成 | `npm run test:integration` | **是**（`rdpms_test`） |
-| 隔离库生命周期 | `npm run test:db:reset` / `check` / `drop` | 管理通道 |
-| 前端完整类型 + 构建 | `npm run build`（`tsc -b && vite build`） | 否 |
-| 前端纯逻辑单测 | `npm test` | 否 |
-| 浏览器用例 | `node tests/browser/<name>.e2e.mjs` | **是**（`rdpms_test`） |
+下表命令在对应 backend / frontend 目录运行；本文更新没有实际执行这些测试或构建。
 
-集成测试使用隔离库 `rdpms_test`（配置 `<repo>/.env.test.local`，由
-`backend/scripts/lib/testDbGuard.mjs` 强制校验库名形状），**绝不连生产库**。
+| 目录 | 命令 | 覆盖/资源边界 |
+|---|---|---|
+| backend | `npm run lint:undefined` | 旧 JS 未定义标识符检查，非全面静态审计 |
+| backend | `npm run typecheck` | tsc --noEmit；checkJs=false，非全部 JS 严格检查 |
+| backend | `npm run typecheck:report` | check-undefined --full，**不是 tsc 类型检查** |
+| backend | `npm test` | build + unit/contract；注入 actor 用例不是完整 JWT 链 |
+| backend | `npm run test:ci` | lint + typecheck + unit/contract，不含全部集成/浏览器 |
+| backend | `npm run test:integration` | 先 guard/build，再启动测试应用；真实隔离库，部分套件有额外配置要求 |
+| backend | `npm run test:db:check` | 检查指定测试资源/配置 |
+| backend | `npm run test:db:reset` / `drop` | 破坏性生命周期操作，只能针对确认自有测试库 |
+| frontend | `npm test` | esbuild 打包 node:test；含 fake-indexeddb，非真实浏览器/UI |
+| frontend | `npm run build` | tsc -b + Vite，编译通过不等于运行通过 |
+| frontend | `node tests/browser/<name>.e2e.mjs` | 用例各自有浏览器、URL、账号、DB及文件前置；逐个核对后运行 |
 
-> 仓库根 `start-dev.sh` 可一键拉起本地开发栈（清理旧进程 → 迁移 → seed → 起前后端 → 健康检查）。
+后端 guard 默认配置路径为仓库根 `.env.test.local`（由 BACKEND_ROOT 上移两层计算），
+可用 `RDPMS_TEST_ENV_FILE` 指向自有唯一配置。guard 允许本机 `rdpms_test` 或 `rdpms_test_<suffix>`，
+拒绝生产库和非本机目标；本轮建议每套件使用自有唯一库，禁止绕过 guard。
+个别历史套件对固定库名或共享状态有额外假设，不能承诺全套在任意随机库/同进程下可直接运行。
 
----
+结果分别记为 PASS / FAIL / NOT_RUN / ENV_BLOCKED；本地通过、候选验证、目标环境验证、发布和 UI 验收分别记录。
 
-## 12. 运维手册
+## 12. 运维检查与文档维护
 
-### 12.1 备份
-
-统一入口（发布流程与外层脚本都调它）：
+### 12.1 健康、就绪与日志
 
 ```bash
-sudo /usr/local/bin/rdpms-backup.sh predeploy
+# 只读探测；在有目标访问权限的环境执行
+curl --fail http://127.0.0.1:3000/api/health
+curl --fail http://127.0.0.1:3000/api/ready
+sudo systemctl status rdpms-api --no-pager
+sudo journalctl -u rdpms-api -n 100 --no-pager
 ```
 
-产出 `/srv/rdpms/backups/pg/predeploy/rdpms-<ts>.dump`（含 `.sha256`，并做 `pg_restore -l` 校验）
-与 `/srv/rdpms/backups/uploads/<ts>` 上传快照，随后执行保留策略（日 30 / 周 84 / 月 365）。
-脚本会告警"未配置异地同步"——当前备份**仅存本机**。
+health 是 liveness，不验证数据库；ready 检查数据库 SELECT 1 及 recovery state=READY，不代替全业务验收。
+响应仅在进程环境提供 RDPMS_BUILD_ID / RDPMS_INSTANCE_ID 时带标识；当前原地启动脚本不自动生成 buildId。
+systemd 模板把 stdout/stderr append 到数据盘日志文件；仓库未配置自动轮转证明。
 
-手工恢复（示例）：
+### 12.2 发布、备份与恢复
 
-```bash
-pg_restore -d rdpms -c /srv/rdpms/backups/pg/predeploy/rdpms-<ts>.dump
-```
+生产发布、启动包装和单元安装参考 §8；当前脚本会直接更改数据库、依赖和运行产物，不能当成只读检查。
+服务器外置备份入口曾记录为 `/usr/local/bin/rdpms-backup.sh`，但文件不在仓库，本轮无法核对其保留策略、校验或恢复能力。
+操作前应验证实际脚本、数据库与文件一致点、备份可恢复性和失败处置；不要照搬旧文档的一条 pg_restore -c 覆盖生产。
+模块 JSON 恢复与物理整库/文件恢复须分别验收，恢复后重新核对安全版本、凭据、epoch 和旧离线队列。
 
-应用层导出/恢复（管理员，经 `/api/backup`，权限由审计过的 SUPER_ADMIN 权限控制）：
+### 12.3 维护入口与资料优先级
 
-```bash
-curl -H "Authorization: Bearer $TOKEN" \
-  "http://localhost:3000/api/backup/export?modules=projects,reports" > backup.json
-```
+| 信息 | 优先依据 |
+|---|---|
+| 数据模型 | schema.prisma + migrations SQL（包括自定义对象） |
+| HTTP 实际行为 | createApp 挂载 + routes + 调用的守卫/命令 |
+| 浏览器路由 | App.tsx + AuthGuard/RoleGuard |
+| 会话/离线 | tokenStore、http、engine、idb 与实际运行证据 |
+| 部署 | rdpms-deploy.sh、rdpms-start.sh、rdpms-api.service；服务器安装副本需另行核对 |
+| 未闭环工作 | docs/review/codebuddy/deepseek/open-items.md |
+| 文档入口/旧资料 | docs/README.md 与 docs/maintenance/2026-10-09/ |
 
-### 12.2 日志
-
-```bash
-sudo tail -f /mnt/datadisk0/rdpms/logs/app.out.log     # 后端 stdout
-sudo tail -f /mnt/datadisk0/rdpms/logs/app.err.log     # 后端 stderr
-sudo journalctl -u rdpms-api -n 100                    # systemd 视角（启动失败先看这里）
-sudo journalctl -u caddy -n 50                         # Caddy
-```
-
-注意：应用日志是**追加写、不轮转**的（systemd `append:`），体积需人工关注。
-
-### 12.3 重启 / 发布
-
-```bash
-# 仅重启（代码未变）
-sudo systemctl restart rdpms-api
-
-# 发布（取码 + 依赖 + 迁移 + 构建 + 重启，一条命令）
-cd /opt/rdpms/app && bash rdpms-system/deploy/scripts/rdpms-deploy.sh
-
-# 回滚
-cd /opt/rdpms/app && git checkout <旧提交> && bash rdpms-system/deploy/scripts/rdpms-deploy.sh
-```
-
-### 12.4 故障排查
-
-| 现象 | 可能原因 | 处置 |
-|------|----------|------|
-| 服务起不来且 `app.err.log` 无内容 | 数据盘未挂载，日志目标目录不存在 | `mountpoint /mnt/datadisk0`；`journalctl -u rdpms-api` |
-| 启动报"缺少构建产物 dist/index.js" | 拉了代码但没构建 | 跑 `rdpms-deploy.sh`（或 `npm run build`） |
-| 全员 401 `SESSION_REVOKED` | `securityVersion` 变更（改密 / 会话撤销 / 版本升级） | 重新登录；属预期行为 |
-| 页面 502 或打不开 | 后端未起 / 端口错 | `systemctl status rdpms-api`；`curl 127.0.0.1:3000/health` |
-| 前端仍是旧页面 | 浏览器缓存，或 Caddy `root` 未指向新产物 | 硬刷新；核对 `rdpms.caddy` 的 `root` 与 `ls .../frontend/dist/assets/` |
-| `/api` 404 或 CORS 报错 | Caddy `handle /api/*` 未生效 / `ALLOWED_ORIGINS` 不含来源 | `caddy validate --config /etc/caddy/Caddyfile`；核对 `.env` |
-| 频繁提示会话过期 | access token 仅 15 分钟 | 正常；刷新页面自动轮换，失败则重新登录 |
-| 离线草稿"不见了" | IndexedDB 升级后原数据转入 `legacyQuarantine` | 经 RecoveryPanel 恢复 |
-| 数据库连不上 | `DATABASE_URL` 错 / PG 未起 | 校验连接串；`systemctl status postgresql` |
-| 公网无法访问 | 云安全组未放通 443 | 控制台放通入站 TCP 443 |
-
----
-
-*文档版本：2026-10-09 修订 · 对应分支 `main`*
+更新接口或模型后同步相关索引。README 是导航和合同摘要，不取代源代码、运行日志或签署的目标环境验收。

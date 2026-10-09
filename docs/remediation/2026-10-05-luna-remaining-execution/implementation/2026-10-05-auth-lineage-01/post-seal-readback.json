@@ -1,9 +1,0 @@
-{
-  "status": "PASS",
-  "drift": 0,
-  "payloadFiles": 344,
-  "manifestSha256": "ddeeef66e45185ec94b01d72417c9a3a75775036fdcf38478ef500c739537003",
-  "finalIntegritySha256": "173e6e72f827f18f4a7e11e24fac29c669eeec3168ade52aecc09e9ced59034a",
-  "noSelfCycle": true,
-  "release": "NOT_EVALUATED"
-}

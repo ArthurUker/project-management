@@ -1,6 +1,0 @@
-{
-  "suite": "rp07-project-status-shared",
-  "path": "../final-regression-2026-10-02/RP07/rp07-project-status-shared/attempt-01",
-  "result": "PASS",
-  "limitations": "See acceptance.json; ENV_BLOCKED means broader required evidence remains."
-}

@@ -1,8 +1,0 @@
-{
- "taskId":"RP02-T01","packageId":"RP02","implementation":"COMPLETE","validation":"ENV_BLOCKED","release":"NOT_EVALUATED","owner":"Codex executor","allowedTaskIds":["RP02-T01"],
- "changedFiles":["rdpms-system/backend/src/routes/auth.js","rdpms-system/backend/src/kernel/rbac.js","rdpms-system/backend/tests/integration/rp02-login-lock-ttl.integration.test.mjs"],
- "evidence":["authorization.json","change-summary.md","acceptance.json","rollback.md","evidence/source-digest-comparison.json","evidence/source-diff.patch","evidence/commands-and-results.json"],
- "cleanup":"not applicable; no runtime resources created",
- "stillOpen":["AC-B14/PAC-RP02-01 dynamic real-DB/API acceptance blocked by tsc absence and no active owned test DB.","B14 remains SUPPORTED until actual row/response assertions pass.","B15 single-consumption/family replay remains for RP02-T02; T-RP-09 PROPOSED.","Local/target release status not evaluated."],
- "releaseStatus":"NOT_EVALUATED"
-}

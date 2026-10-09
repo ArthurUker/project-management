@@ -1,9 +1,0 @@
-{
-  "kind": "TEST_ONLY_REQUIRED_REGRESSION_COMPATIBILITY",
-  "authorityRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-06-continuous-remediation-01/authorization.json",
-  "allowedFiles": [
-    "rdpms-system/backend/tests/integration/b17-role-create.integration.test.mjs"
-  ],
-  "scope": "Only replace3 directsrc route/context imports with equivalent compiled distimports afterbuild, sameassertions/actualJWT/DB/httpfixtures. TSmodule dependency made directsrc unexecutable; never alter business behavior to pass suite.; owned seed must complete actual forced-password change and fresh login, not bypass policy or weaken success expectation",
-  "release": "NOT_EVALUATED"
-}

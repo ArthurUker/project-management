@@ -1,6 +1,8 @@
+> 维护说明（2026-10-09）：本文仅用于新建隔离环境的角色/权限设计，不是现有生产库的初始化或重建指令。当前服务器是否采用双角色需目标环境核对。
+
 # PostgreSQL 初始化说明（DB 窗口交付）
 
-适用范围：R&D PMS 的 PostgreSQL-only 重构。本文只覆盖**数据库与角色初始化**，应用部署见 `linux-production.md`（运维窗口）。
+适用范围：R&D PMS 的 PostgreSQL-only 重构。本文只覆盖**数据库与角色初始化**，应用部署见 [deploy-guide.md](./deploy-guide.md)。
 
 ---
 
@@ -9,7 +11,7 @@
 | 项目 | 要求 |
 |---|---|
 | PostgreSQL | **14+，推荐 15+**（本机验证环境：PostgreSQL 18.4） |
-| Prisma | **锁定 5.22.x**，本轮不升级 Prisma 6 |
+| Prisma | 以 backend/package-lock.json 锁定版本为准；不要按本文升级依赖 |
 | 扩展 | `pgcrypto`（trusted，PG13+ 可由 DB owner 创建）；`pg_trgm` 仅在需要模糊检索时启用 |
 
 ---

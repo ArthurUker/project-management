@@ -1,1 +1,0 @@
-Review per-task rollback.md and exact before/after task diffs. Preserve prior dirty edits and stored records. Never revert all worktree files. No safe production rollback is claimed; no deployment or migration took place.

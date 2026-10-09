@@ -1,1 +1,0 @@
-First independent attempt failed on the review probe extraction shape: projectMembers ordinary endpoint returns a bare array, not {list}. Actual source was unchanged. The original probe and failed log are preserved; only the review extractor was corrected for attempt02. No assertion was weakened.

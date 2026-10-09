@@ -1,7 +1,0 @@
-{
-  "taskId": "RP02-T02",
-  "kind": "VALIDATION_ADDENDUM_ONLY",
-  "approvedDecisionRef": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/approval.json",
-  "frontendDependency": "RP03-T01",
-  "noNewBusinessImplementation": true
-}

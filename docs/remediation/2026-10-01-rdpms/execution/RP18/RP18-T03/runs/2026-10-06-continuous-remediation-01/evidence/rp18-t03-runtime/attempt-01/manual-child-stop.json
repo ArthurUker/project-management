@@ -1,6 +1,0 @@
-{
-  "pid": 78377,
-  "ownerCheck": "78247 /Users/renkang/.nvm/versions/node/v24.15.0/bin/node /var/folders/6v/sk5g296520z6hvn1q3v9_xnr0000gn/T/rdpms-runtime-candidate-owned-Y5hexZ/candidate/rdpms-system/backend/dist/index.js",
-  "reason": "owned candidate remained alive >5min; SIGTERM to collect native failed or blocked-case evidence, no source edit during run",
-  "signal": "SIGTERM"
-}

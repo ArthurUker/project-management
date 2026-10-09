@@ -1,9 +1,0 @@
-{
-  "backendEvidence": "execution/RP02/RP02-T02/runs/2026-10-05-auth-lineage-01/evidence/validation-summary.json",
-  "frontendEvidence": "execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/validation-summary.json",
-  "finalIndex": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/final-validation-index.json",
-  "hashes": {
-    "docs/remediation/2026-10-01-rdpms/execution/RP03/RP03-T01/runs/2026-10-05-auth-lineage-01/evidence/frontend-and-browser-bindings.json": "014145906da2a2e5a312e3c08903e06292ce826dd3b38aa3ed59ecd68c20ad30",
-    "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-auth-lineage-01/evidence/final-validation-index.json": "198edb41c1b7fd46f9b8fc4380360dbd20464636d8ac4d54ecd6494c1ca2e6ed"
-  }
-}

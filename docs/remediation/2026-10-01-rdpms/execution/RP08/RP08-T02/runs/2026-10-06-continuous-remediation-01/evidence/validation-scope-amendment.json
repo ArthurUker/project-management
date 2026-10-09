@@ -1,4 +1,0 @@
-{
-  "file": "rdpms-system/backend/tests/integration/rp08-sync-read-authorization.integration.test.mjs",
-  "reason": "Existing incremental success fixture must send the previously acknowledged ACL fingerprint. Keep original12 names/security/field/value/denial assertions, no business changes for tests."
-}

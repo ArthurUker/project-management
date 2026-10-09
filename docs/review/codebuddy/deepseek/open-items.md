@@ -2,13 +2,14 @@
 
 更新：2026-10-09　　关联提交：`f8ccb06`（部署形态改造）
 
-> 本文件是 RDPMS 当前**尚未闭环**的事项汇总。已闭环的历史材料见同目录
-> [README.md](./README.md) 的清单。
+> 本文件汇总当前部署与服务器补正相关的待办，不等于全部历次审计问题的关闭清单。
+> 本地文档核对结果见 [REVIEW.md](../../../maintenance/2026-10-09/REVIEW.md)。
 
 ## A. 前端测试 4 项未解决（技术债，优先级最高）
 
 2026-10-07 的 `TEST_ONLY` 补正把前端单测从 47/63 提升到 60/64，仍有 4 项失败，
-全部位于 `rdpms-system/frontend/tests/unit/offlineAccountSwitch.test.ts` 的引擎时序套件：
+该结果来自服务器候选副本，补丁尚未应用到当前正式测试目录（当前仍有 idb.outboxClear 等失效调用）。
+剩余四项位于 `rdpms-system/frontend/tests/unit/offlineAccountSwitch.test.ts` 的引擎时序套件：
 
 | 用例 | 现象 | 性质 |
 |---|---|---|
@@ -26,25 +27,16 @@
 其余三项作为「夹具时序」专项处理。
 
 补正成果见 `artifacts/test-only-fix-63d243b.patch`。注意其基线是 `63d243b`，
-当前 HEAD 已是 `f8ccb06`，应用时可能需要手工对齐。
+部署变更起于 `f8ccb06`，本轮核对 HEAD 为 `289d340`，应用时可能需要手工对齐。
 
-## B. 部署工具中的死代码（待清理）
+## B. 旧部署工具仍被测试引用，不能直接作为死代码删除
 
-`rdpms-system/deploy/scripts/` 下仍保留着已被否决的 RP18 门禁体系：
+当前生产入口是 rdpms-deploy.sh。旧 candidate-gate.py、deploy-control.py、backup-pair.py
+及 drill/ 仍被 RP17/RP18/RP19 集成测试调用。deploy.sh/preflight.sh 也仍保留旧协议。
+本轮只清理文档，未删除源码、脚本或测试。
 
-```
-deploy-control.py      候选部署状态机（contract + 10 个 hook）
-candidate-gate.py      候选准备门禁（生成 manifest / buildId）
-backup-pair.py         配对备份
-preflight.sh           （已被改写为只有 --host / --candidate）
-deploy.sh              （已被改写为只转发 --prepare / --apply）
-drill/                 发布演练脚本
-```
-
-2026-10-08 改为原地部署后，这些不再参与任何流程。
-
-**下一步**：确认删除，或保留作历史参考。删之前注意 `deploy.sh`、`preflight.sh`
-已被新流程绕开，但文件内容是 RP18 时期的实现。
+下一步需逐工具确定：保留为隔离验证工具、重命名并明确范围，或连同对应过时测试一起替换。
+旧部署工具的测试通过不能证明当前 rdpms-deploy.sh 已通过部署验收。
 
 ## C. 待专项验证（需自有隔离库，禁止访问生产库）
 
@@ -55,7 +47,7 @@ drill/                 发布演练脚本
 
 但首次初始化涉及源表锁定与批量捕获，其**耗时与锁等待**尚未在目标环境实测。
 
-**下一步**：在 `rdpms_test` 中构造「迁移完成、publication state 不存在、无迁移后业务写入」
+**下一步**：在新建且确认自有的唯一 `rdpms_test_*` 隔离库中构造「迁移完成、publication state 不存在、无迁移后业务写入」
 的场景，实测首次 v2 拉取；不得绕过路由直接调底层函数后宣称 API 有缺陷。
 
 ## D. 环境遗留
@@ -69,8 +61,21 @@ drill/                 发布演练脚本
 ## E. 已知的用户可见影响（非缺陷，无需修复）
 
 - **需要重新登录一次**：新代码要求 access token 携带 `securityVersion`；
-  2026-10-08 之前签发的 token 没有该字段，会被判为 `SESSION_REVOKED`（401）。
+  2026-10-08 之前签发的 token 没有该字段，会先被判为 `SESSION_VERSION_REQUIRED`（401）；版本值不匹配才是 SESSION_REVOKED。
   这是 `kernel/rbac.js` 校验的确定性结果，刷新页面重新登录即可。
 - **前端 IndexedDB v2 → v4**：旧库原始数据转入 `legacyQuarantine`（原样保留），
   未同步的离线草稿需通过 RecoveryPanel 恢复。**此项尚缺真实浏览器 UI 验证**
   （现有证据文件名不能替代真实截图）。
+
+## F. 当前原地发布的实际能力缺口（2026-10-09 源码核对）
+
+- rdpms-deploy.sh 不自动调用备份、不停写、不运行测试；migrate deploy 先于构建。
+- 构建/依赖更新发生于运行目录，不是原子切换；失败不自动恢复之前的文件和数据库。
+- restart 后仅等待 3 秒并核对 systemd active，未校验 HTTP health/ready、build 身份或页面。
+- 当前脚本无固定提交回退模式；checkout 旧提交后调用脚本会再次合入 origin/main。
+- 只有 lockfile 变化才安装，缺失 node_modules 而 lockfile 未变时会直接跳过；已取码后失败再重跑也可能跳过上轮失败的安装。
+- 启动脚本/systemd 单元变化需要单独安装；发布脚本不处理这一步。
+- 服务器 rdpms-backup.sh 未入库，无法从当前仓库确认其备份完整性或恢复能力。
+
+上述是当前源码可确认的边界，不是本轮已修复项。实际服务器成功/失败影响尚未重验。
+生产操作前需补备份、健康验证、失败处置及迁移兼容性依据；不得填造目标环境 PASS。

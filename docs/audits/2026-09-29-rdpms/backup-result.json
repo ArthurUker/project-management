@@ -1,8 +1,0 @@
-{
-  "id": "D01_BACKUP_SNAPSHOT_ALIASES_HISTORY",
-  "platform": "macOS-27.0-arm64-arm-64bit",
-  "secondSnapshotIsSymlink": true,
-  "oldFileLostFromFirstSnapshot": true,
-  "newFileAppearedInFirstSnapshot": true,
-  "defectReproduced": true
-}

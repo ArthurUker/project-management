@@ -1,7 +1,0 @@
-# RP05-T01 handoff — 2026-10-02
-
-Implementation complete; runtime validation `ENV_BLOCKED`. Project PUT task/milestone arrays now require each applicable create/update/delete action permission; task replacement also refuses when cross-project children exist, preventing a parent delete from physically cascading into another project. Online task create/update and sync upsert validate parent existence and same-project scope, and reject direct self-parent references. Tests for no-delete refusal, stable task ID, valid same-project parent, foreign parent rejection and anomalous cross-project cascade protection are authored but not run.
-
-`node --check` for the three routes and new integration test, plus `git diff --check`, passed. `npm run build` exits 127 (`tsc` absent). No isolated PostgreSQL or safe test env is registered; backend `.env` was not used; no HTTP/sync/DB operations ran. B02 and B19 remain SUPPORTED/not FIX_ACCEPTED; `INT-PC07-01` remains NOT_RUN; D-S01-08 remains PENDING; T-RP-07 remains PROPOSED. General DAG, tombstone, stale-delete and legacy data actions were not activated.
-
-The next task graph candidate must be recomputed from implementation dependencies and actual stage gates. RP05-T02 is not ready: D-S01-08 and T-RP-07 are implementation gates. Continue with the earliest independent standard task whose implementation dependencies and task-specific gates are satisfied. Resolve missing compiler and create a new task-owned disposable DB for dynamic validations; no dependency installation is authorized.

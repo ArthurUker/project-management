@@ -1,9 +1,0 @@
-packet,file,symbol_or_route,question,review_status,evidence_ref,unreviewed_reason
-S03,rdpms-system/backend/src/routes/sync.js,GET /init query and cursor construction,Pull upper boundary ordering pagination tombstones and cursor timing,REVIEWED,review.md#拉取边界与时间顺序,
-S03,rdpms-system/frontend/src/offline/engine.ts,applyPull,Whether cursor commit waits for upserts tombstones and ACL cleanup,REVIEWED,review.md#拉取边界与时间顺序,
-S03,rdpms-system/backend/src/routes/sync.js,POST /push receipt lookup and replay,Receipt scope and replay ordering relative to current resource authorization,REVIEWED,review.md#上行回执与竞争,B05 detailed arbitration inherited from R06
-S03,rdpms-system/backend/src/routes/sync.js,POST /push mutation update delete and receipt persistence,CAS delete handling per mutation transaction and batch recovery,REVIEWED,review.md#上行回执与竞争,Database interleaving remains open
-S03,rdpms-system/backend/src/routes/tasks.js,PUT /:id and PATCH /:id/status,Compare HTTP revision and status command behavior with offline sync,REVIEWED,review.md#跨入口语义矩阵,B16 existing finding retained
-S03,rdpms-system/backend/src/routes/reports.js and modules/reports/reportCommands.ts,PUT /:id and POST /:id/submit,Compare draft baseline snapshot and submit/version semantics across entrypoints,REVIEWED,review.md#跨入口语义矩阵,B10 existing finding retained; no offline submit command
-S03,rdpms-system/backend/src/platform/idempotency/receipts.js,Receipt expiry and cleanup marker,Determine deployed receipt retention lookup and cleanup behavior,PENDING,review.md#上行回执与竞争,External scheduled cleanup and deployment configuration not inspected
-S03,rdpms-system/backend/src/routes/sync.js,Concurrent same-key push and late-commit pull,Resolve races that require database commit visibility semantics,PENDING,review.md#拉取边界与时间顺序,Not run; requires owned isolated PostgreSQL and deterministic barriers described in protocol-questions.md

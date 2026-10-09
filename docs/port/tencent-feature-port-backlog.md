@@ -1,3 +1,5 @@
+> 历史技术参考（2026-10-09）：保留供 projectType.ts 引用枚举来源；以下旧任务状态和交付计划不代表当前待办。当前待办见 docs/review/codebuddy/deepseek/open-items.md。
+
 # Tencent → enh 功能复刻移植清单
 
 > 分支：`integrate/tencent-feature-port`（基点 `origin/enh/phase-info-struct` @ 3392572）

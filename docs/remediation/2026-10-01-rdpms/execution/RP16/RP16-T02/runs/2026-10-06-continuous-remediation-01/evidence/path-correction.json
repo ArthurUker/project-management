@@ -1,4 +1,0 @@
-{
-  "kind": "OWNED_NEW_PATH_CORRECTION",
-  "reason": "Initial heredoc used repo-relative destination while exec workdir backend; created only own new nested file, moved exact bytes to registered schema and removed empty own dirs. Native resources not started, existing source unchanged at wrong path."
-}

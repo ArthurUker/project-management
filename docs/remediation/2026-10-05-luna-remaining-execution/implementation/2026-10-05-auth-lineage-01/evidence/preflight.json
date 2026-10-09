@@ -1,9 +1,0 @@
-{
-  "protectedFilesChecked": 2364,
-  "drift": [],
-  "realEnvOrCredentialsRead": false,
-  "dbRunnerSource": "docs/remediation/2026-10-05-luna-remaining-execution/implementation/2026-10-05-approved-contracts-01/run-suite.py",
-  "fakeIndexedDbInstalled": false,
-  "playwrightInstalled": false,
-  "existingChrome": true
-}

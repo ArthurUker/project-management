@@ -1,3 +1,0 @@
-# Rollback — RP02-T01 rework
-
-No schema or migration changed. Source changes are scoped to `backend/src/routes/auth.js`; test changes are scoped to `backend/tests/integration/rp02-login-lock-ttl.integration.test.mjs`. If a later regression requires rollback, reverse only the recorded scoped patch after reviewing current hashes and dependent edits. Do not checkout the whole file or reset the dirty worktree. The auth patch restores pending-account rate limiting and fresh-state response construction; rolling it back would reintroduce confirmed LR-01/LR-02. No target/production rollback was run; release remains NOT_EVALUATED.

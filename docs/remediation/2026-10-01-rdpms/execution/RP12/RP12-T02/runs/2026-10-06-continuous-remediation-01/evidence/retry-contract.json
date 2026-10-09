@@ -1,7 +1,0 @@
-{
-  "taskId": "RP12-T02",
-  "contract": "BOUND_RETRY_3_V1",
-  "authority": "USER_DELEGATED_OPTION_SELECTION",
-  "automaticBudget": 3,
-  "counts": "Each durable reservation or push attempt consumes one; per-item query at most once per sync run. Explicit user action may query original binding only; never new key/re-reserve uncertain old intent."
-}
