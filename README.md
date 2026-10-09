@@ -206,84 +206,174 @@ project-management/
 
 ```mermaid
 erDiagram
-  USER ||--o{ PROJECT : "manages(managerId)"
-  USER ||--o{ PROJECTMEMBER : "is member"
-  USER ||--o{ REPORT : submits
+  USER ||--o{ USERROLE : has
+  ROLE ||--o{ USERROLE : assigned
+  ROLE ||--o{ ROLEPERMISSION : grants
+  PERMISSION ||--o{ ROLEPERMISSION : "in"
+  USER ||--o{ REFRESHTOKEN : owns
+  USER ||--o{ SYNCDEVICE : registers
+  USER ||--o{ PROJECT : manages
+  USER ||--o{ PROJECTMEMBER : joins
+  USER ||--o{ REPORT : authors
   USER ||--o{ MONTHLYPROGRESS : submits
-  USER ||--o{ SYSTEMLOG : generates
-  USER ||--o{ DOCDOCUMENT : creates
-  USER ||--o{ REAGENTFORMULA : creates
-  USER ||--o{ PREPRECORD : creates
-  USER ||--o{ TASKTEMPLATE : owns
 
   PROJECT ||--o{ PROJECTMEMBER : has
-  PROJECT ||--o{ REPORT : has
+  PROJECT ||--o{ PROJECTPHASE : has
   PROJECT ||--o{ TASK : has
   PROJECT ||--o{ MILESTONE : has
+  PROJECT ||--o{ REPORT : has
   PROJECT ||--o{ MONTHLYPROGRESS : has
-  PROJECT ||--o{ REAGENTFORMULA : "references"
-  PROJECT ||--o{ SAMPLEMATERIAL : "references"
-  PROJECT ||--|| PROJECTREGISTRATIONPROFILE : "has(1-1)"
+  PROJECT ||--|| REGISTRATIONPROFILE : "has(1-1)"
+  PROJECT ||--o{ FILEOBJECT : "owns(ownerProjectId)"
   PROJECT }o--|| PROJECTTEMPLATE : "applied(templateId)"
 
-  REPORT ||--o{ REPORTVERSION : has
+  PROJECTTEMPLATE ||--o{ TEMPLATEPHASE : defines
+  PROJECTTEMPLATE ||--o{ TEMPLATETASK : defines
+  PROJECTTEMPLATE ||--o{ TEMPLATEROLE : defines
+
+  PROJECTPHASE ||--o{ TASK : groups
+  PROJECTPHASE ||--o{ MILESTONE : contains
+  PROJECTPHASE ||--o{ PHASETRANSITION : "from/to"
+
   TASK ||--o{ TASKDEPENDENCY : "prerequisite"
-  TASK ||--o{ TASKREGULATORYDOCUMENT : "links"
-  REGULATORYDOCUMENT ||--o{ TASKREGULATORYDOCUMENT : "links"
+  TASK ||--o{ TASKDOCREF : links
+  TASK ||--o{ TASKREGULATORYDOCUMENT : links
+  TASK ||--o{ ATTACHMENT : has
+  REGULATORYDOCUMENT ||--o{ TASKREGULATORYDOCUMENT : links
 
-  PROJECTTEMPLATE ||--o{ PROJECTTEMPLATE : "parent/child"
-  PROJECTTEMPLATE ||--o{ PROJECTROLEDEFINITION : defines
+  REPORT ||--o{ REPORTVERSION : has
+  FILEOBJECT ||--o{ ATTACHMENT : "referenced by"
 
+  REAGENTMATERIAL ||--o{ REAGENTLOT : has
   REAGENTFORMULA ||--o{ FORMULACOMPONENT : has
-  REAGENT ||--o{ FORMULACOMPONENT : "used in"
   REAGENTMATERIAL ||--o{ FORMULACOMPONENT : "used in"
   REAGENTFORMULA ||--o{ PREPRECORD : has
-
   DOCCATEGORY ||--o{ DOCDOCUMENT : contains
   DOCDOCUMENT ||--o{ DOCVERSION : has
 ```
 
-### 4.2 数据表清单（字段 / 约束 / 索引 / 外键）
+### 4.2 数据表清单
 
-> 类型说明：`uuid`=UUID 主键，`cuid`=Prisma cuid，`txt`=文本(String)，`json`=JSON 存文本(String)，`dt`=DateTime，`bool`=Boolean，`int`=Int，`flt`=Float。外键级联：`C`=Cascade，`N`=SetNull。
+> 约定：**表名与列名统一 snake_case**（Prisma `@@map` / `@map`），模型名保持 PascalCase（括号内）。
+> 主键均为 `TEXT`（UUID，由应用生成）。共 **51 个模型**，按域分组如下。
 
-| 表（模型） | 主要字段 | 主键 / 唯一 | 索引 | 外键 / 级联 |
-|------------|----------|-------------|------|-------------|
-| `User` | id, username(UQ), password, name, position, department, role(`admin/manager/member`), status(`active/disabled`), avatar?, createdAt, updatedAt | id / username | — | 被 Project.managerId(N)、ProjectMember.userId(C)、Report.userId(C) 等引用 |
-| `Project` | id, code(UQ), name, type, isDraft, subtype?, status(`进行中…`), managerId, templateId?, startDate?, endDate?, createdAt, updatedAt | id / code | — | managerId→User(N)；templateId→ProjectTemplate(N) |
-| `ProjectRegistrationProfile` | id, projectId(UQ), registrationType(`IVD`), region?, authority?, submissionNo?, certificateNo?, currentStage?, plannedSubmissionDate?, expectedApprovalDate?, complianceOwnerId?, riskLevel(`高/中/低`), notes? | id / projectId | [registrationType],[currentStage],[complianceOwnerId] | projectId→Project(C)；complianceOwnerId→User(N) |
-| `ProjectRoleDefinition` | id, templateId, name, description?, permissions?(csv), sortOrder | id | [templateId] | templateId→ProjectTemplate(C)；UQ[templateId,name] |
-| `ProjectTemplate` | id, code(UQ), name, description?, category?, type?, parentId?(自引用), isMaster, content?(json), preview?(json), createdBy, status, createdAt, updatedAt | id / code | [category],[parentId] | createdBy→User；parentId→自身 |
-| `ProjectMember` | id, projectId, userId, role(`manager/member/viewer`), joinedAt | id | — | UQ[projectId,userId]；projectId→Project(C)；userId→User(C) |
-| `Report` | id, userId, projectId, reportType(`日报/周报/月报`), month, content(json), status(`草稿/已提交/已阅/需修改`), submittedAt?, approvedBy?, approvedAt?, approveNote?, createdAt, updatedAt | id | [updatedAt] | UQ[userId,projectId,month,reportType]；userId→User(C)；projectId→Project(C)；approvedBy→User |
-| `ReportVersion` | id, reportId, version(int), content, createdAt | id | — | UQ[reportId,version]；reportId→Report(C) |
-| `MonthlyProgress` | id, projectId, month, actualWork?, completion(int), nextPlan?, risks?, projectStatus?, submittedBy, submittedAt, createdAt, updatedAt | id | [updatedAt] | UQ[projectId,month]；projectId→Project(C)；submittedBy→User |
-| `Task` | id, projectId, title, description?, assigneeId?, status(`待开始/进行中/已完成/已阻塞`), priority, phase?, phaseId?, phaseOrder?, taskType?, applicabilityStatus, regulatoryPriority, dueDate?, completedAt?, docRefs?(json), createdAt, updatedAt | id | — | projectId→Project(C)；assigneeId→User(N) |
-| `TaskDependency` | id(cuid), taskId, prerequisiteId, createdAt | id | — | UQ[taskId,prerequisiteId]；taskId/prerequisiteId→Task(C) |
-| `RegulatoryDocument` | id, dispatchNo(UQ), title, fullTitle?, category?, applicability, applicableToIvd(bool), priorityLevel, summary?, applicabilityNote?, fileName?, createdAt, updatedAt | id / dispatchNo | [priorityLevel],[applicability],[applicableToIvd] | — |
-| `TaskRegulatoryDocument` | taskId, regulatoryDocumentId, relationType, note?, createdAt | PK[taskId,regulatoryDocumentId] | [taskId],[regulatoryDocumentId] | taskId→Task(C)；regulatoryDocumentId→RegulatoryDocument(C) |
-| `Milestone` | id, projectId, name, phaseId?, phaseName?, date(dt), status(`待完成/已完成/已延期`), completedAt?, createdAt, updatedAt | id | [projectId] | projectId→Project(C) |
-| `SystemLog` | id, action, userId, targetId?, detail?, ip?, createdAt | id | — | userId→User(C) |
-| `DocCategory` | id, name, description?, icon?, sortOrder, createdAt, updatedAt | id | — | — |
-| `DocDocument` | id, categoryId, code(UQ), title, description?, docType(`sop/template/guide/reference`), content?, fileUrl?, fileName?, version, status, tags?, createdBy, approvedBy?, approvedAt?, createdAt, updatedAt | id / code | [categoryId],[docType],[status] | categoryId→DocCategory(C)；createdBy/approvedBy→User |
-| `DocVersion` | id, documentId, version, content, changelog?, createdBy, createdAt | id | — | UQ[documentId,version]；documentId→DocDocument(C) |
-| `Reagent` | id, name(UQ), fullName?, casNumber?, category, molecularWeight?(flt), purity(flt), density?, defaultUnit, hazardLevel?, supplier?, storageCondition?, notes?, status, createdAt, updatedAt | id / name | [category] | — |
-| `ReagentMaterial` | id, name?(legacy), commonName(UQ), chineseName?, englishName?, category, casNumber?, molecularFormula?, mw(flt), purity(flt), density?, state, defaultStockConc?, defaultStockUnit?, supplier?, notes?, createdAt, updatedAt | id / commonName | [commonName],[category] | — |
-| `ReagentFormula` | id, code(UQ), name?, type, pH?(flt), status, projectId?, procedure?, notes?, createdBy, createdAt, updatedAt | id / code | [type],[status] | projectId→Project(N)；createdBy→User |
-| `FormulaComponent` | id, formulaId, reagentId?, reagentMaterialId?, componentName?, concentration(flt), unit, notes?, sortOrder | id | [formulaId] | formulaId→ReagentFormula(C)；reagentId→Reagent；reagentMaterialId→ReagentMaterial |
-| `PrepRecord` | id, formulaId, targetVolume(flt), calcResult(txt), prepDate(txt), operator?, batchNo?, notes?, createdBy, createdAt | id | [formulaId] | formulaId→ReagentFormula(C)；createdBy→User |
-| `PhaseTransition` | id(cuid), fromPhaseId, toPhaseId, createdAt | id | — | UQ[fromPhaseId,toPhaseId]（阶段 ID 为字符串，非模型关系） |
-| `TaskTemplate` | id, name(UQ), category?, description?, estimatedDays(int), priority, tags?, createdAt, updatedAt | id / name | [category] | — |
-| `TaskTemplateStep` | id, templateId, order(int), title, description?, estimatedHours?(flt), assigneeRole?, checklist?, createdAt, updatedAt | id | [templateId],[order] | templateId→TaskTemplate(C) |
-| `Primer` | id, projectName?, name, sequence, targetGene?, detectionTarget?, …(修饰/物种/菌株等), status, createdBy?, createdAt, updatedAt | id | [projectName],[targetGene],[detectionTarget],[name] | — |
-| `SampleMaterial` | id, sampleCode(UQ), sampleName, sampleType, species?, tissue?, concentration?, volume?, storageCondition, collectionDate?, expiryDate?, supplier?, status, projectId?, notes?, createdAt, updatedAt | id / sampleCode | [projectId],[sampleType],[status] | projectId→Project(N) |
+**身份与权限（6）**
+
+| 表（模型） | 关键字段 | 约束 |
+|------------|----------|------|
+| `users` (User) | id, username, password, name, systemRole, status, securityVersion, lastLoginAt?, deletedAt? | UQ `username` |
+| `roles` (Role) | id, code, name, description?, isSystem | UQ `code` |
+| `permissions` (Permission) | id, code, name, category, riskLevel | UQ `code` |
+| `role_permissions` (RolePermission) | roleId, permissionId | PK[roleId, permissionId] |
+| `user_roles` (UserRole) | id, userId, roleId, scopeType?, scopeId? | UQ[userId, roleId, …] |
+| `refresh_tokens` (RefreshToken) | id, userId, tokenHash, expiresAt, revokedAt?, datasetEpoch | 索引 userId |
+
+**项目与模板（8）**
+
+| 表（模型） | 关键字段 | 约束 |
+|------------|----------|------|
+| `projects` (Project) | id, code, name, type, status, managerId, templateId?, startDate?, endDate?, deletedAt? | UQ `code` |
+| `project_members` (ProjectMember) | id, projectId, userId, role, joinedAt | UQ[projectId, userId] |
+| `project_templates` (ProjectTemplate) | id, code, name, category, parentId?(自引用), content, isMaster | UQ `code` |
+| `template_roles` (TemplateRole) | id, templateId, name, permissions | 索引 templateId |
+| `template_phases` (TemplatePhase) | id, templateId, code, name, sortOrder | 索引 templateId |
+| `template_tasks` (TemplateTask) | id, templatePhaseId, code, title, estimatedDays | 索引 templatePhaseId |
+| `project_phases` (ProjectPhase) | id, projectId, templatePhaseId?, code, name, sortOrder, status, plannedStart/End?, actualStart/End?, progressPercent, deletedAt? | 索引 projectId |
+| `phase_transitions` (PhaseTransition) | id, projectId, fromPhaseId, toPhaseId, actorId, createdAt | — |
+
+**任务与里程碑（6）**
+
+| 表（模型） | 关键字段 | 约束 |
+|------------|----------|------|
+| `tasks` (Task) | id, projectId, phaseId?, parentId?, templateTaskId?, code, title, assigneeId?, status, priority, taskType, applicability, dueDate?, completedAt?, deletedAt? | 索引 projectId / phaseId |
+| `task_dependencies` (TaskDependency) | id, taskId, prerequisiteId | UQ[taskId, prerequisiteId] |
+| `task_doc_refs` (TaskDocRef) | id, taskId, documentId | 索引 taskId |
+| `task_templates` (TaskTemplate) | id, name, category?, estimatedDays, priority | UQ `name` |
+| `task_template_steps` (TaskTemplateStep) | id, templateId, order, title | 索引 templateId |
+| `milestones` (Milestone) | id, projectId, phaseId?, name, date, status, completedAt? | 索引 projectId |
+
+**汇报与进展（4）**
+
+| 表（模型） | 关键字段 | 约束 |
+|------------|----------|------|
+| `reports` (Report) | id, projectId, authorId, reviewerId?, reportType, periodKey, periodStart, periodEnd, content, status, currentVersion, submittedAt?, reviewedAt?, deletedAt? | UQ[authorId, projectId, periodKey, reportType] |
+| `report_versions` (ReportVersion) | id, reportId, version, content, createdAt | UQ[reportId, version] |
+| `monthly_progress` (MonthlyProgress) | id, projectId, month, completion, submittedBy | UQ[projectId, month] |
+| `registration_profiles` (RegistrationProfile) | id, projectId, registrationType, currentStage?, riskLevel, complianceOwnerId? | UQ `projectId`（1-1） |
+
+**法规与文档（5）**
+
+| 表（模型） | 关键字段 | 约束 |
+|------------|----------|------|
+| `regulatory_documents` (RegulatoryDocument) | id, dispatchNo, title, category?, applicability, priorityLevel | UQ `dispatchNo` |
+| `task_regulatory_documents` (TaskRegulatoryDocument) | taskId, regulatoryDocumentId, relationType | PK[taskId, regulatoryDocumentId] |
+| `doc_categories` (DocCategory) | id, name, icon?, sortOrder | — |
+| `doc_documents` (DocDocument) | id, categoryId, code, title, docType, version, status, createdBy | UQ `code` |
+| `doc_versions` (DocVersion) | id, documentId, version, content, createdBy | UQ[documentId, version] |
+
+**试剂与样品（8）**
+
+| 表（模型） | 关键字段 | 约束 |
+|------------|----------|------|
+| `reagent_materials` (ReagentMaterial) | id, commonName, chineseName?, category, casNumber?, mw?, purity? | UQ `commonName` |
+| `reagent_lots` (ReagentLot) | id, materialId, lotNo, status(LotStatus), expiryDate? | 索引 materialId |
+| `reagent_formulas` (ReagentFormula) | id, code, name?, type, pH?, status, projectId? | UQ `code` |
+| `formula_components` (FormulaComponent) | id, formulaId, reagentMaterialId?, componentName?, concentration, unit | 索引 formulaId |
+| `prep_records` (PrepRecord) | id, formulaId, targetVolume, calcResult, prepDate, createdBy | 索引 formulaId |
+| `detection_targets` (DetectionTarget) | id, name, category, … | — |
+| `primers` (Primer) | id, name, sequence, targetGene?, detectionTarget? | 索引 name |
+| `sample_materials` (SampleMaterial) | id, sampleCode, sampleName, sampleType, species?, status, projectId? | UQ `sampleCode` |
+
+**文件（2）**
+
+| 表（模型） | 关键字段 | 约束 |
+|------------|----------|------|
+| `file_objects` (FileObject) | id, storageKey, provider, bucket, originalName, mimeType, sizeBytes, checksum, scanStatus, isPublic, uploadedById, **accessScope**, ownerUserId?, ownerProjectId?, sharedReadPermission? | 索引 accessScope / ownerUserId |
+| `attachments` (Attachment) | id, fileId, entityType, entityId, createdBy | 索引 [entityType, entityId] |
+
+> 文件访问的**唯一授权依据**是 `file_objects.accessScope`
+> （`PRIVATE_STAGING` / `PROJECT` / `SHARED_LIBRARY` / `PUBLIC`）+ 归属字段；
+> **不存在"有一条附件关系就放行"的路径**（`modules/files/fileAccessPolicy.ts`）。
+
+**审计与配置（5）**
+
+| 表（模型） | 关键字段 | 约束 |
+|------------|----------|------|
+| `audit_logs` (AuditLog) | id, action, userId, targetType?, targetId?, detail?, ip?, createdAt | **append-only（DB 触发器）** |
+| `system_logs` (SystemLog) | id, action, userId, targetId?, detail?, ip?, createdAt | — |
+| `enum_meta` (EnumMeta) | id, domain, code, label, sortOrder | — |
+| `code_sequences` (CodeSequence) | id, scope, nextValue | UQ `scope` |
+| `system_settings` (SystemSetting) | id, key, value | UQ `key` |
+
+**同步与幂等（7）**
+
+| 表（模型） | 关键字段 | 约束 |
+|------------|----------|------|
+| `sync_devices` (SyncDevice) | id, userId, deviceId, datasetEpoch, lastCursor? | 索引 userId |
+| `sync_mutations` (SyncMutation) | id, actorId, command, resourceScope, idempotencyKey, payloadHash, status | 索引 actorId |
+| `mutation_receipts` (MutationReceipt) | id, datasetEpoch, actorId, command, resourceScope, idempotencyKey, payloadHash, status, responseStatus, responseBody, expiresAt | **UQ[actorId, command, resourceScope, idempotencyKey, …]** |
+| `sync_publication_state` (SyncPublicationState) | epoch, sequence, initialized | PK `epoch` |
+| `sync_source_revisions` (SyncSourceRevision) | id, entity, entityId, revision | — |
+| `sync_change_events` (SyncChangeEvent) | id, epoch, sequence, entity, entityId, operation, actorId | **append-only（触发器）** |
+| `data_recovery_state` (DataRecoveryState) | id(=1), status, epoch, updatedAt | 单行表 |
 
 ### 4.3 设计要点
 
-- **关系型外键由 Prisma 维护**：删除项目（`Cascade`）会级联清理成员 / 汇报 / 任务 / 里程碑 / 进展 / 注册档案；删除用户（`Cascade`）清理其创建的汇报、版本等，`SetNull` 处理负责人 / 指派人。
-- **JSON 以文本存储**：`content`、`docRefs`、`preview` 等复杂结构存为 `String`，由应用层序列化，避免数据库 JSON 类型耦合。
-- **状态字段用字符串枚举**：`role` / `status` / `reportType` 等以字符串常量表示（非 DB enum），便于演进但依赖应用层约束（见技术债务 §10）。
-- **唯一约束保证业务一致性**：汇报按 `[userId,projectId,month,reportType]` 唯一（upsert 幂等），项目成员按 `[projectId,userId]` 唯一。
+- **命名规范**：表与列统一 **snake_case**（`@@map` / `@map`），Prisma 模型名保持 PascalCase。
+- **主键为 TEXT（UUID）**，由应用生成。**手写迁移不要用 `UUID` 类型** —— 会与既有 `TEXT` 外键不兼容。
+- **外键级联**：删除项目（`Cascade`）清理成员 / 阶段 / 任务 / 里程碑 / 汇报 / 进展 / 注册档案；
+  删除用户（`Cascade`）清理其创建物，负责人与指派人用 `SetNull`。
+- **软删除**：`projects` / `tasks` / `reports` / `project_phases` 等带 `deletedAt`，查询必须过滤。
+- **枚举使用**：身份与资源状态用 DB enum（`SystemRole`、`UserStatus`、`LotStatus`、`FileAccessScope` 等）；
+  任务与汇报的业务状态仍为字符串常量（见 §10 技术债务）。
+- **审计 append-only**：`audit_logs` 由触发器禁止 UPDATE / DELETE（报 `P0001`），
+  因此测试断言一律用**增量**，不能全表计数或清理。
+- **幂等回执**：`mutation_receipts` 的作用域键有唯一索引，**跨实例安全**；
+  业务写入 + 严格审计 + 回执在同一事务提交。
+- **同步日志**：`sync_change_events` 由 7 类业务表（projects / phases / tasks / milestones /
+  monthly_progress / reports / project_members）的 AFTER 行级触发器写入，不可变且禁止 TRUNCATE。
+- **恢复门禁**：`data_recovery_state` 为单行表；其状态非 `READY` 时，
+  `rdpms_restore_write_gate()` 触发器会拒绝**所有**业务写入。
 
 ---
 
@@ -469,28 +559,63 @@ erDiagram
 | GET | `/api/backup/export` | 导出备份（`?modules=` 选择性导出） |
 | POST | `/api/backup/restore` | 从 JSON 备份事务恢复 |
 
-### 5.16 登录请求/响应示例
+### 5.16 文件 / 审计 / 角色 / 字典 / 设置 / 试剂批次 / 系统日志
+
+**文件 `/api/files`** —— 授权依据见 §4.2 文件域（`accessScope` 是唯一依据）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/files` | 列表；`?needsClassification=true` 筛选待分类 |
+| POST | `/api/files` | 上传（先入 `PRIVATE_STAGING` 暂存态，绑定后才生效） |
+| GET | `/api/files/:id` · `/:id/metadata` · `/:id/download` | 元数据 / 下载（与 list 同一套授权判定） |
+| PATCH | `/api/files/:id/scope` | 调整访问作用域与归属（分类） |
+| DELETE | `/api/files/:id` | 删除；被证据引用时返回 **409 `FILE_REFERENCED_BY_EVIDENCE`** |
+| POST | `/api/files/:id/restore` | 恢复软删（超级管理员） |
+
+**审计 `/api/audit`**：`GET /api/audit-logs`（查询）、`GET /api/audit/entity/:type/:id/summary`（实体操作摘要）、`POST /api/audit-logs/export`（导出）
+
+**角色 `/api/roles`**：`GET /`、`GET /permission-catalog`、`POST /`、`PATCH /:id`、`DELETE /:id`、`POST /:id/permissions`（表驱动 RBAC 的维护入口，见 §7.2）
+
+**字典 `/api/dict`**：`GET /`、`GET /:enumName`
+
+**设置 `/api/settings`**：`GET /`、`PATCH /`
+
+**试剂批次 `/api/reagent-lots`**：`GET /`、`POST /`、`PATCH /:id`
+
+**系统日志 `/api/system-logs`**：`GET /api/system-logs`（与 `audit_logs` 相互独立，见 §4.2 审计与配置）
+
+---
+
+### 5.17 登录请求/响应示例
 
 ```http
 POST /api/auth/login
 Content-Type: application/json
 
-{ "username": "admin", "password": "admin123" }
+{ "username": "<SEED_ADMIN_USERNAME 指定的账号>", "password": "<seed 时设置的口令>" }
 ```
+
+> 代码内**不再有默认弱口令**，种子账号与口令均由 `SEED_*` 环境变量提供（见 §11.2）。
 
 ```json
 {
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refreshToken": "…",
+  "expiresIn": 900,
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
     "id": "uuid",
-    "username": "admin",
+    "username": "…",
     "name": "管理员",
-    "role": "admin",
-    "status": "active",
+    "systemRole": "ADMIN",
+    "status": "ACTIVE",
     "permissions": ["projects.create", "users.manage", "registrations.approve", "..."]
   }
 }
 ```
+
+- `expiresIn` 为 access token 剩余秒数（默认 900）；`token` 是 `accessToken` 的兼容别名，供旧客户端使用。
+- 令牌过期后调 `POST /api/auth/refresh`（body 带 `refreshToken`）换取新的一对令牌。
 
 ---
 
@@ -498,50 +623,85 @@ Content-Type: application/json
 
 ### 6.1 路由结构（`src/App.tsx`）
 
-路由守卫 `ProtectedRoute`：读取 `useAppStore().user`，为空则 `<Navigate to="/login">`；响应拦截器遇 401 会清 token 并跳登录，形成双重保护。
+两层守卫：
 
-| 路径 | 组件 | 说明 |
+- **`AuthGuard`**：未登录（或会话失效）时重定向 `/login`；
+- **`RoleGuard perm={PERMS.XXX}`**：按权限位控制访问，无权限渲染 `403`；
+- 响应拦截器遇 401 会清理会话并跳登录，与守卫形成双重保护。
+
+| 路径 | 组件 | 守卫 |
 |------|------|------|
-| `/login` | `Login` | 登录（公开） |
-| `/` | `Dashboard` | 仪表盘 |
-| `/projects` `/projects/new` | `Projects` | 项目列表 / 新建 |
-| `/projects/:id` | `ProjectDetail` | 项目详情 |
-| `/registrations` `/registrations/:id` | `RegistrationProjects` / `RegistrationProjectDetail` | 注册申报 |
-| `/regulatory-documents` | → `/knowledge?module=regulatory` | 重定向到知识库法规模块 |
-| `/project-templates` `/:id/edit` | `TemplateLibrary` / `TemplateEditor` | 项目模板 |
-| `/task-templates` | `TaskTemplateLibrary` | 任务模板（knowledge/） |
-| `/reports` `/:id` `/:id/review` | `Reports` / `ReportEdit` / `ReportReview` | 汇报 |
-| `/knowledge` `/:id` | `Docs` / `KnowledgeDetail` | 知识库 |
-| `/reagent-formula` `/new` `/:id/edit` `/calculator` | `FormulaList` / `FormulaEditor` / `PrepCalculator` | 试剂配方 |
-| `/tasks` | `Tasks` | 任务看板 |
-| `/users` | `Users` | 用户管理 |
-| `/settings` | `Settings` | 系统设置 |
-| `/backup` | `BackupManager` | 备份管理 |
+| `/login` | `Login` | 公开 |
+| `/`（index） | `Dashboard` | AuthGuard |
+| `projects`、`projects/new` | `Projects` | AuthGuard |
+| `projects/:id` | `ProjectDetail` | AuthGuard |
+| `registrations`、`registrations/:id` | `RegistrationProjects` / `RegistrationProjectDetail` | `REGISTRATIONS_VIEW` |
+| `regulatory-documents` | → `/knowledge?module=regulatory` | 旧链接兼容重定向 |
+| `project-templates`、`project-templates/:id/edit` | `TemplateLibrary` / `TemplateEditor` | AuthGuard |
+| `task-templates` | `TaskTemplateLibrary` | AuthGuard |
+| `reports` | `Reports` | `REPORTS_VIEW` |
+| `reports/:id`、`reports/:id/review` | `ReportEdit` / `ReportReview` | AuthGuard |
+| `knowledge`、`knowledge/:id`、`docs` | `Docs` / `KnowledgeDetail` | AuthGuard |
+| `reagent-formula`、`/new`、`/:id/edit`、`/calculator` | `FormulaList` / `FormulaEditor` / `PrepCalculator` | AuthGuard |
+| `tasks` | `Tasks` | AuthGuard |
+| `backup` | `BackupManager` | `DATA_EXPORT` |
+| `users` | `Users` | `USERS_VIEW` |
+| `audit-logs` | `AuditLogs` | `AUDIT_VIEW` |
+| `system-logs` | `SystemLogs` | `SYSTEM_LOGS_VIEW` |
+| `roles` | `Roles` | `ROLES_VIEW` |
+| `settings` | `Settings` | `SETTINGS_VIEW` |
+| `change-password` | `ChangePassword` | AuthGuard |
+| `403` | `Forbidden` | — |
+| `*` | `NotFound` | — |
 
-通配 `*` → 重定向首页。
+### 6.2 状态、会话与离线
 
-### 6.2 状态管理（`src/store/appStore.ts`，Zustand）
+全局 UI 状态用 Zustand；**业务数据与离线能力不在 store 里**，而是拆成三层：
 
-- **State**：`user`、`token`、`projects`、`reports`、`tasks`、`milestones`、`monthlyProgress`、`projectMembers`、`lastSync`、`isOnline`、`isSyncing`。
-- **Actions**：`login/logout`、`init`（启动校验 token + 拉本地数据 + 触发同步）、`sync`（上行本地变更 → 下行增量 → 对账）、`saveReportLocal/saveTaskLocal`（写 Dexie）、各 `setXxx`。
-- **持久化**：`persist` 中间件仅持久化 `lastSync`（`partialize`），业务数据走 Dexie（库名 `RDPatabase`，version 2，7 个 object store：projects/reports/tasks/milestones/monthlyProgress/projectMembers/syncMeta）。
-- **离线优先**：网络恢复后 `sync()` 与后端增量对账，保证多端一致。
+| 模块 | 职责 |
+|------|------|
+| `src/auth/tokenStore.ts` | 会话真源：access / refresh 令牌、登录代际 `loginGeneration`、跨标签轮换协调 |
+| `src/offline/idb.ts` | IndexedDB 层，**按登录主体分片**（`activateOwner` / `forOwner`）；每次存储操作校验 userId + loginGeneration + 当前会话 + 已登记的活动会话 |
+| `src/offline/engine.ts` | 同步引擎：分页拉取与 checkpoint 提交、上行、冲突与拒绝区、数据集 epoch 围栏 |
+| `src/offline/pendingDraft.ts` | 缺项目等暂不可提交内容的本地留存与恢复 |
+| `src/offline/deadLetter.ts` | 被拒变更的持久留存（保留最早 payload；同键不同内容另记 `payloadConflict`） |
+
+离线引擎的不变量（改动时必须保持）：无主体不同步、`resetOnLogout` 的状态切换先于任何 `await`、
+拉取/下行落盘前后都检查会话代次、缓存键按主体分片。
+
+> 早期版本使用 `src/store/appStore.ts` + Dexie（IndexedDB `RDPatabase` v2，7 个 object store）。
+> 该方案已在账号隔离改造中替换：**Dexie 依赖已移除，`appStore` 不再存在**。
 
 ### 6.3 组件划分
 
 - **布局**：`components/Layout.tsx`（侧边栏 + 顶栏，包裹受保护路由）。
-- **业务组件**：`KanbanBoard`（看板）、`PhaseTaskPanel`、`PhaseProgressBar`、`ProcessFlowDiagram`、`MindMapView`、`HierarchicalTaskList`、`ProjectCard`、`CreateProjectModal`、`EditProjectModal`、`AddMemberModal`、`DocReference`、`ProjectTemplateEditor`、`ReagentDailyReport`、`VisualTableEditor`。
-- **页面域目录**：`pages/knowledge/`（任务模板、试剂库、引物库、扩增试剂库、样本库）、`pages/reagent-formula/`（配方列表/编辑器/批量编辑/计算器）。
+- **离线与同步反馈**：`OfflineBanner`、`SyncStatusIndicator`、`SyncConflictDialog`、`ErrorBoundary`、`FullPageSpinner`。
+- **业务组件**：`KanbanBoard`、`PhaseTaskPanel`、`PhaseProgressBar`、`ProcessFlowDiagram`、`MindMapView`、`HierarchicalTaskList`、`ProjectCard`、`CreateProjectModal`、`EditProjectModal`、`AddMemberModal`、`DocReference`、`ProjectTemplateEditor`、`ReagentDailyReport`、`VisualTableEditor`。
+- **页面域目录**：`pages/knowledge/`（任务模板、试剂库、引物库、扩增试剂库、样本库）、
+  `pages/reagent-formula/`（配方列表 / 编辑器 / 批量编辑 / 计算器）。
 
-### 6.4 API 客户端（`src/api/client.ts`）
+### 6.4 API 客户端（`src/api/`）
 
-```ts
-const API_BASE = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE || '/api';
+```
+src/api/
+├── http.ts        # axios 实例：BASE_URL、请求/响应拦截器
+├── request.ts     # 统一请求封装（错误归一）
+├── error.ts       # 错误类型与判定
+├── files.ts       # 文件上传/下载专用（表单与 blob）
+├── index.ts       # 汇总导出
+├── types.ts       # 通用 API 类型
+├── adapters/      # 后端 DTO ↔ 前端模型（如 report.ts 的 reportContent）
+└── endpoints/     # 按业务域拆分：auth / backup / knowledge / projects / reagents /
+                   # registrations / regulatoryDocuments / reports / roles / stats /
+                   # sync / system / tasks / templates
 ```
 
-- 请求拦截器注入 `Authorization: Bearer <token>`（从 localStorage `rdpms_token`）。
-- 响应拦截器解包 `response.data`；遇 401 清 token 并跳 `/login`。
-- 导出按业务域拆分对象：`authAPI / userAPI / projectAPI / registrationsAPI / regulatoryDocumentsAPI / reportAPI / progressAPI / taskAPI / syncAPI / statsAPI / projectTemplatesAPI / taskTemplatesAPI / docsAPI / reagentAPI / reagentMaterialsAPI / formulaAPI / prepAPI / primerAPI / samplesAPI`，及默认 `api` 实例。
+- 基础地址取 `import.meta.env.VITE_API_BASE_URL`，默认 `/api`。
+- 请求拦截器注入 `Authorization: Bearer <access token>`；401 触发会话轮换或跳登录。
+- **汇报内容统一经 `src/shared/reportContent.ts` + `api/adapters/report.ts` 读取**
+  （历史形态有对象与字符串两种，都要支持）；解析失败时保留 `contentReadError`，**禁止回写空表**。
+- **共享规则**（如汇报周期计算）在 `src/shared/reportPeriod.ts`，
+  与后端 `src/modules/reports/reportRules.js` 必须同步修改。
 
 ---
 
