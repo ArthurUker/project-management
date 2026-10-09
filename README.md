@@ -829,10 +829,21 @@ Content-Type: application/json
 ### 6.3 组件划分
 
 - **布局**：`components/Layout.tsx`（侧边栏 + 顶栏，包裹受保护路由）。
-- **离线与同步反馈**：`OfflineBanner`、`SyncStatusIndicator`、`SyncConflictDialog`、`ErrorBoundary`、`FullPageSpinner`。
-- **业务组件**：`KanbanBoard`、`PhaseTaskPanel`、`PhaseProgressBar`、`ProcessFlowDiagram`、`MindMapView`、`HierarchicalTaskList`、`ProjectCard`、`CreateProjectModal`、`EditProjectModal`、`AddMemberModal`、`DocReference`、`ProjectTemplateEditor`、`ReagentDailyReport`、`VisualTableEditor`。
-- **页面域目录**：`pages/knowledge/`（任务模板、试剂库、引物库、扩增试剂库、样本库）、
-  `pages/reagent-formula/`（配方列表 / 编辑器 / 批量编辑 / 计算器）。
+- **离线与同步反馈**：`components/OfflineBanner`、`SyncStatusIndicator`、`SyncConflictDialog`、`ErrorBoundary`、`FullPageSpinner`。
+- **业务组件**（`components/`，共 20 个）：`KanbanBoard`、`PhaseTaskPanel`、`PhaseProgressBar`、
+  `ProcessFlowDiagram`、`MindMapView`、`HierarchicalTaskList`、`ProjectCard`、`CreateProjectModal`、
+  `EditProjectModal`、`AddMemberModal`、`DocReference`、`ProjectTemplateEditor`、`ReagentDailyReport`、
+  `VisualTableEditor`（其余为上面已列的布局与离线反馈组件）。
+- **页面**（`pages/` 顶层，每个路由目标一个文件）：`Dashboard`、`Projects`、`ProjectDetail`、
+  `Reports`、`ReportEdit`、`ReportReview`、`Tasks`、`Users`、`Roles`、`Settings`、`AuditLogs`、
+  `SystemLogs`、`BackupManager`、`ChangePassword`、`Login`、`Forbidden`、`NotFound`、
+  `Docs`、`KnowledgeDetail`、`RegistrationProjects`、`RegistrationProjectDetail`、
+  `RegulatoryDocumentsPage`、`TemplateLibrary`、`TemplateEditor`。
+- **页面域子目录**：
+  - `pages/knowledge/`：`ReagentLibrary`、`PrimerLibrary`、`AmplificationReagentLibrary`、
+    `SampleLibrary`、`TaskTemplateLibrary`
+  - `pages/reagent-formula/`：`index.tsx`（配方列表，默认导出为 `FormulaList`）、
+    `FormulaEditor`、`FormulaBatchEditor`、`PrepCalculator`
 
 ### 6.4 API 客户端（`src/api/`）
 
