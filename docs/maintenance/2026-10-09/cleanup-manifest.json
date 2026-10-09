@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-09",
+  "sourceCommit": "289d340",
+  "archiveRoot": "/Users/renkang/Documents/RDPMS-evidence-archive/2026-10-09-docs-cleanup-01",
+  "archive": "historical-docs.tar.gz",
+  "archiveSha256": "dcfc3659b6fc4fbdde95ed0c2135ceb01e738e876af683cade88f746d060e9b5",
+  "archiveBytes": 39257939,
+  "sourceFiles": 10891,
+  "sourceBytes": 379758369,
+  "allArchivedFilesReadbackVerified": true,
+  "removedRoots": [
+    "docs/audits",
+    "docs/remediation",
+    "docs/pm-audit",
+    "docs/publication",
+    "docs/port/evidence",
+    "docs/CODE_REVIEW.md",
+    "docs/deployment/dev-auto-commit-guide.md",
+    "docs/deployment/project-registration-module-migration-plan.md",
+    "docs/deployment/task-template-seed-initialization-guide.md",
+    "docs/review/codebuddy/deepseek/2026-09-17-de260fc-independent-review",
+    "docs/review/codebuddy/deepseek/2026-10-06-github-drift-analysis.md",
+    "docs/review/codebuddy/deepseek/2026-10-07-deploy-contract-draft.md",
+    "docs/port/rf05-delivery.md",
+    "docs/port/rf-implementation-report.md"
+  ],
+  "offsiteBackup": "NOT_CONFIGURED",
+  "note": "Historical results retained in local verified archive and Git history, not evidence of present release acceptance."
+}

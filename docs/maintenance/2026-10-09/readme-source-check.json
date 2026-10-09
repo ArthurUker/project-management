@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-09",
+  "head": "289d340fe7662b8358a25c7a3c7f1f5a68cfd2f8",
+  "kind": "STATIC_DOCUMENTATION_SOURCE_CHECK",
+  "readmeSha256": "5da90491d2a9cdfabc16d90eac1a1c5d015ac8120f0c3ebde69fbb5754b5cc3e",
+  "prismaModelCount": 51,
+  "migrationDirectoryCount": 12,
+  "mountedRouteModuleCount": 28,
+  "staticRouteDeclarationCount": 192,
+  "missingRelativeFileLinks": [],
+  "buildAndTests": "NOT_RUN_DOCUMENTATION_ONLY",
+  "sourceBindings": {
+    "rdpms-system/backend/prisma/schema.prisma": "d7448530caed4540c664ec9718adafe1677c0a31286295115e2c7fb3434ea2ab",
+    "rdpms-system/backend/package-lock.json": "34ab9189ab4bc7bb9c2b3756721be8105f48a539d152b4d84b6352ad2137819c",
+    "rdpms-system/frontend/package-lock.json": "b73bbb543711b2b465e8a165ac84965e69aad8a98aed99adb05f2077952917b0",
+    "rdpms-system/backend/src/bootstrap/createApp.js": "65f96c355d4f99ac72eae4aa3ce0a03a19efda02d0585ef5e04443f43269f8df",
+    "rdpms-system/frontend/src/App.tsx": "1a14979ffb3f3641ef13206d57215e129e0fb82ce498210dc17ab1156e8e67ab",
+    "rdpms-system/backend/src/kernel/rbac.js": "afeac4c2f95d925ade8d09492a41d9c7450f7470b184867e3eab935d05687d70",
+    "rdpms-system/backend/src/modules/sync/changePublisher.ts": "79088749d5e8c57cbb3828227ca5a5ddff4191f2fb402caf29a3d9a25be60062",
+    "rdpms-system/frontend/src/offline/idb.ts": "d1ee2db5c78abbc337a2b15e1207dcf6a9c3185cfaae591ef07f8f7bcb27b310",
+    "rdpms-system/deploy/scripts/rdpms-deploy.sh": "01e7c87fb5f7d5a4bfecc3d2afa29fc5b5c6b9835bff5a047a9473285bb39596",
+    "rdpms-system/deploy/scripts/rdpms-start.sh": "7ef3b21100a0fb7683d3bfabfecd97187eac3f138b7df4e3d576849f89d97b00",
+    "rdpms-system/backend/scripts/lib/testDbGuard.mjs": "ac2f7d99122999e6b81f5f06398a683b4b83fe84fa2c57d55cbcc91f2a229f66"
+  },
+  "defaultTestEnvFile": ".env.test.local at repository root",
+  "tocAnchorCheck": "PASS",
+  "relativeFileLinkCheck": "PASS",
+  "sourceCodeDiff": "NONE",
+  "publication": "NOT_COMMITTED_NOT_PUSHED"
+}
