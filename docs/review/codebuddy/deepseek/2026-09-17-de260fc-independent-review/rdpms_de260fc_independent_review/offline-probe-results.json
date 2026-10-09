@@ -1,0 +1,39 @@
+{
+  "scope": "Actual shipped engine/idb/deadLetter code transpiled unchanged. fake-indexeddb and synthetic delayed API used; NOT a real browser or PostgreSQL test.",
+  "runtime": "v24.15.0",
+  "results": [
+    {
+      "id": "Q6",
+      "finding": "clearAll deletes wrong cursor/acl keys and leaves conflicts",
+      "retained": {
+        "cursor": "cursor-A",
+        "acl": {
+          "projectIds": [
+            "project-A"
+          ]
+        },
+        "conflicts": [
+          {
+            "privatePayload": "synthetic-A-conflict"
+          }
+        ]
+      }
+    },
+    {
+      "id": "Q7",
+      "finding": "Delayed A rejection becomes B-owned dead letter after account switch",
+      "owner": "user-B",
+      "key": "user-B:A-change",
+      "payload": {
+        "content": "synthetic PRIVATE DRAFT A"
+      }
+    },
+    {
+      "id": "Q8",
+      "finding": "mergeDeadLetter contradicts its earliest-payload comment and replaces payload",
+      "payloadAfter": {
+        "v": "replacement"
+      }
+    }
+  ]
+}

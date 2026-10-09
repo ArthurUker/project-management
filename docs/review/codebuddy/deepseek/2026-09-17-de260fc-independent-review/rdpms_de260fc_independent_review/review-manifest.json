@@ -1,0 +1,35 @@
+{
+  "reviewedAt": "2026-09-17T04:20:29.051Z",
+  "claimedHead": "de260fc2bc4fd2ba791abf667c125929368a00c4",
+  "inputZipSha256": "e496a4270bc6c57bc07be3365031757b4a786836eab9ac4565cdc60fa54973ec",
+  "receivedBrowserManifestVersions": {
+    "ee2fba7:dirty=true": 5,
+    "be49ebd:dirty=true": 4
+  },
+  "sourceHashes": {
+    "backend": {
+      "files": 56,
+      "hash": "5ad79ca0bc6395f4b294776b79439a3b"
+    },
+    "frontend": {
+      "files": 113,
+      "hash": "601601f30b3a2d7ff32aa7b790c845d9"
+    }
+  },
+  "reviewRuntime": "v24.15.0",
+  "independentResults": {
+    "backendBuild": "PASS",
+    "backendUnitContract": "69/69 explicit file arguments",
+    "backendUndefined": "52 files 0",
+    "frontendUnit": "25/25",
+    "frontendBuild": "PASS",
+    "realPostgreSQL": "NOT_RUN",
+    "realBrowser": "NOT_RUN",
+    "baselinePatchReplay": "ENV_BLOCKED: system Git unavailable due Xcode license; license not accepted"
+  },
+  "environmentAdaptation": [
+    "Frontend mirror URL changed only in runtime-copy lockfile; versions and integrity unchanged",
+    "Backend tests run with explicit glob arguments on Node 24 after directory argument failed"
+  ],
+  "sourceModified": false
+}

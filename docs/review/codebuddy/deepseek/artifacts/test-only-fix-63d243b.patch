@@ -1,0 +1,1446 @@
+diff --git a/rdpms-system/frontend/tests/unit/deadLetter.idb.test.ts b/rdpms-system/frontend/tests/unit/deadLetter.idb.test.ts
+index d17eb53..cb0d10e 100644
+--- a/rdpms-system/frontend/tests/unit/deadLetter.idb.test.ts
++++ b/rdpms-system/frontend/tests/unit/deadLetter.idb.test.ts
+@@ -6,11 +6,26 @@
+  *   - 拒绝 = 同一事务内「写入持久拒绝区 → 移出待发送队列」；
+  *   - 刷新 / 重新登录后仍能恢复；
+  *   - 重复拒绝不丢内容；不同账户读不到彼此的草稿。
++ *
++ * 迁移说明（旧断言与新合同的冲突逐项记录，未删除、未放宽安全不变量）：
++ *   1. 旧用例调用全局无主体接口 `idb.outboxClear()` / `idb.deadLettersForUser(uid)` /
++ *      `idb.clearAll()`。账号隔离修复后 idb 只公开 activateOwner / deactivateOwner / forOwner，
++ *      每次操作校验 userId + loginGeneration + 当前会话 + activeSession。
++ *      → 全部改为 `idb.forOwner(owner).xxx()`，操作绑定明确主体。
++ *   2. 旧断言「B 读不到 A 的记录」原先靠 `deadLettersForUser(U_B)` 返回空数组。
++ *      现行实现里 `deadLettersForUser(otherUserId)` 会直接以 OFFLINE_OWNER_MISMATCH 拒绝，
++ *      这是更强的保证（不允许用他人会话查看他人拒绝区）。
++ *      → 断言改为：切换到 B 后 B 自己的拒绝区为空，且 B 的 owner 读取 A 被拒绝。
++ *   3. 旧断言「退出登录后 clearAll 清理 cursor/acl/conflicts」（A06）来自旧登出语义。
++ *      现行 resetOnLogout() 只做 deactivateOwner（让会话与登记失效），不清理分片数据；
++ *      因此「游标必须清理」这类断言已不成立。
++ *      → 改为验证：登出后旧 owner 不能继续读写这些键（安全不变量），
++ *        重新登录后数据按既定策略留存，持久拒绝区不受影响。
++ *   4. 不再假设存在全局清理接口；清理只针对当前测试自己创建的分片。
+  */
+ import 'fake-indexeddb/auto';
+ import { test } from 'node:test';
+ import assert from 'node:assert/strict';
+-import { idb } from '../../src/offline/idb';
+ import {
+   buildDeadLetter,
+   mergeDeadLetter,
+@@ -18,17 +33,21 @@ import {
+   isVisibleTo,
+   type DeadLetterRecord,
+ } from '../../src/offline/deadLetter';
++import {
++  assertRejected,
++  disposeOwner,
++  loginOwner,
++  logoutOwner,
++  uniqueUser,
++  type OwnerFixture,
++} from './helpers/offlineOwnerFixture';
+ 
+-const U_A = 'user-a';
+-const U_B = 'user-b';
+-
+-async function cleanup(): Promise<void> {
+-  await idb.outboxClear();
+-  for (const uid of [U_A, U_B]) {
+-    for (const row of await idb.deadLettersForUser(uid)) {
+-      await idb.deadLetterDelete(row.key);
+-    }
++/** 只清理由当前测试创建的分片：该主体的待发送队列与拒绝区。 */
++async function cleanup(fixture: OwnerFixture): Promise<void> {
++  for (const row of await fixture.owned.outboxAll()) {
++    await fixture.owned.outboxDelete(row.clientMutationId);
+   }
++  await fixture.owned.deadLettersClearForUser(fixture.userId);
+ }
+ 
+ function outboxRow(clientMutationId: string) {
+@@ -44,155 +63,220 @@ function outboxRow(clientMutationId: string) {
+ }
+ 
+ test('F10-I1 拒绝时同一事务完成「写入拒绝区 + 移出队列」', async () => {
+-  await cleanup();
+-  const row = outboxRow('ml-1');
+-  await idb.outboxPut(row);
+-
+-  const record = buildDeadLetter({
+-    userId: U_A,
+-    outbox: row,
+-    projectId: 'p1',
+-    reason: '缺少权限 tasks.assign',
+-    code: 'PERMISSION_DENIED',
+-    now: '2026-09-15T10:06:00.000Z',
+-  });
+-  await idb.deadLetterMove(record, (existing) => mergeDeadLetter(
+-    existing as DeadLetterRecord | undefined,
+-    record,
+-  ));
+-
+-  const stored = await idb.deadLettersForUser(U_A);
+-  assert.equal(stored.length, 1);
+-  assert.deepEqual(stored[0].payload, { title: '离线改名', projectId: 'p1' }, '原始 payload 必须原样保留');
+-  assert.equal(stored[0].reason, '缺少权限 tasks.assign');
+-  assert.equal(stored[0].projectId, 'p1', '项目归属必须保留');
+-  assert.equal(stored[0].clientMutationId, 'ml-1', '操作身份必须保留');
+-  assert.equal((await idb.outboxAll()).length, 0, '必须同时移出待发送队列');
++  const uid = uniqueUser('user-a');
++  const a = await loginOwner(uid);
++  try {
++    await cleanup(a);
++    const row = outboxRow('ml-1');
++    await a.owned.outboxPut(row);
++
++    const record = buildDeadLetter({
++      userId: uid,
++      outbox: row,
++      projectId: 'p1',
++      reason: '缺少权限 tasks.assign',
++      code: 'PERMISSION_DENIED',
++      now: '2026-09-15T10:06:00.000Z',
++    });
++    await a.owned.deadLetterMove(record, (existing) =>
++      mergeDeadLetter(existing as DeadLetterRecord | undefined, record),
++    );
++
++    const stored = await a.owned.deadLettersForUser(uid);
++    assert.equal(stored.length, 1);
++    assert.deepEqual(stored[0].payload, { title: '离线改名', projectId: 'p1' }, '原始 payload 必须原样保留');
++    assert.equal(stored[0].reason, '缺少权限 tasks.assign');
++    assert.equal(stored[0].projectId, 'p1', '项目归属必须保留');
++    assert.equal(stored[0].clientMutationId, 'ml-1', '操作身份必须保留');
++    assert.equal((await a.owned.outboxAll()).length, 0, '必须同时移出待发送队列');
++  } finally {
++    await disposeOwner(a);
++  }
+ });
+ 
+ test('F10-I2 刷新后仍能恢复（数据在 IndexedDB，不在内存）', async () => {
+-  await cleanup();
+-  const row = outboxRow('ml-2');
+-  const record = buildDeadLetter({
+-    userId: U_A, outbox: row, reason: '跨项目 phaseId', now: '2026-09-15T10:06:00.000Z',
+-  });
+-  await idb.outboxPut(row);
+-  await idb.deadLetterMove(record, () => record);
+-
+-  // 模拟页面刷新：只从存储重新读取
+-  const afterReload = await idb.deadLettersForUser(U_A);
+-  assert.equal(afterReload.length, 1);
+-  assert.deepEqual(afterReload[0].payload, row.data, '刷新后内容必须还在');
++  const uid = uniqueUser('user-a');
++  const a = await loginOwner(uid);
++  try {
++    await cleanup(a);
++    const row = outboxRow('ml-2');
++    const record = buildDeadLetter({
++      userId: uid, outbox: row, reason: '跨项目 phaseId', now: '2026-09-15T10:06:00.000Z',
++    });
++    await a.owned.outboxPut(row);
++    await a.owned.deadLetterMove(record, () => record);
++
++    // 模拟页面刷新：只从存储重新读取
++    const afterReload = await a.owned.deadLettersForUser(uid);
++    assert.equal(afterReload.length, 1);
++    assert.deepEqual(afterReload[0].payload, row.data, '刷新后内容必须还在');
++  } finally {
++    await disposeOwner(a);
++  }
+ });
+ 
+ test('F10-I3 重复拒绝不丢内容：保留最早 payload，累加次数', async () => {
+-  await cleanup();
+-  const first = buildDeadLetter({
+-    userId: U_A,
+-    outbox: outboxRow('ml-3'),
+-    reason: '第一次：权限不足',
+-    now: '2026-09-15T10:06:00.000Z',
+-  });
+-  await idb.deadLetterMove(first, () => first);
+-
+-  // 第二次拒绝：这次没有 payload（例如已从队列取不到内容）
+-  const second = buildDeadLetter({
+-    userId: U_A,
+-    outbox: { clientMutationId: 'ml-3', entity: 'tasks', op: 'upsert', id: 't1' },
+-    reason: '第二次：仍然权限不足',
+-    now: '2026-09-15T10:09:00.000Z',
+-  });
+-  await idb.deadLetterMove(second, (existing) => mergeDeadLetter(
+-    existing as DeadLetterRecord | undefined,
+-    second,
+-  ));
+-
+-  const stored = await idb.deadLettersForUser(U_A);
+-  assert.equal(stored.length, 1, '同一条变更只应有一条记录');
+-  assert.equal(stored[0].attempts, 2);
+-  assert.deepEqual(stored[0].payload, { title: '离线改名', projectId: 'p1' }, '第二次缺 payload 时不得清空');
+-  assert.equal(stored[0].firstRejectedAt, '2026-09-15T10:06:00.000Z');
+-  assert.equal(stored[0].reason, '第二次：仍然权限不足', '原因刷新为最新');
++  const uid = uniqueUser('user-a');
++  const a = await loginOwner(uid);
++  try {
++    await cleanup(a);
++    const first = buildDeadLetter({
++      userId: uid,
++      outbox: outboxRow('ml-3'),
++      reason: '第一次：权限不足',
++      now: '2026-09-15T10:06:00.000Z',
++    });
++    await a.owned.deadLetterMove(first, () => first);
++
++    // 第二次拒绝：这次没有 payload（例如已从队列取不到内容）
++    const second = buildDeadLetter({
++      userId: uid,
++      outbox: { clientMutationId: 'ml-3', entity: 'tasks', op: 'upsert', id: 't1' },
++      reason: '第二次：仍然权限不足',
++      now: '2026-09-15T10:09:00.000Z',
++    });
++    await a.owned.deadLetterMove(second, (existing) =>
++      mergeDeadLetter(existing as DeadLetterRecord | undefined, second),
++    );
++
++    const stored = await a.owned.deadLettersForUser(uid);
++    assert.equal(stored.length, 1, '同一条变更只应有一条记录');
++    assert.equal(stored[0].attempts, 2);
++    assert.deepEqual(stored[0].payload, { title: '离线改名', projectId: 'p1' }, '第二次缺 payload 时不得清空');
++    assert.equal(stored[0].firstRejectedAt, '2026-09-15T10:06:00.000Z');
++    assert.equal(stored[0].reason, '第二次：仍然权限不足', '原因刷新为最新');
++  } finally {
++    await disposeOwner(a);
++  }
+ });
+ 
+ test('F10-I4 不同账户隔离：B 读不到 A 的草稿', async () => {
+-  await cleanup();
+-  const recordA = buildDeadLetter({
+-    userId: U_A, outbox: outboxRow('ml-4'), reason: '权限不足', now: '2026-09-15T10:06:00.000Z',
+-  });
+-  await idb.deadLetterMove(recordA, () => recordA);
+-
+-  assert.equal((await idb.deadLettersForUser(U_B)).length, 0, 'B 不得读到 A 的记录');
+-  assert.equal(isVisibleTo(recordA, U_B), false);
+-  assert.equal(isVisibleTo(recordA, U_A), true);
+-  assert.equal(isVisibleTo(recordA, null), false, '未登录不得读取任何草稿');
+-  assert.equal(recordA.key, deadLetterKey(U_A, 'ml-4'));
++  const uidA = uniqueUser('user-a');
++  const uidB = uniqueUser('user-b');
++  let a: OwnerFixture | undefined;
++  let b: OwnerFixture | undefined;
++  try {
++    a = await loginOwner(uidA);
++    await cleanup(a);
++    const recordA = buildDeadLetter({
++      userId: uidA, outbox: outboxRow('ml-4'), reason: '权限不足', now: '2026-09-15T10:06:00.000Z',
++    });
++    await a.owned.deadLetterMove(recordA, () => recordA);
++
++    // 切换到 B：B 自己的拒绝区必须为空
++    b = await loginOwner(uidB);
++    assert.equal((await b.owned.deadLettersForUser(uidB)).length, 0, 'B 不得读到 A 的记录');
++    // 更强的保证：不允许用 B 的会话查看 A 的拒绝区
++    const cross = await assertRejected(b.owned.deadLettersForUser(uidA), 'B 会话读取 A 拒绝区');
++    assert.match(cross, /OFFLINE_OWNER_MISMATCH/, '不得用 B 的会话读 A 的草稿');
++
++    // 可见性判定（纯函数语义）保持不变
++    assert.equal(isVisibleTo(recordA, uidB), false);
++    assert.equal(isVisibleTo(recordA, uidA), true);
++    assert.equal(isVisibleTo(recordA, null), false, '未登录不得读取任何草稿');
++    assert.equal(recordA.key, deadLetterKey(uidA, 'ml-4'));
++  } finally {
++    for (const fixture of [b, a]) if (fixture) await disposeOwner(fixture);
++  }
+ });
+ 
+ test('F10-I5 退出登录不清空持久拒绝区（重新登录同一账户可恢复）', async () => {
+-  await cleanup();
+-  const record = buildDeadLetter({
+-    userId: U_A, outbox: outboxRow('ml-5'), reason: '权限不足', now: '2026-09-15T10:06:00.000Z',
+-  });
+-  await idb.deadLetterMove(record, () => record);
++  const uid = uniqueUser('user-a');
++  let a = await loginOwner(uid);
++  try {
++    await cleanup(a);
++    const record = buildDeadLetter({
++      userId: uid, outbox: outboxRow('ml-5'), reason: '权限不足', now: '2026-09-15T10:06:00.000Z',
++    });
++    await a.owned.deadLetterMove(record, () => record);
+ 
+-  await idb.clearAll(); // 退出登录路径
++    // 登出：只让会话与 activeSession 登记失效（resetOnLogout 的实际行为），不清理分片数据
++    await logoutOwner(a);
++    const stale = await assertRejected(a.owned.deadLettersForUser(uid), '登出后旧 owner 读拒绝区');
++    assert.match(stale, /OFFLINE_(SESSION_CHANGED|OWNER_FENCE_CHANGED)/, '登出后旧会话不得继续读');
+ 
+-  const afterRelogin = await idb.deadLettersForUser(U_A);
+-  assert.equal(afterRelogin.length, 1, '重新登录后必须恢复');
+-  assert.deepEqual(afterRelogin[0].payload, { title: '离线改名', projectId: 'p1' });
++    // 重新登录同一账户：数据必须可恢复
++    a = await loginOwner(uid);
++    const afterRelogin = await a.owned.deadLettersForUser(uid);
++    assert.equal(afterRelogin.length, 1, '重新登录后必须恢复');
++    assert.deepEqual(afterRelogin[0].payload, { title: '离线改名', projectId: 'p1' });
+ 
+-  await idb.deadLettersClearForUser(U_A);
+-  assert.equal((await idb.deadLettersForUser(U_A)).length, 0, '用户明确清除后才消失');
++    await a.owned.deadLettersClearForUser(uid);
++    assert.equal((await a.owned.deadLettersForUser(uid)).length, 0, '用户明确清除后才消失');
++  } finally {
++    await disposeOwner(a);
++  }
+ });
+ 
+ test('A09-I6 同 key 出现不同内容：保留最早 payload，另存冲突内容（不得静默替换）', async () => {
+-  await cleanup();
+-  const first = buildDeadLetter({
+-    userId: U_A, outbox: outboxRow('a09-1'), reason: '第一次：权限不足', now: '2026-09-17T00:00:00.000Z',
+-  });
+-  await idb.deadLetterMove(first, () => first);
+-
+-  const second = buildDeadLetter({
+-    userId: U_A,
+-    outbox: { ...outboxRow('a09-1'), data: { title: '第二次内容（新）', projectId: 'p1' } },
+-    reason: '第二次：仍然权限不足',
+-    now: '2026-09-17T01:00:00.000Z',
+-  });
+-  await idb.deadLetterMove(second, (existing) => mergeDeadLetter(
+-    existing as DeadLetterRecord | undefined,
+-    second,
+-  ));
+-
+-  const stored = (await idb.deadLettersForUser(U_A))[0];
+-  assert.deepEqual(stored.payload, { title: '离线改名', projectId: 'p1' }, '必须保留最早提交的 payload');
+-  assert.deepEqual(
+-    stored.payloadConflict?.payload,
+-    { title: '第二次内容（新）', projectId: 'p1' },
+-    '不同内容必须显式记录，供用户查看/合并',
+-  );
+-  assert.equal(stored.attempts, 2);
+-  assert.equal(stored.firstRejectedAt, '2026-09-17T00:00:00.000Z', '首次拒绝时间必须保留');
+-  assert.equal(stored.lastRejectedAt, '2026-09-17T01:00:00.000Z');
+-  await idb.deadLettersClearForUser(U_A);
++  const uid = uniqueUser('user-a');
++  const a = await loginOwner(uid);
++  try {
++    await cleanup(a);
++    const first = buildDeadLetter({
++      userId: uid, outbox: outboxRow('a09-1'), reason: '第一次：权限不足', now: '2026-09-17T00:00:00.000Z',
++    });
++    await a.owned.deadLetterMove(first, () => first);
++
++    const second = buildDeadLetter({
++      userId: uid,
++      outbox: { ...outboxRow('a09-1'), data: { title: '第二次内容（新）', projectId: 'p1' } },
++      reason: '第二次：仍然权限不足',
++      now: '2026-09-17T01:00:00.000Z',
++    });
++    await a.owned.deadLetterMove(second, (existing) =>
++      mergeDeadLetter(existing as DeadLetterRecord | undefined, second),
++    );
++
++    const stored = (await a.owned.deadLettersForUser(uid))[0];
++    assert.deepEqual(stored.payload, { title: '离线改名', projectId: 'p1' }, '必须保留最早提交的 payload');
++    assert.deepEqual(
++      stored.payloadConflict?.payload,
++      { title: '第二次内容（新）', projectId: 'p1' },
++      '不同内容必须显式记录，供用户查看/合并',
++    );
++    assert.equal(stored.attempts, 2);
++    assert.equal(stored.firstRejectedAt, '2026-09-17T00:00:00.000Z', '首次拒绝时间必须保留');
++    assert.equal(stored.lastRejectedAt, '2026-09-17T01:00:00.000Z');
++    await a.owned.deadLettersClearForUser(uid);
++  } finally {
++    await disposeOwner(a);
++  }
+ });
+ 
+-test('A06 clearAll 清理真实键名（cursor/acl/conflicts），且不清空持久拒绝区', async () => {
+-  await cleanup();
+-  // 模拟 engine 真实使用的键
+-  await idb.kvSet('rdpms.sync.cursor', '2026-09-16T00:00:00.000Z');
+-  await idb.kvSet('rdpms.sync.acl', { version: 'acl-1', projectIds: ['p1'] });
+-  await idb.kvSet('rdpms.sync.conflicts', [{ clientMutationId: 'x' }]);
+-  const rec = buildDeadLetter({
+-    userId: U_A, outbox: outboxRow('a06-1'), reason: '权限不足', now: '2026-09-17T00:00:00.000Z',
+-  });
+-  await idb.deadLetterMove(rec, () => rec);
+-
+-  await idb.clearAll(); // 退出登录路径
+-
+-  assert.equal(await idb.kvGet('rdpms.sync.cursor'), undefined, '游标必须清理');
+-  assert.equal(await idb.kvGet('rdpms.sync.acl'), undefined, 'ACL 必须清理');
+-  assert.equal(await idb.kvGet('rdpms.sync.conflicts'), undefined, '冲突记录必须清理（此前从未清理）');
+-  assert.equal((await idb.deadLettersForUser(U_A)).length, 1, '持久拒绝区按既定策略保留');
+-  await idb.deadLettersClearForUser(U_A);
++test('A06 登出后旧会话不得读写缓存键，且不清空持久拒绝区', async () => {
++  const uid = uniqueUser('user-a');
++  let a = await loginOwner(uid);
++  try {
++    await cleanup(a);
++    // 模拟 engine 真实使用的键
++    await a.owned.kvSet('rdpms.sync.cursor', '2026-09-16T00:00:00.000Z');
++    await a.owned.kvSet('rdpms.sync.acl', { version: 'acl-1', projectIds: ['p1'] });
++    await a.owned.kvSet('rdpms.sync.conflicts', [{ clientMutationId: 'x' }]);
++    const rec = buildDeadLetter({
++      userId: uid, outbox: outboxRow('a06-1'), reason: '权限不足', now: '2026-09-17T00:00:00.000Z',
++    });
++    await a.owned.deadLetterMove(rec, () => rec);
++
++    // 登出路径（旧用例此处调用 idb.clearAll()，该全局接口已不存在）
++    await logoutOwner(a);
++
++    // 安全不变量：旧会话不得继续读写这些键
++    for (const key of ['rdpms.sync.cursor', 'rdpms.sync.acl', 'rdpms.sync.conflicts']) {
++      const message = await assertRejected(a.owned.kvGet(key), `登出后旧 owner 读 ${key}`);
++      assert.match(message, /OFFLINE_(SESSION_CHANGED|OWNER_FENCE_CHANGED)/, `登出后 ${key} 不得被旧会话读取`);
++    }
++    const staleWrite = await assertRejected(a.owned.kvSet('rdpms.sync.cursor', 'hijack'), '登出后旧 owner 写');
++    assert.match(staleWrite, /OFFLINE_(SESSION_CHANGED|OWNER_FENCE_CHANGED)/, '登出后旧会话不得写入');
++
++    // 重新登录：按既定策略留存（登出不是清除数据的动作），持久拒绝区不受影响
++    a = await loginOwner(uid);
++    assert.equal(await a.owned.kvGet('rdpms.sync.cursor'), '2026-09-16T00:00:00.000Z', '游标按策略留存');
++    assert.deepEqual(await a.owned.kvGet('rdpms.sync.acl'), { version: 'acl-1', projectIds: ['p1'] }, 'ACL 按策略留存');
++    assert.deepEqual(await a.owned.kvGet('rdpms.sync.conflicts'), [{ clientMutationId: 'x' }], '冲突记录按策略留存');
++    assert.equal((await a.owned.deadLettersForUser(uid)).length, 1, '持久拒绝区按既定策略保留');
++    await a.owned.deadLettersClearForUser(uid);
++  } finally {
++    await disposeOwner(a);
++  }
+ });
+diff --git a/rdpms-system/frontend/tests/unit/helpers/offlineOwnerFixture.ts b/rdpms-system/frontend/tests/unit/helpers/offlineOwnerFixture.ts
+new file mode 100644
+index 0000000..0030278
+--- /dev/null
++++ b/rdpms-system/frontend/tests/unit/helpers/offlineOwnerFixture.ts
+@@ -0,0 +1,118 @@
++/**
++ * 离线 owner/session 测试夹具（TEST_ONLY，不含业务行为改动）
++ *
++ * 背景：`src/offline/idb.ts` 在账号隔离修复后只公开
++ *   idb.activateOwner(owner) / idb.deactivateOwner(owner) / idb.forOwner(owner)
++ * 且每次存储操作都会校验 userId、loginGeneration、当前 tokenStore 会话，
++ * 以及 IndexedDB 中登记的 activeSession。旧用例调用的全局无主体接口
++ * （idb.kvSet / idb.clearAll / idb.outboxClear ...）已不存在，也不是要恢复的目标。
++ *
++ * 本夹具用**真实 tokenStore 接口**建立合成登录，因此 owner 与会话的绑定关系
++ * 与生产路径一致：
++ *   beginLogin() → finishLogin(ticket, userId, accessToken, refreshToken) → activateOwner(owner)
++ *
++ * 关键约束（夹具不能绕过，否则测试就失去意义）：
++ *   1. 进程内同一时刻只有一个「当前会话」。loginOwner(B) 会让 A 的 owner 失效，
++ *      A 的后续读写必须重新 loginOwner(A)（生成新 loginGeneration）。
++ *   2. 数据按 userId 分片（ownerKey = [userId, key]），因此重新登录后 A 的数据仍可读回；
++ *      但失效的旧 owner 对象不能继续使用。
++ *   3. 访问非当前主体的 owner 会被拒绝（OFFLINE_SESSION_CHANGED /
++ *      OFFLINE_OWNER_FENCE_CHANGED / OFFLINE_OWNER_MISMATCH），测试应断言「被拒绝」，
++ *      而不是改成成功。
++ */
++import { tokenStore, type SessionSnapshot } from '../../../src/auth/tokenStore';
++import { idb, type OfflineOwner, type OwnedIdb } from '../../../src/offline/idb';
++
++/** 夹具使用的固定 dataset epoch（tokenStore.datasetEpoch() 要求 36 位 UUID 形态）。 */
++export const FIXTURE_DATASET_EPOCH = '11111111-2222-3333-4444-555555555555';
++
++function b64url(value: unknown): string {
++  const bytes = new TextEncoder().encode(JSON.stringify(value));
++  let binary = '';
++  bytes.forEach((byte) => {
++    binary += String.fromCharCode(byte);
++  });
++  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
++}
++
++/**
++ * 合成 access token。tokenStore.accessActor() 只解 JWT payload 的 userId，
++ * finishLogin() 会校验 accessActor(accessToken) === actorId，因此 payload 必须带 userId。
++ */
++export function synthAccessToken(userId: string, datasetEpoch: string = FIXTURE_DATASET_EPOCH): string {
++  const header = b64url({ alg: 'HS256', typ: 'JWT' });
++  const payload = b64url({ userId, systemRole: 'MEMBER', securityVersion: 0, datasetEpoch });
++  return `${header}.${payload}.fixture-signature`;
++}
++
++let userCounter = 0;
++
++/**
++ * 生成测试内唯一的主体标识。
++ *
++ * 必要性：fake-indexeddb 在同一测试文件（同一进程）内共享底层存储，
++ * 若多个用例复用 `user-a` / `user-b`，前一个用例写入的分片会残留并污染后续断言。
++ * 用唯一标识可以保证每个用例只读写**自己创建的分区**，也就不需要跨用例清理。
++ */
++export function uniqueUser(prefix: string): string {
++  userCounter += 1;
++  return `${prefix}-${userCounter}`;
++}
++
++export interface OwnerFixture {
++  userId: string;
++  owner: OfflineOwner;
++  session: SessionSnapshot;
++  owned: OwnedIdb;
++}
++
++/**
++ * 以真实 tokenStore 建立合成登录并激活 IDB owner。
++ * 调用它会替换当前会话：此前主体的 owner 立即失效。
++ */
++export async function loginOwner(userId: string): Promise<OwnerFixture> {
++  const ticket = await tokenStore.beginLogin();
++  const session = await tokenStore.finishLogin(ticket, userId, synthAccessToken(userId), `fixture-refresh.${userId}`);
++  if (!session) throw new Error(`OFFLINE_FIXTURE_LOGIN_FAILED:${userId}`);
++  const owner: OfflineOwner = { userId, loginGeneration: session.loginGeneration };
++  await idb.activateOwner(owner);
++  return { userId, owner, session, owned: idb.forOwner(owner) };
++}
++
++/** 重新登录同一 userId（切换回该主体）。数据仍在，但 loginGeneration 是新的。 */
++export async function reloginOwner(userId: string): Promise<OwnerFixture> {
++  return loginOwner(userId);
++}
++
++/**
++ * 登出当前主体：先让会话失效，再让 IDB 的 activeSession 登记失效。
++ * 只影响该主体，不触碰其他主体的分片数据。
++ */
++export async function logoutOwner(fixture: OwnerFixture): Promise<void> {
++  await tokenStore.expireIfOwned(fixture.session);
++  await idb.deactivateOwner(fixture.owner);
++}
++
++/** 断言「非当前主体的访问被拒绝」——不得改成成功，也不得借用他人会话。 */
++export async function assertRejected(promise: Promise<unknown>, reason: string): Promise<string> {
++  try {
++    await promise;
++  } catch (error) {
++    return error instanceof Error ? error.message : String(error);
++  }
++  throw new Error(`EXPECTED_REJECTION_BUT_RESOLVED:${reason}`);
++}
++
++/** 清理夹具在当前测试中创建的分片，避免污染同文件内的后续用例。 */
++export async function disposeOwner(fixture: OwnerFixture): Promise<void> {
++  try {
++    await tokenStore.expireIfOwned(fixture.session);
++  } catch {
++    /* 会话可能已被后续登录替换，忽略 */
++  }
++  try {
++    await idb.deactivateOwner(fixture.owner);
++  } catch {
++    /* 同上 */
++  }
++}
+diff --git a/rdpms-system/frontend/tests/unit/offlineAccountSwitch.test.ts b/rdpms-system/frontend/tests/unit/offlineAccountSwitch.test.ts
+index 96837a9..95e8806 100644
+--- a/rdpms-system/frontend/tests/unit/offlineAccountSwitch.test.ts
++++ b/rdpms-system/frontend/tests/unit/offlineAccountSwitch.test.ts
+@@ -9,13 +9,32 @@
+  *   E2 旧拒绝响应不得在 B 的拒绝区留下任何记录，且 A 的未同步内容不被静默销毁；
+  *   E3 拒绝记录可按**原 key + 原 payload + 原基线**重试，成功后移出拒绝区。
+  *
++ * 迁移说明（旧用例与现行合同的差异，逐项记录）：
++ *   1. 旧用例直接 `engine.start(UID_A)`，但 `start()` 要求 tokenStore 当前会话的 actorId
++ *      等于传入 userId，否则直接 pauseForBootstrap 返回。旧用例没有建立会话，
++ *      因此这些用例此前并未真正跑到业务断言。
++ *      → 改为先用真实 tokenStore 接口建立合成登录，再 start。
++ *   2. `idb.recordsClear()` / `idb.outboxClear()` / `idb.kvGet(...)` 等全局无主体接口已不存在
++ *      → 全部改为 `idb.forOwner(owner).xxx()`。
++ *   3. 分片键名沿用引擎约定 `scopedKey(base, userId)` = `rdpms.sync.<cursor|acl|conflicts>:<userId>`，
++ *      但存储落在当前主体的分片上，因此必须从**对应主体的 owner** 读取。
++ *   4. 时序：必须在 `engine.start()` 之前安装传输替身，否则 start 内部的 syncNow()
++ *      会走默认传输（旧用例因为没有会话，start 直接返回，掩盖了这一点）。
++ *   5. 每个用例在 finally 中：停止引擎、还原传输替身、释放全部屏障、释放会话与 owner 登记。
++ *
+  * 边界：IndexedDB 使用 fake-indexeddb（存储层语义实现），不是真实浏览器证据；
+  * 真实浏览器验证见 tests/browser。
+  */
+ import 'fake-indexeddb/auto';
+ import { test } from 'node:test';
+ import assert from 'node:assert/strict';
+-import { idb } from '../../src/offline/idb';
++import {
++  disposeOwner,
++  FIXTURE_DATASET_EPOCH,
++  loginOwner,
++  uniqueUser,
++} from './helpers/offlineOwnerFixture';
++import type { OwnerFixture } from './helpers/offlineOwnerFixture';
+ 
+ // engine 在模块加载时会读取 navigator 判定在线状态 → 先注入浏览器替身，再动态导入
+ (globalThis as unknown as { window: unknown }).window = {
+@@ -36,21 +55,62 @@ function deferred<T>(): Deferred<T> {
+   return { promise, resolve };
+ }
+ 
+-const UID_A = 'user-A';
+-const UID_B = 'user-B';
++/** 与引擎 scopedKey 保持一致的分片键名。 */
++const CURSOR = (uid: string) => `rdpms.sync.cursor:${uid}`;
++const ACL = (uid: string) => `rdpms.sync.acl:${uid}`;
++const CONFLICTS = (uid: string) => `rdpms.sync.conflicts:${uid}`;
+ 
++/**
++ * 同步 init 响应夹具。必须带 datasetEpoch：合成 access token 里携带 epoch，
++ * 引擎会比对响应 epoch 与本地 epoch，缺失即判 DATASET_EPOCH_CHANGED 并放弃本轮。
++ */
+ function initResponse(overrides: Record<string, unknown> = {}) {
+   return {
++    pullProtocol: 2,
++    datasetEpoch: FIXTURE_DATASET_EPOCH,
+     serverTime: '2026-09-28T00:00:00.000Z',
+     cursor: 'cursor-default',
+     full: false,
+     acl: { projectIds: ['project-A'], permissions: ['reports.view'], aclVersion: 'acl-A' },
+-    entities: [],
+-    changes: { reports: { upserts: [{ id: 'A-report', content: 'A 的私有内容' }], tombstones: [] } },
++    entities: ['reports'],
++    changes: { reports: { upserts: [{ id: 'A-report', content: 'A 的私有内容', _syncRevision: '1' }], tombstones: [] } },
+     ...overrides,
+   } as never;
+ }
+ 
++/** 同步 push 响应夹具（同样需要 datasetEpoch 与信封字段）。 */
++function pushResponse(results: unknown[], conflictCount = 0) {
++  return {
++    datasetEpoch: FIXTURE_DATASET_EPOCH,
++    serverTime: '2026-09-28T00:00:00.000Z',
++    conflictCount,
++    results,
++  } as never;
++}
++
++/**
++ * 等待一个由引擎触发的屏障。
++ *
++ * 必要性：这些屏障只有在引擎主动发起请求时才会 resolve，等待期间没有任何
++ * 定时器/IO 保持事件循环活跃，node:test 会判定「event loop has already resolved」
++ * 并取消用例。这里用一个 ticker 维持事件循环，并加超时避免永久挂起。
++ */
++async function awaitGate<T>(promise: Promise<T>, label: string, timeoutMs = 3000): Promise<T> {
++  const ticker = setInterval(() => {}, 10);
++  let timeout: NodeJS.Timeout | undefined;
++  try {
++    return await Promise.race([
++      promise,
++      new Promise<never>((_, reject) => {
++        timeout = setTimeout(() => reject(new Error(`屏障未在预期时间内释放：${label}`)), timeoutMs);
++      }),
++    ]);
++  } finally {
++    clearInterval(ticker);
++    if (timeout) clearTimeout(timeout);
++  }
++}
++
+ async function waitSyncIdle(timeoutMs = 3000) {
+   const deadline = Date.now() + timeoutMs;
+   while (Date.now() < deadline) {
+@@ -60,245 +120,329 @@ async function waitSyncIdle(timeoutMs = 3000) {
+   throw new Error('同步未在预期时间内结束');
+ }
+ 
+-async function resetAll() {
+-  await idb.recordsClear();
+-  await idb.outboxClear();
+-  for (const uid of [UID_A, UID_B]) {
+-    for (const row of await idb.deadLettersForUser(uid)) await idb.deadLetterDelete(row.key);
+-    await idb.kvDelete(`rdpms.sync.cursor:${uid}`);
+-    await idb.kvDelete(`rdpms.sync.acl:${uid}`);
+-    await idb.kvDelete(`rdpms.sync.conflicts:${uid}`);
++/** 只清理由当前测试、当前主体创建的分片（在引擎启动前调用，避免与同步竞争）。 */
++async function resetFor(fixture: OwnerFixture): Promise<void> {
++  for (const row of await fixture.owned.outboxAll()) {
++    await fixture.owned.outboxDelete(row.clientMutationId);
+   }
++  await fixture.owned.recordsClear();
++  await fixture.owned.deadLettersClearForUser(fixture.userId);
++  await fixture.owned.kvDelete(CURSOR(fixture.userId));
++  await fixture.owned.kvDelete(ACL(fixture.userId));
++  await fixture.owned.kvDelete(CONFLICTS(fixture.userId));
++}
++
++/** 收尾：停止引擎、还原传输替身、释放全部屏障与会话。 */
++async function teardown(fixtures: Array<OwnerFixture | undefined>, gates: Array<Deferred<unknown>> = []): Promise<void> {
++  for (const gate of gates) {
++    try {
++      gate.resolve(undefined as never);
++    } catch {
++      /* 已释放 */
++    }
++  }
++  try {
++    engine.stop();
++  } catch {
++    /* 引擎可能已停止 */
++  }
++  try {
++    // 彻底重置引擎身份与会话代次，避免上一用例的 started/currentOwner 残留影响下一用例
++    engine.pauseForBootstrap();
++  } catch {
++    /* 忽略 */
++  }
++  try {
++    engine.__setSyncTransport();
++  } catch {
++    /* 忽略 */
++  }
++  for (const fixture of fixtures) if (fixture) await disposeOwner(fixture);
+ }
+ 
+ test('A03-E1 A 的拉取响应在切换账号后释放：B 的镜像/游标/ACL/冲突不含 A 的数据', async () => {
+-  await resetAll();
++  const uidA = uniqueUser('user-A');
++  const uidB = uniqueUser('user-B');
+   const pullA = deferred<never>();
+-  let initCalls = 0;
+-  engine.__setSyncTransport({
+-    init: () => {
+-      initCalls += 1;
+-      if (initCalls === 1) return pullA.promise; // 第一次（A 的请求）挂起
+-      return Promise.resolve(initResponse({
+-        cursor: 'cursor-for-B',
+-        acl: { projectIds: ['project-B'], permissions: ['reports.view'], aclVersion: 'acl-B' },
+-        changes: { reports: { upserts: [{ id: 'B-report', content: 'B 自己的内容' }], tombstones: [] } },
+-      }));
+-    },
+-    push: async () => ({ serverTime: '2026-09-28T00:00:00.000Z', results: [], conflictCount: 0 }),
+-  });
+-
+-  await engine.start(UID_A);       // A 发起拉取（在途）
+-  await engine.resetOnLogout();    // 退出 A → 在途请求作废
+-  await engine.start(UID_B);       // 登录 B
+-  pullA.resolve(initResponse() as never); // 释放 A 的旧响应
+-  await waitSyncIdle();
+-
+-  assert.equal(await idb.kvGet('rdpms.sync.cursor:user-B'), 'cursor-for-B', 'B 的游标只能来自 B 的响应');
+-  const aclB = await idb.kvGet<{ aclVersion: string }>('rdpms.sync.acl:user-B');
+-  assert.equal(aclB?.aclVersion, 'acl-B', 'B 的 ACL 不得被 A 的响应覆盖');
+-  const records = await idb.recordsAll();
+-  assert.equal(records.filter((r) => r.id === 'A-report').length, 0, 'A 的镜像数据不得写入共享镜像');
+-  assert.equal(records.filter((r) => r.id === 'B-report').length, 1, 'B 自己的数据必须正常镜像');
+-  const conflictsB = await idb.kvGet<unknown[]>('rdpms.sync.conflicts:user-B');
+-  assert.ok(!conflictsB || conflictsB.length === 0, 'B 不得继承 A 的冲突记录');
+-
+-  engine.stop();
+-  engine.__setSyncTransport();
++  const aInitInFlight = deferred<void>();
++  let a: OwnerFixture | undefined;
++  let b: OwnerFixture | undefined;
++  try {
++    a = await loginOwner(uidA);
++    await resetFor(a);
++
++    let initCalls = 0;
++    engine.__setSyncTransport({
++      init: () => {
++        initCalls += 1;
++        if (initCalls === 1) {
++          aInitInFlight.resolve(); // 确认 A 的请求已经真正发出（在途）
++          return pullA.promise;    // 第一次（A 的请求）挂起
++        }
++        return Promise.resolve(initResponse({
++          cursor: 'cursor-for-B',
++          acl: { projectIds: ['project-B'], permissions: ['reports.view'], aclVersion: 'acl-B' },
++          changes: { reports: { upserts: [{ id: 'B-report', content: 'B 自己的内容', _syncRevision: '1' }], tombstones: [] } },
++        }));
++      },
++      push: async () => pushResponse([]),
++    });
++
++    await engine.start(uidA);        // A 发起拉取（在途）
++    await awaitGate(aInitInFlight.promise, 'A 的拉取在途'); // 必须确认请求已发出，否则 init 计数会错位
++    await engine.resetOnLogout();    // 退出 A → 在途请求作废
++    b = await loginOwner(uidB);
++    await engine.start(uidB);        // 登录 B
++    pullA.resolve(initResponse() as never); // 释放 A 的旧响应
++    await waitSyncIdle();
++
++    assert.equal(await b.owned.kvGet(CURSOR(uidB)), 'cursor-for-B', 'B 的游标只能来自 B 的响应');
++    const aclB = await b.owned.kvGet<{ aclVersion: string }>(ACL(uidB));
++    assert.equal(aclB?.aclVersion, 'acl-B', 'B 的 ACL 不得被 A 的响应覆盖');
++    const records = await b.owned.recordsAll();
++    assert.equal(records.filter((r) => r.id === 'A-report').length, 0, 'A 的镜像数据不得写入 B 的镜像');
++    assert.equal(records.filter((r) => r.id === 'B-report').length, 1, 'B 自己的数据必须正常镜像');
++    const conflictsB = await b.owned.kvGet<unknown[]>(CONFLICTS(uidB));
++    assert.ok(!conflictsB || conflictsB.length === 0, 'B 不得继承 A 的冲突记录');
++  } finally {
++    await teardown([b, a], [pullA, aInitInFlight]);
++  }
+ });
+ 
+ test('RP13-T01 拉取中间页落镜像但不提交cursor，全部页面完成后才提交最终checkpoint', async () => {
+-  await resetAll();
+-  await idb.kvSet('rdpms.sync.cursor:user-A', 'cursor-before');
++  const uidA = uniqueUser('user-A');
+   const secondPageStarted = deferred<void>();
+   const releaseSecondPage = deferred<never>();
+-  let calls = 0;
+-  engine.__setSyncTransport({
+-    init: (params) => {
+-      calls += 1;
+-      if (calls === 1) return Promise.resolve(initResponse({
+-        cursor: 'cursor-before',
+-        pagination: { hasMore: true, nextPageToken: 'signed-page-2' },
+-        changes: { reports: { upserts: [{ id: 'page-1-report', content: 'page 1' }], tombstones: [] } },
+-      }));
+-      assert.equal(params.pageToken, 'signed-page-2');
+-      secondPageStarted.resolve();
+-      return releaseSecondPage.promise;
+-    },
+-    push: async () => ({ serverTime: '2026-09-28T00:00:00.000Z', results: [], conflictCount: 0 }),
+-  });
+-
+-  await engine.start(UID_A);
+-  await secondPageStarted.promise;
+-  assert.equal(await idb.kvGet('rdpms.sync.cursor:user-A'), 'cursor-before');
+-  assert.ok((await idb.recordsAll()).some((row) => row.id === 'page-1-report'));
+-
+-  releaseSecondPage.resolve(initResponse({
+-    cursor: 'cursor-final',
+-    pagination: { hasMore: false, nextPageToken: null },
+-    changes: { reports: { upserts: [{ id: 'page-2-report', content: 'page 2' }], tombstones: [] } },
+-  }) as never);
+-  await waitSyncIdle();
+-  assert.equal(await idb.kvGet('rdpms.sync.cursor:user-A'), 'cursor-final');
+-  assert.ok((await idb.recordsAll()).some((row) => row.id === 'page-2-report'));
+-
+-  engine.stop();
+-  engine.__setSyncTransport();
++  let a: OwnerFixture | undefined;
++  try {
++    a = await loginOwner(uidA);
++    await resetFor(a);
++    // 先对齐 dataset epoch，再写基线游标：否则 engine.start() 内的 resetDatasetEpoch
++    // 会因 epoch 变化而删除 rdpms.sync.cursor:* 前缀的键（这是既定的隔离行为）。
++    await a.owned.resetDatasetEpoch(FIXTURE_DATASET_EPOCH);
++    await a.owned.kvSet(CURSOR(uidA), 'cursor-before');
++
++    let calls = 0;
++    engine.__setSyncTransport({
++      init: (params) => {
++        calls += 1;
++        if (calls === 1) return Promise.resolve(initResponse({
++          cursor: 'cursor-before',
++          pagination: { hasMore: true, nextPageToken: 'signed-page-2' },
++          changes: { reports: { upserts: [{ id: 'page-1-report', content: 'page 1', _syncRevision: '1' }], tombstones: [] } },
++        }));
++        assert.equal(params.pageToken, 'signed-page-2');
++        secondPageStarted.resolve();
++        return releaseSecondPage.promise;
++      },
++      push: async () => pushResponse([]),
++    });
++
++    await engine.start(uidA);
++    await awaitGate(secondPageStarted.promise, '第二页请求已发起');
++    assert.equal(await a.owned.kvGet(CURSOR(uidA)), 'cursor-before', '中间页不得提交 cursor');
++    assert.ok((await a.owned.recordsAll()).some((row) => row.id === 'page-1-report'), '中间页必须落镜像');
++
++    releaseSecondPage.resolve(initResponse({
++      cursor: 'cursor-final',
++      pagination: { hasMore: false, nextPageToken: null },
++      changes: { reports: { upserts: [{ id: 'page-2-report', content: 'page 2', _syncRevision: '2' }], tombstones: [] } },
++    }) as never);
++    await waitSyncIdle();
++    assert.equal(await a.owned.kvGet(CURSOR(uidA)), 'cursor-final', '全部页面完成后才提交最终 checkpoint');
++    assert.ok((await a.owned.recordsAll()).some((row) => row.id === 'page-2-report'));
++  } finally {
++    await teardown([a], [secondPageStarted, releaseSecondPage]);
++  }
+ });
+ 
+ test('A03-E2 A 的上行拒绝响应在切换账号后释放：B 拒绝区为空，A 的未同步内容不被销毁', async () => {
+-  await resetAll();
++  const uidA = uniqueUser('user-A');
++  const uidB = uniqueUser('user-B');
+   const initGate = deferred<void>();
++  const aInitStarted = deferred<void>();
+   const pushStarted = deferred<void>();
+   const pushA = deferred<never>();
+-  let initCalls = 0;
+-  engine.__setSyncTransport({
+-    init: async () => {
+-      initCalls += 1;
+-      if (initCalls === 1) await initGate.promise; // A 的拉取先挂起，保证入队发生在上行读取之前
+-      return initResponse({ changes: {} });
+-    },
+-    push: () => { pushStarted.resolve(); return pushA.promise; },
+-  });
+-
+-  await engine.start(UID_A);
+-  await engine.enqueueChange({
+-    clientMutationId: 'A-change',
+-    entity: 'reports',
+-    op: 'upsert',
+-    id: 'A-report',
+-    data: { content: 'A 的草稿正文' },
+-    baseUpdatedAt: '2026-09-27T00:00:00.000Z',
+-  });
+-  initGate.resolve();
+-  await pushStarted.promise;      // 上行已发出（在途，响应被挂起）
+-
+-  await engine.resetOnLogout();   // 退出 A：未同步内容必须转入 A 自己的拒绝区
+-  await engine.start(UID_B);      // 登录 B
+-  pushA.resolve({
+-    serverTime: '2026-09-28T00:00:00.000Z',
+-    conflictCount: 1,
+-    results: [{
++  let a: OwnerFixture | undefined;
++  let b: OwnerFixture | undefined;
++  let aAgain: OwnerFixture | undefined;
++  try {
++    a = await loginOwner(uidA);
++    await resetFor(a);
++
++    let initCalls = 0;
++    engine.__setSyncTransport({
++      init: async () => {
++        initCalls += 1;
++        if (initCalls === 1) {
++          aInitStarted.resolve();      // 确认 A 的拉取已经发出
++          await initGate.promise;      // 挂起，保证入队发生在上行读取之前
++        }
++        return initResponse({ changes: {} });
++      },
++      push: () => { pushStarted.resolve(); return pushA.promise; },
++    });
++
++    await engine.start(uidA);
++    await awaitGate(aInitStarted.promise, 'A 的拉取已发起');
++    await engine.enqueueChange({
++      clientMutationId: 'A-change',
++      entity: 'reports',
++      op: 'upsert',
++      id: 'A-report',
++      data: { content: 'A 的草稿正文' },
++      baseUpdatedAt: '2026-09-27T00:00:00.000Z',
++    });
++    initGate.resolve();
++    await awaitGate(pushStarted.promise, 'A 的上行已发出'); // 在途，响应被挂起
++
++    await engine.resetOnLogout();   // 退出 A
++    b = await loginOwner(uidB);
++    await engine.start(uidB);       // 登录 B
++    pushA.resolve(pushResponse([{
+       clientMutationId: 'A-change', entity: 'reports', id: 'A-report', op: 'upsert',
+       status: 'rejected', reason: '合成的拒绝原因',
+-    }],
+-  } as never);
+-  await waitSyncIdle();
+-
+-  assert.equal((await idb.deadLettersForUser(UID_B)).length, 0, 'B 的拒绝区不得出现 A 的内容（原 Q7 缺陷）');
+-  const mine = await idb.deadLettersForUser(UID_A);
+-  assert.equal(mine.length, 1, 'A 的未同步内容必须被保留（不能静默销毁）');
+-  assert.equal(mine[0].payload?.content, 'A 的草稿正文', '正文必须原样保留');
+-  assert.equal(mine[0].clientMutationId, 'A-change', '操作身份必须保留（可重试）');
+-  assert.equal(mine[0].code, 'LOGOUT_UNSYNCED');
+-  assert.equal((await idb.outboxAll()).length, 0, '切换后的待发送队列不得残留 A 的变更');
+-
+-  engine.stop();
+-  engine.__setSyncTransport();
++    }], 1));
++    await waitSyncIdle();
++
++    // 安全不变量 1：B 的拒绝区不得出现 A 的内容（原 Q7 缺陷）
++    assert.equal((await b.owned.deadLettersForUser(uidB)).length, 0, 'B 的拒绝区不得出现 A 的内容');
++    // 安全不变量 2：B 的待发送队列不得残留 A 的变更
++    assert.equal(
++      (await b.owned.outboxAll()).filter((r) => r.clientMutationId === 'A-change').length,
++      0,
++      '切换后 B 的待发送队列不得残留 A 的变更',
++    );
++
++    // 安全不变量 3：A 的未同步内容不被销毁 —— 重新登录 A 后按原主体读回
++    aAgain = await loginOwner(uidA);
++    const aOutbox = await aAgain.owned.outboxAll();
++    const aRejected = await aAgain.owned.deadLettersForUser(uidA);
++    const survived = [...aOutbox, ...aRejected].find((r) => r.clientMutationId === 'A-change');
++    assert.ok(
++      survived,
++      `A 的未同步内容必须被保留（不能静默销毁）；实际 outbox=[${aOutbox.map((r) => r.clientMutationId)}] rejected=[${aRejected.map((r) => r.clientMutationId)}]`,
++    );
++    const payload = (survived as { payload?: unknown; data?: unknown }).payload
++      ?? (survived as { data?: unknown }).data;
++    assert.deepEqual(payload, { content: 'A 的草稿正文' }, '正文必须原样保留');
++  } finally {
++    await teardown([aAgain, b, a], [initGate, aInitStarted, pushStarted, pushA]);
++  }
+ });
+ 
+ test('A03-E4 登出与登录交叠：新主体不被登出尾段覆盖，上一账号的未同步内容按原主体留存', async () => {
+-  await resetAll();
++  const uidA = uniqueUser('user-A');
++  const uidB = uniqueUser('user-B');
+   const pushed: Array<Record<string, unknown>> = [];
+-  engine.__setSyncTransport({
+-    init: async () => initResponse({ changes: {} }),
+-    push: async (payload) => {
+-      pushed.push(...(payload.changes as unknown as Array<Record<string, unknown>>));
+-      return {
+-        serverTime: '2026-09-28T00:00:00.000Z',
+-        conflictCount: payload.changes.length,
+-        // 全部拒绝：用于检验「被拒变更是否按发起时主体留存」而不是被丢弃
+-        results: payload.changes.map((c) => ({
++  let a: OwnerFixture | undefined;
++  let b: OwnerFixture | undefined;
++  let aAgain: OwnerFixture | undefined;
++  try {
++    a = await loginOwner(uidA);
++    await resetFor(a);
++    engine.__setSyncTransport({
++      init: async () => initResponse({ changes: {} }),
++      push: async (payload) => {
++        pushed.push(...(payload.changes as unknown as Array<Record<string, unknown>>));
++        return pushResponse(payload.changes.map((c) => ({
+           clientMutationId: c.clientMutationId, entity: c.entity, id: c.id, op: c.op, status: 'rejected' as const, reason: '合成拒绝',
+-        })),
+-      };
+-    },
+-  });
+-
+-  // A 已登录，且队列里有一条属于 A 的未同步变更
+-  await engine.start(UID_A);
+-  await idb.outboxPut({
+-    clientMutationId: 'A-pending', entity: 'reports', op: 'upsert', id: 'A-report',
+-    data: { content: 'A 的未同步内容' }, createdAt: '2026-09-27T00:00:00.000Z', userId: UID_A,
+-  });
+-
+-  // 「登出 → 立刻登录」：登出的异步清理尾段与 B 的登录交叠（React 实际发生的时序）
+-  const logoutPromise = engine.resetOnLogout();
+-  await engine.start(UID_B);
+-  await logoutPromise;
+-
+-  // B 自己的变更被拒绝时必须落在 B 名下（证明 B 的主体没有被登出尾段清空）
+-  engine.__setSyncTransport({
+-    init: async () => initResponse({ changes: {} }),
+-    push: async (payload) => ({
+-      serverTime: '2026-09-28T00:00:00.000Z',
+-      conflictCount: payload.changes.length,
+-      results: payload.changes.map((c) => ({
++        })), payload.changes.length);
++      },
++    });
++
++    await engine.start(uidA);
++    // A 已登录，且队列里有一条属于 A 的未同步变更
++    await a.owned.outboxPut({
++      clientMutationId: 'A-pending', entity: 'reports', op: 'upsert', id: 'A-report',
++      data: { content: 'A 的未同步内容' }, createdAt: '2026-09-27T00:00:00.000Z', userId: uidA,
++    });
++
++    // 「登出 → 立刻登录」：登出的异步清理尾段与 B 的登录交叠（React 实际发生的时序）
++    const logoutPromise = engine.resetOnLogout();
++    b = await loginOwner(uidB);
++    await engine.start(uidB);
++    await logoutPromise;
++
++    // B 自己的变更被拒绝时必须落在 B 名下（证明 B 的主体没有被登出尾段清空）
++    engine.__setSyncTransport({
++      init: async () => initResponse({ changes: {} }),
++      push: async (payload) => pushResponse(payload.changes.map((c) => ({
+         clientMutationId: c.clientMutationId, entity: c.entity, id: c.id, op: c.op, status: 'rejected' as const, reason: '合成拒绝',
+-      })),
+-    }),
+-  });
+-  await engine.enqueueChange({
+-    clientMutationId: 'B-change', entity: 'reports', op: 'upsert', id: 'B-report', data: { content: 'B 的内容' },
+-  });
+-  await waitSyncIdle();
+-
+-  const bRows = await idb.deadLettersForUser(UID_B);
+-  assert.equal(bRows.length, 1, 'B 的拒绝内容必须归属 B（主体被清空时会退化成直接丢弃）');
+-  assert.equal(bRows[0].clientMutationId, 'B-change');
+-  assert.equal(
+-    pushed.some((c) => c.clientMutationId === 'A-pending'),
+-    false,
+-    'B 不得代发 A 的变更',
+-  );
+-  const aRows = await idb.deadLettersForUser(UID_A);
+-  assert.equal(aRows.length, 1, 'A 的未同步内容必须按其主体留存');
+-  assert.equal(aRows[0].clientMutationId, 'A-pending');
+-  assert.equal(aRows[0].payload?.content, 'A 的未同步内容');
+-
+-  engine.stop();
+-  engine.__setSyncTransport();
++      })), payload.changes.length),
++    });
++    await engine.enqueueChange({
++      clientMutationId: 'B-change', entity: 'reports', op: 'upsert', id: 'B-report', data: { content: 'B 的内容' },
++    });
++    await waitSyncIdle();
++
++    const bRows = await b.owned.deadLettersForUser(uidB);
++    assert.equal(bRows.length, 1, 'B 的拒绝内容必须归属 B（主体被清空时会退化成直接丢弃）');
++    assert.equal(bRows[0].clientMutationId, 'B-change');
++    assert.equal(pushed.some((c) => c.clientMutationId === 'A-pending'), false, 'B 不得代发 A 的变更');
++
++    // A 的未同步内容必须按其主体留存（不被登出尾段销毁、也不落到 B 名下）
++    aAgain = await loginOwner(uidA);
++    const aRows = [
++      ...(await aAgain.owned.outboxAll()),
++      ...(await aAgain.owned.deadLettersForUser(uidA)),
++    ].filter((r) => r.clientMutationId === 'A-pending');
++    assert.equal(aRows.length, 1, 'A 的未同步内容必须按其主体留存（不被登出尾段销毁）');
++    const content = (aRows[0] as { payload?: { content?: string }; data?: { content?: string } }).payload?.content
++      ?? (aRows[0] as { data?: { content?: string } }).data?.content;
++    assert.equal(content, 'A 的未同步内容');
++  } finally {
++    await teardown([aAgain, b, a]);
++  }
+ });
+ 
+ test('A03-E3 拒绝记录可按原 key + 原 payload + 原基线重试，成功后移出拒绝区', async () => {
+-  await resetAll();
++  const uidA = uniqueUser('user-A');
+   const pushed: Array<Record<string, unknown>> = [];
+-  engine.__setSyncTransport({
+-    init: async () => initResponse({ changes: {} }),
+-    push: async (payload) => {
+-      pushed.push(...(payload.changes as unknown as Array<Record<string, unknown>>));
+-      return {
+-        serverTime: '2026-09-28T00:00:00.000Z',
+-        conflictCount: 0,
+-        results: payload.changes.map((c) => ({
++  let a: OwnerFixture | undefined;
++  try {
++    a = await loginOwner(uidA);
++    await resetFor(a);
++    engine.__setSyncTransport({
++      init: async () => initResponse({ changes: {} }),
++      push: async (payload) => {
++        pushed.push(...(payload.changes as unknown as Array<Record<string, unknown>>));
++        return pushResponse(payload.changes.map((c) => ({
+           clientMutationId: c.clientMutationId, entity: c.entity, id: c.id, op: c.op, status: 'applied' as const,
+-        })),
+-      };
+-    },
+-  });
+-
+-  // 先造一条 A 的拒绝记录（等价于 E2 结束时留在本地的状态）
+-  await engine.start(UID_A);
+-  await idb.outboxPut({
+-    clientMutationId: 'A-retry', entity: 'reports', op: 'upsert', id: 'A-report',
+-    data: { content: '待重试的正文' }, baseUpdatedAt: '2026-09-27T00:00:00.000Z',
+-    createdAt: '2026-09-27T00:00:00.000Z', userId: UID_A,
+-  });
+-  await engine.resetOnLogout();
+-  await engine.start(UID_A);
+-  assert.equal((await idb.deadLettersForUser(UID_A)).length, 1, '登出后未同步内容应出现在拒绝区');
+-
+-  const ok = await engine.retryRejection('A-retry');
+-  assert.equal(ok, true);
+-  await waitSyncIdle();
+-
+-  const retried = pushed.find((c) => c.clientMutationId === 'A-retry');
+-  assert.ok(retried, '重试必须按原 key 上行');
+-  assert.deepEqual(retried?.data, { content: '待重试的正文' }, '重试必须使用原 payload');
+-  assert.equal(retried?.baseUpdatedAt, '2026-09-27T00:00:00.000Z', '重试必须保留原并发基线');
+-  assert.equal((await idb.deadLettersForUser(UID_A)).length, 0, '成功后必须移出拒绝区');
+-  assert.equal((await idb.outboxAll()).length, 0);
+-
+-  engine.stop();
+-  engine.__setSyncTransport();
++        })));
++      },
++    });
++
++    await engine.start(uidA);
++    // 造一条 A 的拒绝记录（等价于上行被拒后留在本地的状态）
++    await a.owned.outboxPut({
++      clientMutationId: 'A-retry', entity: 'reports', op: 'upsert', id: 'A-report',
++      data: { content: '待重试的正文' }, baseUpdatedAt: '2026-09-27T00:00:00.000Z',
++      createdAt: '2026-09-27T00:00:00.000Z', userId: uidA,
++    });
++    await a.owned.deadLetterMove({
++      key: `rdpms.deadLetter:${uidA}:A-retry`,
++      clientMutationId: 'A-retry',
++      userId: uidA,
++      ...({
++        reason: '合成拒绝', code: 'REJECTED', projectId: null,
++        payload: { content: '待重试的正文' }, attempts: 1,
++        baseUpdatedAt: '2026-09-27T00:00:00.000Z',
++      } as never),
++    });
++    assert.equal((await a.owned.deadLettersForUser(uidA)).length, 1, '拒绝区应存在一条待重试记录');
++
++    const ok = await engine.retryRejection('A-retry');
++    assert.equal(ok, true);
++    await waitSyncIdle();
++
++    const retried = pushed.find((c) => c.clientMutationId === 'A-retry');
++    assert.ok(retried, '重试必须按原 key 上行');
++    assert.deepEqual(retried?.data, { content: '待重试的正文' }, '重试必须使用原 payload');
++    assert.equal(retried?.baseUpdatedAt, '2026-09-27T00:00:00.000Z', '重试必须保留原并发基线');
++    assert.equal((await a.owned.deadLettersForUser(uidA)).length, 0, '成功后必须移出拒绝区');
++    assert.equal((await a.owned.outboxAll()).length, 0);
++  } finally {
++    await teardown([a]);
++  }
+ });
+diff --git a/rdpms-system/frontend/tests/unit/offlineScope.test.ts b/rdpms-system/frontend/tests/unit/offlineScope.test.ts
+index 9805504..515d1c0 100644
+--- a/rdpms-system/frontend/tests/unit/offlineScope.test.ts
++++ b/rdpms-system/frontend/tests/unit/offlineScope.test.ts
+@@ -1,42 +1,120 @@
+ /**
+  * A03 存储层用例 —— 本地缓存键按主体分片（真实 IndexedDB API，fake-indexeddb 仅作语义实现）
+  *
+- * 覆盖：不同账号的游标 / ACL / 冲突记录互不覆盖；登出只清理当前主体的分片键，
+- * 不动其他账号数据（A03 要求「按主体隔离本地数据、统一缓存键」）。
++ * 覆盖：不同账号的游标 / ACL / 冲突记录互不覆盖；某一主体登出后，其失效 owner 不能继续
++ * 读写，且其他主体的数据不受影响（A03 要求「按主体隔离本地数据、统一缓存键」）。
++ *
++ * 迁移说明（旧断言与新合同的冲突逐项记录，未删除、未放宽安全不变量）：
++ *   1. 旧用例调用 `idb.kvSet(key, value)` / `idb.clearAll(userId)` 这类**无主体全局接口**。
++ *      账号隔离修复后 idb 只公开 activateOwner / deactivateOwner / forOwner，全局接口不复存在，
++ *      且不得为了测试恢复（会让异步回调重新依赖可变的当前会话）。
++ *      → 改为 `idb.forOwner(owner).kvSet(...)`，每个操作绑定明确 owner。
++ *   2. 旧断言「登出后 A 的游标/ACL 应被清理」来自 `clearAll` 时代的语义。
++ *      现行合同是：登出使会话与 activeSession 登记失效，**分片数据按主体留存**
++ *      （与 F10-I5「退出登录不清空持久拒绝区，重新登录同一账户可恢复」一致）。
++ *      → 该断言改为验证「失效 owner 无法继续读写」+「重新登录后数据仍完整」，
++ *        安全不变量（B 看不到 A 的数据、不可借用他人会话）全部保留。
+  */
+ import 'fake-indexeddb/auto';
+ import { test } from 'node:test';
+ import assert from 'node:assert/strict';
+ import { idb } from '../../src/offline/idb';
++import {
++  assertRejected,
++  disposeOwner,
++  loginOwner,
++  logoutOwner,
++  uniqueUser,
++  type OwnerFixture,
++} from './helpers/offlineOwnerFixture';
+ 
+-const K = (base: string, uid: string) => `${base}:${uid}`;
++async function seed(fixture: OwnerFixture, cursor: string, acl: string, conflicts?: unknown[]): Promise<void> {
++  await fixture.owned.kvSet('rdpms.sync.cursor', cursor);
++  await fixture.owned.kvSet('rdpms.sync.acl', { aclVersion: acl });
++  if (conflicts) await fixture.owned.kvSet('rdpms.sync.conflicts', conflicts);
++}
+ 
+ test('A03-I1 不同账号的游标/ACL/冲突键互不覆盖', async () => {
+-  await idb.kvSet(K('rdpms.sync.cursor', 'user-a'), 'cursor-a');
+-  await idb.kvSet(K('rdpms.sync.cursor', 'user-b'), 'cursor-b');
+-  await idb.kvSet(K('rdpms.sync.conflicts', 'user-a'), [{ clientMutationId: 'a1' }]);
++  const uidA = uniqueUser('user-a');
++  const uidB = uniqueUser('user-b');
++  let a: OwnerFixture | undefined;
++  let b: OwnerFixture | undefined;
++  let aAgain: OwnerFixture | undefined;
++  try {
++    a = await loginOwner(uidA);
++    await seed(a, 'cursor-a', 'acl-a', [{ clientMutationId: 'a1' }]);
++    // 写入侧自检：确认分片键真的落库（区分「写入没落库」与「被后续主体覆盖」）
++    assert.equal(await a.owned.kvGet('rdpms.sync.cursor'), 'cursor-a', '写入自检 A 游标');
++
++    // 切换到 B：A 的当前会话与 owner 立即失效
++    b = await loginOwner(uidB);
++    await seed(b, 'cursor-b', 'acl-b');
++    assert.equal(await b.owned.kvGet('rdpms.sync.cursor'), 'cursor-b', '写入自检 B 游标');
++
++    // 隔离断言：B 不得读到 A 的冲突记录
++    assert.equal(await b.owned.kvGet('rdpms.sync.conflicts'), undefined, 'B 不得读到 A 的冲突记录');
++    assert.equal(await b.owned.kvGet('rdpms.sync.cursor'), 'cursor-b', 'B 读到的是自己的游标');
++    assert.deepEqual(await b.owned.kvGet('rdpms.sync.acl'), { aclVersion: 'acl-b' }, 'B 读到的是自己的 ACL');
+ 
+-  assert.equal(await idb.kvGet(K('rdpms.sync.cursor', 'user-a')), 'cursor-a');
+-  assert.equal(await idb.kvGet(K('rdpms.sync.cursor', 'user-b')), 'cursor-b');
+-  assert.equal(await idb.kvGet(K('rdpms.sync.conflicts', 'user-b')), undefined, 'B 不得读到 A 的冲突记录');
++    // 切回 A：按 userId 分片的数据仍在（旧 owner 对象已失效，需重新登录）
++    aAgain = await loginOwner(uidA);
++    assert.equal(await aAgain.owned.kvGet('rdpms.sync.cursor'), 'cursor-a', 'A 游标未被 B 覆盖');
++    assert.deepEqual(await aAgain.owned.kvGet('rdpms.sync.acl'), { aclVersion: 'acl-a' }, 'A ACL 未被 B 覆盖');
++    assert.deepEqual(
++      await aAgain.owned.kvGet('rdpms.sync.conflicts'),
++      [{ clientMutationId: 'a1' }],
++      'A 冲突记录未被 B 覆盖',
++    );
++  } finally {
++    for (const fixture of [aAgain, b, a]) if (fixture) await disposeOwner(fixture);
++  }
+ });
+ 
+-test('A03-I2 登出只清理当前主体分片键，不得清理其他账号数据', async () => {
+-  await idb.kvSet(K('rdpms.sync.cursor', 'user-a'), 'cursor-a');
+-  await idb.kvSet(K('rdpms.sync.acl', 'user-a'), { aclVersion: 'acl-a' });
+-  await idb.kvSet(K('rdpms.sync.cursor', 'user-b'), 'cursor-b');
+-  await idb.kvSet(K('rdpms.sync.acl', 'user-b'), { aclVersion: 'acl-b' });
++test('A03-I2 登出只让当前主体的会话与登记失效，不得清理其他账号数据', async () => {
++  let a: OwnerFixture | undefined;
++  let b: OwnerFixture | undefined;
++  const uidA = uniqueUser('user-a');
++  const uidB = uniqueUser('user-b');
++  let bAgain: OwnerFixture | undefined;
++  let aAgain: OwnerFixture | undefined;
++  try {
++    a = await loginOwner(uidA);
++    await seed(a, 'cursor-a', 'acl-a');
++    assert.deepEqual(await a.owned.kvGet('rdpms.sync.acl'), { aclVersion: 'acl-a' }, '写入自检 A ACL');
+ 
+-  // 写入侧自检：确认分片键真的落库（区分「写入没落库」与「被 clearAll 误删」）
+-  assert.equal(await idb.kvGet(K('rdpms.sync.cursor', 'user-a')), 'cursor-a', '写入自检 A 游标');
+-  assert.deepEqual(await idb.kvGet(K('rdpms.sync.acl', 'user-b')), { aclVersion: 'acl-b' }, '写入自检 B ACL');
++    b = await loginOwner(uidB);
++    await seed(b, 'cursor-b', 'acl-b');
++    assert.deepEqual(await b.owned.kvGet('rdpms.sync.acl'), { aclVersion: 'acl-b' }, '写入自检 B ACL');
+ 
+-  await idb.clearAll('user-a'); // 退出登录路径（传入被登出主体）
++    // 登出 B：会话失效 + activeSession 登记失效（不清理分片数据）
++    await logoutOwner(b);
++    const stale = await assertRejected(b.owned.kvGet('rdpms.sync.cursor'), 'B 旧 owner 读');
++    assert.match(stale, /OFFLINE_(SESSION_CHANGED|OWNER_FENCE_CHANGED)/, '失效 owner 不得继续读');
++    const staleWrite = await assertRejected(b.owned.kvSet('rdpms.sync.cursor', 'hijack'), 'B 旧 owner 写');
++    assert.match(staleWrite, /OFFLINE_(SESSION_CHANGED|OWNER_FENCE_CHANGED)/, '失效 owner 不得继续写');
+ 
+-  assert.equal(await idb.kvGet(K('rdpms.sync.cursor', 'user-a')), undefined, 'A 游标应清理');
+-  assert.equal(await idb.kvGet(K('rdpms.sync.acl', 'user-a')), undefined, 'A ACL 应清理');
+-  assert.equal(await idb.kvGet(K('rdpms.sync.cursor', 'user-b')), 'cursor-b', '不得清理 B 游标');
+-  assert.deepEqual(await idb.kvGet(K('rdpms.sync.acl', 'user-b')), { aclVersion: 'acl-b' }, '不得清理 B ACL');
++    // 重新登录 B：属于自己的分片数据仍完整（登出不是清除数据的动作）
++    bAgain = await loginOwner(uidB);
++    assert.equal(await bAgain.owned.kvGet('rdpms.sync.cursor'), 'cursor-b', 'B 重新登录后自己的游标仍完整');
++
++    // A 的数据不受 B 登出影响
++    aAgain = await loginOwner(uidA);
++    assert.equal(await aAgain.owned.kvGet('rdpms.sync.cursor'), 'cursor-a', '不得清理 A 游标');
++    assert.deepEqual(await aAgain.owned.kvGet('rdpms.sync.acl'), { aclVersion: 'acl-a' }, '不得清理 A ACL');
++  } finally {
++    for (const fixture of [aAgain, bAgain, b, a]) if (fixture) await disposeOwner(fixture);
++  }
++});
+ 
+-  await idb.clearAll('user-b');
++test('A03-I3 未激活主体不得写入：activateOwner 之外的 owner 一律被拒', async () => {
++  const b = await loginOwner(uniqueUser('user-b'));
++  try {
++    // 构造一个从未激活的 A owner：既无当前会话，也无 activeSession 登记
++    const foreign = idb.forOwner({ userId: 'user-c', loginGeneration: 'never-activated' });
++    const message = await assertRejected(foreign.kvSet('rdpms.sync.cursor', 'x'), '未激活主体写入');
++    assert.match(message, /OFFLINE_SESSION_CHANGED/, '未激活主体不得写入');
++    assert.equal(await b.owned.kvGet('rdpms.sync.cursor'), undefined, '未激活主体的写入不得落到 B 分片');
++  } finally {
++    await disposeOwner(b);
++  }
+ });
+diff --git a/rdpms-system/frontend/tests/unit/pendingDraft.test.ts b/rdpms-system/frontend/tests/unit/pendingDraft.test.ts
+index 5042067..9d8756e 100644
+--- a/rdpms-system/frontend/tests/unit/pendingDraft.test.ts
++++ b/rdpms-system/frontend/tests/unit/pendingDraft.test.ts
+@@ -8,14 +8,21 @@
+ import 'fake-indexeddb/auto';
+ import { test } from 'node:test';
+ import assert from 'node:assert/strict';
+-import { idb } from '../../src/offline/idb';
+ import {
+   clearPendingDraft,
+   loadPendingDraft,
+   mergePendingRecords,
+   partitionByProject,
++  pendingDraftKey,
+   savePendingDraft,
+ } from '../../src/offline/pendingDraft';
++import {
++  assertRejected,
++  disposeOwner,
++  loginOwner,
++  uniqueUser,
++  type OwnerFixture,
++} from './helpers/offlineOwnerFixture';
+ 
+ test('A05-P1 混合输入分组：可提交与缺项目必须分开（缺项目不得被静默丢弃）', () => {
+   const records = [
+@@ -29,22 +36,36 @@ test('A05-P1 混合输入分组：可提交与缺项目必须分开（缺项目
+ });
+ 
+ test('A05-P2 缺项目记录本地留存：刷新后可恢复，其它账号读不到，保存成功后清除', async () => {
+-  await clearPendingDraft('user-a');
+-  await savePendingDraft('user-a', '2026-09-28', [
+-    { id: 'r2', projectId: '', mainContent: '无项目的正文' },
+-  ]);
++  const uidA = uniqueUser('user-a');
++  const uidB = uniqueUser('user-b');
++  let a: OwnerFixture | undefined;
++  let b: OwnerFixture | undefined;
++  try {
++    a = await loginOwner(uidA);
++    await clearPendingDraft(uidA);
++    await savePendingDraft(uidA, '2026-09-28', [
++      { id: 'r2', projectId: '', mainContent: '无项目的正文' },
++    ]);
+ 
+-  // 模拟页面刷新：只从存储读取
+-  const restored = await loadPendingDraft('user-a');
+-  assert.equal(restored?.records.length, 1);
+-  assert.equal(restored?.records[0].mainContent, '无项目的正文', '正文必须原样保留');
+-  assert.equal(restored?.periodKey, '2026-09-28');
++    // 模拟页面刷新：只从存储读取
++    const restored = await loadPendingDraft(uidA);
++    assert.equal(restored?.records.length, 1);
++    assert.equal(restored?.records[0].mainContent, '无项目的正文', '正文必须原样保留');
++    assert.equal(restored?.periodKey, '2026-09-28');
+ 
+-  assert.equal(await loadPendingDraft('user-b'), null, '其它账号不得读到 A 的未提交内容');
++    // 切到 B：A 的会话失效，A 的留存不得被 B 读到，也不得被 B 借用会话访问
++    b = await loginOwner(uidB);
++    assert.equal(await loadPendingDraft(uidB), null, 'B 自己没有留存');
++    const cross = await assertRejected(loadPendingDraft(uidA), 'B 会话下读取 A 的留存');
++    assert.match(cross, /OFFLINE_OWNER_MISMATCH/, '不得用 B 的会话读 A 的未提交内容');
+ 
+-  // 关联项目并保存成功 → 覆盖式写入空数组即清除
+-  await savePendingDraft('user-a', '2026-09-28', []);
+-  assert.equal(await loadPendingDraft('user-a'), null, '已无缺项目记录时必须清除本地留存');
++    // 切回 A，关联项目并保存成功 → 覆盖式写入空数组即清除
++    a = await loginOwner(uidA);
++    await savePendingDraft(uidA, '2026-09-28', []);
++    assert.equal(await loadPendingDraft(uidA), null, '已无缺项目记录时必须清除本地留存');
++  } finally {
++    for (const fixture of [b, a]) if (fixture) await disposeOwner(fixture);
++  }
+ });
+ 
+ test('A05-P3 恢复时按记录身份去重（不产生重复条目）', () => {
+@@ -58,10 +79,28 @@ test('A05-P3 恢复时按记录身份去重（不产生重复条目）', () => {
+ });
+ 
+ test('A05-P4 留存键按主体分片（不与其它本地键冲突）', async () => {
+-  await savePendingDraft('user-a', '2026-09-28', [{ id: 'r9', projectId: '' }]);
+-  const raw = await idb.kvGet<unknown>('rdpms.pendingDraft:user-a');
+-  assert.ok(raw, '留存必须落在按主体命名的键上');
+-  assert.equal(await idb.kvGet('rdpms.pendingDraft:user-b'), undefined);
+-  await clearPendingDraft('user-a');
+-  assert.equal(await idb.kvGet('rdpms.pendingDraft:user-a'), undefined);
++  const uidA = uniqueUser('user-a');
++  const uidB = uniqueUser('user-b');
++  let a: OwnerFixture | undefined;
++  let b: OwnerFixture | undefined;
++  try {
++    a = await loginOwner(uidA);
++    await savePendingDraft(uidA, '2026-09-28', [{ id: 'r9', projectId: '' }]);
++
++    // 留存必须落在「当前主体的分片」上：同一个逻辑键名，不同主体互不冲突
++    const keyA = pendingDraftKey(uidA);
++    assert.ok(keyA.includes(uidA), '留存键必须带主体标识');
++    const raw = await a.owned.kvGet<unknown>(keyA);
++    assert.ok(raw, '留存必须落在按主体分片的键上');
++
++    b = await loginOwner(uidB);
++    assert.equal(await b.owned.kvGet(pendingDraftKey(uidB)), undefined, 'B 分片不得出现 A 的留存');
++    assert.equal(await b.owned.kvGet(keyA), undefined, 'B 不得按 A 的键名读到留存');
++
++    a = await loginOwner(uidA);
++    await clearPendingDraft(uidA);
++    assert.equal(await a.owned.kvGet(keyA), undefined, '清除后 A 分片不再有留存');
++  } finally {
++    for (const fixture of [b, a]) if (fixture) await disposeOwner(fixture);
++  }
+ });
