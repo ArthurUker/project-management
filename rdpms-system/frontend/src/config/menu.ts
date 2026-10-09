@@ -32,6 +32,13 @@ export interface MenuItem {
   perm?: MaybePerm | MaybePerm[];
   icon?: LucideIcon;
   children?: MenuItem[];
+  /**
+   * 标记「二级菜单在运行时由数据构建」。
+   * 目前只有知识库使用：它的分类存在数据库里（用户可增删），
+   * 静态配置无法覆盖，因此由 buildKnowledgeChildren() 在拿到分类后替换 children；
+   * 配置里的 children 仅作为分类尚未加载 / 请求失败时的兜底。
+   */
+  dynamic?: 'knowledge-categories';
 }
 
 export const MENU: MenuItem[] = [
@@ -58,12 +65,16 @@ export const MENU: MenuItem[] = [
     path: '/knowledge',
     perm: PERMS.DOCS_VIEW,
     icon: BookOpen,
+    // 二级菜单运行时按后端分类构建（见 buildKnowledgeChildren）；
+    // 下列静态项是分类未加载完成或请求失败时的兜底。
+    dynamic: 'knowledge-categories',
     children: [
+      { key: 'k-docs', label: '全部文档', path: '/knowledge', perm: PERMS.DOCS_VIEW },
       { key: 'k-primers', label: '引物探针库', path: '/knowledge?module=primers', perm: PERMS.PRIMERS_VIEW },
-      { key: 'k-reagents', label: '试剂库', path: '/knowledge?module=reagents', perm: PERMS.REAGENTS_VIEW },
+      { key: 'k-reagents', label: '试剂原料库', path: '/knowledge?module=reagents', perm: PERMS.REAGENTS_VIEW },
       { key: 'k-samples', label: '样本库', path: '/knowledge?module=samples', perm: PERMS.SAMPLES_VIEW },
     ],
-  },
+    },
   { key: 'tasks', label: '任务管理', path: '/tasks', perm: PERMS.TASKS_VIEW, icon: ListChecks },
   {
     key: 'templates',
@@ -104,6 +115,48 @@ export const MENU: MenuItem[] = [
     ],
   },
 ];
+
+export interface KnowledgeCategory {
+  id: string;
+  name: string;
+}
+
+/**
+ * 知识库分类 → 权限位。
+ *
+ * 分类本身没有独立权限位（它是用户可增删的数据），因此：
+ *   - 有对应权限位的分类，按其权限位控制可见性（与改造前的 3 个入口一致）；
+ *   - 其余分类统一用 docs.view，与知识库页面内的可见范围保持一致。
+ */
+const KNOWLEDGE_CATEGORY_PERM: Record<string, MaybePerm> = {
+  引物探针库: PERMS.PRIMERS_VIEW,
+  试剂原料库: PERMS.REAGENTS_VIEW,
+  样本库: PERMS.SAMPLES_VIEW,
+};
+
+/**
+ * 依据后端返回的知识库分类构建二级菜单。
+ *
+ * 结构：全部文档 → 各分类（顺序与后端返回一致，即页面顶部分类按钮的顺序）→ 法规知识库。
+ * 这样侧边栏与知识库页面内的分类始终一致，用户新增分类后无需改代码。
+ */
+export function buildKnowledgeChildren(categories: KnowledgeCategory[]): MenuItem[] {
+  return [
+    { key: 'k-docs', label: '全部文档', path: '/knowledge', perm: PERMS.DOCS_VIEW },
+    ...categories.map((cat) => ({
+      key: `k-cat-${cat.id}`,
+      label: cat.name,
+      path: `/knowledge?category=${cat.id}`,
+      perm: KNOWLEDGE_CATEGORY_PERM[cat.name] ?? PERMS.DOCS_VIEW,
+    })),
+    {
+      key: 'k-regulatory',
+      label: '法规知识库',
+      path: '/knowledge?module=regulatory',
+      perm: PERMS.REGULATORY_DOCUMENTS_VIEW,
+    },
+  ];
+}
 
 /** 按 permissions 递归过滤菜单 */
 export function filterMenu(items: MenuItem[], permissions: string[]): MenuItem[] {

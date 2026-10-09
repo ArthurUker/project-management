@@ -62,6 +62,7 @@ export default function Docs() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const moduleParam = searchParams.get('module');
+  const categoryParam = searchParams.get('category');
   const [activeModule, setActiveModule] = useState<'docs' | 'regulatory'>(moduleParam === 'regulatory' ? 'regulatory' : 'docs');
 
   const [categories, setCategories] = useState<DocCategory[]>([]);
@@ -105,23 +106,35 @@ export default function Docs() {
 
   useEffect(() => {
     setActiveModule(moduleParam === 'regulatory' ? 'regulatory' : 'docs');
-    // 顶部菜单子项（引物探针库/试剂库/样本库）→ 自动切换到对应分类
-    if (moduleParam === 'primers' && primerCategoryId) setSelectedCategory(primerCategoryId);
+    // 侧边栏分类入口：URL 直接带分类 id（分类是后端数据，不依赖名称字典）
+    if (categoryParam) setSelectedCategory(categoryParam);
+    // 旧入口兼容：module=primers|reagents|samples → 按分类名定位
+    else if (moduleParam === 'primers' && primerCategoryId) setSelectedCategory(primerCategoryId);
     else if (moduleParam === 'reagents' && reagentCategoryId) setSelectedCategory(reagentCategoryId);
     else if (moduleParam === 'samples' && sampleCategoryId) setSelectedCategory(sampleCategoryId);
     // 分类 id 为异步加载，就绪后本 effect 会再次执行完成定位
-  }, [moduleParam, reagentCategoryId, ampReagentCategoryId, primerCategoryId, sampleCategoryId]);
+  }, [categoryParam, moduleParam, reagentCategoryId, ampReagentCategoryId, primerCategoryId, sampleCategoryId]);
 
   useEffect(() => {
     loadCategories();
     loadDocuments();
   }, [selectedCategory, filterType]);
 
+  /** 切换分类并同步 URL —— 侧边栏高亮与「链接可分享/可刷新」都依赖 URL 上的 category */
+  const selectCategory = (id: string) => {
+    setSelectedCategory(id);
+    const next = new URLSearchParams(searchParams);
+    next.set('category', id);
+    next.delete('module');
+    setSearchParams(next, { replace: true });
+  };
+
   const switchModule = (next: 'docs' | 'regulatory') => {
     setActiveModule(next);
     const nextParams = new URLSearchParams(searchParams);
     if (next === 'regulatory') nextParams.set('module', 'regulatory');
     else nextParams.delete('module');
+    nextParams.delete('category');   // 切换模块时清掉分类定位，避免与法规模块冲突
     setSearchParams(nextParams, { replace: true });
   };
 
@@ -148,7 +161,10 @@ export default function Docs() {
       const amp = cats.find((c: DocCategory) => c.name === '扩增反应体系试剂'); if (amp) setAmpReagentCategoryId(amp.id);
       const primer = cats.find((c: DocCategory) => c.name === '引物探针库'); if (primer) setPrimerCategoryId(primer.id);
       const sample = cats.find((c: DocCategory) => c.name === '样本库'); if (sample) setSampleCategoryId(sample.id);
-      if (cats.length > 0 && !selectedCategory) setSelectedCategory(cats[0].id);
+      // 选中的分类必须仍然存在（URL 里的 category 可能指向已被删除的分类）→ 回退到第一个
+      const selectionValid =
+        !!selectedCategory && cats.some((c: DocCategory) => c.id === selectedCategory);
+      if (cats.length > 0 && !selectionValid) setSelectedCategory(cats[0].id);
     } catch (error) { console.error('加载分类失败:', error); }
   };
 
@@ -329,7 +345,7 @@ export default function Docs() {
               return (
                 <div
                   key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
+                  onClick={() => selectCategory(cat.id)}
                   style={{ ...cardBaseStyle, ...getCardStyle(isActive, false), minWidth: 'fit-content' }}
                   onMouseEnter={(e) => {
                     const target = e.currentTarget;

@@ -3,7 +3,15 @@ import type { LucideIcon } from 'lucide-react';
 import { ChevronRight, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
-import { MENU, filterMenu, type MenuItem } from '../config/menu';
+import { PERMS, hasPerm } from '../auth/permissions';
+import { docsAPI } from '../api';
+import {
+  MENU,
+  filterMenu,
+  buildKnowledgeChildren,
+  type KnowledgeCategory,
+  type MenuItem,
+} from '../config/menu';
 import { roleLabel } from '../types/user';
 import OfflineBanner from './OfflineBanner';
 import SyncStatusIndicator from './SyncStatusIndicator';
@@ -49,8 +57,41 @@ export default function Layout() {
   const [collapsed, setCollapsed] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
+  /**
+   * 知识库二级菜单：分类存在数据库里（用户可增删），静态配置覆盖不全，
+   * 因此在有 docs.view 权限时拉取一次分类并注入菜单；失败则沿用静态兜底项。
+   */
+  const [knowledgeCategories, setKnowledgeCategories] = useState<KnowledgeCategory[]>([]);
+  useEffect(() => {
+    if (!hasPerm(permissions, PERMS.DOCS_VIEW)) return;
+    let alive = true;
+    docsAPI.categories
+      .list()
+      .then((res) => {
+        if (!alive) return;
+        const list = Array.isArray(res) ? res : ((res as { list?: KnowledgeCategory[] })?.list ?? []);
+        setKnowledgeCategories(list.filter((cat) => cat?.id && cat?.name));
+      })
+      .catch(() => {
+        /* 拉取失败：保留配置里的静态兜底项，不影响其余菜单 */
+      });
+    return () => {
+      alive = false;
+    };
+  }, [permissions]);
+
+  /** 用运行时分类替换动态菜单项的 children */
+  const nav = useMemo<MenuItem[]>(() => {
+    if (knowledgeCategories.length === 0) return MENU;
+    return MENU.map((item) =>
+      item.dynamic === 'knowledge-categories'
+        ? { ...item, children: buildKnowledgeChildren(knowledgeCategories) }
+        : item,
+    );
+  }, [knowledgeCategories]);
+
   /** 菜单由后端下发的 permissions 驱动；无权限项直接隐藏 */
-  const filteredNav = useMemo<MenuItem[]>(() => filterMenu(MENU, permissions), [permissions]);
+  const filteredNav = useMemo<MenuItem[]>(() => filterMenu(nav, permissions), [nav, permissions]);
 
   const isActive = useMenuMatch();
   const isSuperAdmin = String(user?.systemRole ?? user?.role ?? '') === 'SUPER_ADMIN';
