@@ -50,6 +50,15 @@ export class BackupError extends Error {
     return HTTP_STATUS[this.code];
   }
 
+  /**
+   * 与 kernel/http.js 的 HttpError 同名对齐：bootstrap/createApp.js 的全局 onError 读的是
+   * `err?.status`，没有这个 getter 时任何"漏 catch"的归档错误都会被当成 500（例如生产未配置
+   * BACKUP_ARCHIVE_DIR 时应为 503）。路由层仍优先用 httpStatus 给出带 detail 的响应体。
+   */
+  get status(): number {
+    return this.httpStatus;
+  }
+
   toJSON(): { code: BackupErrorCode; message: string; detail?: string } {
     return { code: this.code, message: this.message, detail: this.detail };
   }

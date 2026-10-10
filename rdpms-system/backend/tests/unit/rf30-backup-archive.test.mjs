@@ -31,7 +31,7 @@ const {
   decryptBuffer,
   parseEnvelope,
 } = await import('../../dist/platform/backup/kms.js');
-const { isBackupError } = await import('../../dist/platform/backup/errors.js');
+const { BackupError, isBackupError } = await import('../../dist/platform/backup/errors.js');
 const { validateArtifactMeta, artifactFileNames, ARTIFACT_META_VERSION } = await import(
   '../../dist/platform/backup/artifactMeta.js'
 );
@@ -502,6 +502,25 @@ test('RF30-T26 陈旧工作区清扫：只清 > 阈值的目录，新目录与�
   assert.equal(fs.existsSync(fresh), true);
   assert.equal(fs.existsSync(linkTarget), true, '符号链接指向的目录不得被删');
   assert.equal(fs.existsSync(path.join(workRoot, 'backup-20260101T000000-cccccccc')), true);
+});
+
+test('RF30-T27 错误码 → HTTP 状态映射：status 与 httpStatus 一致且在 4xx/5xx', () => {
+  // 全局 onError（bootstrap/createApp.js）读的是 err.status；没有该 getter 时
+  // 生产"未配置归档目录"会以 500 而不是 503 暴露，前端与运维都会误判为内部故障。
+  const expected = {
+    BACKUP_KMS_NOT_CONFIGURED: 503,
+    BACKUP_ARCHIVE_DIR_INVALID: 503,
+    BACKUP_LOCK_BUSY: 409,
+    BACKUP_DISK_LOW: 507,
+    BACKUP_PRIVILEGE_DENIED: 500,
+    BACKUP_ARTIFACT_NOT_FOUND: 404,
+  };
+  for (const [code, want] of Object.entries(expected)) {
+    const err = new BackupError(code, 'x');
+    assert.equal(err.status, want, code);
+    assert.equal(err.httpStatus, want, code);
+    assert.ok(err.status >= 400 && err.status < 600, code);
+  }
 });
 
 /* ── 8. CLI 契约（脚本存在且参数校验生效）────────────────────────────────── */

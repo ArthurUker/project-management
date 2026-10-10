@@ -7,7 +7,7 @@ import { prisma } from '../platform/db/client.js';
 import { authenticate as authMiddleware, requirePermission, getAuth } from '../kernel/rbac.js';
 import { AUDIT_ACTIONS } from '../kernel/constants.js';
 import { writeAudit } from '../kernel/audit.js';
-import { forbidden, badRequest, notFound, parsePaging, paged } from '../kernel/http.js';
+import { HttpError, forbidden, badRequest, notFound, parsePaging, paged } from '../kernel/http.js';
 import { isBackupError } from '../platform/backup/errors.js';
 import { runArchive } from '../platform/backup/archive.js';
 import { verifyArchive } from '../platform/backup/verify.js';
@@ -55,8 +55,20 @@ function assertSuperAdmin(c) {
   return auth;
 }
 
+/**
+ * 归档根目录：把 BackupError 翻译成 HttpError。
+ * 这样即便某个处理函数漏了 try/catch（例如 /storage、下载、删除），全局 onError 也能给出
+ * 正确的状态码与错误码（生产未配置归档目录时是 503，而不是含糊的 500）。
+ */
 function archiveRoot() {
-  return ensureArchiveRoot(resolveArchiveRoot(process.env, process.cwd()));
+  try {
+    return ensureArchiveRoot(resolveArchiveRoot(process.env, process.cwd()));
+  } catch (err) {
+    if (isBackupError(err)) {
+      throw new HttpError(err.httpStatus, err.code, err.message, err.detail ? { detail: err.detail } : null);
+    }
+    throw err;
+  }
 }
 
 function audit(c, auth, action, entityLabel, metadata) {
@@ -75,6 +87,10 @@ function audit(c, auth, action, entityLabel, metadata) {
 function respond(c, err, fallbackMessage) {
   if (isBackupError(err)) {
     return c.json({ error: err.message, code: err.code, detail: err.detail ?? null }, err.httpStatus);
+  }
+  // archiveRoot() 会把 BackupError 翻成 HttpError（保住状态码与错误码）
+  if (err instanceof HttpError) {
+    return c.json(err.payload(), err.status);
   }
   console.error('[backup/archives] 未预期失败：', err);
   return c.json({ error: fallbackMessage, code: 'INTERNAL_ERROR', detail: err?.message ?? String(err) }, 500);
