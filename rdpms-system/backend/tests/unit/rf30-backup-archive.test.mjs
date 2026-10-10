@@ -523,6 +523,24 @@ test('RF30-T27 错误码 → HTTP 状态映射：status 与 httpStatus 一致且
   }
 });
 
+test('RF30-T28 子进程提前退出（stdin EPIPE）不得崩进程，应按退出码判定', async () => {
+  const { runCommand } = await import('../../dist/platform/backup/pgTools.js');
+  const dir = await tempDir('rf30-epipe-');
+  const bin = path.join(dir, 'stub');
+  // 完全不读 stdin 就退出，模拟 `pg_restore -l` 读完 TOC 即关闭管道
+  await fsp.writeFile(bin, '#!/bin/sh\nexit 0\n', { mode: 0o755 });
+  const result = await runCommand(bin, ['-l'], { stdin: Buffer.alloc(512 * 1024, 7), timeoutMs: 5000 });
+  assert.equal(result.code, 0);
+  assert.equal(result.timedOut, false);
+
+  // 失败场景同样不得崩：退出码与 stderr 必须原样带出
+  const bad = path.join(dir, 'stub-bad');
+  await fsp.writeFile(bad, '#!/bin/sh\necho "boom" >&2\nexit 3\n', { mode: 0o755 });
+  const failed = await runCommand(bad, ['-l'], { stdin: Buffer.alloc(256 * 1024, 7), timeoutMs: 5000 });
+  assert.equal(failed.code, 3);
+  assert.match(failed.stderr, /boom/);
+});
+
 /* ── 8. CLI 契约（脚本存在且参数校验生效）────────────────────────────────── */
 
 test('RF30-T25 CLI 参数校验：非法 --run-type 退出码 2，--help 退出码 0', async () => {

@@ -76,6 +76,12 @@ export function runCommand(bin: string, args: string[], options: CommandOptions 
       if (stdoutBytes <= maxStdoutBytes) stdout.push(chunk);
     });
     child.stderr.on('data', (chunk: Buffer) => stderr.push(chunk));
+    // pg_restore -l 只需要读归档的 TOC，可能在消费完 stdin 之前就退出并关闭管道；
+    // 此时写入会得到 EPIPE。这是正常时序而非失败 —— 判定依据是退出码与 stderr，
+    // 没有这个处理器时未捕获的 'error' 事件会让整个进程崩掉（生产实测踩到）。
+    child.stdin.on('error', () => {
+      /* 忽略 stdin 写失败：交由 close 事件按退出码判定 */
+    });
     child.on('close', (code, signal) => {
       clearTimeout(timer);
       resolve({
