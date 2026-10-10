@@ -128,7 +128,6 @@ uploads/COS 异地的定时方案。生产验收另发现并修复一个缺陷�
 3. 前置修复（提交 `077fad5`）：`audit_logs.actor_id` 的 `ON DELETE SET NULL` 与 append-only 守护冲突，会让**任何**账号硬删除整体回滚 →
    迁移 `20261010_audit_actor_fk_drop` 去掉该外键（保留列与守护；展示层改用 `actor_name` 快照）。
    生产以「psql 执行 DDL + `prisma migrate resolve --applied`」落地：当时工作树里有并行会话未提交的迁移，故**未**跑 `migrate deploy`。
-4. 并行会话的仓库现状（**需协调**）：`20261010_lab_inventory_v11`（库位/设备/开封状态）已应用于生产（10:18）但**仓库未提交**，
-   其 schema 部分被我的提交 `077fad5` 误带入（原因：`git add` 暂存整个文件）；其余 WIP（`routes/{equipment,storageLocations,detectionTargets}.js`、
-   `pages/{Equipment,Inventory,StorageLocations}.tsx`、`createApp.js`、`constants.js` 等）仍在工作树未提交 → 需由该会话补交，
-   否则干净检出上执行迁移会缺少这份 v11。
+4. 并行会话的 WIP 已入库（提交 `4a643e4`：实验室盘点 v1.1 —— 设备台账/库位树/分类扩展、`20261010_lab_inventory_v11` 迁移、README 章节）。
+   本文件先前记录的「v11 未提交、干净检出会缺迁移」随之消除；提交 `077fad5` 曾误带其 schema 部分（`git add` 暂存整个文件所致），
+   同一内容随后由 `4a643e4` 正式提交，无遗留影响。教训保留：**提交前按文件核对 diff，不要整文件暂存，否则会把他人 WIP 一起带上**。
