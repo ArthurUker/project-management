@@ -37,14 +37,14 @@ audit.get('/audit-logs', requirePermission('audit.view'), async (c) => {
       skip,
       take,
       orderBy: { createdAt: 'desc' },
-      include: { actor: { select: { id: true, displayName: true, username: true } } },
     }),
   ]);
   return c.json({
     ...paged(list, total, { page, pageSize }),
     list: list.map((row) => ({
       ...row,
-      actorName: row.actor?.displayName ?? row.actorName ?? row.actorId ?? '—',
+      // 无外键后只能靠快照字段展示；已删账号的历史行仍有 actorName
+      actorName: row.actorName ?? row.actorId ?? '—',
       metadata: row.metadata ?? null,
     })),
   });

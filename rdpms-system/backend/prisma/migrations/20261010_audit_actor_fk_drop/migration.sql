@@ -1,0 +1,16 @@
+-- 去掉 audit_logs.actor_id 的外键（2026-10-10 用户裁定）
+--
+-- 背景：
+--   audit_logs 有 append-only 守护（触发器 audit_logs_no_update / audit_logs_no_delete），
+--   而 audit_logs.actor_id 的外键是 ON DELETE SET NULL —— 删除任一账号都会先 UPDATE 审计表，
+--   于是被守护拒绝、整个删除事务回滚。实测：硬删除 superadmin 时事务整体回滚，
+--   报 "audit_logs is append-only; UPDATE/DELETE is forbidden"。
+--
+-- 裁定与依据：
+--   AuditLog 的 actor_name / actor_role 本就是"快照，用户被删后仍可追溯"（schema 注释原文），
+--   即设计上预期账号会被删除。保留 append-only 守护、去掉这条外键才是自洽的组合：
+--     - 审计行不会被改写（比 SET NULL 更保真：auditor 看到的还是当时那个 actor_id）；
+--     - 删除账号不再触碰审计表；
+--     - 代价：actor_id 允许悬空（指向已删除账号），展示层改用 actor_name 快照兜底
+--       （src/routes/audit.js 已同步）。
+ALTER TABLE "audit_logs" DROP CONSTRAINT IF EXISTS "audit_logs_actor_id_fkey";

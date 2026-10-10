@@ -284,6 +284,42 @@ enum MaterialCategory {
   ACID_BASE
   SURFACTANT
   OTHER
+  // ── 2026-10 实验室盘点数据扩展（v1.1）：真实台账中的物料分类 ──
+  PRIMER_PROBE // 引物/探针（含库存引物、混合液）
+  MAGNETIC_BEAD // 磁珠
+  PLASMID // 质粒/假病毒
+  STRAIN // 菌株
+  MEDIA // 培养基
+  CONTROL // 对照品/质控品
+  KIT // 试剂盒/预混液
+}
+
+// v1.1：批次开封状态（实验室盘点"已开封/未开封"维度）
+enum OpenedStatus {
+  SEALED
+  OPENED
+}
+
+// v1.1：库位类型（冰箱 → 层 → 盒 的多级存放结构）
+enum StorageLocationType {
+  ROOM // 房间/实验室
+  CABINET // 柜
+  FRIDGE // 冰箱（2~8℃）
+  FREEZER // 冷柜/超低温冰箱（-20/-40/-80℃）
+  SHELF // 层架/层板
+  DRAWER // 抽屉
+  BOX // 盒/冻存盒
+  BAG // 袋/自封袋
+  OTHER
+}
+
+// v1.1：设备/仪器台账状态
+enum EquipmentStatus {
+  IN_USE // 在用
+  IDLE // 闲置
+  REPAIRING // 维修中
+  SCRAPPED // 已报废
+  DISPOSED // 已处置
 }
 
 enum MaterialState {
@@ -452,7 +488,6 @@ model User {
   uploadedFiles        FileObject[]
   attachments          Attachment[]
   registrationProfiles RegistrationProfile[] @relation("RegistrationComplianceOwner")
-  auditLogs            AuditLog[]
   systemLogs           SystemLog[]
   syncDevices          SyncDevice[]
   mutationReceipts     MutationReceipt[]     @relation("MutationReceiptActor")
@@ -1213,6 +1248,9 @@ model ReagentMaterial {
   hazardLevel      String?           @map("hazard_level") @db.VarChar(32)
   supplier         String?           @map("supplier") @db.VarChar(255)
   storageCondition String?           @map("storage_condition") @db.VarChar(128)
+  // v1.1：业务侧编码（如 RM10011306 体系）与所属项目标签（盘点表"所属项目"列）
+  externalCode     String?           @map("external_code") @db.VarChar(64)
+  projectLabel     String?           @map("project_label") @db.VarChar(512)
   notes            String?           @map("notes")
   status           DocumentStatus    @default(ACTIVE) @map("status")
 
@@ -1228,6 +1266,7 @@ model ReagentMaterial {
   @@index([commonName])
   @@index([category, status])
   @@index([casNumber])
+  @@index([externalCode])
   @@map("reagent_materials")
 }
 
@@ -1240,6 +1279,13 @@ model ReagentLot {
   receivedAt     DateTime? @map("received_at") @db.Date
   expiryDate     DateTime? @map("expiry_date") @db.Date
   location       String?   @map("location") @db.VarChar(128)
+  // v1.1：结构化库位（与 location 文本并存，location 保留原始文本兼容旧客户端）
+  locationId     String?   @map("location_id")
+  spec           String?   @map("spec") @db.VarChar(255) // 包装规格："2OD,100µM" / "500G/瓶"
+  containerCount Decimal?  @map("container_count") @db.Decimal(14, 4) // 管数/瓶数
+  openedStatus   OpenedStatus? @map("opened_status") // 已开封/未开封
+  form           String?   @map("form") @db.VarChar(64) // 物理形态自由文本：干粉/复溶液体/…
+  notes          String?   @map("notes")
   supplier       String?   @map("supplier") @db.VarChar(255)
   certificateUrl String?   @map("certificate_url") @db.VarChar(1024)
   status         LotStatus @default(AVAILABLE) @map("status")
@@ -1247,11 +1293,38 @@ model ReagentLot {
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  material ReagentMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  material ReagentMaterial  @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  storage  StorageLocation? @relation(fields: [locationId], references: [id], onDelete: SetNull)
 
   @@unique([materialId, lotNo])
   @@index([expiryDate])
+  @@index([locationId])
   @@map("reagent_lots")
+}
+
+// v1.1：库位树（房间 → 柜/冰箱 → 层 → 盒/袋），批次通过 locationId 结构化关联
+model StorageLocation {
+  id        String              @id @default(uuid()) @map("id")
+  code      String              @unique @map("code") @db.VarChar(64) // LOC-0001
+  name      String              @map("name") @db.VarChar(128)
+  type      StorageLocationType @default(OTHER) @map("type")
+  parentId  String?             @map("parent_id")
+  path      String              @map("path") @db.VarChar(512) // 物化路径，便于前缀查询与展示
+  depth     Int                 @default(0) @map("depth")
+  sortOrder Int                 @default(0) @map("sort_order")
+  notes     String?             @map("notes")
+  status    DocumentStatus      @default(ACTIVE) @map("status")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  parent   StorageLocation?  @relation("LocationTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children StorageLocation[] @relation("LocationTree")
+  lots     ReagentLot[]
+
+  @@index([parentId])
+  @@index([type, status])
+  @@map("storage_locations")
 }
 
 model ReagentFormula {
@@ -1360,6 +1433,8 @@ model Primer {
   validatedStrain  String?        @map("validated_strain") @db.VarChar(128) // Tencent 承接：验证菌株（引物级）
   modification5    String?        @map("modification5") @db.VarChar(128)
   modification3    String?        @map("modification3") @db.VarChar(128)
+  // v1.1：荧光通道（探针检索核心维度，多通道用逗号分隔，如 "FAM,VIC"）
+  fluorescentChannel String?      @map("fluorescent_channel") @db.VarChar(64)
   ampliconLength   Int?           @map("amplicon_length")
   synthesisAmount  String?        @map("synthesis_amount") @db.VarChar(64)
   synthesisCompany String?        @map("synthesis_company") @db.VarChar(255)
@@ -1497,7 +1572,7 @@ model Attachment {
 // 只追加：数据库层用触发器禁止 UPDATE/DELETE（见 baseline 迁移）
 model AuditLog {
   id            String      @id @default(uuid()) @map("id")
-  actorId       String?     @map("actor_id")
+  actorId       String?     @map("actor_id") // 快照；无外键（2026-10-10 移除 audit_logs_actor_id_fkey）
   actorName     String?     @map("actor_name") @db.VarChar(128) // 快照：用户被删后仍可追溯
   actorRole     String?     @map("actor_role") @db.VarChar(64) // 快照
   // M-1 §4：动词/事件优先的 19 项取值（create / login.failed / status.change ...）
@@ -1518,7 +1593,10 @@ model AuditLog {
   requestId     String?     @map("request_id") @db.VarChar(64)
   createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
 
-  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  // 2026-10-10 裁定：审计行按设计「用户被删后仍可追溯」（actor_name/actor_role 为快照），
+  // 但 ON DELETE SET NULL 会 UPDATE 审计表，撞上 append-only 守护（audit_logs_no_update），
+  // 使任何账号硬删除都被整体回滚 → 去掉该外键（迁移 20261010_audit_actor_fk_drop）。
+  // actor_id 允许悬空；审计内容的可读性由 actor_name / actor_role 快照保证。
 
   @@index([entityType, entityId, createdAt])
   @@index([actorId, createdAt])
@@ -1713,4 +1791,41 @@ model BackupArchive {
   @@index([createdAt])
   @@index([status, createdAt])
   @@map("backup_archives")
+}
+
+// =========================== 设备/仪器台账 ==================================
+// v1.1：固定资产/仪器设备登记（来源：研发二楼设备清单 79 台盘点数据）。
+// code 采用业务资产编码（如 DQ022003003），系统不自动发号。
+model Equipment {
+  id              String          @id @default(uuid()) @map("id")
+  code            String          @unique @map("code") @db.VarChar(64) // 资产编码
+  name            String          @map("name") @db.VarChar(255) // 设备名称
+  category        String?         @map("category") @db.VarChar(64) // 资产类别：机器设备/办公家具/电子设备
+  model           String?         @map("model") @db.VarChar(255) // 规格型号
+  manufacturer    String?         @map("manufacturer") @db.VarChar(255) // 制造商
+  quantity        Int             @default(1) @map("quantity") // 资产数量
+  unit            String?         @map("unit") @db.VarChar(32) // 计量单位
+  location        String?         @map("location") @db.VarChar(255) // 存放/使用位置
+  custodian       String?         @map("custodian") @db.VarChar(128) // 保管人/责任人
+  startUseDate    DateTime?       @map("start_use_date") @db.Date // 开始使用日期
+  nature          String?         @map("nature") @db.VarChar(64) // 资产性质：自有资产/…
+  adminCode       String?         @map("admin_code") @db.VarChar(64) // 行政台账编码
+  origCode        String?         @map("orig_code") @db.VarChar(64) // 原编码/旧编码
+  barcode         String?         @map("barcode") @db.VarChar(64) // 条形码
+  status          EquipmentStatus @default(IN_USE) @map("status")
+  scrapped        Boolean         @default(false) @map("scrapped") // 是否报废
+  inventoryResult String?         @map("inventory_result") @db.VarChar(64) // 最近盘点结果
+  inventoryNote   String?         @map("inventory_note") @db.VarChar(512) // 盘点说明
+  notes           String?         @map("notes")
+
+  deletedAt   DateTime? @map("deleted_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  createdById String?   @map("created_by_id")
+  updatedById String?   @map("updated_by_id")
+
+  @@index([category, status])
+  @@index([location])
+  @@index([name])
+  @@map("equipment")
 }
