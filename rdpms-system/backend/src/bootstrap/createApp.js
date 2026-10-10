@@ -31,6 +31,7 @@ import formulasRoutes from '../routes/formulas.js';
 import prepRoutes from '../routes/prep-calculator.js';
 import primersRoutes from '../routes/primers.js';
 import backupRoutes from '../routes/backup.js';
+import backupArchiveRoutes from '../routes/backupArchives.js';
 import samplesRoutes from '../routes/samples.js';
 import registrationsRoutes from '../routes/registrations.js';
 import regulatoryDocumentsRoutes from '../routes/regulatory-documents.js';
@@ -144,6 +145,8 @@ export function createApp(deps = {}) {
   app.route('/api/files', filesRoutes);
   app.route('/api/stats', statsRoutes);
   app.route('/api/backup', backupRoutes);
+  // 归档备份（整库 pg_dump + 加密 + 历史/校验/保留/磁盘）：与上面共用前缀，路径不重叠
+  app.route('/api/backup', backupArchiveRoutes);
 
   // ── 离线同步 v2（批次四）────────────────────────────────────────────────────
   app.route('/api/sync', syncRoutes);

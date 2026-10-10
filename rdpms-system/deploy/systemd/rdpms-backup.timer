@@ -1,0 +1,17 @@
+; rdpms-backup.timer —— 每日 02:00（Asia/Shanghai）触发一次归档备份
+;
+; Persistent=true：机器当天没开机/服务没起来时，开机后补跑一次（RPO ≤ 24h 的兜底）。
+; RandomizedDelaySec=300：错开 02:00 的同机其它任务（foodsentinel 备份也在 02:00 前后）。
+;
+; 安装见 rdpms-backup.service 头部注释。
+[Unit]
+Description=RDPMS 归档备份定时器（每日 02:00）
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+Persistent=true
+RandomizedDelaySec=300
+Unit=rdpms-backup.service
+
+[Install]
+WantedBy=timers.target

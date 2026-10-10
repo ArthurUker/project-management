@@ -1677,3 +1677,40 @@ model SyncChangeEvent {
   @@index([epoch,entity,entityId,revision])
   @@map("sync_change_events")
 }
+/// 归档备份产物登记（platform/backup/archive.ts）。
+/// 口径：**文件系统为准、DB 标记登记状态** —— 没有登记行的产物目录不会被保留策略删除，
+/// 也不出现在下载入口；status=failed 的行只有元信息、没有文件。
+model BackupArchive {
+  id               String    @id @default(uuid()) @map("id")
+  jobId            String    @unique @map("job_id") @db.VarChar(64)
+  runType          String    @default("manual") @map("run_type") @db.VarChar(24)
+  scope            String    @default("all") @map("scope") @db.VarChar(24)
+  status           String    @default("ok") @map("status") @db.VarChar(16)
+  verifyStatus     String    @default("unknown") @map("verify_status") @db.VarChar(16)
+  /// 相对 BACKUP_ARCHIVE_DIR 的产物目录（2026-10-09/rdpms-….backup-…）
+  dirPath          String    @map("dir_path") @db.VarChar(512)
+  aesPath          String    @map("aes_path") @db.VarChar(512)
+  metaPath         String    @map("meta_path") @db.VarChar(512)
+  fileSize         BigInt    @map("file_size")
+  plainSize        BigInt?   @map("plain_size")
+  /// 加密前 .dump 的 sha256
+  checksum         String?   @map("checksum") @db.Char(64)
+  algorithm        String    @default("aes-256-gcm") @map("algorithm") @db.VarChar(32)
+  keyMode          String    @default("local") @map("key_mode") @db.VarChar(32)
+  compression      String    @default("pg_dump -Fc -Z6") @map("compression") @db.VarChar(40)
+  snapshotMode     String    @default("live") @map("snapshot_mode") @db.VarChar(16)
+  tableCounts      Json      @map("table_counts") @db.JsonB
+  schemaSnapshot   Json?     @map("schema_snapshot") @db.JsonB
+  countsCrossCheck Json?     @map("counts_cross_check") @db.JsonB
+  tableCount       Int       @default(0) @map("table_count")
+  durationMs       Int       @default(0) @map("duration_ms")
+  failureCode      String?   @map("failure_code") @db.VarChar(64)
+  failureDetail    String?   @map("failure_detail") @db.VarChar(1000)
+  createdById      String?   @map("created_by_id") @db.VarChar(64)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  verifiedAt       DateTime? @map("verified_at") @db.Timestamptz(3)
+
+  @@index([createdAt])
+  @@index([status, createdAt])
+  @@map("backup_archives")
+}

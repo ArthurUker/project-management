@@ -1,0 +1,45 @@
+; rdpms-backup.service —— 归档备份（整库 pg_dump + AES-256-GCM），由 rdpms-backup.timer 触发
+;
+; 安装（以 ubuntu 身份，需要 sudo）：
+;   sudo cp rdpms-system/deploy/systemd/rdpms-backup.service /etc/systemd/system/
+;   sudo cp rdpms-system/deploy/systemd/rdpms-backup.timer   /etc/systemd/system/
+;   sudo systemctl daemon-reload
+;   sudo systemctl enable --now rdpms-backup.timer
+;   systemctl list-timers rdpms-backup.timer
+;
+; 前置（生产，缺一不可，否则作业 fail-closed 拒绝执行）：
+;   1) /srv/rdpms/.env 增加：BACKUP_MASTER_KEY=<openssl rand -base64 32 的输出>
+;      轮换提示：换密钥后旧备份仍用旧密钥解密（meta.keyMeta.keyFingerprint 记录指纹），
+;                请务必把旧密钥另行保管，否则旧归档永久不可读。
+;   2) /srv/rdpms/.env 增加：BACKUP_ARCHIVE_DIR=/srv/rdpms/backups/archive
+;   3) sudo install -d -o rdpms -g rdpms -m 0700 /srv/rdpms/backups/archive
+;   4) 手工试跑一次：sudo systemctl start rdpms-backup.service && journalctl -u rdpms-backup.service -n 50
+;
+; 与既有的 /usr/local/bin/rdpms-backup.sh（未入库）的分工：
+;   - 本服务：加密归档 + 校验 + 历史/保留 + 控制台「存储用量」，产物在 BACKUP_ARCHIVE_DIR；
+;   - 既有脚本：pg_dump -Fc 明文 + uploads 硬链快照 + 可选异地同步（COS），产物在 /srv/rdpms/backups/{pg,uploads}。
+;   两者**不要各自再装一个每日 timer**，否则同一时段跑两次整库 dump；如需同时保留，
+;   请把其中一个改为每周/或让 uploads 快照由既有脚本单独承担。
+;
+; 失败告警：如已部署告警单元，取消下面 OnFailure 的注释（默认注释，避免指向不存在的单元）。
+[Unit]
+Description=RDPMS 归档备份（pg_dump -Fc + AES-256-GCM）
+After=network-online.target postgresql.service
+Wants=network-online.target
+RequiresMountsFor=/mnt/datadisk0
+;OnFailure=rdpms-backup-alert.service
+
+[Service]
+Type=oneshot
+User=rdpms
+Group=rdpms
+WorkingDirectory=/opt/rdpms/app/rdpms-system/backend
+Environment=NODE_ENV=production
+Environment=TZ=Asia/Shanghai
+EnvironmentFile=/srv/rdpms/.env
+; 单份备份的超时：dump 本身由 BACKUP_DUMP_TIMEOUT_MS 控制（默认 30 分钟），
+; 这里再留 5 分钟给加密/发布/保留策略。
+TimeoutStartSec=2100
+ExecStart=/usr/local/bin/node /opt/rdpms/app/rdpms-system/backend/scripts/backup-now.mjs --run-type scheduled --env-file /srv/rdpms/.env
+StandardOutput=append:/srv/rdpms/logs/backup-archive.out.log
+StandardError=append:/srv/rdpms/logs/backup-archive.err.log
