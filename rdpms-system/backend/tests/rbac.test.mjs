@@ -138,7 +138,7 @@ async function tryLogin(username, password) {
 test('T4 非项目成员（持 projects.view）访问项目 → 404', async (t) => {
   let saToken = null;
   try {
-    saToken = await tryLogin('superadmin', process.env.SMOKE_SA_PASSWORD || '');
+    saToken = await tryLogin(process.env.SMOKE_SA_USER || 'admin', process.env.SMOKE_SA_PASSWORD || '');
   } catch { /* fetch 失败即服务未启动 */ }
   if (!saToken) return t.skip('本地服务不可达或未配置 SMOKE_SA_PASSWORD，跳过 HTTP 断言');
 
@@ -160,7 +160,7 @@ test('T4 非项目成员（持 projects.view）访问项目 → 404', async (t) 
 });
 
 test('T5 SUPER_ADMIN 访问非成员项目 → 200 且写 elevated 审计', async (t) => {
-  const saToken = await tryLogin('superadmin', process.env.SMOKE_SA_PASSWORD || '');
+  const saToken = await tryLogin(process.env.SMOKE_SA_USER || 'admin', process.env.SMOKE_SA_PASSWORD || '');
   if (!saToken) return t.skip('本地服务不可达或未配置 SMOKE_SA_PASSWORD，跳过 HTTP 断言');
 
   const listRes = await fetch(`${BASE}/api/projects?pageSize=1`, {

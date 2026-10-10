@@ -7,13 +7,16 @@
  *   3. P0 = 90 入 permissions 表；P1 = 30 仅作 manifest 常量存在，永不入库
  *   4. 六角色权限数在运行时硬断言：SUPER_ADMIN 90 / ADMIN 80 / MANAGER 66 /
  *      MEMBER 31 / VIEWER 19 / AUDITOR 3，RolePermission 合计 289
- *   5. 口令必须外置：SEED_SUPER_ADMIN_PASSWORD / SEED_ADMIN_PASSWORD；
+ *   5. 口令必须外置：SEED_ADMIN_PASSWORD（唯一顶层账号 admin）；
  *      缺失或命中弱口令黑名单 -> 立即 throw，进程 exit 1（绝不兜底默认值）
  *   6. mustChangePassword = true；bcrypt cost = 12
  *   7. SEED_TEST_ACCOUNTS=true 才创建 test_* 账号；NODE_ENV=production 下永远不创建
+ *   8. 顶层管理账号唯一：admin = SUPER_ADMIN（2026-10-10 裁定，取消原 superadmin 账号）。
+ *      应用层刻意禁止「授予同级或更高角色」（ACCOUNT_TARGET_PROTECTED），因此顶层账号只能由本 seed
+ *      这个治理真源对齐，不能通过 API 再造第二个超管。
  *
  * 用法：
- *   SEED_SUPER_ADMIN_PASSWORD='...' SEED_ADMIN_PASSWORD='...' node prisma/seed.js
+ *   SEED_ADMIN_PASSWORD='...' node prisma/seed.js
  *   （禁止在未设置上述变量的环境执行；本脚本会主动拒绝）
  */
 import { PrismaClient } from '@prisma/client';
@@ -137,6 +140,13 @@ const PERMISSIONS = [
   'reagent_materials.view',
   'reagent_materials.create',
   'reagent_materials.update',
+  // ── v1.1 实验室台账扩展（2026-10-10）：设备台账与存储库位 ──
+  'equipment.view',
+  'equipment.create',
+  'equipment.update',
+  'equipment.delete',
+  'storage_locations.view',
+  'storage_locations.manage',
   'reagents.view',
   'reagents.create',
   'reagents.update',
@@ -205,6 +215,7 @@ const P1_UNFROZEN = [
   'primers.import',
   'primers.delete',
   'reagent_materials.delete',
+  'reagent_materials.import', // 2026-10-10：批量导入（与 primers.import 同模式）
 ];
 
 // 否决清单：以下权限码不可设立（含 detection_targets.* 通配）
@@ -339,6 +350,13 @@ const MANAGER_CODES = [
   'reagent_materials.create',
   'reagent_materials.update',
 
+  // ── v1.1 实验室台账扩展（2026-10-10）：设备台账（不含 delete）与存储库位 ──
+  'equipment.view',
+  'equipment.create',
+  'equipment.update',
+  'storage_locations.view',
+  'storage_locations.manage',
+
   'reagents.view',
   'reagents.create',
   'reagents.update',
@@ -374,6 +392,8 @@ const MEMBER_CODES = [
   'primers.view',
   'samples.view',
   'reagent_materials.view',
+  'equipment.view',
+  'storage_locations.view',
   'reagents.view',
   'formulas.view',
   'prep_records.view',
@@ -416,6 +436,8 @@ const VIEWER_CODES = [
   'primers.view',
   'samples.view',
   'reagent_materials.view',
+  'equipment.view',
+  'storage_locations.view',
   'reagents.view',
   'formulas.view',
   'prep_records.view',
@@ -478,18 +500,19 @@ const ROLE_DEFS = [
 ];
 
 const EXPECTED_COUNTS = {
-  SUPER_ADMIN: 90,
-  ADMIN: 80,
-  MANAGER: 66,
-  MEMBER: 31,
-  VIEWER: 19,
+  // v1.1（2026-10-10）基线：+equipment.view/create/update/delete +storage_locations.view/manage（6 条）
+  SUPER_ADMIN: 96,
+  ADMIN: 86,
+  MANAGER: 71,
+  MEMBER: 33,
+  VIEWER: 21,
   AUDITOR: 3,
 };
 
 /** 基线自检：任何一条不满足立即终止，绝不带着错误权限入库 */
 function assertBaseline() {
-  if (PERMISSIONS.length !== 90) {
-    throw new Error(`seed: P0 权限数应为 90，实际 ${PERMISSIONS.length}`);
+  if (PERMISSIONS.length !== 96) {
+    throw new Error(`seed: P0 权限数应为 96（v1.1 基线），实际 ${PERMISSIONS.length}`);
   }
   if (new Set(PERMISSIONS).size !== PERMISSIONS.length) {
     throw new Error('seed: P0 权限码存在重复');
@@ -531,8 +554,8 @@ function assertBaseline() {
     }
     total += def.permissions.length;
   }
-  if (total !== 289) {
-    throw new Error(`seed: RolePermission 总数应为 289，实际 ${total}`);
+  if (total !== 310) {
+    throw new Error(`seed: RolePermission 总数应为 310（v1.1 基线），实际 ${total}`);
   }
 }
 
@@ -718,6 +741,19 @@ const ENUM_META = {
     ['BUFFER', '缓冲液'], ['SALT', '盐类'], ['ENZYME', '酶'], ['DYE', '染料'],
     ['NUCLEIC_ACID', '核酸'], ['SOLVENT', '溶剂'], ['ACID_BASE', '酸碱'],
     ['SURFACTANT', '表面活性剂'], ['OTHER', '其他'],
+    // v1.1（2026-10-10）：实验室台账扩展分类
+    ['PRIMER_PROBE', '引物探针'], ['MAGNETIC_BEAD', '磁珠'], ['PLASMID', '质粒/假病毒'],
+    ['STRAIN', '菌株'], ['MEDIA', '培养基'], ['CONTROL', '对照品'], ['KIT', '试剂盒'],
+  ] },
+  OpenedStatus: { default: 'SEALED', values: [
+    ['SEALED', '未开封'], ['OPENED', '已开封'],
+  ] },
+  StorageLocationType: { default: 'OTHER', values: [
+    ['ROOM', '房间'], ['CABINET', '柜'], ['FRIDGE', '冰箱'], ['FREEZER', '冷冻柜'],
+    ['SHELF', '层架'], ['DRAWER', '抽屉'], ['BOX', '盒'], ['BAG', '袋'], ['OTHER', '其他'],
+  ] },
+  EquipmentStatus: { default: 'IN_USE', values: [
+    ['IN_USE', '在用'], ['IDLE', '闲置'], ['REPAIRING', '维修中'], ['SCRAPPED', '已报废'], ['DISPOSED', '已处置'],
   ] },
   MaterialState: { default: 'LIQUID', values: [
     ['SOLID', '固体'], ['LIQUID', '液体'], ['SOLUTION', '溶液'], ['GAS', '气体'],
@@ -849,6 +885,10 @@ const CODE_SEQUENCES = [
   { scope: 'DOCUMENT', prefix: 'DOC-', padding: 3 },
   { scope: 'FORMULA', prefix: 'FRM-', padding: 3 },
   { scope: 'REAGENT_LOT', prefix: 'LOT-', padding: 4 },
+  // v1.1（2026-10-10）
+  { scope: 'MATERIAL', prefix: 'RM-', padding: 5 },
+  { scope: 'STORAGE_LOCATION', prefix: 'LOC-', padding: 4 },
+  { scope: 'DETECTION_TARGET', prefix: 'TGT-', padding: 3 },
 ];
 
 const SYSTEM_SETTINGS = [
@@ -878,9 +918,9 @@ async function main() {
   const isProd = process.env.NODE_ENV === 'production';
 
   // 1. 种子账号口令（必须外置）
-  const superAdminUsername = (process.env.SEED_SUPER_ADMIN_USERNAME || 'superadmin').trim().toLowerCase();
+  //    只有一个顶层账号：admin（SUPER_ADMIN）。SEED_SUPER_ADMIN_USERNAME / SEED_SUPER_ADMIN_PASSWORD
+  //    自 2026-10-10 起不再使用（生产该账号已硬删除）；旧环境仍带着这两个变量也不会报错，便于平滑过渡。
   const adminUsername = (process.env.SEED_ADMIN_USERNAME || 'admin').trim().toLowerCase();
-  const superAdminPassword = assertStrongPassword(process.env.SEED_SUPER_ADMIN_PASSWORD, 'SEED_SUPER_ADMIN_PASSWORD');
   const adminPassword = assertStrongPassword(process.env.SEED_ADMIN_PASSWORD, 'SEED_ADMIN_PASSWORD');
 
   const root = await prisma.user.findFirst({ where: { systemRole: 'SUPER_ADMIN' }, orderBy: { createdAt: 'asc' } });
@@ -964,20 +1004,15 @@ async function main() {
     bump('rolePermissions.synced', wantIds.length);
   }
 
-  // 4. 种子账号：superadmin（SUPER_ADMIN）+ admin（ADMIN）
+  // 4. 种子账号：唯一顶层账号 admin（SUPER_ADMIN）
+  //    用户裁定：主系统管理账号不要多层级，最高权限就是 admin。
+  //    注意 seed 只做 upsert，不删除历史账号：旧 superadmin 的退役由一次性运维步骤完成。
   const seedAccounts = [
-    {
-      username: superAdminUsername,
-      password: superAdminPassword,
-      systemRole: 'SUPER_ADMIN',
-      roleCode: 'SUPER_ADMIN',
-      displayName: '系统超级管理员',
-    },
     {
       username: adminUsername,
       password: adminPassword,
-      systemRole: 'ADMIN',
-      roleCode: 'ADMIN',
+      systemRole: 'SUPER_ADMIN',
+      roleCode: 'SUPER_ADMIN',
       displayName: '系统管理员',
     },
   ];
@@ -1022,7 +1057,6 @@ async function main() {
   }
 
   const adminUser = await prisma.user.findUniqueOrThrow({ where: { username: adminUsername } });
-  const superAdminUser = await prisma.user.findUniqueOrThrow({ where: { username: superAdminUsername } });
 
   // 5. 测试账号（仅非生产 + 显式开关）
   const wantTestAccounts = process.env.SEED_TEST_ACCOUNTS === 'true' && !isProd;
@@ -1063,7 +1097,7 @@ async function main() {
       await prisma.userRole.upsert({
         where: { userId_roleId: { userId: user.id, roleId: role.id } },
         update: {},
-        create: { userId: user.id, roleId: role.id, assignedById: superAdminUser.id },
+        create: { userId: user.id, roleId: role.id, assignedById: adminUser.id },
       });
     }
   }
@@ -1305,7 +1339,7 @@ async function main() {
   console.log(`  P1 manifest(不入库)         ${P1_MANIFEST.length}`);
   for (const def of ROLE_DEFS) console.log(`  role ${def.code.padEnd(18)} ${def.permissions.length}`);
   console.log(`  RolePermission 合计         ${ROLE_DEFS.reduce((s, d) => s + d.permissions.length, 0)}`);
-  console.log(`  账号：${superAdminUsername} (SUPER_ADMIN) / ${adminUsername} (ADMIN)，首次登录须改密`);
+  console.log(`  账号：${adminUsername} (SUPER_ADMIN，唯一顶层账号)，首次登录须改密`);
   console.log('───────────────────────────\n');
 }
 

@@ -66,7 +66,7 @@ const res = spawnSync(process.execPath, ['--test', ...targets], {
     ...process.env,
     ...env,
     RBAC_TEST_BASE: app.base,
-    SMOKE_SA_PASSWORD: env.SEED_SUPER_ADMIN_PASSWORD ?? '',
+    SMOKE_SA_PASSWORD: env.SEED_ADMIN_PASSWORD ?? '',
     SMOKE_TEST_PASSWORD: env.SEED_TEST_PASSWORD ?? '',
   },
   stdio: 'inherit',

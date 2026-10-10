@@ -92,3 +92,25 @@
 | 门禁脚本 | `smoke-test.sh`、`perm-matrix.sh` 尚未加入归档端点断言 | 补只读断言：`GET /api/backup/archives|storage` = SA 200 / 其余 403 |
 | 备份范围 | 归档是整库 dump，与应用层 JSON 恢复（27 表，见 §Q 遗留）**范围不同**，不可互相替代；两者都不含 uploads 二进制与异地副本 | 与 uploads 快照、COS 异地方案一并决策 |
 | 演练现场 | `rdpms_test_rf30` 库与角色已在演练后删除（不共用 PG 上遗留弱口令角色） | 复现步骤见 README §12.2 与 `backend/tests/unit/rf30-backup-archive.test.mjs` |
+
+## H. 顶层管理账号收敛为唯一的 admin（2026-10-10 用户裁定）
+
+结论：主系统管理账号不再分层级，最高权限就是 `admin`；原 `superadmin` 账号按裁定**硬删除**，`ADMIN` 角色保留但不再有账号绑定。
+代码侧（seed 治理真源）已同步：`seedAccounts` 只定义 `admin`（systemRole/roleCode = SUPER_ADMIN），
+`SEED_SUPER_ADMIN_USERNAME/_PASSWORD` 不再使用；连带更新 `tests/rbac.test.mjs`、`b17` 集成测试、
+`scripts/{test-db,run-integration,seed-test-files}.mjs`，避免留下指向已删账号的依赖。
+
+为什么只能走 seed/数据库：`modules/auth/accountPolicy.ts` 禁止「授予同级或更高角色」（`ACCOUNT_TARGET_PROTECTED`）
+与「管理自己/同级/更高等级账号」，所以升格与退役在应用层都没有通道 —— 这是 RP01 的既定保护，不是缺陷。
+
+硬删除前的能力清单（只读核对，生产库）：
+
+- `RESTRICT NOT NULL` 引用仅 1 处：`projects.manager_id`（项目 `PRJ-2026-002 [验证]类型规范化-可删除`），连同其 `project_members` OWNER 行一并改指 `admin`；
+- 其余 `SET NULL` 类自动置空（`audit_logs.actor_id` 92 行、`system_logs.user_id` 46、`file_objects.uploaded_by_id` 15、`attachments.uploaded_by_id` 11、`users.created_by_id` 6）——审计表另有 `actor_name` 列，历史仍可读；
+- `CASCADE` 类随账号删除（`refresh_tokens` 35、`user_roles` 1、`sync_devices` 1、`project_members` 1）。
+
+遗留事项：
+
+- 服务器侧副本（`/usr/local/bin/rdpms-{smoke,perm-matrix,preflight}.sh`、`rdpms-env`）若仍以 `superadmin` 取 SA 分支需同步；仓库内 `smoke-test.sh` 用的是 `SMOKE_ADMIN_USER/PASS`，不受影响。
+- 生产 `.env` 里 `SEED_SUPER_ADMIN_USERNAME/_PASSWORD` 已无用，可在下次维护时清理（留着不报错）。
+- 只有唯一顶层账号后，忘记口令没有应用内找回通道（用户明确不新增应急脚本）；重置需直接改库。

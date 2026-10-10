@@ -170,9 +170,9 @@ if (command === 'reset') {
     for (const f of granted.failures) console.warn(`  - ${f}`);
   }
 
-  if (!env.SEED_SUPER_ADMIN_PASSWORD || !env.SEED_ADMIN_PASSWORD) {
+  if (!env.SEED_ADMIN_PASSWORD) {
     blocked([
-      '缺少 SEED_SUPER_ADMIN_PASSWORD / SEED_ADMIN_PASSWORD（种子脚本拒绝在无口令环境执行）',
+      '缺少 SEED_ADMIN_PASSWORD（种子脚本拒绝在无口令环境执行；顶层账号 admin 的口令必须外置）',
       `请在测试环境文件中提供测试专用强口令`,
     ], '构造最小测试数据');
   }

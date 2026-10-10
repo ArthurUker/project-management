@@ -100,8 +100,8 @@ test('B17 role-create HTTP acceptance', async (t) => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        username: process.env.SEED_SUPER_ADMIN_USERNAME || 'superadmin',
-        password: process.env.SEED_SUPER_ADMIN_PASSWORD,
+        username: process.env.SEED_ADMIN_USERNAME || 'admin',
+        password: process.env.SEED_ADMIN_PASSWORD,
       }),
     });
     assert.equal(login.status, 200, 'synthetic SUPER_ADMIN fixture must authenticate');
@@ -111,7 +111,7 @@ test('B17 role-create HTTP acceptance', async (t) => {
       const nextPassword = 'Owned B17 renewedSecret2026!';
       const changed = await fetch(`${app.base}/api/auth/password/force`, {
         method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ oldPassword: process.env.SEED_SUPER_ADMIN_PASSWORD, newPassword: nextPassword }),
+        body: JSON.stringify({ oldPassword: process.env.SEED_ADMIN_PASSWORD, newPassword: nextPassword }),
       });
       assert.equal(changed.status, 200, 'owned seed must complete the real forced-password flow');
       const fresh = await fetch(`${app.base}/api/auth/login`, {

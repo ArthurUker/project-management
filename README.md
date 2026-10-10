@@ -790,6 +790,9 @@ SUPER_ADMIN 从 P0_PERMISSIONS 与 P1_UNFROZEN 获取权限集，不是任意未
 普通管理入口不能授予同级/更高级身份，不能绕过目标保护或强制改密。
 角色定义创建与自定义角色绑定扩展是不同能力，不能因创建入口存在就宣布所有绑定策略已启用。
 
+顶层管理账号唯一：`admin`（系统角色 SUPER_ADMIN，由 `prisma/seed.js` 对齐）。原 `superadmin` 账号已按用户裁定硬删除
+（2026-10-10），因此「再造一个超管」只能改 seed 或数据库 —— 应用层没有通道（同级授予与同级账号管理都被拒）。
+
 ### 7.3 登录、密码与边界
 
 错误密码达到阈值触发临时锁定（当前 5 次、15 分钟）；待激活账号的锁期限同样约束登录，不能自动激活。
@@ -844,7 +847,7 @@ SUPER_ADMIN 从 P0_PERMISSIONS 与 P1_UNFROZEN 获取权限集，不是任意未
 | `STORAGE_DRIVER` | — | 仅支持 `local` |
 | `TRUST_PROXY_HOPS` | — | 仅支持 `1`（当前未实现代理信任策略，该值仅作兼容） |
 | `ENABLE_BACKUP_EXPORT` | — | 仅容忍 `false`；导出权限由审计过的 SUPER_ADMIN 权限控制，不由该变量控制 |
-| `MAX_UPLOAD_MB` / `SEED_*` | — | 上传展示预算 / 种子账号与口令 |
+| `MAX_UPLOAD_MB` / `SEED_*` | — | 上传展示预算 / 种子账号与口令。顶层账号唯一：`admin` = SUPER_ADMIN（`SEED_ADMIN_USERNAME/PASSWORD`）；`SEED_SUPER_ADMIN_USERNAME/_PASSWORD` 自 2026-10-10 起不再使用（留着不报错） |
 | `BACKUP_MASTER_KEY` | 归档用 | base64 的 32 字节主密钥（`openssl rand -base64 32`）；**缺失时归档功能 fail-closed，绝不明文备份** |
 | `BACKUP_ARCHIVE_DIR` | 归档用 | 归档根目录（生产必须为绝对路径且不在代码目录内），如 `/srv/rdpms/backups/archive` |
 | `BACKUP_KEEP_DAYS` / `BACKUP_KEEP_COUNT` | — | 保留策略：天数（默认 30）与份数（默认 60）；`0` 表示该维度不限制；永远保留最新一份 |

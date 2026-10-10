@@ -97,10 +97,10 @@ async function main() {
   assertLocalDatabase();
 
   const actor = await prisma.user.findFirst({
-    where: { username: 'superadmin' },
+    where: { username: process.env.SEED_ADMIN_USERNAME || 'admin' },
     select: { id: true },
   });
-  if (!actor) throw new Error('未找到 superadmin，请先执行 prisma db seed');
+  if (!actor) throw new Error('未找到顶层管理账号（admin），请先执行 prisma db seed');
 
   const rows = [];
   for (const fx of FIXTURES) {
