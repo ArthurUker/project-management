@@ -93,6 +93,11 @@
 | 备份范围 | 归档是整库 dump，与应用层 JSON 恢复（27 表，见 §Q 遗留）**范围不同**，不可互相替代；两者都不含 uploads 二进制与异地副本 | 与 uploads 快照、COS 异地方案一并决策 |
 | 演练现场 | `rdpms_test_rf30` 库与角色已在演练后删除（不共用 PG 上遗留弱口令角色） | 复现步骤见 README §12.2 与 `backend/tests/unit/rf30-backup-archive.test.mjs` |
 
+**2026-10-10 生产启用结果**：`.env` 两项 + 目录 + timer 已就位；首次归档经单元触发成功（54 表 / 密文 737,336 字节 / 快照 exported），
+产物离线校验 7 项全通过、篡改可检出。**仍未做**：生产恢复演练、`smoke-test.sh`/`perm-matrix.sh` 归档断言的目标环境执行、
+uploads/COS 异地的定时方案。生产验收另发现并修复一个缺陷：`pg_restore -l` 只读 TOC 即退出导致写 stdin 触发 `EPIPE`，
+未处理会让校验进程崩溃（`pgTools.runCommand` 已加 stdin error 处理，补 RF30-T28 用例）。
+
 ## H. 顶层管理账号收敛为唯一的 admin（2026-10-10 用户裁定）
 
 结论：主系统管理账号不再分层级，最高权限就是 `admin`；原 `superadmin` 账号按裁定**硬删除**，`ADMIN` 角色保留但不再有账号绑定。
@@ -114,3 +119,16 @@
 - 服务器侧副本（`/usr/local/bin/rdpms-{smoke,perm-matrix,preflight}.sh`、`rdpms-env`）若仍以 `superadmin` 取 SA 分支需同步；仓库内 `smoke-test.sh` 用的是 `SMOKE_ADMIN_USER/PASS`，不受影响。
 - 生产 `.env` 里 `SEED_SUPER_ADMIN_USERNAME/_PASSWORD` 已无用，可在下次维护时清理（留着不报错）。
 - 只有唯一顶层账号后，忘记口令没有应用内找回通道（用户明确不新增应急脚本）；重置需直接改库。
+
+**执行结果（2026-10-10，已在生产落地）**
+
+1. 升格：`admin` 的 `system_role = SUPER_ADMIN`、`must_change_password = false`（10:20 生效）；并存的 `ADMIN` 角色绑定已清理，顶层账号只留 `SUPER_ADMIN` 一条。
+2. 硬删除：`superadmin` 已删除（用户 11 → 10）。事务内先处理唯一 `RESTRICT` 引用（`PRJ-2026-002` 的 `manager_id` 与其 OWNER 成员行改指 `admin`），再删账号；
+   `audit_logs` 947 行一行未动（其中 92 行 `actor_name='系统超级管理员'` 保留），`projects_without_mgr = 0`、孤儿成员 0。
+3. 前置修复（提交 `077fad5`）：`audit_logs.actor_id` 的 `ON DELETE SET NULL` 与 append-only 守护冲突，会让**任何**账号硬删除整体回滚 →
+   迁移 `20261010_audit_actor_fk_drop` 去掉该外键（保留列与守护；展示层改用 `actor_name` 快照）。
+   生产以「psql 执行 DDL + `prisma migrate resolve --applied`」落地：当时工作树里有并行会话未提交的迁移，故**未**跑 `migrate deploy`。
+4. 并行会话的仓库现状（**需协调**）：`20261010_lab_inventory_v11`（库位/设备/开封状态）已应用于生产（10:18）但**仓库未提交**，
+   其 schema 部分被我的提交 `077fad5` 误带入（原因：`git add` 暂存整个文件）；其余 WIP（`routes/{equipment,storageLocations,detectionTargets}.js`、
+   `pages/{Equipment,Inventory,StorageLocations}.tsx`、`createApp.js`、`constants.js` 等）仍在工作树未提交 → 需由该会话补交，
+   否则干净检出上执行迁移会缺少这份 v11。
