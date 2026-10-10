@@ -2,7 +2,8 @@
 
 R&D Project Management System，面向 IVD / 诊断试剂研发团队，覆盖项目、任务、进展汇报、注册申报、法规资料与实验知识管理。
 
-> 文档更新：**2026-10-09**。源码核对基线：`289d340`，包含部署改造提交 `f8ccb06`。
+> 文档更新：**2026-10-09**。源码核对基线：`91d9713`（含部署改造 `f8ccb06`、知识库动态二级菜单 `5f97833`、发布回退修复 `91d9713`）。
+> 本轮新增归档备份子系统（§4.2 `backup_archives`、§5.3 `/api/backup/archives`、§12.2）；该改动位于工作树、**尚未提交**。
 > 本文描述当前仓库行为；服务器路径与部署形态依据入库运维记录，未在本轮连接服务器重验。
 > 文档更新不代表测试重新通过、历史发现全部关闭或生产发布验收完成。当前文档入口见 [docs/README.md](docs/README.md)。
 
@@ -160,8 +161,9 @@ project-management/
     │   │   ├── bootstrap/        # 装配与启动分离
     │   │   ├── routes/           # HTTP 入口
     │   │   ├── kernel/           # 认证、常量、审计、恢复等
-    │   │   ├── platform/         # db、配置、身份、幂等、恢复上下文
+    │   │   ├── platform/         # db、配置、身份、幂等、恢复上下文、backup（归档加密/校验/保留/磁盘）
     │   │   └── modules/          # access/auth/projects/reports/sync/files
+    │   ├── scripts/              # 运维 CLI：归档备份 / 离线校验 / 测试库生命周期
     │   └── tests/                # unit、contract、integration
     ├── frontend/
     │   ├── src/                  # App、pages、components、api、auth、offline、shared
@@ -169,6 +171,7 @@ project-management/
     │   └── tests/                # unit 与 browser
     └── deploy/
         ├── rdpms-api.service
+        ├── systemd/              # rdpms-api.service 与 rdpms-backup.{service,timer} 模板
         └── scripts/              # 当前 start/deploy 与仍被测试引用的旧工具
 ```
 
@@ -176,7 +179,7 @@ project-management/
 
 ### 4.1 数据模型与关系
 
-唯一模型真源为 [schema.prisma](rdpms-system/backend/prisma/schema.prisma)；当前 **51 个 Prisma model、12 个 SQL 迁移目录**。
+唯一模型真源为 [schema.prisma](rdpms-system/backend/prisma/schema.prisma)；当前 **52 个 Prisma model、13 个 SQL 迁移目录**。
 Prisma model 数不是某次服务器盘点的实际表数，也不包括 `_prisma_migrations` 等平台表。
 
 ```mermaid
@@ -254,6 +257,10 @@ erDiagram
 | `SyncPublicationState` | `sync_publication_state` | `epoch: String`, `head: BigInt`, `floor: BigInt`, `initialized: Boolean` | 见 schema |
 | `SyncSourceRevision` | `sync_source_revisions` | `epoch: String`, `entity: String`, `entityId: String`, `revision: BigInt` | `[epoch,entity,entityId]` |
 | `SyncChangeEvent` | `sync_change_events` | `id: String`, `epoch: String`, `entity: String`, `entityId: String`, `projectId: String`, `authorId: String?`, `revision: BigInt`, `action: String`, `publishedSequence: BigInt?` | `[epoch,publishedSequence]`；`[epoch,entity,entityId,revision]` |
+| `BackupArchive` | `backup_archives` | `id: String`, `jobId: String`, `status: String`, `verifyStatus: String`, `dirPath: String`, `fileSize: BigInt`, `checksum: String?`, `snapshotMode: String`, `tableCounts: Json` | `[jobId]`（唯一） |
+
+`backup_archives` 是归档备份产物的登记表，口径为**文件系统为准、DB 标记登记状态**：没有登记行的产物目录不会被保留策略删除；
+`status='failed'` 的行只有失败留痕（`dirPath` 为空串、`fileSize=0`）。该表的行数按**快照时刻**统计，因此归档内容不含本次作业自己那一行。
 
 ### 4.3 数据一致性约束
 
@@ -313,7 +320,7 @@ Content-Type: application/json
 
 ### 5.3 路由清单
 
-从 createApp 挂载和 routes 中的直接方法声明提取，共 **28 个模块、192 个声明端点**，另有根路径与健康就绪入口。
+从 createApp 挂载和 routes 中的直接方法声明提取，共 **29 个模块、200 个声明端点**，另有根路径与健康就绪入口。
 计数仅包含 get/post/put/patch/delete 等静态方法声明，不含 files 的 all 方法兜底、中间件及根健康入口。
 此索引不解析运行时授权、不等于 OpenAPI schema，也不把中间件或测试注入身份当成完整认证证明。
 每个条目的参数、权限、校验和状态码请沿对应源文件读取。
@@ -645,6 +652,21 @@ Content-Type: application/json
 | GET | `/api/backup/restore/status` |
 | POST | `/api/backup/restore/reconcile` |
 
+#### `/api/backup/archives`、`/api/backup/storage` — [backupArchives.js](rdpms-system/backend/src/routes/backupArchives.js)
+
+与 `/api/backup` 共用前缀、路径不重叠；全部仅 SUPER_ADMIN（`data.export`），运行/校验/下载/删除均写审计。
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/backup/archives` | 归档历史（分页 + 状态筛选，附产物是否仍在磁盘） |
+| POST | `/api/backup/archives/run` | 立即生成一份归档（阻塞至完成；并发返回 409） |
+| POST | `/api/backup/archives/retention` | 保留策略，默认 `dryRun=true` |
+| GET | `/api/backup/archives/:id` | 详情（meta 隐去 `dekCipher`） |
+| GET | `/api/backup/archives/:id/download` | 下载产物，`format=aes\|meta` |
+| POST | `/api/backup/archives/:id/verify` | 离线校验（7 项） |
+| DELETE | `/api/backup/archives/:id` | 删除记录与产物 |
+| GET | `/api/backup/storage` | 磁盘水位 + 归档占用（按天）+ 其它备份目录 + 未登记目录 |
+
 #### `/api/sync` — [sync.js](rdpms-system/backend/src/routes/sync.js)
 
 | 方法 | 路径 |
@@ -682,7 +704,7 @@ Content-Type: application/json
 | `knowledge`、`knowledge/:id`、`docs` | `Docs` / `KnowledgeDetail` | AuthGuard |
 | `reagent-formula`、`/new`、`/:id/edit`、`/calculator` | `FormulaList` / `FormulaEditor` / `PrepCalculator` | AuthGuard |
 | `tasks` | `Tasks` | AuthGuard |
-| `backup` | `BackupManager` | `DATA_EXPORT` |
+| `backup` | `BackupManager`（三页签：导出与恢复 / 归档备份 / 存储用量） | `DATA_EXPORT` |
 | `users` | `Users` | `USERS_VIEW` |
 | `audit-logs` | `AuditLogs` | `AUDIT_VIEW` |
 | `system-logs` | `SystemLogs` | `SYSTEM_LOGS_VIEW` |
@@ -823,6 +845,15 @@ SUPER_ADMIN 从 P0_PERMISSIONS 与 P1_UNFROZEN 获取权限集，不是任意未
 | `TRUST_PROXY_HOPS` | — | 仅支持 `1`（当前未实现代理信任策略，该值仅作兼容） |
 | `ENABLE_BACKUP_EXPORT` | — | 仅容忍 `false`；导出权限由审计过的 SUPER_ADMIN 权限控制，不由该变量控制 |
 | `MAX_UPLOAD_MB` / `SEED_*` | — | 上传展示预算 / 种子账号与口令 |
+| `BACKUP_MASTER_KEY` | 归档用 | base64 的 32 字节主密钥（`openssl rand -base64 32`）；**缺失时归档功能 fail-closed，绝不明文备份** |
+| `BACKUP_ARCHIVE_DIR` | 归档用 | 归档根目录（生产必须为绝对路径且不在代码目录内），如 `/srv/rdpms/backups/archive` |
+| `BACKUP_KEEP_DAYS` / `BACKUP_KEEP_COUNT` | — | 保留策略：天数（默认 30）与份数（默认 60）；`0` 表示该维度不限制；永远保留最新一份 |
+| `BACKUP_WARN_PCT` / `BACKUP_MIN_FREE_MB` | — | 磁盘门禁：占用告警线（默认 90%）与最小可用空间（默认 1024 MB，不足直接拒绝备份） |
+| `BACKUP_PG_DUMP_DSN` / `PG_DUMP_BIN` / `PG_RESTORE_BIN` | — | 归档作业的连接串与 pg 工具兜底；默认用 `DATABASE_URL` 与应用角色（需表与序列的 SELECT 权限，见 §12.2） |
+| `BACKUP_DUMP_TIMEOUT_MS` | — | 单份 dump 超时（默认 30 分钟），同时决定快照事务的生命周期 |
+
+> 归档相关变量由 `src/platform/backup/*` 自行读取，**不在** `configSchema.ts` 的启动校验内；未配置主密钥时应用照常启动，
+> 但归档入口会以 `BACKUP_KMS_NOT_CONFIGURED`（HTTP 503）明确拒绝，而不是静默降级。
 
 > 以上由 `src/platform/config/configSchema.ts` 在启动时校验，**不合规直接拒绝启动**（fail fast）。
 
@@ -982,6 +1013,11 @@ list、metadata、download、delete 和 import-source 应经过各自动作的�
 运维 pg_dump/pg_restore + uploads 是另一种恢复范围。需要共同恢复点、文件关联、凭据/账号安全下限和 epoch 核对。
 仓库内旧配对恢复工具的自有演练，不能替代当前服务器外置备份脚本的恢复验收。
 
+**归档备份**（`backup_archives` + `/api/backup/archives`，仓库内实现）是第三种范围：整库 `pg_dump -Fc -Z6` → AES-256-GCM 加密落盘 →
+单事务登记，可离线校验、下载与按策略清理；**应用内不做整库覆盖恢复**，恢复仍是运维 `pg_restore`（解密走 `backup-verify.mjs --decrypt-to`）。
+边界要一起读：dump 只含数据库逻辑内容，**不含 uploads 二进制**（与 `/usr/local/bin/rdpms-backup.sh` 的 uploads 快照互补）；
+`backup_archives` 自身行数按快照时刻统计；`_prisma_migrations` 不计入表清单对账。
+
 ## 10. 当前待办与验证状态
 
 本 README 不汇总历次测试为一个“全部通过”。当前部署相关跟踪见 [open-items.md](docs/review/codebuddy/deepseek/open-items.md)。
@@ -998,6 +1034,9 @@ list、metadata、download、delete 和 import-source 应经过各自动作的�
 | 依赖安装 | 仅 lockfile 差异触发；缺依赖、安装失败重试可能被跳过 | 专项核对安装状态与重试合同 |
 | 旧部署工具 | 退出生产入口但仍被专项集成测试调用 | 分清测试范围，不能直接当死代码删除 |
 | 外置备份与日志 | 服务器脚本未入库；systemd 模板为 append 日志 | 核对恢复、加密/异地与轮转，避免据旧文档推定已实现 |
+| 归档备份上线 | 代码/迁移/单元模板在工作树；生产**未配置**主密钥与归档目录、**未安装** timer | 发布窗口写入 `.env` 两项、建目录、装 `rdpms-backup.timer`，跑一次真实备份 + 校验 |
+| 归档备份验收 | 隔离库演练通过（归档 → 校验 → 篡改检出 → 解密 → `pg_restore` 回灌逐表一致 → HTTP 权限与审计） | 生产首次备份后补一次恢复演练；smoke / perm-matrix 尚未加入归档端点断言 |
+| 归档范围缺口 | 归档只覆盖数据库，不含 uploads 二进制与异地副本 | 与既有 uploads 快照、COS 异地方案一并决策，避免形成"看似完整的备份" |
 | 密码提示 | Settings 页面仍提示至少 6 位；不能代替服务端口令策略 | 按当前服务端合同统一提示与校验 |
 | 全局限流 | 当前未实现统一入口速率限制 | 按实际风险单独设计与验收 |
 
@@ -1105,6 +1144,44 @@ sudo /usr/local/bin/rdpms-backup.sh predeploy
 恢复：模块 JSON 恢复与物理整库/文件恢复须分别验收；恢复后重新核对安全版本、凭据、
 数据集 epoch 与旧离线队列。**不要照搬本文档的一条 `pg_restore -c` 直接覆盖生产**。
 （备份脚本不在仓库内，属服务器安装副本；其行为以上述实测为准。）
+
+**归档备份（仓库内实现：加密 + 历史 + 离线校验 + 保留策略 + 磁盘用量）**
+
+前置（缺一即 fail-closed，不会退化成明文备份）：
+
+```bash
+sudo sh -c 'umask 077; printf "\nBACKUP_MASTER_KEY=%s\nBACKUP_ARCHIVE_DIR=/srv/rdpms/backups/archive\n" "$(openssl rand -base64 32)" >> /srv/rdpms/.env'
+sudo install -d -o rdpms -g rdpms -m 0700 /srv/rdpms/backups/archive
+```
+
+安装每日定时（模板在 `deploy/systemd/`）：
+
+```bash
+sudo cp rdpms-system/deploy/systemd/rdpms-backup.service /etc/systemd/system/
+sudo cp rdpms-system/deploy/systemd/rdpms-backup.timer   /etc/systemd/system/
+sudo systemctl daemon-reload && sudo systemctl enable --now rdpms-backup.timer
+sudo systemctl start rdpms-backup.service      # 手工试跑一次
+systemctl list-timers rdpms-backup.timer
+```
+
+> 与既有的 `/usr/local/bin/rdpms-backup.sh` 分工：本服务负责加密归档与面板，既有脚本负责 uploads 快照与异地（COS）。
+> **不要给两者各装一个每日 timer**，否则同一时段会跑两次整库 dump。
+
+手工执行与离线校验（不需要 HTTP，也不依赖管理员的 access token）：
+
+```bash
+cd /opt/rdpms/app/rdpms-system/backend
+node scripts/backup-now.mjs --run-type manual --env-file /srv/rdpms/.env
+node scripts/backup-verify.mjs /srv/rdpms/backups/archive/<日期>/<产物目录>
+```
+
+整库恢复流程：`backup-verify.mjs <产物目录> --decrypt-to /tmp/x.dump` → 维护窗口内 `pg_restore` 灌入目标库 →
+按 meta 的 `tableCounts` 逐表行数比对。面板入口：`系统 → 数据备份与恢复 → 归档备份 / 存储用量`（仅 SUPER_ADMIN）。
+
+**2026-10-09 隔离库演练实测**（库 `rdpms_test_rf30`，演练后已删除）：归档 53 表；7 项离线校验全通过；
+密文篡改 1 字节 → 解密检查失败；仅改 `meta.sha256` → 哈希检查失败；meta 少一张表 → TOC 对账失败；
+`pg_restore` 回灌后 52 张表行数逐表一致（`backup_archives` 按快照计数，不含本次作业自己那一行，属预期）；
+HTTP 层 `archives`/`storage`/`run`/`verify`/`download`/`retention`/`delete` 均按预期，ADMIN 全部 403，且审计已落库。
 
 ### 12.3 维护入口与资料优先级
 

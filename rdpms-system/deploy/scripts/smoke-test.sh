@@ -278,6 +278,14 @@ expect_contract_multi "P-11 backup export（data.export；ADMIN 403 属 RBAC 正
 # P-12 /api/sync：批次四离线同步 v2（登录后可达；404 表示端点未交付 → BLOCKED-BY-BE）
 expect_contract "P-12 sync status 存活" 200 "$(call GET /api/sync/status "$ADMIN_TOKEN")"
 
+# P-12b/P-12c 归档备份子系统（仓库内实现：整库 dump + 加密 + 历史/校验/保留/磁盘用量）
+#   两个端点都是**只读**（只查登记表与磁盘水位），不产生业务写入、不影响 P-14 行数断言。
+#   口径同 P-11：SA 200 / ADMIN 403 均为「已实现」；只有 404 才判 BLOCKED-BY-BE。
+expect_contract_multi "P-12b 归档历史（data.export；ADMIN 403 属 RBAC 正确）" \
+  200/403 "$(call GET /api/backup/archives "$ADMIN_TOKEN")"
+expect_contract_multi "P-12c 存储用量（data.export；ADMIN 403 属 RBAC 正确）" \
+  200/403 "$(call GET /api/backup/storage "$ADMIN_TOKEN")"
+
 # P-13 只读 smoke 不得下载真实业务文件（该约束仅对 read-only profile 生效；
 #     full profile 本就会执行 F-13 下载验证，属于预期行为）
 if [ "$PROFILE" = "read-only" ]; then

@@ -79,3 +79,16 @@
 
 上述是当前源码可确认的边界，不是本轮已修复项。实际服务器成功/失败影响尚未重验。
 生产操作前需补备份、健康验证、失败处置及迁移兼容性依据；不得填造目标环境 PASS。
+
+## G. 归档备份子系统（2026-10-09 新增，位于工作树、尚未提交）
+
+代码、迁移（`20261009_backup_archives`）、CLI 与 systemd 单元模板已在仓库内；**生产侧尚未配置**，差距必须显式保留：
+
+| 项 | 现状 | 下一步 |
+|---|---|---|
+| 生产前置 | `/srv/rdpms/.env` 尚无 `BACKUP_MASTER_KEY` 与 `BACKUP_ARCHIVE_DIR`；此时归档入口按 fail-closed 返回 503 `BACKUP_KMS_NOT_CONFIGURED`（是设计而非缺陷） | 发布窗口内写入两项并建目录（README §12.2） |
+| 定时任务 | 本机**没有** `rdpms-backup.timer`（只有 foodsentinel 的每日备份 timer）；模板在 `deploy/systemd/` | 安装并手工试跑一次；注意与既有 `rdpms-backup.sh` 的职责划分，避免同一时段两次整库 dump |
+| 生产验收 | 生产**未演练**：隔离库演练已覆盖归档/离线校验/篡改检出/解密/`pg_restore` 回灌逐表行数一致/HTTP 权限与审计 | 生产首次备份后补一次恢复演练，不据隔离库结论直接判生产 PASS |
+| 门禁脚本 | `smoke-test.sh`、`perm-matrix.sh` 尚未加入归档端点断言 | 补只读断言：`GET /api/backup/archives|storage` = SA 200 / 其余 403 |
+| 备份范围 | 归档是整库 dump，与应用层 JSON 恢复（27 表，见 §Q 遗留）**范围不同**，不可互相替代；两者都不含 uploads 二进制与异地副本 | 与 uploads 快照、COS 异地方案一并决策 |
+| 演练现场 | `rdpms_test_rf30` 库与角色已在演练后删除（不共用 PG 上遗留弱口令角色） | 复现步骤见 README §12.2 与 `backend/tests/unit/rf30-backup-archive.test.mjs` |
