@@ -1,4 +1,4 @@
-import { del, get, post, requestPaged } from '../request';
+import { del, get, patch, post, put, requestPaged } from '../request';
 
 /**
  * M-1 §7.7 /api/reagents 前端适配：
@@ -16,6 +16,10 @@ export interface ReagentMaterial {
   englishName?: string | null;
   category?: string | null;
   casNumber?: string | null;
+  /** v1.1：业务侧编码（如 RM10011306 体系） */
+  externalCode?: string | null;
+  /** v1.1：所属项目标签（盘点表"所属项目"列） */
+  projectLabel?: string | null;
   status?: string | null;
   inventory?: { totalQuantity: number; lotCount: number; expiringSoonCount: number };
   materialDetail?: Record<string, unknown> | null;
@@ -33,9 +37,21 @@ export interface ReagentLot {
   receivedAt?: string | null;
   expiryDate?: string | null;
   location?: string | null;
+  /** v1.1：结构化库位 */
+  locationId?: string | null;
+  /** v1.1：包装规格（如 "2OD,100µM"） */
+  spec?: string | null;
+  /** v1.1：管数/瓶数 */
+  containerCount?: string | number | null;
+  /** v1.1：开封状态 */
+  openedStatus?: 'SEALED' | 'OPENED' | null;
+  /** v1.1：物理形态（干粉/复溶液体…） */
+  form?: string | null;
+  notes?: string | null;
   supplier?: string | null;
   certificateUrl?: string | null;
   material?: { id: string; code?: string; commonName?: string | null; chineseName?: string | null };
+  storage?: { id: string; code: string; name: string; path: string } | null;
   [key: string]: unknown;
 }
 
@@ -67,11 +83,18 @@ export const reagentMaterialsAPI = {
     requestPaged<ReagentMaterial>({ method: 'GET', url: '/reagent-materials', params }),
   get: (id: string) => get<ReagentMaterial>(`/reagent-materials/${id}`),
   create: (data: Partial<ReagentMaterial>) => post<ReagentMaterial>('/reagent-materials', data),
+  /** 修正（2026-10-10）：后端为 PUT /:id，此前误用 POST 会导致编辑保存 405 */
   update: (id: string, data: Partial<ReagentMaterial>) =>
-    post<ReagentMaterial>(`/reagent-materials/${id}`, data),
+    put<ReagentMaterial>(`/reagent-materials/${id}`, data),
   /** P1 批次二解冻：reagent_materials.delete（软删除） */
   remove: (id: string) => del<{ id: string }>(`/reagent-materials/${id}`),
   bulkDelete: (ids: string[]) => post<{ deleted: number }>('/reagent-materials/bulk-delete', { ids }),
+  /** 2026-10-10 解冻：reagent_materials.import */
+  batchImport: (rows: Partial<ReagentMaterial>[]) =>
+    post<{
+      success: Array<{ id: string; code: string; name: string }>;
+      failed: Array<{ index: number; name: string | null; reason: string }>;
+    }>('/reagent-materials/batch-import', { rows }),
 };
 
 export const formulaAPI = {
@@ -105,8 +128,9 @@ export const reagentLotsAPI = {
   list: (params?: Record<string, unknown>) =>
     requestPaged<ReagentLot>({ method: 'GET', url: '/reagent-lots', params }),
   create: (data: Partial<ReagentLot>) => post<ReagentLot>('/reagent-lots', data),
+  /** 修正（2026-10-10）：后端为 PATCH /:id，此前误用 POST 会导致保存 405 */
   update: (id: string, data: Partial<ReagentLot>) =>
-    post<ReagentLot>(`/reagent-lots/${id}`, data),
+    patch<ReagentLot>(`/reagent-lots/${id}`, data),
 };
 
 /** 兼容旧命名：仅暴露聚合读取能力 */

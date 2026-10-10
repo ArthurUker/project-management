@@ -91,6 +91,15 @@ export type {
   ReagentMaterial,
 } from './endpoints/reagents';
 
+export { equipmentAPI, storageLocationsAPI, detectionTargetsAPI } from './endpoints/equipment';
+export type {
+  Equipment,
+  EquipmentQuery,
+  EquipmentInput,
+  StorageLocation,
+  DetectionTarget,
+} from './endpoints/equipment';
+
 export { auditLogsAPI, systemLogsAPI, dictAPI, healthAPI } from './endpoints/system';
 export { rolesAPI } from './endpoints/roles';
 export type { RoleItem, PermissionCatalogItem } from './endpoints/roles';

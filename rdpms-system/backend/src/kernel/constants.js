@@ -34,6 +34,10 @@ export const P0_PERMISSIONS = [
   'primers.view', 'primers.create', 'primers.update', 'primers.export',
   'samples.view', 'samples.create', 'samples.update',
   'reagent_materials.view', 'reagent_materials.create', 'reagent_materials.update',
+  // ── v1.1 实验室台账扩展（2026-10-10）：设备台账与存储库位 ──
+  // （M-1 v1.0 冻结期后的增补，随「实验室盘点 v1.1」改造引入；seed.js 同步镜像）
+  'equipment.view', 'equipment.create', 'equipment.update', 'equipment.delete',
+  'storage_locations.view', 'storage_locations.manage',
   'reagents.view', 'reagents.create', 'reagents.update', 'reagents.export',
   'formulas.view', 'formulas.create', 'formulas.update',
   'prep_records.view', 'prep_records.create',
@@ -79,6 +83,7 @@ export const P1_UNFROZEN = [
   'primers.import',
   'primers.delete',
   'reagent_materials.delete',
+  'reagent_materials.import', // 2026-10-10：批量导入（与 primers.import 同模式）
 ];
 
 /** 8 项高危（M-1 §5） */

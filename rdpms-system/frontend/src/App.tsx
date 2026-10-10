@@ -26,6 +26,9 @@ import TemplateEditor from './pages/TemplateEditor';
 import TaskTemplateLibrary from './pages/knowledge/TaskTemplateLibrary';
 import RegistrationProjects from './pages/RegistrationProjects';
 import RegistrationProjectDetail from './pages/RegistrationProjectDetail';
+import Equipment from './pages/Equipment';
+import StorageLocations from './pages/StorageLocations';
+import Inventory from './pages/Inventory';
 import Forbidden from './pages/Forbidden';
 import NotFound from './pages/NotFound';
 import ChangePassword from './pages/ChangePassword';
@@ -107,6 +110,32 @@ function AppRoutes() {
         <Route path="reagent-formula/new" element={<FormulaEditor />} />
         <Route path="reagent-formula/:id/edit" element={<FormulaEditor />} />
         <Route path="reagent-formula/calculator" element={<PrepCalculator />} />
+
+        {/* 实验台账 v1.1（2026-10-10） */}
+        <Route
+          path="inventory"
+          element={
+            <RoleGuard perm={PERMS.REAGENTS_VIEW}>
+              <Inventory />
+            </RoleGuard>
+          }
+        />
+        <Route
+          path="equipment"
+          element={
+            <RoleGuard perm={PERMS.EQUIPMENT_VIEW}>
+              <Equipment />
+            </RoleGuard>
+          }
+        />
+        <Route
+          path="storage-locations"
+          element={
+            <RoleGuard perm={PERMS.STORAGE_LOCATIONS_VIEW}>
+              <StorageLocations />
+            </RoleGuard>
+          }
+        />
 
         <Route path="tasks" element={<Tasks />} />
 

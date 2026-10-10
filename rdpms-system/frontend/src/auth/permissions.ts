@@ -94,6 +94,13 @@ export const PERMS = {
   REAGENT_MATERIALS_VIEW: 'reagent_materials.view',
   REAGENT_MATERIALS_CREATE: 'reagent_materials.create',
   REAGENT_MATERIALS_UPDATE: 'reagent_materials.update',
+  // ── v1.1 实验室台账扩展（2026-10-10）：设备台账与存储库位 ──
+  EQUIPMENT_VIEW: 'equipment.view',
+  EQUIPMENT_CREATE: 'equipment.create',
+  EQUIPMENT_UPDATE: 'equipment.update',
+  EQUIPMENT_DELETE: 'equipment.delete',
+  STORAGE_LOCATIONS_VIEW: 'storage_locations.view',
+  STORAGE_LOCATIONS_MANAGE: 'storage_locations.manage',
   REAGENTS_VIEW: 'reagents.view',
   REAGENTS_CREATE: 'reagents.create',
   REAGENTS_UPDATE: 'reagents.update',
@@ -124,6 +131,7 @@ export const PERMS = {
   PRIMERS_DELETE: 'primers.delete',
   PRIMERS_IMPORT: 'primers.import',
   REAGENT_MATERIALS_DELETE: 'reagent_materials.delete',
+  REAGENT_MATERIALS_IMPORT: 'reagent_materials.import', // 2026-10-10 解冻
 
   // ══════════════════════════════════════════════════════════════════
   // 兼容别名：旧键名 → M-1 P0 新码。仅为存量页面平滑迁移保留；

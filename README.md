@@ -2,8 +2,10 @@
 
 R&D Project Management System，面向 IVD / 诊断试剂研发团队，覆盖项目、任务、进展汇报、注册申报、法规资料与实验知识管理。
 
-> 文档更新：**2026-10-09**。源码核对基线：`91d9713`（含部署改造 `f8ccb06`、知识库动态二级菜单 `5f97833`、发布回退修复 `91d9713`）。
-> 本轮新增归档备份子系统（§4.2 `backup_archives`、§5.3 `/api/backup/archives`、§12.2）；该改动位于工作树、**尚未提交**。
+> 文档更新：**2026-10-10**。源码核对基线：`f8bc5e4`（归档备份已提交）。
+> 2026-10-10 实验室台账 v1.1（工作树、**尚未提交**）：8 份盘点表导入（2360 试剂物料 / 3272 批次 / 59 引物 / 8 靶标 / 79 设备）；
+> 新增 `Equipment`、`StorageLocation` 模型与 `equipment.*`、`storage_locations.*` 权限（P0 90→96 条，P1 解冻 +`reagent_materials.import`）；
+> 新增 `/api/equipment`、`/api/storage-locations`、`/api/detection-targets` 路由与前端实验台账三页面；详见 §1.1/§4.2/§5.3/§6.1。
 > 本文描述当前仓库行为；服务器路径与部署形态依据入库运维记录，未在本轮连接服务器重验。
 > 文档更新不代表测试重新通过、历史发现全部关闭或生产发布验收完成。当前文档入口见 [docs/README.md](docs/README.md)。
 
@@ -34,7 +36,8 @@ R&D Project Management System，面向 IVD / 诊断试剂研发团队，覆盖�
 | 月度进展 | 项目月份记录、完成度、计划与风险 | progress |
 | 注册与法规 | 注册档案、阶段工作流、法规文件、导入来源 | registrations / regulatory-documents |
 | 知识与模板 | 文档分类/版本、项目模板、任务模板 | docs / project-templates / task-templates |
-| 实验资料 | 试剂原料、批次、配方、配制、引物探针、样本 | reagent-materials / reagent-lots / formulas / prep / primers / samples |
+| 实验资料 | 试剂原料、批次（含库位/规格/开封状态）、配方、配制、引物探针、检测靶标、样本 | reagent-materials / reagent-lots / formulas / prep / primers / detection-targets / samples |
+| 设备与库位 | 设备/仪器台账、库位树（房间→柜/冰箱→层→盒） | equipment / storage-locations |
 | 平台管理 | 账号、角色、文件、审计、系统日志、模块导出恢复 | users / roles / files / audit / backup |
 
 路由存在不表示所有操作均有独立页面，也不表示均支持离线写入。
@@ -179,7 +182,7 @@ project-management/
 
 ### 4.1 数据模型与关系
 
-唯一模型真源为 [schema.prisma](rdpms-system/backend/prisma/schema.prisma)；当前 **52 个 Prisma model、13 个 SQL 迁移目录**。
+唯一模型真源为 [schema.prisma](rdpms-system/backend/prisma/schema.prisma)；当前 **54 个 Prisma model、14 个 SQL 迁移目录**。
 Prisma model 数不是某次服务器盘点的实际表数，也不包括 `_prisma_migrations` 等平台表。
 
 ```mermaid
@@ -237,8 +240,10 @@ erDiagram
 | `DocCategory` | `doc_categories` | `id: String`, `status: DocumentStatus` | 见 schema |
 | `DocDocument` | `doc_documents` | `id: String`, `currentVersion: String`, `status: DocumentStatus` | 见 schema |
 | `DocVersion` | `doc_versions` | `id: String` | `[documentId, version]` |
-| `ReagentMaterial` | `reagent_materials` | `id: String`, `status: DocumentStatus` | 见 schema |
-| `ReagentLot` | `reagent_lots` | `id: String`, `status: LotStatus` | `[materialId, lotNo]` |
+| `ReagentMaterial` | `reagent_materials` | `id: String`, `status: DocumentStatus`；v1.1：`externalCode`, `projectLabel` | 见 schema |
+| `ReagentLot` | `reagent_lots` | `id: String`, `status: LotStatus`；v1.1：`locationId`, `spec`, `containerCount`, `openedStatus`, `form`, `notes` | `[materialId, lotNo]` |
+| `StorageLocation` | `storage_locations` | `id: String`, `code: String`, `type: StorageLocationType`, `parentId: String?`, `path: String`, `depth: Int` | 见 schema |
+| `Equipment` | `equipment` | `id: String`, `code: String`, `name: String`, `status: EquipmentStatus`, `scrapped: Boolean` | 见 schema |
 | `ReagentFormula` | `reagent_formulas` | `id: String`, `status: FormulaStatus`, `projectId: String?` | 见 schema |
 | `FormulaComponent` | `formula_components` | `id: String` | 见 schema |
 | `PrepRecord` | `prep_records` | `id: String` | 见 schema |
@@ -320,7 +325,7 @@ Content-Type: application/json
 
 ### 5.3 路由清单
 
-从 createApp 挂载和 routes 中的直接方法声明提取，共 **29 个模块、200 个声明端点**，另有根路径与健康就绪入口。
+从 createApp 挂载和 routes 中的直接方法声明提取，共 **32 个模块、217 个声明端点**，另有根路径与健康就绪入口。
 计数仅包含 get/post/put/patch/delete 等静态方法声明，不含 files 的 all 方法兜底、中间件及根健康入口。
 此索引不解析运行时授权、不等于 OpenAPI schema，也不把中间件或测试注入身份当成完整认证证明。
 每个条目的参数、权限、校验和状态码请沿对应源文件读取。
@@ -512,6 +517,44 @@ Content-Type: application/json
 | PUT | `/api/reagent-materials/:id` |
 | DELETE | `/api/reagent-materials/:id` |
 | POST | `/api/reagent-materials/bulk-delete` |
+| POST | `/api/reagent-materials/batch-import`（`reagent_materials.import`，2026-10-10 解冻，≤200/批，同名去重失败） |
+
+#### `/api/equipment` — [equipment.js](rdpms-system/backend/src/routes/equipment.js)
+
+设备/仪器台账（v1.1，2026-10-10；`equipment.view/create/update/delete`）。资产编码为业务编码，API 层字段名 `assetCode`（映射 `code` 列）。
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/equipment` |
+| GET | `/api/equipment/:id` |
+| POST | `/api/equipment` |
+| POST | `/api/equipment/batch-import`（`equipment.create`，≤200/批） |
+| PUT | `/api/equipment/:id` |
+| DELETE | `/api/equipment/:id` |
+
+#### `/api/storage-locations` — [storageLocations.js](rdpms-system/backend/src/routes/storageLocations.js)
+
+库位树（v1.1；`storage_locations.view/manage`）。`code` 发号器生成（`LOC-0001`）；删除受子库位/批次引用保护。
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/storage-locations`（`?format=tree` 返回嵌套树） |
+| GET | `/api/storage-locations/:id` |
+| POST | `/api/storage-locations` |
+| PUT | `/api/storage-locations/:id` |
+| DELETE | `/api/storage-locations/:id` |
+
+#### `/api/detection-targets` — [detectionTargets.js](rdpms-system/backend/src/routes/detectionTargets.js)
+
+检测靶标（v1.1）。**不设独立权限码**（否决清单 `detection_targets.*` 通配），读写复用 primers 域权限（view/create/update/delete）；`code` 发号器生成（`TGT-001`）。
+
+| 方法 | 路径 |
+|---|---|
+| GET | `/api/detection-targets` |
+| GET | `/api/detection-targets/:id` |
+| POST | `/api/detection-targets` |
+| PUT | `/api/detection-targets/:id` |
+| DELETE | `/api/detection-targets/:id` |
 
 #### `/api/formulas` — [formulas.js](rdpms-system/backend/src/routes/formulas.js)
 
@@ -703,6 +746,9 @@ Content-Type: application/json
 | `reports/:id`、`reports/:id/review` | `ReportEdit` / `ReportReview` | AuthGuard |
 | `knowledge`、`knowledge/:id`、`docs` | `Docs` / `KnowledgeDetail` | AuthGuard |
 | `reagent-formula`、`/new`、`/:id/edit`、`/calculator` | `FormulaList` / `FormulaEditor` / `PrepCalculator` | AuthGuard |
+| `inventory` | `Inventory`（实验台账：批次/库存，v1.1） | `REAGENTS_VIEW` |
+| `equipment` | `Equipment`（设备台账，v1.1） | `EQUIPMENT_VIEW` |
+| `storage-locations` | `StorageLocations`（库位树，v1.1） | `STORAGE_LOCATIONS_VIEW` |
 | `tasks` | `Tasks` | AuthGuard |
 | `backup` | `BackupManager`（三页签：导出与恢复 / 归档备份 / 存储用量） | `DATA_EXPORT` |
 | `users` | `Users` | `USERS_VIEW` |
@@ -1037,8 +1083,8 @@ list、metadata、download、delete 和 import-source 应经过各自动作的�
 | 依赖安装 | 仅 lockfile 差异触发；缺依赖、安装失败重试可能被跳过 | 专项核对安装状态与重试合同 |
 | 旧部署工具 | 退出生产入口但仍被专项集成测试调用 | 分清测试范围，不能直接当死代码删除 |
 | 外置备份与日志 | 服务器脚本未入库；systemd 模板为 append 日志 | 核对恢复、加密/异地与轮转，避免据旧文档推定已实现 |
-| 归档备份上线 | 代码/迁移/单元模板在工作树；生产**未配置**主密钥与归档目录、**未安装** timer | 发布窗口写入 `.env` 两项、建目录、装 `rdpms-backup.timer`，跑一次真实备份 + 校验 |
-| 归档备份验收 | 隔离库演练通过（归档 → 校验 → 篡改检出 → 解密 → `pg_restore` 回灌逐表一致 → HTTP 权限与审计） | 生产首次备份后补一次恢复演练；smoke / perm-matrix 尚未加入归档端点断言 |
+| 归档备份上线 | **已完成（2026-10-10）**：`.env` 两项 + 归档目录 + `rdpms-backup.timer` 均已就位；首次生产归档经单元触发成功 | — |
+| 归档备份验收 | 隔离库演练通过；生产产物离线校验 **7/7 通过**、篡改 1 字节即被「解密」检查拦下 | 仍待：生产恢复演练（解密 → `pg_restore` → 按 meta.tableCounts 逐表比对）；smoke / perm-matrix 的归档断言在目标环境执行 |
 | 归档范围缺口 | 归档只覆盖数据库，不含 uploads 二进制与异地副本 | 与既有 uploads 快照、COS 异地方案一并决策，避免形成"看似完整的备份" |
 | 密码提示 | Settings 页面仍提示至少 6 位；不能代替服务端口令策略 | 按当前服务端合同统一提示与校验 |
 | 全局限流 | 当前未实现统一入口速率限制 | 按实际风险单独设计与验收 |
@@ -1185,6 +1231,12 @@ node scripts/backup-verify.mjs /srv/rdpms/backups/archive/<日期>/<产物目录
 密文篡改 1 字节 → 解密检查失败；仅改 `meta.sha256` → 哈希检查失败；meta 少一张表 → TOC 对账失败；
 `pg_restore` 回灌后 52 张表行数逐表一致（`backup_archives` 按快照计数，不含本次作业自己那一行，属预期）；
 HTTP 层 `archives`/`storage`/`run`/`verify`/`download`/`retention`/`delete` 均按预期，ADMIN 全部 403，且审计已落库。
+
+**2026-10-10 生产启用与首次验收**：`/srv/rdpms/.env` 增加 `BACKUP_MASTER_KEY` 与 `BACKUP_ARCHIVE_DIR=/srv/rdpms/backups/archive`
+（目录 `rdpms:rdpms 0700`），`rdpms-backup.{service,timer}` 已安装并 `enable --now`（下次触发 02:03，Persistent + 5 分钟随机延迟）。
+经单元触发的首次生产归档 `backup-20261010T022914-d2a1dc77`：54 表 / 密文 737,336 字节 / 快照 `exported` / 0.8s；
+产物目录只有 `.dump.aes` 与 `.meta.json`（无明文 dump）；离线校验 7 项全通过，篡改密文 1 字节即被「解密」检查拦下。
+**生产恢复演练（解密 → `pg_restore` → 逐表行数比对）仍待做**；uploads 快照与 COS 异地仍由 `rdpms-backup.sh` 负责且尚无定时。
 
 ### 12.3 维护入口与资料优先级
 

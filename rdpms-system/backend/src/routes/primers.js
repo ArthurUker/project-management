@@ -23,7 +23,7 @@ router.use('*', authMiddleware);
 
 const PRIMER_FIELDS = [
   'name', 'type', 'sequence', 'projectId', 'targetId', 'targetGene', 'validatedStrain',
-  'modification5', 'modification3', 'ampliconLength', 'synthesisAmount',
+  'modification5', 'modification3', 'fluorescentChannel', 'ampliconLength', 'synthesisAmount',
   'synthesisCompany', 'tubeCount', 'notes', 'status',
 ];
 
@@ -59,6 +59,7 @@ router.get('/', requirePermission('primers.view'), async (c) => {
       { name: { contains: keyword } },
       { sequence: { contains: keyword } },
       { targetGene: { contains: keyword } },
+      { fluorescentChannel: { contains: keyword } },
       { code: { contains: keyword } },
     ];
   }

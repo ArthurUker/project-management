@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { reagentMaterialsAPI } from '@/api';
+import { dictAPI, reagentMaterialsAPI } from '@/api';
 import { PERMS, useHasPerm } from '../../auth/permissions';
 import { safeStorage } from '@/utils/safeStorage';
 
@@ -24,46 +24,7 @@ type TableColumn = {
   renderCell: (row: any) => React.ReactNode;
 };
 
-type DefaultMaterial = {
-  commonName: string;
-  chineseName: string;
-  englishName: string;
-  category?: string;
-  mw: number;
-  state?: string;
-  density?: number;
-  casNumber?: string;
-  molecularFormula?: string;
-  purity?: number;
-  defaultStockConc?: number;
-  defaultStockUnit?: string;
-  supplier?: string;
-  notes?: string;
-};
-
-const DEFAULT_MATERIALS: DefaultMaterial[] = [
-  { commonName:'Tris', chineseName:'三羟甲基氨基甲烷', englishName:'Tris base', category:'缓冲体系', mw:121.14 },
-  { commonName:'NaCl', chineseName:'氯化钠', englishName:'Sodium Chloride', category:'盐类', mw:58.44 },
-  { commonName:'KCl', chineseName:'氯化钾', englishName:'Potassium Chloride', category:'盐类', mw:74.55 },
-  { commonName:'EDTA', chineseName:'乙二胺四乙酸二钠', englishName:'Ethylenediaminetetraacetic acid disodium salt', category:'螯合剂', mw:372.24 },
-  { commonName:'MgCl2', chineseName:'氯化镁', englishName:'Magnesium Chloride', category:'盐类', mw:203.30 },
-  { commonName:'CaCl2', chineseName:'氯化钙', englishName:'Calcium Chloride', category:'盐类', mw:110.98 },
-  { commonName:'HEPES', chineseName:'羟乙基哌嗪乙硫磺酸', englishName:'4-(2-hydroxyethyl)-1-piperazineethanesulfonic acid', category:'缓冲体系', mw:238.30 },
-  { commonName:'SDS', chineseName:'十二烷基硫酸钠', englishName:'Sodium Dodecyl Sulfate', category:'去污剂', mw:288.38 },
-  { commonName:'DTT', chineseName:'二硫苏糖醇', englishName:'Dithiothreitol', category:'稳定剂', mw:154.25 },
-  { commonName:'β-ME', chineseName:'β-巯基乙醇', englishName:'Beta-Mercaptoethanol', category:'稳定剂', mw:78.13 },
-  { commonName:'GITC', chineseName:'异硫氰酸胍', englishName:'Guanidinium isothiocyanate', category:'变性剂', mw:118.16 },
-  { commonName:'尿素', chineseName:'尿素', englishName:'Urea', category:'变性剂', mw:60.06 },
-  { commonName:'蔗糖', chineseName:'蔗糖', englishName:'Sucrose', category:'稳定剂', mw:342.30 },
-  { commonName:'甘油', chineseName:'甘油', englishName:'Glycerol', category:'稳定剂', mw:92.09, state:'liquid', density:1.261 },
-  { commonName:'BSA', chineseName:'牛血清白蛋白', englishName:'Bovine Serum Albumin', category:'酶/蛋白', mw:66430 },
-  { commonName:'Tween-20', chineseName:'吐温-20', englishName:'Polyoxyethylene sorbitan monolaurate', category:'去污剂', mw:1228.0, state:'liquid' },
-  { commonName:'Triton X-100', chineseName:'曲拉通X-100', englishName:'Polyethylene glycol tert-octylphenyl ether', category:'去污剂', mw:625.0, state:'liquid' },
-  { commonName:'NaOH', chineseName:'氢氧化钠', englishName:'Sodium Hydroxide', category:'pH调节剂', mw:40.00 },
-  { commonName:'HCl', chineseName:'盐酸', englishName:'Hydrochloric acid', category:'pH调节剂', mw:36.46, state:'liquid', density:1.19 },
-  { commonName:'KH2PO4', chineseName:'磷酸二氢钾', englishName:'Potassium dihydrogen phosphate', category:'盐类', mw:136.09 },
-  { commonName:'Na2HPO4', chineseName:'磷酸氢二钠', englishName:'Disodium hydrogen phosphate', category:'盐类', mw:141.96 },
-];
+// v1.1（2026-10-10）：原 DEFAULT_MATERIALS 初始化词库已移除（见 load() 中的说明）。
 
 const STOCK_UNIT_OPTIONS = [
   { value: 'M', label: 'M' },
@@ -149,6 +110,36 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
   const [showColumnSettings, setShowColumnSettings] = useState(false);
   const [columnOrder, setColumnOrder] = useState<ColumnKey[]>(DEFAULT_COLUMN_ORDER);
   const canDeleteMaterial = useHasPerm(PERMS.REAGENT_MATERIALS_DELETE);
+
+  // v1.1（2026-10-10）：类别字典（MaterialCategory）从后端枚举元数据加载，
+  // 用于展示中文标签并让新增分类（引物探针/磁珠/质粒…）立即可选。
+  const [categoryDict, setCategoryDict] = useState<Array<{ code: string; label: string }>>([]);
+  useEffect(() => {
+    dictAPI
+      .byName('MaterialCategory')
+      .then((rows) => {
+        setCategoryDict(
+          (rows || [])
+            .map((r: { code?: string; label?: string }) => ({ code: String(r.code || ''), label: String(r.label || r.code || '') }))
+            .filter((r) => r.code),
+        );
+      })
+      .catch(() => {
+        /* 字典加载失败时降级为原始值展示 */
+      });
+  }, []);
+
+  /** 类别值（枚举 code 或历史中文）→ 展示用中文标签 */
+  const categoryLabel = React.useCallback(
+    (value?: string | null) => {
+      const raw = String(value || '').trim();
+      if (!raw) return '未分类';
+      const first = raw.split(/[,，;；|、]+/).map((s) => s.trim()).filter(Boolean)[0] || raw;
+      const hit = categoryDict.find((d) => d.code === first || d.label === first);
+      return hit ? hit.label : first;
+    },
+    [categoryDict],
+  );
 
   // 滚动位置保持：编辑保存后恢复原位
   const containerRef = useRef<HTMLDivElement>(null);
@@ -432,9 +423,11 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
 
   const categoryOptions = React.useMemo(() => {
     const merged = new Set(CATEGORY_OPTIONS);
-    list.forEach((item) => parseCategories(item.category || '未分类').forEach((part) => merged.add(part)));
+    // v1.1：后端枚举字典的中文标签（含引物探针/磁珠/质粒/菌株/培养基/对照品/试剂盒）
+    categoryDict.forEach((d) => merged.add(d.label));
+    list.forEach((item) => parseCategories(item.category || '未分类').forEach((part) => merged.add(categoryLabel(part))));
     return Array.from(merged);
-  }, [list, parseCategories]);
+  }, [list, parseCategories, categoryDict, categoryLabel]);
 
   useEffect(() => {
     try {
@@ -475,44 +468,11 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
       });
       const items = res.items || [];
 
-      // 如果数据库为空，按需初始化默认数据
-      if (items.length === 0) {
-        for (const m of DEFAULT_MATERIALS) {
-          try {
-            await reagentMaterialsAPI.create({
-              commonName: m.commonName,
-              chineseName: m.chineseName || null,
-              englishName: m.englishName || null,
-              category: m.category || '未分类',
-              casNumber: m.casNumber || null,
-              molecularFormula: m.molecularFormula || null,
-              mw: m.mw,
-              purity: m.purity || 98,
-              density: m.density || null,
-              state: m.state || 'solid',
-              defaultStockConc: m.defaultStockConc || null,
-              defaultStockUnit: m.defaultStockUnit || null,
-              supplier: m.supplier || null,
-              notes: m.notes || null,
-            });
-          } catch (e) {
-            // ignore
-          }
-        }
-        const res2 = await reagentMaterialsAPI.list({
-          keyword,
-          category: categoryFilter.length > 0 ? categoryFilter.join(',') : 'all',
-          state: stateFilter,
-          sortBy,
-          sortOrder,
-        });
-        const nextList = res2.items || [];
-        setList(nextList);
-        setSelectedIds(prev => prev.filter(id => nextList.some((item: any) => item.id === id)));
-      } else {
-        setList(items);
-        setSelectedIds(prev => prev.filter(id => items.some((item: any) => item.id === id)));
-      }
+      // 修正（2026-10-10）：移除「列表为空自动灌 DEFAULT_MATERIALS」逻辑。
+      // 该逻辑在任意搜索无结果时都会静默写入 20 条 Tris/NaCl 等物料（现存脏数据来源之一），
+      // 且盘点数据入库后已无初始化需求。
+      setList(items);
+      setSelectedIds(prev => prev.filter(id => items.some((item: any) => item.id === id)));
       // 恢复保存前的滚动位置
       if (savedScrollRef.current !== null) {
         const pos = savedScrollRef.current;
@@ -551,8 +511,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
     const data: any = Object.fromEntries(form as any);
     data.category = stringifyCategories(categoryDraft);
 
-    // 校验 MW 必填
-    if (!data.mw) { alert('请填写 MW (g/mol)'); return; }
+    // v1.1：MW 改为可选（盘点导入物料大多没有 MW；后端本就非必填）
     if (!data.commonName) { alert('请填写 常用名 (commonName)'); return; }
 
     try {
@@ -711,10 +670,10 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
       tdClassName: 'px-4 py-3 text-center min-w-[150px] whitespace-nowrap',
       renderCell: (row) => {
         const cats = parseCategories(row.category || '未分类');
-        const primary = cats[0] || '未分类';
+        const primary = categoryLabel(cats[0]) || '未分类';
         const remain = Math.max(cats.length - 1, 0);
         return (
-          <div className="flex items-center justify-center gap-1.5" title={cats.join(' / ')}>
+          <div className="flex items-center justify-center gap-1.5" title={cats.map((c) => categoryLabel(c)).join(' / ')}>
             <span className="inline-flex max-w-[104px] items-center truncate rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] text-slate-700">
               {primary}
             </span>
@@ -1093,8 +1052,8 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
                     </div>
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
-                        <label className="mb-1 block text-sm font-medium text-gray-700">MW (g/mol)（必填）</label>
-                        <input name="mw" type="number" step="any" defaultValue={editing?.mw ?? ''} placeholder="例如 121.14" className="input" />
+                        <label className="mb-1 block text-sm font-medium text-gray-700">MW (g/mol)</label>
+                        <input name="mw" type="number" step="any" defaultValue={editing?.molecularWeight ?? editing?.mw ?? ''} placeholder="例如 121.14（可选）" className="input" />
                       </div>
                       <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700">物态</label>
@@ -1137,6 +1096,14 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
                       <div className="md:col-span-2">
                         <label className="mb-1 block text-sm font-medium text-gray-700">供应商</label>
                         <input name="supplier" defaultValue={editing?.supplier ?? ''} placeholder="记录供应商、货号或采购来源" className="input" />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">外部编码</label>
+                        <input name="externalCode" defaultValue={editing?.externalCode ?? ''} placeholder="如 RM10011306（业务侧编码）" className="input" />
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-sm font-medium text-gray-700">所属项目</label>
+                        <input name="projectLabel" defaultValue={editing?.projectLabel ?? ''} placeholder="如 04-呼吸道-鼓楼10项" className="input" />
                       </div>
                       <div className="md:col-span-2">
                         <label className="mb-1 block text-sm font-medium text-gray-700">备注</label>

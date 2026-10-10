@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   BookOpen,
+  Boxes,
   ClipboardList,
   FileText,
   FlaskConical,
@@ -8,8 +9,10 @@ import {
   LayoutDashboard,
   LayoutTemplate,
   ListChecks,
+  MapPin,
   Scale,
   Settings,
+  Wrench,
 } from 'lucide-react';
 import { PERMS, hasPerm, type MaybePerm } from '../auth/permissions';
 
@@ -93,6 +96,18 @@ export const MENU: MenuItem[] = [
     path: '/reagent-formula',
     perm: PERMS.REAGENTS_VIEW,
     icon: FlaskConical,
+  },
+  {
+    // v1.1（2026-10-10）：实验台账（库存批次 / 设备台账 / 库位管理）
+    key: 'lab-inventory',
+    label: '实验台账',
+    icon: Boxes,
+    perm: [PERMS.REAGENTS_VIEW, PERMS.EQUIPMENT_VIEW, PERMS.STORAGE_LOCATIONS_VIEW],
+    children: [
+      { key: 'li-lots', label: '库存批次', path: '/inventory', perm: PERMS.REAGENTS_VIEW, icon: Boxes },
+      { key: 'li-equipment', label: '设备台账', path: '/equipment', perm: PERMS.EQUIPMENT_VIEW, icon: Wrench },
+      { key: 'li-locations', label: '库位管理', path: '/storage-locations', perm: PERMS.STORAGE_LOCATIONS_VIEW, icon: MapPin },
+    ],
   },
   {
     key: 'system',

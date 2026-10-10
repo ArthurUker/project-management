@@ -26,6 +26,9 @@ import phasesRoutes from '../routes/phases.js';
 import reagentsRoutes from '../routes/reagents.js';
 import reagentLotsRoutes from '../routes/reagent-lots.js';
 import reagentMaterialsRoutes from '../routes/reagentMaterials.js';
+import equipmentRoutes from '../routes/equipment.js';
+import storageLocationsRoutes from '../routes/storageLocations.js';
+import detectionTargetsRoutes from '../routes/detectionTargets.js';
 import taskTemplatesRoutes from '../routes/taskTemplates.js';
 import formulasRoutes from '../routes/formulas.js';
 import prepRoutes from '../routes/prep-calculator.js';
@@ -128,6 +131,11 @@ export function createApp(deps = {}) {
   app.route('/api/reagent-materials', reagentMaterialsRoutes);
   app.route('/api/formulas', formulasRoutes);
   app.route('/api/prep', prepRoutes);
+
+  // ── 实验室台账扩展（v1.1，2026-10-10）───────────────────────────────────────
+  app.route('/api/equipment', equipmentRoutes);                  // 设备/仪器台账
+  app.route('/api/storage-locations', storageLocationsRoutes);   // 库位树
+  app.route('/api/detection-targets', detectionTargetsRoutes);   // 检测靶标（primers 域权限）
 
   // ── 模板与法规 ───────────────────────────────────────────────────────────────
   app.route('/api/project-templates', projectTemplatesRoutes);
