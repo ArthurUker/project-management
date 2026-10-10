@@ -27,7 +27,20 @@ export { projectTemplatesAPI, taskTemplatesAPI } from './endpoints/templates';
 export type { ProjectTemplate, TaskTemplate, TaskTemplateStep } from './endpoints/templates';
 
 export { backupAPI, BACKUP_MODULES } from './endpoints/backup';
-export type { BackupPayload, RestorePreviewTable, RestoreSummary, RestoreValidation } from './endpoints/backup';
+export { backupArchiveAPI } from './endpoints/backup';
+export type {
+  BackupPayload,
+  RestorePreviewTable,
+  RestoreSummary,
+  RestoreValidation,
+  ArchiveRow,
+  ArchiveListResponse,
+  ArchiveVerifyCheck,
+  ArchiveVerifyResponse,
+  ArchiveRunResponse,
+  ArchiveRetentionPreview,
+  ArchiveStorageResponse,
+} from './endpoints/backup';
 
 export { syncAPI } from './endpoints/sync';
 export type {
