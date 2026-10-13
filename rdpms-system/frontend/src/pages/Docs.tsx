@@ -4,7 +4,8 @@ import { docsAPI, formulaAPI } from '@/api';
 import { useAuth } from '../auth/useAuth';
 import ReagentLibrary from './knowledge/ReagentLibrary';
 import PrimerLibrary from './knowledge/PrimerLibrary';
-import AmplificationReagentLibrary from './knowledge/AmplificationReagentLibrary';
+// 注（2026-10-12）：原 AmplificationReagentLibrary（卡片式）已由 ReagentLibrary(libraryTag="AMP") 取代
+
 import SampleLibrary from './knowledge/SampleLibrary';
 import RegulatoryDocumentsPage from './RegulatoryDocumentsPage';
 import VisualTableEditor, { type VisualTableEditorRef } from '../components/VisualTableEditor';
@@ -162,9 +163,15 @@ export default function Docs() {
       const primer = cats.find((c: DocCategory) => c.name === '引物探针库'); if (primer) setPrimerCategoryId(primer.id);
       const sample = cats.find((c: DocCategory) => c.name === '样本库'); if (sample) setSampleCategoryId(sample.id);
       // 选中的分类必须仍然存在（URL 里的 category 可能指向已被删除的分类）→ 回退到第一个
+      // 修正（2026-10-12）：首次挂载时本回调闭包里的 selectedCategory 可能还是初始值
+      // （URL effect 的 setState 尚未回流），会把「URL 直达分类」覆盖成第一个分类；
+      // 因此回退时优先采用 URL 上的 category（若该分类有效）。
       const selectionValid =
         !!selectedCategory && cats.some((c: DocCategory) => c.id === selectedCategory);
-      if (cats.length > 0 && !selectionValid) setSelectedCategory(cats[0].id);
+      if (cats.length > 0 && !selectionValid) {
+        const fromUrl = categoryParam && cats.some((c: DocCategory) => c.id === categoryParam) ? categoryParam : null;
+        setSelectedCategory(fromUrl || cats[0].id);
+      }
     } catch (error) { console.error('加载分类失败:', error); }
   };
 
@@ -259,25 +266,8 @@ export default function Docs() {
     '样本库': Microscope,
   };
 
-  const cardBaseStyle: React.CSSProperties = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 6,
-    padding: '6px 14px',
-    borderRadius: 8,
-    border: '1px solid #e2e8f0',
-    background: '#f8fafc',
-    cursor: 'pointer',
-    transition: 'all 0.18s ease',
-    userSelect: 'none',
-    whiteSpace: 'nowrap',
-  };
-
-  const getCardStyle = (isActive: boolean, isAll: boolean): React.CSSProperties => {
-    if (isAll && isActive) return { background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', border: '1px solid #2563eb', color: '#fff', boxShadow: '0 2px 10px rgba(59,130,246,0.30)' };
-    if (isActive) return { border: '1px solid #3b82f6', background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', color: '#2563eb', boxShadow: '0 2px 8px rgba(59,130,246,0.15)' };
-    return {};
-  };
+  // 注（2026-10-12）：原 cardBaseStyle / getCardStyle（分类卡片内联样式）已由
+  // renderCategoryPill 的 Tailwind 实现取代，随分类区重构一并移除。
 
   const getTypeColor = (type: string) => { const typeInfo = DOC_TYPES.find(t => t.id === type); const colors: Record<string, string> = { blue: 'bg-blue-100 text-blue-700', green: 'bg-green-100 text-green-700', purple: 'bg-purple-100 text-purple-700', orange: 'bg-orange-100 text-orange-700' }; return colors[typeInfo?.color || 'blue']; };
   const getStatusBadge = (status: string) => { const badges: Record<string, string> = { active: 'bg-green-100 text-green-700', archived: 'bg-gray-100 text-gray-700', deprecated: 'bg-red-100 text-red-700' }; return badges[status] || badges.active; };
@@ -306,29 +296,89 @@ export default function Docs() {
     setShowMindmapEditor(true);
   };
 
+  /**
+   * 需要「全高布局 + 表格内部滚动」的库页面（v1.1.1 / v1.3，2026-10-12）：
+   * 试剂原料库 与 扩增反应体系试剂（两者复用同一套表格组件 ReagentLibrary）。
+   * 该分支需要父链最小高度约束（外层列表区 overflow hidden、包装层 flex 撑满），
+   * 其余库/文档分支保持原有「页面级滚动」行为不变。
+   */
+  const reagentLibFullHeight = !!(
+    selectedCategory &&
+    ((reagentCategoryId && selectedCategory === reagentCategoryId) ||
+      (ampReagentCategoryId && selectedCategory === ampReagentCategoryId))
+  );
+  /** 任一库分类（试剂原料库/扩增试剂/引物探针/样本库）：这些页面用不到「文档搜索行」，隐藏它以把高度让给数据区 */
+  const isLibraryCategory =
+    !!selectedCategory &&
+    [reagentCategoryId, ampReagentCategoryId, primerCategoryId, sampleCategoryId].some(
+      (id) => id && selectedCategory === id,
+    );
+
+  /**
+   * 分类分组（2026-10-12）：库类分类（试剂原料库/引物探针库/样本库/扩增反应体系试剂）
+   * 是「实验数据台账」，与 SOP/模板/技术文档等「知识文档」语义不同，分组展示更清晰。
+   */
+  const libraryCategoryIds = new Set(
+    [reagentCategoryId, ampReagentCategoryId, primerCategoryId, sampleCategoryId].filter((x): x is string => !!x),
+  );
+  const dataCategories = categories.filter((c) => libraryCategoryIds.has(c.id));
+  const docCategories = categories.filter((c) => !libraryCategoryIds.has(c.id));
+
+  /** 分类 pill（统一尺寸与配色；替换原先逐个 onMouseEnter/Leave 手改样式的实现） */
+  const renderCategoryPill = (cat: DocCategory) => {
+    const isActive = selectedCategory === cat.id;
+    const Icon = IconMap[cat.name] || FileText;
+    return (
+      <button
+        key={cat.id}
+        type="button"
+        onClick={() => selectCategory(cat.id)}
+        className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs transition-colors ${
+          isActive
+            ? 'border-primary-300 bg-primary-50 font-semibold text-primary-700'
+            : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-primary-200 hover:bg-primary-50/60 hover:text-primary-700'
+        }`}
+      >
+        <Icon size={13} />
+        <span className="truncate">{cat.name}</span>
+        {cat._count?.documents ? (
+          <span
+            className={`rounded-full px-1.5 text-[10px] leading-4 ${
+              isActive ? 'bg-primary-100 text-primary-700' : 'bg-slate-200/70 text-slate-500'
+            }`}
+          >
+            {cat._count.documents}
+          </span>
+        ) : null}
+      </button>
+    );
+  };
+
   return (
-    <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', boxSizing: 'border-box', height: '100%', overflow: 'hidden' }}>
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">知识库管理</h1>
-          <p className="text-sm text-gray-500 mt-1">统一管理知识文档与法规文档（法规作为知识库子模块）</p>
+    <div style={{ padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', boxSizing: 'border-box', height: '100%', overflow: 'hidden' }}>
+      {/* 行1：标题 + 模块切换（合并层级；移除冗余副标题） */}
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-xl font-bold text-gray-900">知识库管理</h1>
+        <div className="flex items-center gap-0.5 rounded-lg border border-slate-200/70 bg-slate-100/80 p-0.5">
+          <button
+            type="button"
+            onClick={() => switchModule('docs')}
+            className={`rounded-md px-3 py-1 text-[13px] transition-colors ${
+              activeModule === 'docs' ? 'bg-white font-semibold text-primary-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            知识文档
+          </button>
+          <button
+            type="button"
+            onClick={() => switchModule('regulatory')}
+            className={`rounded-md px-3 py-1 text-[13px] transition-colors ${
+              activeModule === 'regulatory' ? 'bg-white font-semibold text-primary-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            法规知识库
+          </button>
         </div>
-
-      </div>
-
-      <div className="card p-3 flex items-center gap-2">
-        <button
-          className={activeModule === 'docs' ? 'btn btn-primary' : 'btn btn-secondary'}
-          onClick={() => switchModule('docs')}
-        >
-          知识文档
-        </button>
-        <button
-          className={activeModule === 'regulatory' ? 'btn btn-primary' : 'btn btn-secondary'}
-          onClick={() => switchModule('regulatory')}
-        >
-          法规知识库
-        </button>
       </div>
 
       {activeModule === 'regulatory' ? (
@@ -336,76 +386,106 @@ export default function Docs() {
       ) : (
         <>
 
-      <div style={{ flexShrink: 0, width: '100%', background: 'rgba(255, 255, 255, 0.82)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', borderRadius: '12px', border: '1px solid rgba(0, 0, 0, 0.08)', boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06)', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 0, boxSizing: 'border-box' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-            {categories.map(cat => {
-              const isActive = selectedCategory === cat.id;
-              const Icon = IconMap[cat.name] || FileText;
-              return (
-                <div
-                  key={cat.id}
-                  onClick={() => selectCategory(cat.id)}
-                  style={{ ...cardBaseStyle, ...getCardStyle(isActive, false), minWidth: 'fit-content' }}
-                  onMouseEnter={(e) => {
-                    const target = e.currentTarget;
-                    target.style.border = '1px solid #bfdbfe';
-                    target.style.background = '#eff6ff';
-                    target.style.color = '#3b82f6';
-                    target.style.transform = 'translateY(-1px)';
-                    target.style.boxShadow = '0 2px 8px rgba(59,130,246,0.10)';
-                    const svg = target.querySelector('svg');
-                    if (svg) svg.style.color = '#3b82f6';
-                  }}
-                  onMouseLeave={(e) => {
-                    const target = e.currentTarget;
-                    const isActiveLocal = isActive;
-                    target.style.border = isActiveLocal ? '1px solid #3b82f6' : '1px solid #e2e8f0';
-                    target.style.background = isActiveLocal ? 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)' : '#f8fafc';
-                    target.style.color = isActiveLocal ? '#2563eb' : '#475569';
-                    target.style.transform = 'translateY(0px)';
-                    target.style.boxShadow = isActiveLocal ? '0 2px 8px rgba(59,130,246,0.15)' : 'none';
-                    const svg = target.querySelector('svg');
-                    if (svg) svg.style.color = isActiveLocal ? '#2563eb' : '#475569';
-                  }}
-                >
-                  <Icon size={14} color={isActive ? '#2563eb' : '#475569'} />
-                  <div style={{ fontSize: 13, fontWeight: isActive ? 600 : 500, color: isActive ? '#2563eb' : '#475569' }}>{cat.name}</div>
-                  {cat._count?.documents ? <div style={{ fontSize: 11, color: isActive ? '#1d4ed8' : '#94a3b8', background: isActive ? '#bfdbfe' : '#f1f5f9', borderRadius: 10, padding: '1px 6px', minWidth: 18, textAlign: 'center' }}>{cat._count.documents}</div> : null}
-                </div>
-              );
-            })}
-          </div>
-
-          <div>
-            <button onClick={() => setIsCollapsed(s => !s)} style={{ fontSize: '12px', color: '#94a3b8', cursor: 'pointer', padding: '2px 8px', borderRadius: '6px', border: '1px solid rgba(0,0,0,0.08)', background: 'transparent', display: 'flex', alignItems: 'center', gap: '4px' }} onMouseEnter={(e) => { (e.currentTarget.style.color = '#3b82f6'); (e.currentTarget.style.border = '1px solid #3b82f6'); }} onMouseLeave={(e) => { (e.currentTarget.style.color = '#94a3b8'); (e.currentTarget.style.border = '1px solid rgba(0,0,0,0.08)'); }}>
-              <svg style={{ transform: isCollapsed ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
-              <span>{isCollapsed ? '展开' : '收起'}</span>
+      <div className="shrink-0 rounded-xl border border-slate-200/70 bg-white/85 px-3 py-2.5 shadow-sm">
+        {isCollapsed ? (
+          <div className="flex items-center justify-between gap-2">
+            <span className="truncate text-xs text-slate-500">
+              当前分类：
+              <span className="ml-1 font-medium text-primary-700">
+                {categories.find((c) => c.id === selectedCategory)?.name || '未选择'}
+              </span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsCollapsed(false)}
+              className="inline-flex shrink-0 items-center gap-1 rounded-md border border-slate-200 px-2 py-0.5 text-[11px] text-slate-500 transition-colors hover:border-primary-200 hover:text-primary-700"
+            >
+              全部分类
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
             </button>
           </div>
-        </div>
-        <div style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', paddingBottom: '14px', marginBottom: '14px' }} />
-        <div style={{ overflow: 'hidden', maxHeight: isCollapsed ? '0px' : '60px', opacity: isCollapsed ? 0 : 1, transition: 'max-height 0.25s ease, opacity 0.2s ease' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ position: 'relative', minWidth: '240px' }}>
-              <input type="text" placeholder="搜索文档编号、标题..." className="input pl-10" value={searchKeyword} onChange={(e) => setSearchKeyword(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch()} />
-              <svg className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+        ) : (
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              {dataCategories.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="w-[58px] shrink-0 text-[11px] font-medium tracking-wide text-slate-400">实验数据</span>
+                  {dataCategories.map(renderCategoryPill)}
+                </div>
+              )}
+              {docCategories.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="w-[58px] shrink-0 text-[11px] font-medium tracking-wide text-slate-400">知识文档</span>
+                  {docCategories.map(renderCategoryPill)}
+                </div>
+              )}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {DOC_TYPES.map(type => (
-                <button key={type.id} onClick={() => setFilterType(filterType === type.id ? null : type.id)} style={{ padding: '6px 12px', borderRadius: '9999px', fontSize: '13px', cursor: 'pointer', border: filterType === type.id ? 'none' : '1px solid #e2e8f0', background: filterType === type.id ? '#3b82f6' : '#ffffff', color: filterType === type.id ? '#ffffff' : '#64748b' }}>{type.label}</button>
-              ))}
-            </div>
-            <div style={{ marginLeft: 'auto' }}><button onClick={handleSearch} style={{ background: '#3b82f6', color: '#fff', borderRadius: '8px', padding: '6px 16px', cursor: 'pointer' }}>搜索</button></div>
+            <button
+              type="button"
+              onClick={() => setIsCollapsed(true)}
+              title="收起分类"
+              className="inline-flex shrink-0 items-center rounded-md border border-slate-200 px-1.5 py-0.5 text-slate-400 transition-colors hover:border-slate-300 hover:text-slate-600"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
+            </button>
           </div>
-        </div>
+        )}
+
+        {/* 文档搜索行：库分类页面无需文档搜索，自动隐藏 */}
+        {!isLibraryCategory && (
+          <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-2">
+            <div className="relative min-w-[220px]">
+              <input
+                type="text"
+                placeholder="搜索文档编号、标题..."
+                className="input h-8 pl-9 text-sm"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              />
+              <svg className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            </div>
+            {DOC_TYPES.map((type) => (
+              <button
+                key={type.id}
+                type="button"
+                onClick={() => setFilterType(filterType === type.id ? null : type.id)}
+                className={`rounded-full px-2.5 py-0.5 text-xs transition-colors ${
+                  filterType === type.id
+                    ? 'bg-primary-600 font-medium text-white'
+                    : 'border border-slate-200 bg-white text-slate-500 hover:border-primary-200 hover:text-primary-700'
+                }`}
+              >
+                {type.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={handleSearch}
+              className="ml-auto rounded-md bg-primary-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-700"
+            >
+              搜索
+            </button>
+          </div>
+        )}
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: '16px', width: '100%', boxSizing: 'border-box', paddingBottom: 8 }}>
+      <div style={{ flex: 1, overflowY: reagentLibFullHeight ? 'hidden' : 'auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: reagentLibFullHeight ? 0 : '16px', width: '100%', boxSizing: 'border-box', paddingBottom: 8 }}>
         {selectedCategory && reagentCategoryId && selectedCategory === reagentCategoryId ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-4"><ReagentLibrary /></div>
+          <div
+            className="bg-white rounded-lg border border-gray-200 p-3"
+            style={reagentLibFullHeight ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } : undefined}
+          >
+            <ReagentLibrary />
+          </div>
         ) : selectedCategory && ampReagentCategoryId && selectedCategory === ampReagentCategoryId ? (
-          <div className="bg-white rounded-lg border border-gray-200 p-4"><AmplificationReagentLibrary /></div>
+          /* v1.3（2026-10-12）：扩增反应体系试剂库改为与试剂原料库同款表格（按 libraryTag=AMP 筛选） */
+          <div
+            className="bg-white rounded-lg border border-gray-200 p-3"
+            style={reagentLibFullHeight ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } : undefined}
+          >
+            <ReagentLibrary libraryTag="AMP" newButtonLabel="+ 新增扩增试剂" />
+          </div>
         ) : selectedCategory && primerCategoryId && selectedCategory === primerCategoryId ? (
           <div className="bg-white rounded-lg border border-gray-200 p-4"><PrimerLibrary /></div>
         ) : selectedCategory && sampleCategoryId && selectedCategory === sampleCategoryId ? (

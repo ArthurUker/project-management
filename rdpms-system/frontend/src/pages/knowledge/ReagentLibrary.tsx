@@ -76,7 +76,15 @@ const truncateWithTitle = (value: string | null | undefined, fallback = '-') => 
   );
 };
 
-export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: number; hideTopButton?: boolean }) {
+export default function ReagentLibrary({ openKey, hideTopButton, libraryTag, newButtonLabel }: {
+  openKey?: number;
+  hideTopButton?: boolean;
+  /** v1.3（2026-10-12）：知识库子集标签（如 AMP=扩增反应体系试剂）。
+   *  设置后列表按该标签筛选、新建记录自动打标——同一套表格/分页/列设置。 */
+  libraryTag?: string;
+  /** 新增按钮文案（默认「+ 新增试剂原料」） */
+  newButtonLabel?: string;
+}) {
   // openKey: 当父组件需要触发打开新建抽屉时，传入一个不断递增的数值即可触发打开
   // hideTopButton: 当父级页面有全局新建按钮时，可隐藏组件内部的顶部新建按钮以避免重复
   React.useEffect(() => {
@@ -111,6 +119,12 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
   const [columnOrder, setColumnOrder] = useState<ColumnKey[]>(DEFAULT_COLUMN_ORDER);
   const canDeleteMaterial = useHasPerm(PERMS.REAGENT_MATERIALS_DELETE);
 
+  // v1.1.1（2026-10-12）：大数据量可用性——服务端分页 + 表格独立滚动。
+  // 此前列表全量返回（2000+ 行一次性渲染）+ 无分页控件 + 表格随页面整体滚动，数据难以查看。
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+  const [total, setTotal] = useState(0);
+
   // v1.1（2026-10-10）：类别字典（MaterialCategory）从后端枚举元数据加载，
   // 用于展示中文标签并让新增分类（引物探针/磁珠/质粒…）立即可选。
   const [categoryDict, setCategoryDict] = useState<Array<{ code: string; label: string }>>([]);
@@ -143,6 +157,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
 
   // 滚动位置保持：编辑保存后恢复原位
   const containerRef = useRef<HTMLDivElement>(null);
+  const tableWrapRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement | null>(null);
   const savedScrollRef = useRef<number | null>(null);
 
@@ -175,6 +190,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
   }, []);
 
   const toggleCategoryFilter = React.useCallback((category: string) => {
+    setPage(1);
     setCategoryFilter((prev) => {
       if (prev.includes(category)) {
         return prev.filter((item) => item !== category);
@@ -463,8 +479,12 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
         keyword,
         category: categoryFilter.length > 0 ? categoryFilter.join(',') : 'all',
         state: stateFilter,
+        // v1.3：子集库（扩增反应体系试剂）按标签筛选
+        ...(libraryTag ? { libraryTag } : {}),
         sortBy,
         sortOrder,
+        page,
+        pageSize,
       });
       const items = res.items || [];
 
@@ -472,13 +492,14 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
       // 该逻辑在任意搜索无结果时都会静默写入 20 条 Tris/NaCl 等物料（现存脏数据来源之一），
       // 且盘点数据入库后已无初始化需求。
       setList(items);
+      setTotal(typeof res.total === 'number' ? res.total : items.length);
       setSelectedIds(prev => prev.filter(id => items.some((item: any) => item.id === id)));
-      // 恢复保存前的滚动位置
+      // 恢复保存前的滚动位置（v1.1.1：滚动发生在表格容器内）
       if (savedScrollRef.current !== null) {
         const pos = savedScrollRef.current;
         savedScrollRef.current = null;
         requestAnimationFrame(() => requestAnimationFrame(() => {
-          const parent = findScrollParent(containerRef.current);
+          const parent = findScrollParent(tableWrapRef.current) ?? findScrollParent(containerRef.current);
           if (parent) parent.scrollTop = pos;
         }));
       }
@@ -487,7 +508,13 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { load(); }, [categoryFilter, stateFilter, sortBy, sortOrder]);
+  /** 搜索触发：页码已在第 1 页时直接刷新，否则回到第 1 页并交由 effect 重新加载 */
+  const triggerSearch = () => {
+    if (page !== 1) setPage(1);
+    else load();
+  };
+
+  useEffect(() => { load(); }, [categoryFilter, stateFilter, sortBy, sortOrder, page, pageSize]);
 
   const openNew = () => {
     setEditing(null);
@@ -511,14 +538,23 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
     const data: any = Object.fromEntries(form as any);
     data.category = stringifyCategories(categoryDraft);
 
+    // v1.3：子集库（如扩增反应体系试剂）新建时自动打标
+    if (libraryTag) {
+      const tags = String(data.libraryTags || (editing as any)?.libraryTags || '')
+        .split(',').map((s: string) => s.trim()).filter(Boolean);
+      if (!tags.includes(libraryTag)) tags.push(libraryTag);
+      data.libraryTags = tags.join(',');
+    }
+
     // v1.1：MW 改为可选（盘点导入物料大多没有 MW；后端本就非必填）
     if (!data.commonName) { alert('请填写 常用名 (commonName)'); return; }
 
     try {
       if (editing) await reagentMaterialsAPI.update(editing.id, data);
       else await reagentMaterialsAPI.create(data);
-      // 保存当前滚动位置，load() 完成后恢复
-      savedScrollRef.current = findScrollParent(containerRef.current)?.scrollTop ?? null;
+      // 保存当前滚动位置，load() 完成后恢复（v1.1.1：表格容器滚动）
+      savedScrollRef.current =
+        (findScrollParent(tableWrapRef.current) ?? findScrollParent(containerRef.current))?.scrollTop ?? null;
       closeEditor();
       load();
     } catch (err) { console.error(err); alert('保存失败'); }
@@ -582,19 +618,26 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
     );
   };
 
+  // 修正（2026-10-12）：后端枚举为大写（MaterialState: SOLID/LIQUID/SOLUTION/GAS），
+  // 此前此处按小写比较，导致所有「液体/溶液」物料一律显示为「固体」。
   const stateBadge = (state: string) => {
-    if (state === 'liquid') return 'bg-sky-50 text-sky-700 border border-sky-100';
-    if (state === 'solution') return 'bg-emerald-50 text-emerald-700 border border-emerald-100';
+    const s = String(state || '').toUpperCase();
+    if (s === 'LIQUID') return 'bg-sky-50 text-sky-700 border border-sky-100';
+    if (s === 'SOLUTION') return 'bg-emerald-50 text-emerald-700 border border-emerald-100';
+    if (s === 'GAS') return 'bg-amber-50 text-amber-700 border border-amber-100';
     return 'bg-slate-100 text-slate-700 border border-slate-200';
   };
 
   const stateLabel = (state: string) => {
-    if (state === 'liquid') return '液体';
-    if (state === 'solution') return '溶液';
+    const s = String(state || '').toUpperCase();
+    if (s === 'LIQUID') return '液体';
+    if (s === 'SOLUTION') return '溶液';
+    if (s === 'GAS') return '气体';
     return '固体';
   };
 
   const handleSort = (field: string) => {
+    setPage(1);
     if (sortBy === field) {
       setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
       return;
@@ -748,10 +791,15 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
     [columnOrder, columnsByKey]
   );
 
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
   return (
-    <div ref={containerRef}>
-      <div className="mb-4">
-        <div className="rounded-2xl border border-slate-200/80 bg-white px-4 py-3 shadow-sm">
+    <div ref={containerRef} className="flex h-full min-h-0 flex-col">
+      <div className="mb-3 shrink-0">
+        {/* v1.2.1（2026-10-12）：搜索卡片显式建立高层级上下文。
+            表格容器 .glass 使用 backdrop-filter（自建层叠上下文）且 DOM 顺序在后，
+            会把「分类多选」下拉面板盖住（z-20 不足以越过）。 */}
+        <div className="relative z-30 rounded-2xl border border-slate-200/80 bg-white px-4 py-3 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
               <input
@@ -759,13 +807,13 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
                 placeholder="搜索常用名/中文名/英文名/CAS号"
                 value={keyword}
                 onChange={e => setKeyword(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && load()}
+                onKeyDown={e => e.key === 'Enter' && triggerSearch()}
               />
               <details className="relative">
                 <summary className="list-none border p-2 rounded bg-white text-sm text-gray-700 cursor-pointer min-w-[180px]">
                   {categoryFilter.length > 0 ? `已选分类 ${categoryFilter.length} 项` : '全部分类'}
                 </summary>
-                <div className="absolute z-20 mt-1 w-72 rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
+                <div className="absolute z-50 mt-1 w-72 rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
                   <div className="mb-2 flex items-center justify-between">
                     <span className="text-xs text-gray-500">可多选分类筛选</span>
                     <button
@@ -794,13 +842,21 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
                 </div>
               </details>
 
-              <select className="border p-2 rounded bg-white" value={stateFilter} onChange={e => setStateFilter(e.target.value)}>
+              <select
+                className="border p-2 rounded bg-white"
+                value={stateFilter}
+                onChange={e => {
+                  setPage(1);
+                  setStateFilter(e.target.value);
+                }}
+              >
                 <option value="all">全部物态</option>
-                <option value="solid">固体</option>
-                <option value="liquid">液体</option>
-                <option value="solution">溶液</option>
+                <option value="SOLID">固体</option>
+                <option value="LIQUID">液体</option>
+                <option value="SOLUTION">溶液</option>
+                <option value="GAS">气体</option>
               </select>
-              <button className="btn" onClick={load}>搜索</button>
+              <button className="btn" onClick={triggerSearch}>搜索</button>
               <button
                 type="button"
                 className="px-3 py-2 rounded border border-gray-200 text-gray-600 hover:bg-gray-50"
@@ -809,6 +865,8 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
                   setStateFilter('all');
                   setSortBy('commonName');
                   setSortOrder('asc');
+                  if (page !== 1) setPage(1);
+                  else load();
                 }}
               >
                 重置筛选
@@ -824,7 +882,7 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
                 >
                   列设置
                 </button>
-                <button className="btn btn-primary" onClick={openNew}>+ 新增试剂原料</button>
+                <button className="btn btn-primary" onClick={openNew}>{newButtonLabel || '+ 新增试剂原料'}</button>
               </div>
             )}
             {hideTopButton && (
@@ -840,22 +898,16 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
             )}
           </div>
 
-          <div className="flex items-center justify-between mt-3">
-            <div className="flex items-center gap-4">
-              <input type="checkbox" checked={selectedIds.length === list.length && list.length > 0} onChange={toggleSelectAll} />
-              {selectedIds.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <span>已选 {selectedIds.length} 条</span>
-                  <button className="px-3 py-1 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 rounded" onClick={initiateDeleteSelected}>🗑️ 删除所选</button>
-                </div>
-              )}
+          {selectedIds.length > 0 && (
+            <div className="mt-2 flex items-center gap-3">
+              <span className="text-sm text-slate-600">已选 {selectedIds.length} 条</span>
+              <button className="rounded border border-red-200 bg-red-50 px-3 py-1 text-sm text-red-600 hover:bg-red-100" onClick={initiateDeleteSelected}>🗑️ 删除所选</button>
             </div>
-            <div />
-          </div>
+          )}
         </div>
       </div>
 
-      <div className="glass overflow-x-auto">
+      <div ref={tableWrapRef} className="glass relative z-0 min-h-0 flex-1 overflow-auto">
         <table className="glass-table min-w-[1580px] w-full table-auto">
           <thead>
             <tr>
@@ -944,6 +996,45 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* 分页条（v1.1.1）：固定于表格下方，不随表格内部滚动 */}
+      <div className="mt-2 flex shrink-0 flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+        <span>
+          共 {total} 条 · 第 {page} / {totalPages} 页
+        </span>
+        <div className="flex items-center gap-2">
+          <select
+            className="rounded border border-gray-200 bg-white px-2 py-1 text-xs"
+            value={pageSize}
+            onChange={(e) => {
+              setPage(1);
+              setPageSize(Number(e.target.value));
+            }}
+          >
+            {[20, 50, 100, 200].map((n) => (
+              <option key={n} value={n}>
+                {n} 条/页
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="rounded border border-gray-200 px-3 py-1 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+            disabled={page <= 1 || loading}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
+            上一页
+          </button>
+          <button
+            type="button"
+            className="rounded border border-gray-200 px-3 py-1 text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+            disabled={page >= totalPages || loading}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            下一页
+          </button>
+        </div>
       </div>
 
       {showDrawer && (
@@ -1057,10 +1148,11 @@ export default function ReagentLibrary({ openKey, hideTopButton }: { openKey?: n
                       </div>
                       <div>
                         <label className="mb-1 block text-sm font-medium text-gray-700">物态</label>
-                        <select name="state" defaultValue={editing?.state || 'solid'} className="input bg-white">
-                          <option value="solid">固体</option>
-                          <option value="liquid">液体</option>
-                          <option value="solution">溶液</option>
+                        <select name="state" defaultValue={String(editing?.state || 'LIQUID').toUpperCase()} className="input bg-white">
+                          <option value="SOLID">固体</option>
+                          <option value="LIQUID">液体</option>
+                          <option value="SOLUTION">溶液</option>
+                          <option value="GAS">气体</option>
                         </select>
                       </div>
                       <div>
