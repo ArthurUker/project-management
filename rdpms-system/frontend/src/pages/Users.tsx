@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { userAPI, rolesAPI } from '@/api';
+import { userAPI, rolesAPI, toMessage } from '@/api';
 import { useAuth } from '../auth/useAuth';
 import { useHasPerm, PERMS } from '../auth/permissions';
+import { validatePassword, PASSWORD_HINT } from '../constants/passwordPolicy';
 
 /** 归一化角色取值：后端 enum 为大写，兼容历史小写数据 */
 const roleOf = (u: any): string => String(u?.systemRole ?? u?.role ?? 'MEMBER').toUpperCase();
@@ -79,7 +80,15 @@ export default function Users() {
 
   const handleSave = async () => {
     if (!formData.name) { alert('请填写姓名'); return; }
-    if (modalMode === 'create' && (!formData.username || !formData.password)) { alert('请填写用户名和密码'); return; }
+    if (modalMode === 'create' && !formData.username) { alert('请填写用户名'); return; }
+    // 按服务端合同前置校验，避免「填完才 400」（规则见 constants/passwordPolicy.ts）
+    if (modalMode === 'create') {
+      const pwdError = validatePassword(formData.password);
+      if (pwdError) { alert(`初始密码：${pwdError}`); return; }
+    } else if (newPassword.trim() && canResetPwd) {
+      const pwdError = validatePassword(newPassword.trim());
+      if (pwdError) { alert(`新密码：${pwdError}`); return; }
+    }
     setSaving(true);
     try {
       if (modalMode === 'create') {
@@ -101,12 +110,12 @@ export default function Users() {
       }
       setShowModal(false);
       loadUsers();
-    } catch (err: any) { alert(err.error || '操作失败'); } finally { setSaving(false); }
+    } catch (err) { alert(toMessage(err, '操作失败')); } finally { setSaving(false); }
   };
 
   const handleDelete = async (u: any) => {
     if (!confirm(`确定删除成员「${u.displayName ?? u.name}」？此操作不可恢复。`)) return;
-    try { await userAPI.remove(u.id); loadUsers(); } catch (err: any) { alert(err.error || '删除失败'); }
+    try { await userAPI.remove(u.id); loadUsers(); } catch (err) { alert(toMessage(err, '删除失败')); }
   };
 
   // M-1：启停唯一入口 PATCH /users/:id/status（users.enable / users.disable）
@@ -115,7 +124,7 @@ export default function Users() {
     if (active && !canDisable) return;
     if (!active && !canEnable) return;
     try { await userAPI.setStatus(u.id, active ? 'DISABLED' : 'ACTIVE'); loadUsers(); }
-    catch (err: any) { alert(err.error || '操作失败'); }
+    catch (err) { alert(toMessage(err, '操作失败')); }
   };
 
   // M-1：角色分配唯一入口 PUT /users/:id/roles（roles.assign_user）
@@ -127,7 +136,7 @@ export default function Users() {
       const list = res.items ?? res.list ?? [];
       setRoleOptions(list.map((r: any) => r.code));
     } catch (err: any) {
-      alert(err.error || '加载角色失败');
+      alert(toMessage(err, '加载角色失败'));
     }
   };
 
@@ -139,7 +148,7 @@ export default function Users() {
       setRoleModalUser(null);
       loadUsers();
     } catch (err: any) {
-      alert(err.error || '分配角色失败');
+      alert(toMessage(err, '分配角色失败'));
     }
   };
 
@@ -333,7 +342,7 @@ export default function Users() {
                   </div>
                   <div>
                     <label className="label">初始密码 *</label>
-                    <input type="password" className="input" placeholder="至少6位" value={formData.password} onChange={e => setFormData(p => ({ ...p, password: e.target.value }))} />
+                    <input type="password" className="input" placeholder={PASSWORD_HINT} value={formData.password} onChange={e => setFormData(p => ({ ...p, password: e.target.value }))} />
                   </div>
                 </>
               )}
@@ -354,7 +363,7 @@ export default function Users() {
               {modalMode === 'edit' && (
                 <div>
                   <label className="label">重置密码（留空不修改）</label>
-                  <input type="password" className="input" placeholder="输入新密码" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+                  <input type="password" className="input" placeholder={canResetPwd ? PASSWORD_HINT : '无重置密码权限'} disabled={!canResetPwd} value={newPassword} onChange={e => setNewPassword(e.target.value)} />
                 </div>
               )}
             </div>

@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { authAPI } from '@/api';
+import { authAPI, toMessage } from '@/api';
 import { useAuth } from '../auth/useAuth';
 import { roleLabel } from '../types/user';
+import { validatePassword, PASSWORD_HINT } from '../constants/passwordPolicy';
 
 export default function Settings() {
   const { user } = useAuth();
@@ -22,16 +23,18 @@ export default function Settings() {
       setPasswordMsg({ type: 'error', text: '两次输入的新密码不一致' });
       return;
     }
-    if (passwords.new.length < 6) {
-      setPasswordMsg({ type: 'error', text: '新密码长度不能少于6位' });
+    // 与服务端同一套密码合同（见 constants/passwordPolicy.ts）
+    const pwdError = validatePassword(passwords.new);
+    if (pwdError) {
+      setPasswordMsg({ type: 'error', text: pwdError });
       return;
     }
     try {
       await authAPI.changePassword(passwords.old, passwords.new);
       setPasswordMsg({ type: 'success', text: '密码修改成功' });
       setPasswords({ old: '', new: '', confirm: '' });
-    } catch (err: any) {
-      setPasswordMsg({ type: 'error', text: err.error || '修改失败' });
+    } catch (err) {
+      setPasswordMsg({ type: 'error', text: toMessage(err, '修改失败') });
     }
   };
 
@@ -106,7 +109,7 @@ export default function Settings() {
                 className="input"
                 value={passwords.new}
                 onChange={(e) => setPasswords(prev => ({ ...prev, new: e.target.value }))}
-                placeholder="至少6位"
+                placeholder={PASSWORD_HINT}
               />
             </div>
             <div>

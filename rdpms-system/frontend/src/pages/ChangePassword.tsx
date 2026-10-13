@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { authAPI } from '@/api';
 import { ApiError, toMessage } from '@/api';
 import { useAuth } from '@/auth/useAuth';
+import { validatePassword, PASSWORD_HINT } from '../constants/passwordPolicy';
 
 /** 首登强制改密 / 用户主动改密共用页面 */
 export default function ChangePassword() {
@@ -19,7 +20,9 @@ export default function ChangePassword() {
 
   const validate = (): string | null => {
     if (!forced && !oldPassword) return '请输入当前密码';
-    if (newPassword.length < 10) return '新密码至少 10 位';
+    // 先过服务端合同（长度/弱口令），再附加本页的复杂度要求
+    const pwdError = validatePassword(newPassword);
+    if (pwdError) return pwdError;
     if (!/[a-z]/.test(newPassword) || !/[A-Z]/.test(newPassword) || !/\d/.test(newPassword)) {
       return '新密码需包含大小写字母与数字';
     }
@@ -99,7 +102,7 @@ export default function ChangePassword() {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               autoComplete="new-password"
-              placeholder="至少 10 位，含大小写字母与数字"
+              placeholder={`${PASSWORD_HINT}，含大小写字母与数字`}
             />
           </div>
 
