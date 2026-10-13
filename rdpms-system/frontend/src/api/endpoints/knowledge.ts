@@ -57,6 +57,7 @@ export const docsAPI = {
 
 export interface Primer {
   id: string;
+  code?: string;
   name: string;
   sequence?: string | null;
   targetGene?: string | null;
@@ -66,9 +67,32 @@ export interface Primer {
   speciesLatinName?: string | null;
   /** Tencent 承接（D-3）：验证菌株，引物级字段 */
   validatedStrain?: string | null;
+  /** v1.2（2026-10-12）：库存批次（盘点数据） */
+  lots?: PrimerLot[];
   status?: string | null;
   createdAt?: string;
   updatedAt?: string;
+}
+
+/** 引物/探针库存批次（v1.2） */
+export interface PrimerLot {
+  id: string;
+  primerId?: string;
+  lotNo: string;
+  quantity?: string | number | null;
+  unit?: string;
+  spec?: string | null;
+  containerCount?: string | number | null;
+  openedStatus?: 'SEALED' | 'OPENED' | null;
+  form?: string | null;
+  location?: string | null;
+  locationId?: string | null;
+  supplier?: string | null;
+  receivedAt?: string | null;
+  notes?: string | null;
+  status?: string;
+  storage?: { id: string; code: string; name: string; path: string } | null;
+  [key: string]: unknown;
 }
 
 export interface PrimerQuery {
@@ -102,12 +126,27 @@ export interface SampleMaterial {
   name: string;
   commonName?: string | null;
   category?: string | null;
+  /** v1.2：存放位置（复用库位树） */
+  location?: string | null;
+  locationId?: string | null;
+  storage?: { id: string; code: string; name: string; path: string } | null;
   [key: string]: unknown;
 }
 
 export const samplesAPI = {
-  list: (params?: Record<string, unknown>) =>
-    requestPaged<SampleMaterial>({ method: 'GET', url: '/samples', params }),
+  // v1.6：列表附带 projectNames（拆分去重后的业务项目名，供「归属项目」下拉）。
+  // 注意：不走 requestPaged/normalizePaged——该函数只保留 items/total/page/pageSize，会丢弃额外字段。
+  list: async (params?: Record<string, unknown>) => {
+    const raw = await get<Record<string, any>>('/samples', { params });
+    const items = Array.isArray(raw?.items) ? raw.items : Array.isArray(raw?.list) ? raw.list : [];
+    return {
+      items,
+      total: typeof raw?.total === 'number' ? raw.total : items.length,
+      page: typeof raw?.page === 'number' ? raw.page : 1,
+      pageSize: typeof raw?.pageSize === 'number' ? raw.pageSize : 20,
+      projectNames: Array.isArray(raw?.projectNames) ? raw.projectNames : undefined,
+    };
+  },
   get: (id: string) => get<SampleMaterial>(`/samples/${id}`),
   create: (data: Partial<SampleMaterial>) => post<SampleMaterial>('/samples', data),
   update: (id: string, data: Partial<SampleMaterial>) => put<SampleMaterial>(`/samples/${id}`, data),

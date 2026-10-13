@@ -20,6 +20,8 @@ export interface ReagentMaterial {
   externalCode?: string | null;
   /** v1.1：所属项目标签（盘点表"所属项目"列） */
   projectLabel?: string | null;
+  /** v1.3：知识库子集标签（如 AMP=扩增反应体系试剂） */
+  libraryTags?: string | null;
   status?: string | null;
   inventory?: { totalQuantity: number; lotCount: number; expiringSoonCount: number };
   materialDetail?: Record<string, unknown> | null;

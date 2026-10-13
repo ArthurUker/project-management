@@ -771,9 +771,12 @@ const ENUM_META = {
     ['DRAFT', '草稿'], ['ACTIVE', '启用'], ['DEPRECATED', '已废止'], ['ARCHIVED', '已归档'],
   ] },
   PrimerType: { default: 'PRIMER', values: [['PRIMER', '引物'], ['PROBE', '探针']] },
+  // v1.5（2026-10-12）：细化样本类型（质粒/假病毒/菌株/疫苗/生物样本从「标准品」中拆出）
   SampleType: { default: 'CLINICAL_SAMPLE', values: [
     ['REFERENCE_STANDARD', '标准品'], ['CLINICAL_SAMPLE', '临床样本'], ['CONTROL', '对照品'],
     ['BLANK_MATRIX', '空白基质'], ['SIMULATED', '模拟样本'], ['OTHER', '其他'],
+    ['PLASMID', '质粒'], ['PSEUDOVIRUS', '假病毒'], ['STRAIN', '菌株'],
+    ['VACCINE', '疫苗'], ['BIOLOGICAL_SAMPLE', '生物样本'],
   ] },
   // M-1 v1.0：样本「隔离」统一为 QUARANTINED 拼写，补齐 RESERVED / USED / DISPOSED
   SampleStatus: { default: 'AVAILABLE', values: [

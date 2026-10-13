@@ -1,9 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { samplesAPI, projectAPI } from '@/api';
 
-const SAMPLE_TYPES = ['标准品', '临床样本', '对照品', '空白基质', '模拟样本', '质控样本', '参考品', '其他'];
+// v1.5（2026-10-12）：类型改为后端枚举值（此前传中文给 Prisma 枚举会导致保存失败）
+const SAMPLE_TYPES = ['REFERENCE_STANDARD', 'CLINICAL_SAMPLE', 'CONTROL', 'BLANK_MATRIX', 'SIMULATED', 'OTHER', 'PLASMID', 'PSEUDOVIRUS', 'STRAIN', 'VACCINE', 'BIOLOGICAL_SAMPLE'];
 const STATUS_OPTIONS = ['可用', '已用完', '过期', '封存'];
 const STORAGE_OPTIONS = ['-80°C', '-20°C', '4°C', '室温', '液氮'];
+
+// v1.2：后端枚举 → 中文展示（迁入的质粒/菌株/样本数据 sampleType/status 为英文枚举）
+const SAMPLE_TYPE_LABELS: Record<string, string> = {
+  REFERENCE_STANDARD: '标准品', CLINICAL_SAMPLE: '临床样本', CONTROL: '对照品',
+  BLANK_MATRIX: '空白基质', SIMULATED: '模拟样本', OTHER: '其他',
+  // v1.5
+  PLASMID: '质粒', PSEUDOVIRUS: '假病毒', STRAIN: '菌株', VACCINE: '疫苗', BIOLOGICAL_SAMPLE: '生物样本',
+};
+const SAMPLE_STATUS_LABELS: Record<string, string> = {
+  AVAILABLE: '可用', RESERVED: '已预留', USED: '已使用', DEPLETED: '已用完',
+  EXPIRED: '已过期', QUARANTINED: '隔离中', SEALED: '封存', DISPOSED: '已销毁',
+};
 
 export default function SampleLibrary({ openKey, hideTopButton }: { openKey?: number; hideTopButton?: boolean }) {
   React.useEffect(() => {
@@ -14,7 +27,14 @@ export default function SampleLibrary({ openKey, hideTopButton }: { openKey?: nu
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState('');
-  const [filterProjectId, setFilterProjectId] = useState('');
+  // v1.6（2026-10-12）：归属项目筛选改按「业务项目名」文本（盘点数据项目名在此字段），
+  // 与「全部项目」共用同一数据源，保证两种模式数据范围/排序一致。
+  const [filterProjectName, setFilterProjectName] = useState('');
+  const [projectNames, setProjectNames] = useState<string[]>([]);
+  // v1.2（2026-10-12）：服务端分页（质粒/菌株/样本迁入后总量数百条）
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(50);
+  const [total, setTotal] = useState(0);
   const [editing, setEditing] = useState<any | null>(null);
   const [showDrawer, setShowDrawer] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -33,9 +53,9 @@ export default function SampleLibrary({ openKey, hideTopButton }: { openKey?: nu
   const closeEditor = () => { setShowDrawer(false); setEditing(null); };
 
   const [form, setForm] = useState<Record<string, string>>({
-    sampleCode: '', sampleName: '', sampleType: '临床样本', species: '', tissue: '',
+    sampleCode: '', sampleName: '', sampleType: 'BIOLOGICAL_SAMPLE', species: '', tissue: '',
     concentration: '', volume: '', storageCondition: '-80°C', collectionDate: '',
-    expiryDate: '', supplier: '', status: '可用', projectId: '', notes: '',
+    expiryDate: '', supplier: '', status: '可用', projectId: '', projectName: '', targetGene: '', notes: '',
   });
 
   const loadProjects = async () => {
@@ -45,14 +65,19 @@ export default function SampleLibrary({ openKey, hideTopButton }: { openKey?: nu
     } catch (e) { console.error(e); }
   };
 
-  const load = async () => {
+  const load = async (targetPage?: number, projectNameOverride?: string) => {
     setLoading(true);
     try {
-      const params: any = {};
+      const params: any = { page: targetPage ?? page, pageSize };
       if (keyword) params.keyword = keyword;
-      if (filterProjectId) params.projectId = filterProjectId;
+      // 修正（2026-10-12）：onChange 中 setState 与 load 同一 tick 执行，闭包里 filterProjectName 仍是旧值，
+      // 因此允许调用方显式传入最新的项目名（否则「选具体项目」不过滤）。
+      const projectName = projectNameOverride ?? filterProjectName;
+      if (projectName) params.projectName = projectName;
       const res = await samplesAPI.list(params);
       setList(res.items || []);
+      setTotal(typeof res.total === 'number' ? res.total : (res.items || []).length);
+      if (Array.isArray(res.projectNames)) setProjectNames(res.projectNames);
       if (savedScrollRef.current !== null) {
         const pos = savedScrollRef.current;
         savedScrollRef.current = null;
@@ -69,7 +94,7 @@ export default function SampleLibrary({ openKey, hideTopButton }: { openKey?: nu
 
   const openNew = () => {
     setEditing(null);
-    setForm({ sampleCode: '', sampleName: '', sampleType: '临床样本', species: '', tissue: '', concentration: '', volume: '', storageCondition: '-80°C', collectionDate: '', expiryDate: '', supplier: '', status: '可用', projectId: '', notes: '' });
+    setForm({ sampleCode: '', sampleName: '', sampleType: 'BIOLOGICAL_SAMPLE', species: '', tissue: '', concentration: '', volume: '', storageCondition: '-80°C', collectionDate: '', expiryDate: '', supplier: '', status: '可用', projectId: '', projectName: '', targetGene: '', notes: '' });
     setShowDrawer(true);
   };
 
@@ -78,7 +103,7 @@ export default function SampleLibrary({ openKey, hideTopButton }: { openKey?: nu
     setForm({
       sampleCode: item.sampleCode || '',
       sampleName: item.sampleName || '',
-      sampleType: item.sampleType || '临床样本',
+      sampleType: item.sampleType || 'BIOLOGICAL_SAMPLE',
       species: item.species || '',
       tissue: item.tissue || '',
       concentration: item.concentration || '',
@@ -89,6 +114,8 @@ export default function SampleLibrary({ openKey, hideTopButton }: { openKey?: nu
       supplier: item.supplier || '',
       status: item.status || '可用',
       projectId: item.projectId || '',
+      projectName: item.projectName || '',
+      targetGene: item.targetGene || '',
       notes: item.notes || '',
     });
     setShowDrawer(true);
@@ -145,13 +172,13 @@ export default function SampleLibrary({ openKey, hideTopButton }: { openKey?: nu
         <input
           type="text" placeholder="搜索编号/名称/物种..." className="input w-52 text-sm"
           value={keyword} onChange={e => setKeyword(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && load()}
+          onKeyDown={e => { if (e.key === 'Enter') { setPage(1); load(1); } }}
         />
-        <select className="input w-44 text-sm" value={filterProjectId} onChange={e => { setFilterProjectId(e.target.value); }}>
+        <select className="input w-44 text-sm" value={filterProjectName} onChange={e => { const v = e.target.value; setFilterProjectName(v); setPage(1); load(1, v); }}>
           <option value="">全部项目</option>
-          {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          {projectNames.map(n => <option key={n} value={n}>{n}</option>)}
         </select>
-        <button onClick={load} className="px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600">搜索</button>
+        <button onClick={() => { setPage(1); load(1); }} className="px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600">搜索</button>
         {selectedIds.length > 0 && (
           <button onClick={handleBulkDelete} className="px-3 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600">
             删除选中({selectedIds.length})
@@ -180,19 +207,21 @@ export default function SampleLibrary({ openKey, hideTopButton }: { openKey?: nu
               <th className="px-3 py-2 text-left">样本名称</th>
               <th className="px-3 py-2 text-left">类型</th>
               <th className="px-3 py-2 text-left">归属项目</th>
+              <th className="px-3 py-2 text-left">检测靶标</th>
               <th className="px-3 py-2 text-left">物种</th>
               <th className="px-3 py-2 text-left">组织/来源</th>
               <th className="px-3 py-2 text-left">浓度</th>
               <th className="px-3 py-2 text-left">保存条件</th>
+              <th className="px-3 py-2 text-left">存放位置</th>
               <th className="px-3 py-2 text-left">状态</th>
               <th className="px-3 py-2 text-left">操作</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={11} className="text-center py-8 text-gray-400">加载中...</td></tr>
+              <tr><td colSpan={13} className="text-center py-8 text-gray-400">加载中...</td></tr>
             ) : list.length === 0 ? (
-              <tr><td colSpan={11} className="text-center py-10 text-gray-400">
+              <tr><td colSpan={13} className="text-center py-10 text-gray-400">
                 暂无样本，点击「新建样本」添加
               </td></tr>
             ) : list.map(item => (
@@ -204,14 +233,24 @@ export default function SampleLibrary({ openKey, hideTopButton }: { openKey?: nu
                 </td>
                 <td className="px-3 py-2 font-mono text-xs text-blue-700">{item.sampleCode}</td>
                 <td className="px-3 py-2 font-medium text-gray-900">{item.sampleName}</td>
-                <td className="px-3 py-2 text-gray-600">{item.sampleType}</td>
-                <td className="px-3 py-2 text-gray-600 text-xs">{item.project?.name || '—'}</td>
+                <td className="px-3 py-2 text-gray-600">{SAMPLE_TYPE_LABELS[item.sampleType] || item.sampleType}</td>
+                <td className="px-3 py-2 text-gray-600 text-xs" title={item.projectName || item.project?.name || ''}>{item.projectName || item.project?.name || '—'}</td>
+                <td className="px-3 py-2 text-gray-700 text-xs">
+                  {item.targetGene
+                    ? <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-700" title={item.targetGene}>{item.targetGene}</span>
+                    : <span className="text-gray-300">—</span>}
+                </td>
                 <td className="px-3 py-2 text-gray-500 text-xs italic">{item.species || '—'}</td>
                 <td className="px-3 py-2 text-gray-500 text-xs">{item.tissue || '—'}</td>
                 <td className="px-3 py-2 text-gray-500 text-xs">{item.concentration || '—'}</td>
                 <td className="px-3 py-2 text-gray-500 text-xs">{item.storageCondition}</td>
+                <td className="px-3 py-2 text-gray-500 text-xs max-w-[220px] truncate" title={item.storage?.path || item.location || ''}>
+                  {item.storage?.path || item.location || '—'}
+                </td>
                 <td className="px-3 py-2">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[item.status] || 'bg-gray-100 text-gray-600'}`}>{item.status}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor[SAMPLE_STATUS_LABELS[item.status] || item.status] || 'bg-gray-100 text-gray-600'}`}>
+                    {SAMPLE_STATUS_LABELS[item.status] || item.status}
+                  </span>
                 </td>
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-2">
@@ -227,6 +266,25 @@ export default function SampleLibrary({ openKey, hideTopButton }: { openKey?: nu
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* 分页条（v1.2） */}
+      <div className="flex items-center justify-between text-xs text-slate-500 px-1">
+        <span>共 {total} 条 · 第 {page} / {Math.max(1, Math.ceil(total / pageSize))} 页</span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            className="px-3 py-1 rounded border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+            disabled={page <= 1 || loading}
+            onClick={() => { const p = Math.max(1, page - 1); setPage(p); load(p); }}
+          >上一页</button>
+          <button
+            type="button"
+            className="px-3 py-1 rounded border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:opacity-40"
+            disabled={page >= Math.max(1, Math.ceil(total / pageSize)) || loading}
+            onClick={() => { const p = page + 1; setPage(p); load(p); }}
+          >下一页</button>
+        </div>
       </div>
 
       {/* 侧边抽屉：新建/编辑 */}
@@ -256,16 +314,36 @@ export default function SampleLibrary({ openKey, hideTopButton }: { openKey?: nu
                 <div>
                   <label className="label text-xs">样本类型</label>
                   <select className="input text-sm" value={f('sampleType')} onChange={e => setF('sampleType', e.target.value)}>
-                    {SAMPLE_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    {SAMPLE_TYPES.map((t) => (
+                      <option key={t} value={t}>{SAMPLE_TYPE_LABELS[t] || t}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
-                  <label className="label text-xs">归属项目</label>
+                  <label className="label text-xs">归属项目（已登记）</label>
                   <select className="input text-sm" value={f('projectId')} onChange={e => setF('projectId', e.target.value)}>
                     <option value="">无（通用样本）</option>
                     {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                 </div>
+              </div>
+              <div>
+                <label className="label text-xs">所属项目（业务名，可多项目逗号分隔）</label>
+                <input
+                  className="input text-sm"
+                  placeholder="如 08-消化道_食源性（盘点表原始项目名）"
+                  value={f('projectName')}
+                  onChange={e => setF('projectName', e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="label text-xs">检测靶标（多靶标逗号分隔）</label>
+                <input
+                  className="input text-sm"
+                  placeholder="如 MCP、toxR、N基因"
+                  value={f('targetGene')}
+                  onChange={e => setF('targetGene', e.target.value)}
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

@@ -7,7 +7,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { formulaAPI, reagentMaterialsAPI } from '@/api';
 
-const FORMULA_TYPES = ['XDY', 'LJY', 'CLY', 'HCY', 'JHY'];
+// v1.6（2026-10-12）：类型代号统一带中文展示（与 FormulaEditor 一致，避免界面出现无中文说明的代号）
+const FORMULA_TYPE_LABELS: Record<string, string> = {
+  XDY: 'XDY（洗涤液）',
+  LJY: 'LJY（离解液）',
+  CLY: 'CLY（裂解液）',
+  HCY: 'HCY（缓冲液）',
+  JHY: 'JHY（结合液）',
+};
+const FORMULA_TYPES = Object.keys(FORMULA_TYPE_LABELS);
 const PCR_TYPES = ['PCR', 'qPCR', 'RT-PCR', 'RT-qPCR'];
 
 interface BRow {
@@ -373,7 +381,7 @@ export default function FormulaBatchEditor({ initialFormulaIds, initialFormulas,
                         onChange={e => setField(ri, 'type', e.target.value)}
                         style={{ width: '100%', padding: '4px 6px', border: 'none', background: 'transparent', fontSize: 12, outline: 'none' }}
                       >
-                        {FORMULA_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                        {FORMULA_TYPES.map(t => <option key={t} value={t}>{FORMULA_TYPE_LABELS[t] || t}</option>)}
                       </select>
                     </td>
                     {/* pH */}

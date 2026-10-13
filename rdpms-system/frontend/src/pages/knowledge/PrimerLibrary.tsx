@@ -10,6 +10,8 @@ import { safeStorage } from '@/utils/safeStorage';
 const COLUMNS = [
   { key: 'projectName',        label: '所属项目',              mono: false, italic: false },
   { key: 'name',               label: '引物名称',              mono: false, italic: false, required: true },
+  // v1.2（2026-10-12）：盘点库存（位置 · 数量 · 规格），来源 PrimerLot
+  { key: 'inventorySummary',   label: '库存(位置·数量)',        mono: false, italic: false },
   { key: 'sequence',           label: "5'-3'序列",             mono: true,  italic: false, required: true },
   { key: 'targetGene',         label: '目标基因',              mono: false, italic: false },
   { key: 'detectionTarget',    label: '检测靶标',              mono: false, italic: false },
@@ -28,7 +30,28 @@ const COLUMNS = [
 ];
 
 // 默认显示的列（可通过列设置调整）
-const DEFAULT_VISIBLE_COLS = ['projectName', 'name', 'sequence', 'targetGene', 'detectionTarget', 'modification5', 'modification3', 'ampliconLength', 'synthesisCompany'];
+const DEFAULT_VISIBLE_COLS = ['projectName', 'name', 'inventorySummary', 'sequence', 'targetGene', 'detectionTarget', 'modification5', 'modification3', 'ampliconLength', 'synthesisCompany'];
+
+/** v1.2：把库存批次摘要为「位置 · 数量 · 规格」文本（列表列 / CSV 导出共用）。
+ *  超过 2 个批次只展示前 2 条 + 「等 N 处」，避免单元格过高。 */
+function inventorySummary(row: any): string {
+  const lots = Array.isArray(row?.lots) ? row.lots : [];
+  if (lots.length === 0) return '';
+  const parts = lots
+    .map((l: any) => {
+      const loc = l.storage?.path || l.location || '';
+      const qty = l.quantity != null && Number(l.quantity) > 0
+        ? `${Number(l.quantity)}${l.unit && l.unit !== '未标注' ? l.unit : ''}`
+        : '';
+      const spec = l.spec || '';
+      const form = l.form || '';
+      return [loc, qty, spec, form].filter(Boolean).join(' · ');
+    })
+    .filter(Boolean);
+  const shown = parts.slice(0, 2);
+  if (parts.length > 2) shown.push(`等 ${parts.length} 处`);
+  return shown.join(' | ');
+}
 
 // 支持批量编辑的字段
 const BATCH_FIELDS = [
@@ -56,6 +79,10 @@ export default function PrimerLibrary() {
   const [list, setList] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [keyword, setKeyword] = useState('');
+  // v1.2：服务端分页（迁入库存引物后总量接近千条，此前固定只取首页 100 条）
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(100);
+  const [total, setTotal] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [form, setForm] = useState<Record<string, any>>(EMPTY_FORM());
@@ -124,16 +151,25 @@ export default function PrimerLibrary() {
     } catch { setProjects([]); }
   };
 
-  const load = async (kw?: string) => {
+  const load = async (kw?: string, targetPage?: number) => {
     setLoading(true);
     try {
-      const res = await primerAPI.list({ keyword: kw ?? keyword }) as any;
+      const res = await primerAPI.list({ keyword: kw ?? keyword, page: targetPage ?? page, pageSize }) as any;
       setList(res.items || []);
+      setTotal(typeof res.total === 'number' ? res.total : (res.items || []).length);
     } catch { setList([]); }
     setLoading(false);
   };
 
-  const handleSearch = () => load(keyword);
+  const handleSearch = () => { setPage(1); load(keyword, 1); };
+
+  const goPage = (p: number) => {
+    const target = Math.max(1, p);
+    setPage(target);
+    load(keyword, target);
+  };
+
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   const openNew = () => {
     setEditing(null);
@@ -158,7 +194,7 @@ export default function PrimerLibrary() {
   const closeModal = () => { setShowModal(false); setEditing(null); setShowProjectDropdown(false); };
 
   const handleSave = async () => {
-    if (!form.name || !form.sequence) { alert('引物名称和序列为必填项'); return; }
+    if (!form.name) { alert('引物名称为必填项'); return; }
     setSaving(true);
     try {
       const payload = {
@@ -248,7 +284,7 @@ export default function PrimerLibrary() {
   // CSV 导出
   const handleExport = () => {
     const headers = COLUMNS.map(c => c.label);
-    const rows = list.map(r => COLUMNS.map(c => r[c.key] ?? ''));
+    const rows = list.map(r => COLUMNS.map(c => (c.key === 'inventorySummary' ? inventorySummary(r) : (r[c.key] ?? ''))));
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const a = document.createElement('a');
@@ -421,7 +457,9 @@ export default function PrimerLibrary() {
             </div>
           )}
         </div>
-        <span style={{ fontSize: 12, color: '#94a3b8', whiteSpace: 'nowrap' }}>共 {displayList.length} 条记录</span>
+        <span style={{ fontSize: 12, color: '#94a3b8', whiteSpace: 'nowrap' }}>
+          共 {total} 条记录{filterProject ? `（当前筛选 ${displayList.length} 条）` : ''}
+        </span>
       </div>
 
       {/* ── 批量操作栏（选中时出现） ── */}
@@ -486,6 +524,10 @@ export default function PrimerLibrary() {
                             <span key={i} style={{ fontSize: 11, padding: '1px 6px', borderRadius: 8, background: '#dbeafe', color: '#1d4ed8', whiteSpace: 'nowrap' }}>{n.trim()}</span>
                           ))}
                         </div>
+                      ) : col.key === 'inventorySummary' ? (
+                        <span style={{ fontSize: 11, color: '#475569' }} title={inventorySummary(row)}>
+                          {inventorySummary(row) || <span style={{ color: '#cbd5e1' }}>-</span>}
+                        </span>
                       ) : (
                         <span style={{ fontFamily: col.mono ? 'monospace' : undefined, fontStyle: col.italic ? 'italic' : undefined, color: col.key === 'name' ? '#1e40af' : '#374151', fontWeight: col.key === 'name' ? 600 : 400 }}>
                           {row[col.key] != null && row[col.key] !== '' ? row[col.key] : <span style={{ color: '#cbd5e1' }}>-</span>}
@@ -504,6 +546,27 @@ export default function PrimerLibrary() {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* ── 分页条（v1.2） ── */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, color: '#64748b', padding: '0 2px' }}>
+        <span>
+          共 {total} 条 · 第 {page} / {totalPages} 页
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button
+            type="button"
+            disabled={page <= 1 || loading}
+            onClick={() => goPage(page - 1)}
+            style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', color: '#374151', cursor: page <= 1 || loading ? 'not-allowed' : 'pointer', opacity: page <= 1 || loading ? 0.5 : 1, fontSize: 12 }}
+          >上一页</button>
+          <button
+            type="button"
+            disabled={page >= totalPages || loading}
+            onClick={() => goPage(page + 1)}
+            style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #e2e8f0', background: '#fff', color: '#374151', cursor: page >= totalPages || loading ? 'not-allowed' : 'pointer', opacity: page >= totalPages || loading ? 0.5 : 1, fontSize: 12 }}
+          >下一页</button>
+        </div>
       </div>
 
       {/* ── 批量编辑弹窗 ── */}

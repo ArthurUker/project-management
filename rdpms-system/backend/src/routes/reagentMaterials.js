@@ -5,7 +5,7 @@ import { pickAllowed } from '../kernel/massAssign.js';
 import { AUDIT_ACTIONS } from '../kernel/constants.js';
 import { writeAudit } from '../kernel/audit.js';
 import { nextCode } from '../kernel/sequence.js';
-import { badRequest, notFound } from '../kernel/http.js';
+import { badRequest, notFound, parsePaging, paged } from '../kernel/http.js';
 
 /**
  * /api/reagent-materials —— 试剂原料（W10 PG baseline 迁移）。
@@ -20,6 +20,9 @@ import { badRequest, notFound } from '../kernel/http.js';
 const materials = new Hono();
 
 materials.use('*', authMiddleware);
+
+/** MaterialState 枚举（物态筛选白名单，2026-10-12） */
+const MATERIAL_STATES = new Set(['SOLID', 'LIQUID', 'SOLUTION', 'GAS']);
 
 const MATERIAL_CATEGORIES = new Set([
   'BUFFER', 'SALT', 'ENZYME', 'DYE', 'NUCLEIC_ACID', 'SOLVENT', 'ACID_BASE', 'SURFACTANT', 'OTHER',
@@ -74,10 +77,13 @@ const SORT_FIELD_MAP = {
 };
 
 // GET / —— 列表
+// v1.1.1（2026-10-12）：支持可选 page/pageSize 分页（传参时返回 total，未传时保持全量返回兼容旧调用方）。
+// v1.3（2026-10-12）：支持 libraryTag 子集筛选（如 AMP → 扩增反应体系试剂库）。
 materials.get('/', requirePermission('reagent_materials.view'), async (c) => {
   const keyword = c.req.query('keyword');
   const category = c.req.query('category');
   const state = c.req.query('state');
+  const libraryTag = c.req.query('libraryTag');
   const sortBy = c.req.query('sortBy');
   const sortOrder = c.req.query('sortOrder') === 'desc' ? 'desc' : 'asc';
 
@@ -98,10 +104,29 @@ materials.get('/', requirePermission('reagent_materials.view'), async (c) => {
     const enums = categoryValues.map(toCategory);
     where.category = enums.length === 1 ? enums[0] : { in: enums };
   }
-  if (state && state !== 'all') where.state = state;
+  if (state && state !== 'all') {
+    // 修正（2026-10-12）：物态枚举为大写；此前小写值会触发 Prisma 枚举校验失败（500）
+    const s = String(state).trim().toUpperCase();
+    if (MATERIAL_STATES.has(s)) where.state = s;
+  }
+  // v1.3：知识库子集标签筛选（如 AMP=扩增反应体系试剂；字段为逗号分隔存储）
+  if (libraryTag) where.libraryTags = { contains: String(libraryTag).trim() };
 
   const orderByField = SORT_FIELD_MAP[sortBy] || 'commonName';
-  const list = await prisma.reagentMaterial.findMany({ where, orderBy: { [orderByField]: sortOrder } });
+  const orderBy = { [orderByField]: sortOrder };
+
+  // 可选分页：仅当显式传 page/pageSize 时生效（不传 = 全量，保持旧契约）
+  const wantsPaging = c.req.query('page') != null || c.req.query('pageSize') != null;
+  if (wantsPaging) {
+    const { page, pageSize, skip, take } = parsePaging(c.req.query(), 50);
+    const [total, list] = await Promise.all([
+      prisma.reagentMaterial.count({ where }),
+      prisma.reagentMaterial.findMany({ where, orderBy, skip, take }),
+    ]);
+    return c.json({ success: true, list, total, ...paged(list, total, { page, pageSize }) });
+  }
+
+  const list = await prisma.reagentMaterial.findMany({ where, orderBy });
   return c.json({ success: true, list });
 });
 
@@ -117,7 +142,7 @@ function normalizeMaterialData(raw, { forCreate }) {
     'code', 'commonName', 'chineseName', 'englishName', 'category', 'casNumber',
     'molecularFormula', 'molecularWeight', 'mw', 'purity', 'density', 'state',
     'defaultStockConc', 'defaultStockUnit', 'hazardLevel', 'supplier',
-    'storageCondition', 'externalCode', 'projectLabel', 'notes', 'status',
+    'storageCondition', 'externalCode', 'projectLabel', 'libraryTags', 'notes', 'status',
   ], { entityLabel: '试剂原料', allowEmpty: false });
 
   if ('mw' in data) { data.molecularWeight = toFloatOrNull(data.mw); delete data.mw; }

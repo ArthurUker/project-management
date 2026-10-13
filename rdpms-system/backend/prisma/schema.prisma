@@ -370,6 +370,13 @@ enum SampleType {
   BLANK_MATRIX
   SIMULATED
   OTHER
+  // v1.5（2026-10-12）：盘点数据显示「质粒/假病毒/菌株/疫苗」是独立品类，
+  // 此前被笼统归为 REFERENCE_STANDARD（标准品），无法按品类筛选管理。
+  PLASMID
+  PSEUDOVIRUS
+  STRAIN
+  VACCINE
+  BIOLOGICAL_SAMPLE
 }
 
 // M-1 v1.0：隔离状态统一使用 QUARANTINED（废弃旧的全词拼写），并补齐 RESERVED/USED/DISPOSED。
@@ -1251,6 +1258,9 @@ model ReagentMaterial {
   // v1.1：业务侧编码（如 RM10011306 体系）与所属项目标签（盘点表"所属项目"列）
   externalCode     String?           @map("external_code") @db.VarChar(64)
   projectLabel     String?           @map("project_label") @db.VarChar(512)
+  // v1.3（2026-10-12）：知识库子集标签（如 AMP=扩增反应体系试剂；逗号分隔便于扩展），
+  // 用于把「按用途归类」的试剂（PCR/qPCR/LAMP 体系）在对应知识库中做子集视图展示。
+  libraryTags      String?           @map("library_tags") @db.VarChar(128)
   notes            String?           @map("notes")
   status           DocumentStatus    @default(ACTIVE) @map("status")
 
@@ -1267,6 +1277,7 @@ model ReagentMaterial {
   @@index([category, status])
   @@index([casNumber])
   @@index([externalCode])
+  @@index([libraryTags])
   @@map("reagent_materials")
 }
 
@@ -1321,6 +1332,9 @@ model StorageLocation {
   parent   StorageLocation?  @relation("LocationTree", fields: [parentId], references: [id], onDelete: SetNull)
   children StorageLocation[] @relation("LocationTree")
   lots     ReagentLot[]
+  // v1.2（2026-10-12）：引物/探针库存与样本也复用同一库位树
+  primerLots      PrimerLot[]
+  sampleMaterials SampleMaterial[]
 
   @@index([parentId])
   @@index([type, status])
@@ -1426,8 +1440,12 @@ model Primer {
   code             String         @unique @map("code") @db.VarChar(64) // PRM-2026-001
   name             String         @map("name") @db.VarChar(255)
   type             PrimerType     @default(PRIMER) @map("type")
-  sequence         String         @map("sequence") @db.VarChar(512) // 5'-3'
-  projectId        String?        @map("project_id") // 旧版为文本 projectName
+  // v1.2（2026-10-12）：库存引物（来自盘点表）没有序列，改为可空；序列待补充
+  sequence         String?        @map("sequence") @db.VarChar(512) // 5'-3'
+  projectId        String?        @map("project_id") // 外键（业务项目已登记进 projects 表时使用）
+  // v1.4（2026-10-12）：业务项目名文本（盘点表"所属项目"列，如 "08-消化道_食源性"，多项目逗号分隔）。
+  // 历史重构把该文本字段换成了外键，导致前端「所属项目」列取不到值（业务项目名多未登记进 projects）。
+  projectName      String?        @map("project_name") @db.VarChar(512)
   targetId         String?        @map("target_id") // 旧版为文本 detectionTarget
   targetGene       String?        @map("target_gene") @db.VarChar(128)
   validatedStrain  String?        @map("validated_strain") @db.VarChar(128) // Tencent 承接：验证菌株（引物级）
@@ -1451,11 +1469,43 @@ model Primer {
   project Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
   target  DetectionTarget? @relation(fields: [targetId], references: [id], onDelete: SetNull)
   creator User?            @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  lots    PrimerLot[]
 
   @@index([projectId, status, deletedAt])
   @@index([targetId])
   @@index([name])
   @@map("primers")
+}
+
+/// 引物/探针库存批次（v1.2，2026-10-12）。
+/// 来源：盘点表中的引物库存（干粉/复溶、按管管理），与「引物设计信息」（Primer.sequence/target）互补。
+model PrimerLot {
+  id             String        @id @default(uuid()) @map("id")
+  primerId       String        @map("primer_id")
+  lotNo          String        @map("lot_no") @db.VarChar(64)
+  quantity       Decimal?      @map("quantity") @db.Decimal(14, 4) // 现存量；空 = 原表未标注
+  unit           String        @default("未标注") @map("unit") @db.VarChar(16)
+  spec           String?       @map("spec") @db.VarChar(128) // 包装规格 / OD / 浓度，如 "2OD,100µM"
+  containerCount Decimal?      @map("container_count") @db.Decimal(10, 2) // 管数
+  openedStatus   OpenedStatus? @map("opened_status")
+  form           String?       @map("form") @db.VarChar(64) // 干粉 / 已复溶液体
+  locationId     String?       @map("location_id")
+  location       String?       @map("location") @db.VarChar(128) // 原始位置文本（结构化前的兜底）
+  supplier       String?       @map("supplier") @db.VarChar(255)
+  receivedAt     DateTime?     @map("received_at") @db.Date
+  notes          String?
+  status         LotStatus     @default(AVAILABLE) @map("status")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  primer  Primer           @relation(fields: [primerId], references: [id], onDelete: Cascade)
+  storage StorageLocation? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  @@unique([primerId, lotNo])
+  @@index([locationId])
+  @@index([status])
+  @@map("primer_lots")
 }
 
 // ================================ 样本 ======================================
@@ -1466,11 +1516,18 @@ model SampleMaterial {
   sampleName       String       @map("sample_name") @db.VarChar(255)
   sampleType       SampleType   @default(CLINICAL_SAMPLE) @map("sample_type")
   projectId        String?      @map("project_id")
+  // v1.4（2026-10-12）：业务项目名文本（与 Primer.projectName 同源；盘点数据项目名多未登记进 projects）
+  projectName      String?      @map("project_name") @db.VarChar(512)
+  // v1.7（2026-10-12）：检测靶标（来源：研发总表「引物质粒对应表」；多靶标逗号分隔）
+  targetGene       String?      @map("target_gene") @db.VarChar(512)
   species          String?      @map("species") @db.VarChar(255)
   tissue           String?      @map("tissue") @db.VarChar(255)
   concentration    String?      @map("concentration") @db.VarChar(128) // 自由文本，如 1×10^6 copies/mL
   volume           String?      @map("volume") @db.VarChar(128)
   storageCondition String       @default("-80°C") @map("storage_condition") @db.VarChar(128)
+  // v1.2（2026-10-12）：复用库位树，承接质粒/菌株/样本的存放位置
+  locationId       String?      @map("location_id")
+  location         String?      @map("location") @db.VarChar(128)
   receivedAt       DateTime?    @map("received_at") @db.Date
   expiryDate       DateTime?    @map("expiry_date") @db.Date
   supplier         String?      @map("supplier") @db.VarChar(255)
@@ -1483,12 +1540,14 @@ model SampleMaterial {
   createdById String?   @map("created_by_id")
   updatedById String?   @map("updated_by_id")
 
-  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  creator User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  project Project?         @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  creator User?            @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  storage StorageLocation? @relation(fields: [locationId], references: [id], onDelete: SetNull)
 
   @@index([projectId, status, deletedAt])
   @@index([sampleType])
   @@index([expiryDate])
+  @@index([locationId])
   @@map("sample_materials")
 }
 

@@ -20,10 +20,10 @@ const samples = new Hono();
 samples.use('*', authenticate);
 
 const SAMPLE_FIELDS = [
-  'sampleName', 'sampleType', 'projectId', 'species', 'tissue', 'concentration',
-  'volume', 'storageCondition', 'receivedAt', 'expiryDate', 'supplier', 'status', 'notes',
+  'sampleName', 'sampleType', 'projectId', 'projectName', 'targetGene', 'species', 'tissue', 'concentration',
+  'volume', 'storageCondition', 'locationId', 'location', 'receivedAt', 'expiryDate', 'supplier', 'status', 'notes',
 ];
-const OPTIONAL_NULLABLE = ['species', 'tissue', 'concentration', 'volume', 'receivedAt', 'expiryDate', 'supplier', 'notes', 'projectId'];
+const OPTIONAL_NULLABLE = ['species', 'tissue', 'concentration', 'volume', 'locationId', 'location', 'receivedAt', 'expiryDate', 'supplier', 'notes', 'projectId'];
 
 function normalize(data) {
   const out = { ...data };
@@ -33,12 +33,27 @@ function normalize(data) {
   return out;
 }
 
+/** v1.2：库位必须存在（复用库位树） */
+async function assertLocationExists(locationId) {
+  if (!locationId) return;
+  const loc = await prisma.storageLocation.findUnique({ where: { id: locationId }, select: { id: true } });
+  if (!loc) throw badRequest('VALIDATION_ERROR', '库位不存在');
+}
+
+const SAMPLE_INCLUDE = {
+  project: { select: { id: true, name: true, code: true } },
+  storage: { select: { id: true, code: true, name: true, path: true } },
+};
+
 // ── 列表 ─────────────────────────────────────────────────────────────────────
 samples.get('/', requirePermission('samples.view'), async (c) => {
   const { page, pageSize, skip, take } = parsePaging(c.req.query(), 50);
-  const { keyword, projectId, status } = c.req.query();
+  const { keyword, projectId, projectName, status } = c.req.query();
   const where = {};
   if (projectId) where.projectId = projectId;
+  // 修正（2026-10-12）：业务项目名筛选（盘点数据项目名在 projectName 文本字段，
+  // 此前只支持 projectId 外键，导致「选具体项目 vs 全部项目」结果不一致——选中具体项目恒为空）。
+  if (projectName) where.projectName = { contains: projectName };
   if (status) where.status = status;
   if (keyword) {
     where.OR = [
@@ -46,6 +61,9 @@ samples.get('/', requirePermission('samples.view'), async (c) => {
       { sampleName: { contains: keyword } },
       { species: { contains: keyword } },
       { tissue: { contains: keyword } },
+      { location: { contains: keyword } },
+      { projectName: { contains: keyword } },
+      { targetGene: { contains: keyword } },
     ];
   }
   const [total, list] = await Promise.all([
@@ -55,17 +73,34 @@ samples.get('/', requirePermission('samples.view'), async (c) => {
       skip,
       take,
       orderBy: { sampleCode: 'asc' },
-      include: { project: { select: { id: true, name: true, code: true } } },
+      include: SAMPLE_INCLUDE,
     }),
   ]);
-  return c.json({ ...paged(list, total, { page, pageSize }), list });
+  // 项目名选项（v1.6）：拆分「多项目拼接」后去重，供前端「归属项目」下拉使用
+  const nameRows = await prisma.sampleMaterial.findMany({
+    where: { deletedAt: null, projectName: { not: null } },
+    select: { projectName: true },
+    distinct: ['projectName'],
+  });
+  const projectNames = Array.from(
+    new Set(
+      nameRows.flatMap((r) =>
+        String(r.projectName || '')
+          .split(/[,，;；、]/)
+          .map((s) => s.trim())
+          .filter(Boolean),
+      ),
+    ),
+  ).sort((a, b) => a.localeCompare(b, 'zh'));
+
+  return c.json({ ...paged(list, total, { page, pageSize }), list, projectNames });
 });
 
 // ── 详情 ─────────────────────────────────────────────────────────────────────
 samples.get('/:id', requirePermission('samples.view'), async (c) => {
   const s = await prisma.sampleMaterial.findUnique({
     where: { id: c.req.param('id') },
-    include: { project: { select: { id: true, name: true, code: true } } },
+    include: SAMPLE_INCLUDE,
   });
   if (!s) throw notFound('SAMPLE_NOT_FOUND', '样本不存在');
   return c.json(s);
@@ -90,9 +125,10 @@ samples.post('/', requirePermission('samples.create'), async (c) => {
     padding: 3,
   });
 
+  await assertLocationExists(data.locationId);
   const created = await prisma.sampleMaterial.create({
     data: { ...normalize(data), sampleCode, status: data.status ?? 'AVAILABLE', createdById: auth.userId },
-    include: { project: { select: { id: true, name: true, code: true } } },
+    include: SAMPLE_INCLUDE,
   });
 
   await writeAudit(prisma, {
@@ -123,10 +159,11 @@ samples.put('/:id', requirePermission('samples.update'), async (c) => {
   const before = await prisma.sampleMaterial.findUnique({ where: { id } });
   if (!before) throw notFound('SAMPLE_NOT_FOUND', '样本不存在');
 
+  await assertLocationExists(data.locationId);
   const updated = await prisma.sampleMaterial.update({
     where: { id },
     data: normalize(data),
-    include: { project: { select: { id: true, name: true, code: true } } },
+    include: SAMPLE_INCLUDE,
   });
 
   await writeAudit(prisma, {
