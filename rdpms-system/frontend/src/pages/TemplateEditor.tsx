@@ -201,6 +201,28 @@ const EVENT_RECOMMENDATIONS = [
   },
 ];
 
+/**
+ * 任务领域字段透传（2026-10-13）
+ * 编辑器加载与保存时此前只保留 id/title/priority/estimatedDays/role/source/enabled，
+ * 会把模板任务的交付物、适用性、任务类型、监管优先级、人时与责任角色裁掉：
+ *   - 画布上的任务节点因此看不到交付物/适用性（点击任务详情为空）；
+ *   - 保存回写也会把这些内容从 config 中抹去（仅靠后端按结构化行补全兜底）。
+ * 这里统一透传，保证加载 → 编辑 → 保存的字段完整。
+ */
+function pickTaskDomainFields(t: any) {
+  return {
+    code: t?.code ?? null,
+    description: t?.description ?? null,
+    taskType: t?.taskType ?? null,
+    applicability: t?.applicability ?? null,
+    regulatoryPriority: t?.regulatoryPriority ?? null,
+    expectedDeliverable: t?.expectedDeliverable ?? null,
+    regulatoryNotes: t?.regulatoryNotes ?? null,
+    estimatedHours: t?.estimatedHours ?? null,
+    assigneeRoleCode: t?.assigneeRoleCode ?? null,
+  };
+}
+
 function buildDefaultEventTemplates(phaseName?: string): PhaseEvent[] {
   const phaseLabel = phaseName || '当前节点';
   return EVENT_RECOMMENDATIONS.map((_, idx) => {
@@ -1020,6 +1042,7 @@ export default function TemplateEditor() {
                 role: t.role || 'member',
                 source: t.source || 'self',
                 enabled: t.enabled !== false,
+                ...pickTaskDomainFields(t),
               })),
             }))
           : [];
@@ -1032,6 +1055,7 @@ export default function TemplateEditor() {
           role: t.role || 'member',
           source: t.source || 'self',
           enabled: t.enabled !== false,
+          ...pickTaskDomainFields(t),
         }));
 
         const tasks = rootTasks.length > 0 ? rootTasks : subPhases.flatMap((sub: { tasks: PhaseTask[] }) => sub.tasks);
@@ -1578,6 +1602,8 @@ export default function TemplateEditor() {
           role: t.role,
           source: t.source,
           enabled: t.enabled,
+          // 2026-10-13：保存时同样透传领域字段，避免把交付物/适用性等从 config 中抹掉
+          ...pickTaskDomainFields(t),
         })),
         events: (p.events || []).map((ev: PhaseEvent) => ({
           id: ev.id,

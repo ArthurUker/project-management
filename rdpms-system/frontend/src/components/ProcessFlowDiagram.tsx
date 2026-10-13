@@ -135,6 +135,22 @@ function buildFlowGraph(
           totalDays: typeof t?.estimatedDays === 'number' ? t.estimatedDays : 0,
           enabled: p.enabled !== false,
           isTaskNode: true,
+          // 任务详情（2026-10-13）：点击任务节点时展示（只读视图，供查看交付物/适用性等）
+          taskDetail: {
+            title: t?.title ?? '未命名任务',
+            code: t?.code ?? null,
+            description: t?.description ?? null,
+            taskType: t?.taskType ?? null,
+            applicability: t?.applicability ?? null,
+            regulatoryPriority: t?.regulatoryPriority ?? null,
+            expectedDeliverable: t?.expectedDeliverable ?? null,
+            regulatoryNotes: t?.regulatoryNotes ?? null,
+            estimatedDays: typeof t?.estimatedDays === 'number' ? t.estimatedDays : null,
+            estimatedHours: typeof t?.estimatedHours === 'number' ? t.estimatedHours : null,
+            assigneeRoleCode: t?.assigneeRoleCode ?? null,
+            enabled: t?.enabled !== false,
+            phaseName: p.name ?? null,
+          },
         },
       });
     }
@@ -156,6 +172,46 @@ function buildFlowGraph(
 
   return { nodes, edges, phaseLike };
 }
+
+/** 适用性中文（与后端 applicability 契约一致；仅用于只读展示） */
+const APPLICABILITY_TEXT: Record<string, string> = {
+  required: '必需',
+  conditional: '条件',
+  not_applicable: '不适用',
+  to_be_confirmed: '待确认',
+};
+
+/** 任务类型中文（只读展示用；未知值原样显示代码） */
+const TASK_TYPE_TEXT: Record<string, string> = {
+  CLASSIFICATION: '分级/定位', STRATEGY: '策略决策', REGISTRATION_DOSSIER: '注册资料',
+  LABELING: '标识说明书', QMS: '质量管理', CLINICAL_EVALUATION: '临床评价',
+  CLINICAL_EVALUATION_EXEMPTION: '临床评价豁免', CLINICAL_TRIAL: '临床试验',
+  ANALYTICAL_VALIDATION: '分析方法验证', PERFORMANCE_VALIDATION: '性能验证',
+  SOFTWARE: '软件/算法', SUBMISSION: '提交申报', POST_MARKET: '上市后/应用反馈',
+  DESIGN_INPUT: '设计输入', DESIGN_OUTPUT: '设计输出', PRODUCTION: '生产制造',
+  STABILITY: '稳定性', OTHER: '其他',
+};
+
+/** 任务规划字段（标签 + 值；空值显示占位，保证结构可见） */
+const DetailField = ({ label, value }: { label: string; value: React.ReactNode }) => (
+  <div className="min-w-0">
+    <div className="text-[10px] text-slate-400">{label}</div>
+    <div className="mt-0.5 break-words text-[12px] leading-snug text-slate-700">
+      {value === null || value === undefined || value === '' ? <span className="text-slate-300">未填写</span> : value}
+    </div>
+  </div>
+);
+
+/** 任务规划分区标题 */
+const DetailSection = ({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) => (
+  <section>
+    <div className="mb-1.5 flex items-center gap-1.5">
+      <span className="text-[11px] font-semibold text-slate-600">{title}</span>
+      {hint ? <span className="text-[10px] text-slate-400">{hint}</span> : null}
+    </div>
+    {children}
+  </section>
+);
 
 // ─── 自适应分层布局 ─────────────────────────────────────────────────────────────
 const NODE_WIDTH = 160;
@@ -740,7 +796,8 @@ const PhaseNodeComponent = ({
           'relative rounded-xl border-2 px-3 py-2',
           isTaskNode ? 'w-[124px]' : isSubPhase ? 'w-[130px]' : 'w-[150px]',
           'transition-all duration-150 select-none',
-          isTaskNode ? 'cursor-default' : 'cursor-pointer',
+          // 任务节点可点击查看详情（不可拖拽/连线），因此同为 pointer 光标
+          'cursor-pointer',
           selected
             ? isTaskNode
               ? 'border-blue-500 shadow-md ring-2 ring-blue-200 ring-offset-1 bg-white'
@@ -1054,6 +1111,8 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
 }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  /** 任务详情浮层（2026-10-13）：点击任务子节点时展示；null 表示关闭 */
+  const [taskDetail, setTaskDetail] = useState<any | null>(null);
   const { fitView, getNodes, getEdges, getViewport, screenToFlowPosition, getZoom, zoomTo } = useReactFlow();
   const flowWrapperRef = useRef<HTMLDivElement>(null);
 
@@ -1467,6 +1526,13 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
   // 节点点击
   const handleNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
+      // 任务子节点（2026-10-13 修复）：此前直接走阶段查找（找不到 → 点击无反应）。
+      // 现在改为展示任务详情浮层（只读），阶段节点仍回调父组件。
+      if (node.data?.isTaskNode) {
+        const detail = (node.data as { taskDetail?: Record<string, unknown> }).taskDetail;
+        setTaskDetail({ ...(detail ?? {}), nodeId: node.id });
+        return;
+      }
       const phase = phases.find((p) => p.id === node.id);
       if (phase && onPhaseClick) onPhaseClick(phase);
     },
@@ -1499,7 +1565,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
   }, [onRegisterViewportCenterGetter, screenToFlowPosition, getViewport]);
 
   return (
-    <div ref={flowWrapperRef} className="w-full h-full">
+    <div ref={flowWrapperRef} className="relative w-full h-full">
     <svg style={{ position: 'absolute', top: 0, left: 0, width: 0, height: 0 }}>
       <defs>
         <marker id="arrow-default" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
@@ -1601,6 +1667,99 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
         </Panel>
       )}
     </ReactFlow>
+
+    {/* 任务规划面板（2026-10-13 v2）：点击任务子节点展示完整任务规划与安排；只读，可关闭 */}
+    {taskDetail && (
+      <div className="absolute right-0 top-0 z-30 flex h-full w-[380px] flex-col border-l border-slate-200 bg-white/97 shadow-2xl backdrop-blur">
+        <div className="flex items-start justify-between gap-2 border-b border-slate-100 px-4 py-3">
+          <div className="min-w-0">
+            <div className="text-[10px] font-medium uppercase tracking-wide text-slate-400">任务规划</div>
+            <div className="mt-0.5 text-[15px] font-semibold leading-snug text-slate-800" title={taskDetail.title}>
+              {taskDetail.title}
+            </div>
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px]">
+              <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-600">
+                {taskDetail.phaseName || '未归属阶段'}
+              </span>
+              {taskDetail.applicability ? (
+                <span className={`rounded px-1.5 py-0.5 ${String(taskDetail.applicability).toLowerCase() === 'conditional' ? 'bg-amber-50 text-amber-700' : 'bg-blue-50 text-blue-700'}`}>
+                  {APPLICABILITY_TEXT[String(taskDetail.applicability).toLowerCase()] ?? taskDetail.applicability}
+                </span>
+              ) : null}
+              {taskDetail.enabled === false ? (
+                <span className="rounded bg-rose-50 px-1.5 py-0.5 text-rose-600">已禁用</span>
+              ) : null}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setTaskDetail(null)}
+            className="shrink-0 rounded p-1 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
+            title="关闭"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="min-h-0 flex-1 space-y-3.5 overflow-y-auto px-4 py-3">
+          <DetailSection title="任务属性">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+              <DetailField label="任务编号" value={taskDetail.code} />
+              <DetailField
+                label="任务类型"
+                value={taskDetail.taskType ? (TASK_TYPE_TEXT[taskDetail.taskType] ?? taskDetail.taskType) : null}
+              />
+              <DetailField label="监管优先级" value={taskDetail.regulatoryPriority} />
+              <DetailField label="责任角色" value={taskDetail.assigneeRoleCode} />
+              <DetailField
+                label="建议工期"
+                value={taskDetail.estimatedDays != null ? `${taskDetail.estimatedDays} 天` : null}
+              />
+              <DetailField
+                label="预估人时"
+                value={taskDetail.estimatedHours != null ? `${taskDetail.estimatedHours} 小时` : null}
+              />
+            </div>
+          </DetailSection>
+
+          <DetailSection title="交付物" hint="本任务的产出">
+            {taskDetail.expectedDeliverable ? (
+              <div className="rounded-lg border border-emerald-100 bg-emerald-50/70 p-2.5 text-[12px] leading-relaxed text-emerald-800">
+                {taskDetail.expectedDeliverable}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-dashed border-slate-200 p-2.5 text-[12px] text-slate-300">未填写</div>
+            )}
+          </DetailSection>
+
+          <DetailSection title="工作说明" hint="怎么做">
+            <div className="text-[12px] leading-relaxed text-slate-600">
+              {taskDetail.description || <span className="text-slate-300">未填写</span>}
+            </div>
+          </DetailSection>
+
+          <DetailSection title="监管 / 依据备注">
+            <div className="text-[12px] leading-relaxed text-amber-700">
+              {taskDetail.regulatoryNotes || <span className="text-slate-300">未填写</span>}
+            </div>
+          </DetailSection>
+
+          <div className="rounded-lg bg-slate-50 p-2.5 text-[11px] leading-relaxed text-slate-500">
+            <div className="font-medium text-slate-600">关于任务规划字段</div>
+            <div className="mt-1">
+              交付物 / 任务类型 / 监管优先级等来自模板任务定义。显示「未填写」表示该任务在模板中尚未录入，
+              或后端投影尚未同步（模板信息传递修复待合入）。
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-slate-100 px-4 py-2 text-[11px] text-slate-400">
+          任务节点不可拖拽 / 连线；如需修改任务规划，请在左侧阶段列表中编辑。
+        </div>
+      </div>
+    )}
 
     {/* Drop menu (outside ReactFlow but inside provider) */}
     {dropMenuState.visible && (
