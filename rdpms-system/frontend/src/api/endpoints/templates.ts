@@ -33,6 +33,66 @@ export interface TaskTemplateStep {
   order: number;
 }
 
+/** 模板任务（规范投影，P0-01：含领域字段与模板身份） */
+export interface TemplateInstantiationTask {
+  templateTaskId?: string | null;
+  templatePhaseId?: string | null;
+  title: string;
+  code?: string | null;
+  description?: string | null;
+  taskType?: string | null;
+  applicability?: string | null;
+  regulatoryPriority?: string | null;
+  expectedDeliverable?: string | null;
+  regulatoryNotes?: string | null;
+  estimatedHours?: number | null;
+  estimatedDays?: number;
+  assigneeRoleCode?: string | null;
+  priority?: string;
+  status?: string;
+  enabled?: boolean;
+  dueDate?: string;
+}
+
+/** 模板阶段（规范投影；name 为真实阶段名，非 key/UUID） */
+export interface TemplateInstantiationPhase {
+  templatePhaseId: string;
+  key?: string;
+  name: string;
+  order: number;
+  totalDays?: number;
+  isMilestone?: boolean;
+  enabled?: boolean;
+  type?: string;
+  phaseInfo?: string | null;
+  completionTip?: string | null;
+  allowSkip?: boolean;
+  nextPhaseIds?: string[];
+  taskCount?: number;
+  tasks: TemplateInstantiationTask[];
+}
+
+/** POST /:id/apply 响应载荷（P0-02/P0-03：与项目实例化共用同一规范来源） */
+export interface TemplateApplyPayload {
+  tasks: TemplateInstantiationTask[];
+  phases: TemplateInstantiationPhase[];
+  milestones: unknown[];
+  templateId: string;
+  defaults?: Record<string, unknown>;
+  counts?: {
+    phaseCount: number;
+    taskCount: number;
+    emptyPhaseCount: number;
+    conditionalCount: number;
+    requiredCount: number;
+    disabledTaskCount: number;
+  };
+  emptyPhases?: Array<{ templatePhaseId: string; key?: string; name: string }>;
+  /** 模板可保留、但当前项目模型不能表达的字段（不得伪称生效） */
+  runtimeUnsupported?: Record<string, string>;
+  source?: 'config' | 'structured';
+}
+
 export const projectTemplatesAPI = {
   list: (params?: Record<string, unknown>) =>
     requestPaged<ProjectTemplate>({ method: 'GET', url: '/project-templates', params }),
@@ -53,7 +113,8 @@ export const projectTemplatesAPI = {
 
   preview: (id: string) => get<unknown>(`/project-templates/${id}/preview`),
 
-  apply: (id: string, data?: unknown) => post<unknown>(`/project-templates/${id}/apply`, data),
+  apply: (id: string, data?: unknown) =>
+    post<{ payload: TemplateApplyPayload }>(`/project-templates/${id}/apply`, data),
 
   roles: {
     list: (templateId: string) => get<unknown[]>(`/project-templates/${templateId}/roles`),

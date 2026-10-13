@@ -1,0 +1,123 @@
+{
+  "login": {
+    "status": 200,
+    "tokenAcquired": true,
+    "userId": "616dd5de-934b-4705-95c9-becc48cc8868"
+  },
+  "detailRead": {
+    "status": 200,
+    "phases": 13,
+    "tasks": 65,
+    "firstPhaseType": "approval",
+    "deliverableNonNull": 64,
+    "taskTypeNonNull": 65,
+    "required": 56,
+    "conditional": 9,
+    "configTypeInDbIsString": false
+  },
+  "roundTrip": {
+    "putStatus": 200,
+    "savedAsObject": true,
+    "configVersion": 2,
+    "typePreserved": true,
+    "phaseInfoPreserved": true,
+    "eventsPreserved": true,
+    "disabledPhaseStillDisabled": true,
+    "explicitEmptyDeliverableKept": true,
+    "otherTaskDeliverableKept": true
+  },
+  "rejection": {
+    "brokenJson": {
+      "status": 400,
+      "code": "TEMPLATE_CONFIG_INVALID"
+    },
+    "duplicateIds": {
+      "status": 400,
+      "code": "TEMPLATE_CONFIG_INVALID"
+    },
+    "invalidRef": {
+      "status": 400,
+      "code": "TEMPLATE_CONFIG_INVALID"
+    },
+    "recordUnchanged": true
+  },
+  "copy": {
+    "copyStatus": 201,
+    "copyIdAcquired": true,
+    "copyIsMaster": false,
+    "copyStatusField": "DRAFT",
+    "copyPhases": 13,
+    "copyTasks": 65,
+    "copyDeliverableNonNull": 64,
+    "configCopied": true,
+    "phaseIdsRemapped": true,
+    "nextRefsSelfConsistent": true,
+    "originUnchanged": true
+  },
+  "applyPayload": {
+    "status": 200,
+    "tasks": 65,
+    "firstPhaseName": "立项与需求确认",
+    "firstTaskDeliverable": "",
+    "firstTaskTemplateTaskId": "23f3bcf9-d9d1-4eb9-8ec5-ea71826c4813",
+    "counts": {
+      "phaseCount": 13,
+      "taskCount": 65,
+      "emptyPhaseCount": 0,
+      "conditionalCount": 9,
+      "requiredCount": 56,
+      "disabledTaskCount": 0
+    },
+    "runtimeUnsupportedKeys": 6
+  },
+  "newProjectPersisted": {
+    "createStatus": 201,
+    "projectId": "3c473dcc-ac1a-4873-8f8e-513955aad4da",
+    "phaseCount": 13,
+    "taskCount": 65,
+    "deliverableNonNull": 64,
+    "taskTypeNonNull": 65,
+    "regulatoryPriorityNonNull": 65,
+    "applicabilityCounts": {
+      "REQUIRED": 56,
+      "CONDITIONAL": 9
+    },
+    "templateTaskIdNonNull": 65,
+    "firstPhaseName": "立项与需求确认",
+    "noKeyLikePhaseName": true
+  },
+  "applyToExistingProject": {
+    "createStatus": 201,
+    "applyStatus": 200,
+    "taskCount": 65,
+    "deliverableNonNull": 64,
+    "applicabilityCounts": {
+      "REQUIRED": 56,
+      "CONDITIONAL": 9
+    },
+    "firstPhaseName": "立项与需求确认",
+    "conflictStatus": 400,
+    "conflictCode": "TEMPLATE_ALREADY_APPLIED",
+    "tasksBeforeConflict": 65,
+    "tasksAfterConflict": 65,
+    "noPartialWrite": true
+  },
+  "permissionDenial": {
+    "viewerLoginStatus": 200,
+    "viewerTokenAcquired": true,
+    "putStatus": 403,
+    "copyStatus": 403,
+    "putDenied": true,
+    "nameUnchanged": true
+  },
+  "summary": {
+    "ac02_roundTripOk": true,
+    "ac03_nodeFieldsOk": true,
+    "ac04_rejectionOk": true,
+    "ac04_explicitEmptyKept": true,
+    "ac05_copyOk": true,
+    "ac06_newProjectOk": true,
+    "ac07_applyExistingOk": true,
+    "ac08_permissionOk": true
+  }
+}

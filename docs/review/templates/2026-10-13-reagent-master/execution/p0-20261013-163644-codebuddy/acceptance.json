@@ -1,0 +1,108 @@
+{
+  "runId": "p0-20261013-163644-codebuddy",
+  "recordedAt": "2026-10-13T18:20:00+08:00",
+  "statusVocabulary": ["PASS", "PARTIAL", "FAIL", "NOT_RUN", "ENV_BLOCKED"],
+  "verificationEnvironment": {
+    "temporaryDatabase": "rdpms_test_p0acc（本轮自有唯一命名库；验收结束后已删除）",
+    "isolatedBackend": "worktree dist + 自有依赖副本，PORT 3117，显式指向该临时库",
+    "fixture": "由 inputs/template-export.json 生成（保留原始阶段/任务 ID）：13 阶段 / 65 任务 / config 为 JSON 字符串（简化结构，复现 SYS-01）",
+    "auth": "真实 JWT 登录（test_super_admin / test_viewer），未修改任何鉴权代码",
+    "note": "未导回生产；生产库/母版未被读写修改"
+  },
+  "overallStatement": "P0-01/02/03 实现完成（含前端补齐），并在自有临时库 + 真实 HTTP 全链路上通过 AC-P0-02~08；AC-P0-01 由真实导出夹具与单元测试共同验证。独立审阅仍为 PENDING，发布 NOT_EVALUATED。",
+  "items": [
+    {
+      "id": "AC-P0-01",
+      "requirement": "完整重算 13/65；稳定 ID 合并后 65 个交付物、56 REQUIRED/9 CONDITIONAL 语义保留",
+      "status": "PASS",
+      "evidence": ["evidence/ac-p0-01-real-export-fixture.json", "evidence/ac-verification-real-db.json", "evidence/unit-test-canonical.txt"],
+      "detail": "真实导出夹具：13/65、65 交付物、56+9、与结构化表零差异。真实 HTTP 详情读取（临时库夹具）：phases=13、tasks=65、deliverableNonNull=65、taskTypeNonNull=65、required=56、conditional=9、p1 type=approval。"
+    },
+    {
+      "id": "AC-P0-02",
+      "requirement": "旧字符串与对象输入均可合法读取；保存重开后逐字段核对；p1 approval 保留",
+      "status": "PASS",
+      "evidence": ["evidence/ac-verification-real-db.json"],
+      "detail": "PUT 保存返回 200，库内 config 由字符串升级为规范对象（configVersion=2，savedAsObject=true）；重读后 type=approval 保留、phaseInfo/events 保留、显式禁用/显式空值保留、其余任务交付物保留。"
+    },
+    {
+      "id": "AC-P0-03",
+      "requirement": "非空 phaseInfo、事件配置、角色、子阶段/里程碑及禁用状态保存重开不丢；事件仅保存、未执行",
+      "status": "PASS",
+      "evidence": ["evidence/ac-verification-real-db.json", "evidence/unit-test-canonical.txt"],
+      "detail": "真实往返：phaseInfo 保留、events 保留 1 条、阶段禁用状态保留；apply 载荷 runtimeUnsupported 含 6 项（事件执行/审批门禁/子阶段/角色绑定等明确登记为不支持，未伪称生效）。单元层覆盖 completionTip/allowSkip/subPhases/x/y/milestones 往返。"
+    },
+    {
+      "id": "AC-P0-04",
+      "requirement": "显式 false/0/允许清空值不被补全覆盖；损坏配置、重复 ID/无效引用明确拒绝，原记录不变",
+      "status": "PASS",
+      "evidence": ["evidence/ac-verification-real-db.json"],
+      "detail": "显式 expectedDeliverable='' 在保存重读后仍为空（未被结构化行覆盖）；「损坏 JSON / 阶段 ID 重复 / nextPhaseIds 无效引用」三种输入均返回 400 TEMPLATE_CONFIG_INVALID，且记录内容逐字节不变（recordUnchanged=true）。"
+    },
+    {
+      "id": "AC-P0-05",
+      "requirement": "复制后合法字段一致、内部引用重映射；原模板完全不变；计数与规范内容一致",
+      "status": "PASS",
+      "evidence": ["evidence/ac-verification-real-db.json"],
+      "detail": "POST /copy 返回 201；副本 13 阶段 65 任务、config 已复制（含节点信息），阶段/任务 ID 已重映射、nextPhaseIds 在副本内自洽（nextRefsSelfConsistent=true）；副本仍非母版（isMaster=false、status=DRAFT）；原模板内容未被写入（originUnchanged=true）。副本交付物非空 64（= 65 减去本脚本在 AC-P0-04 中显式清空的 1 条，非丢失）。"
+    },
+    {
+      "id": "AC-P0-06",
+      "requirement": "预览/apply 与实际创建的新项目，其目标模型已有领域字段一致；核对真实阶段、任务、交付物和条件字段",
+      "status": "PASS",
+      "evidence": ["evidence/ac-verification-real-db.json"],
+      "detail": "apply 载荷：65 任务、首阶段名『立项与需求确认』（非 p1/UUID）、任务带 templateTaskId、counts 显示 56 required + 9 conditional。新建项目（POST /projects）后直接查库：13 项目阶段、65 任务、交付物非空 64、taskType/regulatoryPriority 各 65、适用性 REQUIRED 56 / CONDITIONAL 9、templateTaskId 65、阶段名均为真实名称（noKeyLikePhaseName=true）。"
+    },
+    {
+      "id": "AC-P0-07",
+      "requirement": "已有项目套用的合法路径成功；原已执行任务及证据保留；冲突/失败路径无部分残留",
+      "status": "PASS",
+      "evidence": ["evidence/ac-verification-real-db.json"],
+      "detail": "对已有项目 POST /apply-template 返回 200，库内新增 65 任务、适用性 56/9 正确；重复套用返回 400 TEMPLATE_ALREADY_APPLIED，且冲突前后任务数均为 65（noPartialWrite=true，未删除/覆盖既有记录）。"
+    },
+    {
+      "id": "AC-P0-08",
+      "requirement": "合法权限链成功；无权限及受保护字段注入被拒绝；全局保护未放宽",
+      "status": "PASS",
+      "evidence": ["evidence/ac-verification-real-db.json", "evidence/full-diff.patch"],
+      "detail": "test_viewer 真实登录后 PUT 返回 403、POST /copy 返回 403，且模板名称未被改动；超级管理员完整链路均成功。代码层未修改权限/RBAC/全局批量赋值保护（diff 可核），新增字段走既有 DTO 白名单逐字段受控解析。"
+    },
+    {
+      "id": "AC-P0-09",
+      "requirement": "被明确禁用项的生成策略一致；CONDITIONAL 不自动改 REQUIRED；没有新 A/B/C 自动裁剪或权限授予",
+      "status": "PASS",
+      "evidence": ["evidence/ac-verification-real-db.json", "evidence/unit-test-canonical.txt", "evidence/full-diff.patch"],
+      "detail": "项目任务适用性落库为 REQUIRED 56 / CONDITIONAL 9（CONDITIONAL 未被改写为 REQUIRED）；阶段禁用状态在保存重读后保持；代码层未引入 A/B/C 自动裁剪、审批门禁、角色自动绑定或事件执行（diff 可核）。"
+    },
+    {
+      "id": "AC-P0-10",
+      "requirement": "相关回归与两端构建/类型检查结果真实；所有资源有所有权和清理证据",
+      "status": "PASS",
+      "evidence": ["evidence/unit-test-canonical.txt", "evidence/backend-npm-test.txt", "evidence/backend-lint-undefined.txt", "evidence/backend-typecheck.txt", "evidence/rp04-regression.txt", "evidence/frontend-npm-test.txt", "evidence/frontend-baseline-comparison.txt", "evidence/changed-files.txt", "scope-and-authorization.json"],
+      "detail": "已运行：新增单元/契约测试 9/9；后端 npm test 全量 = 单元 129/129 + 契约 6/6（exit 0）；lint:undefined、typecheck 通过；rp04 定向回归 5/5；前端 npm run build（含 tsc -b）通过；前端 npm test 47/63（16 项失败）。对 16 项失败的基线核验：在干净基线 03f9637（另建 detached worktree）上运行同一测试集，结果同为 47/63、失败 16 项且集合完全一致——失败全部集中在离线同步/本地持久化（IndexedDB、拒绝区、账户分片、游标/ACL），与模板改动无交集，判定为既有失败，P0 改动未引入回归（证据见 frontend-baseline-comparison.txt）。未运行：浏览器端保存重开/复制/创建流程（以真实 HTTP + 数据库直查替代，持久化证据更强）。资源所有权与清理：见 scope-and-authorization.json 与 handoff.md。"
+    }
+  ],
+  "verificationFindings": [
+    {
+      "finding": "后端 projects.js 缺少 canonicalTemplate 模块 import，导致新建项目与已有项目套用均 500",
+      "detectedBy": "真实 HTTP 验收（单元测试无法发现）",
+      "status": "FIXED_AND_VERIFIED",
+      "evidence": "evidence/ac-verification-real-db.json（修复后 createStatus=201 / applyStatus=200）"
+    },
+    {
+      "finding": "前端 CreateProjectModal 误读 apply 载荷字段（读取 task.phaseId，实际字段为 templatePhaseId），导致任务阶段归属丢失",
+      "detectedBy": "本文件规定的端到端补齐（对照后端载荷契约）",
+      "status": "FIXED",
+      "evidence": "evidence/full-diff.patch（前端改动段）"
+    },
+    {
+      "finding": "前端本地解析仅读 template.content，而接口返回的是 config，导致本地路径恒为空并退化为 apply 兜底",
+      "status": "FIXED",
+      "evidence": "evidence/full-diff.patch"
+    }
+  ],
+  "notProductAcceptance": [
+    "阶段放行/证据门禁、平台性能、IVD/兽医合规、完整 UI 与生产环境均不在本轮验收范围",
+    "本清单不构成发布或产品批准结论；独立审阅保持 PENDING"
+  ]
+}

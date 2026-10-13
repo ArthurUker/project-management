@@ -105,13 +105,16 @@ function normalizeTaskPriority(priority?: string | null) {
 }
 
 function parseTemplateContentToPlan(template: any, startDateText: string) {
-  if (!template?.content) {
+  // P0-01/P0-02（2026-10-13）：模板完整结构存于 config（编辑器保存处）；
+  // 此前只读 template.content，而列表/详情返回的是 config，导致本地解析恒为空、退化为 apply 兜底。
+  const rawContent = template?.content ?? template?.config;
+  if (!rawContent) {
     return { phases: [] as PlannedPhase[], milestones: [] as any[] };
   }
 
   let content: any = {};
   try {
-    content = typeof template.content === 'string' ? JSON.parse(template.content) : template.content;
+    content = typeof rawContent === 'string' ? JSON.parse(rawContent) : rawContent;
   } catch {
     return { phases: [] as PlannedPhase[], milestones: [] as any[] };
   }
@@ -143,6 +146,14 @@ function parseTemplateContentToPlan(template: any, startDateText: string) {
         phaseOrder,
         estimatedDays: Number(task.estimatedDays) || 3,
         dueDate: '',
+        // P0-03（2026-10-13）：模板任务的领域字段与身份随计划下传，避免创建项目时丢失
+        // （此前只保留简化字段，交付物/适用性/任务类型/监管优先级在提交给后端前就被裁掉）
+        templateTaskId: task.id ? String(task.id) : null,
+        taskType: task.taskType ?? null,
+        applicability: task.applicability ?? null,
+        regulatoryPriority: task.regulatoryPriority ?? null,
+        expectedDeliverable: task.expectedDeliverable ?? null,
+        regulatoryNotes: task.regulatoryNotes ?? null,
       }));
 
       return {
@@ -321,16 +332,32 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
       const applyData = (applyRes as any).payload || {};
       const tasks = Array.isArray(applyData.tasks) ? applyData.tasks : [];
       const milestones = Array.isArray(applyData.milestones) ? applyData.milestones : [];
+      // P0-03：apply 返回的规范阶段带真实名称；计划阶段名取它（此前用 phaseId/key，会出现 p1 之类显示名）。
+      // 同时注意 apply 载荷中的阶段引用字段是 templatePhaseId（此前误读 task.phaseId，恒为 undefined → 阶段归属丢失）。
+      const phaseNameById = new Map<string, string>(
+        (Array.isArray(applyData.phases) ? applyData.phases : []).map((p: any) => [
+          String(p.templatePhaseId || p.id || p.key || ''),
+          String(p.name || ''),
+        ]),
+      );
       const normalizedTasks = tasks.map((task: any, idx: number) => ({
-        id: `${task.phaseId || 'task'}_${idx}_${Date.now()}`,
+        id: `${task.templatePhaseId || task.phaseId || 'task'}_${idx}_${Date.now()}`,
         title: task.title || `任务 ${idx + 1}`,
+        description: task.description || '',
         priority: task.priority || '中',
         status: task.status || 'NOT_STARTED',
-        phase: task.phase || '',
-        phaseId: task.phaseId || '',
+        phase: phaseNameById.get(String(task.templatePhaseId || task.phaseId || '')) || task.phase || '',
+        phaseId: task.templatePhaseId || task.phaseId || '',
         phaseOrder: task.phaseOrder ?? null,
-        estimatedDays: task.estimatedDays ?? 3,
+        estimatedDays: task.estimatedDays ?? (task.estimatedHours ? Math.ceil(task.estimatedHours / 8) : 3),
         dueDate: task.dueDate ? String(task.dueDate).slice(0, 10) : '',
+        // P0-03：模板任务领域字段与身份随计划下传（此前在提交给后端前被裁剪）
+        templateTaskId: task.templateTaskId ?? null,
+        taskType: task.taskType ?? null,
+        applicability: task.applicability ?? null,
+        regulatoryPriority: task.regulatoryPriority ?? null,
+        expectedDeliverable: task.expectedDeliverable ?? null,
+        regulatoryNotes: task.regulatoryNotes ?? null,
       }));
 
       const phases = buildPhasesFromTasks(normalizedTasks);
@@ -398,16 +425,32 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
       const applyData = (applyRes as any).payload || {};
       const tasks = Array.isArray(applyData.tasks) ? applyData.tasks : [];
       const milestones = Array.isArray(applyData.milestones) ? applyData.milestones : [];
+      // P0-03：apply 返回的规范阶段带真实名称；计划阶段名取它（此前用 phaseId/key，会出现 p1 之类显示名）。
+      // 同时注意 apply 载荷中的阶段引用字段是 templatePhaseId（此前误读 task.phaseId，恒为 undefined → 阶段归属丢失）。
+      const phaseNameById = new Map<string, string>(
+        (Array.isArray(applyData.phases) ? applyData.phases : []).map((p: any) => [
+          String(p.templatePhaseId || p.id || p.key || ''),
+          String(p.name || ''),
+        ]),
+      );
       const normalizedTasks = tasks.map((task: any, idx: number) => ({
-        id: `${task.phaseId || 'task'}_${idx}_${Date.now()}`,
+        id: `${task.templatePhaseId || task.phaseId || 'task'}_${idx}_${Date.now()}`,
         title: task.title || `任务 ${idx + 1}`,
+        description: task.description || '',
         priority: task.priority || '中',
         status: task.status || 'NOT_STARTED',
-        phase: task.phase || '',
-        phaseId: task.phaseId || '',
+        phase: phaseNameById.get(String(task.templatePhaseId || task.phaseId || '')) || task.phase || '',
+        phaseId: task.templatePhaseId || task.phaseId || '',
         phaseOrder: task.phaseOrder ?? null,
-        estimatedDays: task.estimatedDays ?? 3,
+        estimatedDays: task.estimatedDays ?? (task.estimatedHours ? Math.ceil(task.estimatedHours / 8) : 3),
         dueDate: task.dueDate ? String(task.dueDate).slice(0, 10) : '',
+        // P0-03：模板任务领域字段与身份随计划下传（此前在提交给后端前被裁剪）
+        templateTaskId: task.templateTaskId ?? null,
+        taskType: task.taskType ?? null,
+        applicability: task.applicability ?? null,
+        regulatoryPriority: task.regulatoryPriority ?? null,
+        expectedDeliverable: task.expectedDeliverable ?? null,
+        regulatoryNotes: task.regulatoryNotes ?? null,
       }));
 
       const phases = buildPhasesFromTasks(normalizedTasks);
@@ -463,6 +506,13 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
           estimatedDays: task.estimatedDays ? parseInt(task.estimatedDays) || 3 : 3,
           dueDate: task.dueDate ? new Date(task.dueDate).toISOString() : undefined,
           assigneeId: managerId,
+          // P0-03：模板领域字段与任务身份（后端 DTO 白名单已支持；此前前端未提交导致信息丢失）
+          templateTaskId: task.templateTaskId || null,
+          taskType: task.taskType || null,
+          applicability: task.applicability || null,
+          regulatoryPriority: task.regulatoryPriority || null,
+          expectedDeliverable: task.expectedDeliverable || null,
+          regulatoryNotes: task.regulatoryNotes || null,
         }));
         payload.milestones = plannedMilestones.map((m) => ({
           name: m.name,
@@ -542,6 +592,13 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
           estimatedDays: task.estimatedDays ? parseInt(task.estimatedDays) || 3 : 3,
           dueDate: task.dueDate ? new Date(task.dueDate).toISOString() : undefined,
           assigneeId: managerId,
+          // P0-03：模板领域字段与任务身份（同 draft 路径）
+          templateTaskId: task.templateTaskId || null,
+          taskType: task.taskType || null,
+          applicability: task.applicability || null,
+          regulatoryPriority: task.regulatoryPriority || null,
+          expectedDeliverable: task.expectedDeliverable || null,
+          regulatoryNotes: task.regulatoryNotes || null,
         })),
         milestones: plannedMilestones.map((m) => ({
           name: m.name,

@@ -1,0 +1,791 @@
+
+> rdpms-backend@2.0.0 test
+> npm run test:unit && npm run test:contract
+
+
+> rdpms-backend@2.0.0 test:unit
+> npm run build && node --test tests/unit/
+
+
+> rdpms-backend@2.0.0 build
+> tsc -p tsconfig.json
+
+TAP version 13
+# Subtest: deploy/ 下不得再出现已删除的旧布局路径
+ok 1 - deploy/ 下不得再出现已删除的旧布局路径
+  ---
+  duration_ms: 2.479453
+  ...
+# Subtest: 成对副本逐字节一致：deploy/rdpms-api.service 与 deploy/systemd/rdpms-api.service
+ok 2 - 成对副本逐字节一致：deploy/rdpms-api.service 与 deploy/systemd/rdpms-api.service
+  ---
+  duration_ms: 0.330694
+  ...
+# Subtest: caddy 站点片段的静态根为原地部署路径
+ok 3 - caddy 站点片段的静态根为原地部署路径
+  ---
+  duration_ms: 0.357224
+  ...
+# Subtest: api 单元的运行目录与启动入口为原地部署口径
+ok 4 - api 单元的运行目录与启动入口为原地部署口径
+  ---
+  duration_ms: 0.255582
+  ...
+# Subtest: 运维脚本的默认路径不得回退到旧布局
+ok 5 - 运维脚本的默认路径不得回退到旧布局
+  ---
+  duration_ms: 0.513037
+  ...
+# Subtest: AC-P0-01 config 简化字段 + 结构化补全：交付物/适用性/任务类型不丢失
+ok 6 - AC-P0-01 config 简化字段 + 结构化补全：交付物/适用性/任务类型不丢失
+  ---
+  duration_ms: 2.428137
+  ...
+# Subtest: AC-P0-02 字符串与对象 config 均可读；节点类型 approval 保留；保存为对象后重读一致
+ok 7 - AC-P0-02 字符串与对象 config 均可读；节点类型 approval 保留；保存为对象后重读一致
+  ---
+  duration_ms: 2.254139
+  ...
+# Subtest: AC-P0-03 phaseInfo/事件/子阶段/里程碑/禁用状态保存重开不丢（事件不执行）
+ok 8 - AC-P0-03 phaseInfo/事件/子阶段/里程碑/禁用状态保存重开不丢（事件不执行）
+  ---
+  duration_ms: 0.972342
+  ...
+# Subtest: AC-P0-04 显式 false/0/空串不被结构化行覆盖
+ok 9 - AC-P0-04 显式 false/0/空串不被结构化行覆盖
+  ---
+  duration_ms: 0.416094
+  ...
+# Subtest: AC-P0-04 损坏 config / 重复 ID / 无效连线引用均明确拒绝
+ok 10 - AC-P0-04 损坏 config / 重复 ID / 无效连线引用均明确拒绝
+  ---
+  duration_ms: 0.726209
+  ...
+# Subtest: 旧模板（无 config）由结构化表构建并保留领域字段
+ok 11 - 旧模板（无 config）由结构化表构建并保留领域字段
+  ---
+  duration_ms: 0.439488
+  ...
+# Subtest: AC-P0-05 复制重映射：阶段/任务/连线/子阶段 ID 一致重映射，原对象不变
+ok 12 - AC-P0-05 复制重映射：阶段/任务/连线/子阶段 ID 一致重映射，原对象不变
+  ---
+  duration_ms: 0.560607
+  ...
+# Subtest: 实例化计划：真实阶段名（非 p1/UUID）、领域字段、模板任务身份、空间阶段登记
+ok 13 - 实例化计划：真实阶段名（非 p1/UUID）、领域字段、模板任务身份、空间阶段登记
+  ---
+  duration_ms: 0.449387
+  ...
+# Subtest: validateCanonicalPhases 直接可用的边界输入
+ok 14 - validateCanonicalPhases 直接可用的边界输入
+  ---
+  duration_ms: 0.299865
+  ...
+# [auth] ⚠️  JWT_SECRET 未设置，正在使用开发默认值（生产必须显式配置）
+# Subtest: RF01-01 导入 createApp 不连接数据库、不监听端口
+ok 15 - RF01-01 导入 createApp 不连接数据库、不监听端口
+  ---
+  duration_ms: 240.864231
+  ...
+# Subtest: RF01-02 入口拆分后 index.js 仍是可启动的服务入口（仅此文件允许 serve）
+ok 16 - RF01-02 入口拆分后 index.js 仍是可启动的服务入口（仅此文件允许 serve）
+  ---
+  duration_ms: 38.551474
+  ...
+# [auth] ⚠️  JWT_SECRET 未设置，正在使用开发默认值（生产必须显式配置）
+# Subtest: RF01-03 POST /api/reports 创建日报不返回 ReferenceError
+ok 17 - RF01-03 POST /api/reports 创建日报不返回 ReferenceError
+  ---
+  duration_ms: 73.245529
+  ...
+# Subtest: RF01-04 POST /api/reports/:id/approve 审阅不返回 ReferenceError
+ok 18 - RF01-04 POST /api/reports/:id/approve 审阅不返回 ReferenceError
+  ---
+  duration_ms: 15.512429
+  ...
+# Subtest: RF01-05 POST /api/reports/:id/reject 驳回不返回 ReferenceError
+ok 19 - RF01-05 POST /api/reports/:id/reject 驳回不返回 ReferenceError
+  ---
+  duration_ms: 15.984249
+  ...
+# Subtest: RF01-06 注入的 db 与 actor 确实生效（依赖注入而非全局单例）
+ok 20 - RF01-06 注入的 db 与 actor 确实生效（依赖注入而非全局单例）
+  ---
+  duration_ms: 31.445541
+  ...
+# Subtest: RF01-09 两个应用实例交错请求时数据库完全隔离（实例级注入）
+ok 21 - RF01-09 两个应用实例交错请求时数据库完全隔离（实例级注入）
+  ---
+  duration_ms: 21.36434
+  ...
+# Subtest: RF01-10 交错请求中的鉴权上下文同样不串用（身份来自各自实例）
+ok 22 - RF01-10 交错请求中的鉴权上下文同样不串用（身份来自各自实例）
+  ---
+  duration_ms: 13.831641
+  ...
+# [check-undefined] 发现 28 处未定义标识符或语法错误：
+#   src/routes/reports.js(77,9): TS2304: Cannot find name 'projectVisibilityFilter'.
+#   src/routes/reports.js(77,52): TS2304: Cannot find name 'projectVisibilityFilter'.
+#   src/routes/reports.js(116,24): TS2304: Cannot find name 'resolveProjectAccess'.
+#   src/routes/reports.js(117,9): TS2304: Cannot find name 'auditElevatedIfNeeded'.
+#   src/routes/reports.js(138,24): TS2304: Cannot find name 'resolveProjectAccess'.
+#   src/routes/reports.js(139,9): TS2304: Cannot find name 'auditElevatedIfNeeded'.
+#   src/routes/reports.js(140,3): TS2304: Cannot find name 'assertProjectCapability'.
+#   src/routes/reports.js(322,24): TS2304: Cannot find name 'resolveProjectAccess'.
+#   src/routes/reports.js(323,9): TS2304: Cannot find name 'auditElevatedIfNeeded'.
+#   src/routes/reports.js(421,24): TS2304: Cannot find name 'resolveProjectAccess'.
+#   src/routes/reports.js(422,9): TS2304: Cannot find name 'auditElevatedIfNeeded'.
+#   src/routes/reports.js(423,3): TS2304: Cannot find name 'assertProjectCapability'.
+#   src/routes/reports.js(480,26): TS2304: Cannot find name 'resolveProjectAccess'.
+#   src/routes/reports.js(481,5): TS2304: Cannot find name 'assertProjectCapability'.
+#   src/routes/reports.js(508,24): TS2304: Cannot find name 'resolveProjectAccess'.
+#   src/routes/reports.js(509,9): TS2304: Cannot find name 'auditElevatedIfNeeded'.
+#   src/routes/reports.js(510,3): TS2304: Cannot find name 'assertProjectCapability'.
+#   src/routes/reports.js(528,24): TS2304: Cannot find name 'resolveProjectAccess'.
+#   src/routes/reports.js(529,9): TS2304: Cannot find name 'auditElevatedIfNeeded'.
+#   src/routes/reports.js(530,3): TS2304: Cannot find name 'assertProjectCapability'.
+#   src/routes/reports.js(544,24): TS2304: Cannot find name 'resolveProjectAccess'.
+#   src/routes/reports.js(545,3): TS2304: Cannot find name 'assertProjectCapability'.
+#   src/routes/reports.js(591,24): TS2304: Cannot find name 'resolveProjectAccess'.
+#   src/routes/reports.js(592,9): TS2304: Cannot find name 'auditElevatedIfNeeded'.
+#   src/routes/reports.js(593,3): TS2304: Cannot find name 'assertProjectCapability'.
+#   src/routes/reports.js(623,24): TS2304: Cannot find name 'resolveProjectAccess'.
+#   src/routes/reports.js(624,9): TS2304: Cannot find name 'auditElevatedIfNeeded'.
+#   src/routes/reports.js(625,3): TS2304: Cannot find name 'assertProjectCapability'.
+# Subtest: RF01-07 当前后端源码不存在未定义标识符
+ok 23 - RF01-07 当前后端源码不存在未定义标识符
+  ---
+  duration_ms: 9870.080175
+  ...
+# Subtest: RF01-08 故意遗漏 import 时检查必须失败
+ok 24 - RF01-08 故意遗漏 import 时检查必须失败
+  ---
+  duration_ms: 19877.52764
+  ...
+# [auth] ⚠️  JWT_SECRET 未设置，正在使用开发默认值（生产必须显式配置）
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u2 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r2 actor=u1 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# Error: Error: [stubDeps] 模拟审计写入失败
+#     at Object.create (file:///home/ubuntu/rdpms-wt-p0-20261013-163644/rdpms-system/backend/tests/helpers/stubDeps.mjs:216:17)
+#     at writeAuditStrict (file:///home/ubuntu/rdpms-wt-p0-20261013-163644/rdpms-system/backend/dist/platform/audit/strictAudit.js:18:24)
+#     at execute (file:///home/ubuntu/rdpms-wt-p0-20261013-163644/rdpms-system/backend/dist/routes/reports.js:363:23)
+#     at async db.$transaction.timeout (file:///home/ubuntu/rdpms-wt-p0-20261013-163644/rdpms-system/backend/dist/platform/idempotency/receipts.js:115:28)
+#     at async Object.$transaction (file:///home/ubuntu/rdpms-wt-p0-20261013-163644/rdpms-system/backend/tests/helpers/stubDeps.mjs:363:16)
+#     at async withIdempotency (file:///home/ubuntu/rdpms-wt-p0-20261013-163644/rdpms-system/backend/dist/platform/idempotency/receipts.js:100:16)
+#     at async file:///home/ubuntu/rdpms-wt-p0-20261013-163644/rdpms-system/backend/dist/routes/reports.js:331:18
+#     at async dispatch (file:///home/ubuntu/rdpms-wt-p0-20261013-163644/rdpms-system/backend/node_modules/hono/dist/compose.js:22:17)
+#     at async file:///home/ubuntu/rdpms-wt-p0-20261013-163644/rdpms-system/backend/dist/kernel/rbac.js:161:9
+#     at async dispatch (file:///home/ubuntu/rdpms-wt-p0-20261013-163644/rdpms-system/backend/node_modules/hono/dist/compose.js:22:17)
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# Subtest: RF02-U1 相同幂等键、不同用户：不得回放他人响应
+ok 25 - RF02-U1 相同幂等键、不同用户：不得回放他人响应
+  ---
+  duration_ms: 80.241306
+  ...
+# Subtest: RF02-U2 相同幂等键、不同资源：不得跨资源回放
+ok 26 - RF02-U2 相同幂等键、不同资源：不得跨资源回放
+  ---
+  duration_ms: 18.455647
+  ...
+# Subtest: RF02-U3 相同幂等键、不同请求内容 → 409 且不回放
+ok 27 - RF02-U3 相同幂等键、不同请求内容 → 409 且不回放
+  ---
+  duration_ms: 16.174928
+  ...
+# Subtest: RF02-U4 相同幂等键、相同内容：返回存储响应且业务只执行一次
+ok 28 - RF02-U4 相同幂等键、相同内容：返回存储响应且业务只执行一次
+  ---
+  duration_ms: 16.742799
+  ...
+# Subtest: RF02-U5 业务校验失败：不留下回执与半成品
+ok 29 - RF02-U5 业务校验失败：不留下回执与半成品
+  ---
+  duration_ms: 12.204253
+  ...
+# Subtest: RF02-U6 未授权（非项目成员）：先授权后回执，不产生回执
+ok 30 - RF02-U6 未授权（非项目成员）：先授权后回执，不产生回执
+  ---
+  duration_ms: 15.680557
+  ...
+# Subtest: RF02-U7 撤权后不得回放：同一 key 重试返回拒绝而不是旧成功响应
+ok 31 - RF02-U7 撤权后不得回放：同一 key 重试返回拒绝而不是旧成功响应
+  ---
+  duration_ms: 6.593938
+  ...
+# Subtest: RF02-U8 审计写入失败：业务回滚，不留回执（关键证据与业务同生共死）
+ok 32 - RF02-U8 审计写入失败：业务回滚，不留回执（关键证据与业务同生共死）
+  ---
+  duration_ms: 7.452006
+  ...
+# Subtest: RF02-U9 提交命令（POST /submit）同样走回执：重放不重复生成版本
+ok 33 - RF02-U9 提交命令（POST /submit）同样走回执：重放不重复生成版本
+  ---
+  duration_ms: 12.508497
+  ...
+# Subtest: RF02-U11 未认证请求持相同 key：返回 401，不回放已缓存的成功响应（F01 回归）
+ok 34 - RF02-U11 未认证请求持相同 key：返回 401，不回放已缓存的成功响应（F01 回归）
+  ---
+  duration_ms: 21.203557
+  ...
+# Subtest: RF02-U12 相同 key、不同命令：不得跨命令回放
+ok 35 - RF02-U12 相同 key、不同命令：不得跨命令回放
+  ---
+  duration_ms: 12.331793
+  ...
+# Subtest: RF02-U13 首次提交成功并改变状态后，同 key 同 payload 重试仍返回首次结果
+ok 36 - RF02-U13 首次提交成功并改变状态后，同 key 同 payload 重试仍返回首次结果
+  ---
+  duration_ms: 19.623038
+  ...
+# Subtest: RF02-U14 首次保存成功后汇报被审阅，同 key 同 payload 重试仍回放（状态校验不阻断回放）
+ok 37 - RF02-U14 首次保存成功后汇报被审阅，同 key 同 payload 重试仍回放（状态校验不阻断回放）
+  ---
+  duration_ms: 11.190043
+  ...
+# Subtest: RF02-U15 新命令才校验状态：换新 key 的锁定汇报仍被拒绝（不因回放机制放宽）
+ok 38 - RF02-U15 新命令才校验状态：换新 key 的锁定汇报仍被拒绝（不因回放机制放宽）
+  ---
+  duration_ms: 11.431867
+  ...
+# Subtest: RF02-U10 无幂等键时仍执行（兼容旧客户端），但不写回执
+ok 39 - RF02-U10 无幂等键时仍执行（兼容旧客户端），但不写回执
+  ---
+  duration_ms: 11.859213
+  ...
+# [auth] ⚠️  JWT_SECRET 未设置，正在使用开发默认值（生产必须显式配置）
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# Subtest: RF03-U1 DAILY 拒绝月份键（F03：09-14 与 09-15 不能落到同一键）
+ok 40 - RF03-U1 DAILY 拒绝月份键（F03：09-14 与 09-15 不能落到同一键）
+  ---
+  duration_ms: 63.92422
+  ...
+# Subtest: RF03-U2 同人同项目两天 DAILY 产生两条
+ok 41 - RF03-U2 同人同项目两天 DAILY 产生两条
+  ---
+  duration_ms: 20.665362
+  ...
+# Subtest: RF03-U3 同一天重复保存仍然只更新同一条（幂等键语义不变）
+ok 42 - RF03-U3 同一天重复保存仍然只更新同一条（幂等键语义不变）
+  ---
+  duration_ms: 19.893718
+  ...
+# Subtest: RF03-U4 WEEKLY / MONTHLY 键格式校验
+ok 43 - RF03-U4 WEEKLY / MONTHLY 键格式校验
+  ---
+  duration_ms: 18.921795
+  ...
+# Subtest: RF03-U5 不存在的日期（2026-02-30）被拒绝
+ok 44 - RF03-U5 不存在的日期（2026-02-30）被拒绝
+  ---
+  duration_ms: 13.49136
+  ...
+# Subtest: RF03-U6 客户端 REVIEWED 被拒绝（F05：保存接口不得写入状态）
+ok 45 - RF03-U6 客户端 REVIEWED 被拒绝（F05：保存接口不得写入状态）
+  ---
+  duration_ms: 14.689578
+  ...
+# Subtest: RF03-U7 已提交/已审阅的汇报不能被保存接口覆盖
+ok 46 - RF03-U7 已提交/已审阅的汇报不能被保存接口覆盖
+  ---
+  duration_ms: 17.031523
+  ...
+# Subtest: RF03-U8 PUT 同样按类型校验 periodKey
+ok 47 - RF03-U8 PUT 同样按类型校验 periodKey
+  ---
+  duration_ms: 10.199284
+  ...
+# Subtest: RF03-U9 PUT 改类型时必须与键格式一致
+ok 48 - RF03-U9 PUT 改类型时必须与键格式一致
+  ---
+  duration_ms: 9.472725
+  ...
+# Subtest: RF03-U10 提交确实写版本与状态（并留严格审计）
+ok 49 - RF03-U10 提交确实写版本与状态（并留严格审计）
+  ---
+  duration_ms: 8.0484
+  ...
+# [auth] ⚠️  JWT_SECRET 未设置，正在使用开发默认值（生产必须显式配置）
+# Subtest: RF03-U21 SUPER_ADMIN 的 /api/auth/me 返回全量权限（不得为空）
+ok 50 - RF03-U21 SUPER_ADMIN 的 /api/auth/me 返回全量权限（不得为空）
+  ---
+  duration_ms: 55.571486
+  ...
+# Subtest: RF04-A1 失去项目 write capability → 授权判定拒绝（同 key 重放不得命中回执）
+ok 51 - RF04-A1 失去项目 write capability → 授权判定拒绝（同 key 重放不得命中回执）
+  ---
+  duration_ms: 1.656463
+  ...
+# Subtest: RF04-A2 非作者身份 → 授权判定拒绝
+ok 52 - RF04-A2 非作者身份 → 授权判定拒绝
+  ---
+  duration_ms: 0.293373
+  ...
+# Subtest: RF04-A3 授权判定不含状态锁：已提交/已审阅仍应通过（合法 replay 前提）
+ok 53 - RF04-A3 授权判定不含状态锁：已提交/已审阅仍应通过（合法 replay 前提）
+  ---
+  duration_ms: 0.257296
+  ...
+# Subtest: RF04-A4 状态锁仍由 assertReportWritable 承担（不得弱化）
+ok 54 - RF04-A4 状态锁仍由 assertReportWritable 承担（不得弱化）
+  ---
+  duration_ms: 0.322277
+  ...
+# [auth] ⚠️  JWT_SECRET 未设置，正在使用开发默认值（生产必须显式配置）
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# Subtest: RF04-U19 声明新版契约却缺并发基线 → 400，不回落旧版兼容
+ok 55 - RF04-U19 声明新版契约却缺并发基线 → 400，不回落旧版兼容
+  ---
+  duration_ms: 57.878835
+  ...
+# Subtest: RF04-U20 旧客户端对已审阅汇报无基线 → 409，且不改数据不留回执
+ok 56 - RF04-U20 旧客户端对已审阅汇报无基线 → 409，且不改数据不留回执
+  ---
+  duration_ms: 20.429818
+  ...
+# Subtest: RF04-U21 旧客户端对实验科学数据无基线 → 409，实验数据不得无基线覆盖
+ok 57 - RF04-U21 旧客户端对实验科学数据无基线 → 409，实验数据不得无基线覆盖
+  ---
+  duration_ms: 15.414936
+  ...
+# Subtest: RF04-U22 兼容路径放行时必须在审计中留痕（不静默降低保护）
+ok 58 - RF04-U22 兼容路径放行时必须在审计中留痕（不静默降低保护）
+  ---
+  duration_ms: 26.687663
+  ...
+# Subtest: RF04-U22b 携带基线时审计记录基线值而非兼容标记
+ok 59 - RF04-U22b 携带基线时审计记录基线值而非兼容标记
+  ---
+  duration_ms: 14.257303
+  ...
+# Subtest: RF04-U23 只有 milestones.update 时不能删除里程碑（删除不复用 update 授权）
+ok 60 - RF04-U23 只有 milestones.update 时不能删除里程碑（删除不复用 update 授权）
+  ---
+  duration_ms: 17.45479
+  ...
+# Subtest: RF04-U23b 具备 milestones.delete 时删除放行（软删）
+ok 61 - RF04-U23b 具备 milestones.delete 时删除放行（软删）
+  ---
+  duration_ms: 12.926756
+  ...
+# Subtest: RF04-U24 projects 删除必须 projects.delete；有 projects.update 也不放行
+ok 62 - RF04-U24 projects 删除必须 projects.delete；有 projects.update 也不放行
+  ---
+  duration_ms: 7.994439
+  ...
+# Subtest: RF04-U25 指派与状态转换权限独立（同步入口同样分别校验）
+ok 63 - RF04-U25 指派与状态转换权限独立（同步入口同样分别校验）
+  ---
+  duration_ms: 16.675551
+  ...
+# [auth] ⚠️  JWT_SECRET 未设置，正在使用开发默认值（生产必须显式配置）
+# Subtest: A02-1 仅有 reports.create 时不得覆盖已有草稿 → 403
+ok 64 - A02-1 仅有 reports.create 时不得覆盖已有草稿 → 403
+  ---
+  duration_ms: 57.360638
+  ...
+# Subtest: A02-2 新版客户端覆盖已有草稿必须带基线 → 400
+ok 65 - A02-2 新版客户端覆盖已有草稿必须带基线 → 400
+  ---
+  duration_ms: 14.297209
+  ...
+# Subtest: A02-3 有 update 权限 + 正确基线 → 原子更新成功且审计记录基线
+ok 66 - A02-3 有 update 权限 + 正确基线 → 原子更新成功且审计记录基线
+  ---
+  duration_ms: 17.066518
+  ...
+# Subtest: A02-4 过期基线不得覆盖 → 409 CONFLICT
+ok 67 - A02-4 过期基线不得覆盖 → 409 CONFLICT
+  ---
+  duration_ms: 15.296221
+  ...
+# Subtest: A02-5 旧客户端对实验科学草稿无基线覆盖 → 409（兼容路径边界）
+ok 68 - A02-5 旧客户端对实验科学草稿无基线覆盖 → 409（兼容路径边界）
+  ---
+  duration_ms: 14.127698
+  ...
+# Subtest: A02-6 新周期仍走创建路径（不被授权收紧误伤）
+ok 69 - A02-6 新周期仍走创建路径（不被授权收紧误伤）
+  ---
+  duration_ms: 9.925759
+  ...
+# [auth] ⚠️  JWT_SECRET 未设置，正在使用开发默认值（生产必须显式配置）
+# Subtest: A01-1 非成员读取历史版本 → 按隐藏策略拒绝（不得返回正文）
+ok 70 - A01-1 非成员读取历史版本 → 按隐藏策略拒绝（不得返回正文）
+  ---
+  duration_ms: 58.439812
+  ...
+# Subtest: A01-2 项目成员读取历史版本 → 正常返回
+ok 71 - A01-2 项目成员读取历史版本 → 正常返回
+  ---
+  duration_ms: 13.260364
+  ...
+# Subtest: A01-3 已删除日报的历史版本 → 404（与详情一致）
+ok 72 - A01-3 已删除日报的历史版本 → 404（与详情一致）
+  ---
+  duration_ms: 15.124688
+  ...
+# [auth] ⚠️  JWT_SECRET 未设置，正在使用开发默认值（生产必须显式配置）
+# [reports.update] 旧客户端兼容路径（无基线）report=r1 actor=u1 contract=未声明
+# Subtest: RF04-U1 被移出项目的作者不能删除自己的汇报
+ok 73 - RF04-U1 被移出项目的作者不能删除自己的汇报
+  ---
+  duration_ms: 47.37192
+  ...
+# Subtest: RF04-U2 非作者即使有 reports.delete 也不能删除他人汇报
+ok 74 - RF04-U2 非作者即使有 reports.delete 也不能删除他人汇报
+  ---
+  duration_ms: 27.198386
+  ...
+# Subtest: RF04-U3 被移出项目的作者不能撤回自己已提交的汇报
+ok 75 - RF04-U3 被移出项目的作者不能撤回自己已提交的汇报
+  ---
+  duration_ms: 18.891689
+  ...
+# Subtest: RF04-U4 成员但无 write 能力（VIEWER）不能更新自己的汇报
+ok 76 - RF04-U4 成员但无 write 能力（VIEWER）不能更新自己的汇报
+  ---
+  duration_ms: 21.752351
+  ...
+# Subtest: RF04-U5 只有 tasks.update 时不能通过通用 PUT 改状态
+ok 77 - RF04-U5 只有 tasks.update 时不能通过通用 PUT 改状态
+  ---
+  duration_ms: 11.185814
+  ...
+# Subtest: RF04-U6 有 tasks.change_status 但项目能力无 transition 时仍不能改状态
+ok 78 - RF04-U6 有 tasks.change_status 但项目能力无 transition 时仍不能改状态
+  ---
+  duration_ms: 12.599137
+  ...
+# Subtest: RF04-U7 有 tasks.update 时不能通过通用 PUT 改负责人
+ok 79 - RF04-U7 有 tasks.update 时不能通过通用 PUT 改负责人
+  ---
+  duration_ms: 6.603227
+  ...
+# Subtest: RF04-U8 同时具备权限与项目能力时，状态流转正常放行（回归）
+ok 80 - RF04-U8 同时具备权限与项目能力时，状态流转正常放行（回归）
+  ---
+  duration_ms: 6.763749
+  ...
+# Subtest: RF04-U9 跨项目 phaseId 被拒绝（任务更新）
+ok 81 - RF04-U9 跨项目 phaseId 被拒绝（任务更新）
+  ---
+  duration_ms: 8.513136
+  ...
+# Subtest: RF04-U10 同步不得覆盖已审阅汇报的内容（reviewed 锁定）
+ok 82 - RF04-U10 同步不得覆盖已审阅汇报的内容（reviewed 锁定）
+  ---
+  duration_ms: 17.657082
+  ...
+# Subtest: RF04-U11 同步不得修改他人汇报
+ok 83 - RF04-U11 同步不得修改他人汇报
+  ---
+  duration_ms: 12.345209
+  ...
+# Subtest: RF04-U12 同步改任务状态需要 tasks.change_status（无权限则拒绝）
+ok 84 - RF04-U12 同步改任务状态需要 tasks.change_status（无权限则拒绝）
+  ---
+  duration_ms: 12.755022
+  ...
+# Subtest: RF04-U13 同步里的跨项目 phaseId 被拒绝
+ok 85 - RF04-U13 同步里的跨项目 phaseId 被拒绝
+  ---
+  duration_ms: 13.976114
+  ...
+# Subtest: RF04-U16 任务 PUT 混合字段时必须全成功或全不变（多命令同事务）
+ok 86 - RF04-U16 任务 PUT 混合字段时必须全成功或全不变（多命令同事务）
+  ---
+  duration_ms: 9.743595
+  ...
+# Subtest: RF04-U17 同步实体补齐动作权限：projects / milestones 缺权限即拒绝
+ok 87 - RF04-U17 同步实体补齐动作权限：projects / milestones 缺权限即拒绝
+  ---
+  duration_ms: 20.836684
+  ...
+# Subtest: RF04-U18 汇报 PUT 携带过期并发基线 → 409 冲突且不改数据
+ok 88 - RF04-U18 汇报 PUT 携带过期并发基线 → 409 冲突且不改数据
+  ---
+  duration_ms: 13.535804
+  ...
+# Subtest: RF04-U15 新建日报走持久幂等：同 key 同 payload 重试不重复创建
+ok 89 - RF04-U15 新建日报走持久幂等：同 key 同 payload 重试不重复创建
+  ---
+  duration_ms: 18.991296
+  ...
+# Subtest: RF04-U14 被移出项目后同步更新被拒绝
+ok 90 - RF04-U14 被移出项目后同步更新被拒绝
+  ---
+  duration_ms: 22.05451
+  ...
+# Subtest: RF05-U1 私有暂存：仅上传人可读（metadata/download），他人一律拒绝
+ok 91 - RF05-U1 私有暂存：仅上传人可读（metadata/download），他人一律拒绝
+  ---
+  duration_ms: 1.640072
+  ...
+# Subtest: RF05-U2 私有暂存：删除也只允许上传人（或超管清理）
+ok 92 - RF05-U2 私有暂存：删除也只允许上传人（或超管清理）
+  ---
+  duration_ms: 0.2176
+  ...
+# Subtest: RF05-U3 项目文件：同项目成员可读，非成员一律拒绝；删除需项目写能力
+ok 93 - RF05-U3 项目文件：同项目成员可读，非成员一律拒绝；删除需项目写能力
+  ---
+  duration_ms: 0.28097
+  ...
+# Subtest: RF05-U4 项目作用域缺失 ownerProjectId（历史脏数据）按私有暂存处理，不自动公开
+ok 94 - RF05-U4 项目作用域缺失 ownerProjectId（历史脏数据）按私有暂存处理，不自动公开
+  ---
+  duration_ms: 0.202692
+  ...
+# Subtest: RF05-U5 历史无归属（无 owner 也无上传者）：仅超管可见/可分类，普通用户 404
+ok 95 - RF05-U5 历史无归属（无 owner 也无上传者）：仅超管可见/可分类，普通用户 404
+  ---
+  duration_ms: 0.187654
+  ...
+# Subtest: RF05-U6 共享库：必须命中声明的读权限（未声明权限 = 不共享）
+ok 96 - RF05-U6 共享库：必须命中声明的读权限（未声明权限 = 不共享）
+  ---
+  duration_ms: 0.189347
+  ...
+# Subtest: RF05-U7 公共文件：任意持 files.download 的登录用户可读
+ok 97 - RF05-U7 公共文件：任意持 files.download 的登录用户可读
+  ---
+  duration_ms: 1.159325
+  ...
+# Subtest: RF05-U8 已删除文件对所有动作隐藏（包括上传者与超管）
+ok 98 - RF05-U8 已删除文件对所有动作隐藏（包括上传者与超管）
+  ---
+  duration_ms: 0.251784
+  ...
+# Subtest: RF05-U9 列表可见性过滤：只返回本人/本项目/已声明共享/公共，超管额外可列出未分类历史文件
+ok 99 - RF05-U9 列表可见性过滤：只返回本人/本项目/已声明共享/公共，超管额外可列出未分类历史文件
+  ---
+  duration_ms: 0.467762
+  ...
+# Subtest: RF05-U10 历史归类优先级：项目内实体 > 法规共享库 > 头像公共 > 未分类
+ok 100 - RF05-U10 历史归类优先级：项目内实体 > 法规共享库 > 头像公共 > 未分类
+  ---
+  duration_ms: 14.6585
+  ...
+# Subtest: RF05-U11 删除守卫：被证据引用的文件只能解绑，不得整体删除
+ok 101 - RF05-U11 删除守卫：被证据引用的文件只能解绑，不得整体删除
+  ---
+  duration_ms: 0.632222
+  ...
+# Subtest: RF30-T01 主密钥解析：缺失返回 null / 长度不符抛错 / 合法解码为 32 字节
+ok 102 - RF30-T01 主密钥解析：缺失返回 null / 长度不符抛错 / 合法解码为 32 字节
+  ---
+  duration_ms: 2.353517
+  ...
+# Subtest: RF30-T02 信封加密往返：解密结果与明文逐字节一致，信封字段合法
+ok 103 - RF30-T02 信封加密往返：解密结果与明文逐字节一致，信封字段合法
+  ---
+  duration_ms: 2.134333
+  ...
+# Subtest: RF30-T03 篡改检测：密文任一字节变化都会导致 GCM 认证失败（而不是返回脏数据）
+ok 104 - RF30-T03 篡改检测：密文任一字节变化都会导致 GCM 认证失败（而不是返回脏数据）
+  ---
+  duration_ms: 0.990366
+  ...
+# Subtest: RF30-T04 换错主密钥：指纹不匹配时给出可读原因，不做静默尝试
+ok 105 - RF30-T04 换错主密钥：指纹不匹配时给出可读原因，不做静默尝试
+  ---
+  duration_ms: 0.459927
+  ...
+# Subtest: RF30-T05 信封字段非法：算法不符 / iv 长度错 / 缺 dekCipher 一律拒绝
+ok 106 - RF30-T05 信封字段非法：算法不符 / iv 长度错 / 缺 dekCipher 一律拒绝
+  ---
+  duration_ms: 0.639595
+  ...
+# Subtest: RF30-T06 meta 严格校验：合法通过；缺 sha256 / jobId 非法 / 计数非法一律拒绝
+ok 107 - RF30-T06 meta 严格校验：合法通过；缺 sha256 / jobId 非法 / 计数非法一律拒绝
+  ---
+  duration_ms: 1.189813
+  ...
+# Subtest: RF30-T07 归档根目录规则：严格模式必须显式绝对路径，且不得落在代码目录内
+ok 108 - RF30-T07 归档根目录规则：严格模式必须显式绝对路径，且不得落在代码目录内
+  ---
+  duration_ms: 0.49848
+  ...
+# Subtest: RF30-T08 路径穿越与符号链接：越界路径、经由符号链接的路径都被拒绝
+ok 109 - RF30-T08 路径穿越与符号链接：越界路径、经由符号链接的路径都被拒绝
+  ---
+  duration_ms: 15.965042
+  ...
+# Subtest: RF30-T09 日期目录按 Asia/Shanghai：UTC 18:30 属次日 02:30
+ok 110 - RF30-T09 日期目录按 Asia/Shanghai：UTC 18:30 属次日 02:30
+  ---
+  duration_ms: 1.651894
+  ...
+# Subtest: RF30-T10 ensureArchiveRoot：创建 0700 目录；把符号链接当根目录会被拒绝
+ok 111 - RF30-T10 ensureArchiveRoot：创建 0700 目录；把符号链接当根目录会被拒绝
+  ---
+  duration_ms: 5.039319
+  ...
+# Subtest: RF30-T11 TOC 解析：desc 含空格的右侧对齐解析，TABLE / TABLE DATA 分别计数
+ok 112 - RF30-T11 TOC 解析：desc 含空格的右侧对齐解析，TABLE / TABLE DATA 分别计数
+  ---
+  duration_ms: 1.52255
+  ...
+# Subtest: RF30-T12 连接串剥离查询参数：Prisma 私有参数不能透传给 libpq
+ok 113 - RF30-T12 连接串剥离查询参数：Prisma 私有参数不能透传给 libpq
+  ---
+  duration_ms: 0.438406
+  ...
+# Subtest: RF30-T13 离线校验正面路径：解密 / sha256 / 表清单对账全部通过
+ok 114 - RF30-T13 离线校验正面路径：解密 / sha256 / 表清单对账全部通过
+  ---
+  duration_ms: 25.049355
+  ...
+# Subtest: RF30-T14 表清单对账失败：TOC 缺表 → 不通过且指出缺哪张
+ok 115 - RF30-T14 表清单对账失败：TOC 缺表 → 不通过且指出缺哪张
+  ---
+  duration_ms: 17.212423
+  ...
+# Subtest: RF30-T15 密文被篡改：解密检查失败，且不再继续后面的检查
+ok 116 - RF30-T15 密文被篡改：解密检查失败，且不再继续后面的检查
+  ---
+  duration_ms: 4.391748
+  ...
+# Subtest: RF30-T16 产物配对：拿另一份备份的 meta 来校验会被识破（不是含糊的"解密失败"）
+ok 117 - RF30-T16 产物配对：拿另一份备份的 meta 来校验会被识破（不是含糊的"解密失败"）
+  ---
+  duration_ms: 7.864544
+  ...
+# Subtest: RF30-T17 未配置主密钥：校验抛 BACKUP_KMS_NOT_CONFIGURED（区分"环境未配"与"备份坏了"）
+ok 118 - RF30-T17 未配置主密钥：校验抛 BACKUP_KMS_NOT_CONFIGURED（区分"环境未配"与"备份坏了"）
+  ---
+  duration_ms: 7.60208
+  ...
+# Subtest: RF30-T18 表集合对账纯函数：missing / extra 双向可比
+ok 119 - RF30-T18 表集合对账纯函数：missing / extra 双向可比
+  ---
+  duration_ms: 0.619848
+  ...
+# Subtest: RF30-T19 归档表级对账：缺表判失败；TOC 多出的对象（扩展/其它 schema）只记警告
+ok 120 - RF30-T19 归档表级对账：缺表判失败；TOC 多出的对象（扩展/其它 schema）只记警告
+  ---
+  duration_ms: 0.29713
+  ...
+# Subtest: RF30-T20 保留策略：未登记跳过；永远保留最新一份；天数与份数取先超限者
+ok 121 - RF30-T20 保留策略：未登记跳过；永远保留最新一份；天数与份数取先超限者
+  ---
+  duration_ms: 0.51465
+  ...
+# Subtest: RF30-T21 保留策略配置：缺省 30 天 / 60 份；非法值回落默认；0 视为不限制
+ok 122 - RF30-T21 保留策略配置：缺省 30 天 / 60 份；非法值回落默认；0 视为不限制
+  ---
+  duration_ms: 0.296709
+  ...
+# Subtest: RF30-T22 磁盘阈值：默认 90% / 1024MB；非法值回落默认
+ok 123 - RF30-T22 磁盘阈值：默认 90% / 1024MB；非法值回落默认
+  ---
+  duration_ms: 0.351403
+  ...
+# Subtest: RF30-T23 磁盘门禁：余量不足抛 BACKUP_DISK_LOW；充足时给出挂载水位
+ok 124 - RF30-T23 磁盘门禁：余量不足抛 BACKUP_DISK_LOW；充足时给出挂载水位
+  ---
+  duration_ms: 6.026339
+  ...
+# Subtest: RF30-T24 目录用量聚合：归档按日期目录统计产物份数/字节，.work 单独计
+ok 125 - RF30-T24 目录用量聚合：归档按日期目录统计产物份数/字节，.work 单独计
+  ---
+  duration_ms: 6.609538
+  ...
+# Subtest: RF30-T26 陈旧工作区清扫：只清 > 阈值的目录，新目录与符号链接都保留
+ok 126 - RF30-T26 陈旧工作区清扫：只清 > 阈值的目录，新目录与符号链接都保留
+  ---
+  duration_ms: 5.855938
+  ...
+# Subtest: RF30-T27 错误码 → HTTP 状态映射：status 与 httpStatus 一致且在 4xx/5xx
+ok 127 - RF30-T27 错误码 → HTTP 状态映射：status 与 httpStatus 一致且在 4xx/5xx
+  ---
+  duration_ms: 0.432075
+  ...
+# Subtest: RF30-T28 子进程提前退出（stdin EPIPE）不得崩进程，应按退出码判定
+ok 128 - RF30-T28 子进程提前退出（stdin EPIPE）不得崩进程，应按退出码判定
+  ---
+  duration_ms: 9.316981
+  ...
+# Subtest: RF30-T25 CLI 参数校验：非法 --run-type 退出码 2，--help 退出码 0
+ok 129 - RF30-T25 CLI 参数校验：非法 --run-type 退出码 2，--help 退出码 0
+  ---
+  duration_ms: 47.82287
+  ...
+1..129
+# tests 129
+# suites 0
+# pass 129
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 34752.269517
+
+> rdpms-backend@2.0.0 test:contract
+> npm run build && node --test tests/contract/
+
+
+> rdpms-backend@2.0.0 build
+> tsc -p tsconfig.json
+
+TAP version 13
+# [auth] ⚠️  JWT_SECRET 未设置，正在使用开发默认值（生产必须显式配置）
+# Subtest: RF01-C1 createApp 接受 05 §1 声明的依赖形参
+ok 1 - RF01-C1 createApp 接受 05 §1 声明的依赖形参
+  ---
+  duration_ms: 3.320859
+  ...
+# Subtest: RF01-C2 健康检查不需要数据库即可返回
+ok 2 - RF01-C2 健康检查不需要数据库即可返回
+  ---
+  duration_ms: 54.152792
+  ...
+# Subtest: RF01-C3 未认证的业务请求返回 401 且不泄漏内部错误
+ok 3 - RF01-C3 未认证的业务请求返回 401 且不泄漏内部错误
+  ---
+  duration_ms: 14.140924
+  ...
+# Subtest: RF01-C4 未知路径返回 404 契约响应
+ok 4 - RF01-C4 未知路径返回 404 契约响应
+  ---
+  duration_ms: 23.049586
+  ...
+# Subtest: RF01-C4b /api 下的未知路径仍先要求认证（现有安全口径不变）
+ok 5 - RF01-C4b /api 下的未知路径仍先要求认证（现有安全口径不变）
+  ---
+  duration_ms: 12.70604
+  ...
+# Subtest: RF01-C5 默认依赖下不构造数据库客户端（无 DATABASE_URL 也能装配）
+ok 6 - RF01-C5 默认依赖下不构造数据库客户端（无 DATABASE_URL 也能装配）
+  ---
+  duration_ms: 13.391331
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 428.046447

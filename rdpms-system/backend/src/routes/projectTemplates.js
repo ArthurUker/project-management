@@ -5,6 +5,11 @@ import { pickAllowed } from '../kernel/massAssign.js';
 import { AUDIT_ACTIONS } from '../kernel/constants.js';
 import { writeAudit } from '../kernel/audit.js';
 import { badRequest, notFound } from '../kernel/http.js';
+import {
+  buildCanonicalTemplate,
+  buildInstantiationPlan,
+  remapCanonicalIds,
+} from '../modules/projectTemplates/canonicalTemplate.js';
 
 /**
  * /api/project-templates —— 项目模板（W10 PG baseline 迁移）。
@@ -20,71 +25,20 @@ const templates = new Hono();
 
 templates.use('*', authMiddleware);
 
-/** 将模板行结构归一化为 FE 兼容形状 */
-function toCompatPhases(tpl) {
-  // v2（2026-10-12）：优先返回编辑器保存在 config 中的完整结构。
-  // 该结构含并行拓扑（nextPhaseIds：分叉/汇合）、节点坐标（x/y）与子阶段；
-  // 此前一律按行结构归一化，会把画布上拖拽出来的「1 → 2-1/2-2/2-3 并行 → 汇合 3」拓扑丢弃。
-  const saved = parseConfigPhases(tpl?.config);
-  if (saved && saved.length > 0) return saved;
-
-  return (tpl.phases ?? []).map((p, idx) => ({
-    id: p.id,
-    key: p.code,
-    name: p.name,
-    order: p.sortOrder ?? idx + 1,
-    totalDays: p.plannedDurationDays ?? 0,
-    isMilestone: p.isMilestone,
-    enabled: true,
-    subPhases: [],
-    nextPhaseIds: [],
-    tasks: (p.tasks ?? []).map((t) => ({
-      id: t.id,
-      title: t.title,
-      description: t.description || null,
-      taskType: t.taskType,
-      applicability: t.applicability.toLowerCase(),
-      regulatoryPriority: t.regulatoryPriority,
-      estimatedDays: t.estimatedHours ? Math.ceil(t.estimatedHours / 8) : 3,
-      enabled: true,
-    })),
-  }));
+/**
+ * 规范来源构建（P0 修复）：详情/预览/复制/apply/实例化共用同一解析与投影链路。
+ * config（字符串或对象）已表达的字段优先；缺失的领域字段按同任务 ID 从结构化行补全。
+ * 损坏/重复 ID/无效引用 → 抛出明确错误（不静默退回旧表、不显示成功）。
+ */
+function buildCanonicalOrThrow(tpl) {
+  const built = buildCanonicalTemplate(tpl);
+  if (!built.ok) throw badRequest('TEMPLATE_CONFIG_INVALID', built.error);
+  return built;
 }
 
-/** 解析 config 中编辑器保存的 phases（JSON 字符串或对象），补齐 FE 兼容缺省字段 */
-function parseConfigPhases(config) {
-  if (!config) return null;
-  let obj = config;
-  if (typeof config === 'string') {
-    try { obj = JSON.parse(config); } catch { return null; }
-  }
-  const arr = obj?.phases;
-  if (!Array.isArray(arr) || arr.length === 0) return null;
-  return arr.map((p, idx) => ({
-    id: p.id,
-    key: p.key ?? p.code ?? `p${idx + 1}`,
-    name: p.name ?? `阶段 ${idx + 1}`,
-    order: typeof p.order === 'number' ? p.order : idx + 1,
-    totalDays: typeof p.totalDays === 'number' ? p.totalDays : 0,
-    isMilestone: p.isMilestone === true,
-    enabled: p.enabled !== false,
-    subPhases: Array.isArray(p.subPhases) ? p.subPhases : [],
-    nextPhaseIds: Array.isArray(p.nextPhaseIds) ? p.nextPhaseIds.filter(Boolean) : [],
-    x: typeof p.x === 'number' ? p.x : undefined,
-    y: typeof p.y === 'number' ? p.y : undefined,
-    tasks: Array.isArray(p.tasks)
-      ? p.tasks.map((t) => ({
-          id: t.id,
-          title: t.title ?? '',
-          description: t.description ?? null,
-          taskType: t.taskType ?? null,
-          applicability: typeof t.applicability === 'string' ? t.applicability.toLowerCase() : 'required',
-          regulatoryPriority: t.regulatoryPriority ?? null,
-          estimatedDays: typeof t.estimatedDays === 'number' ? t.estimatedDays : 3,
-          enabled: t.enabled !== false,
-        }))
-      : [],
-  }));
+/** 将模板行结构投影为 FE 兼容形状（规范来源） */
+function toCompatPhases(tpl) {
+  return buildCanonicalOrThrow(tpl).canonical.phases;
 }
 
 const TEMPLATE_INCLUDE = {
@@ -193,11 +147,22 @@ templates.put('/:id', requirePermission('project_templates.update'), async (c) =
   const raw = await c.req.json().catch(() => null);
   const data = pickAllowed(raw, ['name', 'description', 'category', 'typeLabel', 'parentId', 'isMaster', 'status', 'config'], { entityLabel: '更新项目模板', allowEmpty: true });
   if ('status' in data) data.status = String(data.status).toUpperCase();
-  if (raw?.content !== undefined && data.config === undefined) data.config = raw.content;
   data.updatedById = auth.userId;
 
-  const before = await prisma.projectTemplate.findUnique({ where: { id } });
+  const before = await prisma.projectTemplate.findUnique({
+    where: { id },
+    include: { phases: { include: { tasks: { orderBy: { sortOrder: 'asc' } } } } },
+  });
   if (!before || before.deletedAt) throw notFound('TEMPLATE_NOT_FOUND', '模版不存在');
+
+  // P0-01：保存时写入完整、可版本识别的规范 JSON 对象（含 configVersion）。
+  // 输入为字符串或对象均接受；用当前结构化行做同 ID 补全并校验（重复 ID/无效引用 → 明确拒绝，保留原数据）。
+  const rawConfig = raw?.config !== undefined ? raw.config : raw?.content;
+  if (rawConfig !== undefined) {
+    const built = buildCanonicalTemplate({ config: rawConfig, phases: before.phases });
+    if (!built.ok) throw badRequest('TEMPLATE_CONFIG_INVALID', built.error);
+    data.config = built.canonical;
+  }
 
   const tpl = await prisma.projectTemplate.update({ where: { id }, data });
   await writeAudit(prisma, {
@@ -225,7 +190,16 @@ templates.patch('/:id', requirePermission('project_templates.update'), async (c)
   if (body.typeLabel !== undefined) data.typeLabel = body.typeLabel;
   if (body.type !== undefined) data.typeLabel = body.type;
   if (body.config !== undefined || body.content !== undefined) {
-    data.config = body.config ?? body.content;
+    // P0-01：与 PUT 相同的规范化与校验（字符串/对象输入均接受，保存为规范对象）
+    const before = await prisma.projectTemplate.findUnique({
+      where: { id },
+      include: { phases: { include: { tasks: { orderBy: { sortOrder: 'asc' } } } } },
+    });
+    if (!before || before.deletedAt) throw notFound('TEMPLATE_NOT_FOUND', '模版不存在');
+    const input = body.config !== undefined ? body.config : body.content;
+    const built = buildCanonicalTemplate({ config: input, phases: before.phases });
+    if (!built.ok) throw badRequest('TEMPLATE_CONFIG_INVALID', built.error);
+    data.config = built.canonical;
   }
   const tpl = await prisma.projectTemplate.update({ where: { id }, data });
   return c.json(tpl);
@@ -276,7 +250,13 @@ templates.post('/:id/copy', requirePermission('project_templates.copy'), async (
   });
   if (!src || src.deletedAt) throw notFound('TEMPLATE_NOT_FOUND', '模版不存在');
 
+  // P0-02：复制使用与详情/预览/apply 相同的规范来源（buildCanonicalOrThrow），
+  // 副本重建内部 ID 时同步重映射 config 中的阶段/任务/连线/子阶段引用；
+  // 只读取原模板（src），不写原模板任何字段。
+  const builtSrc = buildCanonicalOrThrow(src);
   const code = `TPL-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+  const phaseIdMap = new Map();
+  const taskIdMap = new Map();
   const copy = await prisma.$transaction(async (tx) => {
     const created = await tx.projectTemplate.create({
       data: {
@@ -289,6 +269,7 @@ templates.post('/:id/copy', requirePermission('project_templates.copy'), async (
         isMaster: false, // 副本永远不是母版
         status: 'DRAFT',
         createdById: auth.userId,
+        config: null, // 行与 config 在下方统一重建后写入规范对象
       },
     });
 
@@ -318,10 +299,14 @@ templates.post('/:id/copy', requirePermission('project_templates.copy'), async (
           plannedDurationDays: ph.plannedDurationDays ?? null,
           isMilestone: ph.isMilestone,
         },
+        select: { id: true },
       });
-      if (ph.tasks.length) {
-        await tx.templateTask.createMany({
-          data: ph.tasks.map((t) => ({
+      phaseIdMap.set(ph.id, newPhase.id);
+
+      for (const t of ph.tasks) {
+        // eslint-disable-next-line no-await-in-loop
+        const newTask = await tx.templateTask.create({
+          data: {
             templatePhaseId: newPhase.id,
             code: t.code ?? null,
             title: t.title,
@@ -334,10 +319,17 @@ templates.post('/:id/copy', requirePermission('project_templates.copy'), async (
             estimatedHours: t.estimatedHours ?? null,
             assigneeRoleCode: t.assigneeRoleCode ?? null,
             sortOrder: t.sortOrder,
-          })),
+          },
+          select: { id: true },
         });
+        taskIdMap.set(t.id, newTask.id);
       }
     }
+
+    // 复制规范 config（保留节点类型/信息/事件/里程碑/布局/子阶段），并重映射内部 ID
+    const copyConfig = remapCanonicalIds(builtSrc.canonical, phaseIdMap, taskIdMap);
+    await tx.projectTemplate.update({ where: { id: created.id }, data: { config: copyConfig } });
+
     return created;
   });
 
@@ -390,36 +382,22 @@ templates.post('/:id/apply', requirePermission('project_templates.view'), async 
   });
   if (!tpl || tpl.deletedAt) throw notFound('TEMPLATE_NOT_FOUND', '模版不存在');
 
-  const startDate = body.startDate ? new Date(body.startDate) : new Date();
-  let dayOffset = 0;
-  const phases = toCompatPhases(tpl);
-  const tasks = [];
-  for (const phase of phases) {
-    for (const t of phase.tasks) {
-      const dueDate = new Date(startDate);
-      dueDate.setDate(dueDate.getDate() + dayOffset + (t.estimatedDays || 3));
-      tasks.push({
-        title: t.title,
-        taskType: t.taskType,
-        applicability: t.applicability,
-        regulatoryPriority: t.regulatoryPriority,
-        priority: 'MEDIUM',
-        status: 'NOT_STARTED',
-        phaseKey: phase.key,
-        phaseId: phase.key,
-        phaseOrder: phase.order,
-        estimatedDays: t.estimatedDays || 3,
-        dueDate: dueDate.toISOString(),
-      });
-      dayOffset += t.estimatedDays || 3;
-    }
-  }
+  // P0-02/P0-03：apply 与项目实例化共用 buildInstantiationPlan（同一规范来源）。
+  // 返回内容含阶段名（非 key/UUID）、任务的领域字段（交付物/适用性/任务类型/监管优先级）、
+  // 模板任务身份（templateTaskId）与当前项目模型不能表达的能力边界（runtimeUnsupported）。
+  const built = buildCanonicalOrThrow(tpl);
+  const plan = buildInstantiationPlan(built.canonical, { startDate: body.startDate });
   return c.json({
     payload: {
-      tasks,
-      milestones: [],
+      tasks: plan.tasks,
+      phases: plan.phases,
+      milestones: Array.isArray(built.canonical?.milestones) ? built.canonical.milestones : [],
       templateId: tpl.id,
-      defaults: tpl.config?.defaults ?? {},
+      defaults: built.canonical?.defaults ?? {},
+      counts: plan.counts,
+      emptyPhases: plan.emptyPhases,
+      runtimeUnsupported: plan.runtimeUnsupported,
+      source: built.source,
     },
   });
 });

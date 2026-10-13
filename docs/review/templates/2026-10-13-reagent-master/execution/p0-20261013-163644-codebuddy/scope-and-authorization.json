@@ -1,0 +1,114 @@
+{
+  "runId": "p0-20261013-163644-codebuddy",
+  "executor": "CodeBuddy（本轮 P0 技术修复执行者）",
+  "startedAt": "2026-10-13T16:36:44+08:00",
+  "timezone": "Asia/Shanghai (UTC+08:00)",
+  "instructionSource": "docs/review/templates/2026-10-13-reagent-master/SERVER_P0_EXECUTOR_PROMPT.md（完整读取 206 行）",
+
+  "authorization": {
+    "scope": ["P0-01 规范化与保存读回", "P0-02 复制与预览一致性", "P0-03 项目实例化信息保留"],
+    "granted": [
+      "在本机新建自有独立分支/worktree 进行改造",
+      "修改下列允许文件",
+      "添加本轮定向测试（自有夹具）",
+      "在自有临时 PostgreSQL 库与自有资源中运行验证",
+      "在独立 worktree 内构建（使用自有依赖副本）"
+    ],
+    "notGranted": [
+      "stage / commit / push / merge / 部署 / 生产迁移 / 服务重启 / 切换运行目录",
+      "写生产或共享数据库；操作真实账号、真实项目、真实母版",
+      "对真实/共享环境执行 seed、db push 或重置",
+      "修改 schema / migration / 安装或升级依赖",
+      "改造认证、RBAC、同步、离线、报告、文件、备份、部署体系",
+      "启用新的 A/B/C 定义、裁剪政策、审批门禁、自动角色绑定或事件执行",
+      "改阶段顺序、任务业务内容、监管规则或在研项目数据",
+      "通用审批引擎、自动通知/webhook、全量版本快照、排程算法",
+      "调用子代理；切换模型"
+    ],
+    "stopCondition": "完成 P0-01/02/03 后停止；不进入 P1/P2/P3；不调整真实母版；不推送或部署"
+  },
+
+  "allowedFiles": {
+    "existing": [
+      "rdpms-system/backend/src/routes/projectTemplates.js",
+      "rdpms-system/backend/src/routes/projects.js（仅模板相关创建 DTO/实例化、apply-template 路径及必要共用解析）",
+      "rdpms-system/frontend/src/pages/TemplateEditor.tsx",
+      "rdpms-system/frontend/src/components/CreateProjectModal.tsx",
+      "rdpms-system/frontend/src/api/endpoints/templates.ts"
+    ],
+    "new": [
+      "rdpms-system/backend/src/modules/projectTemplates/**（规范化/验证/模板实例化专用模块）",
+      "rdpms-system/frontend/src/domain/projectTemplates/**（类型及纯转换模块）",
+      "backend/tests/unit|contract|integration 中本轮新增测试与自有夹具",
+      "frontend/tests/unit|browser 中本轮新增测试与自有夹具",
+      "本轮 execution 交付目录中的运行脚本与证据"
+    ],
+    "explicitlyUnchanged": [
+      "rdpms-system/frontend/src/components/ProcessFlowDiagram.tsx",
+      "rdpms-system/backend/prisma/schema.prisma",
+      "seed / 迁移 / 锁文件",
+      "全局请求层、全局批量赋值保护、权限/审计框架、共享测试 helper、全局运行器"
+    ]
+  },
+
+  "baseline": {
+    "repoPathProduction": "/mnt/datadisk0/rdpms/app",
+    "startupHeadProduction": "03f9637adb9109e11c28a91d8a6bd99b69991fa1",
+    "businessSourceBaseline": "24679d2c1e8992c39c0b9b79748bb539274fc4f7",
+    "headNote": "03f9637 为纯文档提交（评审资料 + 本执行指令），按指令第 58-59 行不视为业务源码失配",
+    "productionWorktreeStatusAtStart": "clean（git status --short 为空）",
+    "sourceHashVerification": {
+      "method": "在自有 worktree 内对 7 个文件计算 sha256，与 inputs/source-context.json 比对",
+      "result": "7/7 MATCH",
+      "evidence": "evidence/startup-source-hashes.txt",
+      "files": [
+        { "path": "rdpms-system/backend/src/routes/projectTemplates.js", "sha256": "22f5129d512efff0ade3ee03338a78bb2903d78ff67eaa10d3cc00101a0b4718", "matches": true },
+        { "path": "rdpms-system/backend/src/routes/projects.js", "sha256": "a8c8e5aad515c05cc51f241f6aeb058c10c105ee64318c5ad0e5a65e7d15ab21", "matches": true },
+        { "path": "rdpms-system/backend/prisma/schema.prisma", "sha256": "94186272109519d647dac2263be769ab40d4c305cf401451d4e231161fb6fe4a", "matches": true },
+        { "path": "rdpms-system/frontend/src/pages/TemplateEditor.tsx", "sha256": "3c29dd6ab94b3534d42aa3bea47c27399a187374d4455b210e3696dc85f6c834", "matches": true },
+        { "path": "rdpms-system/frontend/src/components/CreateProjectModal.tsx", "sha256": "092078ee6f899e4f439402a8c81323fbd6e6ebe412dce5d86a8e05ea5def5205", "matches": true },
+        { "path": "rdpms-system/frontend/src/components/ProcessFlowDiagram.tsx", "sha256": "da24327b5cabf095c7e1ca554f424990e54b3a55d488aa94775d9f06e81477de", "matches": true, "note": "本轮不修改，仅作基线记录" },
+        { "path": "rdpms-system/frontend/src/api/endpoints/templates.ts", "sha256": "3cdba59ffff88fa75e45ca21ea86346fb4452e48b40db490369ceae3e124bce2", "matches": true }
+      ]
+    },
+    "preservedInputs": {
+      "templateExportSha256": "536b4f886133206c1edce8463f6181bacb62a95d61a683026b1203cd240edf32",
+      "independentlyRecomputed": true,
+      "note": "inputs/template-export.json 已程序化完整读取（非截断终端输出）并独立复算，与 evidence-summary.json 一致"
+    }
+  },
+
+  "resources": {
+    "worktree": {
+      "path": "/home/ubuntu/rdpms-wt-p0-20261013-163644",
+      "branch": "p0/template-info-20261013-163644",
+      "createMethod": "git worktree add <path> -b <branch> HEAD（首次尝试于 /mnt/datadisk0 因生产目录 root 属主权限被拒，改用户主目录，未对生产目录做任何改动）",
+      "ownership": "本轮自有，结束后可移除"
+    },
+    "dependencyCopies": [
+      { "path": "/home/ubuntu/rdpms-wt-p0-20261013-163644/rdpms-system/backend/node_modules", "size": "144M", "method": "从生产只读复制" },
+      { "path": "/home/ubuntu/rdpms-wt-p0-20261013-163644/rdpms-system/frontend/node_modules", "size": "242M", "method": "从生产只读复制" }
+    ],
+    "deliveryDir": "/home/ubuntu/rdpms-wt-p0-20261013-163644/docs/review/templates/2026-10-13-reagent-master/execution/p0-20261013-163644-codebuddy/",
+    "temporaryDatabase": {
+      "planned": "本轮新建唯一命名的临时 PostgreSQL 库（rdpms_test_p0_*），自带 guard 通过后应用仓库现有迁移并写合成夹具",
+      "explicitlyForbidden": ["旧固定审计库", "生产库 rdpms", "共享库", "真实账号/项目/母版数据"]
+    },
+    "productionZeroChange": "未停止或重启任何服务；未写生产库；未覆盖生产 dist/node_modules/.prisma；未改生产工作树任何文件"
+  },
+
+  "prohibitedActionsObserved": [
+    "未执行 stage/commit/push/merge/部署",
+    "未执行 seed/migration/db push/reset（生产或共享环境）",
+    "未修改 schema/prisma 迁移/依赖/锁文件",
+    "未改认证、RBAC、同步、离线、报告、文件、备份、部署体系",
+    "未修改 ProcessFlowDiagram.tsx",
+    "未调用子代理、未切换模型"
+  ],
+
+  "reviewAndReleaseState": {
+    "implementation": "IN_PROGRESS",
+    "independentReview": "PENDING",
+    "release": "NOT_EVALUATED"
+  }
+}

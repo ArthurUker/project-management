@@ -18,6 +18,8 @@ import {
   projectVisibilityFilter,
 } from '../kernel/projectAccess.js';
 import { badRequest, notFound } from '../kernel/http.js';
+// P0-03（2026-10-13）：模板规范来源（与详情/预览/复制/apply 共用同一解析与投影）
+import { buildCanonicalTemplate, buildInstantiationPlan } from '../modules/projectTemplates/canonicalTemplate.js';
 
 /**
  * /api/projects —— PostgreSQL baseline 口径（W10 路由层迁移）+ 项目权限 ∩ 模型全量接入。
@@ -111,6 +113,8 @@ function normalizeTaskInput(t, idx) {
     regulatoryPriority: t.regulatoryPriority || null,
     expectedDeliverable: t.expectedDeliverable || null,
     regulatoryNotes: t.regulatoryNotes || null,
+    // P0-03：保留模板任务身份（追溯用），由模板下发；执行态字段不受影响
+    templateTaskId: t.templateTaskId || null,
     dueDate: t.dueDate ? new Date(t.dueDate) : null,
     assigneeId: t.assigneeId || null,
     phaseKey: t.phaseId || t.phaseKey || null, // 模板阶段引用键，落库前映射为 ProjectPhase.id
@@ -211,7 +215,7 @@ function validateProjectCreateCommand(raw, auth) {
     const taskStringFields = [
       'title', 'description', 'status', 'priority', 'taskType', 'applicability',
       'applicabilityStatus', 'regulatoryPriority', 'expectedDeliverable', 'regulatoryNotes',
-      'assigneeId', 'phaseId', 'phaseKey',
+      'assigneeId', 'phaseId', 'phaseKey', 'templateTaskId',
     ];
     for (const field of taskStringFields) {
       if (task[field] !== undefined && task[field] !== null && typeof task[field] !== 'string') {
@@ -421,9 +425,32 @@ projects.post('/', requirePermission('projects.create'), async (c) => {
       });
 
       const phaseIdByKey = new Map();
+      // P0-03：阶段名称必须使用模板中的真实阶段名（此前直接把 phaseKey 写成名称，会出现 p1/p2 之类的显示名）
+      const templatePhaseNameByKey = new Map();
+      if (command.data.templateId) {
+        const tplForNames = await tx.projectTemplate.findUnique({
+          where: { id: command.data.templateId },
+          include: { phases: { include: { tasks: { orderBy: { sortOrder: 'asc' } } } } },
+        });
+        if (tplForNames) {
+          const builtForNames = buildCanonicalTemplate(tplForNames);
+          if (builtForNames.ok) {
+            for (const p of builtForNames.canonical.phases) {
+              templatePhaseNameByKey.set(p.id, p.name);
+              if (p.key) templatePhaseNameByKey.set(p.key, p.name);
+            }
+          }
+        }
+      }
       for (const [idx, key] of command.phaseKeys.entries()) {
         const phase = await tx.projectPhase.create({
-          data: { projectId: project.id, code: `PH-${code}-${idx + 1}`, name: key, sortOrder: idx, createdById: auth.userId },
+          data: {
+            projectId: project.id,
+            code: `PH-${code}-${idx + 1}`,
+            name: templatePhaseNameByKey.get(key) ?? key,
+            sortOrder: idx,
+            createdById: auth.userId,
+          },
           select: { id: true },
         });
         phaseIdByKey.set(key, phase.id);
@@ -441,6 +468,7 @@ projects.post('/', requirePermission('projects.create'), async (c) => {
             regulatoryPriority: task.regulatoryPriority,
             expectedDeliverable: task.expectedDeliverable,
             regulatoryNotes: task.regulatoryNotes,
+            templateTaskId: task.templateTaskId ?? null,
             dueDate: task.dueDate,
             assigneeId: task.assigneeId,
             phaseId: phaseIdByKey.get(task.phaseKey) ?? null,
@@ -795,7 +823,28 @@ projects.post('/:id/apply-template', requirePermission('projects.update'), async
     where: { id: templateId },
     include: { phases: { orderBy: { sortOrder: 'asc' }, include: { tasks: { orderBy: { sortOrder: 'asc' } } } } },
   });
-  if (!template) throw notFound('TEMPLATE_NOT_FOUND', '模板不存在');
+  if (!template || template.deletedAt) throw notFound('TEMPLATE_NOT_FOUND', '模板不存在');
+
+  // P0-03：已有项目套用使用与预览/创建相同的规范来源（config 优先 + 结构化同 ID 补全），
+  // 与 /preview、/apply 及新建项目保持一致，避免两种应用方式生成不同内容。
+  const built = buildCanonicalTemplate(template);
+  if (!built.ok) throw badRequest('TEMPLATE_CONFIG_INVALID', built.error);
+  const plan = buildInstantiationPlan(built.canonical, { startDate });
+
+  // 冲突保护（P0-03）：不删除/覆盖/重置已执行任务与证据；若目标项目已包含该模板的阶段或任务，
+  // 明确拒绝并保持事务无部分写入（不设计整套合并策略）。
+  const existingPhaseCount = await prisma.projectPhase.count({
+    where: { projectId: id, templatePhaseId: { in: plan.phases.map((p) => p.templatePhaseId) } },
+  });
+  const existingTaskCount = await prisma.task.count({
+    where: { projectId: id, templateTaskId: { in: plan.tasks.map((t) => t.templateTaskId).filter(Boolean) } },
+  });
+  if (existingPhaseCount > 0 || existingTaskCount > 0) {
+    throw badRequest(
+      'TEMPLATE_ALREADY_APPLIED',
+      `该项目已包含此模板的阶段/任务（阶段 ${existingPhaseCount} 项、任务 ${existingTaskCount} 项）；为避免覆盖已执行记录，本次未套用`,
+    );
+  }
 
   const base = startDate ? new Date(startDate) : (businessSnapshot.startDate || new Date());
   let dayOffset = 0;
@@ -803,11 +852,11 @@ projects.post('/:id/apply-template', requirePermission('projects.update'), async
   const project = await prisma.$transaction(async (tx) => {
     await tx.project.update({ where: { id }, data: { templateId, updatedById: auth.userId } });
     let taskCount = 0;
-    for (const [pIdx, phase] of template.phases.entries()) {
+    for (const [pIdx, phase] of plan.phases.entries()) {
       const phaseRow = await tx.projectPhase.create({
         data: {
           projectId: id,
-          templatePhaseId: phase.id,
+          templatePhaseId: phase.templatePhaseId,
           code: `${template.code}-P${pIdx + 1}`,
           name: phase.name,
           sortOrder: pIdx,
@@ -815,16 +864,15 @@ projects.post('/:id/apply-template', requirePermission('projects.update'), async
         },
       });
       for (const [tIdx, t] of phase.tasks.entries()) {
-        const dueDate = new Date(base);
-        dueDate.setDate(dueDate.getDate() + dayOffset + (phase.plannedDurationDays || 3));
         await tx.task.create({
           data: {
             projectId: id,
             phaseId: phaseRow.id,
-            templateTaskId: t.id,
+            templateTaskId: t.templateTaskId,
             title: t.title,
+            description: t.description,
             taskType: t.taskType,
-            applicability: t.applicability,
+            applicability: String(t.applicability ?? 'required').toUpperCase(),
             regulatoryPriority: t.regulatoryPriority,
             expectedDeliverable: t.expectedDeliverable,
             regulatoryNotes: t.regulatoryNotes,
@@ -833,13 +881,13 @@ projects.post('/:id/apply-template', requirePermission('projects.update'), async
             priority: 'MEDIUM',
             sortOrder: tIdx,
             assigneeId: access.project.managerId,
-            dueDate,
+            dueDate: t.dueDate ? new Date(t.dueDate) : null,
             createdById: auth.userId,
           },
         });
         taskCount += 1;
       }
-      dayOffset += phase.plannedDurationDays || 3;
+      dayOffset += phase.plannedDurationDays ?? phase.totalDays ?? 3;
     }
     return taskCount;
   });

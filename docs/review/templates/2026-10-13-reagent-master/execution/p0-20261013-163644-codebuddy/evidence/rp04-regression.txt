@@ -1,0 +1,18 @@
+ok 4 - RP04-T02 rejects malformed top-level scalars before normalization or persistence
+  ---
+  duration_ms: 47.556429
+  ...
+# Subtest: RP04-T02 rejects malformed nested task scalars before normalization or persistence
+ok 5 - RP04-T02 rejects malformed nested task scalars before normalization or persistence
+  ---
+  duration_ms: 13.291693
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 782.079844
