@@ -1,0 +1,171 @@
+{
+  "analysisDate": "2026-10-13",
+  "timezone": "Asia/Shanghai",
+  "evidenceLevel": "EXPORTED_DATA_AND_STATIC_SOURCE_REVIEW",
+  "businessChanges": false,
+  "runtimeValidation": "NOT_RUN",
+  "serverAccessThisReview": false,
+  "archive": {
+    "name": "rdpms-template-export-20261013-110209.tar.gz",
+    "sha256": "c9c58550c0e9ec13fc4821ec6dc1286f3639634dbd5a0483c49f127a8ab85480"
+  },
+  "baseline": "24679d2c1e8992c39c0b9b79748bb539274fc4f7",
+  "localSourceComparison": [
+    {
+      "path": "rdpms-system/backend/src/routes/projectTemplates.js",
+      "expectedSha256": "22f5129d512efff0ade3ee03338a78bb2903d78ff67eaa10d3cc00101a0b4718",
+      "actualSha256": "22f5129d512efff0ade3ee03338a78bb2903d78ff67eaa10d3cc00101a0b4718",
+      "matches": true
+    },
+    {
+      "path": "rdpms-system/backend/src/routes/projects.js",
+      "expectedSha256": "a8c8e5aad515c05cc51f241f6aeb058c10c105ee64318c5ad0e5a65e7d15ab21",
+      "actualSha256": "a8c8e5aad515c05cc51f241f6aeb058c10c105ee64318c5ad0e5a65e7d15ab21",
+      "matches": true
+    },
+    {
+      "path": "rdpms-system/backend/prisma/schema.prisma",
+      "expectedSha256": "94186272109519d647dac2263be769ab40d4c305cf401451d4e231161fb6fe4a",
+      "actualSha256": "94186272109519d647dac2263be769ab40d4c305cf401451d4e231161fb6fe4a",
+      "matches": true
+    },
+    {
+      "path": "rdpms-system/frontend/src/pages/TemplateEditor.tsx",
+      "expectedSha256": "3c29dd6ab94b3534d42aa3bea47c27399a187374d4455b210e3696dc85f6c834",
+      "actualSha256": "3c29dd6ab94b3534d42aa3bea47c27399a187374d4455b210e3696dc85f6c834",
+      "matches": true
+    },
+    {
+      "path": "rdpms-system/frontend/src/components/CreateProjectModal.tsx",
+      "expectedSha256": "092078ee6f899e4f439402a8c81323fbd6e6ebe412dce5d86a8e05ea5def5205",
+      "actualSha256": "092078ee6f899e4f439402a8c81323fbd6e6ebe412dce5d86a8e05ea5def5205",
+      "matches": true
+    },
+    {
+      "path": "rdpms-system/frontend/src/components/ProcessFlowDiagram.tsx",
+      "expectedSha256": "da24327b5cabf095c7e1ca554f424990e54b3a55d488aa94775d9f06e81477de",
+      "actualSha256": "da24327b5cabf095c7e1ca554f424990e54b3a55d488aa94775d9f06e81477de",
+      "matches": true
+    },
+    {
+      "path": "rdpms-system/frontend/src/api/endpoints/templates.ts",
+      "expectedSha256": "3cdba59ffff88fa75e45ca21ea86346fb4452e48b40db490369ceae3e124bce2",
+      "actualSha256": "3cdba59ffff88fa75e45ca21ea86346fb4452e48b40db490369ceae3e124bce2",
+      "matches": true
+    }
+  ],
+  "inputFiles": [
+    {
+      "path": "inputs/EXPORT_NOTE.md",
+      "sha256": "a495891cdff7cf444b15bda6fdf580c6fa7f891b654086547f3a5632ebafe47f"
+    },
+    {
+      "path": "inputs/source-context.json",
+      "sha256": "5c1f7f5ed199060d4a95c703ece20aef5b90d33c6de8a546217df226b132e8d9"
+    },
+    {
+      "path": "inputs/template-export.json",
+      "sha256": "536b4f886133206c1edce8463f6181bacb62a95d61a683026b1203cd240edf32"
+    }
+  ],
+  "rawIntermediateSha256": "abc1719268eec66ae2aa191f9510303f34127b2cae0d668620d6fbfa21afee17",
+  "rawVsExportFieldMismatches": {
+    "phases": [],
+    "tasks": [],
+    "roles": []
+  },
+  "rawConfigEqualsExport": true,
+  "parsedConfigEqualsDeclared": true,
+  "counts": {
+    "configPhases": 13,
+    "configTasks": 65,
+    "structuredPhases": 13,
+    "structuredTasks": 65,
+    "roles": 4,
+    "conditionalTasks": 9,
+    "taskReviewRows": 65
+  },
+  "fieldCoverage": {
+    "structuredExpectedDeliverable": 65,
+    "structuredDescription": 0,
+    "structuredAssigneeRoleCode": 0,
+    "structuredRegulatoryNotes": 0,
+    "configPhaseInfo": 0,
+    "configEvents": 0,
+    "configMilestones": 0
+  },
+  "configTaskFieldFrequency": {
+    "id": 65,
+    "title": 65,
+    "priority": 65,
+    "estimatedDays": 65,
+    "role": 65,
+    "source": 65,
+    "enabled": 65
+  },
+  "configRoleFrequency": {
+    "member": 65
+  },
+  "durationsNotInterchangeable": {
+    "sumStructuredStageDays": 240,
+    "sumConfigTaskEstimatedDays": 154,
+    "sumStructuredTaskHours": 1200.0
+  },
+  "findings": [
+    {
+      "id": "SYS-01",
+      "priority": "HIGH",
+      "topic": "交付物与条件适用性传递不完整",
+      "evidence": "STATIC_SOURCE_SUPPORTED"
+    },
+    {
+      "id": "SYS-02",
+      "priority": "HIGH",
+      "topic": "节点业务字段读回不完整",
+      "evidence": "STATIC_SOURCE_SUPPORTED"
+    },
+    {
+      "id": "SYS-03",
+      "priority": "MEDIUM",
+      "topic": "复制和套用使用不同模板结构",
+      "evidence": "STATIC_SOURCE_SUPPORTED"
+    },
+    {
+      "id": "SYS-04",
+      "priority": "HIGH",
+      "topic": "阶段状态更新未实现证据放行",
+      "evidence": "STATIC_SOURCE_SUPPORTED"
+    },
+    {
+      "id": "SYS-05",
+      "priority": "MEDIUM",
+      "topic": "排期与依赖表达不一致",
+      "evidence": "STATIC_SOURCE_SUPPORTED"
+    },
+    {
+      "id": "SYS-06",
+      "priority": "MEDIUM",
+      "topic": "职责及版本追溯合同不完整",
+      "evidence": "EXPORTED_DATA_AND_STATIC_SOURCE_SUPPORTED"
+    }
+  ],
+  "limitations": [
+    "未连接服务器或核对真实项目实例",
+    "未独立确认服务器导出的数据库事务和访问方式",
+    "只读事务本身不证明跨语句同一MVCC快照",
+    "未运行产品测试、构建、浏览器或部署",
+    "建议未批准、未实施",
+    "typeLabel为执行者根据前端映射补充，非原数据库值"
+  ],
+  "documentReadbackChecks": {
+    "taskRows65": true,
+    "taskIdsUnique": true,
+    "allTasksCovered": true,
+    "allProposalsUnimplemented": true,
+    "sourceHashesStillMatch": true,
+    "inputHashesMatch": true,
+    "rawIntermediateMatches": true,
+    "actualStageGraphLinear": true,
+    "reportLocalLinksExist": true
+  }
+}

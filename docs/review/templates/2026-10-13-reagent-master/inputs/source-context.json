@@ -1,0 +1,54 @@
+{
+  "repoPath": "/mnt/datadisk0/rdpms/app",
+  "gitHead": "24679d2c1e8992c39c0b9b79748bb539274fc4f7",
+  "branch": "main",
+  "detached": false,
+  "gitStatusShort": [],
+  "gitStatusClean": true,
+  "collectedAt": "2026-10-13T11:02:38.662125+08:00",
+  "files": [
+    {
+      "path": "rdpms-system/backend/src/routes/projectTemplates.js",
+      "exists": true,
+      "sha256": "22f5129d512efff0ade3ee03338a78bb2903d78ff67eaa10d3cc00101a0b4718",
+      "bytes": 20098
+    },
+    {
+      "path": "rdpms-system/backend/src/routes/projects.js",
+      "exists": true,
+      "sha256": "a8c8e5aad515c05cc51f241f6aeb058c10c105ee64318c5ad0e5a65e7d15ab21",
+      "bytes": 43338
+    },
+    {
+      "path": "rdpms-system/backend/prisma/schema.prisma",
+      "exists": true,
+      "sha256": "94186272109519d647dac2263be769ab40d4c305cf401451d4e231161fb6fe4a",
+      "bytes": 78810
+    },
+    {
+      "path": "rdpms-system/frontend/src/pages/TemplateEditor.tsx",
+      "exists": true,
+      "sha256": "3c29dd6ab94b3534d42aa3bea47c27399a187374d4455b210e3696dc85f6c834",
+      "bytes": 125968
+    },
+    {
+      "path": "rdpms-system/frontend/src/components/CreateProjectModal.tsx",
+      "exists": true,
+      "sha256": "092078ee6f899e4f439402a8c81323fbd6e6ebe412dce5d86a8e05ea5def5205",
+      "bytes": 58676
+    },
+    {
+      "path": "rdpms-system/frontend/src/components/ProcessFlowDiagram.tsx",
+      "exists": true,
+      "sha256": "da24327b5cabf095c7e1ca554f424990e54b3a55d488aa94775d9f06e81477de",
+      "bytes": 68719
+    },
+    {
+      "path": "rdpms-system/frontend/src/api/endpoints/templates.ts",
+      "exists": true,
+      "sha256": "3cdba59ffff88fa75e45ca21ea86346fb4452e48b40db490369ceae3e124bce2",
+      "bytes": 3033
+    }
+  ],
+  "note": "本资料用于核对分析基线，不代表部署状态或产品验收结论；文件 SHA256 为当前工作树内容，工作树与 HEAD 一致。"
+}

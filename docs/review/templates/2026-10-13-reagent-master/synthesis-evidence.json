@@ -1,0 +1,265 @@
+{
+  "date": "2026-10-13",
+  "timezone": "Asia/Shanghai",
+  "baseline": "24679d2c1e8992c39c0b9b79748bb539274fc4f7",
+  "proposalStatus": "PROPOSED_NOT_IMPLEMENTED",
+  "attachmentSha256": "b65799dd1a8143852b6c2a52dfa8cb0662850d59d6d59afddd251c6cc80b5496",
+  "inputReferences": [
+    {
+      "path": "inputs/template-export.json",
+      "sha256": "536b4f886133206c1edce8463f6181bacb62a95d61a683026b1203cd240edf32"
+    },
+    {
+      "path": "inputs/source-context.json",
+      "sha256": "5c1f7f5ed199060d4a95c703ece20aef5b90d33c6de8a546217df226b132e8d9"
+    },
+    {
+      "path": "inputs/monica-original-review.txt",
+      "sha256": "b65799dd1a8143852b6c2a52dfa8cb0662850d59d6d59afddd251c6cc80b5496"
+    }
+  ],
+  "phaseComparisons": [
+    {
+      "phaseCode": "p1",
+      "phaseName": "立项与需求确认",
+      "configTaskCount": 7,
+      "structuredTaskCount": 7,
+      "phaseIdMatches": true,
+      "orderedTaskIdsAndTitlesMatch": true
+    },
+    {
+      "phaseCode": "p2",
+      "phaseName": "项目管理机制",
+      "configTaskCount": 6,
+      "structuredTaskCount": 6,
+      "phaseIdMatches": true,
+      "orderedTaskIdsAndTitlesMatch": true
+    },
+    {
+      "phaseCode": "p3",
+      "phaseName": "技术方案设计",
+      "configTaskCount": 6,
+      "structuredTaskCount": 6,
+      "phaseIdMatches": true,
+      "orderedTaskIdsAndTitlesMatch": true
+    },
+    {
+      "phaseCode": "p4",
+      "phaseName": "样本收集",
+      "configTaskCount": 3,
+      "structuredTaskCount": 3,
+      "phaseIdMatches": true,
+      "orderedTaskIdsAndTitlesMatch": true
+    },
+    {
+      "phaseCode": "p5",
+      "phaseName": "片前处理验证",
+      "configTaskCount": 3,
+      "structuredTaskCount": 3,
+      "phaseIdMatches": true,
+      "orderedTaskIdsAndTitlesMatch": true
+    },
+    {
+      "phaseCode": "p6",
+      "phaseName": "片外扩增优化",
+      "configTaskCount": 5,
+      "structuredTaskCount": 5,
+      "phaseIdMatches": true,
+      "orderedTaskIdsAndTitlesMatch": true
+    },
+    {
+      "phaseCode": "p7",
+      "phaseName": "芯片集成联调",
+      "configTaskCount": 5,
+      "structuredTaskCount": 5,
+      "phaseIdMatches": true,
+      "orderedTaskIdsAndTitlesMatch": true
+    },
+    {
+      "phaseCode": "p8",
+      "phaseName": "分析性能验证",
+      "configTaskCount": 8,
+      "structuredTaskCount": 8,
+      "phaseIdMatches": true,
+      "orderedTaskIdsAndTitlesMatch": true
+    },
+    {
+      "phaseCode": "p9",
+      "phaseName": "稳定性验证",
+      "configTaskCount": 4,
+      "structuredTaskCount": 4,
+      "phaseIdMatches": true,
+      "orderedTaskIdsAndTitlesMatch": true
+    },
+    {
+      "phaseCode": "p10",
+      "phaseName": "小试生产与质控",
+      "configTaskCount": 4,
+      "structuredTaskCount": 4,
+      "phaseIdMatches": true,
+      "orderedTaskIdsAndTitlesMatch": true
+    },
+    {
+      "phaseCode": "p11",
+      "phaseName": "应用验证与客户试用",
+      "configTaskCount": 5,
+      "structuredTaskCount": 5,
+      "phaseIdMatches": true,
+      "orderedTaskIdsAndTitlesMatch": true
+    },
+    {
+      "phaseCode": "p12",
+      "phaseName": "产品发布评审",
+      "configTaskCount": 4,
+      "structuredTaskCount": 4,
+      "phaseIdMatches": true,
+      "orderedTaskIdsAndTitlesMatch": true
+    },
+    {
+      "phaseCode": "p13",
+      "phaseName": "文件归档与交付",
+      "configTaskCount": 5,
+      "structuredTaskCount": 5,
+      "phaseIdMatches": true,
+      "orderedTaskIdsAndTitlesMatch": true
+    }
+  ],
+  "sourceMatches": [
+    {
+      "path": "rdpms-system/backend/src/routes/projectTemplates.js",
+      "expectedSha256": "22f5129d512efff0ade3ee03338a78bb2903d78ff67eaa10d3cc00101a0b4718",
+      "matches": true
+    },
+    {
+      "path": "rdpms-system/backend/src/routes/projects.js",
+      "expectedSha256": "a8c8e5aad515c05cc51f241f6aeb058c10c105ee64318c5ad0e5a65e7d15ab21",
+      "matches": true
+    },
+    {
+      "path": "rdpms-system/backend/prisma/schema.prisma",
+      "expectedSha256": "94186272109519d647dac2263be769ab40d4c305cf401451d4e231161fb6fe4a",
+      "matches": true
+    },
+    {
+      "path": "rdpms-system/frontend/src/pages/TemplateEditor.tsx",
+      "expectedSha256": "3c29dd6ab94b3534d42aa3bea47c27399a187374d4455b210e3696dc85f6c834",
+      "matches": true
+    },
+    {
+      "path": "rdpms-system/frontend/src/components/CreateProjectModal.tsx",
+      "expectedSha256": "092078ee6f899e4f439402a8c81323fbd6e6ebe412dce5d86a8e05ea5def5205",
+      "matches": true
+    },
+    {
+      "path": "rdpms-system/frontend/src/components/ProcessFlowDiagram.tsx",
+      "expectedSha256": "da24327b5cabf095c7e1ca554f424990e54b3a55d488aa94775d9f06e81477de",
+      "matches": true
+    },
+    {
+      "path": "rdpms-system/frontend/src/api/endpoints/templates.ts",
+      "expectedSha256": "3cdba59ffff88fa75e45ca21ea86346fb4452e48b40db490369ceae3e124bce2",
+      "matches": true
+    }
+  ],
+  "allOriginalSixFilesUnchanged": true,
+  "stageGraphStrictlyLinear": true,
+  "arithmeticNotPerformanceEvidence": {
+    "sumStructuredStageDays": 240,
+    "sumConfigTaskEstimatedDays": 154,
+    "sumStructuredTaskEstimatedHours": 1200.0,
+    "sumPhaseMaximumTaskDaysAssumingUnlimitedParallelism": 48
+  },
+  "reconciliation": [
+    {
+      "topic": "65项及ID完整对照",
+      "decision": "CONFIRMED_FROM_FULL_EXPORT",
+      "reason": "Monica所见资料截断不适用于本地完整导出；逐行复算见phaseComparisons"
+    },
+    {
+      "topic": "字段下发丢失",
+      "decision": "STATIC_SOURCE_SUPPORTED_RUNTIME_NOT_RUN",
+      "reason": "保留已核对链路结论，不推广至所有客户端/历史实例"
+    },
+    {
+      "topic": "A必生成全部BC任务",
+      "decision": "NO_GLOBAL_RUNTIME_CLAIM",
+      "reason": "区分缺省/未实现裁剪与真实创建验收"
+    },
+    {
+      "topic": "整体小试阶段前移",
+      "decision": "REFINED_TO_REPRESENTATIVE_CONFIGURATION_DEPENDENCY",
+      "reason": "探索研究可先进行，正式结论前确认代表性，不强制重排整阶段"
+    },
+    {
+      "topic": "统一双人审核与八门禁",
+      "decision": "LIGHTWEIGHT_RISK_BASED_PROPOSAL",
+      "reason": "五类核心记录和少量决定；A内部合并，对外使用明确审批"
+    },
+    {
+      "topic": "周期效率",
+      "decision": "LINEAR_CONFIG_CONFIRMED_ACTUAL_PERFORMANCE_UNKNOWN",
+      "reason": "无真实人力/等待/返工，240/154/48不得称真实周期或节省"
+    },
+    {
+      "topic": "非医疗产品要求",
+      "decision": "SCOPE_BASED_LEGAL_METHOD_INTERNAL_CLASSIFICATION",
+      "reason": "新增兽医诊断路线判断，不将人用IVD流程普遍强加"
+    }
+  ],
+  "platformChecklistRows": 23,
+  "tierMatrixRows": 14,
+  "documentLocalLinks": [
+    {
+      "document": "SYNTHESIS_V2.md",
+      "target": "REVIEW.md",
+      "exists": true
+    },
+    {
+      "document": "SYNTHESIS_V2.md",
+      "target": "platform-checklist.csv",
+      "exists": true
+    },
+    {
+      "document": "SYNTHESIS_V2.md",
+      "target": "aquaculture-walkthrough.md",
+      "exists": true
+    },
+    {
+      "document": "SYNTHESIS_V2.md",
+      "target": "platform-checklist.csv",
+      "exists": true
+    },
+    {
+      "document": "SYNTHESIS_V2.md",
+      "target": "tier-matrix.csv",
+      "exists": true
+    },
+    {
+      "document": "SYNTHESIS_V2.md",
+      "target": "aquaculture-walkthrough.md",
+      "exists": true
+    },
+    {
+      "document": "SYNTHESIS_V2.md",
+      "target": "synthesis-evidence.json",
+      "exists": true
+    }
+  ],
+  "notRun": [
+    "HTTP/API/DB/浏览器或产品测试",
+    "真实项目压力测试或性能验证",
+    "服务器/SSH访问",
+    "构建/依赖安装/迁移/部署"
+  ],
+  "knownMissingInputs": [
+    "主要产品用途及监管判断",
+    "团队现行A/B/C定义与交付状态",
+    "实际芯片驱动材料架构及平台证据",
+    "真实人员/项目工期/等待/返工数据"
+  ],
+  "readback": {
+    "platformCsvCountMatches": true,
+    "tierCsvCountMatches": true,
+    "allLocalLinksExist": true
+  }
+}
