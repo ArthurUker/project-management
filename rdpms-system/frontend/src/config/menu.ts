@@ -70,9 +70,9 @@ export const MENU: MenuItem[] = [
     icon: BookOpen,
     // 二级菜单运行时按后端分类构建（见 buildKnowledgeChildren）；
     // 下列静态项是分类未加载完成或请求失败时的兜底。
+    // 不列「全部文档」：全量视图由一级项自身承载（点「知识库」即 navigate('/knowledge')）。
     dynamic: 'knowledge-categories',
     children: [
-      { key: 'k-docs', label: '全部文档', path: '/knowledge', perm: PERMS.DOCS_VIEW },
       { key: 'k-primers', label: '引物探针库', path: '/knowledge?module=primers', perm: PERMS.PRIMERS_VIEW },
       { key: 'k-reagents', label: '试剂原料库', path: '/knowledge?module=reagents', perm: PERMS.REAGENTS_VIEW },
       { key: 'k-samples', label: '样本库', path: '/knowledge?module=samples', perm: PERMS.SAMPLES_VIEW },
@@ -152,12 +152,15 @@ const KNOWLEDGE_CATEGORY_PERM: Record<string, MaybePerm> = {
 /**
  * 依据后端返回的知识库分类构建二级菜单。
  *
- * 结构：全部文档 → 各分类（顺序与后端返回一致，即页面顶部分类按钮的顺序）→ 法规知识库。
+ * 结构：各分类（顺序与后端返回一致，即页面顶部分类按钮的顺序）→ 法规知识库。
  * 这样侧边栏与知识库页面内的分类始终一致，用户新增分类后无需改代码。
+ *
+ * 不再单列「全部文档」（2026-10-13 用户反馈多余）：全量视图就是知识库首页，
+ * 点一级项「知识库」即进入（Layout 的一级项点击会 navigate(item.path)），
+ * 页面内也另有「全部分类」入口；重复列一项只会让二级菜单看起来比实际多一层。
  */
 export function buildKnowledgeChildren(categories: KnowledgeCategory[]): MenuItem[] {
   return [
-    { key: 'k-docs', label: '全部文档', path: '/knowledge', perm: PERMS.DOCS_VIEW },
     ...categories.map((cat) => ({
       key: `k-cat-${cat.id}`,
       label: cat.name,

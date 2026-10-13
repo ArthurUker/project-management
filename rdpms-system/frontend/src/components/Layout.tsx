@@ -129,9 +129,17 @@ export default function Layout() {
     setSidebarOpen(false);
   }, [location.pathname]);
 
-  /** 二级菜单：当前路由所在的分组默认展开 */
+  /**
+   * 二级菜单：当前路由所在的分组默认展开。
+   * 除「某个二级项命中」外，一级项自身路径命中也要展开：「知识库」的全量视图
+   * （/knowledge）由一级项承载，二级项里已不再有「全部文档」（2026-10-13 移除）。
+   */
   useEffect(() => {
-    const hit = filteredNav.find((item) => item.children?.some((child) => isActive(child.path)));
+    const hit = filteredNav.find(
+      (item) =>
+        !!item.children?.length &&
+        (isActive(item.path) || item.children.some((child) => isActive(child.path))),
+    );
     if (hit) setExpanded((prev) => (prev[hit.key] ? prev : { ...prev, [hit.key]: true }));
   }, [filteredNav, isActive]);
 
