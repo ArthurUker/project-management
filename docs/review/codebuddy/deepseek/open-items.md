@@ -117,6 +117,11 @@ uploads/COS 异地的定时方案。生产验收另发现并修复一个缺陷�
 遗留事项：
 
 - 服务器侧副本（`/usr/local/bin/rdpms-{smoke,perm-matrix,preflight}.sh`、`rdpms-env`）若仍以 `superadmin` 取 SA 分支需同步；仓库内 `smoke-test.sh` 用的是 `SMOKE_ADMIN_USER/PASS`，不受影响。
+  - 2026-10-12 已处理（全部带 `.bak-20261012` 备份）：
+    - `rdpms-env`、`rdpms-init-postgres.sh` 与仓库同步。前者线上原为旧版「`source .env` + `exec`」注入写法（把真配置当 shell 代码执行），已换成仓库的 `configExec.js` 字面量实现；两者默认路径原都指向已失效的 `/opt/rdpms/current`，已改为 `/opt/rdpms/app`。`init-postgres` 线上副本还缺 W12 的 `ALTER SCHEMA public OWNER TO` 修复（生产库该 schema 属主已是 `rdpms_migrate`，故为幂等空操作）。
+    - `rdpms-preflight.sh` 就地把默认 `APP_DIR/WEB_DIR/REPO_ROOT` 改到 `/opt/rdpms/app`，nginx 分支的 dist 路径改为变量；同时修掉两条**修好路径后会误报**的源码检查（`ensure[A-Z]` 命中正规的 `ensureArchiveRoot`；`rdpms-jwt-secret` 命中 `configSchema` 的防御性引用——该清单本身按 W12 设计置于 `src` 之外）。修后实跑：73 通过 / 0 失败（严格模式同样全绿）。**已入库**为 `rdpms-system/deploy/scripts/host-preflight.sh`（2026-10-13 补），与线上 `/usr/local/bin/rdpms-preflight.sh` **逐字节一致**（仓库副本带来源/同步/修订说明头部）；注意它与同目录 `preflight.sh` **不是同一件工具**（那个是 `--host/--candidate` 候选环境校验器）。
+    - `/etc/systemd/system/rdpms-api-staging.service`：`WorkingDirectory` 改到 `/opt/rdpms/app/...`，`ExecStart` 由已不可执行的 `node src/index.js` 改为 `/usr/local/bin/rdpms-start.sh`（dist-only），`Documentation` 由指向密值文件改为指向本文档；`systemd-analyze verify` 干净，启停状态未变（disabled/inactive）。
+    - 演练环境启动阻塞**已解除**：`configSchema` 的种子开关禁令原按 `strict`（含 staging）生效，与裁定 #19「**生产** SEED_TEST_ACCOUNTS 必须为 false」及 `seed.js` 的 `!isProd`、preflight 的 production 分支不一致 → 已改为仅生产口径；`staging` 只有该开关放开，其余严格项（JWT/URL/HOST/UPLOAD_DIR 等）不变。后端已重建并重启，`rdpms-api-staging` 实测可启动（3210 回环、`/health` ok），验证后已停止并恢复 disabled。演练库若长期未用，启动前需先对其执行 `prisma migrate deploy`。
 - 生产 `.env` 里 `SEED_SUPER_ADMIN_USERNAME/_PASSWORD` 已无用，可在下次维护时清理（留着不报错）。
 - 只有唯一顶层账号后，忘记口令没有应用内找回通道（用户明确不新增应急脚本）；重置需直接改库。
 

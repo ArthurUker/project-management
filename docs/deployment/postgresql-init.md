@@ -12,7 +12,7 @@
 |---|---|
 | PostgreSQL | **14+，推荐 15+**（本机验证环境：PostgreSQL 18.4） |
 | Prisma | 以 backend/package-lock.json 锁定版本为准；不要按本文升级依赖 |
-| 扩展 | `pgcrypto`（trusted，PG13+ 可由 DB owner 创建）；`pg_trgm` 仅在需要模糊检索时启用 |
+| 扩展 | 目标库 **PG13+** 时无需任何扩展：`gen_random_uuid()` 已是内核函数（`pgcrypto` 不再必需）。仅 PG12 及以下或其他 pgcrypto 函数才需 `pgcrypto`（trusted，可由 DB owner 创建）；`pg_trgm` 仅在需要模糊检索时启用。口径修订见 2026-10-12 说明（`preflight` 5.3 与 `init-postgres.sh` Step 5 均按此执行） |
 
 ---
 

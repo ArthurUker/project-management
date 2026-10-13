@@ -13,7 +13,7 @@ import { idb, type OfflineOwner } from '../idb';
 import Tasks from '../../pages/Tasks';
 import * as pendingDraft from '../pendingDraft';
 
-const permissions = ['tasks.view', 'projects.view', 'reports.view', 'tasks.update', 'tasks.update_status'];
+const permissions = ['tasks.view', 'projects.view', 'reports.view', 'tasks.update', 'tasks.change_status'];
 let auth: ReturnType<typeof useAuth>;
 let openPanel: (value: boolean) => void;
 let savedConflict: import('../idb').OutboxRecord | null = null;

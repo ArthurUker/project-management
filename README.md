@@ -173,9 +173,11 @@ project-management/
     │   ├── scripts/              # 前端单测运行器
     │   └── tests/                # unit 与 browser
     └── deploy/
-        ├── rdpms-api.service
-        ├── systemd/              # rdpms-api.service 与 rdpms-backup.{service,timer} 模板
-        └── scripts/              # 当前 start/deploy 与仍被测试引用的旧工具
+        ├── caddy/                # 站点片段模板（与 /etc/caddy/sites/rdpms.caddy 一致）
+        ├── rdpms-api.service     # api 单元权威副本（安装源）
+        ├── systemd/              # rdpms-backup.{service,timer} 模板 + 与上者一致的 api 单元副本
+        └── scripts/              # start/deploy、preflight.sh（候选环境校验）与
+                                  # host-preflight.sh（服务器主机审计，线上同名副本）等
 ```
 
 ## 4. 数据库设计
@@ -977,6 +979,13 @@ sudo cp rdpms-system/deploy/rdpms-api.service /etc/systemd/system/rdpms-api.serv
 sudo systemctl daemon-reload
 ```
 
+单元模板在仓库里有两份：`deploy/rdpms-api.service`（**权威，安装以它为准**）与
+`deploy/systemd/rdpms-api.service`（副本，须与之逐字节一致）。后者曾是原地部署改造前的旧版
+（`WorkingDirectory=/opt/rdpms/current/...`），照它安装会启动失败；2026-10-12 已同步并核对。
+这两份副本、caddy 片段的静态根、以及 `deploy/scripts/` 里各脚本的默认路径，由后端单测
+`backend/tests/unit/deploy-artifacts.test.mjs` 守护（`npm run test:unit` 时会跑）：旧布局
+`/opt/rdpms/current` 不得复活、成对副本不得漂移。
+
 ### 8.4 回退与失败处理
 
 **回退代码** —— 脚本支持指定提交（2026-10-09 起，已实测）：
@@ -1002,7 +1011,7 @@ bash rdpms-system/deploy/scripts/rdpms-deploy.sh --commit <旧提交>
 
 ### 8.5 反向代理（Caddy）
 
-站点片段 `/etc/caddy/sites/rdpms.caddy`：
+站点片段 `/etc/caddy/sites/rdpms.caddy`（2026-10-12 与线上逐行核对，仅邮箱作脱敏）：
 
 ```caddyfile
 rdpms.digifluidic.com {
@@ -1013,10 +1022,11 @@ rdpms.digifluidic.com {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Content-Type-Options "nosniff"
         Referrer-Policy "no-referrer"
-        X-Frame-Options "SAMEORIGIN"
         -Server
+        X-Frame-Options "SAMEORIGIN"
     }
 
+    # 排他 handle 分流：/api/* 直达后端，其余走 SPA（try_files 仅在 SPA 块内生效）
     handle /api/* {
         reverse_proxy 127.0.0.1:3000
     }
@@ -1024,10 +1034,25 @@ rdpms.digifluidic.com {
     handle {
         root * /opt/rdpms/app/rdpms-system/frontend/dist
         try_files {path} /index.html
+
+        # 带内容 hash 的静态资源：长期强缓存（文件名随内容变化，不会读到旧版）
+        @assets path /assets/*
+        header @assets Cache-Control "public, max-age=31536000, immutable"
+
+        # SPA 入口与前端路由：始终回源验证，保证部署后即时生效
+        # - 根路径与 index.html：直接匹配
+        # - 其余路由（/knowledge、/login 等）由 try_files 回退到 index.html，用「文件不存在」识别
+        header / Cache-Control "no-cache, must-revalidate"
+        header /index.html Cache-Control "no-cache, must-revalidate"
+        @spa not file
+        header @spa Cache-Control "no-cache, must-revalidate"
+
         file_server
     }
 }
 ```
+
+同一份配置在仓库内另有一副本 `rdpms-system/deploy/caddy/rdpms.caddy`，改动须两处同步（本次已同步）。
 
 改配置后：`sudo caddy validate --config /etc/caddy/Caddyfile && sudo systemctl reload caddy`。
 
@@ -1086,7 +1111,9 @@ list、metadata、download、delete 和 import-source 应经过各自动作的�
 | 归档备份上线 | **已完成（2026-10-10）**：`.env` 两项 + 归档目录 + `rdpms-backup.timer` 均已就位；首次生产归档经单元触发成功 | — |
 | 归档备份验收 | 隔离库演练通过；生产产物离线校验 **7/7 通过**、篡改 1 字节即被「解密」检查拦下 | 仍待：生产恢复演练（解密 → `pg_restore` → 按 meta.tableCounts 逐表比对）；smoke / perm-matrix 的归档断言在目标环境执行 |
 | 归档范围缺口 | 归档只覆盖数据库，不含 uploads 二进制与异地副本 | 与既有 uploads 快照、COS 异地方案一并决策，避免形成"看似完整的备份" |
-| 密码提示 | Settings 页面仍提示至少 6 位；不能代替服务端口令策略 | 按当前服务端合同统一提示与校验 |
+| 密码提示 | **已完成（2026-10-12）**：新增 `frontend/src/constants/passwordPolicy.ts` 为唯一来源（≥12 位 + 弱口令黑名单，对齐 `routes/users.js`、`routes/auth.js`）；成员管理/系统设置/强制改密三处统一引用。原成员管理提示「至少6位」、系统设置按 6 位校验，与合同不符；页面又用 `err.error` 取错字段，把后端原因吞成「操作失败」 | 已关闭。口令策略仍以服务端为准，改策略必须同步该常量 |
+| 离线写权限码漂移 | **已修复源码（2026-10-12）**：`frontend/src/offline/engine.ts` 的任务写准入原用 `tasks.update_status`，真实权限码是 `tasks.change_status`（生产库 `permissions` 只有后者；后端 16 处、离线测试夹具的 ACL writePolicy 也都用后者）→ 导致离线待同步的「仅改状态」条目在恢复面板被判为不可写、无法重试。已连同 `frontend/src/offline/tests/rp11-owner.browser.tsx` 夹具一并改对 | 源码已改、`tsc -b` 通过、preflight 5.6 门禁由告警转 [OK]；**待前端重新构建后生效**（构建/发布由运维流程做） |
+| 迁移使用 gen_random_uuid | **已处理（2026-10-12，口径修订）**：`20261006_restore_operation_gate`、`20261008_sync_commit_journal` 使用 `gen_random_uuid()`。两个迁移在生产**已应用**（`_prisma_migrations` 有校验和），编辑会破坏 `migrate deploy`，故不改迁移；该函数自 PG13 起为**内核**（生产库实为 PG 14.0.23，只装 `plpgsql` 仍跑完全部迁移），不构成扩展依赖 | 禁区改为只针对扩展依赖：`preflight` 5.3 与 `init-postgres.sh` Step 5 均改为「禁止 `pgcrypto`/`pg_trgm`/`CREATE EXTENSION`；`gen_random_uuid` 在目标库 ≥ PG13 时放行，< PG13 或版本取不到时按兼容策略装 pgcrypto」。`docs/deployment/postgresql-init.md` 扩展行同步更新 |
 | 全局限流 | 当前未实现统一入口速率限制 | 按实际风险单独设计与验收 |
 
 旧审计与整改过程已按用户要求移出工作树，保留 Git 历史和本地归档；删除报告不关闭其未完成事项。
