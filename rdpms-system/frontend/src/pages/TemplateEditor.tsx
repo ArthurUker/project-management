@@ -210,17 +210,25 @@ const EVENT_RECOMMENDATIONS = [
  * 这里统一透传，保证加载 → 编辑 → 保存的字段完整。
  */
 function pickTaskDomainFields(t: any) {
-  return {
-    code: t?.code ?? null,
-    description: t?.description ?? null,
-    taskType: t?.taskType ?? null,
-    applicability: t?.applicability ?? null,
-    regulatoryPriority: t?.regulatoryPriority ?? null,
-    expectedDeliverable: t?.expectedDeliverable ?? null,
-    regulatoryNotes: t?.regulatoryNotes ?? null,
-    estimatedHours: t?.estimatedHours ?? null,
-    assigneeRoleCode: t?.assigneeRoleCode ?? null,
+  const src: Record<string, unknown> = {
+    code: t?.code,
+    description: t?.description,
+    taskType: t?.taskType,
+    applicability: t?.applicability,
+    regulatoryPriority: t?.regulatoryPriority,
+    expectedDeliverable: t?.expectedDeliverable,
+    regulatoryNotes: t?.regulatoryNotes,
+    estimatedHours: t?.estimatedHours,
+    assigneeRoleCode: t?.assigneeRoleCode,
   };
+  // 只写入非 null/undefined 的键：
+  //   null 表示「未填写」，不写进 config，留给后端按任务 ID 从结构化行补全；
+  //   '' 表示「明确清空」，保留写入（后端据此保留空值、不覆盖）。
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(src)) {
+    if (v !== null && v !== undefined) out[k] = v;
+  }
+  return out;
 }
 
 function buildDefaultEventTemplates(phaseName?: string): PhaseEvent[] {

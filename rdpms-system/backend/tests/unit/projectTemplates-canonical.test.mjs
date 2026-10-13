@@ -232,6 +232,32 @@ test('AC-P0-04 显式 false/0/空串不被结构化行覆盖', () => {
   assert.equal(built.canonical.phases[0].enabled, false, '阶段级禁用保留');
 });
 
+test('AC-P0-04 null 视为未填写（可补全），显式空串视为明确清空（保留）', () => {
+  const cfg = {
+    phases: [
+      {
+        id: 'ph-1',
+        name: '阶段',
+        order: 1,
+        tasks: [
+          // null → 应被结构化行补全
+          { id: 'tk-1', title: '任务1', taskType: null, expectedDeliverable: null, applicability: null },
+          // 显式空串 → 保留（不被结构化行覆盖）
+          { id: 'tk-2', title: '任务2', expectedDeliverable: '' },
+        ],
+      },
+    ],
+  };
+  const built = buildCanonicalTemplate({ config: cfg, phases: structuredFixture() });
+  assert.equal(built.ok, true, built.error);
+  const t1 = built.canonical.phases[0].tasks.find((t) => t.id === 'tk-1');
+  assert.equal(t1.taskType, 'STRATEGY', 'null 的 taskType 应按同 ID 从结构化行补全');
+  assert.equal(t1.expectedDeliverable, '调研纪要', 'null 的交付物应被补全');
+  assert.equal(t1.applicability, 'required', 'null 的适用性应被补全');
+  const t2 = built.canonical.phases[0].tasks.find((t) => t.id === 'tk-2');
+  assert.equal(t2.expectedDeliverable, '', '显式空串保留，不被旧行覆盖');
+});
+
 test('AC-P0-04 损坏 config / 重复 ID / 无效连线引用均明确拒绝', () => {
   const broken = buildCanonicalTemplate({ config: '{不是JSON', phases: structuredFixture() });
   assert.equal(broken.ok, false);

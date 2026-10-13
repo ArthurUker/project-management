@@ -119,12 +119,18 @@ function mergeTask(cfgTask, idx, structTaskById) {
   out.title = cfgTask?.title ?? row?.title ?? '';
   out.sortOrder = cfgTask?.sortOrder ?? row?.sortOrder ?? idx;
 
-  // 领域字段：键存在即采用 config 值（含空值），否则从同 ID 结构化行补全，仍无则不伪造
+  // 领域字段合并（2026-10-13 修正）：
+  //   - config 提供**非 null** 值（含 '' / 0 / false）→ 采用 config（明确值/明确清空优先，不被旧行覆盖）；
+  //   - config 未提供或为 **null**（视为「未提供」）→ 从同 ID 结构化行补全；
+  //   - 两处都没有 → 保持 null（不伪造交付物/角色）。
+  // 说明：null 与 '' 语义不同——'' 表示「明确清空」，null 表示「未填写」；
+  // 此前把 null 也当作明确值，导致编辑器写回 null 后结构化补全被永久挡住。
   for (const f of TASK_DOMAIN_FIELDS) {
-    if (isPlainObject(cfgTask) && f in cfgTask) {
+    const cfgHasValue = isPlainObject(cfgTask) && f in cfgTask && cfgTask[f] !== null && cfgTask[f] !== undefined;
+    if (cfgHasValue) {
       out[f] = cfgTask[f];
-    } else if (row) {
-      out[f] = row[f] ?? null;
+    } else if (row && row[f] !== null && row[f] !== undefined) {
+      out[f] = row[f];
     } else if (!(f in out)) {
       out[f] = null;
     }
