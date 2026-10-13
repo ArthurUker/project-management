@@ -21,7 +21,7 @@ DB_NAME="${DB_NAME:-rdpms}"
 MIGRATE_ROLE="${MIGRATE_ROLE:-rdpms_migrate}"
 APP_ROLE="${APP_ROLE:-rdpms_app}"
 SECRETS_FILE="${SECRETS_FILE:-/root/.rdpms-pg-secrets}"
-MIG_DIR="${MIG_DIR:-/opt/rdpms/current/rdpms-system/backend/prisma/migrations}"
+MIG_DIR="${MIG_DIR:-/opt/rdpms/app/rdpms-system/backend/prisma/migrations}"
 PG_VERSION="${PG_VERSION:-16}"
 
 log() { printf '[init-pg] %s\n' "$*"; }
@@ -106,17 +106,26 @@ ALTER DEFAULT PRIVILEGES FOR ROLE ${MIGRATE_ROLE} IN SCHEMA public
 SQL
 log "已授予 ${APP_ROLE}：CONNECT / USAGE / DML（无 DDL）"
 
-# ── Step 5 扩展（总控裁定 #13 / #14）───────────────────────
-log "扩展策略：pg_trgm 不安装（总控裁定 #13）；pgcrypto 不强制（总控裁定 #14）"
-log "期望：migrations 中 gen_random_uuid 命中数为 0（ID 由 Prisma uuid() 生成）"
+# ── Step 5 扩展（总控裁定 #13 / #14；口径 2026-10-12 修订）──────
+# pg_trgm 不安装（#13）。gen_random_uuid() 自 PG13 起是**内核函数**，不构成扩展依赖，
+# 故只在「迁移用到它 且 目标库 < PG13」时才装 pgcrypto；版本取不到时按兼容策略安装。
+log "扩展策略：pg_trgm 不安装（#13）；pgcrypto 仅当目标库 < PG13 且迁移用到 gen_random_uuid 时安装（#14）"
 if [ -d "$MIG_DIR" ] && grep -rqi 'gen_random_uuid' "$MIG_DIR"; then
-  log "WARN 检测到 migration 使用 gen_random_uuid() —— 与 DB 窗口修订后的约定不符"
-  log "WARN 请与 DB 窗口确认是否为预期；为保证迁移可成功，此处仍安装 pgcrypto"
-  sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" \
-    -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto;'
-  log "已安装 pgcrypto（条件安装，非默认）"
+  HITS=$(grep -rli 'gen_random_uuid' "$MIG_DIR" | wc -l | tr -d ' ')
+  PG_NUM=$(sudo -u postgres psql -tAc 'SHOW server_version_num' 2>/dev/null | tr -d '[:space:]' || true)
+  case "$PG_NUM" in *[!0-9]*|'') PG_NUM='' ;; esac
+  if [ -n "$PG_NUM" ] && [ "$PG_NUM" -ge 130000 ]; then
+    log "检测到 ${HITS} 个 migration 使用 gen_random_uuid()；目标库 server_version_num=${PG_NUM} ≥ 130000"
+    log "该函数由内核提供，跳过 pgcrypto —— 符合修订后的裁定 #14"
+  else
+    log "WARN 检测到 ${HITS} 个 migration 使用 gen_random_uuid()，且目标库版本无法确认为 PG13+"
+    log "WARN 为保证迁移可成功，按兼容策略安装 pgcrypto"
+    sudo -u postgres psql -v ON_ERROR_STOP=1 -d "$DB_NAME" \
+      -c 'CREATE EXTENSION IF NOT EXISTS pgcrypto;'
+    log "已安装 pgcrypto（条件安装，非默认）"
+  fi
 else
-  log "gen_random_uuid 命中数为 0，跳过 pgcrypto —— 符合裁定"
+  log "migrations 中 gen_random_uuid 命中数为 0，跳过 pgcrypto —— 符合裁定"
 fi
 
 # ── Step 6 连通性自检 ─────────────────────────────────────
@@ -132,6 +141,6 @@ cat <<EOF
        DATABASE_URL="postgresql://${APP_ROLE}:<APP_PASSWORD>@127.0.0.1:5432/${DB_NAME}?schema=public&connection_limit=10&pool_timeout=20"
        DIRECT_URL="postgresql://${MIGRATE_ROLE}:<MIGRATE_PASSWORD>@127.0.0.1:5432/${DB_NAME}?schema=public"
   2) sudo bash deploy/scripts/preflight.sh
-  3) cd /opt/rdpms/current/rdpms-system/backend && sudo -u rdpms env HOME=/var/lib/rdpms /usr/local/bin/rdpms-env npx prisma migrate deploy
+  3) cd /opt/rdpms/app/rdpms-system/backend && sudo -u rdpms env HOME=/var/lib/rdpms /usr/local/bin/rdpms-env npx prisma migrate deploy
 
 EOF

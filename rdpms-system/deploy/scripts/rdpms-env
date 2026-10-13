@@ -1,7 +1,17 @@
 #!/usr/bin/env bash
+#
+# rdpms-env — 为手动执行的命令注入 /srv/rdpms/.env（按字面量解析，绝不 source 真配置，杜绝命令注入）
+#
+# 安装（改本文件后必须重装）：
+#   sudo install -m 750 -o root -g rdpms deploy/scripts/rdpms-env /usr/local/bin/rdpms-env
+# 用法：
+#   sudo -u rdpms env HOME=/var/lib/rdpms /usr/local/bin/rdpms-env npx prisma migrate deploy
+#
+# 依赖 $APP_DIR/dist/platform/config/configExec.js（后端构建产物）。发布脚本 rdpms-deploy.sh
+# 不经过本 wrapper（它自行解析 .env，且迁移排在构建之后），本 wrapper 只服务手动运维命令。
 # Shared literal parser/schema. Never source a real config file as shell code.
 set -Eeuo pipefail
-APP_DIR="${RDPMS_APP_DIR:-/opt/rdpms/current/rdpms-system/backend}"
+APP_DIR="${RDPMS_APP_DIR:-/opt/rdpms/app/rdpms-system/backend}"
 ENV_FILE="${RDPMS_ENV_FILE:-/srv/rdpms/.env}"
 NODE_BIN="${NODE_BIN:-/usr/local/bin/node}"
 test -f "$APP_DIR/dist/platform/config/configExec.js"

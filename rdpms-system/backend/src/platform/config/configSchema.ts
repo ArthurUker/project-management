@@ -15,7 +15,10 @@ export function loadConfig(env:Environment, codeRoot=process.cwd()) {
  if(env.NODE_ENV&&!['development','test','staging','production'].includes(env.NODE_ENV))errors.push('NODE_ENV');
  for(const name of ['DATABASE_URL','DIRECT_URL'])if(strict||env[name]){try{const u=new URL(env[name]??'');if(!['postgresql:','postgres:'].includes(u.protocol)||!u.hostname||u.pathname.length<2)errors.push(name);}catch{errors.push(name);}}
  if(strict){if(!env.JWT_SECRET||env.JWT_SECRET.length<32||/please-change|admin123|123456|rdpms-jwt-secret/i.test(env.JWT_SECRET))errors.push('JWT_SECRET');
-  if(['1','true'].includes(env.SEED_TEST_ACCOUNTS??'')||['1','true'].includes(env.SEED_DEMO??''))errors.push('SEED_TEST_ACCOUNTS');}
+ }
+ // 种子开关只按**生产**口径禁止（裁定 #19；与 seed.js 的 !isProd、preflight 的 production 分支一致）：
+ // staging 是演练环境，必须允许 SEED_TEST_ACCOUNTS=true，否则无法种子出 test_* 账号（见 backlog §演练环境）。
+ if(env.NODE_ENV==='production'&&(['1','true'].includes(env.SEED_TEST_ACCOUNTS??'')||['1','true'].includes(env.SEED_DEMO??'')))errors.push('SEED_TEST_ACCOUNTS');
  const port=Number(env.PORT??3000),hostname=env.HOST??'127.0.0.1';
  if(!Number.isInteger(port)||port<1||port>65535)errors.push('PORT');
  if(strict&&!['127.0.0.1','::1','localhost'].includes(hostname))errors.push('HOST');
