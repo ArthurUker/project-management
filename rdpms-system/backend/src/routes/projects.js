@@ -338,7 +338,7 @@ projects.get('/:id', requirePermission('projects.view'), async (c) => {
     where: { id },
     include: {
       manager: MANAGER_SELECT,
-      template: { select: { id: true, name: true, code: true, category: true } },
+      template: { select: { id: true, name: true, code: true, category: true, config: true } },
       members: MEMBER_INCLUDE,
       phases: { orderBy: { sortOrder: 'asc' } },
       tasks: {

@@ -58,6 +58,105 @@ interface ProcessFlowDiagramProps {
   readonly?: boolean;
 }
 
+// ─── 两级流转图构建（v3，2026-10-13） ───────────────────────────────────────────
+/**
+ * 把「阶段 + 其下任务」展开为两级拓扑：
+ *   阶段有任务时：阶段 → 各任务子节点（扇出）→ 各任务子节点 → 后继阶段（扇入），
+ *              即「所有任务收口后才推进到下一阶段」；
+ *   阶段无任务时：阶段 → 后继阶段（直连）。
+ * 任务子节点只读（不可拖拽/连线），编号由 computeDisplayOrder 按层自动生成（2-1/2-2/2-3）。
+ */
+function buildFlowGraph(
+  phases: Phase[],
+  edgeFactory: (source: string, target: string) => Edge,
+): { nodes: Node[]; edges: Edge[]; phaseLike: Array<{ id: string; name: string; nextPhaseIds: string[] }> } {
+  const nodes: Node[] = [];
+  const edges: Edge[] = [];
+  const phaseLike: Array<{ id: string; name: string; nextPhaseIds: string[] }> = [];
+  const sorted = [...phases].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+  // v4（2026-10-13）：收口节点（流程终点）。
+  // 末阶段（无后继流转）的任务全部汇合到该节点，形成"任务收口 → 项目完成"的闭环。
+  const END_ID = '__flow_end__';
+  const hasEnd = sorted.some((p) => (p.nextPhaseIds ?? []).filter(Boolean).length === 0);
+  if (hasEnd) {
+    nodes.push({
+      id: END_ID,
+      type: 'phase',
+      position: { x: 0, y: 0 },
+      draggable: false,
+      connectable: false,
+      data: { label: '完成', order: 9999, isEndNode: true },
+    });
+  }
+
+  for (const p of sorted) {
+    nodes.push({
+      id: p.id,
+      type: 'phase',
+      position: { x: typeof p.x === 'number' ? p.x : 0, y: typeof p.y === 'number' ? p.y : 0 },
+      data: {
+        label: p.name,
+        order: p.order ?? 1,
+        taskCount: p.tasks?.length ?? 0,
+        totalDays: p.totalDays ?? 0,
+        enabled: p.enabled !== false,
+        isSubPhase: p.isSubPhase ?? false,
+      },
+    });
+
+    const tasks = Array.isArray(p.tasks) ? p.tasks : [];
+    const declared = (p.nextPhaseIds ?? []).filter(Boolean);
+    // 末阶段（无显式后继）：流转指向收口节点
+    const nexts = declared.length > 0 ? declared : hasEnd ? [END_ID] : [];
+
+    if (tasks.length === 0) {
+      phaseLike.push({ id: p.id, name: p.name, nextPhaseIds: nexts });
+      for (const nid of nexts) edges.push(edgeFactory(p.id, nid));
+      continue;
+    }
+
+    const taskIds: string[] = [];
+    for (const [ti, t] of tasks.entries()) {
+      const tid = `${p.id}::task::${t?.id ?? ti}`;
+      taskIds.push(tid);
+      nodes.push({
+        id: tid,
+        type: 'phase',
+        position: { x: 0, y: 0 },
+        // 任务子节点只读：不参与拖拽与连线编辑
+        draggable: false,
+        connectable: false,
+        selectable: true,
+        data: {
+          label: t?.title ?? '未命名任务',
+          order: p.order ?? 1,
+          taskCount: 0,
+          totalDays: typeof t?.estimatedDays === 'number' ? t.estimatedDays : 0,
+          enabled: p.enabled !== false,
+          isTaskNode: true,
+        },
+      });
+    }
+    // 阶段节点自身的拓扑指向其任务子节点（供编号/分层计算）
+    phaseLike.push({ id: p.id, name: p.name, nextPhaseIds: taskIds });
+    // 阶段 → 任务（扇出）
+    for (const tid of taskIds) {
+      edges.push(edgeFactory(p.id, tid));
+      phaseLike.push({ id: tid, name: `任务`, nextPhaseIds: nexts });
+    }
+    // 任务 → 后继阶段（扇入/汇合）
+    for (const tid of taskIds) {
+      for (const nid of nexts) edges.push(edgeFactory(tid, nid));
+    }
+  }
+
+  // 终点参与编号/分层计算（位于最后一层）
+  if (hasEnd) phaseLike.push({ id: END_ID, name: '完成', nextPhaseIds: [] });
+
+  return { nodes, edges, phaseLike };
+}
+
 // ─── 自适应分层布局 ─────────────────────────────────────────────────────────────
 const NODE_WIDTH = 160;
 const NODE_HEIGHT = 60;
@@ -584,7 +683,50 @@ const PhaseNodeComponent = ({
 }) => {
   const disabled = data.enabled === false;
   const isSubPhase = data.isSubPhase === true;
+  // v3（2026-10-13）：任务子节点（由阶段任务派生的二级流转节点）
+  const isTaskNode = data.isTaskNode === true;
+  // v4（2026-10-13）：收口节点（流程终点）
+  const isEndNode = data.isEndNode === true;
   const [isHovered, setIsHovered] = React.useState(false);
+
+  if (isEndNode) {
+    return (
+      <div className="relative" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+        <div
+          className={[
+            'relative flex w-[112px] items-center justify-center gap-1.5 rounded-full border-2 px-3 py-2',
+            'select-none cursor-default transition-all duration-150',
+            selected
+              ? 'border-emerald-500 bg-white shadow-md ring-2 ring-emerald-200 ring-offset-1'
+              : 'border-emerald-400 bg-emerald-50 shadow-sm',
+          ].join(' ')}
+          title="流程收口：所有任务完成后项目结束"
+        >
+          <svg className="h-3.5 w-3.5 text-emerald-600" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          <span className="text-sm font-semibold text-emerald-700">{data.label || '完成'}</span>
+          <span className="absolute -top-3 -left-3 min-w-[28px] h-5 px-1.5 rounded-full bg-emerald-500 text-[10px] font-bold flex items-center justify-center text-white shadow-sm">
+            {data.displayOrder ?? data.order}
+          </span>
+        </div>
+        {/* 收口节点只需入边（左侧连接柄） */}
+        <Handle
+          type="target"
+          position={Position.Left}
+          style={{
+            width: 18,
+            height: 18,
+            background: '#d1fae5',
+            border: '3px solid #34d399',
+            borderRadius: '50%',
+            boxShadow: '0 0 0 3px rgba(52,211,153,0.20)',
+            zIndex: 20,
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div
@@ -592,18 +734,23 @@ const PhaseNodeComponent = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* 节点卡片主体 */}
+      {/* 节点卡片主体（极简：序号 + 阶段名 + 任务数/工期；流转关系由连线表达） */}
       <div
         className={[
           'relative rounded-xl border-2 px-3 py-2',
-          isSubPhase ? 'w-[130px]' : 'w-[150px]',
-          'transition-all duration-150 cursor-pointer select-none',
+          isTaskNode ? 'w-[124px]' : isSubPhase ? 'w-[130px]' : 'w-[150px]',
+          'transition-all duration-150 select-none',
+          isTaskNode ? 'cursor-default' : 'cursor-pointer',
           selected
-            ? isSubPhase
+            ? isTaskNode
+              ? 'border-blue-500 shadow-md ring-2 ring-blue-200 ring-offset-1 bg-white'
+              : isSubPhase
               ? 'border-emerald-500 shadow-lg ring-2 ring-emerald-200 ring-offset-1 bg-white'
               : 'border-blue-500 shadow-lg ring-2 ring-blue-200 ring-offset-1 bg-white'
             : disabled
             ? 'border-dashed border-gray-300 bg-gray-50 shadow-none'
+            : isTaskNode
+            ? 'border-blue-200 bg-blue-50/80 shadow-sm'
             : isSubPhase
             ? 'border-emerald-200 bg-emerald-50 shadow-sm hover:shadow-md hover:border-emerald-400'
             : 'border-blue-200 bg-blue-50 shadow-sm hover:shadow-md hover:border-blue-400',
@@ -613,10 +760,12 @@ const PhaseNodeComponent = ({
         <span
           className={[
             'absolute -top-3 -left-3 min-w-[28px] h-5 px-1.5 rounded-full',
-            isSubPhase ? 'text-[9px]' : 'text-[10px]',
+            isTaskNode ? 'text-[9px]' : isSubPhase ? 'text-[9px]' : 'text-[10px]',
             'font-bold flex items-center justify-center shadow-sm',
             disabled
               ? 'bg-gray-200 text-gray-400'
+              : isTaskNode
+              ? 'bg-blue-400 text-white'
               : isSubPhase
               ? 'bg-emerald-500 text-white'
               : 'bg-blue-500 text-white',
@@ -629,13 +778,16 @@ const PhaseNodeComponent = ({
         <div
           className={[
             'leading-tight truncate',
-            isSubPhase ? 'text-xs font-medium' : 'text-sm font-semibold',
+            isTaskNode ? 'text-xs font-medium' : isSubPhase ? 'text-xs font-medium' : 'text-sm font-semibold',
             disabled
               ? 'text-gray-400'
+              : isTaskNode
+              ? 'text-blue-800'
               : isSubPhase
               ? 'text-emerald-800'
               : 'text-blue-800',
           ].join(' ')}
+          title={data.label}
         >
           {data.label}
         </div>
@@ -647,6 +799,8 @@ const PhaseNodeComponent = ({
               'text-[10px]',
               disabled
                 ? 'text-gray-400'
+                : isTaskNode
+                ? 'text-blue-400'
                 : isSubPhase
                 ? 'text-emerald-600'
                 : 'text-blue-500',
@@ -660,6 +814,8 @@ const PhaseNodeComponent = ({
                 'text-[10px]',
                 disabled
                   ? 'text-gray-400'
+                  : isTaskNode
+                  ? 'text-blue-300'
                   : isSubPhase
                   ? 'text-emerald-400'
                   : 'text-blue-400',
@@ -898,8 +1054,22 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
 }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const { fitView, getNodes, getEdges, getViewport, screenToFlowPosition } = useReactFlow();
+  const { fitView, getNodes, getEdges, getViewport, screenToFlowPosition, getZoom, zoomTo } = useReactFlow();
   const flowWrapperRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * v2（2026-10-12）：fitView 保底缩放。
+   * 节点内嵌任务列表后尺寸变大，13+ 阶段全图 fitView 会缩到 ~0.2 导致不可读；
+   * fitView 的 minZoom 选项在当前 @xyflow/react 版本不生效，故 fit 后按需提升到 0.8。
+   */
+  const FIT_FLOOR_ZOOM = 0.8;
+  const fitWithFloor = useCallback((padding: number) => {
+    fitView({ padding, duration: 400 });
+    window.setTimeout(() => {
+      const z = getZoom();
+      if (z < FIT_FLOOR_ZOOM) zoomTo(FIT_FLOOR_ZOOM, { duration: 300 });
+    }, 450);
+  }, [fitView, getZoom, zoomTo]);
 
   // drag-to-snap: disabled (set to 0 so menu never triggers; users connect via handles)
   const [dragOverNodeId, setDragOverNodeId] = useState<string | null>(null);
@@ -1008,7 +1178,7 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     return match?.[1] ?? '';
   };
 
-  const computeDisplayOrder = (phs: Phase[], nodePositions: Map<string, { x: number; y: number }>) => {
+  const computeDisplayOrder = (phs: Array<{ id: string; name: string; nextPhaseIds?: string[] }>, nodePositions: Map<string, { x: number; y: number }>) => {
     const displayOrderMap = new Map<string, string>();
 
     // 预先检查是否所有 phase 都有原始编号
@@ -1087,24 +1257,20 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
 
 
 
-    const rawNodes: Node[] = sortedPhases.map((p) => ({
-      id: p.id,
-      type: 'phase',
-      position: {
-        x: typeof p.x === 'number' ? p.x : 0,
-        y: typeof p.y === 'number' ? p.y : 0,
-      },
-      data: {
-        label: p.name,
-        order: p.order ?? 1,
-        // 优先使用阶段名称中的原始编号，layout 后 computeDisplayOrder 会再次确认
-        displayOrder: getOriginalPhaseCode(p.name) || String(p.order ?? 1),
-        taskCount: p.tasks?.length ?? 0,
-        totalDays: p.totalDays ?? 0,
-        enabled: p.enabled !== false,
-        isSubPhase: p.isSubPhase ?? false,
-      },
-    }));
+    // v3（2026-10-13）：两级流转图——阶段节点 + 任务子节点（阶段→任务扇出、任务→后继阶段扇入）
+    const edgeFactory = (source: string, target: string): Edge => ({
+      id: `e-${source}-${target}`,
+      source,
+      target,
+      type: 'custom',
+      animated: false,
+      style: { stroke: '#93C5FD', strokeWidth: 2 },
+      markerEnd: { type: MarkerType.ArrowClosed, color: '#93C5FD' },
+      data: { onAddParallel: onAddParallel ?? (() => {}), onDelete: onEdgeDelete },
+    });
+    const graph = buildFlowGraph(sortedPhases, edgeFactory);
+    const rawNodes: Node[] = graph.nodes;
+    const rawEdges: Edge[] = graph.edges;
 
     // build helper: identify parallel groups before layout
     const getParallelGroups = (phs: Phase[]) => {
@@ -1122,40 +1288,6 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       }
       return groups;
     };
-
-    // 构建边：优先用 nextPhaseIds，回退到按 order 线性连接
-    const rawEdges: Edge[] = [];
-
-    // 判断是否有任何阶段配置了显式流转
-    const hasExplicitEdges = phases.some(
-      (p) => Array.isArray(p.nextPhaseIds) && p.nextPhaseIds.length > 0
-    );
-
-    if (hasExplicitEdges) {
-      // 使用显式流转关系（支持并行分叉）
-      phases.forEach((p) => {
-        (p.nextPhaseIds ?? []).forEach((nextId: string) => {
-          // 确认目标阶段存在
-          const targetExists = phases.some((ph) => ph.id === nextId);
-          if (!targetExists) return;
-
-          rawEdges.push({
-            id: `e-${p.id}-${nextId}`,
-            source: p.id,
-            target: nextId,
-            type: 'custom',
-            animated: false,
-            style: { stroke: '#93C5FD', strokeWidth: 2 },
-            markerEnd: {
-              type: MarkerType.ArrowClosed,
-              color: '#93C5FD',
-            },
-            data: { onAddParallel: onAddParallel ?? (() => {}), onDelete: onEdgeDelete },
-          });
-        });
-      });
-    }
-    // 不再回退到线性连接：若用户清除了所有 nextPhaseIds，节点保持无连线状态
 
     const mergedEdges = mergeEdgesWithCurrent(rawEdges, getEdges());
 
@@ -1220,7 +1352,8 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
 
     // compute displayOrder using adjusted positions
     const nodePositions = new Map<string, { x: number; y: number }>(lnAdjusted.map(n => [n.id, n.position] as [string, {x:number,y:number}]));
-    const displayOrderMap = computeDisplayOrder(sortedPhases, nodePositions);
+    // v3：传入含任务子节点的图结构，任务节点编号随并行层自动生成（2-1/2-2/2-3）
+    const displayOrderMap = computeDisplayOrder(graph.phaseLike, nodePositions);
 
     const lnUpdated = lnAdjusted.map(n => ({
       ...n,
@@ -1233,21 +1366,28 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
     setNodes(lnUpdated);
     setEdges(le);
 
-    // Keep user zoom/viewport during editing. Auto-fit only once when data is first loaded.
-    if (!hasInitialAutoFitRef.current && sortedPhases.length > 0) {
-      hasInitialAutoFitRef.current = true;
-      const cfg = layoutConfigByMode(initialLayoutMode);
-      if (fitTimerRef.current) window.clearTimeout(fitTimerRef.current);
-      fitTimerRef.current = window.setTimeout(() => fitView({ padding: cfg.fitPadding, duration: 400 }), 50);
-    }
     return () => {
       if (fitTimerRef.current) window.clearTimeout(fitTimerRef.current);
     };
   }, [phases, fitView, getNodes, getEdges, onAddParallel, onEdgeDelete, setEdges, setNodes, mergeEdgesWithCurrent]);
 
+  /**
+   * 首次视口适配（独立 effect）。
+   * 修复（2026-10-12）：此前首次 fit 定时器挂在主 effect 内，其清理函数会在 phases prop
+   * 每次渲染（新数组引用）导致 effect 重跑时取消定时器，fitWithFloor 永不执行。
+   */
+  const hasFittedRef = useRef(false);
+  useEffect(() => {
+    if (hasFittedRef.current || nodes.length === 0) return;
+    hasFittedRef.current = true;
+    const cfg = layoutConfigByMode(DEFAULT_INITIAL_LAYOUT_MODE);
+    const t = window.setTimeout(() => fitWithFloor(cfg.fitPadding), 100);
+    return () => window.clearTimeout(t);
+  }, [nodes.length, fitWithFloor]);
+
   // 监听外部 fitView / reLayout 事件
   useEffect(() => {
-    const fitHandler = () => fitView({ padding: 0.25, duration: 400 });
+    const fitHandler = () => fitWithFloor(0.25);
 
     const handleReLayout = (evt?: Event) => {
       if (!phases?.length) return;
@@ -1256,44 +1396,32 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
 
       // Build raw nodes/edges and run adaptive layout directly.
       // Do not apply legacy parallel/tail post-processors; they can reintroduce crossings.
-      const rawNodes: Node[] = phases.map((p) => ({
-        id: p.id,
-        type: 'phase',
-        position: { x: 0, y: 0 },
-        data: {
-          label: p.name,
-          order: p.order ?? 1,
-          taskCount: p.tasks?.length ?? 0,
-          totalDays: p.totalDays ?? 0,
-          enabled: p.enabled !== false,
-          isSubPhase: p.isSubPhase ?? false,
-        },
-      }));
-
-      const rawEdges: Edge[] = [];
-      const hasExplicitEdges = phases.some((p) => (p.nextPhaseIds ?? []).length > 0);
-      if (hasExplicitEdges) {
-        phases.forEach((p) => {
-          (p.nextPhaseIds ?? []).forEach((nextId) => {
-            rawEdges.push({ id: `e-${p.id}-${nextId}`, source: p.id, target: nextId, type: 'custom', animated: false, style: { stroke: '#93C5FD', strokeWidth: 2 }, markerEnd: { type: MarkerType.ArrowClosed, color: '#93C5FD' }, data: { onAddParallel: onAddParallel ?? (() => {}), onDelete: onEdgeDelete } });
-          });
-        });
-      }
-      // 无显式连线时不再回退到线性连接（TemplateEditor 加载时已保证初始连线）
-
-      const mergedEdges = mergeEdgesWithCurrent(rawEdges, getEdges());
+      // v3（2026-10-13）：两级流转图（阶段 + 任务子节点）
+      const edgeFactory2 = (source: string, target: string): Edge => ({
+        id: `e-${source}-${target}`,
+        source,
+        target,
+        type: 'custom',
+        animated: false,
+        style: { stroke: '#93C5FD', strokeWidth: 2 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: '#93C5FD' },
+        data: { onAddParallel: onAddParallel ?? (() => {}), onDelete: onEdgeDelete },
+      });
+      const graph2 = buildFlowGraph([...phases].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)), edgeFactory2);
+      const rawNodes: Node[] = graph2.nodes;
+      const mergedEdges = mergeEdgesWithCurrent(graph2.edges, getEdges());
       const { nodes: ln, edges: le } = getLayoutedElements(rawNodes, mergedEdges, mode);
 
       // Recompute display order using adaptive-layout positions
       const nodePositions = new Map<string, { x: number; y: number }>(ln.map(n => [n.id, n.position] as [string, {x:number,y:number}]));
-      const displayOrderMap = computeDisplayOrder(phases, nodePositions);
+      const displayOrderMap = computeDisplayOrder(graph2.phaseLike, nodePositions);
       const lnUpdated = ln.map(n => ({ ...n, data: { ...n.data, displayOrder: displayOrderMap.get(n.id) ?? String(n.data?.order ?? 1) } }));
 
       setNodes(lnUpdated);
       setEdges(le);
       onNodesPositionChange?.(lnUpdated.map((n) => ({ id: n.id, x: n.position.x, y: n.position.y })));
       if (fitTimerRef.current) window.clearTimeout(fitTimerRef.current);
-      fitTimerRef.current = window.setTimeout(() => fitView({ padding: cfg.fitPadding, duration: 400 }), 50);
+      fitTimerRef.current = window.setTimeout(() => fitWithFloor(cfg.fitPadding), 50);
     };
 
     window.addEventListener('flow:fitView', fitHandler);
@@ -1401,8 +1529,8 @@ const FlowInner: React.FC<ProcessFlowDiagramProps> = ({
       onNodeDrag={handleNodeDrag}
       onNodeDragStop={handleNodeDragStop}
       onNodeClick={handleNodeClick}
-      fitView
-      fitViewOptions={{ padding: 0.25 }}
+      // v2：不再使用 fitView prop 自动适配（会把内嵌任务的大节点整图缩到不可读），
+      // 由 fitWithFloor 统一控制首次/重排后的视口
       minZoom={0.2}
       maxZoom={2.5}
       nodesDraggable={!readonly}

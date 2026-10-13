@@ -22,6 +22,12 @@ templates.use('*', authMiddleware);
 
 /** 将模板行结构归一化为 FE 兼容形状 */
 function toCompatPhases(tpl) {
+  // v2（2026-10-12）：优先返回编辑器保存在 config 中的完整结构。
+  // 该结构含并行拓扑（nextPhaseIds：分叉/汇合）、节点坐标（x/y）与子阶段；
+  // 此前一律按行结构归一化，会把画布上拖拽出来的「1 → 2-1/2-2/2-3 并行 → 汇合 3」拓扑丢弃。
+  const saved = parseConfigPhases(tpl?.config);
+  if (saved && saved.length > 0) return saved;
+
   return (tpl.phases ?? []).map((p, idx) => ({
     id: p.id,
     key: p.code,
@@ -42,6 +48,42 @@ function toCompatPhases(tpl) {
       estimatedDays: t.estimatedHours ? Math.ceil(t.estimatedHours / 8) : 3,
       enabled: true,
     })),
+  }));
+}
+
+/** 解析 config 中编辑器保存的 phases（JSON 字符串或对象），补齐 FE 兼容缺省字段 */
+function parseConfigPhases(config) {
+  if (!config) return null;
+  let obj = config;
+  if (typeof config === 'string') {
+    try { obj = JSON.parse(config); } catch { return null; }
+  }
+  const arr = obj?.phases;
+  if (!Array.isArray(arr) || arr.length === 0) return null;
+  return arr.map((p, idx) => ({
+    id: p.id,
+    key: p.key ?? p.code ?? `p${idx + 1}`,
+    name: p.name ?? `阶段 ${idx + 1}`,
+    order: typeof p.order === 'number' ? p.order : idx + 1,
+    totalDays: typeof p.totalDays === 'number' ? p.totalDays : 0,
+    isMilestone: p.isMilestone === true,
+    enabled: p.enabled !== false,
+    subPhases: Array.isArray(p.subPhases) ? p.subPhases : [],
+    nextPhaseIds: Array.isArray(p.nextPhaseIds) ? p.nextPhaseIds.filter(Boolean) : [],
+    x: typeof p.x === 'number' ? p.x : undefined,
+    y: typeof p.y === 'number' ? p.y : undefined,
+    tasks: Array.isArray(p.tasks)
+      ? p.tasks.map((t) => ({
+          id: t.id,
+          title: t.title ?? '',
+          description: t.description ?? null,
+          taskType: t.taskType ?? null,
+          applicability: typeof t.applicability === 'string' ? t.applicability.toLowerCase() : 'required',
+          regulatoryPriority: t.regulatoryPriority ?? null,
+          estimatedDays: typeof t.estimatedDays === 'number' ? t.estimatedDays : 3,
+          enabled: t.enabled !== false,
+        }))
+      : [],
   }));
 }
 
