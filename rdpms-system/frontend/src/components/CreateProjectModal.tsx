@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { projectAPI, projectTemplatesAPI, taskTemplatesAPI, userAPI } from '@/api';
+import { projectAPI, projectTemplatesAPI, taskTemplatesAPI, userAPI, toMessage } from '@/api';
 import { useAuth } from '../auth/useAuth';
 import { safeStorage } from '@/utils/safeStorage';
 import ProcessFlowDiagram from './ProcessFlowDiagram';
@@ -478,8 +478,8 @@ export default function CreateProjectModal({ onClose, initialDraftProjectId }: P
         : await projectAPI.create(payload);
       safeStorage.remove(CREATE_PROJECT_DRAFT_KEY);
       navigate(`/projects/${(newProject as any).id}`);
-    } catch (err: any) {
-      alert(err?.error || '创建失败');
+    } catch (err) {
+      alert(toMessage(err, '创建失败'));
     } finally {
       setCreating(false);
     }

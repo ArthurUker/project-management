@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { projectTemplatesAPI } from '@/api';
+import { projectTemplatesAPI, toMessage } from '@/api';
 
 interface Role {
   id?: string;
@@ -63,8 +63,8 @@ export default function ProjectTemplateEditor({ templateId, onClose, onSave }: P
       await loadData();
       setEditingRole(null);
       setShowRoleForm(false);
-    } catch (err: any) {
-      alert(err?.error || '保存失败');
+    } catch (err) {
+      alert(toMessage(err, '保存失败'));
     } finally {
       setSaving(false);
     }
@@ -75,8 +75,8 @@ export default function ProjectTemplateEditor({ templateId, onClose, onSave }: P
     try {
       await projectTemplatesAPI.roles.remove(templateId, roleId);
       await loadData();
-    } catch (err: any) {
-      alert(err?.error || '删除失败');
+    } catch (err) {
+      alert(toMessage(err, '删除失败'));
     }
   }
 
