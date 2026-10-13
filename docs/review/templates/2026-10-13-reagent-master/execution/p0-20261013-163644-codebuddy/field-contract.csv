@@ -1,0 +1,35 @@
+层级,字段,原始位置,规范来源,缺省/清空规则,详情,预览,复制,apply,项目实例化,备注
+阶段,id,config.phases[].id / template_phases.id,config 优先,必填；重复即拒绝,PASS,PASS,PASS(重映射),PASS,PASS(templatePhaseId),稳定 ID 合并键
+阶段,key,config.phases[].key / template_phases.code,config 优先,回退 code 再回退 p{n},PASS,PASS,PASS,PASS,PASS,仅引用键，不再作显示名
+阶段,name,config.phases[].name / template_phases.name,config 优先,回退结构化 name,PASS,PASS,PASS,PASS,PASS,项目阶段名使用此值
+阶段,order,config.phases[].order / sort_order,config 优先,回退结构化,PASS,PASS,PASS,PASS,PASS,
+阶段,totalDays / plannedDurationDays,config.totalDays / planned_duration_days,config 优先,回退结构化,PASS,PASS,PASS,PASS,PARTIAL,ProjectPhase 无同名列
+阶段,isMilestone,config / is_milestone,config 优先,回退结构化,PASS,PASS,PASS,PASS,NOT_SUPPORTED,项目阶段无里程碑列（登记为不支持）
+阶段,enabled,config.phases[].enabled,config 优先,显式 false 保留,PASS,PASS,PASS,PASS,PARTIAL,仍建行并登记，不静默启用
+阶段,type,config.phases[].type,config 优先,缺省 normal,PASS,PASS,PASS,PASS,PARTIAL,approval 读回保留；不做审批门禁
+阶段,phaseInfo,config.phases[].phaseInfo,config 优先,null,PASS,PASS,PASS,PASS,NOT_SUPPORTED,当前项目模型不能表达
+阶段,completionTip,config.phases[].completionTip,config 优先,null,PASS,PASS,PASS,PASS,NOT_SUPPORTED,
+阶段,allowSkip,config.phases[].allowSkip,config 优先,false,PASS,PASS,PASS,PASS,NOT_SUPPORTED,
+阶段,events,config.phases[].events,config 优先,[],PASS,PASS,PASS,PASS,NOT_SUPPORTED,仅保存；不执行
+阶段,eventTemplates,config.phases[].eventTemplates,config 优先,[],PASS,PASS,PASS,PASS,NOT_SUPPORTED,仅保存；不执行
+阶段,subPhases,config.phases[].subPhases,config 优先,[],PASS,PASS,PASS,PASS,NOT_SUPPORTED,不物化为项目阶段
+阶段,nextPhaseIds,config.phases[].nextPhaseIds,config 优先,[],PASS,PASS,PASS(重映射),PASS,NOT_SUPPORTED,项目模型无阶段连线
+阶段,x/y,config.phases[].x|y,config 优先,undefined,PASS,PASS,PASS,PASS,NOT_SUPPORTED,画布坐标
+任务,id,config.tasks[].id / template_tasks.id,config 优先,必填且全局唯一,PASS,PASS,PASS(重映射),PASS,PASS(templateTaskId),稳定 ID 合并键
+任务,title,config / structured title,config 优先,空则回退结构化,PASS,PASS,PASS,PASS,PASS,
+任务,description,structured description,结构化（config 未携带时补全）,null,PASS,PASS,PASS,PASS,PASS,本轮开始进入项目任务
+任务,taskType,structured task_type,结构化补全,null,PASS,PASS,PASS,PASS,PASS,
+任务,applicability,structured applicability,结构化补全,缺省 required（小写契约）,PASS,PASS,PASS,PASS,PASS,落库转大写；CONDITIONAL 不被改写为 REQUIRED
+任务,regulatoryPriority,structured regulatory_priority,结构化补全,null,PASS,PASS,PASS,PASS,PASS,与执行优先级 priority 区分
+任务,expectedDeliverable,structured expected_deliverable,结构化补全,无结构化行时为 null（不伪造）,PASS,PASS,PASS,PASS,PASS,本轮核心修复项
+任务,regulatoryNotes,structured regulatory_notes,结构化补全,null,PASS,PASS,PASS,PASS,PASS,
+任务,estimatedHours,structured estimated_hours,结构化补全,null,PASS,PASS,PASS,PASS,PASS,与 estimatedDays 语义不同
+任务,estimatedDays,config.estimatedDays,config 优先,回退 ceil(hours/8) 再回退 3,PASS,PASS,PASS,PASS,PASS,
+任务,assigneeRoleCode,structured assignee_role_code,结构化补全,null,PASS,PASS,PASS,PASS,NOT_SUPPORTED,角色意图保留；不绑定账号、不把角色码当 userId
+任务,enabled,config.tasks[].enabled,config 优先,显式 false 保留,PASS,PASS,PASS,PASS,PASS,禁用项不被重新启用/不生成执行记录
+任务,priority,config.tasks[].priority,config 优先,执行优先级；项目默认 MEDIUM,PASS,PASS,PASS,PASS,PARTIAL,与 regulatoryPriority 不同概念
+模板,configVersion,本模块写入（常量 2）,规范模块,null,PASS,PASS,PASS,PASS,PASS,配置格式版本，非产品发布政策
+模板,milestones,config.milestones,config 优先,[],PASS,PASS,PASS,PASS,PARTIAL,项目里程碑另行创建
+模板,defaults,config.defaults,config 优先,{},PASS,PASS,PASS,PASS,PASS,
+模板,未知顶层/节点键,原始输入,原样保留,不丢弃,PASS,PASS,PASS,PASS,PARTIAL,受控解析；危险输入被拒绝
+角色,code/name/permissions,template_roles.*,结构化,结构化,PASS,PASS(roles 接口),PASS(深拷贝),NOT_APPLICABLE,PARTIAL,完整保存/读回/复制；不授予账号权限

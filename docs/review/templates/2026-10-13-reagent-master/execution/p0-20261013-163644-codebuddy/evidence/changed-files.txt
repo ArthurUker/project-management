@@ -1,0 +1,8 @@
+ M rdpms-system/backend/src/routes/projectTemplates.js
+ M rdpms-system/backend/src/routes/projects.js
+?? docs/review/templates/2026-10-13-reagent-master/execution/
+?? rdpms-system/backend/src/modules/projectTemplates/
+?? rdpms-system/backend/tests/unit/projectTemplates-canonical.test.mjs
+ .../backend/src/routes/projectTemplates.js         | 172 +++++++++------------
+ rdpms-system/backend/src/routes/projects.js        |  68 ++++++--
+ 2 files changed, 132 insertions(+), 108 deletions(-)

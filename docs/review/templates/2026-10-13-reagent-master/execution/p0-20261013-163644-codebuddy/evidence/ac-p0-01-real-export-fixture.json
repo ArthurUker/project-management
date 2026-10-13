@@ -1,0 +1,68 @@
+{
+  "source": "config",
+  "configVersion": 2,
+  "phaseCount": 13,
+  "taskCount": 65,
+  "perPhaseTaskCounts": [
+    7,
+    6,
+    6,
+    3,
+    3,
+    5,
+    5,
+    8,
+    4,
+    4,
+    5,
+    4,
+    5
+  ],
+  "deliverableNonNull": 65,
+  "applicabilityCounts": {
+    "required": 56,
+    "conditional": 9
+  },
+  "taskTypeNonNull": 65,
+  "estimatedHoursNonNull": 65,
+  "mismatchWithStructured": [],
+  "phaseTypes": [
+    "approval",
+    "normal",
+    "normal",
+    "normal",
+    "normal",
+    "normal",
+    "normal",
+    "normal",
+    "normal",
+    "normal",
+    "normal",
+    "normal",
+    "normal"
+  ],
+  "firstPhaseTasksSample": [
+    {
+      "id": "23f3bcf9-d9d1-4eb9-8ec5-ea71826c4813",
+      "title": "市场调研与需求收集",
+      "deliverable": "调研纪要、竞品与需求来源分析",
+      "applicability": "required"
+    },
+    {
+      "id": "5223d7ef-b306-4a19-81a0-4be2cce77df5",
+      "title": "应用场景与用户需求确认",
+      "deliverable": "用户需求记录、应用场景说明（海关/疾控/食安/环境/水产/宠物/中药材）",
+      "applicability": "required"
+    }
+  ],
+  "planCounts": {
+    "phaseCount": 13,
+    "taskCount": 65,
+    "emptyPhaseCount": 0,
+    "conditionalCount": 9,
+    "requiredCount": 56,
+    "disabledTaskCount": 0
+  },
+  "planFirstPhaseName": "立项与需求确认",
+  "verdict": "PASS_AC_P0_01_REAL_EXPORT_FIXTURE"
+}

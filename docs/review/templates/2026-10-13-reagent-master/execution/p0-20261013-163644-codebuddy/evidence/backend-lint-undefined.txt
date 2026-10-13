@@ -1,0 +1,4 @@
+> rdpms-backend@2.0.0 lint:undefined
+> node scripts/check-undefined.mjs
+
+[check-undefined] no undefined identifiers in 58 file(s) under src, prisma, scripts

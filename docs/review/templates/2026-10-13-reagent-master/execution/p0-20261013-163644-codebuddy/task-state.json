@@ -1,0 +1,59 @@
+{
+  "runId": "p0-20261013-163644-codebuddy",
+  "updatedAt": "2026-10-13T19:05:00+08:00",
+  "note": "实现、验证、独立审阅、发布状态分别记录；不以未完成验证冒充整体通过",
+
+  "implementation": {
+    "P0-01_规范化与保存读回": {
+      "status": "DONE",
+      "backend": [
+        "modules/projectTemplates/canonicalTemplate.js（新增：解析/合并/校验/实例化计划/ID 重映射）",
+        "routes/projectTemplates.js（详情、预览、PUT/PATCH 保存统一走规范来源；损坏配置明确拒绝）"
+      ],
+      "frontend": [
+        "components/CreateProjectModal.tsx（本地解析兼容 config）",
+        "api/endpoints/templates.ts（apply/阶段/任务规范载荷类型）"
+      ],
+      "note": "TemplateEditor.tsx 未修改：后端在 PUT/PATCH 时已做规范化（字符串/对象输入均接受并写入规范对象），编辑器无需改动即可不丢字段"
+    },
+    "P0-02_复制与预览一致性": {
+      "status": "DONE",
+      "backend": [
+        "routes/projectTemplates.js（copy 使用规范来源并重映射阶段/任务/连线/子阶段引用；apply 使用实例化计划；预览计数动态化）"
+      ],
+      "frontend": ["api/endpoints/templates.ts（apply 响应类型）"]
+    },
+    "P0-03_项目实例化信息保留": {
+      "status": "DONE",
+      "backend": [
+        "routes/projects.js（补 canonicalTemplate import；templateTaskId 传递落库；阶段真实名称；apply-template 规范来源 + TEMPLATE_ALREADY_APPLIED 冲突保护）"
+      ],
+      "frontend": [
+        "components/CreateProjectModal.tsx（阶段引用改读 templatePhaseId、计划阶段名取真实名称、提交完整领域字段）"
+      ]
+    }
+  },
+
+  "verification": {
+    "unit_contract_tests": { "status": "PASS", "result": "9/9", "evidence": "evidence/unit-test-canonical.txt" },
+    "real_export_fixture": { "status": "PASS", "result": "13/65、65 交付物、56+9、零字段差异", "evidence": "evidence/ac-p0-01-real-export-fixture.json" },
+    "real_database_http_acceptance": {
+      "status": "PASS",
+      "environment": "自有临时库 rdpms_test_p0acc + 隔离后端 :3117 + 真实 JWT",
+      "covered": ["AC-P0-02", "AC-P0-03", "AC-P0-04", "AC-P0-05", "AC-P0-06", "AC-P0-07", "AC-P0-08", "AC-P0-09"],
+      "evidence": "evidence/ac-verification-real-db.json"
+    },
+    "backend_lint_undefined": { "status": "PASS", "evidence": "evidence/backend-lint-undefined.txt" },
+    "backend_typecheck": { "status": "PASS", "evidence": "evidence/backend-typecheck.txt" },
+    "rp04_targeted_regression": { "status": "PASS", "result": "5/5", "evidence": "evidence/rp04-regression.txt" },
+    "frontend_build_tsc": { "status": "PASS", "result": "✓ built（含 tsc -b，无类型错误）" },
+    "backend_full_npm_test": { "status": "PASS", "result": "单元 129/129 + 契约 6/6（exit 0）", "evidence": "evidence/backend-npm-test.txt" },
+    "frontend_unit_tests": { "status": "PASS", "result": "47/63；16 项失败经基线核验为既有失败（干净基线 03f9637 同为 47/63 且失败集合一致），无新增回归", "evidence": "evidence/frontend-npm-test.txt, evidence/frontend-baseline-comparison.txt" },
+    "browser_flow": { "status": "NOT_RUN", "reason": "未下载浏览器资源；改用真实 HTTP + 数据库直查（更强的持久化证据）" }
+  },
+
+  "independentReview": { "status": "PENDING", "note": "由审阅者独立执行；本轮不代签" },
+  "release": { "status": "NOT_EVALUATED" },
+  "productApproval": { "status": "NOT_REQUESTED" },
+  "deployment": { "status": "NOT_EXECUTED", "note": "未 stage/commit/push/merge/部署/重启生产；生产库与母版未改动" }
+}

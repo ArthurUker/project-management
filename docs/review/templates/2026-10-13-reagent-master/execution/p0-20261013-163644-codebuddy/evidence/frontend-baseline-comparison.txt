@@ -1,0 +1,564 @@
+
+> rdpms-frontend@1.0.0 test
+> node scripts/run-unit-tests.mjs
+
+TAP version 13
+# Subtest: F10-I1 拒绝时同一事务完成「写入拒绝区 + 移出队列」
+not ok 1 - F10-I1 拒绝时同一事务完成「写入拒绝区 + 移出队列」
+  ---
+  duration_ms: 2.198855
+  location: '/tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:4017:1'
+  failureType: 'testCodeFailure'
+  error: 'idb.outboxClear is not a function'
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    cleanup (file:///tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:3999:13)
+    TestContext.<anonymous> (file:///tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:4018:9)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    node:internal/test_runner/harness:255:12
+    node:internal/process/task_queues:140:7
+    AsyncResource.runInAsyncScope (node:async_hooks:206:9)
+    AsyncResource.runMicrotask (node:internal/process/task_queues:137:8)
+  ...
+# Subtest: F10-I2 刷新后仍能恢复（数据在 IndexedDB，不在内存）
+not ok 2 - F10-I2 刷新后仍能恢复（数据在 IndexedDB，不在内存）
+  ---
+  duration_ms: 0.299234
+  location: '/tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:4041:1'
+  failureType: 'testCodeFailure'
+  error: 'idb.outboxClear is not a function'
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    cleanup (file:///tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:3999:13)
+    TestContext.<anonymous> (file:///tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:4042:9)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: F10-I3 重复拒绝不丢内容：保留最早 payload，累加次数
+not ok 3 - F10-I3 重复拒绝不丢内容：保留最早 payload，累加次数
+  ---
+  duration_ms: 1.228075
+  location: '/tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:4056:1'
+  failureType: 'testCodeFailure'
+  error: 'idb.outboxClear is not a function'
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    cleanup (file:///tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:3999:13)
+    TestContext.<anonymous> (file:///tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:4057:9)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: F10-I4 不同账户隔离：B 读不到 A 的草稿
+not ok 4 - F10-I4 不同账户隔离：B 读不到 A 的草稿
+  ---
+  duration_ms: 0.253528
+  location: '/tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:4082:1'
+  failureType: 'testCodeFailure'
+  error: 'idb.outboxClear is not a function'
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    cleanup (file:///tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:3999:13)
+    TestContext.<anonymous> (file:///tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:4083:9)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: F10-I5 退出登录不清空持久拒绝区（重新登录同一账户可恢复）
+not ok 5 - F10-I5 退出登录不清空持久拒绝区（重新登录同一账户可恢复）
+  ---
+  duration_ms: 0.282663
+  location: '/tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:4097:1'
+  failureType: 'testCodeFailure'
+  error: 'idb.outboxClear is not a function'
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    cleanup (file:///tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:3999:13)
+    TestContext.<anonymous> (file:///tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:4098:9)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: A09-I6 同 key 出现不同内容：保留最早 payload，另存冲突内容（不得静默替换）
+not ok 6 - A09-I6 同 key 出现不同内容：保留最早 payload，另存冲突内容（不得静默替换）
+  ---
+  duration_ms: 0.248418
+  location: '/tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:4113:1'
+  failureType: 'testCodeFailure'
+  error: 'idb.outboxClear is not a function'
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    cleanup (file:///tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:3999:13)
+    TestContext.<anonymous> (file:///tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:4114:9)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: A06 clearAll 清理真实键名（cursor/acl/conflicts），且不清空持久拒绝区
+not ok 7 - A06 clearAll 清理真实键名（cursor/acl/conflicts），且不清空持久拒绝区
+  ---
+  duration_ms: 0.243449
+  location: '/tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:4144:1'
+  failureType: 'testCodeFailure'
+  error: 'idb.outboxClear is not a function'
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    cleanup (file:///tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:3999:13)
+    TestContext.<anonymous> (file:///tmp/rdpms-fe-tests-9T8vPL/deadLetter.idb.test.mjs:4145:9)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: RF02-K1 同一槽位重试（同一载荷）复用原 key
+ok 8 - RF02-K1 同一槽位重试（同一载荷）复用原 key
+  ---
+  duration_ms: 1.516458
+  ...
+# Subtest: RF02-K2 多项目 A/B 的 key 同时存活（互不清空）
+ok 9 - RF02-K2 多项目 A/B 的 key 同时存活（互不清空）
+  ---
+  duration_ms: 0.234342
+  ...
+# Subtest: RF02-K3 A 成功、B 失败后重试：A 命中回执（同 key），B 可继续
+ok 10 - RF02-K3 A 成功、B 失败后重试：A 命中回执（同 key），B 可继续
+  ---
+  duration_ms: 0.209956
+  ...
+# Subtest: RF02-K4 update 与 submit 的 key 同时保留
+ok 11 - RF02-K4 update 与 submit 的 key 同时保留
+  ---
+  duration_ms: 0.175611
+  ...
+# Subtest: RF02-K5 服务端 submit 成功但响应丢失：重试时 update 与 submit 都按原身份重放
+ok 12 - RF02-K5 服务端 submit 成功但响应丢失：重试时 update 与 submit 都按原身份重放
+  ---
+  duration_ms: 0.851255
+  ...
+# Subtest: RF02-K6 全部成功后 complete：再次主动操作生成新 key
+ok 13 - RF02-K6 全部成功后 complete：再次主动操作生成新 key
+  ---
+  duration_ms: 0.205968
+  ...
+# Subtest: RF02-K7 用户真正修改 payload → 新的业务操作身份（整会话轮换）
+ok 14 - RF02-K7 用户真正修改 payload → 新的业务操作身份（整会话轮换）
+  ---
+  duration_ms: 0.321627
+  ...
+# Subtest: RF02-K8 切换到另一次操作（不同会话）时槽位不复用
+ok 15 - RF02-K8 切换到另一次操作（不同会话）时槽位不复用
+  ---
+  duration_ms: 0.20665
+  ...
+# Subtest: A04-K9 A 成功、B 失败后用户改了 B 的内容再重试：A 的 key 不被牵连轮换
+ok 16 - A04-K9 A 成功、B 失败后用户改了 B 的内容再重试：A 的 key 不被牵连轮换
+  ---
+  duration_ms: 0.336955
+  ...
+# Subtest: A04-K10 update/submit 共享资源作用域：内容不变都复用；内容变化一起轮换
+ok 17 - A04-K10 update/submit 共享资源作用域：内容不变都复用；内容变化一起轮换
+  ---
+  duration_ms: 0.27064
+  ...
+# Subtest: A04-K11 并发基线变化必须换新 key（否则服务端 payloadHash 校验会判为不一致）
+ok 18 - A04-K11 并发基线变化必须换新 key（否则服务端 payloadHash 校验会判为不一致）
+  ---
+  duration_ms: 0.226597
+  ...
+# Subtest: A03-E1 A 的拉取响应在切换账号后释放：B 的镜像/游标/ACL/冲突不含 A 的数据
+not ok 19 - A03-E1 A 的拉取响应在切换账号后释放：B 的镜像/游标/ACL/冲突不含 A 的数据
+  ---
+  duration_ms: 1.800674
+  location: '/tmp/rdpms-fe-tests-9T8vPL/offlineAccountSwitch.test.mjs:21349:1'
+  failureType: 'testCodeFailure'
+  error: 'idb.recordsClear is not a function'
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    resetAll (file:///tmp/rdpms-fe-tests-9T8vPL/offlineAccountSwitch.test.mjs:21340:13)
+    TestContext.<anonymous> (file:///tmp/rdpms-fe-tests-9T8vPL/offlineAccountSwitch.test.mjs:21350:9)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    node:internal/test_runner/harness:255:12
+    node:internal/process/task_queues:140:7
+    AsyncResource.runInAsyncScope (node:async_hooks:206:9)
+    AsyncResource.runMicrotask (node:internal/process/task_queues:137:8)
+  ...
+# Subtest: RP13-T01 拉取中间页落镜像但不提交cursor，全部页面完成后才提交最终checkpoint
+not ok 20 - RP13-T01 拉取中间页落镜像但不提交cursor，全部页面完成后才提交最终checkpoint
+  ---
+  duration_ms: 0.303772
+  location: '/tmp/rdpms-fe-tests-9T8vPL/offlineAccountSwitch.test.mjs:21381:1'
+  failureType: 'testCodeFailure'
+  error: 'idb.recordsClear is not a function'
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    resetAll (file:///tmp/rdpms-fe-tests-9T8vPL/offlineAccountSwitch.test.mjs:21340:13)
+    TestContext.<anonymous> (file:///tmp/rdpms-fe-tests-9T8vPL/offlineAccountSwitch.test.mjs:21382:9)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: A03-E2 A 的上行拒绝响应在切换账号后释放：B 拒绝区为空，A 的未同步内容不被销毁
+not ok 21 - A03-E2 A 的上行拒绝响应在切换账号后释放：B 拒绝区为空，A 的未同步内容不被销毁
+  ---
+  duration_ms: 0.331826
+  location: '/tmp/rdpms-fe-tests-9T8vPL/offlineAccountSwitch.test.mjs:21416:1'
+  failureType: 'testCodeFailure'
+  error: 'idb.recordsClear is not a function'
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    resetAll (file:///tmp/rdpms-fe-tests-9T8vPL/offlineAccountSwitch.test.mjs:21340:13)
+    TestContext.<anonymous> (file:///tmp/rdpms-fe-tests-9T8vPL/offlineAccountSwitch.test.mjs:21417:9)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: A03-E4 登出与登录交叠：新主体不被登出尾段覆盖，上一账号的未同步内容按原主体留存
+not ok 22 - A03-E4 登出与登录交叠：新主体不被登出尾段覆盖，上一账号的未同步内容按原主体留存
+  ---
+  duration_ms: 0.309784
+  location: '/tmp/rdpms-fe-tests-9T8vPL/offlineAccountSwitch.test.mjs:21469:1'
+  failureType: 'testCodeFailure'
+  error: 'idb.recordsClear is not a function'
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    resetAll (file:///tmp/rdpms-fe-tests-9T8vPL/offlineAccountSwitch.test.mjs:21340:13)
+    TestContext.<anonymous> (file:///tmp/rdpms-fe-tests-9T8vPL/offlineAccountSwitch.test.mjs:21470:9)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: A03-E3 拒绝记录可按原 key + 原 payload + 原基线重试，成功后移出拒绝区
+not ok 23 - A03-E3 拒绝记录可按原 key + 原 payload + 原基线重试，成功后移出拒绝区
+  ---
+  duration_ms: 0.33416
+  location: '/tmp/rdpms-fe-tests-9T8vPL/offlineAccountSwitch.test.mjs:21542:1'
+  failureType: 'testCodeFailure'
+  error: 'idb.recordsClear is not a function'
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    resetAll (file:///tmp/rdpms-fe-tests-9T8vPL/offlineAccountSwitch.test.mjs:21340:13)
+    TestContext.<anonymous> (file:///tmp/rdpms-fe-tests-9T8vPL/offlineAccountSwitch.test.mjs:21543:9)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: A03-I1 不同账号的游标/ACL/冲突键互不覆盖
+not ok 24 - A03-I1 不同账号的游标/ACL/冲突键互不覆盖
+  ---
+  duration_ms: 2.156244
+  location: '/tmp/rdpms-fe-tests-9T8vPL/offlineScope.test.mjs:3953:1'
+  failureType: 'testCodeFailure'
+  error: 'idb.kvSet is not a function'
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (file:///tmp/rdpms-fe-tests-9T8vPL/offlineScope.test.mjs:3954:13)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    node:internal/test_runner/harness:255:12
+    node:internal/process/task_queues:140:7
+    AsyncResource.runInAsyncScope (node:async_hooks:206:9)
+    AsyncResource.runMicrotask (node:internal/process/task_queues:137:8)
+  ...
+# Subtest: A03-I2 登出只清理当前主体分片键，不得清理其他账号数据
+not ok 25 - A03-I2 登出只清理当前主体分片键，不得清理其他账号数据
+  ---
+  duration_ms: 0.357183
+  location: '/tmp/rdpms-fe-tests-9T8vPL/offlineScope.test.mjs:3961:1'
+  failureType: 'testCodeFailure'
+  error: 'idb.kvSet is not a function'
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (file:///tmp/rdpms-fe-tests-9T8vPL/offlineScope.test.mjs:3962:13)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: A05-P1 混合输入分组：可提交与缺项目必须分开（缺项目不得被静默丢弃）
+ok 26 - A05-P1 混合输入分组：可提交与缺项目必须分开（缺项目不得被静默丢弃）
+  ---
+  duration_ms: 1.906022
+  ...
+# Subtest: A05-P2 缺项目记录本地留存：刷新后可恢复，其它账号读不到，保存成功后清除
+not ok 27 - A05-P2 缺项目记录本地留存：刷新后可恢复，其它账号读不到，保存成功后清除
+  ---
+  duration_ms: 0.754111
+  location: '/tmp/rdpms-fe-tests-9T8vPL/pendingDraft.test.mjs:4023:1'
+  failureType: 'testCodeFailure'
+  error: 'OFFLINE_OWNER_MISMATCH'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    storageFor (file:///tmp/rdpms-fe-tests-9T8vPL/pendingDraft.test.mjs:3954:49)
+    clearPendingDraft (file:///tmp/rdpms-fe-tests-9T8vPL/pendingDraft.test.mjs:4009:9)
+    TestContext.<anonymous> (file:///tmp/rdpms-fe-tests-9T8vPL/pendingDraft.test.mjs:4024:9)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: A05-P3 恢复时按记录身份去重（不产生重复条目）
+ok 28 - A05-P3 恢复时按记录身份去重（不产生重复条目）
+  ---
+  duration_ms: 0.315364
+  ...
+# Subtest: A05-P4 留存键按主体分片（不与其它本地键冲突）
+not ok 29 - A05-P4 留存键按主体分片（不与其它本地键冲突）
+  ---
+  duration_ms: 1.557446
+  location: '/tmp/rdpms-fe-tests-9T8vPL/pendingDraft.test.mjs:4045:1'
+  failureType: 'testCodeFailure'
+  error: 'OFFLINE_OWNER_MISMATCH'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    storageFor (file:///tmp/rdpms-fe-tests-9T8vPL/pendingDraft.test.mjs:3954:49)
+    savePendingDraft (file:///tmp/rdpms-fe-tests-9T8vPL/pendingDraft.test.mjs:4005:9)
+    TestContext.<anonymous> (file:///tmp/rdpms-fe-tests-9T8vPL/pendingDraft.test.mjs:4046:9)
+    Test.runInAsyncScope (node:async_hooks:206:9)
+    Test.run (node:internal/test_runner/test:796:25)
+    Test.processPendingSubtests (node:internal/test_runner/test:526:18)
+    Test.postRun (node:internal/test_runner/test:889:19)
+    Test.run (node:internal/test_runner/test:835:12)
+    async Test.processPendingSubtests (node:internal/test_runner/test:526:7)
+  ...
+# Subtest: RF03-F8 后端返回的对象内容必须直接可用（不再 JSON.parse）
+ok 30 - RF03-F8 后端返回的对象内容必须直接可用（不再 JSON.parse）
+  ---
+  duration_ms: 1.695666
+  ...
+# Subtest: RF03-F9 字符串内容仍然兼容（旧数据与旧客户端）
+ok 31 - RF03-F9 字符串内容仍然兼容（旧数据与旧客户端）
+  ---
+  duration_ms: 0.479234
+  ...
+# Subtest: RF03-F10 无法解析时必须暴露错误，而不是静默返回空表
+ok 32 - RF03-F10 无法解析时必须暴露错误，而不是静默返回空表
+  ---
+  duration_ms: 0.317248
+  ...
+# Subtest: RF03-F11 null / undefined / 空串视为空内容（ok=true，空对象）
+ok 33 - RF03-F11 null / undefined / 空串视为空内容（ok=true，空对象）
+  ---
+  duration_ms: 0.190048
+  ...
+# Subtest: RF03-F12 非对象 JSON（数组/数字）按非法内容处理
+ok 34 - RF03-F12 非对象 JSON（数组/数字）按非法内容处理
+  ---
+  duration_ms: 0.213833
+  ...
+# Subtest: RF03-F13b 编辑回填无丢项：多项目与嵌套字段完整往返
+ok 35 - RF03-F13b 编辑回填无丢项：多项目与嵌套字段完整往返
+  ---
+  duration_ms: 0.224854
+  ...
+# Subtest: RF03-F13 normalizeReportContent 提供不抛错的便捷入口
+ok 36 - RF03-F13 normalizeReportContent 提供不抛错的便捷入口
+  ---
+  duration_ms: 0.20672
+  ...
+# Subtest: RF03-F1 DAILY 使用完整日期键（不是月份键）
+ok 37 - RF03-F1 DAILY 使用完整日期键（不是月份键）
+  ---
+  duration_ms: 1.614654
+  ...
+# Subtest: RF03-F2 同月两天必须得到不同的键（F03 直接回归）
+ok 38 - RF03-F2 同月两天必须得到不同的键（F03 直接回归）
+  ---
+  duration_ms: 0.270811
+  ...
+# Subtest: RF03-F3 WEEKLY 使用 ISO 周键
+ok 39 - RF03-F3 WEEKLY 使用 ISO 周键
+  ---
+  duration_ms: 0.23355
+  ...
+# Subtest: RF03-F4 MONTHLY 使用 YYYY-MM
+ok 40 - RF03-F4 MONTHLY 使用 YYYY-MM
+  ---
+  duration_ms: 0.242077
+  ...
+# Subtest: RF03-F5 缺少必要输入返回 null（不得猜造日期）
+ok 41 - RF03-F5 缺少必要输入返回 null（不得猜造日期）
+  ---
+  duration_ms: 0.177274
+  ...
+# Subtest: RF03-F6 ISO 周跨年边界正确
+ok 42 - RF03-F6 ISO 周跨年边界正确
+  ---
+  duration_ms: 0.178105
+  ...
+# Subtest: RF03-F7 中文类型标签 → 后端枚举（值发枚举，中文只做 label）
+ok 43 - RF03-F7 中文类型标签 → 后端枚举（值发枚举，中文只做 label）
+  ---
+  duration_ms: 0.770612
+  ...
+# Subtest: legacy two-key credentials are not imported; unrelated last-copy storage is untouched
+ok 44 - legacy two-key credentials are not imported; unrelated last-copy storage is untouched
+  ---
+  duration_ms: 2.01069
+  ...
+# Subtest: later B login supersedes delayed A login ticket; same actor relogin also changes generation
+ok 45 - later B login supersedes delayed A login ticket; same actor relogin also changes generation
+  ---
+  duration_ms: 1.588304
+  ...
+# Subtest: old failure cannot clear same-login successor or new identity; terminal current failure emits exact generation
+ok 46 - old failure cannot clear same-login successor or new identity; terminal current failure emits exact generation
+  ---
+  duration_ms: 2.601944
+  ...
+# Subtest: late ordinary 200 A response after B login is rejected and never clears B or refreshes
+ok 47 - late ordinary 200 A response after B login is rejected and never clears B or refreshes
+  ---
+  duration_ms: 3.009773
+  ...
+# Subtest: late ordinary 401 A response after B login is rejected and never clears B or refreshes
+ok 48 - late ordinary 401 A response after B login is rejected and never clears B or refreshes
+  ---
+  duration_ms: 1.650471
+  ...
+# Subtest: late ordinary 403 A response after B login is rejected and never clears B or refreshes
+ok 49 - late ordinary 403 A response after B login is rejected and never clears B or refreshes
+  ---
+  duration_ms: 1.032236
+  ...
+# Subtest: late refresh success A after B cannot write/clear B or replay original
+ok 50 - late refresh success A after B cannot write/clear B or replay original
+  ---
+  duration_ms: 2.591415
+  ...
+# Subtest: late refresh failure A after B cannot write/clear B or replay original
+ok 51 - late refresh failure A after B cannot write/clear B or replay original
+  ---
+  duration_ms: 1.399197
+  ...
+# Subtest: late refresh network A after B cannot write/clear B or replay original
+ok 52 - late refresh network A after B cannot write/clear B or replay original
+  ---
+  duration_ms: 2.09038
+  ...
+# Subtest: old refresh success cannot revive logout or overwrite same actor new login
+ok 53 - old refresh success cannot revive logout or overwrite same actor new login
+  ---
+  duration_ms: 4.608086
+  ...
+# Subtest: one-module parallel requests singleflight once; replay actor, method and payload/key stay original
+ok 54 - one-module parallel requests singleflight once; replay actor, method and payload/key stay original
+  ---
+  duration_ms: 2.838901
+  ...
+# Subtest: genuinely invalid current refresh clears current credentials; not public login401
+ok 55 - genuinely invalid current refresh clears current credentials; not public login401
+  ---
+  duration_ms: 3.353881
+  ...
+# Subtest: refresh replayed preserves current tokens, blocks further automatic refresh and keeps last copy
+ok 56 - refresh replayed preserves current tokens, blocks further automatic refresh and keeps last copy
+  ---
+  duration_ms: 2.427486
+  ...
+# Subtest: refresh network preserves current tokens, blocks further automatic refresh and keeps last copy
+ok 57 - refresh network preserves current tokens, blocks further automatic refresh and keeps last copy
+  ---
+  duration_ms: 1.93601
+  ...
+# Subtest: refresh server preserves current tokens, blocks further automatic refresh and keeps last copy
+ok 58 - refresh server preserves current tokens, blocks further automatic refresh and keeps last copy
+  ---
+  duration_ms: 4.235413
+  ...
+# Subtest: refresh malformed preserves current tokens, blocks further automatic refresh and keeps last copy
+ok 59 - refresh malformed preserves current tokens, blocks further automatic refresh and keeps last copy
+  ---
+  duration_ms: 1.871247
+  ...
+# Subtest: refresh wrong-actor preserves current tokens, blocks further automatic refresh and keeps last copy
+ok 60 - refresh wrong-actor preserves current tokens, blocks further automatic refresh and keeps last copy
+  ---
+  duration_ms: 1.683523
+  ...
+# Subtest: stale invalid refresh after successor commit does not clear successor
+ok 61 - stale invalid refresh after successor commit does not clear successor
+  ---
+  duration_ms: 1.833536
+  ...
+# Subtest: permission403 and ordinary offline do not refresh, clear or block valid session
+ok 62 - permission403 and ordinary offline do not refresh, clear or block valid session
+  ---
+  duration_ms: 2.596444
+  ...
+# Subtest: explicit captured logout cannot borrow B token or refresh; stale local clear is rejected
+ok 63 - explicit captured logout cannot borrow B token or refresh; stale local clear is rejected
+  ---
+  duration_ms: 0.955431
+  ...
+1..63
+# tests 63
+# suites 0
+# pass 47
+# fail 16
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 803.925665
+=== 基线一致性对比（2026-10-13）===
+分支 p0/template-info-20261013-163644（含 P0 改动）：
+# tests 63
+# pass 47
+# fail 16
+干净基线 03f9637（无 P0 改动）：
+# tests 63
+# pass 47
+# fail 16
+结论：两处失败集合完全一致（16 项，均为离线同步/本地持久化既有失败），P0 改动未引入任何新失败。
