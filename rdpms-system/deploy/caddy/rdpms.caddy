@@ -16,8 +16,21 @@ rdpms.digifluidic.com {
 	}
 
 	handle {
-		root * /opt/rdpms/current/rdpms-system/frontend/dist
+		root * /opt/rdpms/app/rdpms-system/frontend/dist
 		try_files {path} /index.html
+
+		# 带内容 hash 的静态资源：长期强缓存（文件名随内容变化，不会读到旧版）
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+
+		# SPA 入口与前端路由：始终回源验证，保证部署后即时生效
+		# - 根路径与 index.html：直接匹配
+		# - 其余路由（/knowledge、/login 等）由 try_files 回退到 index.html，用「文件不存在」识别
+		header / Cache-Control "no-cache, must-revalidate"
+		header /index.html Cache-Control "no-cache, must-revalidate"
+		@spa not file
+		header @spa Cache-Control "no-cache, must-revalidate"
+
 		file_server
 	}
 }
