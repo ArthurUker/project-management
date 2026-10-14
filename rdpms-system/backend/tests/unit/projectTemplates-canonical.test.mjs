@@ -258,6 +258,46 @@ test('AC-P0-04 null 视为未填写（可补全），显式空串视为明确清
   assert.equal(t2.expectedDeliverable, '', '显式空串保留，不被旧行覆盖');
 });
 
+test('AC-P0-04 Prisma Decimal 形态的人时可正确读回（不因类型判断丢失）', () => {
+  // 模拟 Prisma Decimal：对象 + toNumber()
+  const decimalLike = { s: 1, e: 0, d: [16], toNumber: () => 16 };
+  const phases = [
+    {
+      id: 'ph-1',
+      code: 'p1',
+      name: '阶段',
+      sortOrder: 1,
+      isMilestone: false,
+      tasks: [
+        {
+          id: 'tk-1',
+          title: '任务1',
+          taskType: 'OTHER',
+          applicability: 'REQUIRED',
+          regulatoryPriority: 'P2',
+          expectedDeliverable: '产出',
+          estimatedHours: decimalLike,
+          sortOrder: 1,
+        },
+      ],
+    },
+  ];
+  const built = buildCanonicalTemplate({ config: null, phases });
+  assert.equal(built.ok, true, built.error);
+  const t = built.canonical.phases[0].tasks[0];
+  assert.equal(t.estimatedHours, 16, 'Decimal 形态的人时应归一为 number');
+  assert.equal(typeof t.estimatedHours, 'number');
+  assert.equal(t.estimatedDays, 2, '估算天数按 ceil(16/8) 推导');
+
+  // config 提供人时时同样归一
+  const withCfg = buildCanonicalTemplate({
+    config: { phases: [{ id: 'ph-1', name: 'A', order: 1, tasks: [{ id: 'tk-1', title: 't', estimatedHours: { toNumber: () => 40 } }] }] },
+    phases,
+  });
+  assert.equal(withCfg.canonical.phases[0].tasks[0].estimatedHours, 40);
+  assert.equal(withCfg.canonical.phases[0].tasks[0].estimatedDays, 5);
+});
+
 test('AC-P0-04 损坏 config / 重复 ID / 无效连线引用均明确拒绝', () => {
   const broken = buildCanonicalTemplate({ config: '{不是JSON', phases: structuredFixture() });
   assert.equal(broken.ok, false);

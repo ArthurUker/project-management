@@ -41,6 +41,24 @@ export const TASK_DOMAIN_FIELDS = [
 const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 
 /**
+ * 数值归一（2026-10-14）：兼容 Prisma Decimal（对象，含 toNumber）、Int 与字符串数字。
+ * 背景：template_tasks.estimated_hours 为 Decimal，Prisma 返回 Decimal 实例，
+ * 此前用 typeof === 'number' 判断会全部判为无效，导致「预估人时」在投影后丢失。
+ */
+function toNumeric(v) {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+  if (v && typeof v === 'object' && typeof v.toNumber === 'function') {
+    const n = v.toNumber();
+    return Number.isFinite(n) ? n : null;
+  }
+  if (typeof v === 'string' && v.trim() !== '') {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  }
+  return null;
+}
+
+/**
  * 解析模板 config。字符串与对象均可；不合法时返回错误而非静默降级。
  * @returns {{ ok: true, data: object|null } | { ok: false, error: string }}
  */
@@ -99,8 +117,8 @@ function taskFromRow(row, idx) {
     regulatoryPriority: row.regulatoryPriority ?? null,
     expectedDeliverable: row.expectedDeliverable ?? null,
     regulatoryNotes: row.regulatoryNotes ?? null,
-    estimatedHours: row.estimatedHours ?? null,
-    estimatedDays: row.estimatedHours ? Math.ceil(row.estimatedHours / 8) : 3,
+    estimatedHours: toNumeric(row.estimatedHours),
+    estimatedDays: toNumeric(row.estimatedHours) !== null ? Math.ceil(toNumeric(row.estimatedHours) / 8) : 3,
     assigneeRoleCode: row.assigneeRoleCode ?? null,
     enabled: true,
     sortOrder: row.sortOrder ?? idx,
@@ -145,17 +163,18 @@ function mergeTask(cfgTask, idx, structTaskById) {
     out.applicability = out.applicability.toLowerCase(); // '' 保持空字符串，登记为“明确为空”
   }
 
-  // 人时与估算天数：两者语义不同（SYS-05），分别保留
-  const cfgHours = cfgTask?.estimatedHours;
-  if (typeof cfgHours === 'number') {
+  // 人时与估算天数：两者语义不同（SYS-05），分别保留；数值经 toNumeric 归一（兼容 Decimal）
+  const cfgHours = toNumeric(cfgTask?.estimatedHours);
+  const rowHours = row ? toNumeric(row.estimatedHours) : null;
+  if (cfgHours !== null) {
     out.estimatedHours = cfgHours;
-  } else if (row && typeof row.estimatedHours === 'number') {
-    out.estimatedHours = row.estimatedHours;
-  } else if (!('estimatedHours' in out)) {
+  } else if (rowHours !== null) {
+    out.estimatedHours = rowHours;
+  } else {
     out.estimatedHours = null;
   }
-  const cfgDays = cfgTask?.estimatedDays;
-  if (typeof cfgDays === 'number') {
+  const cfgDays = toNumeric(cfgTask?.estimatedDays);
+  if (cfgDays !== null) {
     out.estimatedDays = cfgDays;
   } else if (typeof out.estimatedHours === 'number') {
     out.estimatedDays = Math.ceil(out.estimatedHours / 8);
