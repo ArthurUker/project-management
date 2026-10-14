@@ -1,0 +1,21 @@
+{
+  "checks": {
+    "mapped": 12,
+    "written": 21,
+    "skipped": 0,
+    "missing": []
+  },
+  "tiers": {
+    "mapped": 8,
+    "written": 8,
+    "skipped": 0,
+    "missing": []
+  },
+  "verify": {
+    "withPlatformCheck": 18,
+    "withTierNote": 8,
+    "withAcceptance": 65,
+    "withRole": 65,
+    "total": 65
+  }
+}
