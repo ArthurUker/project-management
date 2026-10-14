@@ -1,0 +1,57 @@
+{
+  "phase": "P1 轻量母版",
+  "runDate": "2026-10-14",
+  "completionCriterion": "SYNTHESIS_V2 第 10 节：选一个项目桌面走读，关键工作可执行、可解释、可审查",
+  "status": "PARTIAL_DRAFT_ONLY",
+  "overallStatement": "P1 的草案与差异预览已完成，桌面走读已完成并给出量化判定；P1-a/b/c 的实际落地未执行（按第 10 节要求先草案后落地，且角色主责分配与 A/B/C 定义属业务判断，待确认）。",
+  "items": [
+    {
+      "id": "P1-a",
+      "name": "角色映射",
+      "status": "DRAFT_READY_NOT_APPLIED",
+      "evidence": ["p1-diff-role.csv", "p1-role-code-mapping.csv"],
+      "detail": "现状 assignee_role_code 空 65/65；已按「主责优先」规则生成角色码草案：owner 13 / tech_lead 27 / reviewer 25（member 0）。规则为执行者拟定，属业务判断，待确认后一条命令落地（可逆：原值全空）。"
+    },
+    {
+      "id": "P1-b",
+      "name": "交付物细化（验收/前置）",
+      "status": "DRAFT_READY_NOT_APPLIED",
+      "evidence": ["p1-diff-deliverable.csv"],
+      "detail": "65/65 任务已有交付物文本，与 recommendedDeliverable 逐条不同（diffClass=REVIEW_DIFF 65），建议以「追加」方式补验收标准与前置（不覆盖既有文本）。建议先对 p1/p3/p8 三阶段试批。"
+    },
+    {
+      "id": "P1-c",
+      "name": "平台检查表嵌入",
+      "status": "DRAFT_READY_NOT_APPLIED",
+      "evidence": ["p1-diff-checklist.csv"],
+      "detail": "23 项检查已按 existingTaskLocation 整理为落点差异表（p5/p7/p10/p12 等）。其中与驱动/材料/油相架构、一次性或复用、片内提取相关的取舍需第 11 节业务资料确认。"
+    },
+    {
+      "id": "P1-d",
+      "name": "五类资料与 G0–G4 决策位置",
+      "status": "DRAFT_READY",
+      "evidence": ["p1-five-records-mapping.csv", "p1-gates-mapping.csv"],
+      "detail": "五类核心资料承载位置（p1+p2 / p5–p11 / p3·p7·p12 / p2+各阶段 / 评审试用发布归档）与 G0–G4 决策点已映射到现有阶段；以「位置约定」为主，多数不需写库。"
+    },
+    {
+      "id": "P1-e",
+      "name": "A/B/C 定义",
+      "status": "PENDING_USER_DECISION",
+      "evidence": ["p1-tier-definition.csv"],
+      "detail": "14 维度 A/B/C 建议已整理，但属「待确认的新定义」，不得声称团队已采用，也不擅自改写项目旧等级（SYNTHESIS_V2 4.3）。"
+    },
+    {
+      "id": "P1-WALKTHROUGH",
+      "name": "桌面走读（P1 完成判据）",
+      "status": "DONE",
+      "evidence": ["p1-walkthrough-desk.md"],
+      "detail": "水产（甲鱼）情景逐阶段走读 13 阶段 65 任务，三段判定：现状可执行 0/65（角色空）、可解释 0/65（验收未录入）；按建议落地后分别可达 65/65、65/65；可审查 65/65（均有交付物，且项目下发保留 templateTaskId 可回指）。能力边界四条已登记（角色不绑定账号、无等待时间、无门禁引擎、检查项不自动判定）。"
+    }
+  ],
+  "notRun": [
+    "P1-a/b/c 的实际写入（待确认）",
+    "隔离库端到端复演（本包为数据层草案与走读，未起隔离环境跑 UI）"
+  ],
+  "independentReview": "PENDING",
+  "release": "NOT_EVALUATED"
+}

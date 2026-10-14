@@ -1,0 +1,35 @@
+{
+  "phase": "P1 轻量母版",
+  "runDate": "2026-10-14",
+  "timezone": "Asia/Shanghai",
+  "executor": "CodeBuddy",
+  "authorization": {
+    "from": "用户口令「继续」（承接上一轮 P0 合入后继续推进 P1）",
+    "scope": [
+      "按 SYNTHESIS_V2.md 第 10 节 P1 范围推进：五类资料、A/B/C 定义、角色映射、平台检查表、五种依赖"
+    ],
+    "preconditionEnforced": "SYNTHESIS_V2 第 10 节：实施时须保护在研项目，先做新版草案和差异预览，不自动重写旧项目证据",
+    "thisRunDeliverable": "新版草案 + 差异预览 + 桌面走读（未写入任何母版/项目数据）",
+    "notGranted": [
+      "写入生产库（P1-a/b/c 的实际写入待用户确认映射规则与试批范围后进行）",
+      "改写母版任务名称、阶段顺序、A/B/C 定义或项目旧等级",
+      "改动 schema/migration/依赖/认证/RBAC",
+      "触碰在研项目已下发的任务与历史证据",
+      "进入 P2（条件裁剪预览、任务依赖、决策记录、版本快照）"
+    ]
+  },
+  "allowedWritesThisRun": [
+    "docs/review/templates/2026-10-13-reagent-master/execution/p1/**（草案、差异、走读、脚本）"
+  ],
+  "readOnlySources": [
+    "docs/review/templates/2026-10-13-reagent-master/task-review.csv（65 行）",
+    "docs/review/templates/2026-10-13-reagent-master/platform-checklist.csv（23 行）",
+    "docs/review/templates/2026-10-13-reagent-master/tier-matrix.csv（14 维度）",
+    "docs/review/templates/2026-10-13-reagent-master/SYNTHESIS_V2.md",
+    "生产库只读导出：母版 65 项任务现状（evidence/master-tasks-now.tsv）"
+  ],
+  "sideEffectDisclosure": {
+    "productionData": "本包生成过程未写入生产库；但同一轮中为修复 P0 遗留的「预估人时丢失」缺陷，对 canonical 模块做了代码修复并重建部署（详见 p1-handoff.md 第 4 节），该修复不改变任何母版内容。",
+    "productionDeploy": "已 build + 重启 rdpms-api（部署 P0 人时修复）；前端无改动"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "reviews": 65,
+  "checklist": 23,
+  "tierDimensions": 14,
+  "currentRoleFilled": 0,
+  "currentDeliverableFilled": 65,
+  "diffClassCounts": {
+    "REVIEW_DIFF": 65
+  }
+}
