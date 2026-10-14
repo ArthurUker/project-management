@@ -1,0 +1,128 @@
+{
+ "23f3bcf9-d9d1-4eb9-8ec5-ea71826c4813": {
+  "phase": "p1",
+  "title": "市场调研与需求收集",
+  "acceptance": "需求证据可引用，事实与商业假设分开",
+  "prerequisite": "无；可与场景访谈并行"
+ },
+ "5223d7ef-b306-4a19-81a0-4be2cce77df5": {
+  "phase": "p1",
+  "title": "应用场景与用户需求确认",
+  "acceptance": "各场景有需求负责人确认，样本和结果用途无歧义",
+  "prerequisite": "需求来源；与声称边界联合评审"
+ },
+ "8a81c0fb-3e27-4a7b-ac71-1b3f9661d9c6": {
+  "phase": "p1",
+  "title": "项目价值与 Go/No-Go 判断",
+  "acceptance": "结论带条件、依据、决策人及未决项",
+  "prerequisite": "正式决策依赖需求、范围及资源初评"
+ },
+ "b2f78477-6116-45bc-8024-e7fb59a6a144": {
+  "phase": "p1",
+  "title": "产品定位与声称边界",
+  "acceptance": "发布声称有需求和证据映射，不仅按场景名称分类",
+  "prerequisite": "需求访谈与路线判断"
+ },
+ "db1dae74-0c08-4e6f-b659-08e740d65a39": {
+  "phase": "p1",
+  "title": "开发等级划分（A/B/C）",
+  "acceptance": "内部等级不等同医疗分类；裁剪理由可审核、升级条件明确",
+  "prerequisite": "声称、风险、变化范围"
+ },
+ "c23646fd-cfd0-48eb-813a-ff4207e8c0bb": {
+  "phase": "p1",
+  "title": "立项申请",
+  "acceptance": "必填输入齐备，不重复抄写相互矛盾的数据",
+  "prerequisite": "需求、价值、路线及资源初评"
+ },
+ "96dce12a-d54d-4fc6-9f6c-4538eb9c2910": {
+  "phase": "p1",
+  "title": "立项评审与审批",
+  "acceptance": "授权批准者审查证据；未通过不得作为已放行",
+  "prerequisite": "立项申请及适用审核意见"
+ },
+ "740490ed-814c-4869-bc5f-b656c6fe74cc": {
+  "phase": "p3",
+  "title": "检测原理选择",
+  "acceptance": "选择理由关联需求，不将不同方法套用同一判读规则",
+  "prerequisite": "设计输入"
+ },
+ "8ea2c22e-b737-4c3c-8f80-18912548f69d": {
+  "phase": "p3",
+  "title": "靶标选择与信息学分析",
+  "acceptance": "目标与非目标对象清单可追溯，生信不替代实验确认",
+  "prerequisite": "靶标声称与适用样本"
+ },
+ "385a7ce2-4b1b-465b-b089-c47d22e2dd66": {
+  "phase": "p3",
+  "title": "引物/探针设计",
+  "acceptance": "候选组合和风险可追溯，跨靶标干扰有验证安排",
+  "prerequisite": "靶标分析"
+ },
+ "4431446f-4a2b-43ac-a722-3166f05ae4f5": {
+  "phase": "p3",
+  "title": "样本前处理方案",
+  "acceptance": "各样本场景有流程假设及验证责任",
+  "prerequisite": "样本设计输入"
+ },
+ "952ab4ab-8271-47fa-be03-91a1b3a2f31f": {
+  "phase": "p3",
+  "title": "芯片与平台适配方案",
+  "acceptance": "温控/通道/体积/判读接口及版本明确",
+  "prerequisite": "系统设计输入及平台能力"
+ },
+ "bcab1635-3316-4d32-a904-9d5cd3527200": {
+  "phase": "p3",
+  "title": "技术方案评审",
+  "acceptance": "关键不可验证需求已处置，方案和版本获审核",
+  "prerequisite": "上述专业方案与风险复评"
+ },
+ "ab9d1b69-b6e5-46d9-a479-cf652d7a88d0": {
+  "phase": "p8",
+  "title": "性能验证方案设计（按等级）",
+  "acceptance": "任何裁剪有明确批准，不以低等级掩盖发布底线",
+  "prerequisite": "设计输入、正式批次就绪"
+ },
+ "2f2350ae-8ccd-4d53-8bf2-fdff37889190": {
+  "phase": "p8",
+  "title": "A 类最低验证执行",
+  "acceptance": "选择 A 的理由明确；不以探索通过等同正式发布",
+  "prerequisite": "等级决定、方案及允许用途"
+ },
+ "ba2d713e-5aca-447a-a892-7a190a5660b7": {
+  "phase": "p8",
+  "title": "灵敏度与检出限（LoD）",
+  "acceptance": "预先标准、浓度依据、版本及检出范围可追溯",
+  "prerequisite": "批准方案与代表性放行批次"
+ },
+ "cf411913-b0cc-4bd0-a0b6-00bcf8d3d9dc": {
+  "phase": "p8",
+  "title": "特异性与交叉反应",
+  "acceptance": "挑战对象与声称相适配，阴性结果有有效对照",
+  "prerequisite": "靶标范围、材料及正式方案"
+ },
+ "0fb5cb56-8397-4038-9a5e-f8174685b58f": {
+  "phase": "p8",
+  "title": "重复性与批间一致性",
+  "acceptance": "统计指标适用；定性产品不能只凭 Ct CV 放行",
+  "prerequisite": "批准设计、代表性批次和版本"
+ },
+ "9c250094-2dff-4c86-b1ce-7d141c945863": {
+  "phase": "p8",
+  "title": "抗干扰与样本适用性",
+  "acceptance": "因素基于具体用途，结果直接限定声称",
+  "prerequisite": "用途及样本范围、方案、正式批次"
+ },
+ "c3837da6-472c-4bff-acb1-6b76713199ad": {
+  "phase": "p8",
+  "title": "C 类增强验证",
+  "acceptance": "各增强因素及样本/统计安排明确，不能仅用大样本量命名",
+  "prerequisite": "风险和使用变化触发决定"
+ },
+ "a6af64c2-dd71-4c42-b4cb-2f35967d91f2": {
+  "phase": "p8",
+  "title": "性能验证报告",
+  "acceptance": "全部适用指标有结论；未覆盖项与发布限制明确",
+  "prerequisite": "相应验证完成及偏差处置"
+ }
+}

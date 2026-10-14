@@ -1,0 +1,457 @@
+[
+  {
+    "id": "23f3bcf9-d9d1-4eb9-8ec5-ea71826c4813",
+    "phaseCode": "p1",
+    "title": "市场调研与需求收集",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "调研纪要、竞品与需求来源分析"
+  },
+  {
+    "id": "5223d7ef-b306-4a19-81a0-4be2cce77df5",
+    "phaseCode": "p1",
+    "title": "应用场景与用户需求确认",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "用户需求记录、应用场景说明（海关/疾控/食安/环境/水产/宠物/中药材）"
+  },
+  {
+    "id": "8a81c0fb-3e27-4a7b-ac71-1b3f9661d9c6",
+    "phaseCode": "p1",
+    "title": "项目价值与 Go/No-Go 判断",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "立项简表、痛点与差异化分析、优先级决策"
+  },
+  {
+    "id": "b2f78477-6116-45bc-8024-e7fb59a6a144",
+    "phaseCode": "p1",
+    "title": "产品定位与声称边界",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "产品定位说明（检测对象/靶标/样本/场景/结果类型）与声称边界声明"
+  },
+  {
+    "id": "db1dae74-0c08-4e6f-b659-08e740d65a39",
+    "phaseCode": "p1",
+    "title": "开发等级划分（A/B/C）",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "等级决策记录（市场规模/客户要求/法规标准/样本复杂度/技术风险/周期/资源）"
+  },
+  {
+    "id": "c23646fd-cfd0-48eb-813a-ff4207e8c0bb",
+    "phaseCode": "p1",
+    "title": "立项申请",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "立项申请书、目标样本与靶标初稿、周期与资源评估"
+  },
+  {
+    "id": "96dce12a-d54d-4fc6-9f6c-4538eb9c2910",
+    "phaseCode": "p1",
+    "title": "立项评审与审批",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "评审纪要、立项批复（Go/No-Go）"
+  },
+  {
+    "id": "ec4e210e-72f7-451d-959e-2157a4fb47a7",
+    "phaseCode": "p2",
+    "title": "团队组建与职责分工",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "项目组织架构与职责表（PM/研发/芯片/前处理/质量文档/客户接口）"
+  },
+  {
+    "id": "59f75f04-74c4-42e1-a9d4-b86f4d460071",
+    "phaseCode": "p2",
+    "title": "项目范围定义",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "范围说明（覆盖的靶标/样本/形态/验证范围，及本阶段不覆盖项）"
+  },
+  {
+    "id": "da1aa684-1d2d-498e-b2ad-480bb3bd66a6",
+    "phaseCode": "p2",
+    "title": "里程碑计划（M0-M7）",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "里程碑计划表（需求确认/方案/片外/芯片/小样本/稳定性/SOP/试用）"
+  },
+  {
+    "id": "fa06e301-a17c-4878-be61-e08a53c9baa2",
+    "phaseCode": "p2",
+    "title": "资源与预算计划",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "人员/样本/仪器/芯片耗材/关键试剂/外部资源计划，研发与加工成本预算"
+  },
+  {
+    "id": "be295861-2e6f-423f-9ab3-da3ec0365a79",
+    "phaseCode": "p2",
+    "title": "风险清单管理",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "风险登记册（技术/样本/供应链/周期/需求变更/合规表述）"
+  },
+  {
+    "id": "d0aa369f-4d95-4502-a62f-daad5f8ddb2b",
+    "phaseCode": "p2",
+    "title": "变更控制机制",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "变更控制记录（靶标/引物探针/样本类型/反应体系/芯片结构程序/判读规则/声称变更）"
+  },
+  {
+    "id": "740490ed-814c-4869-bc5f-b656c6fe74cc",
+    "phaseCode": "p3",
+    "title": "检测原理选择",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "方法学确认（荧光 PCR/qPCR、多重 PCR、等温扩增）"
+  },
+  {
+    "id": "8ea2c22e-b737-4c3c-8f80-18912548f69d",
+    "phaseCode": "p3",
+    "title": "靶标选择与信息学分析",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "靶标分析记录（保守区/特异区、同源与近缘物种比对、交叉反应风险初判、片段长度适配）"
+  },
+  {
+    "id": "385a7ce2-4b1b-465b-b089-c47d22e2dd66",
+    "phaseCode": "p3",
+    "title": "引物/探针设计",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "候选引物/探针清单（Tm/GC/片段长度、二聚体与发夹分析、多靶标组合、内控体系）"
+  },
+  {
+    "id": "4431446f-4a2b-43ac-a722-3166f05ae4f5",
+    "phaseCode": "p3",
+    "title": "样本前处理方案",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "前处理方案（采集/保存运输、研磨裂解离心过滤富集、提取方式、抑制物去除、上样液要求）"
+  },
+  {
+    "id": "952ab4ab-8271-47fa-be03-91a1b3a2f31f",
+    "phaseCode": "p3",
+    "title": "芯片与平台适配方案",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "芯片适配方案（芯片类型/反应腔/液滴路径/磁珠路径/温控/荧光通道/采集方式/判读算法）"
+  },
+  {
+    "id": "bcab1635-3316-4d32-a904-9d5cd3527200",
+    "phaseCode": "p3",
+    "title": "技术方案评审",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "技术方案文档、评审纪要"
+  },
+  {
+    "id": "32a827a1-9747-4733-a949-0d16f99e30cb",
+    "phaseCode": "p4",
+    "title": "样本方案设计",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "样本计划（类型/数量/来源/阴阳性对照/弱阳性与复杂基质）"
+  },
+  {
+    "id": "fe3cc633-95ac-485b-8f46-a46e3b4cc637",
+    "phaseCode": "p4",
+    "title": "样本采集与接收",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "样本采集与接收记录"
+  },
+  {
+    "id": "2f6b94ff-617b-4d98-a8d1-c99c3b9080d1",
+    "phaseCode": "p4",
+    "title": "样本入库登记",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "样本清单（知识库样本库登记：类型/位置/保存条件）"
+  },
+  {
+    "id": "d0da36e1-3f4f-4494-8ccd-7bb30d78fba2",
+    "phaseCode": "p5",
+    "title": "提取方案对比",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "方案对比报告（磁珠法/快速裂解法/柱法）"
+  },
+  {
+    "id": "35dfb188-5cf2-4793-8a1b-7c9bff533c2f",
+    "phaseCode": "p5",
+    "title": "前处理条件验证",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "裂解条件/提取效率/抑制物影响评估、上清与 PCR 体系兼容性数据"
+  },
+  {
+    "id": "8099bc55-3e15-4f88-933e-1c366d6c81c9",
+    "phaseCode": "p5",
+    "title": "前处理方案确认",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "推荐样本前处理流程"
+  },
+  {
+    "id": "4ac9e166-3a09-41d2-b4f4-f7043a8c9b86",
+    "phaseCode": "p6",
+    "title": "候选体系筛选",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "推荐引物/探针组合（单靶标验证、多靶标兼容、内控兼容、阴阳性初筛）"
+  },
+  {
+    "id": "27c06267-f2c2-4234-938e-2419602396f0",
+    "phaseCode": "p6",
+    "title": "反应体系优化",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "推荐反应体系（酶/Buffer、引物探针浓度、Mg 离子与添加剂、模板量、体积、退火温度、延伸与循环数）"
+  },
+  {
+    "id": "0699033d-5d02-4553-aad7-f5040e80ded1",
+    "phaseCode": "p6",
+    "title": "扩增程序优化",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "推荐 PCR 程序"
+  },
+  {
+    "id": "efda2882-33c3-48d6-8a54-9e3d74075a4d",
+    "phaseCode": "p6",
+    "title": "片外性能初评",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "检出能力/特异性/重复性/阴阳性判读/临界样本初评数据"
+  },
+  {
+    "id": "75f4be15-a8c6-4514-856d-5c4f1e96f4ee",
+    "phaseCode": "p6",
+    "title": "片外体系评审",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "片外验证报告、是否进入芯片适配的评审结论"
+  },
+  {
+    "id": "8e113fba-93b8-4b42-87ff-ce32b7e0912e",
+    "phaseCode": "p7",
+    "title": "芯片方案确认",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "芯片结构/反应腔体积/加样口与废液区/试剂预置/密封防污染确认"
+  },
+  {
+    "id": "4ca32576-0f8b-4d63-945c-62ac3a070e66",
+    "phaseCode": "p7",
+    "title": "液滴与磁珠操作调试",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "液滴生成转移、裂解洗涤洗脱液转移、磁珠捕获释放、残液与交叉污染控制数据"
+  },
+  {
+    "id": "0e43b528-9ba8-4209-ba04-938d39982c71",
+    "phaseCode": "p7",
+    "title": "芯片内扩增验证",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "温控均匀性/荧光采集稳定性/多孔位一致性/多靶标兼容、片内外 Ct 差异评估"
+  },
+  {
+    "id": "fadf58ef-8bb5-4c5e-9230-1ba646f45ec8",
+    "phaseCode": "p7",
+    "title": "程序与算法调试",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "自动化运行程序、qPCR 温控程序、荧光采集参数、阈值线、判读逻辑与弱阳性复测规则"
+  },
+  {
+    "id": "a7ca2b44-ad87-4764-86e4-617d94089992",
+    "phaseCode": "p7",
+    "title": "芯片方案冻结",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "芯片运行程序、加样与运行 SOP、芯片方案冻结或迭代建议"
+  },
+  {
+    "id": "ab9d1b69-b6e5-46d9-a479-cf652d7a88d0",
+    "phaseCode": "p8",
+    "title": "性能验证方案设计（按等级）",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "性能验证方案（A 类最低验证 / B 类标准验证 / C 类增强验证）"
+  },
+  {
+    "id": "2f2350ae-8ccd-4d53-8bf2-fdff37889190",
+    "phaseCode": "p8",
+    "title": "A 类最低验证执行",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "阳性检出、阴性不检出、近缘干扰初排、重复性初评、片内成功率、客户样本小规模验证"
+  },
+  {
+    "id": "ba2d713e-5aca-447a-a892-7a190a5660b7",
+    "phaseCode": "p8",
+    "title": "灵敏度与检出限（LoD）",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "LoD/最低检出浓度数据（B/C 类）"
+  },
+  {
+    "id": "cf411913-b0cc-4bd0-a0b6-00bcf8d3d9dc",
+    "phaseCode": "p8",
+    "title": "特异性与交叉反应",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "特异性与交叉反应报告（近缘种/常见干扰对象）"
+  },
+  {
+    "id": "0fb5cb56-8397-4038-9a5e-f8174685b58f",
+    "phaseCode": "p8",
+    "title": "重复性与批间一致性",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "重复性、批内/批间一致性数据（B/C 类）"
+  },
+  {
+    "id": "9c250094-2dff-4c86-b1ce-7d141c945863",
+    "phaseCode": "p8",
+    "title": "抗干扰与样本适用性",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "抗干扰能力、样本适用性、片内/片外一致性数据"
+  },
+  {
+    "id": "c3837da6-472c-4bff-acb1-6b76713199ad",
+    "phaseCode": "p8",
+    "title": "C 类增强验证",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "更大样本量、多中心/多来源样本、临界样本、稳健性（操作者/仪器/批次）、权威方法比对（C 类）"
+  },
+  {
+    "id": "a6af64c2-dd71-4c42-b4cb-2f35967d91f2",
+    "phaseCode": "p8",
+    "title": "性能验证报告",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "性能验证报告（方案/原始数据/统计分析/偏差记录/符合率）"
+  },
+  {
+    "id": "74377e26-5260-46f0-9ab7-e7ebbd6e2bd4",
+    "phaseCode": "p9",
+    "title": "试剂与芯片稳定性",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "实时/加速稳定性数据（阴阳性、Ct 或荧光变化、重复性、片内成功率）"
+  },
+  {
+    "id": "cc309cde-d89d-4fcb-9fb7-c8d6959264a4",
+    "phaseCode": "p9",
+    "title": "开封后与上机稳定性",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "开封后使用期限、上机前等待稳定性数据"
+  },
+  {
+    "id": "9d8f6b00-67ca-4311-81cb-d2280bf25929",
+    "phaseCode": "p9",
+    "title": "包装与运输验证",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "高低温循环/冻融/运输振动模拟、包装完整性检查报告（B/C 类）"
+  },
+  {
+    "id": "7455277d-729a-4018-994b-3bf8ed672c5d",
+    "phaseCode": "p9",
+    "title": "有效期与储运条件确定",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "建议储存条件、建议运输条件、初步有效期、开封后使用期限"
+  },
+  {
+    "id": "d555efce-cfb8-489b-b171-4d670cc0b614",
+    "phaseCode": "p10",
+    "title": "小试生产准备",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "BOM 清单、芯片加工封装/试剂配制/分装预装/包装流程"
+  },
+  {
+    "id": "9f13b74d-b402-4e9f-b2d7-3d5d9e4fab2d",
+    "phaseCode": "p10",
+    "title": "过程质量控制",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "来料检验、芯片外观结构、反应腔一致性、配制记录、分装体积、封装完整性、成品抽检"
+  },
+  {
+    "id": "9f5050a2-28cb-44d4-bdd7-b581bccd96df",
+    "phaseCode": "p10",
+    "title": "放行标准与批检",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "成品放行标准（阳阴对照/内控/重复性/外观包装/批记录完整）、批检验记录"
+  },
+  {
+    "id": "8d5474f0-7fd5-4b23-a063-34650a8e74d1",
+    "phaseCode": "p10",
+    "title": "批间一致性",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "多小试批次对比、不同批次芯片/试剂一致性、关键 Ct 波动范围（B/C 类）"
+  },
+  {
+    "id": "1fa00fc1-203f-46b7-a33c-1c8a8f0bf9c4",
+    "phaseCode": "p11",
+    "title": "应用验证样本准备",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "真实/阳性/阴性/弱阳性低载量/复杂基质/客户提供样本清单"
+  },
+  {
+    "id": "5aa9dc01-fe94-405d-a465-d84d3b43d789",
+    "phaseCode": "p11",
+    "title": "应用验证场景执行",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "内部实验室/客户现场/第三方实验室验证数据"
+  },
+  {
+    "id": "965073c2-56f0-478b-91a3-b0ae37aea5db",
+    "phaseCode": "p11",
+    "title": "对比方法验证",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "与常规 PCR/qPCR、测序、培养法、形态学、行业标准方法或客户现行方法比对"
+  },
+  {
+    "id": "19ff5957-08aa-43ff-9741-282f02533c48",
+    "phaseCode": "p11",
+    "title": "用户体验评价",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "加样便利性/步骤复杂度/运行时间/结果可读性/报告格式/异常处理评价"
+  },
+  {
+    "id": "bada8706-cf32-4da1-b404-a776a0978472",
+    "phaseCode": "p11",
+    "title": "客户试用与反馈",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "客户试用反馈、问题清单、迭代优化建议、是否转入发布评审"
+  },
+  {
+    "id": "80edd14a-c5b2-45c0-8835-7c0e0fa20bca",
+    "phaseCode": "p12",
+    "title": "产品发布评审",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "评审结论（需求满足/性能达标/文件完整/质量标准/生产可执行/试用通过/风险可接受）"
+  },
+  {
+    "id": "aabbb04d-083f-4e7c-b78b-c5006e1af766",
+    "phaseCode": "p12",
+    "title": "版本管理",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "产品/试剂/芯片/程序/说明书版本号与变更历史记录"
+  },
+  {
+    "id": "725ae6e1-c917-4eb0-99a6-2197867d0a62",
+    "phaseCode": "p12",
+    "title": "上市后跟踪",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "客户反馈、投诉与异常记录、运行失败率统计、批次问题追踪、质控趋势分析"
+  },
+  {
+    "id": "337eb6ea-5ecb-441d-bfb8-84d72c8393ca",
+    "phaseCode": "p12",
+    "title": "产品迭代规划",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "迭代路线（靶标扩展/样本类型扩展/多重升级/芯片结构/程序/判读算法/包装优化）"
+  },
+  {
+    "id": "dcd6ca31-2a7c-4ccd-92d5-efce16e19e95",
+    "phaseCode": "p13",
+    "title": "技术文件整理",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "技术方案、靶标分析记录、引物探针设计记录、体系优化记录、前处理 SOP、运行程序、性能与稳定性报告"
+  },
+  {
+    "id": "ca19f068-87a9-4809-80b8-bf103f5e993b",
+    "phaseCode": "p13",
+    "title": "产品文件编制",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "产品说明书、快速操作指南、芯片加样与运行 SOP、结果判读指南、质控品说明、包装标签、储运要求"
+  },
+  {
+    "id": "46f004bb-bbf5-4ec4-8597-d9bfe3347604",
+    "phaseCode": "p13",
+    "title": "质量文件整理",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "BOM、原材料标准、来料检验规程、生产作业指导书、批生产/批检验记录、放行标准、变更记录"
+  },
+  {
+    "id": "0ae9c725-0a86-44fc-bada-826a74081b60",
+    "phaseCode": "p13",
+    "title": "客户交付文件",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "产品清单、验证摘要、FAQ 与异常处理指南、培训材料、售后支持流程"
+  },
+  {
+    "id": "03d0c9c9-1b67-41df-a8ee-f6d9f0509cd8",
+    "phaseCode": "p13",
+    "title": "知识库归档",
+    "assigneeRoleCode": null,
+    "expectedDeliverable": "项目文档整理与知识库归档记录"
+  }
+]

@@ -1,0 +1,44 @@
+{
+  "backupDir": "/mnt/datadisk0/rdpms/app/docs/review/templates/2026-10-13-reagent-master/execution/p1/evidence/backup-2026-10-14T01-15-14-667Z",
+  "phaseA": {
+    "total": 65,
+    "updated": 65,
+    "skippedFilled": 0,
+    "unmapped": []
+  },
+  "phaseB": {
+    "phases": [
+      "p1",
+      "p3",
+      "p8"
+    ],
+    "total": 21,
+    "updated": 21,
+    "skippedAlready": 0,
+    "samples": [
+      {
+        "phase": "p1",
+        "title": "市场调研与需求收集",
+        "before": "调研纪要、竞品与需求来源分析",
+        "after": "调研纪要、竞品与需求来源分析\n[验收] 需求证据可引用，事实与商业假设分开\n[前置] 无；可与场景访谈并行"
+      },
+      {
+        "phase": "p1",
+        "title": "应用场景与用户需求确认",
+        "before": "用户需求记录、应用场景说明（海关/疾控/食安/环境/水产/宠物/中药材）",
+        "after": "用户需求记录、应用场景说明（海关/疾控/食安/环境/水产/宠物/中药材）\n[验收] 各场景有需求负责人确认，样本和结果用途无歧义\n[前置] 需求来源；与声称边界联合评审"
+      },
+      {
+        "phase": "p1",
+        "title": "项目价值与 Go/No-Go 判断",
+        "before": "立项简表、痛点与差异化分析、优先级决策",
+        "after": "立项简表、痛点与差异化分析、优先级决策\n[验收] 结论带条件、依据、决策人及未决项\n[前置] 正式决策依赖需求、范围及资源初评"
+      }
+    ]
+  },
+  "verify": {
+    "roleFilled": 65,
+    "roleTotal": 65,
+    "deliverableWithAcceptance": 21
+  }
+}
