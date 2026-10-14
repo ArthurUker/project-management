@@ -1,0 +1,31 @@
+{
+  "phase": "P2 必要系统支持",
+  "runDate": "2026-10-14",
+  "timezone": "Asia/Shanghai",
+  "executor": "CodeBuddy",
+  "authorization": {
+    "from": "用户确认：P2 三批全做；schema 变更授权（模板版本、决策记录、任务依赖）",
+    "scope": [
+      "P2-a 模板版本快照 + 关键决策记录（G0–G4）",
+      "P2-b 基本任务依赖（FS/SS/FF + 延迟）",
+      "P2-c 条件裁剪预览与理由"
+    ],
+    "thisRunDeliverable": "设计文档 P2-DESIGN.md（schema 4 个迁移、后端 API、前端改动、验收用例、风险回滚）",
+    "notYetDone": "尚未写任何迁移或代码——等用户确认设计文档第 7 节 5 个小项后按 P2-a→b→c 实施"
+  },
+  "constraints": [
+    "只新增表/可空字段，不 ALTER 现有列、不回填历史数据、不动在研项目已下发任务",
+    "新表可 DROP、新字段可 DROP COLUMN，按批独立回退",
+    "不做通用审批引擎、自动通知/webhook、全面 QMS、甘特/关键路径/自动排程",
+    "CONDITIONAL 语义不得被定级或裁剪改写",
+    "裁剪仅预览与标注，不删除任务；裁剪必须填理由",
+    "每批：隔离库先行 → 定向测试 → 复验证据 → 独立审阅 → 再交付"
+  ],
+  "pendingDecisions": [
+    "版本号规则：每模板独立递增（推荐）vs 全局流水号",
+    "restore 语义：生成新版本保留历史（推荐）vs 就地覆盖",
+    "依赖是否允许跨阶段（推荐允许）",
+    "裁剪理由粒度：任务级 exemptionReason（推荐）vs 项目级一次性说明",
+    "决策记录是否允许事后补录 decidedAt（推荐允许）"
+  ]
+}
