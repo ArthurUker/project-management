@@ -25,7 +25,7 @@ const { PrismaClient } = require_('@prisma/client');
 const readJson = (p) => JSON.parse(fs.readFileSync(p, 'utf8'));
 
 const TEMPLATE_CODE = 'TPL-REAGENT-MASTER';
-const TRIAL_PHASES = new Set(['p1', 'p3', 'p8']); // 用户确认的试批范围
+const TRIAL_PHASES = new Set(['p1','p2','p3','p4','p5','p6','p7','p8','p9','p10','p11','p12','p13']); // 用户「继续推进」→ 推广至全部阶段（幂等，已有 [验收] 的跳过）
 
 const readCsv = (p) => fs.readFileSync(p, 'utf8').replace(/^\uFEFF/, '').split(/\r?\n/).filter(Boolean)
   .map((line) => line.split(','));

@@ -2,8 +2,8 @@
   "phase": "P1 轻量母版",
   "runDate": "2026-10-14",
   "completionCriterion": "SYNTHESIS_V2 第 10 节：选一个项目桌面走读，关键工作可执行、可解释、可审查",
-  "status": "PARTIAL_APPLIED",
-  "overallStatement": "P1-a（角色映射）与 P1-b（p1/p3/p8 试批）已按用户确认落地并复验通过；P1-b 剩余 44 项待试批确认后推广；P1-c/P1-e 仍为草案待业务资料。",
+  "status": "P1_MAIN_APPLIED",
+  "overallStatement": "P1-a（角色 65/65）、P1-b（验收/前置 65/65 全量）、P1-c（平台检查 11 项→8 任务，唯一映射部分）已落地并复验；P1-d 为位置约定（文档）；P1-e A/B/C 与 12 项模糊检查待业务资料/确认。",
   "items": [
     {
       "id": "P1-a",
@@ -19,21 +19,25 @@
     {
       "id": "P1-b",
       "name": "交付物细化（验收/前置）",
-      "status": "APPLIED_TRIAL",
+      "status": "APPLIED_FULL",
       "evidence": [
         "p1-diff-deliverable.csv",
-        "evidence/p1-apply-result-2026-10-14T01-15-14-667Z.json"
+        "evidence/p1-apply-result-2026-10-14T01-15-14-667Z.json",
+        "evidence/p1-apply-result-2026-10-14T01-22-46-258Z.json"
       ],
-      "detail": "已试批落地 p1/p3/p8 共 21 项：向 expected_deliverable 追加 [验收]/[前置]（保留原文本，未覆盖），投影后含[验收]21、含[前置]21；config 中相关键此前已清理，故结构化行为投影来源。剩余 44 项待试批效果确认后同法推广。"
+      "detail": "已全量落地 65/65：向 expected_deliverable 追加 [验收]/[前置]（原文本保留）；投影复验 65 项均含 [验收] 与 [前置]。"
     },
     {
       "id": "P1-c",
       "name": "平台检查表嵌入",
-      "status": "DRAFT_READY_NOT_APPLIED",
+      "status": "APPLIED_UNIQUE_ONLY",
       "evidence": [
-        "p1-diff-checklist.csv"
+        "p1-diff-checklist.csv",
+        "map-checklist.py",
+        "apply-p1c.cjs",
+        "evidence/p1c-apply-result-2026-10-14T01-24-22-820Z.json"
       ],
-      "detail": "23 项检查已按 existingTaskLocation 整理为落点差异表（p5/p7/p10/p12 等）。其中与驱动/材料/油相架构、一次性或复用、片内提取相关的取舍需第 11 节业务资料确认。"
+      "detail": "11 项可唯一映射的平台检查已写入 8 个任务的 regulatory_notes（3 个任务各承接 2 项：芯片方案确认←DMF-03/04、芯片内扩增验证←DMF-05/08、液滴与磁珠操作调试←DMF-01/10）；剩余 12 项跨多阶段/关键词弱，保持草案待人工判定，不猜测。"
     },
     {
       "id": "P1-d",
@@ -61,7 +65,7 @@
       "evidence": [
         "p1-walkthrough-desk.md"
       ],
-      "detail": "水产（甲鱼）情景逐阶段走读。落地后口径：可执行 65/65（角色全部有主责）、可解释 21/65（p1/p3/p8 已录入验收）、可审查 65/65；能力边界四条已登记（角色不绑定账号、无等待时间、无门禁引擎、检查项不自动判定）。"
+      "detail": "落地后复测：可执行 65/65（角色全部有主责）、可解释 65/65（验收已录入）、可审查 65/65（交付物齐全，8 个任务另有平台检查要点）；能力边界四条已登记（角色不绑定账号、无等待时间、无门禁引擎、检查项不自动判定）。"
     }
   ],
   "notRun": [

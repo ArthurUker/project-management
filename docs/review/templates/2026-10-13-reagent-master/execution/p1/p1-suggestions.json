@@ -41,6 +41,42 @@
   "acceptance": "授权批准者审查证据；未通过不得作为已放行",
   "prerequisite": "立项申请及适用审核意见"
  },
+ "ec4e210e-72f7-451d-959e-2157a4fb47a7": {
+  "phase": "p2",
+  "title": "团队组建与职责分工",
+  "acceptance": "每项关键交付有负责和审核角色，兼任规则明确",
+  "prerequisite": "项目范围及人员可用性"
+ },
+ "59f75f04-74c4-42e1-a9d4-b86f4d460071": {
+  "phase": "p2",
+  "title": "项目范围定义",
+  "acceptance": "范围版本可追溯，变更重新评估验证覆盖",
+  "prerequisite": "立项及用途边界"
+ },
+ "da1aa684-1d2d-498e-b2ad-480bb3bd66a6": {
+  "phase": "p2",
+  "title": "里程碑计划（M0-M7）",
+  "acceptance": "阶段名、证据、批准与排期对应，不以标题代替配置",
+  "prerequisite": "设计输入、工作包依赖及资源"
+ },
+ "fa06e301-a17c-4878-be61-e08a53c9baa2": {
+  "phase": "p2",
+  "title": "资源与预算计划",
+  "acceptance": "关键资源可获得，成本/日历与人时分别记录",
+  "prerequisite": "范围与技术路线；门禁复评"
+ },
+ "be295861-2e6f-423f-9ab3-da3ec0365a79": {
+  "phase": "p2",
+  "title": "风险清单管理",
+  "acceptance": "主要风险有控制和验证，放行时复评残余风险",
+  "prerequisite": "立项启动；设计及验证节点持续更新"
+ },
+ "d0aa369f-4d95-4502-a62f-daad5f8ddb2b": {
+  "phase": "p2",
+  "title": "变更控制机制",
+  "acceptance": "变更前评估并批准；旧证据适用性有结论",
+  "prerequisite": "任一需求/设计/材料/算法变化触发"
+ },
  "740490ed-814c-4869-bc5f-b656c6fe74cc": {
   "phase": "p3",
   "title": "检测原理选择",
@@ -76,6 +112,102 @@
   "title": "技术方案评审",
   "acceptance": "关键不可验证需求已处置，方案和版本获审核",
   "prerequisite": "上述专业方案与风险复评"
+ },
+ "32a827a1-9747-4733-a949-0d16f99e30cb": {
+  "phase": "p4",
+  "title": "样本方案设计",
+  "acceptance": "每个验证工作包所需样本可获得，代表性与限制明确",
+  "prerequisite": "设计输入、验证总体计划"
+ },
+ "fe3cc633-95ac-485b-8f46-a46e3b4cc637": {
+  "phase": "p4",
+  "title": "样本采集与接收",
+  "acceptance": "拒收/异常及可用范围有记录；人源资料按适用要求管理",
+  "prerequisite": "相应样本方案及合法合规来源"
+ },
+ "2f6b94ff-617b-4d98-a8d1-c99c3b9080d1": {
+  "phase": "p4",
+  "title": "样本入库登记",
+  "acceptance": "可从结果追到具体样本状态和有效性",
+  "prerequisite": "接收合格及相关确证"
+ },
+ "d0da36e1-3f4f-4494-8ccd-7bb30d78fba2": {
+  "phase": "p5",
+  "title": "提取方案对比",
+  "acceptance": "方法比较变量受控，不能仅据跨平台 Ct 判断提取效率",
+  "prerequisite": "开发样本、参考扩增方法及方案"
+ },
+ "35dfb188-5cf2-4793-8a1b-7c9bff533c2f": {
+  "phase": "p5",
+  "title": "前处理条件验证",
+  "acceptance": "覆盖声称基质及边界；异常有原因和限制结论",
+  "prerequisite": "候选流程与可用检测体系"
+ },
+ "8099bc55-3e15-4f88-933e-1c366d6c81c9": {
+  "phase": "p5",
+  "title": "前处理方案确认",
+  "acceptance": "与最终扩增/芯片接口兼容，流程版本明确",
+  "prerequisite": "条件验证及联合兼容性结果"
+ },
+ "4ac9e166-3a09-41d2-b4f4-f7043a8c9b86": {
+  "phase": "p6",
+  "title": "候选体系筛选",
+  "acceptance": "候选淘汰和选择有依据，筛选数据不冒充正式性能",
+  "prerequisite": "候选引物/探针与开发材料"
+ },
+ "27c06267-f2c2-4234-938e-2419602396f0": {
+  "phase": "p6",
+  "title": "反应体系优化",
+  "acceptance": "配方可复现，优化与最终确认数据区分",
+  "prerequisite": "候选组合及兼容性输入"
+ },
+ "0699033d-5d02-4553-aad7-f5040e80ded1": {
+  "phase": "p6",
+  "title": "扩增程序优化",
+  "acceptance": "程序适合目标平台；改变后能追到验证影响",
+  "prerequisite": "配方和目标平台参数"
+ },
+ "efda2882-33c3-48d6-8a54-9e3d74075a4d": {
+  "phase": "p6",
+  "title": "片外性能初评",
+  "acceptance": "支持进入下一阶段的可行性判断，不能提前批准最终声称",
+  "prerequisite": "候选体系、程序及相容前处理"
+ },
+ "75f4be15-a8c6-4514-856d-5c4f1e96f4ee": {
+  "phase": "p6",
+  "title": "片外体系评审",
+  "acceptance": "片外流程有复现依据；进入芯片集成的条件明确",
+  "prerequisite": "前处理及扩增联合数据"
+ },
+ "8e113fba-93b8-4b42-87ff-ce32b7e0912e": {
+  "phase": "p7",
+  "title": "芯片方案确认",
+  "acceptance": "关键设计接口及材料版本明确",
+  "prerequisite": "系统方案及片外可行性"
+ },
+ "4ca32576-0f8b-4d63-945c-62ac3a070e66": {
+  "phase": "p7",
+  "title": "液滴与磁珠操作调试",
+  "acceptance": "关键运行失败和影响有定位，不仅记录一次成功",
+  "prerequisite": "芯片候选结构及控制程序"
+ },
+ "0e43b528-9ba8-4209-ba04-938d39982c71": {
+  "phase": "p7",
+  "title": "芯片内扩增验证",
+  "acceptance": "输入量和版本可比；评价检出/无效/污染，比较限制明确",
+  "prerequisite": "参考流程、样本及芯片系统就绪"
+ },
+ "fadf58ef-8bb5-4c5e-9230-1ba646f45ec8": {
+  "phase": "p7",
+  "title": "程序与算法调试",
+  "acceptance": "已知边界结果可解释；最终规则先冻结再正式确认",
+  "prerequisite": "分析数据与设计输入"
+ },
+ "a7ca2b44-ad87-4764-86e4-617d94089992": {
+  "phase": "p7",
+  "title": "芯片方案冻结",
+  "acceptance": "未决风险和变更规则明确，冻结后变化触发评估",
+  "prerequisite": "桥接及集成证据、方案评审"
  },
  "ab9d1b69-b6e5-46d9-a479-cf652d7a88d0": {
   "phase": "p8",
@@ -124,5 +256,137 @@
   "title": "性能验证报告",
   "acceptance": "全部适用指标有结论；未覆盖项与发布限制明确",
   "prerequisite": "相应验证完成及偏差处置"
+ },
+ "74377e26-5260-46f0-9ab7-e7ebbd6e2bd4": {
+  "phase": "p9",
+  "title": "试剂与芯片稳定性",
+  "acceptance": "结论仅支持已证明范围，工时不替代货架期观察",
+  "prerequisite": "代表性试制、包装和方案就绪"
+ },
+ "cc309cde-d89d-4fcb-9fb7-c8d6959264a4": {
+  "phase": "p9",
+  "title": "开封后与上机稳定性",
+  "acceptance": "使用期限及操作条件有实测依据，不适用有理由",
+  "prerequisite": "最终或具代表性的配置及操作流程"
+ },
+ "9d8f6b00-67ca-4311-81cb-d2280bf25929": {
+  "phase": "p9",
+  "title": "包装与运输验证",
+  "acceptance": "模拟和实际边界有依据，不能因开发等级低自动跳过",
+  "prerequisite": "拟配送路线、包装及产品基线"
+ },
+ "7455277d-729a-4018-994b-3bf8ed672c5d": {
+  "phase": "p9",
+  "title": "有效期与储运条件确定",
+  "acceptance": "标签及说明与已有数据一致，不把建议当已确认",
+  "prerequisite": "稳定性已有数据、适用风险和审核"
+ },
+ "d555efce-cfb8-489b-b171-4d670cc0b614": {
+  "phase": "p10",
+  "title": "小试生产准备",
+  "acceptance": "工艺和材料版本可追溯；正式验证产品具有代表性",
+  "prerequisite": "系统冻结、物料及工艺准备"
+ },
+ "9f13b74d-b402-4e9f-b2d7-3d5d9e4fab2d": {
+  "phase": "p10",
+  "title": "过程质量控制",
+  "acceptance": "过程可执行，偏差及可用范围经处置",
+  "prerequisite": "受控工艺、标准及人员/设备就绪"
+ },
+ "9f5050a2-28cb-44d4-bdd7-b581bccd96df": {
+  "phase": "p10",
+  "title": "放行标准与批检",
+  "acceptance": "未放行批不能作为合格确认批；原始和审批可追溯",
+  "prerequisite": "批记录及检验结果完整"
+ },
+ "8d5474f0-7fd5-4b23-a063-34650a8e74d1": {
+  "phase": "p10",
+  "title": "批间一致性",
+  "acceptance": "批间差异能追到材料及工艺；变化有评估",
+  "prerequisite": "多批试制及适用方案"
+ },
+ "1fa00fc1-203f-46b7-a33c-1c8a8f0bf9c4": {
+  "phase": "p11",
+  "title": "应用验证样本准备",
+  "acceptance": "覆盖目标应用，样本选择及确证过程可追溯",
+  "prerequisite": "冻结用途及应用方案"
+ },
+ "5aa9dc01-fe94-405d-a465-d84d3b43d789": {
+  "phase": "p11",
+  "title": "应用验证场景执行",
+  "acceptance": "按用途执行并审核；不能以现场能运行代替准确性",
+  "prerequisite": "应用样本、受控配置、适用启动条件"
+ },
+ "965073c2-56f0-478b-91a3-b0ae37aea5db": {
+  "phase": "p11",
+  "title": "对比方法验证",
+  "acceptance": "方法适合声称，冲突不只挑有利结果解释",
+  "prerequisite": "预批准比较方案及有效样本"
+ },
+ "19ff5957-08aa-43ff-9741-282f02533c48": {
+  "phase": "p11",
+  "title": "用户体验评价",
+  "acceptance": "关键使用风险已控制，反馈不替代分析性能",
+  "prerequisite": "可试用配置及目标用户场景"
+ },
+ "bada8706-cf32-4da1-b404-a776a0978472": {
+  "phase": "p11",
+  "title": "客户试用与反馈",
+  "acceptance": "未决严重问题有措施；试用结论不扩大用途",
+  "prerequisite": "适用性能/风险证据及受控交付文件"
+ },
+ "80edd14a-c5b2-45c0-8835-7c0e0fa20bca": {
+  "phase": "p12",
+  "title": "产品发布评审",
+  "acceptance": "批准发布边界明确；发布前文件必须已有受控版本",
+  "prerequisite": "M5、应用及稳定性声称证据、文件批准"
+ },
+ "aabbb04d-083f-4e7c-b78b-c5006e1af766": {
+  "phase": "p12",
+  "title": "版本管理",
+  "acceptance": "发布包组成一致；可追到创建和验证时的版本",
+  "prerequisite": "首次设计基线建立后持续维护"
+ },
+ "725ae6e1-c917-4eb0-99a6-2197867d0a62": {
+  "phase": "p12",
+  "title": "上市后跟踪",
+  "acceptance": "发布前建计划，发布后按节奏执行，不以两天标为结束",
+  "prerequisite": "发布前监测计划；发布后实际运行"
+ },
+ "337eb6ea-5ecb-441d-bfb8-84d72c8393ca": {
+  "phase": "p12",
+  "title": "产品迭代规划",
+  "acceptance": "新范围触发变更或新项目，不自动沿用旧证据",
+  "prerequisite": "反馈、问题趋势或新增需求"
+ },
+ "dcd6ca31-2a7c-4ccd-92d5-efce16e19e95": {
+  "phase": "p13",
+  "title": "技术文件整理",
+  "acceptance": "关键原始及结论可定位，不能结项后补写历史结果",
+  "prerequisite": "各阶段形成证据；发布前核对完整性"
+ },
+ "ca19f068-87a9-4809-80b8-bf103f5e993b": {
+  "phase": "p13",
+  "title": "产品文件编制",
+  "acceptance": "内容与验证声称、产品版本一致并经审核",
+  "prerequisite": "最终配置和已有确认结果"
+ },
+ "46f004bb-bbf5-4ec4-8597-d9bfe3347604": {
+  "phase": "p13",
+  "title": "质量文件整理",
+  "acceptance": "生产和验证使用已批准文件，归档不代替事前控制",
+  "prerequisite": "工艺策划到发布分批就绪"
+ },
+ "0ae9c725-0a86-44fc-bada-826a74081b60": {
+  "phase": "p13",
+  "title": "客户交付文件",
+  "acceptance": "接收方得到适用版本，交付范围经批准",
+  "prerequisite": "试用或发布范围、受控产品文件"
+ },
+ "03d0c9c9-1b67-41df-a8ee-f6d9f0509cd8": {
+  "phase": "p13",
+  "title": "知识库归档",
+  "acceptance": "接收方确认，后续监测和未决行动有负责人",
+  "prerequisite": "发布及已批准证据、移交计划"
  }
 }

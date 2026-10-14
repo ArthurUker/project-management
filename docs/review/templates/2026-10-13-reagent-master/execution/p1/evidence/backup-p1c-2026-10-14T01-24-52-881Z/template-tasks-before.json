@@ -1,0 +1,327 @@
+[
+  {
+    "id": "23f3bcf9-d9d1-4eb9-8ec5-ea71826c4813",
+    "title": "市场调研与需求收集",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "5223d7ef-b306-4a19-81a0-4be2cce77df5",
+    "title": "应用场景与用户需求确认",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "8a81c0fb-3e27-4a7b-ac71-1b3f9661d9c6",
+    "title": "项目价值与 Go/No-Go 判断",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "b2f78477-6116-45bc-8024-e7fb59a6a144",
+    "title": "产品定位与声称边界",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "db1dae74-0c08-4e6f-b659-08e740d65a39",
+    "title": "开发等级划分（A/B/C）",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "c23646fd-cfd0-48eb-813a-ff4207e8c0bb",
+    "title": "立项申请",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "96dce12a-d54d-4fc6-9f6c-4538eb9c2910",
+    "title": "立项评审与审批",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "ec4e210e-72f7-451d-959e-2157a4fb47a7",
+    "title": "团队组建与职责分工",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "59f75f04-74c4-42e1-a9d4-b86f4d460071",
+    "title": "项目范围定义",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "da1aa684-1d2d-498e-b2ad-480bb3bd66a6",
+    "title": "里程碑计划（M0-M7）",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "fa06e301-a17c-4878-be61-e08a53c9baa2",
+    "title": "资源与预算计划",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "be295861-2e6f-423f-9ab3-da3ec0365a79",
+    "title": "风险清单管理",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "d0aa369f-4d95-4502-a62f-daad5f8ddb2b",
+    "title": "变更控制机制",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "740490ed-814c-4869-bc5f-b656c6fe74cc",
+    "title": "检测原理选择",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "8ea2c22e-b737-4c3c-8f80-18912548f69d",
+    "title": "靶标选择与信息学分析",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "385a7ce2-4b1b-465b-b089-c47d22e2dd66",
+    "title": "引物/探针设计",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "4431446f-4a2b-43ac-a722-3166f05ae4f5",
+    "title": "样本前处理方案",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "952ab4ab-8271-47fa-be03-91a1b3a2f31f",
+    "title": "芯片与平台适配方案",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "bcab1635-3316-4d32-a904-9d5cd3527200",
+    "title": "技术方案评审",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "32a827a1-9747-4733-a949-0d16f99e30cb",
+    "title": "样本方案设计",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "fe3cc633-95ac-485b-8f46-a46e3b4cc637",
+    "title": "样本采集与接收",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "2f6b94ff-617b-4d98-a8d1-c99c3b9080d1",
+    "title": "样本入库登记",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "d0da36e1-3f4f-4494-8ccd-7bb30d78fba2",
+    "title": "提取方案对比",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "35dfb188-5cf2-4793-8a1b-7c9bff533c2f",
+    "title": "前处理条件验证",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "8099bc55-3e15-4f88-933e-1c366d6c81c9",
+    "title": "前处理方案确认",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "4ac9e166-3a09-41d2-b4f4-f7043a8c9b86",
+    "title": "候选体系筛选",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "27c06267-f2c2-4234-938e-2419602396f0",
+    "title": "反应体系优化",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "0699033d-5d02-4553-aad7-f5040e80ded1",
+    "title": "扩增程序优化",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "efda2882-33c3-48d6-8a54-9e3d74075a4d",
+    "title": "片外性能初评",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "75f4be15-a8c6-4514-856d-5c4f1e96f4ee",
+    "title": "片外体系评审",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "8e113fba-93b8-4b42-87ff-ce32b7e0912e",
+    "title": "芯片方案确认",
+    "regulatoryNotes": "[平台检查 DMF-04] 材料与变更：材料和工艺版本、供应/替代及影响评估"
+  },
+  {
+    "id": "4ca32576-0f8b-4d63-945c-62ac3a070e66",
+    "title": "液滴与磁珠操作调试",
+    "regulatoryNotes": "[平台检查 DMF-10] 磁珠过程：适用的捕获/洗涤/洗脱与反应兼容性，控制材料行为说明"
+  },
+  {
+    "id": "0e43b528-9ba8-4209-ba04-938d39982c71",
+    "title": "芯片内扩增验证",
+    "regulatoryNotes": "[平台检查 DMF-08] 温控：实际反应位置的温控差异或经验证代理与功能结果"
+  },
+  {
+    "id": "fadf58ef-8bb5-4c5e-9230-1ba646f45ec8",
+    "title": "程序与算法调试",
+    "regulatoryNotes": "[平台检查 DMF-09] 光学与判读：通道及背景、原始信号、判读版本和边界例"
+  },
+  {
+    "id": "a7ca2b44-ad87-4764-86e4-617d94089992",
+    "title": "芯片方案冻结",
+    "regulatoryNotes": "[平台检查 CHANGE-01] 平台证据复用：基线版本及变化清单、适用证据、缺口和桥接决定"
+  },
+  {
+    "id": "ab9d1b69-b6e5-46d9-a479-cf652d7a88d0",
+    "title": "性能验证方案设计（按等级）",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "2f2350ae-8ccd-4d53-8bf2-fdff37889190",
+    "title": "A 类最低验证执行",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "ba2d713e-5aca-447a-a892-7a190a5660b7",
+    "title": "灵敏度与检出限（LoD）",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "cf411913-b0cc-4bd0-a0b6-00bcf8d3d9dc",
+    "title": "特异性与交叉反应",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "0fb5cb56-8397-4038-9a5e-f8174685b58f",
+    "title": "重复性与批间一致性",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "9c250094-2dff-4c86-b1ce-7d141c945863",
+    "title": "抗干扰与样本适用性",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "c3837da6-472c-4bff-acb1-6b76713199ad",
+    "title": "C 类增强验证",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "a6af64c2-dd71-4c42-b4cb-2f35967d91f2",
+    "title": "性能验证报告",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "74377e26-5260-46f0-9ab7-e7ebbd6e2bd4",
+    "title": "试剂与芯片稳定性",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "cc309cde-d89d-4fcb-9fb7-c8d6959264a4",
+    "title": "开封后与上机稳定性",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "9d8f6b00-67ca-4311-81cb-d2280bf25929",
+    "title": "包装与运输验证",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "7455277d-729a-4018-994b-3bf8ed672c5d",
+    "title": "有效期与储运条件确定",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "d555efce-cfb8-489b-b171-4d670cc0b614",
+    "title": "小试生产准备",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "9f13b74d-b402-4e9f-b2d7-3d5d9e4fab2d",
+    "title": "过程质量控制",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "9f5050a2-28cb-44d4-bdd7-b581bccd96df",
+    "title": "放行标准与批检",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "8d5474f0-7fd5-4b23-a063-34650a8e74d1",
+    "title": "批间一致性",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "1fa00fc1-203f-46b7-a33c-1c8a8f0bf9c4",
+    "title": "应用验证样本准备",
+    "regulatoryNotes": "[平台检查 SAMPLE-02] 独立性与真值：用途分组、来源/真值/浓度依据与阈值冻结"
+  },
+  {
+    "id": "5aa9dc01-fe94-405d-a465-d84d3b43d789",
+    "title": "应用验证场景执行",
+    "regulatoryNotes": "[平台检查 FIELD-01] 现场环境：记录实际环境及目标用户操作；引用适用平台环境边界"
+  },
+  {
+    "id": "965073c2-56f0-478b-91a3-b0ae37aea5db",
+    "title": "对比方法验证",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "19ff5957-08aa-43ff-9741-282f02533c48",
+    "title": "用户体验评价",
+    "regulatoryNotes": "[平台检查 FIELD-02] 操作者：目标用户按受控说明完成关键任务及异常处理"
+  },
+  {
+    "id": "bada8706-cf32-4da1-b404-a776a0978472",
+    "title": "客户试用与反馈",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "80edd14a-c5b2-45c0-8835-7c0e0fa20bca",
+    "title": "产品发布评审",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "aabbb04d-083f-4e7c-b78b-c5006e1af766",
+    "title": "版本管理",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "725ae6e1-c917-4eb0-99a6-2197867d0a62",
+    "title": "上市后跟踪",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "337eb6ea-5ecb-441d-bfb8-84d72c8393ca",
+    "title": "产品迭代规划",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "dcd6ca31-2a7c-4ccd-92d5-efce16e19e95",
+    "title": "技术文件整理",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "ca19f068-87a9-4809-80b8-bf103f5e993b",
+    "title": "产品文件编制",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "46f004bb-bbf5-4ec4-8597-d9bfe3347604",
+    "title": "质量文件整理",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "0ae9c725-0a86-44fc-bada-826a74081b60",
+    "title": "客户交付文件",
+    "regulatoryNotes": null
+  },
+  {
+    "id": "03d0c9c9-1b67-41df-a8ee-f6d9f0509cd8",
+    "title": "知识库归档",
+    "regulatoryNotes": null
+  }
+]

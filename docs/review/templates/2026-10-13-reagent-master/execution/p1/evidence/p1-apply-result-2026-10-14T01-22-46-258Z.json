@@ -1,0 +1,54 @@
+{
+  "backupDir": "/mnt/datadisk0/rdpms/app/docs/review/templates/2026-10-13-reagent-master/execution/p1/evidence/backup-2026-10-14T01-22-46-258Z",
+  "phaseA": {
+    "total": 65,
+    "updated": 0,
+    "skippedFilled": 65,
+    "unmapped": []
+  },
+  "phaseB": {
+    "phases": [
+      "p1",
+      "p2",
+      "p3",
+      "p4",
+      "p5",
+      "p6",
+      "p7",
+      "p8",
+      "p9",
+      "p10",
+      "p11",
+      "p12",
+      "p13"
+    ],
+    "total": 65,
+    "updated": 44,
+    "skippedAlready": 21,
+    "samples": [
+      {
+        "phase": "p2",
+        "title": "团队组建与职责分工",
+        "before": "项目组织架构与职责表（PM/研发/芯片/前处理/质量文档/客户接口）",
+        "after": "项目组织架构与职责表（PM/研发/芯片/前处理/质量文档/客户接口）\n[验收] 每项关键交付有负责和审核角色，兼任规则明确\n[前置] 项目范围及人员可用性"
+      },
+      {
+        "phase": "p2",
+        "title": "项目范围定义",
+        "before": "范围说明（覆盖的靶标/样本/形态/验证范围，及本阶段不覆盖项）",
+        "after": "范围说明（覆盖的靶标/样本/形态/验证范围，及本阶段不覆盖项）\n[验收] 范围版本可追溯，变更重新评估验证覆盖\n[前置] 立项及用途边界"
+      },
+      {
+        "phase": "p2",
+        "title": "里程碑计划（M0-M7）",
+        "before": "里程碑计划表（需求确认/方案/片外/芯片/小样本/稳定性/SOP/试用）",
+        "after": "里程碑计划表（需求确认/方案/片外/芯片/小样本/稳定性/SOP/试用）\n[验收] 阶段名、证据、批准与排期对应，不以标题代替配置\n[前置] 设计输入、工作包依赖及资源"
+      }
+    ]
+  },
+  "verify": {
+    "roleFilled": 65,
+    "roleTotal": 65,
+    "deliverableWithAcceptance": 65
+  }
+}
